@@ -1,8 +1,9 @@
 require('dotenv').config();
-const express = require('express');
-const multer  = require('multer');
-const Stripe  = require('stripe');
-const mailer  = require('nodemailer');
+const express   = require('express');
+const multer    = require('multer');
+const Stripe    = require('stripe');
+const mailer    = require('nodemailer');
+const rateLimit = require('express-rate-limit');
 const { DatabaseSync: Database } = require('node:sqlite');
 const path = require('path');
 const fs   = require('fs');
@@ -92,8 +93,25 @@ app.get('/faq', (req, res) => res.redirect('/#faq'));
 
 app.use(express.static('public'));
 
+// ── Rate limiting ─────────────────────────────────────────────────────────────
+const orderLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 8,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests from this IP. Please try again in an hour.' },
+});
+
+const contactLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many messages sent. Please try again later.' },
+});
+
 // ── Create order ──────────────────────────────────────────────────────────────
-app.post('/api/create-order', upload.array('attachments', 5), async (req, res) => {
+app.post('/api/create-order', orderLimiter, upload.array('attachments', 5), async (req, res) => {
   const b = req.body;
   const rEmail  = (b['r-email']  || '').trim();
   const rName   = (b['r-name']   || '').trim();
@@ -201,7 +219,7 @@ app.post('/api/track', (req, res) => {
 });
 
 // ── Contact form ──────────────────────────────────────────────────────────────
-app.post('/api/contact', async (req, res) => {
+app.post('/api/contact', contactLimiter, async (req, res) => {
   const { name, email, message } = req.body;
   if (!name || !email || !message) return res.status(400).json({ error: 'All fields are required.' });
 

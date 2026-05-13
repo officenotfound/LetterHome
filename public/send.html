@@ -122,6 +122,7 @@ nav {
 .step-label.active { color: var(--ink); font-weight: 500; }
 
 /* MAIN LAYOUT */
+.pac-container { z-index: 10000 !important; }
 .send-wrap {
   max-width: 860px; margin: 0 auto; padding: 48px 36px 80px;
   position: relative; z-index: 2;
@@ -854,7 +855,10 @@ function initAutocomplete() {
 
 function setupAddressAuto(inputId, prefix) {
   const input = document.getElementById(inputId);
-  const auto = new google.maps.places.Autocomplete(input, { types: ['address'] });
+  const auto = new google.maps.places.Autocomplete(input, {
+    types: ['address'],
+    fields: ['address_components', 'formatted_address'],
+  });
   auto.addListener('place_changed', () => {
     const place = auto.getPlace();
     if (!place.address_components) return;
