@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en-CA">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Order Confirmed — Letterhome</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --kraft:#ede5d3;--kraft-light:#f7f2e6;--paper:#faf6ec;
+  --ink:#2a2a2a;--ink-soft:#3a3835;--ink-muted:#6b6258;--ink-faint:#968b7d;
+  --red:#a8472d;--red-deep:#7d3220;--red-stamp:#b85540;
+  --line:rgba(42,42,42,0.14);--shadow-card:0 2px 6px rgba(42,42,42,0.06),0 14px 40px rgba(42,42,42,0.1);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--kraft);color:var(--ink);line-height:1.6;min-height:100vh}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:1;opacity:0.5;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.16 0 0 0 0 0.13 0 0 0 0 0.08 0 0 0 0.08 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+nav{position:sticky;top:0;z-index:100;background:rgba(237,229,211,0.94);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.nav-inner{max-width:1280px;margin:0 auto;padding:20px 36px;display:flex;align-items:center;justify-content:space-between}
+.logo{display:flex;align-items:center;gap:12px;font-family:'DM Serif Display',serif;font-size:26px;color:var(--ink);text-decoration:none}
+.logo-mark{width:38px;height:38px;background:var(--red);display:grid;place-items:center;border-radius:2px;color:var(--paper);font-family:'DM Serif Display',serif;font-size:22px;position:relative;box-shadow:0 1px 3px rgba(0,0,0,0.15)}
+.logo-mark::before{content:'';position:absolute;inset:-3px;border:1px dashed var(--ink);border-radius:4px;opacity:0.5}
+.main{max-width:640px;margin:0 auto;padding:80px 36px;position:relative;z-index:2}
+.success-icon{width:72px;height:72px;background:var(--red);border-radius:50%;display:grid;place-items:center;margin-bottom:32px;font-size:32px;color:var(--paper)}
+h1{font-family:'DM Serif Display',serif;font-size:clamp(36px,5vw,56px);font-weight:400;letter-spacing:-0.025em;margin-bottom:16px;line-height:1.05}
+h1 em{font-style:italic;color:var(--red)}
+.sub{font-size:18px;color:var(--ink-muted);margin-bottom:48px;line-height:1.6}
+.card{background:var(--paper);border:1px solid var(--line);padding:36px 40px;border-radius:2px;box-shadow:var(--shadow-card);margin-bottom:28px}
+.detail-row{display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px dashed var(--line);font-size:14px}
+.detail-row:last-child{border-bottom:none}
+.detail-row .label{font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:var(--ink-muted)}
+.detail-row .val{font-weight:500;text-align:right;max-width:60%}
+.loading{color:var(--ink-muted);font-style:italic}
+.btn{display:inline-block;padding:14px 28px;border-radius:2px;font-weight:500;font-size:14px;text-decoration:none;transition:all 0.25s;border:none;cursor:pointer;font-family:inherit;letter-spacing:0.02em;text-transform:uppercase}
+.btn-outline{background:transparent;color:var(--ink);border:1.5px solid var(--ink)}
+.btn-outline:hover{background:var(--ink);color:var(--paper)}
+.eyebrow{display:inline-flex;align-items:center;gap:12px;font-family:'DM Mono',monospace;font-size:12px;text-transform:uppercase;letter-spacing:0.18em;color:var(--red);font-weight:500;margin-bottom:28px}
+.eyebrow::before{content:'';width:40px;height:1px;background:var(--red)}
+footer{background:var(--ink);color:rgba(250,246,236,0.65);padding:40px 36px;position:relative;z-index:2;margin-top:80px}
+.footer-bottom{max-width:1280px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;flex-wrap:wrap;gap:16px}
+.footer-bottom a{color:rgba(250,246,236,0.5);text-decoration:none}
+.footer-bottom a:hover{color:var(--red-stamp)}
+.footer-bottom-links{display:flex;gap:28px}
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-inner">
+    <a href="/" class="logo"><span class="logo-mark">L</span>Letterhome</a>
+  </div>
+</nav>
+
+<div class="main">
+  <div class="eyebrow">Order confirmed</div>
+  <div class="success-icon">✓</div>
+  <h1>Your letter is <em>on its way</em>.</h1>
+  <p class="sub">Payment received. We'll print and mail your letter within one business day. A confirmation has been sent to your email.</p>
+
+  <div class="card" id="order-details">
+    <div class="loading">Loading order details…</div>
+  </div>
+
+  <a href="/" class="btn btn-outline">Back to Letterhome</a>
+</div>
+
+<footer>
+  <div class="footer-bottom">
+    <div>© 2026 Letterhome</div>
+    <div class="footer-bottom-links">
+      <a href="/privacy">Privacy</a>
+      <a href="/terms">Terms</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+(async () => {
+  const params = new URLSearchParams(window.location.search);
+  const sessionId = params.get('session_id');
+  const el = document.getElementById('order-details');
+  if (!sessionId) { el.innerHTML = '<p style="color:var(--ink-muted)">No order found.</p>'; return; }
+
+  try {
+    const res  = await fetch('/api/order-status?session_id=' + encodeURIComponent(sessionId));
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+
+    const countryNames = { CA:'Canada', US:'United States', GB:'United Kingdom', AU:'Australia', NZ:'New Zealand', FR:'France', DE:'Germany', JP:'Japan', MX:'Mexico' };
+    const destName = countryNames[data.destinationCountry] || data.destinationCountry;
+    const isDomestic = data.destinationCountry === 'CA';
+
+    el.innerHTML = `
+      <div class="detail-row"><span class="label">Order</span><span class="val">#${data.id}</span></div>
+      <div class="detail-row"><span class="label">Recipient</span><span class="val">${data.recipientName}${data.recipientCity ? ', ' + data.recipientCity : ''}</span></div>
+      <div class="detail-row"><span class="label">Destination</span><span class="val">${destName}</span></div>
+      <div class="detail-row"><span class="label">Price</span><span class="val">${isDomestic ? '$10' : '$16'} CAD</span></div>
+      <div class="detail-row"><span class="label">Estimated delivery</span><span class="val">${isDomestic ? 'Within 2 weeks' : 'Within 4 weeks'}</span></div>
+      <div class="detail-row"><span class="label">Status</span><span class="val" style="color:var(--red)">Received — preparing to mail</span></div>
+    `;
+  } catch (err) {
+    el.innerHTML = '<p style="color:var(--ink-muted);font-size:14px">Your payment went through — we\'ll send a confirmation email shortly. If you have questions, contact us.</p>';
+  }
+})();
+</script>
+</body>
+</html>
