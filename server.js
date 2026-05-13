@@ -104,7 +104,7 @@ app.post('/api/create-order', upload.array('attachments', 5), async (req, res) =
   }
 
   const isDomestic = b['r-country'] === 'CA';
-  const priceCents = isDomestic ? 1000 : 1600;
+  const priceCents = isDomestic ? 1000 : 2000;
 
   const attachmentInfo = (req.files || []).map(f => ({
     tempPath:     f.path,
