@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en-CA">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Send a Letter — Letterhome</title>
+<meta name="description" content="Send a real letter to Canada from anywhere in the world. We print, stamp, and mail it for you. From $10 CAD.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --kraft: #ede5d3;
+  --kraft-deep: #e1d6bd;
+  --kraft-light: #f7f2e6;
+  --paper: #faf6ec;
+  --ink: #2a2a2a;
+  --ink-soft: #3a3835;
+  --ink-muted: #6b6258;
+  --ink-faint: #968b7d;
+  --red: #a8472d;
+  --red-deep: #7d3220;
+  --red-stamp: #b85540;
+  --taupe: #8a7f70;
+  --line: rgba(42,42,42,0.14);
+  --line-soft: rgba(42,42,42,0.08);
+  --shadow-soft: 0 1px 2px rgba(42,42,42,0.04), 0 6px 20px rgba(42,42,42,0.06);
+  --shadow-card: 0 2px 6px rgba(42,42,42,0.06), 0 14px 40px rgba(42,42,42,0.1);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background: var(--kraft);
+  color: var(--ink);
+  line-height: 1.6;
+  font-size: 16px;
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+body::before {
+  content: '';
+  position: fixed; inset: 0; pointer-events: none; z-index: 1; opacity: 0.5;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.16 0 0 0 0 0.13 0 0 0 0 0.08 0 0 0 0.08 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.serif { font-family: 'DM Serif Display', Georgia, serif; }
+.mono { font-family: 'DM Mono', monospace; }
+
+/* NAV */
+nav {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(237,229,211,0.94);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--line);
+}
+.nav-inner {
+  max-width: 1280px; margin: 0 auto; padding: 20px 36px;
+  display: flex; align-items: center; justify-content: space-between; gap: 24px;
+}
+.logo {
+  display: flex; align-items: center; gap: 12px;
+  font-family: 'DM Serif Display', serif; font-size: 26px;
+  color: var(--ink); text-decoration: none; letter-spacing: -0.01em;
+}
+.logo-mark {
+  width: 38px; height: 38px; background: var(--red);
+  display: grid; place-items: center; border-radius: 2px;
+  color: var(--paper); font-family: 'DM Serif Display', serif;
+  font-size: 22px; line-height: 1; position: relative;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+.logo-mark::before {
+  content: ''; position: absolute; inset: -3px;
+  border: 1px dashed var(--ink); border-radius: 4px; opacity: 0.5;
+}
+.nav-links { display: flex; gap: 36px; align-items: center; }
+.nav-links a {
+  color: var(--ink-soft); text-decoration: none;
+  font-size: 14px; font-weight: 500; transition: color 0.2s; letter-spacing: 0.01em;
+}
+.nav-links a:hover { color: var(--red); }
+.btn {
+  display: inline-block; padding: 13px 26px; border-radius: 2px;
+  font-weight: 500; font-size: 14px; text-decoration: none;
+  transition: all 0.25s ease; border: none; cursor: pointer;
+  font-family: inherit; letter-spacing: 0.02em; text-transform: uppercase;
+}
+.btn-red { background: var(--red); color: var(--paper); }
+.btn-red:hover { background: var(--red-deep); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(168,71,45,0.3); }
+.btn-outline { background: transparent; color: var(--ink); border: 1.5px solid var(--ink); }
+.btn-outline:hover { background: var(--ink); color: var(--paper); }
+.btn-ink { background: var(--ink); color: var(--paper); }
+.btn-ink:hover { background: var(--ink-soft); transform: translateY(-1px); }
+.btn:disabled, .btn[disabled] { opacity: 0.4; cursor: not-allowed; transform: none !important; }
+
+/* PROGRESS BAR */
+.progress-wrap {
+  background: var(--paper); border-bottom: 1px solid var(--line);
+  padding: 24px 36px; position: relative; z-index: 2;
+}
+.progress-inner { max-width: 860px; margin: 0 auto; }
+.progress-steps { display: flex; align-items: center; gap: 0; }
+.progress-step {
+  display: flex; flex-direction: column; align-items: center; flex: 1;
+}
+.progress-step-row { display: flex; align-items: center; width: 100%; }
+.step-circle {
+  width: 44px; height: 44px; border-radius: 50%;
+  display: grid; place-items: center;
+  font-family: 'DM Serif Display', serif; font-style: italic; font-size: 20px;
+  border: 1.5px solid var(--ink); background: var(--paper);
+  color: var(--ink); transition: all 0.3s; flex-shrink: 0;
+}
+.step-circle.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.step-circle.done { background: var(--red); color: var(--paper); border-color: var(--red); font-size: 16px; }
+.step-line { flex: 1; height: 1px; background: var(--line); margin: 0 8px; }
+.step-line.done { background: var(--red); }
+.step-label {
+  font-family: 'DM Mono', monospace; font-size: 10px; text-transform: uppercase;
+  letter-spacing: 0.15em; color: var(--ink-muted); margin-top: 8px; text-align: center;
+}
+.step-label.active { color: var(--ink); font-weight: 500; }
+
+/* MAIN LAYOUT */
+.send-wrap {
+  max-width: 860px; margin: 0 auto; padding: 48px 36px 80px;
+  position: relative; z-index: 2;
+}
+
+/* PANELS */
+.panel {
+  background: var(--paper); border: 1px solid var(--line);
+  border-radius: 2px; box-shadow: var(--shadow-soft);
+  padding: 48px 48px; display: none;
+}
+.panel.active { display: block; }
+
+.panel-title {
+  font-family: 'DM Serif Display', serif; font-size: 36px;
+  font-weight: 400; letter-spacing: -0.02em; margin-bottom: 8px; line-height: 1.1;
+}
+.panel-sub {
+  color: var(--ink-muted); font-size: 15px; margin-bottom: 40px;
+  padding-bottom: 32px; border-bottom: 1px solid var(--line);
+}
+
+/* FORM */
+.form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 20px; }
+.form-group:last-child { margin-bottom: 0; }
+label {
+  font-family: 'DM Mono', monospace; font-size: 11px; text-transform: uppercase;
+  letter-spacing: 0.15em; color: var(--ink-muted); font-weight: 500;
+}
+input, select, textarea {
+  width: 100%; padding: 13px 16px; border: 1px solid rgba(42,42,42,0.2);
+  background: var(--kraft-light); color: var(--ink); font-family: 'Inter', sans-serif;
+  font-size: 15px; border-radius: 2px; transition: border-color 0.2s, box-shadow 0.2s;
+  outline: none; appearance: none;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: var(--ink); box-shadow: 0 0 0 3px rgba(42,42,42,0.06);
+}
+textarea { resize: vertical; min-height: 180px; line-height: 1.6; }
+.field-note { font-size: 12px; color: var(--ink-faint); margin-top: 4px; }
+
+/* ADDRESS COLUMNS */
+.address-columns {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 40px;
+}
+.address-col h3 {
+  font-family: 'DM Mono', monospace; font-size: 11px; text-transform: uppercase;
+  letter-spacing: 0.15em; color: var(--ink-muted); font-weight: 500;
+  margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px dashed var(--line);
+}
+
+/* LETTER TYPE SELECTOR */
+.letter-types { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 32px; }
+.letter-type {
+  border: 1.5px solid var(--line); background: var(--kraft-light);
+  padding: 20px 16px; border-radius: 2px; cursor: pointer;
+  transition: all 0.2s; text-align: center;
+}
+.letter-type:hover { border-color: var(--ink); background: var(--paper); }
+.letter-type.selected { border-color: var(--ink); background: var(--paper); box-shadow: var(--shadow-soft); }
+.letter-type-name {
+  font-family: 'DM Serif Display', serif; font-size: 18px; font-weight: 400;
+  margin-bottom: 4px; line-height: 1.2;
+}
+.letter-type-price {
+  font-family: 'DM Mono', monospace; font-size: 12px; color: var(--red);
+  font-weight: 500; margin-bottom: 6px;
+}
+.letter-type-desc { font-size: 12px; color: var(--ink-muted); line-height: 1.4; }
+
+/* ATTACHMENT AREA */
+.attach-zone {
+  border: 1.5px dashed rgba(42,42,42,0.25); background: var(--kraft-light);
+  padding: 28px; text-align: center; cursor: pointer; transition: all 0.2s;
+  border-radius: 2px; margin-bottom: 20px;
+}
+.attach-zone:hover { border-color: var(--ink); background: var(--paper); }
+.attach-zone p { font-size: 14px; color: var(--ink-muted); margin-top: 8px; }
+.attach-zone .attach-icon { font-size: 28px; }
+.attach-list { list-style: none; }
+.attach-list li {
+  display: flex; align-items: center; gap: 12px; padding: 10px 14px;
+  background: var(--paper); border: 1px solid var(--line); margin-bottom: 8px;
+  font-size: 13px; border-radius: 2px;
+}
+.attach-list li .remove { margin-left: auto; color: var(--red); cursor: pointer; font-size: 18px; line-height: 1; background: none; border: none; }
+
+/* PREVIEW PANEL */
+.preview-envelope {
+  background: var(--paper); border: 1px solid rgba(42,42,42,0.12);
+  border-radius: 2px; box-shadow: var(--shadow-card);
+  padding: 36px 40px; margin-bottom: 32px; position: relative;
+  font-family: 'DM Serif Display', serif;
+}
+.preview-envelope::before {
+  content: ''; position: absolute; inset: 0;
+  background: repeating-linear-gradient(45deg, var(--red) 0px, var(--red) 5px, transparent 5px, transparent 10px, var(--ink) 10px, var(--ink) 15px, transparent 15px, transparent 20px);
+  -webkit-mask: linear-gradient(#000,#000) content-box, linear-gradient(#000,#000);
+  mask: linear-gradient(#000,#000) content-box, linear-gradient(#000,#000);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  padding: 7px; pointer-events: none; opacity: 0.5; border-radius: 2px;
+}
+.preview-stamp {
+  position: absolute; top: 20px; right: 20px;
+  width: 68px; height: 80px; background: var(--red-stamp);
+  color: var(--paper); display: grid; place-items: center;
+  font-family: 'DM Serif Display', serif; font-size: 11px; text-align: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.18); transform: rotate(4deg);
+}
+.preview-stamp strong { font-size: 20px; display: block; font-weight: 400; }
+.preview-from { font-size: 13px; color: var(--ink-muted); margin-bottom: 32px; line-height: 1.5; }
+.preview-from-label {
+  font-family: 'DM Mono', monospace; font-size: 9px; text-transform: uppercase;
+  letter-spacing: 0.2em; color: var(--ink-faint); margin-bottom: 6px;
+}
+.preview-to { font-size: 19px; color: var(--ink-soft); line-height: 1.45; }
+.preview-to-label {
+  font-family: 'DM Mono', monospace; font-size: 10px; text-transform: uppercase;
+  letter-spacing: 0.2em; color: var(--ink-muted); margin-bottom: 10px; display: flex; align-items: center; gap: 8px;
+}
+.preview-to-label::before { content: '→'; color: var(--red); }
+
+.preview-letter-box {
+  background: var(--kraft-light); border: 1px solid var(--line);
+  padding: 28px 32px; margin-bottom: 28px; border-radius: 2px;
+}
+.preview-letter-box p {
+  font-family: 'DM Serif Display', serif; font-style: italic;
+  font-size: 17px; line-height: 1.7; color: var(--ink-soft); white-space: pre-wrap;
+}
+
+/* ORDER SUMMARY */
+.order-summary {
+  background: var(--ink); color: var(--paper);
+  padding: 28px 32px; border-radius: 2px; margin-bottom: 28px;
+}
+.order-summary-row {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.1);
+  font-size: 14px;
+}
+.order-summary-row:last-child { border-bottom: none; }
+.order-summary-row.total {
+  font-family: 'DM Serif Display', serif; font-size: 26px;
+  color: var(--paper); padding-top: 16px; margin-top: 4px;
+}
+.order-summary-row .label { color: rgba(250,246,236,0.7); font-family: 'DM Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; }
+.order-summary-row .val { font-weight: 500; }
+.order-summary-row.total .val { color: var(--paper); }
+
+/* PRIVACY NOTE */
+.privacy-note {
+  display: flex; gap: 12px; align-items: flex-start;
+  background: rgba(42,42,42,0.04); padding: 16px 20px;
+  border-left: 3px solid var(--red); margin-bottom: 28px;
+}
+.privacy-note p { font-size: 13px; color: var(--ink-muted); line-height: 1.6; }
+
+/* NAV BUTTONS */
+.panel-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 40px; padding-top: 32px; border-top: 1px solid var(--line); }
+.btn-large { padding: 18px 36px; font-size: 14px; }
+
+/* EYEBROW */
+.eyebrow {
+  display: inline-flex; align-items: center; gap: 12px;
+  font-family: 'DM Mono', monospace; font-size: 12px; text-transform: uppercase;
+  letter-spacing: 0.18em; color: var(--red); font-weight: 500; margin-bottom: 16px;
+}
+.eyebrow::before { content: ''; width: 40px; height: 1px; background: var(--red); }
+
+/* CHECKBOX */
+.check-row { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 16px; }
+.check-row input[type="checkbox"] { width: 16px; height: 16px; flex-shrink: 0; margin-top: 3px; accent-color: var(--ink); }
+.check-row label { font-family: 'Inter', sans-serif; font-size: 13px; color: var(--ink-muted); text-transform: none; letter-spacing: 0; font-weight: 400; cursor: pointer; }
+
+/* FOOTER */
+footer { background: var(--ink); color: rgba(250,246,236,0.65); padding: 48px 36px 32px; position: relative; z-index: 2; }
+.footer-inner { max-width: 1280px; margin: 0 auto; }
+.footer-bottom {
+  display: flex; justify-content: space-between; align-items: center;
+  font-family: 'DM Mono', monospace; font-size: 11px; text-transform: uppercase;
+  letter-spacing: 0.12em; flex-wrap: wrap; gap: 16px;
+}
+.footer-bottom-links { display: flex; gap: 28px; }
+.footer-bottom a { color: rgba(250,246,236,0.5); text-decoration: none; transition: color 0.2s; }
+.footer-bottom a:hover { color: var(--red-stamp); }
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .nav-links { display: none; }
+  .send-wrap { padding: 28px 20px 60px; }
+  .panel { padding: 28px 24px; }
+  .address-columns { grid-template-columns: 1fr; gap: 28px; }
+  .form-grid-2 { grid-template-columns: 1fr; }
+  .letter-types { grid-template-columns: 1fr; }
+  .progress-wrap { padding: 20px 20px; }
+  .step-label { display: none; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a href="index.html" class="logo">
+      <span class="logo-mark">L</span>
+      Letterhome
+    </a>
+    <div class="nav-links">
+      <a href="index.html#how">How it works</a>
+      <a href="index.html#pricing">Pricing</a>
+      <a href="index.html#faq">FAQ</a>
+    </div>
+  </div>
+</nav>
+
+<!-- PROGRESS -->
+<div class="progress-wrap">
+  <div class="progress-inner">
+    <div class="progress-steps">
+      <div class="progress-step">
+        <div class="progress-step-row">
+          <div class="step-circle active" id="circle-1">i</div>
+          <div class="step-line" id="line-1"></div>
+        </div>
+        <div class="step-label active" id="label-1">Addresses</div>
+      </div>
+      <div class="progress-step">
+        <div class="progress-step-row">
+          <div class="step-circle" id="circle-2">ii</div>
+          <div class="step-line" id="line-2"></div>
+        </div>
+        <div class="step-label" id="label-2">Your Letter</div>
+      </div>
+      <div class="progress-step">
+        <div class="progress-step-row">
+          <div class="step-circle" id="circle-3">iii</div>
+          <div class="step-line" style="opacity:0"></div>
+        </div>
+        <div class="step-label" id="label-3">Review & Pay</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FORM WRAPPER -->
+<div class="send-wrap">
+
+  <!-- STEP 1: ADDRESSES -->
+  <div class="panel active" id="panel-1">
+    <div class="eyebrow">Step One</div>
+    <h2 class="panel-title serif">Who is this going to?</h2>
+    <p class="panel-sub">Enter the sender and recipient addresses. The sender address appears as the return address on the envelope.</p>
+
+    <div class="address-columns">
+      <div class="address-col">
+        <h3>From — Sender</h3>
+        <div class="check-row" style="margin-bottom:20px;">
+          <input type="checkbox" id="skip-return" onchange="toggleReturn(this)">
+          <label for="skip-return">Skip return address (anonymous send)</label>
+        </div>
+        <div id="sender-fields">
+          <div class="form-group"><label for="s-name">Full Name</label><input id="s-name" type="text" placeholder="Margaret Tremblay" autocomplete="name"></div>
+          <div class="form-group"><label for="s-street">Street Address</label><input id="s-street" type="text" placeholder="123 Main Street" autocomplete="street-address"></div>
+          <div class="form-grid-2">
+            <div class="form-group"><label for="s-city">City</label><input id="s-city" type="text" placeholder="Toronto" autocomplete="address-level2"></div>
+            <div class="form-group"><label for="s-province">Province / State</label><input id="s-province" type="text" placeholder="ON"></div>
+          </div>
+          <div class="form-grid-2">
+            <div class="form-group"><label for="s-postal">Postal Code</label><input id="s-postal" type="text" placeholder="V6B 1A1" maxlength="10"></div>
+            <div class="form-group"><label for="s-country">Country</label><input id="s-country" type="text" placeholder="Canada" autocomplete="country-name"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="address-col">
+        <h3>To — Recipient</h3>
+        <div class="form-group">
+          <label for="r-country">Destination Country</label>
+          <select id="r-country" onchange="updatePricing()">
+            <option value="CA">Canada — $10 CAD</option>
+            <option value="US">United States — $16 CAD</option>
+            <option value="GB">United Kingdom — $16 CAD</option>
+            <option value="AU">Australia — $16 CAD</option>
+            <option value="NZ">New Zealand — $16 CAD</option>
+            <option value="FR">France — $16 CAD</option>
+            <option value="DE">Germany — $16 CAD</option>
+            <option value="JP">Japan — $16 CAD</option>
+            <option value="MX">Mexico — $16 CAD</option>
+            <option value="OTHER">Other Country — $16 CAD</option>
+          </select>
+          <span class="field-note">Domestic (Canada) $10 · International $16 — all prices CAD</span>
+        </div>
+        <div class="form-group"><label for="r-name">Full Name</label><input id="r-name" type="text" placeholder="James Okafor"></div>
+        <div class="form-group"><label for="r-street">Street Address</label><input id="r-street" type="text" placeholder="456 Oak Avenue, Apt 3"></div>
+        <div class="form-grid-2">
+          <div class="form-group"><label for="r-city">City</label><input id="r-city" type="text" placeholder="Halifax"></div>
+          <div class="form-group"><label for="r-province">Province / State</label>
+            <select id="r-province">
+              <option value="">Select...</option>
+              <option>AB — Alberta</option><option>BC — British Columbia</option>
+              <option>MB — Manitoba</option><option>NB — New Brunswick</option>
+              <option>NL — Newfoundland and Labrador</option><option>NS — Nova Scotia</option>
+              <option>NT — Northwest Territories</option><option>NU — Nunavut</option>
+              <option>ON — Ontario</option><option>PE — Prince Edward Island</option>
+              <option>QC — Quebec</option><option>SK — Saskatchewan</option><option>YT — Yukon</option>
+              <option disabled>──────────</option>
+              <option>Other / International</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-grid-2">
+          <div class="form-group"><label for="r-postal">Postal / ZIP Code</label><input id="r-postal" type="text" placeholder="B3H 2L6"></div>
+          <div class="form-group"><label for="r-email">Your Email (confirmation)</label><input id="r-email" type="email" placeholder="you@example.com" autocomplete="email"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-nav">
+      <span></span>
+      <button class="btn btn-ink btn-large" onclick="goTo(2)">Continue to Letter →</button>
+    </div>
+  </div>
+
+  <!-- STEP 2: LETTER -->
+  <div class="panel" id="panel-2">
+    <div class="eyebrow">Step Two</div>
+    <h2 class="panel-title serif">Write your letter.</h2>
+    <p class="panel-sub">Type your message below. You can also attach PDF or Word documents to be printed alongside your letter.</p>
+
+    <div class="letter-types">
+      <div class="letter-type selected" onclick="selectType(this, 'standard')" data-type="standard">
+        <div class="letter-type-name serif">Standard Letter</div>
+        <div class="letter-type-price">Included</div>
+        <div class="letter-type-desc">Up to 5 pages on quality paper</div>
+      </div>
+      <div class="letter-type" onclick="selectType(this, 'legal')" data-type="legal">
+        <div class="letter-type-name serif">Legal / Formal</div>
+        <div class="letter-type-price">Included</div>
+        <div class="letter-type-desc">Formal layout, letterhead style</div>
+      </div>
+      <div class="letter-type" onclick="selectType(this, 'card')" data-type="card">
+        <div class="letter-type-name serif">Card / Note</div>
+        <div class="letter-type-price">Included</div>
+        <div class="letter-type-desc">Short message, card format</div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="letter-body">Your Message</label>
+      <textarea id="letter-body" placeholder="Dear Margaret,&#10;&#10;I hope this letter finds you well. I'm writing from..." oninput="updatePreview()"></textarea>
+      <span class="field-note">Max 5 pages (~2,500 words). Plain text only — your letter will be typeset professionally.</span>
+    </div>
+
+    <div class="attach-zone" onclick="document.getElementById('file-input').click()">
+      <div class="attach-icon">📎</div>
+      <p><strong>Attach documents</strong> — click to upload PDF or Word files</p>
+      <p style="font-size:12px; margin-top:4px;">Max 5 files · PDF or .docx only · 10MB per file</p>
+      <input type="file" id="file-input" accept=".pdf,.doc,.docx" multiple style="display:none" onchange="handleFiles(this)">
+    </div>
+    <ul class="attach-list" id="attach-list"></ul>
+
+    <div class="panel-nav">
+      <button class="btn btn-outline" onclick="goTo(1)">← Back</button>
+      <button class="btn btn-ink btn-large" onclick="goTo(3)">Preview & Review →</button>
+    </div>
+  </div>
+
+  <!-- STEP 3: PREVIEW & PAY -->
+  <div class="panel" id="panel-3">
+    <div class="eyebrow">Step Three</div>
+    <h2 class="panel-title serif">Review your order.</h2>
+    <p class="panel-sub">Check everything looks right before paying. Once submitted, your letter will be printed and mailed within one business day.</p>
+
+    <div class="preview-envelope">
+      <div class="preview-stamp">
+        <strong id="preview-price">$10</strong>
+        CAD
+      </div>
+      <div class="preview-from">
+        <div class="preview-from-label">Return address</div>
+        <div id="preview-from-text">—</div>
+      </div>
+      <div class="preview-to">
+        <div class="preview-to-label">Deliver to</div>
+        <div id="preview-to-text">—</div>
+      </div>
+    </div>
+
+    <div class="preview-letter-box">
+      <p id="preview-body-text">Your letter will appear here as you type it in Step 2.</p>
+    </div>
+
+    <div class="order-summary">
+      <div class="order-summary-row"><span class="label">Service</span><span class="val" id="summary-service">Standard Letter</span></div>
+      <div class="order-summary-row"><span class="label">Destination</span><span class="val" id="summary-dest">Canada (Domestic)</span></div>
+      <div class="order-summary-row"><span class="label">Delivery estimate</span><span class="val" id="summary-delivery">2–4 business days</span></div>
+      <div class="order-summary-row"><span class="label">Includes</span><span class="val">Print · Envelope · Postage · Delivery</span></div>
+      <div class="order-summary-row total"><span class="label" style="color:rgba(250,246,236,0.7)">Total</span><span class="val" id="summary-total">$10 CAD</span></div>
+    </div>
+
+    <div class="privacy-note">
+      <span>🔒</span>
+      <p>Your letter content is used only for printing. We delete the text and attachments within 7 days of mailing. We never share or store your message for any other purpose. Payment is handled securely by Stripe — we never see your card details.</p>
+    </div>
+
+    <div class="check-row">
+      <input type="checkbox" id="agree-terms">
+      <label for="agree-terms">I agree to the <a href="terms.html" style="color:var(--red)">Terms of Service</a> and <a href="privacy.html" style="color:var(--red)">Privacy Policy</a>. I confirm this letter does not contain threats, scams, or illegal content.</label>
+    </div>
+
+    <div class="panel-nav">
+      <button class="btn btn-outline" onclick="goTo(2)">← Edit Letter</button>
+      <button class="btn btn-red btn-large" onclick="submitOrder()">Pay & Send Letter →</button>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-bottom">
+      <div>© 2026 Letterhome · For Canadians abroad</div>
+      <div class="footer-bottom-links">
+        <a href="privacy.html">Privacy</a>
+        <a href="terms.html">Terms</a>
+        <a href="index.html">Home</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+let currentStep = 1;
+let letterType = 'standard';
+
+function goTo(step) {
+  document.getElementById('panel-' + currentStep).classList.remove('active');
+  currentStep = step;
+  document.getElementById('panel-' + step).classList.add('active');
+  updateStepUI();
+  if (step === 3) buildPreview();
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+function updateStepUI() {
+  for (let i = 1; i <= 3; i++) {
+    const c = document.getElementById('circle-' + i);
+    const l = document.getElementById('label-' + i);
+    c.classList.remove('active','done');
+    l.classList.remove('active');
+    if (i < currentStep) { c.classList.add('done'); c.textContent = '✓'; }
+    else if (i === currentStep) { c.classList.add('active'); setCircleLabel(c, i); l.classList.add('active'); }
+    else { setCircleLabel(c, i); }
+    if (i < 3) {
+      const line = document.getElementById('line-' + i);
+      if (line) line.classList.toggle('done', i < currentStep);
+    }
+  }
+}
+
+function setCircleLabel(el, i) {
+  const labels = ['i','ii','iii'];
+  if (!el.classList.contains('done')) el.textContent = labels[i-1];
+}
+
+function toggleReturn(cb) {
+  document.getElementById('sender-fields').style.opacity = cb.checked ? '0.3' : '1';
+  document.getElementById('sender-fields').style.pointerEvents = cb.checked ? 'none' : 'auto';
+}
+
+function selectType(el, type) {
+  document.querySelectorAll('.letter-type').forEach(t => t.classList.remove('selected'));
+  el.classList.add('selected');
+  letterType = type;
+}
+
+function updatePricing() {
+  const country = document.getElementById('r-country').value;
+  const isDomestic = country === 'CA';
+  document.getElementById('preview-price').textContent = isDomestic ? '$10' : '$16';
+  document.getElementById('summary-total').textContent = isDomestic ? '$10 CAD' : '$16 CAD';
+  document.getElementById('summary-dest').textContent = isDomestic ? 'Canada (Domestic)' : 'International';
+  document.getElementById('summary-delivery').textContent = isDomestic ? '2–4 business days' : '6–10 business days';
+}
+
+function updatePreview() {
+  const body = document.getElementById('letter-body').value;
+  const el = document.getElementById('preview-body-text');
+  if (el) el.textContent = body || 'Your letter will appear here as you type it in Step 2.';
+}
+
+function buildPreview() {
+  const sName = document.getElementById('s-name').value;
+  const sStreet = document.getElementById('s-street').value;
+  const sCity = document.getElementById('s-city').value;
+  const sProvince = document.getElementById('s-province').value;
+  const sCountry = document.getElementById('s-country').value;
+  const skipReturn = document.getElementById('skip-return').checked;
+
+  const rName = document.getElementById('r-name').value;
+  const rStreet = document.getElementById('r-street').value;
+  const rCity = document.getElementById('r-city').value;
+  const rPostal = document.getElementById('r-postal').value;
+
+  const fromLines = skipReturn ? 'No return address' :
+    [sName, sStreet, sCity + (sProvince ? ', ' + sProvince : ''), sCountry].filter(Boolean).join('\n');
+  const toLines = [rName, rStreet, rCity + (rPostal ? '  ' + rPostal : '')].filter(Boolean).join('\n');
+
+  document.getElementById('preview-from-text').textContent = fromLines || '—';
+  document.getElementById('preview-to-text').textContent = toLines || '—';
+
+  const body = document.getElementById('letter-body').value;
+  document.getElementById('preview-body-text').textContent = body || 'No message entered.';
+
+  const typeLabels = {standard: 'Standard Letter', legal: 'Legal / Formal', card: 'Card / Note'};
+  document.getElementById('summary-service').textContent = typeLabels[letterType] || 'Standard Letter';
+
+  updatePricing();
+}
+
+function handleFiles(input) {
+  const list = document.getElementById('attach-list');
+  Array.from(input.files).forEach(f => {
+    const li = document.createElement('li');
+    li.innerHTML = '<span>📄</span><span>' + f.name + '</span><span style="font-size:11px;color:var(--ink-faint);margin-left:4px;">(' + (f.size / 1024).toFixed(0) + ' KB)</span><button class="remove" onclick="this.parentElement.remove()">×</button>';
+    list.appendChild(li);
+  });
+  input.value = '';
+}
+
+function submitOrder() {
+  const agreed = document.getElementById('agree-terms').checked;
+  if (!agreed) { alert('Please agree to the Terms of Service before proceeding.'); return; }
+  const rName = document.getElementById('r-name').value;
+  if (!rName) { goTo(1); alert('Please enter the recipient name before proceeding.'); return; }
+  alert('This is a demo — Stripe payment integration coming soon. Your order details have been captured.');
+}
+</script>
+</body>
+</html>
