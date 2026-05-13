@@ -386,7 +386,7 @@ footer { background: var(--ink); color: rgba(250,246,236,0.65); padding: 48px 36
         </div>
         <div id="sender-fields">
           <div class="form-group"><label for="s-name">Full Name</label><input id="s-name" type="text" placeholder="Margaret Tremblay" autocomplete="name"></div>
-          <div class="form-group"><label for="s-street">Street Address</label><input id="s-street" type="text" placeholder="123 Main Street" autocomplete="street-address"></div>
+          <div class="form-group"><label for="s-street">Street Address</label><input id="s-street" type="text" placeholder="123 Main Street" autocomplete="off"></div>
           <div class="form-grid-2">
             <div class="form-group"><label for="s-city">City</label><input id="s-city" type="text" placeholder="Toronto" autocomplete="address-level2"></div>
             <div class="form-group"><label for="s-province">Province / State</label><input id="s-province" type="text" placeholder="ON"></div>
@@ -583,7 +583,7 @@ footer { background: var(--ink); color: rgba(250,246,236,0.65); padding: 48px 36
           <span class="field-note">Domestic (Canada) $10 · International $20 — all prices CAD</span>
         </div>
         <div class="form-group"><label for="r-name">Full Name</label><input id="r-name" type="text" placeholder="James Okafor"></div>
-        <div class="form-group"><label for="r-street">Street Address</label><input id="r-street" type="text" placeholder="456 Oak Avenue, Apt 3"></div>
+        <div class="form-group"><label for="r-street">Street Address</label><input id="r-street" type="text" placeholder="456 Oak Avenue, Apt 3" autocomplete="off"></div>
         <div class="form-grid-2">
           <div class="form-group"><label for="r-city">City</label><input id="r-city" type="text" placeholder="Halifax"></div>
           <div class="form-group" id="province-field">
@@ -847,6 +847,54 @@ function removeFile(idx, btn) {
   btn.parentElement.remove();
 }
 
+function initAutocomplete() {
+  setupAddressAuto('s-street', 's');
+  setupAddressAuto('r-street', 'r');
+}
+
+function setupAddressAuto(inputId, prefix) {
+  const input = document.getElementById(inputId);
+  const auto = new google.maps.places.Autocomplete(input, { types: ['address'] });
+  auto.addListener('place_changed', () => {
+    const place = auto.getPlace();
+    if (!place.address_components) return;
+
+    let num = '', route = '', city = '', province = '', postal = '', countryCode = '', countryName = '';
+    place.address_components.forEach(c => {
+      const t = c.types[0];
+      if (t === 'street_number')               num         = c.long_name;
+      if (t === 'route')                       route       = c.long_name;
+      if (t === 'locality')                    city        = c.long_name;
+      if (t === 'postal_town' && !city)        city        = c.long_name;
+      if (t === 'administrative_area_level_1') province    = c.short_name;
+      if (t === 'postal_code')                 postal      = c.long_name;
+      if (t === 'country') { countryCode = c.short_name; countryName = c.long_name; }
+    });
+
+    const street = [num, route].filter(Boolean).join(' ');
+    if (street) document.getElementById(`${prefix}-street`).value = street;
+    if (city)   document.getElementById(`${prefix}-city`).value   = city;
+    if (postal) document.getElementById(`${prefix}-postal`).value = postal;
+
+    if (prefix === 's') {
+      if (province)    document.getElementById('s-province').value = province;
+      if (countryName) document.getElementById('s-country').value  = countryName;
+    } else {
+      const countrySel = document.getElementById('r-country');
+      const match = Array.from(countrySel.options).find(o => o.value === countryCode);
+      if (match) { countrySel.value = countryCode; updatePricing(); }
+
+      if (countryCode === 'CA') {
+        const provSel = document.getElementById('r-province');
+        const provMatch = Array.from(provSel.options).find(o => o.text.startsWith(province + ' —'));
+        if (provMatch) provSel.value = provMatch.value;
+      } else {
+        document.getElementById('r-province-text').value = province;
+      }
+    }
+  });
+}
+
 async function submitOrder() {
   if (!document.getElementById('agree-terms').checked) {
     alert('Please agree to the Terms of Service before proceeding.');
@@ -887,5 +935,6 @@ async function submitOrder() {
   }
 }
 </script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB74KWQXxUIm2DKB43TEGb7f1-cZAw9rCs&libraries=places&callback=initAutocomplete" async defer></script>
 </body>
 </html>
