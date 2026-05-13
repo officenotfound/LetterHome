@@ -122,7 +122,20 @@ nav {
 .step-label.active { color: var(--ink); font-weight: 500; }
 
 /* MAIN LAYOUT */
-.pac-container { z-index: 10000 !important; }
+.ac-drop {
+  position: absolute; top: 100%; left: 0; right: 0; z-index: 10000;
+  background: var(--paper); border: 1px solid var(--line); border-top: none;
+  list-style: none; margin: 0; padding: 0;
+  box-shadow: 0 4px 16px rgba(42,42,42,0.12);
+  max-height: 240px; overflow-y: auto;
+}
+.ac-item {
+  padding: 10px 14px; cursor: pointer; font-size: 13px;
+  color: var(--ink-soft); border-bottom: 1px solid rgba(42,42,42,0.06);
+  line-height: 1.4;
+}
+.ac-item:hover { background: var(--kraft-light); color: var(--ink); }
+.ac-item:last-child { border-bottom: none; }
 .send-wrap {
   max-width: 860px; margin: 0 auto; padding: 48px 36px 80px;
   position: relative; z-index: 2;
@@ -849,54 +862,92 @@ function removeFile(idx, btn) {
 }
 
 function initAutocomplete() {
-  setupAddressAuto('s-street', 's');
-  setupAddressAuto('r-street', 'r');
+  setupAuto('s-street', 's');
+  setupAuto('r-street', 'r');
 }
 
-function setupAddressAuto(inputId, prefix) {
-  const input = document.getElementById(inputId);
-  const auto = new google.maps.places.Autocomplete(input, {
-    types: ['address'],
-    fields: ['address_components', 'formatted_address'],
+function setupAuto(inputId, prefix) {
+  const input  = document.getElementById(inputId);
+  const wrap   = input.closest('.form-group');
+  wrap.style.position = 'relative';
+
+  const drop   = document.createElement('ul');
+  drop.className = 'ac-drop';
+  wrap.appendChild(drop);
+
+  const svc    = new google.maps.places.AutocompleteService();
+  const detSvc = new google.maps.places.PlacesService(document.createElement('div'));
+  let   timer;
+
+  input.addEventListener('input', () => {
+    clearTimeout(timer);
+    const q = input.value.trim();
+    if (q.length < 3) { drop.innerHTML = ''; return; }
+    timer = setTimeout(() => {
+      svc.getPlacePredictions({ input: q, types: ['address'] }, (preds, status) => {
+        drop.innerHTML = '';
+        if (status !== google.maps.places.PlacesServiceStatus.OK || !preds) return;
+        preds.forEach(pred => {
+          const li = document.createElement('li');
+          li.className = 'ac-item';
+          li.textContent = pred.description;
+          li.addEventListener('mousedown', e => {
+            e.preventDefault();
+            drop.innerHTML = '';
+            input.value = pred.structured_formatting.main_text;
+            detSvc.getDetails(
+              { placeId: pred.place_id, fields: ['address_components'] },
+              (place, s) => {
+                if (s === google.maps.places.PlacesServiceStatus.OK && place)
+                  fillPlace(place.address_components, prefix);
+              }
+            );
+          });
+          drop.appendChild(li);
+        });
+      });
+    }, 300);
   });
-  auto.addListener('place_changed', () => {
-    const place = auto.getPlace();
-    if (!place.address_components) return;
 
-    let num = '', route = '', city = '', province = '', postal = '', countryCode = '', countryName = '';
-    place.address_components.forEach(c => {
-      const t = c.types[0];
-      if (t === 'street_number')               num         = c.long_name;
-      if (t === 'route')                       route       = c.long_name;
-      if (t === 'locality')                    city        = c.long_name;
-      if (t === 'postal_town' && !city)        city        = c.long_name;
-      if (t === 'administrative_area_level_1') province    = c.short_name;
-      if (t === 'postal_code')                 postal      = c.long_name;
-      if (t === 'country') { countryCode = c.short_name; countryName = c.long_name; }
-    });
+  document.addEventListener('click', e => {
+    if (!wrap.contains(e.target)) drop.innerHTML = '';
+  });
+}
 
-    const street = [num, route].filter(Boolean).join(' ');
-    if (street) document.getElementById(`${prefix}-street`).value = street;
-    if (city)   document.getElementById(`${prefix}-city`).value   = city;
-    if (postal) document.getElementById(`${prefix}-postal`).value = postal;
+function fillPlace(components, prefix) {
+  let num = '', route = '', city = '', province = '', postal = '', countryCode = '', countryName = '';
+  components.forEach(c => {
+    const t = c.types[0];
+    if (t === 'street_number')               num         = c.long_name;
+    if (t === 'route')                       route       = c.long_name;
+    if (t === 'locality')                    city        = c.long_name;
+    if (t === 'postal_town' && !city)        city        = c.long_name;
+    if (t === 'administrative_area_level_1') province    = c.short_name;
+    if (t === 'postal_code')                 postal      = c.long_name;
+    if (t === 'country') { countryCode = c.short_name; countryName = c.long_name; }
+  });
 
-    if (prefix === 's') {
-      if (province)    document.getElementById('s-province').value = province;
-      if (countryName) document.getElementById('s-country').value  = countryName;
+  const streetEl = document.getElementById(`${prefix}-street`);
+  const street   = [num, route].filter(Boolean).join(' ');
+  if (street) streetEl.value = street;
+  if (city)   document.getElementById(`${prefix}-city`).value   = city;
+  if (postal) document.getElementById(`${prefix}-postal`).value = postal;
+
+  if (prefix === 's') {
+    if (province)    document.getElementById('s-province').value = province;
+    if (countryName) document.getElementById('s-country').value  = countryName;
+  } else {
+    const sel = document.getElementById('r-country');
+    const opt = Array.from(sel.options).find(o => o.value === countryCode);
+    if (opt) { sel.value = countryCode; updatePricing(); }
+    if (countryCode === 'CA') {
+      const ps = document.getElementById('r-province');
+      const pm = Array.from(ps.options).find(o => o.text.startsWith(province + ' —'));
+      if (pm) ps.value = pm.value;
     } else {
-      const countrySel = document.getElementById('r-country');
-      const match = Array.from(countrySel.options).find(o => o.value === countryCode);
-      if (match) { countrySel.value = countryCode; updatePricing(); }
-
-      if (countryCode === 'CA') {
-        const provSel = document.getElementById('r-province');
-        const provMatch = Array.from(provSel.options).find(o => o.text.startsWith(province + ' —'));
-        if (provMatch) provSel.value = provMatch.value;
-      } else {
-        document.getElementById('r-province-text').value = province;
-      }
+      document.getElementById('r-province-text').value = province;
     }
-  });
+  }
 }
 
 async function submitOrder() {
