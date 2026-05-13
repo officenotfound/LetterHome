@@ -586,7 +586,8 @@ footer { background: var(--ink); color: rgba(250,246,236,0.65); padding: 48px 36
         <div class="form-group"><label for="r-street">Street Address</label><input id="r-street" type="text" placeholder="456 Oak Avenue, Apt 3"></div>
         <div class="form-grid-2">
           <div class="form-group"><label for="r-city">City</label><input id="r-city" type="text" placeholder="Halifax"></div>
-          <div class="form-group"><label for="r-province">Province / State</label>
+          <div class="form-group" id="province-field">
+            <label for="r-province" id="province-label">Province / State</label>
             <select id="r-province">
               <option value="">Select...</option>
               <option>AB — Alberta</option><option>BC — British Columbia</option>
@@ -595,9 +596,8 @@ footer { background: var(--ink); color: rgba(250,246,236,0.65); padding: 48px 36
               <option>NT — Northwest Territories</option><option>NU — Nunavut</option>
               <option>ON — Ontario</option><option>PE — Prince Edward Island</option>
               <option>QC — Quebec</option><option>SK — Saskatchewan</option><option>YT — Yukon</option>
-              <option disabled>──────────</option>
-              <option>Other / International</option>
             </select>
+            <input id="r-province-text" type="text" placeholder="State / Region / Province" style="display:none">
           </div>
         </div>
         <div class="form-grid-2">
@@ -772,12 +772,32 @@ function updatePricing() {
   document.getElementById('summary-total').textContent   = isDomestic ? '$10 CAD' : '$20 CAD';
   document.getElementById('summary-dest').textContent    = isDomestic ? 'Canada (Domestic)' : 'International';
   document.getElementById('summary-delivery').textContent = isDomestic ? 'Within 2 weeks' : 'Within 4 weeks';
+
+  const sel = document.getElementById('r-province');
+  const txt = document.getElementById('r-province-text');
+  const lbl = document.getElementById('province-label');
+  if (isDomestic) {
+    sel.style.display = '';
+    txt.style.display = 'none';
+    txt.value = '';
+    lbl.textContent = 'Province';
+  } else {
+    sel.style.display = 'none';
+    sel.value = '';
+    txt.style.display = '';
+    lbl.textContent = 'State / Region (optional)';
+  }
 }
 
 function updatePreview() {
   const body = document.getElementById('letter-body').value;
   const el = document.getElementById('preview-body-text');
   if (el) el.textContent = body || 'Your letter will appear here as you type it in Step 2.';
+}
+
+function getRecipientProvince() {
+  const txt = document.getElementById('r-province-text');
+  return txt.style.display === 'none' ? document.getElementById('r-province').value : txt.value;
 }
 
 function buildPreview() {
@@ -843,11 +863,12 @@ async function submitOrder() {
 
   const form = new FormData();
   const ids = ['skip-return','s-name','s-street','s-city','s-province','s-postal','s-country',
-                'r-name','r-street','r-city','r-province','r-postal','r-country','r-email','letter-body'];
+                'r-name','r-street','r-city','r-postal','r-country','r-email','letter-body'];
   ids.forEach(id => {
     const el = document.getElementById(id);
     if (el) form.append(id, el.type === 'checkbox' ? (el.checked ? '1' : '') : el.value);
   });
+  form.append('r-province', getRecipientProvince());
   form.append('letter-type', letterType);
   uploadedFiles.filter(Boolean).forEach(f => form.append('attachments', f));
 
