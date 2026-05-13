@@ -3,7 +3,7 @@ const express = require('express');
 const multer  = require('multer');
 const Stripe  = require('stripe');
 const mailer  = require('nodemailer');
-const Database = require('better-sqlite3');
+const { DatabaseSync: Database } = require('node:sqlite');
 const path = require('path');
 const fs   = require('fs');
 
@@ -13,7 +13,7 @@ const app    = express();
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 
 // ── Database ──────────────────────────────────────────────────────────────────
-const db = new Database('orders.db');
+const db = new Database('orders.db', { allowBareNamedParameters: true });
 db.exec(`
   CREATE TABLE IF NOT EXISTS orders (
     id                 INTEGER PRIMARY KEY AUTOINCREMENT,
