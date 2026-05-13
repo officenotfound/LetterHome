@@ -1,2 +1,2 @@
 # LetterHome
-Send mail in Canada without being there
+Send real mail to Canada from anywhere in the world.
