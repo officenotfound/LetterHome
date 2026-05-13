@@ -9,6 +9,7 @@ const path = require('path');
 const fs   = require('fs');
 
 fs.mkdirSync('uploads', { recursive: true });
+fs.mkdirSync('orders',  { recursive: true });
 
 const app    = express();
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
@@ -59,6 +60,21 @@ const upload = multer({
     cb(null, ['.pdf', '.doc', '.docx'].includes(ext));
   },
 });
+
+// ── Order folder helpers ──────────────────────────────────────────────────────
+function orderDirPath(id, createdAt) {
+  const date = new Date(createdAt).toISOString().slice(0, 10);
+  return path.join(__dirname, 'orders', `${date}_${String(id).padStart(5, '0')}`);
+}
+
+function safeFilePath(dir, originalName) {
+  const ext  = path.extname(originalName);
+  const base = path.basename(originalName, ext);
+  let dest = path.join(dir, originalName);
+  let i = 1;
+  while (fs.existsSync(dest)) dest = path.join(dir, `${base}_${i++}${ext}`);
+  return dest;
+}
 
 // ── Stripe webhook (must come before express.json middleware) ─────────────────
 app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
@@ -124,7 +140,7 @@ app.post('/api/create-order', orderLimiter, upload.array('attachments', 5), asyn
   const isDomestic = b['r-country'] === 'CA';
   const priceCents = isDomestic ? 1000 : 2000;
 
-  const attachmentInfo = (req.files || []).map(f => ({
+  const tempFiles = (req.files || []).map(f => ({
     tempPath:     f.path,
     originalName: f.originalname,
     mimeType:     f.mimetype,
@@ -145,9 +161,51 @@ app.post('/api/create-order', orderLimiter, upload.array('attachments', 5), asyn
     b['r-city']     || null, b['r-province'] || null, b['r-postal'] || null,
     b['r-country']  || 'CA', b['letter-type'] || 'standard',
     b['letter-body'] || null,
-    JSON.stringify(attachmentInfo),
+    '[]',
     priceCents
   );
+
+  const orderId  = row.lastInsertRowid;
+  const now      = new Date();
+  const orderDir = orderDirPath(orderId, now);
+  fs.mkdirSync(orderDir, { recursive: true });
+
+  const movedFiles = tempFiles.map(f => {
+    const dest = safeFilePath(orderDir, f.originalName);
+    fs.renameSync(f.tempPath, dest);
+    return { path: dest, originalName: f.originalName, mimeType: f.mimeType };
+  });
+
+  if (b['letter-body']) {
+    fs.writeFileSync(path.join(orderDir, 'letter.txt'), b['letter-body'], 'utf8');
+  }
+
+  fs.writeFileSync(path.join(orderDir, 'order.json'), JSON.stringify({
+    id:             orderId,
+    created:        now.toISOString(),
+    customer_email: rEmail,
+    recipient: {
+      name: rName, street: rStreet,
+      city:     b['r-city']     || null,
+      province: b['r-province'] || null,
+      postal:   b['r-postal']   || null,
+      country:  b['r-country']  || 'CA',
+    },
+    sender: b['skip-return'] ? null : {
+      name:     b['s-name']     || null,
+      street:   b['s-street']   || null,
+      city:     b['s-city']     || null,
+      province: b['s-province'] || null,
+      postal:   b['s-postal']   || null,
+      country:  b['s-country']  || null,
+    },
+    letter_type:  b['letter-type'] || 'standard',
+    price_cents:  priceCents,
+    attachments:  movedFiles.map(f => path.basename(f.path)),
+  }, null, 2), 'utf8');
+
+  db.prepare('UPDATE orders SET attachment_info = ? WHERE id = ?')
+    .run(JSON.stringify(movedFiles), orderId);
 
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ['card'],
@@ -166,11 +224,11 @@ app.post('/api/create-order', orderLimiter, upload.array('attachments', 5), asyn
     mode: 'payment',
     success_url: `${process.env.BASE_URL}/order-success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url:  `${process.env.BASE_URL}/send`,
-    metadata: { order_id: String(row.lastInsertRowid) },
+    metadata: { order_id: String(orderId) },
   });
 
   db.prepare('UPDATE orders SET stripe_session_id = ? WHERE id = ?')
-    .run(session.id, row.lastInsertRowid);
+    .run(session.id, orderId);
 
   res.json({ checkoutUrl: session.url });
 });
@@ -263,8 +321,8 @@ async function fulfillOrder(sessionId) {
 
   const attachInfos = order.attachment_info ? JSON.parse(order.attachment_info) : [];
   const emailAttachments = attachInfos
-    .filter(a => fs.existsSync(a.tempPath))
-    .map(a => ({ filename: a.originalName, path: a.tempPath }));
+    .filter(a => fs.existsSync(a.path))
+    .map(a => ({ filename: a.originalName, path: a.path }));
 
   await transport.sendMail({
     from:        process.env.EMAIL_FROM,
@@ -281,11 +339,11 @@ async function fulfillOrder(sessionId) {
     html:    buildCustomerEmail(order, toAddr, amountCAD, isDomestic),
   });
 
-  // Delete uploaded files after 7 days
-  const filePaths = emailAttachments.map(a => a.path);
-  if (filePaths.length) {
-    setTimeout(() => filePaths.forEach(p => { try { fs.unlinkSync(p); } catch {} }), 7 * 86400 * 1000);
-  }
+  // Delete entire order folder after 7 days per privacy policy
+  const orderDir = orderDirPath(order.id, order.created_at);
+  setTimeout(() => {
+    try { fs.rmSync(orderDir, { recursive: true, force: true }); } catch {}
+  }, 7 * 86400 * 1000);
 }
 
 function buildOperatorEmail(o, fromAddr, toAddr, amountCAD, attachCount) {
