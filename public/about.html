@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en-CA">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>About — Letterhome</title>
+<meta name="description" content="Letterhome is a one-person mail service for Canadians abroad. Real letters, printed and mailed from Canada on your behalf.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--kraft:#ede5d3;--kraft-deep:#e1d6bd;--kraft-light:#f7f2e6;--paper:#faf6ec;--ink:#2a2a2a;--ink-soft:#3a3835;--ink-muted:#6b6258;--ink-faint:#968b7d;--red:#a8472d;--red-deep:#7d3220;--red-stamp:#b85540;--line:rgba(42,42,42,0.14);--shadow-card:0 2px 6px rgba(42,42,42,0.06),0 14px 40px rgba(42,42,42,0.1)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--kraft);color:var(--ink);line-height:1.6;min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:1;opacity:0.5;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.16 0 0 0 0 0.13 0 0 0 0 0.08 0 0 0 0.08 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+nav{position:sticky;top:0;z-index:100;background:rgba(237,229,211,0.94);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.nav-inner{max-width:1280px;margin:0 auto;padding:20px 36px;display:flex;align-items:center;justify-content:space-between;gap:24px}
+.logo{display:flex;align-items:center;gap:12px;font-family:'DM Serif Display',serif;font-size:26px;color:var(--ink);text-decoration:none}
+.logo-mark{width:38px;height:38px;background:var(--red);display:grid;place-items:center;border-radius:2px;color:var(--paper);font-family:'DM Serif Display',serif;font-size:22px;position:relative;box-shadow:0 1px 3px rgba(0,0,0,0.15)}
+.logo-mark::before{content:'';position:absolute;inset:-3px;border:1px dashed var(--ink);border-radius:4px;opacity:0.5}
+.nav-links{display:flex;gap:36px;align-items:center}
+.nav-links a{color:var(--ink-soft);text-decoration:none;font-size:14px;font-weight:500;transition:color 0.2s}
+.nav-links a:hover{color:var(--red)}
+.btn{display:inline-block;padding:13px 26px;border-radius:2px;font-weight:500;font-size:14px;text-decoration:none;transition:all 0.25s;border:none;cursor:pointer;font-family:inherit;letter-spacing:0.02em;text-transform:uppercase}
+.btn-red{background:var(--red);color:var(--paper)}
+.btn-red:hover{background:var(--red-deep);transform:translateY(-1px)}
+.btn-outline{background:transparent;color:var(--ink);border:1.5px solid var(--ink)}
+.btn-outline:hover{background:var(--ink);color:var(--paper)}
+.btn-large{padding:18px 36px;font-size:14px}
+/* Hero */
+.hero{max-width:1280px;margin:0 auto;padding:80px 36px;position:relative;z-index:2}
+.eyebrow{display:inline-flex;align-items:center;gap:12px;font-family:'DM Mono',monospace;font-size:12px;text-transform:uppercase;letter-spacing:0.18em;color:var(--red);font-weight:500;margin-bottom:28px}
+.eyebrow::before{content:'';width:40px;height:1px;background:var(--red)}
+h1{font-family:'DM Serif Display',serif;font-size:clamp(46px,6vw,80px);font-weight:400;letter-spacing:-0.025em;margin-bottom:28px;line-height:1.0;max-width:820px}
+h1 em{font-style:italic;color:var(--red)}
+.hero p{font-size:20px;color:var(--ink-muted);max-width:620px;line-height:1.65;margin-bottom:44px}
+/* Story section */
+.story{background:var(--ink);color:var(--paper);padding:110px 0;border-top:4px solid var(--red);border-bottom:4px solid var(--red);position:relative;z-index:2}
+.story-inner{max-width:1280px;margin:0 auto;padding:0 36px;display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:start}
+.story h2{font-family:'DM Serif Display',serif;font-size:clamp(36px,4.5vw,56px);font-weight:400;letter-spacing:-0.025em;margin-bottom:28px;line-height:1.05}
+.story h2 em{font-style:italic;color:var(--red-stamp)}
+.story p{font-size:17px;line-height:1.75;color:rgba(250,246,236,0.82);margin-bottom:20px}
+.story .eyebrow{color:var(--red-stamp)}
+.story .eyebrow::before{background:var(--red-stamp)}
+.manifesto{padding:40px;background:rgba(250,246,236,0.05);border-left:3px solid var(--red-stamp)}
+.manifesto p{font-family:'DM Serif Display',serif;font-style:italic;font-size:22px;line-height:1.5;color:var(--paper);margin-bottom:0}
+/* Values */
+.values{position:relative;z-index:2}
+.values-inner{max-width:1280px;margin:0 auto;padding:110px 36px}
+.values h2{font-family:'DM Serif Display',serif;font-size:clamp(36px,4.5vw,56px);font-weight:400;letter-spacing:-0.025em;margin-bottom:72px;line-height:1.05}
+.values h2 em{font-style:italic;color:var(--red)}
+.values-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-top:1px solid var(--line);border-left:1px solid var(--line)}
+.value{padding:44px 36px;border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+.value-num{font-family:'DM Mono',monospace;font-size:11px;color:var(--red);letter-spacing:0.15em;margin-bottom:20px}
+.value h3{font-family:'DM Serif Display',serif;font-size:24px;font-weight:400;margin-bottom:14px;letter-spacing:-0.01em}
+.value p{font-size:15px;color:var(--ink-muted);line-height:1.7;margin-bottom:0}
+/* CTA */
+.cta{background:var(--paper);text-align:center;padding:110px 36px;border-top:1px solid var(--line);position:relative;z-index:2}
+.cta h2{font-family:'DM Serif Display',serif;font-size:clamp(36px,5vw,60px);font-weight:400;letter-spacing:-0.025em;margin-bottom:20px;line-height:1.05}
+.cta h2 em{font-style:italic;color:var(--red)}
+.cta p{font-size:18px;color:var(--ink-muted);max-width:540px;margin:0 auto 40px;line-height:1.6}
+footer{background:var(--ink);color:rgba(250,246,236,0.65);padding:48px 36px 32px;position:relative;z-index:2}
+.footer-bottom{max-width:1280px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;flex-wrap:wrap;gap:16px}
+.footer-bottom-links{display:flex;gap:28px}
+.footer-bottom a{color:rgba(250,246,236,0.5);text-decoration:none}
+.footer-bottom a:hover{color:var(--red-stamp)}
+@media(max-width:900px){.nav-links{display:none}.story-inner{grid-template-columns:1fr;gap:56px}.values-grid{grid-template-columns:1fr}.hero{padding:48px 24px 64px}.values-inner{padding:72px 24px}.story{padding:72px 0}.cta{padding:72px 24px}}
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-inner">
+    <a href="/" class="logo"><span class="logo-mark">L</span>Letterhome</a>
+    <div class="nav-links">
+      <a href="/#how">How it works</a>
+      <a href="/#pricing">Pricing</a>
+      <a href="/contact">Contact</a>
+      <a href="/send" class="btn btn-red">Send a Letter</a>
+    </div>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="eyebrow">About Letterhome</div>
+  <h1>One person. One printer. <em>Every letter</em>.</h1>
+  <p>Letterhome is a small, personally-run mail service for Canadians who are somewhere else. Every order is handled by a real person — printed, folded, sealed, stamped, and walked to the post office.</p>
+  <div style="display:flex;gap:14px;flex-wrap:wrap">
+    <a href="/send" class="btn btn-red btn-large">Send a Letter</a>
+    <a href="/contact" class="btn btn-outline btn-large">Get in touch</a>
+  </div>
+</div>
+
+<section class="story">
+  <div class="story-inner">
+    <div>
+      <div class="eyebrow">The origin</div>
+      <h2>Built for a <em>gap nobody warned you about</em>.</h2>
+      <p>Living outside Canada comes with a specific paperwork problem. The CRA still wants signed documents. Banks still send statements by post. Your mum still appreciates a real card. And you're in Berlin, or Bangkok, or Auckland — with no practical way to put something in the Canadian mail.</p>
+      <p>Letterhome started as a solution to that problem. The premise is simple: you write the letter, we take care of everything between your screen and the recipient's letterbox.</p>
+      <p>There's no algorithm deciding what gets mailed. No automated quality check. Every order goes through me before it leaves. That's by design.</p>
+    </div>
+    <div class="manifesto">
+      <p>I started this because I needed it myself. The service I wanted didn't exist — so I built it, and I still run every order personally. That's not a limitation. That's the point.</p>
+    </div>
+  </div>
+</section>
+
+<section class="values">
+  <div class="values-inner">
+    <h2>How we <em>operate</em>.</h2>
+    <div class="values-grid">
+      <div class="value">
+        <div class="value-num">01</div>
+        <h3>Human review, every time</h3>
+        <p>Every order is read and checked by a real person before printing. If something looks off — wrong address, garbled content, anything — you get a message before anything is printed or charged.</p>
+      </div>
+      <div class="value">
+        <div class="value-num">02</div>
+        <h3>No unnecessary data storage</h3>
+        <p>Your letter content is used to print your letter and then deleted. We don't keep it, analyse it, or use it for anything else. The order record we retain is the minimum required by Canadian tax law.</p>
+      </div>
+      <div class="value">
+        <div class="value-num">03</div>
+        <h3>Flat, honest pricing</h3>
+        <p>$10 domestic. $16 international. That's it. No per-page charges, no platform fees, no surprise add-ons at checkout. The price you see is the price you pay.</p>
+      </div>
+      <div class="value">
+        <div class="value-num">04</div>
+        <h3>Stripe for payments</h3>
+        <p>We don't see or store your card details. Payment goes through Stripe — the same processor used by millions of businesses worldwide. Your financial information never touches our systems.</p>
+      </div>
+      <div class="value">
+        <div class="value-num">05</div>
+        <h3>Canada Post for delivery</h3>
+        <p>Your letter enters Canada Post's network — the same postal system your letter would have used if you'd mailed it yourself from a Canadian address. Same postmark, same service, same reliability.</p>
+      </div>
+      <div class="value">
+        <div class="value-num">06</div>
+        <h3>Direct accountability</h3>
+        <p>There's no support ticket queue. If something goes wrong with your order, you're talking to the same person who handled it. Problems get fixed the same day, not routed through a helpdesk.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="cta">
+  <h2>Ready to send something <em>home</em>?</h2>
+  <p>It takes about three minutes. Write your letter, pay, and we'll handle the rest.</p>
+  <a href="/send" class="btn btn-red btn-large">Send Your First Letter — $10 CAD</a>
+</section>
+
+<footer>
+  <div class="footer-bottom">
+    <div>© 2026 Letterhome · Made for Canadians abroad</div>
+    <div class="footer-bottom-links">
+      <a href="/privacy">Privacy</a>
+      <a href="/terms">Terms</a>
+    </div>
+  </div>
+</footer>
+</body>
+</html>

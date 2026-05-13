@@ -327,14 +327,14 @@ footer { background: var(--ink); color: rgba(250,246,236,0.65); padding: 48px 36
 
 <nav>
   <div class="nav-inner">
-    <a href="index.html" class="logo">
+    <a href="/" class="logo">
       <span class="logo-mark">L</span>
       Letterhome
     </a>
     <div class="nav-links">
-      <a href="index.html#how">How it works</a>
-      <a href="index.html#pricing">Pricing</a>
-      <a href="index.html#faq">FAQ</a>
+      <a href="/#how">How it works</a>
+      <a href="/#pricing">Pricing</a>
+      <a href="/#faq">FAQ</a>
     </div>
   </div>
 </nav>
@@ -519,7 +519,7 @@ footer { background: var(--ink); color: rgba(250,246,236,0.65); padding: 48px 36
     <div class="order-summary">
       <div class="order-summary-row"><span class="label">Service</span><span class="val" id="summary-service">Standard Letter</span></div>
       <div class="order-summary-row"><span class="label">Destination</span><span class="val" id="summary-dest">Canada (Domestic)</span></div>
-      <div class="order-summary-row"><span class="label">Delivery estimate</span><span class="val" id="summary-delivery">2–4 business days</span></div>
+      <div class="order-summary-row"><span class="label">Delivery estimate</span><span class="val" id="summary-delivery">Within 2 weeks</span></div>
       <div class="order-summary-row"><span class="label">Includes</span><span class="val">Print · Envelope · Postage · Delivery</span></div>
       <div class="order-summary-row total"><span class="label" style="color:rgba(250,246,236,0.7)">Total</span><span class="val" id="summary-total">$10 CAD</span></div>
     </div>
@@ -531,7 +531,7 @@ footer { background: var(--ink); color: rgba(250,246,236,0.65); padding: 48px 36
 
     <div class="check-row">
       <input type="checkbox" id="agree-terms">
-      <label for="agree-terms">I agree to the <a href="terms.html" style="color:var(--red)">Terms of Service</a> and <a href="privacy.html" style="color:var(--red)">Privacy Policy</a>. I confirm this letter does not contain threats, scams, or illegal content.</label>
+      <label for="agree-terms">I agree to the <a href="/terms" style="color:var(--red)">Terms of Service</a> and <a href="/privacy" style="color:var(--red)">Privacy Policy</a>. I confirm this letter does not contain threats, scams, or illegal content.</label>
     </div>
 
     <div class="panel-nav">
@@ -547,9 +547,9 @@ footer { background: var(--ink); color: rgba(250,246,236,0.65); padding: 48px 36
     <div class="footer-bottom">
       <div>© 2026 Letterhome · For Canadians abroad</div>
       <div class="footer-bottom-links">
-        <a href="privacy.html">Privacy</a>
-        <a href="terms.html">Terms</a>
-        <a href="index.html">Home</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/terms">Terms</a>
+        <a href="/">Home</a>
       </div>
     </div>
   </div>
@@ -558,6 +558,7 @@ footer { background: var(--ink); color: rgba(250,246,236,0.65); padding: 48px 36
 <script>
 let currentStep = 1;
 let letterType = 'standard';
+let uploadedFiles = [];
 
 function goTo(step) {
   document.getElementById('panel-' + currentStep).classList.remove('active');
@@ -565,14 +566,14 @@ function goTo(step) {
   document.getElementById('panel-' + step).classList.add('active');
   updateStepUI();
   if (step === 3) buildPreview();
-  window.scrollTo({top: 0, behavior: 'smooth'});
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function updateStepUI() {
   for (let i = 1; i <= 3; i++) {
     const c = document.getElementById('circle-' + i);
     const l = document.getElementById('label-' + i);
-    c.classList.remove('active','done');
+    c.classList.remove('active', 'done');
     l.classList.remove('active');
     if (i < currentStep) { c.classList.add('done'); c.textContent = '✓'; }
     else if (i === currentStep) { c.classList.add('active'); setCircleLabel(c, i); l.classList.add('active'); }
@@ -585,8 +586,7 @@ function updateStepUI() {
 }
 
 function setCircleLabel(el, i) {
-  const labels = ['i','ii','iii'];
-  if (!el.classList.contains('done')) el.textContent = labels[i-1];
+  if (!el.classList.contains('done')) el.textContent = ['i','ii','iii'][i - 1];
 }
 
 function toggleReturn(cb) {
@@ -601,12 +601,11 @@ function selectType(el, type) {
 }
 
 function updatePricing() {
-  const country = document.getElementById('r-country').value;
-  const isDomestic = country === 'CA';
-  document.getElementById('preview-price').textContent = isDomestic ? '$10' : '$16';
-  document.getElementById('summary-total').textContent = isDomestic ? '$10 CAD' : '$16 CAD';
-  document.getElementById('summary-dest').textContent = isDomestic ? 'Canada (Domestic)' : 'International';
-  document.getElementById('summary-delivery').textContent = isDomestic ? '2–4 business days' : '6–10 business days';
+  const isDomestic = document.getElementById('r-country').value === 'CA';
+  document.getElementById('preview-price').textContent   = isDomestic ? '$10' : '$16';
+  document.getElementById('summary-total').textContent   = isDomestic ? '$10 CAD' : '$16 CAD';
+  document.getElementById('summary-dest').textContent    = isDomestic ? 'Canada (Domestic)' : 'International';
+  document.getElementById('summary-delivery').textContent = isDomestic ? 'Within 2 weeks' : 'Within 4 weeks';
 }
 
 function updatePreview() {
@@ -616,50 +615,89 @@ function updatePreview() {
 }
 
 function buildPreview() {
-  const sName = document.getElementById('s-name').value;
-  const sStreet = document.getElementById('s-street').value;
-  const sCity = document.getElementById('s-city').value;
-  const sProvince = document.getElementById('s-province').value;
-  const sCountry = document.getElementById('s-country').value;
   const skipReturn = document.getElementById('skip-return').checked;
+  const sName     = document.getElementById('s-name').value;
+  const sStreet   = document.getElementById('s-street').value;
+  const sCity     = document.getElementById('s-city').value;
+  const sProvince = document.getElementById('s-province').value;
+  const sCountry  = document.getElementById('s-country').value;
+  const rName     = document.getElementById('r-name').value;
+  const rStreet   = document.getElementById('r-street').value;
+  const rCity     = document.getElementById('r-city').value;
+  const rPostal   = document.getElementById('r-postal').value;
 
-  const rName = document.getElementById('r-name').value;
-  const rStreet = document.getElementById('r-street').value;
-  const rCity = document.getElementById('r-city').value;
-  const rPostal = document.getElementById('r-postal').value;
-
-  const fromLines = skipReturn ? 'No return address' :
-    [sName, sStreet, sCity + (sProvince ? ', ' + sProvince : ''), sCountry].filter(Boolean).join('\n');
+  const fromLines = skipReturn ? 'No return address'
+    : [sName, sStreet, sCity + (sProvince ? ', ' + sProvince : ''), sCountry].filter(Boolean).join('\n');
   const toLines = [rName, rStreet, rCity + (rPostal ? '  ' + rPostal : '')].filter(Boolean).join('\n');
 
   document.getElementById('preview-from-text').textContent = fromLines || '—';
-  document.getElementById('preview-to-text').textContent = toLines || '—';
+  document.getElementById('preview-to-text').textContent   = toLines   || '—';
+  document.getElementById('preview-body-text').textContent =
+    document.getElementById('letter-body').value || 'No message entered.';
 
-  const body = document.getElementById('letter-body').value;
-  document.getElementById('preview-body-text').textContent = body || 'No message entered.';
-
-  const typeLabels = {standard: 'Standard Letter', legal: 'Legal / Formal', card: 'Card / Note'};
+  const typeLabels = { standard: 'Standard Letter', legal: 'Legal / Formal', card: 'Card / Note' };
   document.getElementById('summary-service').textContent = typeLabels[letterType] || 'Standard Letter';
-
   updatePricing();
 }
 
 function handleFiles(input) {
   const list = document.getElementById('attach-list');
   Array.from(input.files).forEach(f => {
+    uploadedFiles.push(f);
     const li = document.createElement('li');
-    li.innerHTML = '<span>📄</span><span>' + f.name + '</span><span style="font-size:11px;color:var(--ink-faint);margin-left:4px;">(' + (f.size / 1024).toFixed(0) + ' KB)</span><button class="remove" onclick="this.parentElement.remove()">×</button>';
+    const idx = uploadedFiles.length - 1;
+    li.innerHTML =
+      '<span>📄</span>' +
+      '<span>' + f.name + '</span>' +
+      '<span style="font-size:11px;color:var(--ink-faint);margin-left:4px;">(' + (f.size / 1024).toFixed(0) + ' KB)</span>' +
+      '<button class="remove" onclick="removeFile(' + idx + ', this)">×</button>';
     list.appendChild(li);
   });
   input.value = '';
 }
 
-function submitOrder() {
-  const agreed = document.getElementById('agree-terms').checked;
-  if (!agreed) { alert('Please agree to the Terms of Service before proceeding.'); return; }
-  const rName = document.getElementById('r-name').value;
-  if (!rName) { goTo(1); alert('Please enter the recipient name before proceeding.'); return; }
-  alert('This is a demo — Stripe payment integration coming soon. Your order details have been captured.');
+function removeFile(idx, btn) {
+  uploadedFiles[idx] = null;
+  btn.parentElement.remove();
+}
+
+async function submitOrder() {
+  if (!document.getElementById('agree-terms').checked) {
+    alert('Please agree to the Terms of Service before proceeding.');
+    return;
+  }
+  const rName  = document.getElementById('r-name').value.trim();
+  const rEmail = document.getElementById('r-email').value.trim();
+  if (!rName)  { goTo(1); alert('Please enter the recipient name before proceeding.'); return; }
+  if (!rEmail) { goTo(1); alert('Please enter your email address before proceeding.'); return; }
+
+  const btn = document.querySelector('[onclick="submitOrder()"]');
+  btn.disabled = true;
+  btn.textContent = 'Processing…';
+
+  const form = new FormData();
+  const ids = ['skip-return','s-name','s-street','s-city','s-province','s-postal','s-country',
+                'r-name','r-street','r-city','r-province','r-postal','r-country','r-email','letter-body'];
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) form.append(id, el.type === 'checkbox' ? (el.checked ? '1' : '') : el.value);
+  });
+  form.append('letter-type', letterType);
+  uploadedFiles.filter(Boolean).forEach(f => form.append('attachments', f));
+
+  try {
+    const res  = await fetch('/api/create-order', { method: 'POST', body: form });
+    const data = await res.json();
+    if (data.checkoutUrl) {
+      window.location.href = data.checkoutUrl;
+    } else {
+      throw new Error(data.error || 'Unknown error');
+    }
+  } catch (err) {
+    btn.disabled = false;
+    btn.textContent = 'Pay & Send Letter →';
+    alert('Something went wrong: ' + err.message + '\nPlease try again or contact us.');
+  }
 }
 </script>
 </body>
