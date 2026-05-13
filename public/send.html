@@ -904,10 +904,14 @@ async function submitOrder() {
     alert('Please agree to the Terms of Service before proceeding.');
     return;
   }
-  const rName  = document.getElementById('r-name').value.trim();
-  const rEmail = document.getElementById('r-email').value.trim();
-  if (!rName)  { goTo(1); alert('Please enter the recipient name before proceeding.'); return; }
-  if (!rEmail) { goTo(1); alert('Please enter your email address before proceeding.'); return; }
+  const rName   = document.getElementById('r-name').value.trim();
+  const rStreet = document.getElementById('r-street').value.trim();
+  const rEmail  = document.getElementById('r-email').value.trim();
+  const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(rEmail);
+  if (!rName)   { goTo(1); alert('Please enter the recipient\'s full name.'); return; }
+  if (!rStreet) { goTo(1); alert('Please enter the recipient\'s street address.'); return; }
+  if (!rEmail)  { goTo(1); alert('Please enter your email address so we can send your confirmation.'); return; }
+  if (!emailOk) { goTo(1); alert('That email address doesn\'t look right — please double-check it.'); return; }
 
   const btn = document.querySelector('[onclick="submitOrder()"]');
   btn.disabled = true;
