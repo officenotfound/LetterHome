@@ -1,0 +1,1480 @@
+<!DOCTYPE html>
+<html lang="en-CA">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Letterhome — Send Real Mail to Canada from Anywhere in the World</title>
+<meta name="description" content="Letterhome lets Canadians abroad send physical letters, legal documents, and cards back home. We print, stamp, and mail it for you. From $10 CAD.">
+<meta name="keywords" content="send mail to canada, canadian expat mail service, mail letters from abroad, send documents canada from overseas, canadian mail forwarding, send physical mail online">
+<meta property="og:title" content="Letterhome — Send Real Mail to Canada from Anywhere">
+<meta property="og:description" content="For Canadians abroad. Write online, we mail it home. From $10 CAD, anywhere in the world.">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="en_CA">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --kraft: #ede5d3;
+  --kraft-deep: #e1d6bd;
+  --kraft-light: #f7f2e6;
+  --paper: #faf6ec;
+  --ink: #2a2a2a;
+  --ink-soft: #3a3835;
+  --ink-muted: #6b6258;
+  --ink-faint: #968b7d;
+  --red: #a8472d;
+  --red-deep: #7d3220;
+  --red-stamp: #b85540;
+  --taupe: #8a7f70;
+  --line: rgba(42,42,42,0.14);
+  --line-soft: rgba(42,42,42,0.08);
+  --shadow-soft: 0 1px 2px rgba(42,42,42,0.04), 0 6px 20px rgba(42,42,42,0.06);
+  --shadow-card: 0 2px 6px rgba(42,42,42,0.06), 0 14px 40px rgba(42,42,42,0.1);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background: var(--kraft);
+  color: var(--ink);
+  line-height: 1.6;
+  font-size: 16px;
+  overflow-x: hidden;
+}
+
+/* Kraft paper texture */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.5;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.16 0 0 0 0 0.13 0 0 0 0 0.08 0 0 0 0.08 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.serif { font-family: 'DM Serif Display', Georgia, serif; }
+.mono { font-family: 'DM Mono', monospace; }
+
+/* ========== NAV ========== */
+nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(237,229,211,0.94);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--line);
+}
+
+.nav-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 20px 36px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: 'DM Serif Display', serif;
+  font-size: 26px;
+  color: var(--ink);
+  text-decoration: none;
+  letter-spacing: -0.01em;
+}
+
+.logo-mark {
+  width: 38px;
+  height: 38px;
+  background: var(--red);
+  display: grid;
+  place-items: center;
+  border-radius: 2px;
+  color: var(--paper);
+  font-family: 'DM Serif Display', serif;
+  font-size: 22px;
+  line-height: 1;
+  position: relative;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+
+.logo-mark::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border: 1px dashed var(--ink);
+  border-radius: 4px;
+  opacity: 0.5;
+}
+
+.nav-links {
+  display: flex;
+  gap: 36px;
+  align-items: center;
+}
+
+.nav-links a {
+  color: var(--ink-soft);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 0.2s;
+  letter-spacing: 0.01em;
+}
+
+.nav-links a:hover { color: var(--red); }
+
+.btn {
+  display: inline-block;
+  padding: 13px 26px;
+  border-radius: 2px;
+  font-weight: 500;
+  font-size: 14px;
+  text-decoration: none;
+  transition: all 0.25s ease;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.btn-primary {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.btn-primary:hover {
+  background: var(--ink-soft);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(42,42,42,0.25);
+}
+
+.btn-red {
+  background: var(--red);
+  color: var(--paper);
+}
+
+.btn-red:hover {
+  background: var(--red-deep);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(168,71,45,0.3);
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--ink);
+  border: 1.5px solid var(--ink);
+}
+
+.btn-outline:hover {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+/* ========== HERO ========== */
+.hero {
+  position: relative;
+  padding: 80px 36px 100px;
+  max-width: 1280px;
+  margin: 0 auto;
+  z-index: 2;
+}
+
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 80px;
+  align-items: center;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--red);
+  font-weight: 500;
+  margin-bottom: 32px;
+}
+
+.eyebrow::before {
+  content: '';
+  width: 40px;
+  height: 1px;
+  background: var(--red);
+}
+
+h1 {
+  font-family: 'DM Serif Display', serif;
+  font-size: clamp(46px, 6.5vw, 84px);
+  line-height: 1.0;
+  font-weight: 400;
+  letter-spacing: -0.025em;
+  color: var(--ink);
+  margin-bottom: 32px;
+}
+
+h1 em {
+  font-style: italic;
+  color: var(--red);
+}
+
+.hero-lede {
+  font-size: 19px;
+  line-height: 1.55;
+  color: var(--ink-muted);
+  margin-bottom: 44px;
+  max-width: 520px;
+}
+
+.hero-cta {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 36px;
+}
+
+.btn-large {
+  padding: 18px 36px;
+  font-size: 14px;
+}
+
+.hero-meta {
+  display: flex;
+  gap: 32px;
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  color: var(--ink-muted);
+  flex-wrap: wrap;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.hero-meta span {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.hero-meta .dot {
+  width: 4px;
+  height: 4px;
+  background: var(--red);
+}
+
+/* Hero visual — parcel/envelope illustration */
+.envelope-stage {
+  position: relative;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  min-height: 460px;
+}
+
+.envelope {
+  width: 100%;
+  max-width: 460px;
+  aspect-ratio: 1.55;
+  background: var(--paper);
+  border-radius: 2px;
+  box-shadow: var(--shadow-card);
+  position: relative;
+  transform: rotate(-2.5deg);
+  border: 1px solid rgba(42,42,42,0.1);
+  padding: 28px 32px;
+  font-family: 'DM Serif Display', serif;
+}
+
+/* Airmail stripes */
+.envelope::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(45deg, var(--red) 0px, var(--red) 6px, transparent 6px, transparent 12px, var(--ink) 12px, var(--ink) 18px, transparent 18px, transparent 24px);
+  -webkit-mask: linear-gradient(#000, #000) content-box, linear-gradient(#000, #000);
+  mask: linear-gradient(#000, #000) content-box, linear-gradient(#000, #000);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  padding: 8px;
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+.stamp {
+  position: absolute;
+  top: 22px;
+  right: 22px;
+  width: 76px;
+  height: 92px;
+  background: var(--red-stamp);
+  color: var(--paper);
+  border-radius: 0;
+  display: grid;
+  place-items: center;
+  font-family: 'DM Serif Display', serif;
+  font-size: 13px;
+  text-align: center;
+  line-height: 1.1;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+  z-index: 3;
+  transform: rotate(5deg);
+  /* perforated edges */
+  background-image:
+    radial-gradient(circle at 0% 50%, transparent 4px, var(--red-stamp) 4px),
+    radial-gradient(circle at 100% 50%, transparent 4px, var(--red-stamp) 4px),
+    radial-gradient(circle at 50% 0%, transparent 4px, var(--red-stamp) 4px),
+    radial-gradient(circle at 50% 100%, transparent 4px, var(--red-stamp) 4px);
+  background-size: 8px 8px;
+  background-repeat: repeat-y, repeat-y, repeat-x, repeat-x;
+  background-position: left top, right top, top left, bottom left;
+}
+
+.stamp-inner {
+  border: 1px solid var(--paper);
+  padding: 8px 10px;
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+}
+
+.stamp-inner strong {
+  font-size: 18px;
+  display: block;
+  font-weight: 400;
+}
+
+.postmark {
+  position: absolute;
+  top: 48%;
+  left: 32%;
+  transform: translate(-50%, -50%) rotate(-14deg);
+  width: 130px;
+  height: 130px;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  opacity: 0.4;
+  z-index: 1;
+  text-align: center;
+  font-family: 'DM Mono', monospace;
+  color: var(--ink);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  line-height: 1.4;
+  padding: 16px;
+}
+
+.postmark::before {
+  content: '';
+  position: absolute;
+  inset: 7px;
+  border: 1px solid var(--ink);
+  border-radius: 50%;
+}
+
+.postmark::after {
+  content: '';
+  position: absolute;
+  left: -12px;
+  right: -12px;
+  top: 50%;
+  border-top: 1px solid var(--ink);
+  transform: translateY(-50%);
+  opacity: 0.5;
+}
+
+.address {
+  position: relative;
+  z-index: 2;
+  margin-top: 100px;
+  font-size: 18px;
+  color: var(--ink-soft);
+  line-height: 1.4;
+  letter-spacing: 0.01em;
+}
+
+.address-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--ink-muted);
+  font-weight: 500;
+  margin-bottom: 10px;
+}
+
+.floating-letter {
+  position: absolute;
+  background: var(--paper);
+  border-radius: 2px;
+  box-shadow: var(--shadow-card);
+  border: 1px solid rgba(42,42,42,0.1);
+  padding: 18px;
+  font-family: 'DM Serif Display', serif;
+  font-size: 11px;
+  color: var(--ink-muted);
+  line-height: 1.7;
+}
+
+.floating-letter.fl-1 {
+  width: 130px;
+  height: 165px;
+  top: 5%;
+  left: -4%;
+  transform: rotate(-14deg);
+  z-index: -1;
+}
+
+.floating-letter.fl-2 {
+  width: 115px;
+  height: 145px;
+  bottom: 3%;
+  right: 0%;
+  transform: rotate(9deg);
+  z-index: -1;
+}
+
+.floating-letter .corner-stamp {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 24px;
+  height: 28px;
+  background: var(--red);
+  border-radius: 1px;
+}
+
+.floating-letter::before {
+  content: '';
+  display: block;
+  height: 1px;
+  background: var(--line);
+  margin: 8px 0;
+  margin-top: 28px;
+}
+
+.floating-letter span {
+  font-family: 'DM Mono', monospace;
+  font-size: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--ink-muted);
+}
+
+/* ========== TICKER ========== */
+.ticker {
+  background: var(--ink);
+  color: var(--kraft);
+  padding: 22px 0;
+  overflow: hidden;
+  position: relative;
+  z-index: 2;
+  border-top: 4px solid var(--red);
+  border-bottom: 4px solid var(--red);
+}
+
+.ticker-track {
+  display: flex;
+  gap: 64px;
+  white-space: nowrap;
+  animation: scroll 50s linear infinite;
+  font-family: 'DM Serif Display', serif;
+  font-style: italic;
+  font-size: 22px;
+}
+
+.ticker-track span {
+  display: inline-flex;
+  align-items: center;
+  gap: 64px;
+}
+
+.ticker-track span::after {
+  content: '✺';
+  color: var(--red-stamp);
+  font-style: normal;
+  font-size: 20px;
+}
+
+@keyframes scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+/* ========== SECTIONS ========== */
+section { position: relative; z-index: 2; }
+
+.section-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 110px 36px;
+}
+
+.section-head {
+  margin-bottom: 72px;
+  max-width: 760px;
+}
+
+.section-head h2 {
+  font-family: 'DM Serif Display', serif;
+  font-size: clamp(38px, 5vw, 64px);
+  line-height: 1.05;
+  font-weight: 400;
+  letter-spacing: -0.025em;
+  margin-bottom: 24px;
+}
+
+.section-head h2 em {
+  font-style: italic;
+  color: var(--red);
+}
+
+.section-head p {
+  font-size: 18px;
+  color: var(--ink-muted);
+  max-width: 580px;
+  line-height: 1.6;
+}
+
+/* ========== HOW IT WORKS ========== */
+.steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 48px;
+  position: relative;
+}
+
+.steps::before {
+  content: '';
+  position: absolute;
+  top: 40px;
+  left: 12%;
+  right: 12%;
+  height: 1px;
+  background: repeating-linear-gradient(to right, var(--ink-faint) 0, var(--ink-faint) 6px, transparent 6px, transparent 14px);
+  z-index: 0;
+}
+
+.step {
+  position: relative;
+  z-index: 1;
+  background: var(--kraft);
+}
+
+.step-num {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--ink-muted);
+  margin-bottom: 24px;
+  background: var(--kraft);
+  padding-right: 14px;
+}
+
+.step-num-mark {
+  width: 56px;
+  height: 56px;
+  background: var(--paper);
+  border: 1.5px solid var(--ink);
+  display: grid;
+  place-items: center;
+  font-family: 'DM Serif Display', serif;
+  font-style: italic;
+  font-size: 24px;
+  color: var(--ink);
+  border-radius: 50%;
+}
+
+.step h3 {
+  font-family: 'DM Serif Display', serif;
+  font-size: 28px;
+  font-weight: 400;
+  margin-bottom: 14px;
+  letter-spacing: -0.015em;
+  line-height: 1.15;
+}
+
+.step p {
+  color: var(--ink-muted);
+  font-size: 15.5px;
+  line-height: 1.65;
+}
+
+/* ========== PRICING ========== */
+.pricing-wrap {
+  background: var(--paper);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.pricing-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  margin-top: 64px;
+}
+
+.price-card {
+  background: var(--kraft-light);
+  padding: 52px 44px;
+  border-radius: 2px;
+  position: relative;
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-soft);
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.price-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-card);
+}
+
+.price-tag {
+  position: absolute;
+  top: -1px;
+  right: 32px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--paper);
+  font-weight: 500;
+  background: var(--ink);
+  padding: 8px 14px;
+}
+
+.price-card.featured .price-tag {
+  background: var(--red);
+}
+
+.price-card h3 {
+  font-family: 'DM Serif Display', serif;
+  font-size: 32px;
+  font-weight: 400;
+  margin-bottom: 8px;
+  letter-spacing: -0.015em;
+}
+
+.price-card .price-sub {
+  color: var(--ink-muted);
+  font-size: 15px;
+  margin-bottom: 36px;
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.price {
+  font-family: 'DM Serif Display', serif;
+  font-size: 72px;
+  font-weight: 400;
+  color: var(--ink);
+  line-height: 1;
+  margin-bottom: 6px;
+  letter-spacing: -0.04em;
+  display: flex;
+  align-items: baseline;
+}
+
+.price small {
+  font-size: 18px;
+  font-weight: 400;
+  color: var(--ink-muted);
+  margin-left: 8px;
+  font-family: 'DM Mono', monospace;
+  letter-spacing: 0.1em;
+}
+
+.price-meta {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--ink-muted);
+  margin-bottom: 36px;
+}
+
+.price-includes {
+  list-style: none;
+  margin-bottom: 40px;
+}
+
+.price-includes li {
+  padding: 12px 0;
+  border-bottom: 1px dashed var(--line);
+  font-size: 14.5px;
+  color: var(--ink-soft);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.price-includes li:last-child { border-bottom: none; }
+
+.price-includes li::before {
+  content: '→';
+  color: var(--red);
+  font-weight: 500;
+  font-size: 14px;
+  font-family: 'DM Mono', monospace;
+}
+
+.price-card.featured {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.price-card.featured h3,
+.price-card.featured .price { color: var(--paper); }
+
+.price-card.featured .price-sub,
+.price-card.featured .price-meta,
+.price-card.featured .price small { color: rgba(250,246,236,0.65); }
+
+.price-card.featured .price-includes li {
+  color: rgba(250,246,236,0.88);
+  border-bottom-color: rgba(250,246,236,0.18);
+}
+
+.price-card.featured .price-includes li::before { color: var(--red-stamp); }
+
+/* ========== USE CASES ========== */
+.usecases-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0;
+  margin-top: 64px;
+  border-top: 1px solid var(--line);
+  border-left: 1px solid var(--line);
+}
+
+.usecase {
+  background: var(--kraft);
+  padding: 40px;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+  transition: background 0.25s;
+}
+
+.usecase:hover { background: var(--kraft-light); }
+
+.usecase-num {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--red);
+  letter-spacing: 0.15em;
+  padding-top: 4px;
+  min-width: 32px;
+}
+
+.usecase h3 {
+  font-family: 'DM Serif Display', serif;
+  font-size: 22px;
+  font-weight: 400;
+  margin-bottom: 10px;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+.usecase p {
+  font-size: 14.5px;
+  color: var(--ink-muted);
+  line-height: 1.6;
+}
+
+/* ========== STORY BAND ========== */
+.story {
+  background: var(--ink);
+  color: var(--paper);
+  padding: 110px 0;
+  position: relative;
+  overflow: hidden;
+  border-top: 4px solid var(--red);
+  border-bottom: 4px solid var(--red);
+}
+
+.story-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 36px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  align-items: center;
+}
+
+.story-text .eyebrow { color: var(--red-stamp); }
+.story-text .eyebrow::before { background: var(--red-stamp); }
+
+.story-text h2 {
+  font-family: 'DM Serif Display', serif;
+  font-size: clamp(38px, 5vw, 60px);
+  line-height: 1.05;
+  font-weight: 400;
+  letter-spacing: -0.025em;
+  margin-bottom: 28px;
+}
+
+.story-text h2 em { font-style: italic; color: var(--red-stamp); }
+
+.story-text p {
+  font-size: 17px;
+  line-height: 1.7;
+  color: rgba(250,246,236,0.82);
+  margin-bottom: 20px;
+}
+
+.story-quote {
+  position: relative;
+  padding: 44px;
+  background: rgba(250,246,236,0.04);
+  border-left: 3px solid var(--red-stamp);
+  font-family: 'DM Serif Display', serif;
+  font-style: italic;
+  font-size: 23px;
+  line-height: 1.45;
+  color: var(--paper);
+}
+
+.story-quote::before {
+  content: '"';
+  position: absolute;
+  top: 8px;
+  left: 20px;
+  font-size: 90px;
+  color: var(--red-stamp);
+  font-family: 'DM Serif Display', serif;
+  line-height: 1;
+  opacity: 0.4;
+}
+
+.story-quote cite {
+  display: block;
+  font-style: normal;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: rgba(250,246,236,0.6);
+  margin-top: 24px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+/* ========== FAQ ========== */
+.faq-head { text-align: center; margin: 0 auto 64px; }
+.faq-head .eyebrow { justify-content: center; }
+
+.faq-grid {
+  max-width: 920px;
+  margin: 0 auto;
+}
+
+.faq-item {
+  border-top: 1px solid var(--line);
+  padding: 28px 0;
+}
+
+.faq-item:last-child { border-bottom: 1px solid var(--line); }
+
+.faq-item summary {
+  font-family: 'DM Serif Display', serif;
+  font-size: 22px;
+  font-weight: 400;
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+  transition: color 0.2s;
+  line-height: 1.3;
+}
+
+.faq-item summary:hover { color: var(--red); }
+
+.faq-item summary::-webkit-details-marker { display: none; }
+
+.faq-item summary::after {
+  content: '+';
+  font-size: 32px;
+  font-weight: 300;
+  color: var(--red);
+  transition: transform 0.3s;
+  font-family: 'DM Mono', monospace;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.faq-item[open] summary::after { transform: rotate(45deg); }
+
+.faq-item p {
+  margin-top: 18px;
+  color: var(--ink-muted);
+  font-size: 15.5px;
+  line-height: 1.75;
+  max-width: 760px;
+}
+
+/* ========== CTA BAND ========== */
+.cta-band {
+  text-align: center;
+  background: var(--paper);
+  padding: 110px 36px;
+  border-top: 1px solid var(--line);
+  position: relative;
+  overflow: hidden;
+}
+
+.cta-band::before, .cta-band::after {
+  content: '✺';
+  position: absolute;
+  font-size: 200px;
+  color: var(--red);
+  opacity: 0.06;
+  font-family: serif;
+}
+
+.cta-band::before { top: -60px; left: 4%; }
+.cta-band::after { bottom: -80px; right: 4%; }
+
+.cta-band-inner { position: relative; z-index: 2; }
+
+.cta-band h2 {
+  font-family: 'DM Serif Display', serif;
+  font-size: clamp(40px, 5.5vw, 64px);
+  line-height: 1.05;
+  font-weight: 400;
+  letter-spacing: -0.025em;
+  margin-bottom: 24px;
+}
+
+.cta-band h2 em { font-style: italic; color: var(--red); }
+
+.cta-band p {
+  font-size: 18px;
+  color: var(--ink-muted);
+  max-width: 560px;
+  margin: 0 auto 40px;
+}
+
+/* ========== FOOTER ========== */
+footer {
+  background: var(--ink);
+  color: rgba(250,246,236,0.65);
+  padding: 72px 36px 32px;
+  position: relative;
+  z-index: 2;
+}
+
+.footer-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.footer-grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr 1fr;
+  gap: 48px;
+  margin-bottom: 56px;
+}
+
+.footer-brand .logo { color: var(--paper); margin-bottom: 20px; }
+
+.footer-brand p {
+  font-size: 14px;
+  line-height: 1.65;
+  max-width: 340px;
+}
+
+.footer-col h4 {
+  color: var(--paper);
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  margin-bottom: 18px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+}
+
+.footer-col ul { list-style: none; }
+.footer-col li { margin-bottom: 12px; }
+
+.footer-col a {
+  color: rgba(250,246,236,0.65);
+  text-decoration: none;
+  font-size: 14px;
+  transition: color 0.2s;
+}
+
+.footer-col a:hover { color: var(--red-stamp); }
+
+.footer-bottom {
+  border-top: 1px solid rgba(250,246,236,0.12);
+  padding-top: 28px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.footer-bottom-links {
+  display: flex;
+  gap: 28px;
+}
+
+/* ========== ANIMATIONS ========== */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.hero-grid > div { animation: fadeUp 0.9s ease-out both; }
+.hero-grid > div:nth-child(2) { animation-delay: 0.15s; }
+
+/* ========== RESPONSIVE ========== */
+@media (max-width: 900px) {
+  .nav-links { display: none; }
+  .hero-grid { grid-template-columns: 1fr; gap: 60px; }
+  .hero { padding: 48px 24px 60px; }
+  .steps { grid-template-columns: 1fr; gap: 40px; }
+  .steps::before { display: none; }
+  .pricing-grid { grid-template-columns: 1fr; }
+  .usecases-grid { grid-template-columns: 1fr; }
+  .story-inner { grid-template-columns: 1fr; gap: 56px; }
+  .section-inner { padding: 72px 24px; }
+  .story { padding: 72px 0; }
+  .cta-band { padding: 72px 24px; }
+  .footer-grid { grid-template-columns: 1fr 1fr; gap: 36px; }
+  .floating-letter { display: none; }
+  .envelope-stage { min-height: 380px; }
+  .ticker-track { font-size: 18px; gap: 48px; }
+  .ticker-track span { gap: 48px; }
+}
+
+@media (max-width: 540px) {
+  .footer-grid { grid-template-columns: 1fr; }
+  .footer-bottom { flex-direction: column; text-align: center; }
+  .envelope { transform: rotate(0deg); }
+  .price-card { padding: 40px 28px; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+    <a href="#" class="logo">
+      <span class="logo-mark">L</span>
+      Letterhome
+    </a>
+    <div class="nav-links">
+      <a href="#how">How it works</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#usecases">Use cases</a>
+      <a href="#faq">FAQ</a>
+      <a href="/send" class="btn btn-red">Send a Letter</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-grid">
+    <div>
+      <div class="eyebrow">EST. 2026 · For Canadians abroad</div>
+      <h1>Real mail. <em>From wherever you are</em>, to wherever Canada is.</h1>
+      <p class="hero-lede">Write your letter online. We print it on quality paper, seal it in a proper envelope, apply Canadian postage, and drop it in the post. You stay where you are.</p>
+      <div class="hero-cta">
+        <a href="/send" class="btn btn-red btn-large">Send Your First Letter</a>
+        <a href="#how" class="btn btn-outline btn-large">How it works</a>
+      </div>
+      <div class="hero-meta">
+        <span><span class="dot"></span>From $10 CAD</span>
+        <span><span class="dot"></span>Mailed in 24h</span>
+        <span><span class="dot"></span>No account needed</span>
+      </div>
+    </div>
+
+    <div class="envelope-stage">
+      <div class="floating-letter fl-1">
+        <div class="corner-stamp"></div>
+        <span>Calgary, AB</span>
+      </div>
+      <div class="envelope">
+        <div class="stamp">
+          <div class="stamp-inner">
+            <strong>$10</strong>
+            CAD
+          </div>
+        </div>
+        <div class="postmark">
+          Letterhome<br>·&nbsp;CANADA&nbsp;·<br>2026
+        </div>
+        <div class="address">
+          <div class="address-label">→ Deliver to</div>
+          Margaret Tremblay<br>
+          427 Oak Ridge Lane<br>
+          Halifax, NS B3H 2L6<br>
+          Canada
+        </div>
+      </div>
+      <div class="floating-letter fl-2">
+        <div class="corner-stamp"></div>
+        <span>From Tokyo</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TICKER -->
+<div class="ticker">
+  <div class="ticker-track">
+    <span>Letters from Berlin to Burnaby</span>
+    <span>Tax forms from Tokyo to Toronto</span>
+    <span>Birthday cards from Bali to Brandon</span>
+    <span>Legal notices from London to Lévis</span>
+    <span>Letters from Berlin to Burnaby</span>
+    <span>Tax forms from Tokyo to Toronto</span>
+    <span>Birthday cards from Bali to Brandon</span>
+    <span>Legal notices from London to Lévis</span>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <div class="section-inner">
+    <div class="section-head">
+      <div class="eyebrow">How it works</div>
+      <h2>Three steps and it's <em>on its way</em>.</h2>
+      <p>From a hostel in Lisbon or a flat in Singapore, the process is the same. Write, pay, done.</p>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">
+          <span class="step-num-mark">i</span>
+          Step One
+        </div>
+        <h3>Write your letter</h3>
+        <p>Type your message in our online editor, enter the sender and recipient addresses, and attach any documents you need included — PDFs or Word files.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">
+          <span class="step-num-mark">ii</span>
+          Step Two
+        </div>
+        <h3>We handle the printing</h3>
+        <p>Once you pay, we print your letter on quality paper, fold it neatly, seal it in a professional envelope, and apply the correct Canadian postage.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">
+          <span class="step-num-mark">iii</span>
+          Step Three
+        </div>
+        <h3>Into the post it goes</h3>
+        <p>Your letter enters the postal system within one business day. Domestic Canadian mail arrives in 2–4 days. International delivery takes 6–10 business days.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<div class="pricing-wrap" id="pricing">
+  <div class="section-inner">
+    <div class="section-head">
+      <div class="eyebrow">Simple pricing</div>
+      <h2>One flat fee. <em>Everything included</em>.</h2>
+      <p>No subscriptions, no per-page charges, no surprises. Pay only for the letters you send.</p>
+    </div>
+
+    <div class="pricing-grid">
+      <div class="price-card">
+        <span class="price-tag">Within Canada</span>
+        <h3>Domestic</h3>
+        <p class="price-sub">Anywhere in Canada</p>
+        <div class="price">$10<small>CAD</small></div>
+        <div class="price-meta">Delivered in 2–4 business days</div>
+        <ul class="price-includes">
+          <li>Printed on quality letter paper</li>
+          <li>Up to 5 pages, single or double-sided</li>
+          <li>Professional envelope and postage</li>
+          <li>Attach PDF or Word documents</li>
+          <li>Order confirmation by email</li>
+        </ul>
+        <a href="/send" class="btn btn-outline btn-large" style="width:100%;text-align:center;">Send Domestic →</a>
+      </div>
+
+      <div class="price-card featured">
+        <span class="price-tag">Anywhere else</span>
+        <h3>International</h3>
+        <p class="price-sub">200+ countries worldwide</p>
+        <div class="price">$16<small>CAD</small></div>
+        <div class="price-meta">Delivered in 6–10 business days</div>
+        <ul class="price-includes">
+          <li>Printed on quality letter paper</li>
+          <li>Up to 5 pages, single or double-sided</li>
+          <li>Envelope and international postage</li>
+          <li>Attach PDF or Word documents</li>
+          <li>Order confirmation by email</li>
+        </ul>
+        <a href="/send" class="btn btn-red btn-large" style="width:100%;text-align:center;">Send International →</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- USE CASES -->
+<section id="usecases">
+  <div class="section-inner">
+    <div class="section-head">
+      <div class="eyebrow">What people send</div>
+      <h2>For when an email <em>won't do</em>.</h2>
+      <p>Some things still have to arrive on paper. Wherever you are, we'll get it there.</p>
+    </div>
+
+    <div class="usecases-grid">
+      <div class="usecase">
+        <div class="usecase-num">01</div>
+        <div>
+          <h3>Tax & government forms</h3>
+          <p>CRA paperwork, Service Canada forms, signed documents that still need to arrive by mail. Submit them from abroad without flying home.</p>
+        </div>
+      </div>
+
+      <div class="usecase">
+        <div class="usecase-num">02</div>
+        <div>
+          <h3>Letters home</h3>
+          <p>Birthday cards, anniversary notes, condolence letters, a real letter to your grandmother. A printed envelope on the kitchen table still means something.</p>
+        </div>
+      </div>
+
+      <div class="usecase">
+        <div class="usecase-num">03</div>
+        <div>
+          <h3>Legal correspondence</h3>
+          <p>Demand letters, notices, immigration paperwork, real-estate documents, estate matters. Sent from a real Canadian postal address with a verified record.</p>
+        </div>
+      </div>
+
+      <div class="usecase">
+        <div class="usecase-num">04</div>
+        <div>
+          <h3>Business mail</h3>
+          <p>Invoices that need to arrive on paper, contracts, signed agreements, mailed receipts. For Canadian businesses run remotely from anywhere in the world.</p>
+        </div>
+      </div>
+
+      <div class="usecase">
+        <div class="usecase-num">05</div>
+        <div>
+          <h3>Marketing & direct mail</h3>
+          <p>Postcards, announcements, customer thank-yous, small-batch direct mail. Reach Canadian addresses without setting up a mailroom.</p>
+        </div>
+      </div>
+
+      <div class="usecase">
+        <div class="usecase-num">06</div>
+        <div>
+          <h3>Sentimental & keepsake mail</h3>
+          <p>A handwritten-feeling note, a photo printed alongside a letter, a postcard from your travels. The kind of mail people keep in a drawer.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STORY BAND -->
+<section class="story">
+  <div class="story-inner">
+    <div class="story-text">
+      <div class="eyebrow">Why Letterhome</div>
+      <h2>Distance shouldn't mean <em>disconnection</em>.</h2>
+      <p>Living abroad as a Canadian comes with a paperwork problem nobody warns you about. The CRA still wants a signature on paper. Your mum still wants a real card on her birthday. Your accountant still mails you forms to an address you haven't lived at in three years.</p>
+      <p>Letterhome was built for that gap. Whether you're in Berlin or Bangkok, Sydney or San Diego, you can send mail into Canada — or anywhere in the world — without leaving your apartment. Every order is reviewed by a real person before it goes out. Nothing automated, nothing impersonal.</p>
+    </div>
+    <div class="story-quote">
+      Every order I send goes through me personally before it hits the post. If something looks off, you get a message — not a silent reprint and a charged card.
+      <cite>— The person reading this who's about to run your order</cite>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq">
+  <div class="section-inner">
+    <div class="section-head faq-head">
+      <div class="eyebrow">Questions, answered</div>
+      <h2>Frequently asked <em>questions</em>.</h2>
+    </div>
+
+    <div class="faq-grid">
+      <details class="faq-item">
+        <summary>Can I use Letterhome if I'm not in Canada?</summary>
+        <p>Yes — that's exactly who we built it for. The whole process happens online, so as long as you have an internet connection and a way to pay, you can send mail from anywhere in the world. You don't need a Canadian address, a Canadian credit card, or a VPN. We accept international cards through Stripe.</p>
+      </details>
+
+      <details class="faq-item">
+        <summary>Where does the letter actually get mailed from?</summary>
+        <p>Letters are printed and mailed from within Canada. That means a Canadian postmark, Canadian postage, and full access to Canada Post's domestic and international delivery network. For the recipient, it looks identical to a letter mailed from down the street.</p>
+      </details>
+
+      <details class="faq-item">
+        <summary>What's the difference between domestic and international pricing?</summary>
+        <p>Domestic is $10 CAD per letter — anywhere within Canada. International is $16 CAD per letter — anywhere outside Canada, to over 200 countries. Both prices include everything: printing, paper, envelope, postage, and delivery. No per-page charges up to 5 pages.</p>
+      </details>
+
+      <details class="faq-item">
+        <summary>How long does delivery take?</summary>
+        <p>Once we receive your order, it's printed and mailed within one business day. After that, domestic Canadian mail typically takes 2–4 business days to arrive. Mail to the United States usually takes 4–7 business days. International mail to other countries takes 6–10 business days, occasionally longer for remote destinations.</p>
+      </details>
+
+      <details class="faq-item">
+        <summary>Can I attach documents like PDFs or Word files?</summary>
+        <p>Yes. You can attach PDF or Word documents to your letter. These are printed alongside your message and included in the same envelope. This is what makes Letterhome useful for tax forms, signed contracts, immigration paperwork, and other documents that need to physically arrive somewhere.</p>
+      </details>
+
+      <details class="faq-item">
+        <summary>Is the content of my letter kept private?</summary>
+        <p>Yes. Letters are reviewed only briefly to screen for prohibited content (threats, scams, illegal material) before being printed. We don't store, read, or share the contents of your letters for any other purpose. Once your letter has been mailed, the digital file and attachments are deleted from our system within 7 days. We retain a basic order record (date, amount, your email) as required by Canadian tax law, but not the letter content itself. Payments are processed securely through Stripe — we never see your card details.</p>
+      </details>
+
+      <details class="faq-item">
+        <summary>Do I need to create an account?</summary>
+        <p>No. You can send a one-off letter without signing up — just write, pay, and you're done. If you send mail regularly (especially for business or tax purposes), creating an account lets you save addresses, track past orders, and reuse templates.</p>
+      </details>
+
+      <details class="faq-item">
+        <summary>What payment methods do you accept?</summary>
+        <p>We accept all major credit and debit cards through Stripe, including international cards. Prices are charged in Canadian dollars; your bank will convert at the prevailing exchange rate. More payment options (PayPal, Square, and others) are coming soon.</p>
+      </details>
+
+      <details class="faq-item">
+        <summary>What happens if my letter doesn't arrive?</summary>
+        <p>Postal delivery is generally reliable, but mail does occasionally go missing — usually due to incorrect addresses. If your letter doesn't arrive within the expected window, contact us. We'll investigate, and if the issue was on our end, we'll re-send it at no charge. For high-stakes mail like legal or government correspondence, we recommend tracking; reach out and we can quote a tracked-mail upgrade.</p>
+      </details>
+
+      <details class="faq-item">
+        <summary>Can I send marketing or bulk mail?</summary>
+        <p>Yes, in small batches. If you need to send the same letter or postcard to multiple Canadian addresses, get in touch and we can arrange bulk pricing. For larger volume direct-mail campaigns (500+ pieces), we'll point you to a partner better suited to that scale.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- CTA BAND -->
+<section class="cta-band">
+  <div class="cta-band-inner">
+    <h2>Ready to send something <em>home</em>?</h2>
+    <p>It takes about three minutes. You'll be done before your coffee gets cold.</p>
+    <a href="/send" class="btn btn-red btn-large">Send Your First Letter — $10 CAD</a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="#" class="logo">
+          <span class="logo-mark">L</span>
+          Letterhome
+        </a>
+        <p>Real letters, sent on your behalf from Canada. Built for Canadians abroad, but useful to anyone who needs to mail something the old-fashioned way.</p>
+      </div>
+
+      <div class="footer-col">
+        <h4>Service</h4>
+        <ul>
+          <li><a href="/send">Send a letter</a></li>
+          <li><a href="#pricing">Pricing</a></li>
+          <li><a href="#usecases">Use cases</a></li>
+          <li><a href="/track">Track an order</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4>Company</h4>
+        <ul>
+          <li><a href="/about">About</a></li>
+          <li><a href="/contact">Contact</a></li>
+          <li><a href="/faq">FAQ</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4>Legal</h4>
+        <ul>
+          <li><a href="/privacy">Privacy policy</a></li>
+          <li><a href="/terms">Terms of service</a></li>
+          <li><a href="/refunds">Refund policy</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <div>© 2026 Letterhome · Made for Canadians abroad</div>
+      <div class="footer-bottom-links">
+        <a href="/privacy">Privacy</a>
+        <a href="/terms">Terms</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.style.opacity = '1';
+        entry.target.style.transform = 'translateY(0)';
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.step, .price-card, .usecase, .faq-item').forEach(el => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(20px)';
+    el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+    observer.observe(el);
+  });
+</script>
+
+</body>
+</html>
