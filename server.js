@@ -85,6 +85,7 @@ db.exec(`
 
 // Add deleted_at to orders if it doesn't exist (idempotent migration)
 try { db.exec(`ALTER TABLE orders ADD COLUMN deleted_at DATETIME`); } catch {}
+try { db.exec(`ALTER TABLE orders ADD COLUMN customer_ip TEXT`);  } catch {}
 
 // ── Email transport ───────────────────────────────────────────────────────────
 const transport = mailer.createTransport({
@@ -202,13 +203,15 @@ app.post('/api/create-order', orderLimiter, upload.array('attachments', 5), asyn
     mimeType:     f.mimetype,
   }));
 
+  const customerIp = (req.ip || '').replace(/^::ffff:/, '');
+
   const row = db.prepare(`
     INSERT INTO orders (
       customer_email, skip_return,
       sender_name, sender_street, sender_city, sender_province, sender_postal, sender_country,
       recipient_name, recipient_street, recipient_city, recipient_province, recipient_postal,
-      destination_country, letter_type, letter_body, attachment_info, price_cents
-    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+      destination_country, letter_type, letter_body, attachment_info, price_cents, customer_ip
+    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
   `).run(
     rEmail, b['skip-return'] ? 1 : 0,
     b['s-name']     || null, b['s-street']   || null, b['s-city']  || null,
@@ -218,7 +221,8 @@ app.post('/api/create-order', orderLimiter, upload.array('attachments', 5), asyn
     b['r-country']  || 'CA', b['letter-type'] || 'standard',
     b['letter-body'] || null,
     '[]',
-    priceCents
+    priceCents,
+    customerIp || null
   );
 
   const orderId  = row.lastInsertRowid;
