@@ -601,71 +601,78 @@ const STRIPE_PCT         = 0.029;   // 2.9% Canadian card rate
 const STRIPE_FIXED       = 30;      // $0.30 per transaction
 
 app.get('/api/admin/stats', requireAdmin, (req, res) => {
-  const paidOrders = db.prepare(`
-    SELECT price_cents, destination_country, customer_email
-    FROM orders WHERE status != 'awaiting_payment' AND deleted_at IS NULL
-  `).all();
+  try {
+    const paidOrders = db.prepare(`
+      SELECT price_cents, destination_country, customer_email
+      FROM orders WHERE status != 'awaiting_payment' AND deleted_at IS NULL
+    `).all();
 
-  let revenue = 0, stripeFees = 0, cogs = 0;
-  const customers = new Set();
-  paidOrders.forEach(o => {
-    revenue    += o.price_cents;
-    stripeFees += Math.round(o.price_cents * STRIPE_PCT) + STRIPE_FIXED;
-    cogs       += o.destination_country === 'CA' ? COST_DOMESTIC : COST_INTERNATIONAL;
-    customers.add(o.customer_email);
-  });
+    let revenue = 0, stripeFees = 0, cogs = 0;
+    const customers = new Set();
+    paidOrders.forEach(o => {
+      revenue    += o.price_cents;
+      stripeFees += Math.round(o.price_cents * STRIPE_PCT) + STRIPE_FIXED;
+      cogs       += o.destination_country === 'CA' ? COST_DOMESTIC : COST_INTERNATIONAL;
+      customers.add(o.customer_email);
+    });
 
-  // C. Enhanced stats: repeat rate, segments, avg_days_between_orders
-  const custOrderCounts = db.prepare(`
-    SELECT customer_email, COUNT(*) as n
-    FROM orders WHERE status != 'awaiting_payment' AND deleted_at IS NULL
-    GROUP BY customer_email
-  `).all();
+    const custOrderCounts = db.prepare(`
+      SELECT customer_email, COUNT(*) as n
+      FROM orders WHERE status != 'awaiting_payment' AND deleted_at IS NULL
+      GROUP BY customer_email
+    `).all();
 
-  let oneTime = 0, returning = 0, loyal = 0, repeatCount = 0;
-  for (const c of custOrderCounts) {
-    if (c.n === 1)      oneTime++;
-    else if (c.n <= 4)  returning++;
-    else                loyal++;
-    if (c.n > 1) repeatCount++;
-  }
-  const totalCusts = custOrderCounts.length;
-  const repeat_rate = totalCusts ? Math.round((repeatCount / totalCusts) * 100) : 0;
+    let oneTime = 0, returning = 0, loyal = 0, repeatCount = 0;
+    for (const c of custOrderCounts) {
+      if (c.n === 1)      oneTime++;
+      else if (c.n <= 4)  returning++;
+      else                loyal++;
+      if (c.n > 1) repeatCount++;
+    }
+    const totalCusts = custOrderCounts.length;
+    const repeat_rate = totalCusts ? Math.round((repeatCount / totalCusts) * 100) : 0;
 
-  const avgRow = db.prepare(`
-    SELECT AVG(days_between) as avg_days FROM (
-      SELECT customer_email,
-        CAST((julianday(second_order) - julianday(first_order)) AS REAL) as days_between
-      FROM (
-        SELECT customer_email,
-          MIN(created_at) as first_order,
-          (SELECT created_at FROM orders o2
-           WHERE o2.customer_email = o1.customer_email
-             AND o2.status != 'awaiting_payment'
-             AND o2.deleted_at IS NULL
-             AND o2.created_at > MIN(o1.created_at)
-           ORDER BY o2.created_at ASC LIMIT 1) as second_order
-        FROM orders o1
+    // Find avg days between first and second order using a CTE to avoid
+    // aggregate-in-subquery which node:sqlite rejects
+    const avgRow = db.prepare(`
+      WITH first_orders AS (
+        SELECT customer_email, MIN(created_at) AS first_order
+        FROM orders
         WHERE status != 'awaiting_payment' AND deleted_at IS NULL
         GROUP BY customer_email
         HAVING COUNT(*) >= 2
+      ),
+      second_orders AS (
+        SELECT o.customer_email,
+               MIN(o.created_at) AS second_order,
+               f.first_order
+        FROM orders o
+        JOIN first_orders f ON f.customer_email = o.customer_email
+        WHERE o.status != 'awaiting_payment'
+          AND o.deleted_at IS NULL
+          AND o.created_at > f.first_order
+        GROUP BY o.customer_email
       )
-      WHERE second_order IS NOT NULL
-    )
-  `).get();
+      SELECT AVG(CAST((julianday(second_order) - julianday(first_order)) AS REAL)) AS avg_days
+      FROM second_orders
+    `).get();
 
-  res.json({
-    total:       db.prepare('SELECT COUNT(*) as n FROM orders WHERE deleted_at IS NULL').get().n,
-    paid:        paidOrders.length,
-    revenue,
-    stripe_fees: stripeFees,
-    cogs,
-    net:         revenue - stripeFees - cogs,
-    customers:   customers.size,
-    repeat_rate,
-    segments:    { one_time: oneTime, returning, loyal },
-    avg_days_between_orders: avgRow?.avg_days != null ? Math.round(avgRow.avg_days) : null,
-  });
+    res.json({
+      total:       db.prepare('SELECT COUNT(*) as n FROM orders WHERE deleted_at IS NULL').get().n,
+      paid:        paidOrders.length,
+      revenue,
+      stripe_fees: stripeFees,
+      cogs,
+      net:         revenue - stripeFees - cogs,
+      customers:   customers.size,
+      repeat_rate,
+      segments:    { one_time: oneTime, returning, loyal },
+      avg_days_between_orders: avgRow?.avg_days != null ? Math.round(avgRow.avg_days) : null,
+    });
+  } catch (err) {
+    console.error('Stats endpoint error:', err.message);
+    res.status(500).json({ error: 'Failed to load stats', detail: err.message });
+  }
 });
 
 app.get('/api/admin/orders', requireAdmin, (req, res) => {
