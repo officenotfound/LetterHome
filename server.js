@@ -376,7 +376,7 @@ app.get('/api/admin/me', requireAdmin, (req, res) =>
 
 // Cost & fee constants (in cents CAD)
 const COST_DOMESTIC      = 600;     // $6 per Canadian letter
-const COST_INTERNATIONAL = 1000;    // $10 per international letter
+const COST_INTERNATIONAL = 1200;    // $12 per international letter
 const STRIPE_PCT         = 0.029;   // 2.9% Canadian card rate
 const STRIPE_FIXED       = 30;      // $0.30 per transaction
 
