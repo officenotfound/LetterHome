@@ -28,6 +28,10 @@
   --shadow-card: 0 2px 6px rgba(42,42,42,0.06), 0 14px 40px rgba(42,42,42,0.1);
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
+.skip-link { position: absolute; left: -9999px; top: 8px; padding: 8px 16px; background: var(--ink); color: var(--paper); text-decoration: none; border-radius: 2px; z-index: 1000; font-size: 14px; }
+.skip-link:focus { left: 8px; }
+:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; } }
 html { scroll-behavior: smooth; }
 body {
   font-family: 'Inter', system-ui, sans-serif;
@@ -338,6 +342,7 @@ footer { background: var(--ink); color: rgba(250,246,236,0.65); padding: 48px 36
 </style>
 </head>
 <body>
+<a href="#main" class="skip-link">Skip to main content</a>
 
 <nav>
   <div class="nav-inner">
@@ -383,7 +388,7 @@ footer { background: var(--ink); color: rgba(250,246,236,0.65); padding: 48px 36
 </div>
 
 <!-- FORM WRAPPER -->
-<div class="send-wrap">
+<div id="main" class="send-wrap">
 
   <!-- STEP 1: ADDRESSES -->
   <div class="panel active" id="panel-1">
