@@ -107,6 +107,49 @@ try { db.exec(`ALTER TABLE orders ADD COLUMN customer_ip TEXT`);          } catc
 try { db.exec(`ALTER TABLE orders ADD COLUMN printer_ref TEXT`);          } catch {}
 try { db.exec(`ALTER TABLE orders ADD COLUMN estimated_delivery TEXT`);   } catch {}
 try { db.exec(`ALTER TABLE orders ADD COLUMN status_token TEXT`);         } catch {}
+try { db.exec(`ALTER TABLE orders ADD COLUMN recovery_sent_at DATETIME`); } catch {}
+try { db.exec(`ALTER TABLE orders ADD COLUMN actual_cost_cents INTEGER`); } catch {}
+try { db.exec(`ALTER TABLE orders ADD COLUMN sla_alert_sent_at DATETIME`);} catch {}
+
+// New tables (schema B)
+try {
+  db.exec(`CREATE TABLE IF NOT EXISTS occasions (
+    id                 INTEGER PRIMARY KEY AUTOINCREMENT,
+    customer_email     TEXT NOT NULL,
+    occasion_name      TEXT NOT NULL,
+    occasion_date      TEXT NOT NULL,
+    remind_days_before INTEGER DEFAULT 14,
+    last_reminded_year INTEGER,
+    created_at         DATETIME DEFAULT CURRENT_TIMESTAMP
+  )`);
+} catch (e) { console.error('[init] occasions table:', e.message); }
+
+try {
+  db.exec(`CREATE TABLE IF NOT EXISTS order_notes (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    order_id   INTEGER NOT NULL,
+    note       TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  )`);
+} catch (e) { console.error('[init] order_notes table:', e.message); }
+
+try {
+  db.exec(`CREATE TABLE IF NOT EXISTS email_templates (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    name       TEXT NOT NULL UNIQUE,
+    subject    TEXT NOT NULL,
+    body       TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  )`);
+} catch (e) { console.error('[init] email_templates table:', e.message); }
+
+try {
+  db.exec(`CREATE TABLE IF NOT EXISTS settings (
+    key        TEXT PRIMARY KEY,
+    value      TEXT NOT NULL,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  )`);
+} catch (e) { console.error('[init] settings table:', e.message); }
 
 // ── Email transport ───────────────────────────────────────────────────────────
 const transport = mailer.createTransport({
@@ -151,13 +194,92 @@ function safeFilePath(dir, originalName) {
   } catch (e) { console.error('[init] token backfill failed:', e.message); }
 })();
 
+// Abandoned order recovery — send a one-time recovery email.
+;(async function abandonedOrderRecovery() {
+  try {
+    const cutoff2d  = new Date(Date.now() - 2  * 86400 * 1000).toISOString();
+    const cutoff7d  = new Date(Date.now() - 7  * 86400 * 1000).toISOString();
+    const abandoned = db.prepare(`
+      SELECT * FROM orders
+      WHERE status = 'awaiting_payment'
+        AND created_at < ?
+        AND created_at > ?
+        AND recovery_sent_at IS NULL
+        AND customer_email IS NOT NULL
+    `).all(cutoff2d, cutoff7d);
+    for (const order of abandoned) {
+      try {
+        await transport.sendMail(buildRecoveryEmail(order));
+        db.prepare("UPDATE orders SET recovery_sent_at = CURRENT_TIMESTAMP WHERE id = ?").run(order.id);
+        console.log(`[recovery] sent recovery email for order #${order.id} to ${order.customer_email}`);
+      } catch (e) { console.error(`[recovery] failed for order #${order.id}:`, e.message); }
+    }
+  } catch (e) { console.error('[recovery] startup check failed:', e.message); }
+})();
+
+// Occasion reminders — send reminders for upcoming occasions.
+;(async function occasionReminders() {
+  try {
+    const occasions = db.prepare('SELECT * FROM occasions').all();
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    for (const occ of occasions) {
+      try {
+        const [mm, dd] = occ.occasion_date.split('-').map(Number);
+        const occasionThisYear = new Date(currentYear, mm - 1, dd);
+        const remindOn = new Date(occasionThisYear.getTime() - occ.remind_days_before * 86400 * 1000);
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        if (today >= remindOn && today <= occasionThisYear && occ.last_reminded_year !== currentYear) {
+          const lastOrder = db.prepare(`
+            SELECT * FROM orders
+            WHERE customer_email = ? AND status IN ('paid','submitted_to_printer','mailed','delivered')
+            ORDER BY created_at DESC LIMIT 1
+          `).get(occ.customer_email);
+          await transport.sendMail(buildOccasionReminderEmail(occ, lastOrder));
+          db.prepare('UPDATE occasions SET last_reminded_year = ? WHERE id = ?').run(currentYear, occ.id);
+          console.log(`[occasions] sent reminder for occasion #${occ.id} to ${occ.customer_email}`);
+        }
+      } catch (e) { console.error(`[occasions] failed for occasion #${occ.id}:`, e.message); }
+    }
+  } catch (e) { console.error('[occasions] startup check failed:', e.message); }
+})();
+
+// SLA alerts — email OPERATOR_EMAIL if any orders have been in paid/submitted_to_printer for 20h+.
+;(async function slaAlerts() {
+  if (!process.env.OPERATOR_EMAIL) return;
+  try {
+    const cutoff20h = new Date(Date.now() - 20 * 3600 * 1000).toISOString();
+    const overdue = db.prepare(`
+      SELECT * FROM orders
+      WHERE status IN ('paid','submitted_to_printer')
+        AND created_at < ?
+        AND sla_alert_sent_at IS NULL
+        AND deleted_at IS NULL
+    `).all(cutoff20h);
+    if (overdue.length) {
+      const lines = overdue.map(o =>
+        `  Order #${o.id} — ${o.recipient_name} — ${o.status} — created ${o.created_at}`
+      ).join('\n');
+      await transport.sendMail({
+        from:    process.env.EMAIL_FROM,
+        to:      process.env.OPERATOR_EMAIL,
+        subject: `[Letterhome] SLA Alert — ${overdue.length} order${overdue.length > 1 ? 's' : ''} overdue`,
+        text:    `The following orders have been in paid/submitted_to_printer status for over 20 hours:\n\n${lines}\n\nPlease take action.`,
+      });
+      const stmt = db.prepare('UPDATE orders SET sla_alert_sent_at = CURRENT_TIMESTAMP WHERE id = ?');
+      for (const o of overdue) stmt.run(o.id);
+      console.log(`[sla] sent alert for ${overdue.length} overdue orders`);
+    }
+  } catch (e) { console.error('[sla] startup check failed:', e.message); }
+})();
+
 // Privacy cleanup: delete order folders older than 7 days on every startup.
 // Replaces the unreliable setTimeout approach that was lost on process restart.
 ;(function cleanupOldOrderFolders() {
   const cutoff = new Date(Date.now() - 7 * 86400 * 1000).toISOString();
   try {
     const old = db.prepare(
-      "SELECT id, created_at FROM orders WHERE status != 'awaiting_payment' AND created_at < ?"
+      "SELECT id, created_at FROM orders WHERE status IN ('mailed','delivered','refunded') AND created_at < ?"
     ).all(cutoff);
     for (const o of old) {
       const dir = orderDirPath(o.id, o.created_at);
@@ -240,6 +362,10 @@ function requireAdmin(req, res, next) {
 
 // ── Create order ──────────────────────────────────────────────────────────────
 app.post('/api/create-order', orderLimiter, upload.array('attachments', 5), async (req, res) => {
+  // E. Service pause check
+  const paused = db.prepare("SELECT value FROM settings WHERE key='service_paused'").get();
+  if (paused?.value === 'true') return res.status(503).json({ error: 'The service is temporarily paused. Please try again later.' });
+
   const b = req.body;
   const rEmail  = (b['r-email']  || '').trim();
   const rName   = (b['r-name']   || '').trim();
@@ -456,6 +582,45 @@ app.get('/api/admin/stats', requireAdmin, (req, res) => {
     customers.add(o.customer_email);
   });
 
+  // C. Enhanced stats: repeat rate, segments, avg_days_between_orders
+  const custOrderCounts = db.prepare(`
+    SELECT customer_email, COUNT(*) as n
+    FROM orders WHERE status != 'awaiting_payment' AND deleted_at IS NULL
+    GROUP BY customer_email
+  `).all();
+
+  let oneTime = 0, returning = 0, loyal = 0, repeatCount = 0;
+  for (const c of custOrderCounts) {
+    if (c.n === 1)      oneTime++;
+    else if (c.n <= 4)  returning++;
+    else                loyal++;
+    if (c.n > 1) repeatCount++;
+  }
+  const totalCusts = custOrderCounts.length;
+  const repeat_rate = totalCusts ? Math.round((repeatCount / totalCusts) * 100) : 0;
+
+  const avgRow = db.prepare(`
+    SELECT AVG(days_between) as avg_days FROM (
+      SELECT customer_email,
+        CAST((julianday(second_order) - julianday(first_order)) AS REAL) as days_between
+      FROM (
+        SELECT customer_email,
+          MIN(created_at) as first_order,
+          (SELECT created_at FROM orders o2
+           WHERE o2.customer_email = o1.customer_email
+             AND o2.status != 'awaiting_payment'
+             AND o2.deleted_at IS NULL
+             AND o2.created_at > MIN(o1.created_at)
+           ORDER BY o2.created_at ASC LIMIT 1) as second_order
+        FROM orders o1
+        WHERE status != 'awaiting_payment' AND deleted_at IS NULL
+        GROUP BY customer_email
+        HAVING COUNT(*) >= 2
+      )
+      WHERE second_order IS NOT NULL
+    )
+  `).get();
+
   res.json({
     total:       db.prepare('SELECT COUNT(*) as n FROM orders WHERE deleted_at IS NULL').get().n,
     paid:        paidOrders.length,
@@ -464,6 +629,9 @@ app.get('/api/admin/stats', requireAdmin, (req, res) => {
     cogs,
     net:         revenue - stripeFees - cogs,
     customers:   customers.size,
+    repeat_rate,
+    segments:    { one_time: oneTime, returning, loyal },
+    avg_days_between_orders: avgRow?.avg_days != null ? Math.round(avgRow.avg_days) : null,
   });
 });
 
@@ -634,6 +802,43 @@ app.post('/api/admin/customers/:email/restore', requireAdmin, (req, res) => {
   res.json({ ok: true });
 });
 
+// CSV export — must be registered before /api/admin/customers/:email to avoid being shadowed by the param route
+app.get('/api/admin/customers/export.csv', requireAdmin, (req, res) => {
+  const csvEscape = s => {
+    const str = String(s ?? '');
+    return /[,"\n]/.test(str) ? '"' + str.replace(/"/g, '""') + '"' : str;
+  };
+  const fromOrders = db.prepare(`
+    SELECT customer_email as email,
+      COUNT(*) as order_count,
+      COALESCE(SUM(CASE WHEN status != 'awaiting_payment' THEN price_cents ELSE 0 END),0) as total_spent_cents,
+      MAX(created_at) as last_order
+    FROM orders WHERE deleted_at IS NULL GROUP BY customer_email
+  `).all();
+  const manual = db.prepare(`SELECT email, display_name, created_at FROM customers WHERE deleted_at IS NULL`).all();
+  const tagRows = db.prepare('SELECT customer_email, tag FROM customer_tags').all();
+  const tagMap = {};
+  tagRows.forEach(t => { (tagMap[t.customer_email] = tagMap[t.customer_email] || []).push(t.tag); });
+  const map = {};
+  manual.forEach(m => { map[m.email] = { email: m.email, display_name: m.display_name, order_count: 0, total_spent_cents: 0, last_order: m.created_at }; });
+  fromOrders.forEach(o => {
+    if (!map[o.email]) map[o.email] = { email: o.email, display_name: '' };
+    Object.assign(map[o.email], o);
+  });
+  const rows = Object.values(map);
+  const lines = ['email,name,orders,total_spent_cad,last_order,tags'];
+  rows.forEach(r => {
+    lines.push([
+      csvEscape(r.email), csvEscape(r.display_name || ''),
+      r.order_count || 0, ((r.total_spent_cents || 0) / 100).toFixed(2),
+      r.last_order || '', csvEscape((tagMap[r.email] || []).join('|')),
+    ].join(','));
+  });
+  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+  res.setHeader('Content-Disposition', `attachment; filename="letterhome-customers-${new Date().toISOString().slice(0,10)}.csv"`);
+  res.send(lines.join('\n'));
+});
+
 app.get('/api/admin/customers/:email', requireAdmin, (req, res) => {
   const email   = req.params.email;
   const orders  = db.prepare('SELECT * FROM orders WHERE customer_email = ? AND deleted_at IS NULL ORDER BY created_at DESC').all(email);
@@ -687,43 +892,6 @@ app.post('/api/admin/orders/:id/message', requireAdmin, async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
-});
-
-// CSV export of customers
-app.get('/api/admin/customers/export.csv', requireAdmin, (req, res) => {
-  const csvEscape = s => {
-    const str = String(s ?? '');
-    return /[,"\n]/.test(str) ? '"' + str.replace(/"/g, '""') + '"' : str;
-  };
-  const fromOrders = db.prepare(`
-    SELECT customer_email as email,
-      COUNT(*) as order_count,
-      COALESCE(SUM(CASE WHEN status != 'awaiting_payment' THEN price_cents ELSE 0 END),0) as total_spent_cents,
-      MAX(created_at) as last_order
-    FROM orders WHERE deleted_at IS NULL GROUP BY customer_email
-  `).all();
-  const manual = db.prepare(`SELECT email, display_name, created_at FROM customers WHERE deleted_at IS NULL`).all();
-  const tagRows = db.prepare('SELECT customer_email, tag FROM customer_tags').all();
-  const tagMap = {};
-  tagRows.forEach(t => { (tagMap[t.customer_email] = tagMap[t.customer_email] || []).push(t.tag); });
-  const map = {};
-  manual.forEach(m => { map[m.email] = { email: m.email, display_name: m.display_name, order_count: 0, total_spent_cents: 0, last_order: m.created_at }; });
-  fromOrders.forEach(o => {
-    if (!map[o.email]) map[o.email] = { email: o.email, display_name: '' };
-    Object.assign(map[o.email], o);
-  });
-  const rows = Object.values(map);
-  const lines = ['email,name,orders,total_spent_cad,last_order,tags'];
-  rows.forEach(r => {
-    lines.push([
-      csvEscape(r.email), csvEscape(r.display_name || ''),
-      r.order_count || 0, ((r.total_spent_cents || 0) / 100).toFixed(2),
-      r.last_order || '', csvEscape((tagMap[r.email] || []).join('|')),
-    ].join(','));
-  });
-  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-  res.setHeader('Content-Disposition', `attachment; filename="letterhome-customers-${new Date().toISOString().slice(0,10)}.csv"`);
-  res.send(lines.join('\n'));
 });
 
 // Broadcast email — to all customers, or filtered by tag
@@ -854,6 +1022,187 @@ app.get('/api/admin/search', requireAdmin, (req, res) => {
 app.get('/api/admin/audit', requireAdmin, (req, res) => {
   const rows = db.prepare(`SELECT * FROM audit_log ORDER BY created_at DESC LIMIT 200`).all();
   res.json(rows);
+});
+
+// D. Chart data
+app.get('/api/admin/stats/chart', requireAdmin, (req, res) => {
+  const period = req.query.period === 'weekly' ? 'weekly' : 'monthly';
+  let rows;
+  if (period === 'monthly') {
+    rows = db.prepare(`
+      SELECT strftime('%Y-%m', created_at) as label,
+             COUNT(*) as orders,
+             COALESCE(SUM(price_cents), 0) as revenue_cents
+      FROM orders
+      WHERE status != 'awaiting_payment' AND deleted_at IS NULL
+        AND created_at >= date('now', '-12 months')
+      GROUP BY label ORDER BY label ASC
+    `).all();
+  } else {
+    rows = db.prepare(`
+      SELECT strftime('%Y-W%W', created_at) as label,
+             COUNT(*) as orders,
+             COALESCE(SUM(price_cents), 0) as revenue_cents
+      FROM orders
+      WHERE status != 'awaiting_payment' AND deleted_at IS NULL
+        AND created_at >= date('now', '-84 days')
+      GROUP BY label ORDER BY label ASC
+    `).all();
+  }
+  res.json(rows);
+});
+
+// Geographic breakdown
+app.get('/api/admin/stats/geo', requireAdmin, (req, res) => {
+  const from = db.prepare(`
+    SELECT sender_country as country, COUNT(*) as orders
+    FROM orders
+    WHERE status != 'awaiting_payment' AND deleted_at IS NULL AND sender_country IS NOT NULL
+    GROUP BY sender_country ORDER BY orders DESC LIMIT 15
+  `).all();
+  const to = db.prepare(`
+    SELECT destination_country as country, COUNT(*) as orders
+    FROM orders
+    WHERE status != 'awaiting_payment' AND deleted_at IS NULL
+    GROUP BY destination_country ORDER BY orders DESC LIMIT 15
+  `).all();
+  res.json({ from, to });
+});
+
+// Order notes
+app.get('/api/admin/orders/:id/notes', requireAdmin, (req, res) => {
+  const notes = db.prepare('SELECT * FROM order_notes WHERE order_id = ? ORDER BY created_at DESC')
+    .all(Number(req.params.id));
+  res.json(notes);
+});
+
+app.post('/api/admin/orders/:id/notes', requireAdmin, (req, res) => {
+  const { note } = req.body;
+  if (!note?.trim()) return res.status(400).json({ error: 'Note is required' });
+  db.prepare('INSERT INTO order_notes (order_id, note) VALUES (?,?)').run(Number(req.params.id), note.trim());
+  res.json({ ok: true });
+});
+
+// Occasions (per customer)
+app.get('/api/admin/customers/:email/occasions', requireAdmin, (req, res) => {
+  const occasions = db.prepare('SELECT * FROM occasions WHERE customer_email = ? ORDER BY created_at DESC')
+    .all(req.params.email);
+  res.json(occasions);
+});
+
+app.post('/api/admin/customers/:email/occasions', requireAdmin, (req, res) => {
+  const { occasion_name, occasion_date, remind_days_before } = req.body;
+  if (!occasion_name?.trim()) return res.status(400).json({ error: 'occasion_name is required' });
+  if (!/^\d{2}-\d{2}$/.test(occasion_date || '')) return res.status(400).json({ error: 'occasion_date must match MM-DD' });
+  const days = parseInt(remind_days_before, 10);
+  db.prepare(`INSERT INTO occasions (customer_email, occasion_name, occasion_date, remind_days_before) VALUES (?,?,?,?)`)
+    .run(req.params.email, occasion_name.trim(), occasion_date, isNaN(days) ? 14 : days);
+  res.json({ ok: true });
+});
+
+app.delete('/api/admin/occasions/:id', requireAdmin, (req, res) => {
+  db.prepare('DELETE FROM occasions WHERE id = ?').run(Number(req.params.id));
+  res.json({ ok: true });
+});
+
+// Email templates
+app.get('/api/admin/templates', requireAdmin, (req, res) => {
+  res.json(db.prepare('SELECT * FROM email_templates ORDER BY created_at DESC').all());
+});
+
+app.post('/api/admin/templates', requireAdmin, (req, res) => {
+  const { name, subject, body } = req.body;
+  if (!name?.trim() || !subject?.trim() || !body?.trim()) return res.status(400).json({ error: 'name, subject, and body are required' });
+  try {
+    db.prepare('INSERT INTO email_templates (name, subject, body) VALUES (?,?,?)').run(name.trim(), subject.trim(), body.trim());
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(400).json({ error: 'A template with that name already exists' });
+  }
+});
+
+app.delete('/api/admin/templates/:id', requireAdmin, (req, res) => {
+  db.prepare('DELETE FROM email_templates WHERE id = ?').run(Number(req.params.id));
+  res.json({ ok: true });
+});
+
+// Settings
+app.get('/api/admin/settings', requireAdmin, (req, res) => {
+  const rows = db.prepare('SELECT key, value FROM settings').all();
+  const obj = {};
+  rows.forEach(r => { obj[r.key] = r.value; });
+  res.json(obj);
+});
+
+app.post('/api/admin/settings', requireAdmin, (req, res) => {
+  const { key, value } = req.body;
+  if (!key?.trim() || typeof value !== 'string') return res.status(400).json({ error: 'key and value are required' });
+  db.prepare(`INSERT INTO settings (key, value, updated_at) VALUES (?,?,CURRENT_TIMESTAMP)
+    ON CONFLICT(key) DO UPDATE SET value=excluded.value, updated_at=CURRENT_TIMESTAMP`)
+    .run(key.trim(), value);
+  logAudit(req, 'settings.change', 'settings', key.trim(), { value });
+  res.json({ ok: true });
+});
+
+// Actual cost per order
+app.post('/api/admin/orders/:id/actual-cost', requireAdmin, (req, res) => {
+  const cost = req.body.actual_cost_cents;
+  if (!Number.isInteger(cost) || cost < 0) return res.status(400).json({ error: 'actual_cost_cents must be a non-negative integer' });
+  const id = Number(req.params.id);
+  db.prepare('UPDATE orders SET actual_cost_cents = ? WHERE id = ?').run(cost, id);
+  logAudit(req, 'order.actual_cost', 'order', id, { actual_cost_cents: cost });
+  res.json({ ok: true });
+});
+
+// P&L monthly digest
+app.post('/api/admin/pnl-digest', requireAdmin, async (req, res) => {
+  if (!process.env.OPERATOR_EMAIL) return res.status(400).json({ error: 'OPERATOR_EMAIL not configured' });
+  const month = (req.body.month || new Date().toISOString().slice(0, 7));
+  if (!/^\d{4}-\d{2}$/.test(month)) return res.status(400).json({ error: 'month must be YYYY-MM' });
+
+  const orders = db.prepare(`
+    SELECT * FROM orders
+    WHERE status != 'awaiting_payment' AND deleted_at IS NULL
+      AND strftime('%Y-%m', created_at) = ?
+  `).all(month);
+
+  let revenue = 0, stripeFees = 0, estCogs = 0, actualCogs = 0, actualCogsCounted = 0;
+  const custSet = new Set();
+  for (const o of orders) {
+    revenue += o.price_cents;
+    stripeFees += Math.round(o.price_cents * STRIPE_PCT) + STRIPE_FIXED;
+    estCogs += o.destination_country === 'CA' ? COST_DOMESTIC : COST_INTERNATIONAL;
+    if (o.actual_cost_cents != null) { actualCogs += o.actual_cost_cents; actualCogsCounted++; }
+    custSet.add(o.customer_email);
+  }
+  const net = revenue - stripeFees - estCogs;
+  const fmtCAD = c => '$' + (c / 100).toFixed(2) + ' CAD';
+
+  const lines = [
+    `Letterhome P&L Digest — ${month}`,
+    '='.repeat(40),
+    `Orders:           ${orders.length}`,
+    `Unique customers: ${custSet.size}`,
+    '',
+    `Gross revenue:    ${fmtCAD(revenue)}`,
+    `Stripe fees:      ${fmtCAD(stripeFees)}`,
+    `Est. COGS:        ${fmtCAD(estCogs)}`,
+    actualCogsCounted ? `Actual COGS:      ${fmtCAD(actualCogs)} (${actualCogsCounted} orders with recorded cost)` : '',
+    '',
+    `Net profit:       ${fmtCAD(net)}`,
+  ].filter(l => l !== undefined);
+
+  try {
+    await transport.sendMail({
+      from:    process.env.EMAIL_FROM,
+      to:      process.env.OPERATOR_EMAIL,
+      subject: `[Letterhome] P&L Digest — ${month}`,
+      text:    lines.join('\n'),
+    });
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // Print-ready view for an order
@@ -1165,6 +1514,53 @@ a{color:#a8472d}</style></head>
 <body><div class="box"><h1>Order not found</h1>
 <p>The status link may have expired or the order was not found.</p>
 <a href="/">← Back to Letterhome</a></div></body></html>`;
+}
+
+// F. New email builder functions
+
+function buildRecoveryEmail(order) {
+  const recipientHint = order.recipient_name ? ` to ${order.recipient_name}` : '';
+  return {
+    from:    process.env.EMAIL_FROM,
+    to:      order.customer_email,
+    subject: 'You left a letter unsent — Letterhome',
+    html: `<!DOCTYPE html><html>
+<body style="font-family:Georgia,serif;background:#ede5d3;padding:40px 20px;color:#2a2a2a;margin:0">
+  <div style="max-width:520px;margin:0 auto;background:#faf6ec;border:1px solid rgba(42,42,42,0.12);padding:48px">
+    <div style="width:38px;height:38px;background:#a8472d;display:inline-flex;align-items:center;justify-content:center;color:#faf6ec;font-size:20px;font-family:Georgia,serif;margin-bottom:28px">L</div>
+    <h1 style="font-size:28px;font-weight:400;margin:0 0 10px;letter-spacing:-0.02em">Someone back home is waiting.</h1>
+    <p style="color:#6b6258;margin:0 0 32px;font-size:16px;line-height:1.6">Someone back home is waiting to hear from you. Your letter${recipientHint} is still ready to go.</p>
+    <a href="${process.env.BASE_URL || ''}/send" style="display:inline-block;background:#a8472d;color:#faf6ec;padding:14px 28px;font-family:Georgia,serif;font-size:15px;text-decoration:none;letter-spacing:0.02em;margin-bottom:32px">Send Your Letter →</a>
+    <div style="border-top:1px solid rgba(42,42,42,0.1);padding-top:20px;font-size:12px;color:#968b7d">
+      <p style="margin:0">We only send this reminder once.</p>
+    </div>
+  </div>
+</body></html>`,
+  };
+}
+
+function buildOccasionReminderEmail(occ, lastOrder) {
+  const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const [mm, dd] = occ.occasion_date.split('-').map(Number);
+  const dateFormatted = `${monthNames[mm - 1]} ${dd}`;
+  const lastOrderHint = lastOrder ? ` Last year you sent a letter to ${lastOrder.recipient_name}.` : '';
+  return {
+    from:    process.env.EMAIL_FROM,
+    to:      occ.customer_email,
+    subject: `${occ.occasion_name} is coming up — send a letter?`,
+    html: `<!DOCTYPE html><html>
+<body style="font-family:Georgia,serif;background:#ede5d3;padding:40px 20px;color:#2a2a2a;margin:0">
+  <div style="max-width:520px;margin:0 auto;background:#faf6ec;border:1px solid rgba(42,42,42,0.12);padding:48px">
+    <div style="width:38px;height:38px;background:#a8472d;display:inline-flex;align-items:center;justify-content:center;color:#faf6ec;font-size:20px;font-family:Georgia,serif;margin-bottom:28px">L</div>
+    <h1 style="font-size:28px;font-weight:400;margin:0 0 10px;letter-spacing:-0.02em">${occ.occasion_name} is coming up.</h1>
+    <p style="color:#6b6258;margin:0 0 32px;font-size:16px;line-height:1.6">${occ.occasion_name} is ${occ.remind_days_before} days away (${dateFormatted}).${lastOrderHint} Send a letter — it'll mean more than a text.</p>
+    <a href="${process.env.BASE_URL || ''}/send" style="display:inline-block;background:#a8472d;color:#faf6ec;padding:14px 28px;font-family:Georgia,serif;font-size:15px;text-decoration:none;letter-spacing:0.02em;margin-bottom:32px">Send a Letter →</a>
+    <div style="border-top:1px solid rgba(42,42,42,0.1);padding-top:20px;font-size:12px;color:#968b7d">
+      <p style="margin:0">You set this reminder via Letterhome. Reply to stop.</p>
+    </div>
+  </div>
+</body></html>`,
+  };
 }
 
 const PORT = process.env.PORT || 3000;
