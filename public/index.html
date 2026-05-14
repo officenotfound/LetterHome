@@ -1824,5 +1824,18 @@ footer {
 </script>
 
 <script src="/theme.js"></script>
+<script>
+(async () => {
+  try {
+    const cfg = await fetch('/api/site-config').then(r => r.json());
+    if (cfg.announcement) {
+      const bar = document.createElement('div');
+      bar.style.cssText = 'background:#1e293b;color:#f1f5f9;text-align:center;padding:10px 20px;font-size:14px;position:relative;z-index:200';
+      bar.textContent = cfg.announcement;
+      document.body.insertBefore(bar, document.body.firstChild);
+    }
+  } catch(e) {}
+})();
+</script>
 </body>
 </html>

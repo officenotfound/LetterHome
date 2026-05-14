@@ -227,7 +227,8 @@ function route() {
   if (p.match(/^\/admin\/customers\/.+$/))          return showCustomer(decodeURIComponent(p.replace('/admin/customers/', '')));
   if (p === '/admin/trash')                         return showTrash();
   if (p === '/admin/broadcast')                     return showBroadcast();
-if (p === '/admin/insights')                      return showInsights();
+  if (p === '/admin/print-queue')                   return showPrintQueue();
+  if (p === '/admin/insights')                      return showInsights();
   if (p === '/admin/templates')                     return showTemplates();
   if (p === '/admin/settings')                      return showSettings();
   showDashboard();
@@ -535,19 +536,70 @@ function renderDashboard(stats, paidOrders, submittedOrders, chartData, geoData,
 
 // ── Orders list ───────────────────────────────────────────────────────────────
 let orderFilter = '';
+let allOrders   = [];
+
 async function showOrders(filter) {
   if (filter !== undefined) orderFilter = filter;
   setTitle('Orders');
   const url = orderFilter ? `/api/admin/orders?status=${orderFilter}` : '/api/admin/orders';
-  const orders = await api(url);
-  if (!orders) return;
+  allOrders = await api(url) || [];
 
   const statuses = ['','awaiting_payment','paid','submitted_to_printer','printing','mailed','delivered'];
   const labels   = ['All','Awaiting','Paid','At Printer','Printing','Mailed','Delivered'];
   const filters  = statuses.map((s,i) => `<button class="filter-btn ${orderFilter===s?'active':''}" onclick="showOrders('${s}')">${labels[i]}</button>`).join('');
 
-  const rows = orders.map(o => `
+  setMain(`
+    <div class="page-header">
+      <div class="page-title">Orders</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-outline btn-sm" onclick="showPrintQueue()">🖨 Print Queue</button>
+        <a class="btn btn-outline btn-sm" href="/api/admin/orders/csv" download>↓ Export CSV</a>
+      </div>
+    </div>
+    <div class="filter-row" style="justify-content:space-between;align-items:center">
+      <div style="display:flex;gap:8px;flex-wrap:wrap">${filters}</div>
+      <input type="text" id="order-search" placeholder="Search name, email, #ID…" style="width:220px;padding:6px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px" oninput="renderOrdersTable()">
+    </div>
+    <div id="bulk-bar" style="display:none;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:10px 16px;margin-bottom:12px;display:none;align-items:center;gap:12px">
+      <span id="bulk-count" style="font-size:13px;color:#64748b"></span>
+      <select id="bulk-status-select" style="font-size:13px;border:1px solid #e2e8f0;border-radius:4px;padding:5px 8px">
+        <option value="">Set status…</option>
+        <option value="paid">Paid</option>
+        <option value="submitted_to_printer">At Printer</option>
+        <option value="printing">Printing</option>
+        <option value="mailed">Mailed</option>
+        <option value="delivered">Delivered</option>
+        <option value="refunded">Refunded</option>
+      </select>
+      <button class="btn btn-primary btn-sm" onclick="applyBulkStatus()">Apply</button>
+      <button class="btn btn-outline btn-sm" onclick="clearSelection()">Clear</button>
+    </div>
+    <div class="card">
+      <table>
+        <thead><tr>
+          <th style="width:36px"><input type="checkbox" id="select-all" onchange="toggleSelectAll(this.checked)"></th>
+          <th>#</th><th>Submitted</th><th>Recipient</th><th>Destination</th><th>Status</th><th>Time Left</th><th>Price</th><th></th>
+        </tr></thead>
+        <tbody id="orders-tbody"></tbody>
+      </table>
+    </div>`);
+
+  renderOrdersTable();
+}
+
+function renderOrdersTable() {
+  const q = (document.getElementById('order-search')?.value || '').toLowerCase();
+  const filtered = q
+    ? allOrders.filter(o =>
+        String(o.id).includes(q) ||
+        (o.recipient_name  || '').toLowerCase().includes(q) ||
+        (o.customer_email  || '').toLowerCase().includes(q) ||
+        (o.destination_country || '').toLowerCase().includes(q))
+    : allOrders;
+
+  const rows = filtered.map(o => `
     <tr>
+      <td><input type="checkbox" class="order-cb" value="${o.id}" onchange="updateBulkBar()"></td>
       <td><button class="link" onclick="go('/admin/orders/${o.id}')">#${o.id}</button></td>
       <td>${fmtDateTime(o.created_at)}</td>
       <td>${esc(o.recipient_name)}</td>
@@ -558,15 +610,93 @@ async function showOrders(filter) {
       <td><button class="link" onclick="go('/admin/orders/${o.id}')">View →</button></td>
     </tr>`).join('');
 
+  const tbody = document.getElementById('orders-tbody');
+  if (tbody) tbody.innerHTML = rows || '<tr><td colspan="9" class="empty">No orders.</td></tr>';
+}
+
+function toggleSelectAll(checked) {
+  document.querySelectorAll('.order-cb').forEach(cb => cb.checked = checked);
+  updateBulkBar();
+}
+
+function updateBulkBar() {
+  const selected = document.querySelectorAll('.order-cb:checked');
+  const bar = document.getElementById('bulk-bar');
+  const count = document.getElementById('bulk-count');
+  if (!bar) return;
+  if (selected.length > 0) {
+    bar.style.display = 'flex';
+    count.textContent = `${selected.length} order${selected.length>1?'s':''} selected`;
+  } else {
+    bar.style.display = 'none';
+  }
+}
+
+function clearSelection() {
+  document.querySelectorAll('.order-cb').forEach(cb => cb.checked = false);
+  const sa = document.getElementById('select-all');
+  if (sa) sa.checked = false;
+  updateBulkBar();
+}
+
+async function applyBulkStatus() {
+  const status = document.getElementById('bulk-status-select').value;
+  if (!status) return alert('Choose a status first.');
+  const ids = [...document.querySelectorAll('.order-cb:checked')].map(cb => Number(cb.value));
+  if (!ids.length) return;
+  if (!confirm(`Mark ${ids.length} order(s) as "${status}"?`)) return;
+  const r = await post('/api/admin/orders/bulk-status', { ids, status });
+  if (r?.ok) { showOrders(); }
+  else alert('Error: ' + (r?.error || 'unknown'));
+}
+
+// ── Print Queue ───────────────────────────────────────────────────────────────
+async function showPrintQueue() {
+  setTitle('Print Queue');
+  const [paid, submitted] = await Promise.all([
+    api('/api/admin/orders?status=paid'),
+    api('/api/admin/orders?status=submitted_to_printer'),
+  ]);
+  const orders = [...(paid||[]), ...(submitted||[])].sort((a,b) => new Date(a.created_at)-new Date(b.created_at));
+
+  if (!orders.length) {
+    return setMain(`
+      <button class="back-link" onclick="go('/admin/orders')">← Back to Orders</button>
+      <div class="empty" style="padding:60px">No orders in the queue.</div>`);
+  }
+
+  const cards = orders.map(o => {
+    const toAddr = [o.recipient_name, o.recipient_street,
+      [o.recipient_city, o.recipient_province, o.recipient_postal].filter(Boolean).join(' '),
+      o.destination_country].filter(Boolean).join('\n');
+    const fromAddr = o.skip_return ? '' : [o.sender_name, o.sender_street,
+      [o.sender_city, o.sender_province, o.sender_postal].filter(Boolean).join(' '),
+      o.sender_country].filter(Boolean).join('\n');
+    return `<div style="border:1px solid #e2e8f0;border-radius:6px;padding:20px;break-inside:avoid;margin-bottom:16px">
+      <div style="font-size:11px;color:#94a3b8;margin-bottom:10px;font-family:monospace">ORDER #${o.id} · ${fmtDate(o.created_at)} · ${statusBadge(o.status)}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <div>
+          <div style="font-size:10px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">From</div>
+          <div style="font-size:13px;line-height:1.7;white-space:pre-line;color:#334155">${fromAddr ? esc(fromAddr) : '<em style="color:#94a3b8">No return address</em>'}</div>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">To</div>
+          <div style="font-size:13px;line-height:1.7;white-space:pre-line;color:#0f172a;font-weight:500">${esc(toAddr)}</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
   setMain(`
-    <div class="page-header"><div class="page-title">Orders</div></div>
-    <div class="filter-row">${filters}</div>
-    <div class="card">
-      <table>
-        <thead><tr><th>#</th><th>Submitted</th><th>Recipient</th><th>Destination</th><th>Status</th><th>Time Left</th><th>Price</th><th></th></tr></thead>
-        <tbody>${rows || '<tr><td colspan="8" class="empty">No orders.</td></tr>'}</tbody>
-      </table>
-    </div>`);
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px" class="no-print">
+      <button class="back-link" onclick="go('/admin/orders')" style="margin:0">← Back to Orders</button>
+      <div style="display:flex;gap:8px">
+        <span style="font-size:13px;color:#64748b;align-self:center">${orders.length} order${orders.length>1?'s':''} to mail</span>
+        <button class="btn btn-primary btn-sm" onclick="window.print()">Print this page</button>
+      </div>
+    </div>
+    <style>@media print { .no-print { display:none !important } body { background:#fff } .sidebar,.topbar,.content>.topbar { display:none !important } .content { margin:0 !important } }</style>
+    ${cards}`);
 }
 
 // ── Order detail ──────────────────────────────────────────────────────────────
@@ -1256,35 +1386,142 @@ async function deleteTemplate(id) {
   showTemplates();
 }
 
+// ── Country lookup (for blocked countries UI) ─────────────────────────────────
+const COUNTRIES = {CA:'Canada',US:'United States',GB:'United Kingdom',AU:'Australia',NZ:'New Zealand',FR:'France',DE:'Germany',JP:'Japan',MX:'Mexico',IN:'India',BR:'Brazil',ZA:'South Africa',SG:'Singapore',HK:'Hong Kong',IE:'Ireland',NL:'Netherlands',BE:'Belgium',CH:'Switzerland',AT:'Austria',SE:'Sweden',NO:'Norway',DK:'Denmark',FI:'Finland',ES:'Spain',IT:'Italy',PT:'Portugal',PL:'Poland',CZ:'Czech Republic',HU:'Hungary',RO:'Romania',BG:'Bulgaria',HR:'Croatia',SK:'Slovakia',SI:'Slovenia',EE:'Estonia',LV:'Latvia',LT:'Lithuania',GR:'Greece',CY:'Cyprus',MT:'Malta',LU:'Luxembourg',IS:'Iceland',AL:'Albania',DZ:'Algeria',AD:'Andorra',AO:'Angola',AG:'Antigua and Barbuda',AR:'Argentina',AM:'Armenia',AZ:'Azerbaijan',BS:'Bahamas',BH:'Bahrain',BD:'Bangladesh',BB:'Barbados',BZ:'Belize',BJ:'Benin',BT:'Bhutan',BO:'Bolivia',BA:'Bosnia and Herzegovina',BW:'Botswana',BN:'Brunei',BI:'Burundi',KH:'Cambodia',CM:'Cameroon',CV:'Cape Verde',TD:'Chad',CL:'Chile',CN:'China',CO:'Colombia',KM:'Comoros',CG:'Congo',CR:'Costa Rica',CU:'Cuba',DJ:'Djibouti',DM:'Dominica',DO:'Dominican Republic',EC:'Ecuador',EG:'Egypt',SV:'El Salvador',GQ:'Equatorial Guinea',ER:'Eritrea',SZ:'Eswatini',ET:'Ethiopia',FJ:'Fiji',GA:'Gabon',GM:'Gambia',GE:'Georgia',GH:'Ghana',GD:'Grenada',GT:'Guatemala',GN:'Guinea',GW:'Guinea-Bissau',GY:'Guyana',HT:'Haiti',HN:'Honduras',ID:'Indonesia',IR:'Iran',IQ:'Iraq',IL:'Israel',JM:'Jamaica',JO:'Jordan',KZ:'Kazakhstan',KE:'Kenya',KI:'Kiribati',KW:'Kuwait',KG:'Kyrgyzstan',LA:'Laos',LB:'Lebanon',LS:'Lesotho',LR:'Liberia',LY:'Libya',LI:'Liechtenstein',MG:'Madagascar',MW:'Malawi',MY:'Malaysia',MV:'Maldives',ML:'Mali',MH:'Marshall Islands',MR:'Mauritania',MU:'Mauritius',FM:'Micronesia',MD:'Moldova',MC:'Monaco',MN:'Mongolia',ME:'Montenegro',MA:'Morocco',MZ:'Mozambique',MM:'Myanmar',NA:'Namibia',NR:'Nauru',NP:'Nepal',NI:'Nicaragua',NE:'Niger',NG:'Nigeria',OM:'Oman',PK:'Pakistan',PW:'Palau',PA:'Panama',PG:'Papua New Guinea',PY:'Paraguay',PE:'Peru',PH:'Philippines',QA:'Qatar',RU:'Russia',RW:'Rwanda',KN:'Saint Kitts and Nevis',LC:'Saint Lucia',VC:'Saint Vincent',WS:'Samoa',SM:'San Marino',ST:'São Tomé and Príncipe',SA:'Saudi Arabia',SN:'Senegal',RS:'Serbia',SC:'Seychelles',SL:'Sierra Leone',SB:'Solomon Islands',SD:'Sudan',SR:'Suriname',SY:'Syria',TW:'Taiwan',TJ:'Tajikistan',TZ:'Tanzania',TH:'Thailand',TL:'Timor-Leste',TG:'Togo',TO:'Tonga',TT:'Trinidad and Tobago',TN:'Tunisia',TR:'Turkey',TM:'Turkmenistan',TV:'Tuvalu',UG:'Uganda',UA:'Ukraine',AE:'United Arab Emirates',UY:'Uruguay',UZ:'Uzbekistan',VU:'Vanuatu',VE:'Venezuela',VN:'Vietnam',YE:'Yemen',ZM:'Zambia',ZW:'Zimbabwe'};
+
 // ── Settings ──────────────────────────────────────────────────────────────────
 async function showSettings() {
   setTitle('Settings');
   const settings = await api('/api/admin/settings');
   if (settings === null) return;
 
-  const paused = settings['service_paused'] === 'true';
+  const paused       = settings['service_paused'] === 'true';
+  const announcement = settings['announcement'] || '';
+  const priceDom     = settings['price_domestic_cents']      || '1000';
+  const priceIntl    = settings['price_international_cents'] || '2000';
+  const dailyCap     = settings['daily_order_cap']           || '0';
+  const blockedRaw   = settings['blocked_countries']         || '[]';
+  let blocked = [];
+  try { blocked = JSON.parse(blockedRaw); } catch {}
+
+  const countryOptions = Object.entries(COUNTRIES)
+    .sort((a,b) => a[1].localeCompare(b[1]))
+    .map(([code, name]) => `<option value="${code}">${name} (${code})</option>`)
+    .join('');
+
+  const blockedChips = blocked.map(code => `
+    <span style="display:inline-flex;align-items:center;gap:5px;background:#fee2e2;color:#991b1b;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:500;margin:3px">
+      ${esc(COUNTRIES[code] || code)} (${code})
+      <button onclick="removeBlockedCountry('${code}')" style="background:none;border:none;cursor:pointer;color:#991b1b;font-size:14px;line-height:1;padding:0">×</button>
+    </span>`).join('');
+
   setMain(`
     <div class="page-header"><div class="page-title">Settings</div></div>
-    <div class="card" style="max-width:600px">
-      <div class="card-header"><div class="card-title">Service Status</div></div>
+
+    <div class="card" style="max-width:640px;margin-bottom:20px">
+      <div class="card-header"><div class="card-title">Orders</div></div>
       <div style="padding:20px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:16px;border-bottom:1px solid #f1f5f9;margin-bottom:16px">
           <div>
-            <div style="font-size:14px;font-weight:600;color:#0f172a;margin-bottom:4px">Service Paused</div>
-            <div style="font-size:12px;color:#64748b">When paused, the /api/create-order endpoint will reject new orders with a 503.</div>
+            <div style="font-size:14px;font-weight:600;color:#0f172a;margin-bottom:3px">Accept Orders</div>
+            <div style="font-size:12px;color:#64748b">When off, checkout is blocked and the site shows a closed message.</div>
           </div>
-          <button id="pause-toggle-btn" class="btn ${paused?'btn-primary':'btn-outline'}" onclick="toggleServicePause(${paused})" style="${paused?'background:#dc2626':''}">
-            ${paused ? 'Paused — Click to Resume' : 'Active — Click to Pause'}
+          <button id="pause-toggle-btn" class="btn ${paused?'btn-primary':'btn-outline'}"
+            onclick="toggleServicePause(${paused})"
+            style="${paused?'background:#dc2626;border-color:#dc2626;color:#fff':''}">
+            ${paused ? '⏸ Orders Off — Click to Open' : '✓ Orders Open — Click to Close'}
           </button>
         </div>
-        <div id="settings-msg" style="font-size:12px;color:#16a34a;display:none">✓ Saved</div>
+        <div class="field" style="margin-bottom:12px">
+          <label>Announcement Banner <span style="color:#94a3b8;font-weight:400">(shown on the site — leave blank to hide)</span></label>
+          <input id="setting-announcement" type="text" value="${esc(announcement)}" placeholder="e.g. Holiday closure Dec 24–Jan 2. Orders resume Jan 3.">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+          <div class="field">
+            <label>Domestic Price (CAD cents)</label>
+            <input id="setting-price-dom" type="number" min="100" step="100" value="${priceDom}">
+            <span style="font-size:11px;color:#94a3b8">Currently $${(parseInt(priceDom)/100).toFixed(2)} CAD</span>
+          </div>
+          <div class="field">
+            <label>International Price (CAD cents)</label>
+            <input id="setting-price-intl" type="number" min="100" step="100" value="${priceIntl}">
+            <span style="font-size:11px;color:#94a3b8">Currently $${(parseInt(priceIntl)/100).toFixed(2)} CAD</span>
+          </div>
+        </div>
+        <div class="field" style="margin-bottom:16px">
+          <label>Daily Order Cap <span style="color:#94a3b8;font-weight:400">(0 = unlimited)</span></label>
+          <input id="setting-daily-cap" type="number" min="0" value="${dailyCap}" style="max-width:120px">
+        </div>
+        <div class="field" style="margin-bottom:16px">
+          <label>Block a Destination</label>
+          <div style="display:flex;gap:8px;margin-bottom:8px">
+            <select id="block-country-select" style="flex:1">
+              <option value="">Select country…</option>
+              ${countryOptions}
+            </select>
+            <button class="btn btn-outline btn-sm" onclick="addBlockedCountry()">Block</button>
+          </div>
+          <div id="blocked-chips" style="min-height:28px">${blockedChips || '<span style="font-size:12px;color:#94a3b8">No countries blocked.</span>'}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <button class="btn btn-primary" onclick="saveAllSettings()">Save Settings</button>
+          <span id="settings-saved-msg" style="font-size:12px;color:#16a34a;display:none">✓ Saved</span>
+        </div>
+        <div id="settings-msg" style="font-size:12px;color:#16a34a;display:none;margin-top:8px">✓ Saved</div>
       </div>
     </div>`);
+
+  window._blockedCountries = [...blocked];
 }
 
-async function loadSetting(key, defaultVal) {
-  const s = await api('/api/admin/settings');
-  return s?.[key] ?? defaultVal;
+function addBlockedCountry() {
+  const sel = document.getElementById('block-country-select');
+  const code = sel.value;
+  if (!code) return;
+  if (!window._blockedCountries) window._blockedCountries = [];
+  if (window._blockedCountries.includes(code)) return;
+  window._blockedCountries.push(code);
+  sel.value = '';
+  renderBlockedChips();
+}
+
+function removeBlockedCountry(code) {
+  window._blockedCountries = (window._blockedCountries || []).filter(c => c !== code);
+  renderBlockedChips();
+}
+
+function renderBlockedChips() {
+  const el = document.getElementById('blocked-chips');
+  if (!el) return;
+  const blocked = window._blockedCountries || [];
+  el.innerHTML = blocked.length
+    ? blocked.map(code => `
+        <span style="display:inline-flex;align-items:center;gap:5px;background:#fee2e2;color:#991b1b;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:500;margin:3px">
+          ${esc(COUNTRIES[code] || code)} (${code})
+          <button onclick="removeBlockedCountry('${code}')" style="background:none;border:none;cursor:pointer;color:#991b1b;font-size:14px;line-height:1;padding:0">×</button>
+        </span>`).join('')
+    : '<span style="font-size:12px;color:#94a3b8">No countries blocked.</span>';
+}
+
+async function saveAllSettings() {
+  const announcement = document.getElementById('setting-announcement')?.value || '';
+  const priceDom     = parseInt(document.getElementById('setting-price-dom')?.value) || 1000;
+  const priceIntl    = parseInt(document.getElementById('setting-price-intl')?.value) || 2000;
+  const dailyCap     = parseInt(document.getElementById('setting-daily-cap')?.value) || 0;
+  const blocked      = JSON.stringify(window._blockedCountries || []);
+
+  const r = await post('/api/admin/settings/batch', {
+    announcement,
+    price_domestic_cents:      String(priceDom),
+    price_international_cents: String(priceIntl),
+    daily_order_cap:           String(dailyCap),
+    blocked_countries:         blocked,
+  });
+  const msg = document.getElementById('settings-saved-msg');
+  if (r?.ok && msg) {
+    msg.style.display = 'inline';
+    setTimeout(() => { msg.style.display = 'none'; }, 2500);
+  } else alert('Error saving: ' + (r?.error || 'unknown'));
 }
 
 async function saveSetting(key, value) {
@@ -1294,11 +1531,8 @@ async function saveSetting(key, value) {
 async function toggleServicePause(currentlyPaused) {
   const newVal = !currentlyPaused;
   const r = await saveSetting('service_paused', newVal ? 'true' : 'false');
-  if (r?.ok) {
-    const msg = document.getElementById('settings-msg');
-    if (msg) msg.style.display = 'block';
-    setTimeout(() => showSettings(), 800);
-  } else alert('Error saving setting.');
+  if (r?.ok) showSettings();
+  else alert('Error saving setting.');
 }
 
 // ── Trash ─────────────────────────────────────────────────────────────────────

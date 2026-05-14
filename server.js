@@ -160,6 +160,16 @@ try {
   )`);
 } catch (e) { console.error('[init] settings table:', e.message); }
 
+function getSetting(key, fallback = '') {
+  const row = db.prepare('SELECT value FROM settings WHERE key = ?').get(key);
+  return row ? row.value : fallback;
+}
+function setSetting(key, value) {
+  db.prepare(`INSERT INTO settings (key, value, updated_at) VALUES (?,?,CURRENT_TIMESTAMP)
+    ON CONFLICT(key) DO UPDATE SET value=excluded.value, updated_at=CURRENT_TIMESTAMP`)
+    .run(key, String(value ?? ''));
+}
+
 // ── Email transport ───────────────────────────────────────────────────────────
 const transport = mailer.createTransport({
   host:   process.env.SMTP_HOST,
@@ -363,6 +373,17 @@ document.head.appendChild(s);})();
 });
 
 
+// ── Public site config ────────────────────────────────────────────────────────
+app.get('/api/site-config', (req, res) => {
+  res.json({
+    orders_open:               getSetting('service_paused', 'false') !== 'true',
+    announcement:              getSetting('announcement', ''),
+    price_domestic_cents:      parseInt(getSetting('price_domestic_cents',      '1000')) || 1000,
+    price_international_cents: parseInt(getSetting('price_international_cents', '2000')) || 2000,
+    blocked_countries:         JSON.parse(getSetting('blocked_countries', '[]') || '[]'),
+  });
+});
+
 // ── Rate limiting ─────────────────────────────────────────────────────────────
 const orderLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
@@ -395,21 +416,36 @@ function requireAdmin(req, res, next) {
 
 // ── Create order ──────────────────────────────────────────────────────────────
 app.post('/api/create-order', orderLimiter, upload.array('attachments', 5), async (req, res) => {
-  // E. Service pause check
-  const paused = db.prepare("SELECT value FROM settings WHERE key='service_paused'").get();
-  if (paused?.value === 'true') return res.status(503).json({ error: 'The service is temporarily paused. Please try again later.' });
+  if (getSetting('service_paused', 'false') === 'true')
+    return res.status(503).json({ error: 'Orders are currently paused. Please check back soon.' });
 
   const b = req.body;
   const rEmail  = (b['r-email']  || '').trim().toLowerCase();
   const rName   = (b['r-name']   || '').trim();
   const rStreet = (b['r-street'] || '').trim();
 
-  if (!rEmail || !rName || !rStreet) {
+  if (!rEmail || !rName || !rStreet)
     return res.status(400).json({ error: 'Missing required fields.' });
+
+  const blockedCountries = JSON.parse(getSetting('blocked_countries', '[]') || '[]');
+  if (blockedCountries.includes(b['r-country']))
+    return res.status(400).json({ error: 'We are not currently shipping to that destination.' });
+
+  const dailyCap = parseInt(getSetting('daily_order_cap', '0')) || 0;
+  if (dailyCap > 0) {
+    const todayCount = db.prepare(`
+      SELECT COUNT(*) as n FROM orders
+      WHERE status != 'awaiting_payment' AND deleted_at IS NULL
+        AND date(created_at) = date('now')
+    `).get().n;
+    if (todayCount >= dailyCap)
+      return res.status(503).json({ error: "We've reached our order limit for today. Please try again tomorrow." });
   }
 
   const isDomestic = b['r-country'] === 'CA';
-  const priceCents = isDomestic ? 1000 : 2000;
+  const priceCents = isDomestic
+    ? (parseInt(getSetting('price_domestic_cents',      '1000')) || 1000)
+    : (parseInt(getSetting('price_international_cents', '2000')) || 2000);
 
   const tempFiles = (req.files || []).map(f => ({
     tempPath:     f.path,
@@ -681,6 +717,22 @@ app.get('/api/admin/orders', requireAdmin, (req, res) => {
     ? db.prepare("SELECT * FROM orders WHERE status = ? AND deleted_at IS NULL ORDER BY created_at DESC").all(status)
     : db.prepare("SELECT * FROM orders WHERE deleted_at IS NULL ORDER BY created_at DESC").all();
   res.json(rows);
+});
+
+app.get('/api/admin/orders/csv', requireAdmin, (req, res) => {
+  const orders = db.prepare(`
+    SELECT id, created_at, status, customer_email,
+           recipient_name, recipient_street, recipient_city, recipient_province, recipient_postal, destination_country,
+           sender_name, sender_country, price_cents, printer_ref
+    FROM orders WHERE deleted_at IS NULL ORDER BY created_at DESC
+  `).all();
+  const cols = ['id','created_at','status','customer_email','recipient_name','recipient_street',
+                'recipient_city','recipient_province','recipient_postal','destination_country',
+                'sender_name','sender_country','price_cents','printer_ref'];
+  const rows = orders.map(o => cols.map(c => `"${String(o[c]??'').replace(/"/g,'""')}"`).join(','));
+  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+  res.setHeader('Content-Disposition', `attachment; filename="orders-${new Date().toISOString().slice(0,10)}.csv"`);
+  res.send([cols.join(','), ...rows].join('\r\n'));
 });
 
 app.delete('/api/admin/orders/:id', requireAdmin, (req, res) => {
@@ -1177,10 +1229,18 @@ app.get('/api/admin/settings', requireAdmin, (req, res) => {
 app.post('/api/admin/settings', requireAdmin, (req, res) => {
   const { key, value } = req.body;
   if (!key?.trim() || typeof value !== 'string') return res.status(400).json({ error: 'key and value are required' });
-  db.prepare(`INSERT INTO settings (key, value, updated_at) VALUES (?,?,CURRENT_TIMESTAMP)
-    ON CONFLICT(key) DO UPDATE SET value=excluded.value, updated_at=CURRENT_TIMESTAMP`)
-    .run(key.trim(), value);
+  setSetting(key.trim(), value);
   logAudit(req, 'settings.change', 'settings', key.trim(), { value });
+  res.json({ ok: true });
+});
+
+app.post('/api/admin/settings/batch', requireAdmin, (req, res) => {
+  const allowed = ['service_paused','announcement','price_domestic_cents','price_international_cents','daily_order_cap','blocked_countries'];
+  const updates = req.body || {};
+  for (const key of allowed) {
+    if (key in updates) setSetting(key, updates[key]);
+  }
+  logAudit(req, 'settings.batch_update', 'settings', null, updates);
   res.json({ ok: true });
 });
 
