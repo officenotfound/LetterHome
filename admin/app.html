@@ -170,6 +170,9 @@ textarea{resize:vertical;min-height:80px}
     <button class="nav-link" id="nav-orders"    onclick="go('/admin/orders')"><span class="nav-icon">✉</span> Orders</button>
     <button class="nav-link" id="nav-customers" onclick="go('/admin/customers')"><span class="nav-icon">◎</span> Customers</button>
     <button class="nav-link" id="nav-broadcast" onclick="go('/admin/broadcast')"><span class="nav-icon">📢</span> Broadcast</button>
+    <button class="nav-link" id="nav-insights"  onclick="go('/admin/insights')"><span class="nav-icon">◑</span> Insights</button>
+    <button class="nav-link" id="nav-templates" onclick="go('/admin/templates')"><span class="nav-icon">☰</span> Templates</button>
+    <button class="nav-link" id="nav-settings"  onclick="go('/admin/settings')"><span class="nav-icon">⚙</span> Settings</button>
     <button class="nav-link" id="nav-trash"     onclick="go('/admin/trash')"><span class="nav-icon">⌫</span> Trash</button>
     <div class="nav-label">External</div>
     <a class="nav-link" href="https://dashboard.stripe.com/payments" target="_blank" rel="noopener" style="text-decoration:none"><span class="nav-icon">↗</span> Stripe Dashboard</a>
@@ -224,14 +227,20 @@ function route() {
   if (p.match(/^\/admin\/customers\/.+$/))          return showCustomer(decodeURIComponent(p.replace('/admin/customers/', '')));
   if (p === '/admin/trash')                         return showTrash();
   if (p === '/admin/broadcast')                     return showBroadcast();
+  if (p === '/admin/insights')                      return showInsights();
+  if (p === '/admin/templates')                     return showTemplates();
+  if (p === '/admin/settings')                      return showSettings();
   showDashboard();
 }
 
 function setActiveNav(p) {
-  ['dashboard','orders','customers','broadcast','trash'].forEach(k => document.getElementById('nav-'+k)?.classList.remove('active'));
+  ['dashboard','orders','customers','broadcast','insights','templates','settings','trash'].forEach(k => document.getElementById('nav-'+k)?.classList.remove('active'));
   if (p.startsWith('/admin/orders'))         document.getElementById('nav-orders')?.classList.add('active');
   else if (p.startsWith('/admin/customers')) document.getElementById('nav-customers')?.classList.add('active');
   else if (p.startsWith('/admin/broadcast')) document.getElementById('nav-broadcast')?.classList.add('active');
+  else if (p.startsWith('/admin/insights'))  document.getElementById('nav-insights')?.classList.add('active');
+  else if (p.startsWith('/admin/templates')) document.getElementById('nav-templates')?.classList.add('active');
+  else if (p.startsWith('/admin/settings'))  document.getElementById('nav-settings')?.classList.add('active');
   else if (p.startsWith('/admin/trash'))     document.getElementById('nav-trash')?.classList.add('active');
   else                                       document.getElementById('nav-dashboard')?.classList.add('active');
 }
@@ -346,15 +355,54 @@ function startCountdownTicker() {
 }
 
 // ── Dashboard ─────────────────────────────────────────────────────────────────
+let dashChartPeriod = 'monthly';
+
 async function showDashboard() {
   setTitle('Dashboard');
-  const [stats, paidOrders, submittedOrders] = await Promise.all([
+  const [stats, paidOrders, submittedOrders, chartData, geoData] = await Promise.all([
     api('/api/admin/stats'),
     api('/api/admin/orders?status=paid'),
     api('/api/admin/orders?status=submitted_to_printer'),
+    api('/api/admin/stats/chart?period=monthly'),
+    api('/api/admin/stats/geo'),
   ]);
   if (!stats) return;
 
+  renderDashboard(stats, paidOrders, submittedOrders, chartData, geoData, 'monthly');
+}
+
+async function reloadDashChart(period) {
+  dashChartPeriod = period;
+  const chartData = await api('/api/admin/stats/chart?period=' + period);
+  const container = document.getElementById('dash-chart-container');
+  if (container && chartData) container.innerHTML = renderBarChart(chartData, 120);
+  document.querySelectorAll('.dash-period-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.period === period);
+  });
+}
+
+function renderBarChart(data, maxBarPx) {
+  if (!data || !data.length) return '<div class="empty" style="padding:20px">No data yet.</div>';
+  const maxRev = Math.max(...data.map(d => d.revenue_cents), 1);
+  const bars = data.map(d => {
+    const h = Math.max(4, Math.round((d.revenue_cents / maxRev) * maxBarPx));
+    return `<div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;min-width:0">
+      <span style="font-size:10px;color:#64748b">${fmtCAD(d.revenue_cents).replace(' CAD','')}</span>
+      <div style="width:100%;height:${h}px;background:#a8472d;border-radius:2px 2px 0 0;min-height:4px" title="${d.label}: ${d.orders} orders, ${fmtCAD(d.revenue_cents)}"></div>
+      <span style="font-size:10px;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%">${esc(d.label)}</span>
+    </div>`;
+  }).join('');
+  return `<div style="display:flex;align-items:flex-end;gap:4px;height:${maxBarPx + 50}px;padding:0 4px">${bars}</div>`;
+}
+
+async function sendPnlDigest() {
+  const month = new Date().toISOString().slice(0, 7);
+  const r = await post('/api/admin/pnl-digest', { month });
+  if (r?.ok) alert('P&L digest sent to ' + (window._operatorEmail || 'operator email'));
+  else alert('Error: ' + (r?.error || 'unknown'));
+}
+
+function renderDashboard(stats, paidOrders, submittedOrders, chartData, geoData, period) {
   const queueRows = [...(paidOrders || []), ...(submittedOrders || [])]
     .sort((a,b) => new Date(a.created_at) - new Date(b.created_at))
     .map(o => `
@@ -369,8 +417,12 @@ async function showDashboard() {
       <td><button class="btn btn-primary btn-sm" onclick="go('/admin/orders/${o.id}')">Action →</button></td>
     </tr>`).join('');
 
+  const seg = stats.segments || {};
+  const geoFromRows = (geoData?.from || []).slice(0,5).map(r => `<tr><td>${esc(r.country||'—')}</td><td>${r.orders}</td></tr>`).join('');
+  const geoToRows   = (geoData?.to   || []).slice(0,5).map(r => `<tr><td>${esc(r.country||'—')}</td><td>${r.orders}</td></tr>`).join('');
+
   setMain(`
-    <div class="stats-grid">
+    <div class="stats-grid" style="grid-template-columns:repeat(5,1fr)">
       <div class="stat-card">
         <div class="stat-label">Paid Orders</div>
         <div class="stat-value">${stats.paid}</div>
@@ -379,38 +431,94 @@ async function showDashboard() {
       <div class="stat-card">
         <div class="stat-label">Gross Revenue</div>
         <div class="stat-value">${fmtCAD(stats.revenue)}</div>
-        <div class="stat-sub">before fees & costs</div>
+        <div class="stat-sub">before fees &amp; costs</div>
       </div>
       <div class="stat-card">
         <div class="stat-label">Net Profit</div>
         <div class="stat-value" style="color:#16a34a">${fmtCAD(stats.net)}</div>
-        <div class="stat-sub">after fees & costs</div>
+        <div class="stat-sub">after fees &amp; costs</div>
       </div>
       <div class="stat-card">
         <div class="stat-label">Avg / Order</div>
         <div class="stat-value">${stats.paid ? fmtCAD(Math.round(stats.net / stats.paid)) : '$0.00 CAD'}</div>
         <div class="stat-sub">net per letter</div>
       </div>
+      <div class="stat-card">
+        <div class="stat-label">Repeat Rate</div>
+        <div class="stat-value">${stats.repeat_rate ?? 0}%</div>
+        <div class="stat-sub">of customers reordered</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Profit Breakdown</div>
+          <button class="btn btn-outline btn-sm" onclick="sendPnlDigest()">Email P&amp;L Digest</button>
+        </div>
+        <div style="padding:20px 24px">
+          <div class="detail-row">
+            <span class="detail-label">Gross Revenue</span>
+            <span class="detail-value" style="font-size:15px">${fmtCAD(stats.revenue)}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Stripe Fees <span style="color:#94a3b8;font-size:11px">(2.9% + $0.30)</span></span>
+            <span class="detail-value" style="color:#dc2626">−${fmtCAD(stats.stripe_fees)}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Print &amp; Postage <span style="color:#94a3b8;font-size:11px">($6 CA · $12 intl)</span></span>
+            <span class="detail-value" style="color:#dc2626">−${fmtCAD(stats.cogs)}</span>
+          </div>
+          <div class="detail-row" style="border-top:2px solid #e2e8f0;margin-top:6px;padding-top:14px">
+            <span class="detail-label" style="font-weight:600;color:#0f172a;font-size:14px">Net Profit</span>
+            <span class="detail-value" style="color:#16a34a;font-size:18px;font-weight:700">${fmtCAD(stats.net)}</span>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Customer Segments</div>
+        </div>
+        <div style="padding:20px 24px">
+          <div class="detail-row"><span class="detail-label">One-time</span><span class="detail-value">${seg.one_time ?? 0}</span></div>
+          <div class="detail-row"><span class="detail-label">Returning (2–4)</span><span class="detail-value">${seg.returning ?? 0}</span></div>
+          <div class="detail-row"><span class="detail-label">Loyal (5+)</span><span class="detail-value">${seg.loyal ?? 0}</span></div>
+          <div class="detail-row"><span class="detail-label">Repeat rate</span><span class="detail-value">${stats.repeat_rate ?? 0}%</span></div>
+          <div class="detail-row" style="border-bottom:none"><span class="detail-label">Avg days between orders</span><span class="detail-value">${stats.avg_days_between_orders != null ? stats.avg_days_between_orders + ' days' : '—'}</span></div>
+        </div>
+      </div>
     </div>
     <div class="card" style="margin-bottom:24px">
-      <div class="card-header"><div class="card-title">Profit Breakdown</div></div>
-      <div style="padding:20px 24px">
-        <div class="detail-row">
-          <span class="detail-label">Gross Revenue</span>
-          <span class="detail-value" style="font-size:15px">${fmtCAD(stats.revenue)}</span>
+      <div class="card-header">
+        <div class="card-title">Revenue Trend</div>
+        <div style="display:flex;gap:6px">
+          <button class="filter-btn dash-period-btn active" data-period="monthly" onclick="reloadDashChart('monthly')">Monthly</button>
+          <button class="filter-btn dash-period-btn" data-period="weekly" onclick="reloadDashChart('weekly')">Weekly</button>
         </div>
-        <div class="detail-row">
-          <span class="detail-label">Stripe Fees <span style="color:#94a3b8;font-size:11px">(2.9% + $0.30 per charge)</span></span>
-          <span class="detail-value" style="color:#dc2626">−${fmtCAD(stats.stripe_fees)}</span>
+      </div>
+      <div style="padding:16px 20px" id="dash-chart-container">
+        ${renderBarChart(chartData, 120)}
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Top Origins</div>
+          <button class="link" onclick="go('/admin/insights')">View all →</button>
         </div>
-        <div class="detail-row">
-          <span class="detail-label">Print & Postage <span style="color:#94a3b8;font-size:11px">($6 CA · $12 international)</span></span>
-          <span class="detail-value" style="color:#dc2626">−${fmtCAD(stats.cogs)}</span>
+        <table>
+          <thead><tr><th>Country</th><th>Orders</th></tr></thead>
+          <tbody>${geoFromRows || '<tr><td colspan="2" class="empty">No data.</td></tr>'}</tbody>
+        </table>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Top Destinations</div>
+          <button class="link" onclick="go('/admin/insights')">View all →</button>
         </div>
-        <div class="detail-row" style="border-top:2px solid #e2e8f0;margin-top:6px;padding-top:14px">
-          <span class="detail-label" style="font-weight:600;color:#0f172a;font-size:14px">Net Profit</span>
-          <span class="detail-value" style="color:#16a34a;font-size:18px;font-weight:700">${fmtCAD(stats.net)}</span>
-        </div>
+        <table>
+          <thead><tr><th>Country</th><th>Orders</th></tr></thead>
+          <tbody>${geoToRows || '<tr><td colspan="2" class="empty">No data.</td></tr>'}</tbody>
+        </table>
       </div>
     </div>
     <div class="card">
@@ -464,7 +572,10 @@ async function showOrders(filter) {
 // ── Order detail ──────────────────────────────────────────────────────────────
 async function showOrder(id) {
   setTitle(`Order #${id}`);
-  const o = await api(`/api/admin/orders/${id}`);
+  const [o, orderNotes] = await Promise.all([
+    api(`/api/admin/orders/${id}`),
+    api(`/api/admin/orders/${id}/notes`),
+  ]);
   if (!o) return setMain('<div class="empty">Order not found.</div>');
 
   const fromAddr = o.skip_return ? 'No return address'
@@ -533,9 +644,19 @@ async function showOrder(id) {
         <div class="detail-row"><span class="detail-label">IP address</span><span class="detail-value">${o.customer_ip ? esc(o.customer_ip) : '<span style="color:#94a3b8">—</span>'}</span></div>
         <div class="detail-row"><span class="detail-label">Type</span><span class="detail-value">${esc(o.letter_type||'standard')}</span></div>
         <div class="detail-row"><span class="detail-label">Price</span><span class="detail-value">${fmtCAD(o.price_cents)}</span></div>
+        ${o.actual_cost_cents != null ? `<div class="detail-row"><span class="detail-label">Actual Cost</span><span class="detail-value">${fmtCAD(o.actual_cost_cents)}</span></div>` : ''}
         ${o.printer_ref ? `<div class="detail-row"><span class="detail-label">Printer Ref</span><span class="detail-value" style="font-family:monospace;font-size:13px">${esc(o.printer_ref)}</span></div>` : ''}
         ${o.estimated_delivery ? `<div class="detail-row"><span class="detail-label">Est. Delivery</span><span class="detail-value">${esc(o.estimated_delivery)}</span></div>` : ''}
         ${o.status_token ? `<div class="detail-row"><span class="detail-label">Status Page</span><span class="detail-value"><a href="/status/${o.status_token}" target="_blank" class="link" style="font-size:12px">View →</a></span></div>` : ''}
+        <div class="detail-row" style="border-bottom:none;flex-direction:column;gap:8px;align-items:flex-start">
+          <span class="detail-label">Record actual cost</span>
+          <div style="display:flex;gap:8px;align-items:center;width:100%">
+            <span style="font-size:13px;color:#64748b">$</span>
+            <input type="number" id="actual-cost-input" min="0" step="0.01" placeholder="0.00" style="width:100px" value="${o.actual_cost_cents != null ? (o.actual_cost_cents/100).toFixed(2) : ''}">
+            <span style="font-size:13px;color:#64748b">CAD</span>
+            <button class="btn btn-outline btn-sm" onclick="saveActualCost(${o.id})">Save</button>
+          </div>
+        </div>
       </div>
       ${fulfillmentCard(o, statusOpts)}
     </div>
@@ -551,7 +672,19 @@ async function showOrder(id) {
         ${userFiles.length > 1 ? `<button class="btn btn-outline btn-sm" onclick="downloadAllFiles(${o.id}, ${JSON.stringify(userFiles)})">Download All</button>` : ''}
       </div>
       <div class="files-list">${fileItems}</div>
-    </div>` : ''}`);
+    </div>` : ''}
+    <div class="card" style="margin-bottom:24px">
+      <div class="card-header"><div class="card-title">Order Notes</div></div>
+      <div style="padding:16px 20px">
+        <div class="field" style="margin-bottom:12px">
+          <textarea id="order-note-input" placeholder="Add an internal note about this order…"></textarea>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="addOrderNote(${o.id})">Add Note</button>
+      </div>
+      <div style="padding:0 20px 16px" id="order-notes-list">
+        ${(orderNotes||[]).map(n => `<div class="note-item"><div class="note-meta">${fmtDateTime(n.created_at)}</div><div class="note-text">${esc(n.note)}</div></div>`).join('') || '<div class="empty" style="padding:20px 0">No notes yet.</div>'}
+      </div>
+    </div>`);
 }
 
 function toggleMessageForm() {
@@ -572,6 +705,23 @@ async function sendMessage(id) {
   } else {
     alert('Could not send: ' + (r?.error || 'unknown error'));
   }
+}
+
+async function saveActualCost(id) {
+  const val = parseFloat(document.getElementById('actual-cost-input').value);
+  if (isNaN(val) || val < 0) return alert('Enter a valid non-negative cost.');
+  const cents = Math.round(val * 100);
+  const r = await post(`/api/admin/orders/${id}/actual-cost`, { actual_cost_cents: cents });
+  if (r?.ok) showOrder(id);
+  else alert('Error: ' + (r?.error || 'could not save'));
+}
+
+async function addOrderNote(id) {
+  const note = document.getElementById('order-note-input').value.trim();
+  if (!note) return;
+  const r = await post(`/api/admin/orders/${id}/notes`, { note });
+  if (r?.ok) showOrder(id);
+  else alert('Error: ' + (r?.error || 'could not add note'));
 }
 
 function fulfillmentCard(o, statusOpts) {
@@ -728,7 +878,10 @@ async function deleteCustomer(encodedEmail) {
 // ── Customer detail ───────────────────────────────────────────────────────────
 async function showCustomer(email) {
   setTitle('Customer');
-  const c = await api(`/api/admin/customers/${encodeURIComponent(email)}`);
+  const [c, occasions] = await Promise.all([
+    api(`/api/admin/customers/${encodeURIComponent(email)}`),
+    api(`/api/admin/customers/${encodeURIComponent(email)}/occasions`),
+  ]);
   if (!c) return setMain('<div class="empty">Customer not found.</div>');
 
   const totalSpent = c.orders.filter(o => o.status !== 'awaiting_payment').reduce((s,o) => s + o.price_cents, 0);
@@ -786,7 +939,7 @@ async function showCustomer(email) {
         <tbody>${orderRows || '<tr><td colspan="6" class="empty">No orders.</td></tr>'}</tbody>
       </table>
     </div>
-    <div class="card">
+    <div class="card" style="margin-bottom:24px">
       <div class="card-header"><div class="card-title">Notes</div></div>
       <div style="padding:16px 20px">
         <div class="field" style="margin-bottom:12px">
@@ -796,6 +949,27 @@ async function showCustomer(email) {
       </div>
       <div style="padding:0 20px 16px" id="notes-list">
         ${noteItems || '<div class="empty" style="padding:20px 0">No notes yet.</div>'}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">Occasions &amp; Reminders</div></div>
+      <div style="padding:16px 20px">
+        ${(occasions||[]).map(occ => `
+          <div class="note-item" style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div class="note-text" style="font-weight:600">${esc(occ.occasion_name)}</div>
+              <div class="note-meta">${formatOccasionDate(occ.occasion_date)} &nbsp;·&nbsp; ${occ.remind_days_before} days before</div>
+            </div>
+            <button class="btn-ghost" onclick="deleteOccasion(${occ.id}, '${encodeURIComponent(email)}')">Delete</button>
+          </div>`).join('') || '<div class="empty" style="padding:10px 0">No reminders set.</div>'}
+        <div style="border-top:1px solid #f1f5f9;margin-top:16px;padding-top:16px">
+          <div class="form-row" style="flex-wrap:wrap;margin-bottom:0">
+            <div class="field"><label>Name</label><input id="occ-name" type="text" placeholder="e.g. Mom's Birthday"></div>
+            <div class="field"><label>Date (MM-DD)</label><input id="occ-date" type="text" placeholder="e.g. 06-15" maxlength="5"></div>
+            <div class="field" style="max-width:120px"><label>Days before</label><input id="occ-days" type="number" value="14" min="1"></div>
+            <button class="btn btn-primary btn-sm" style="align-self:flex-end" onclick="addOccasion('${encodeURIComponent(email)}')">Add Reminder</button>
+          </div>
+        </div>
       </div>
     </div>`);
 }
@@ -819,19 +993,50 @@ async function removeTag(encodedEmail, tag) {
   showCustomer(decodeURIComponent(encodedEmail));
 }
 
+function formatOccasionDate(mmdd) {
+  const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const [mm, dd] = (mmdd || '').split('-').map(Number);
+  if (!mm || !dd) return mmdd || '—';
+  return `${monthNames[mm-1]} ${dd}`;
+}
+
+async function addOccasion(encodedEmail) {
+  const occasion_name      = document.getElementById('occ-name').value.trim();
+  const occasion_date      = document.getElementById('occ-date').value.trim();
+  const remind_days_before = parseInt(document.getElementById('occ-days').value, 10);
+  if (!occasion_name) return alert('Occasion name is required.');
+  if (!/^\d{2}-\d{2}$/.test(occasion_date)) return alert('Date must be in MM-DD format, e.g. 06-15.');
+  const r = await post(`/api/admin/customers/${encodedEmail}/occasions`, { occasion_name, occasion_date, remind_days_before });
+  if (r?.ok) showCustomer(decodeURIComponent(encodedEmail));
+  else alert('Error: ' + (r?.error || 'could not add occasion'));
+}
+
+async function deleteOccasion(id, encodedEmail) {
+  if (!confirm('Delete this reminder?')) return;
+  await del(`/api/admin/occasions/${id}`);
+  showCustomer(decodeURIComponent(encodedEmail));
+}
+
 // ── Broadcast ─────────────────────────────────────────────────────────────────
 async function showBroadcast() {
   setTitle('Broadcast');
-  const tags = await api('/api/admin/tags');
+  const [tags, templates] = await Promise.all([api('/api/admin/tags'), api('/api/admin/templates')]);
   if (!tags) return;
   const tagOpts = ['<option value="">All customers</option>']
-    .concat(tags.map(t => `<option value="${esc(t.tag)}">${esc(t.tag)} (${t.n})</option>`))
+    .concat((tags||[]).map(t => `<option value="${esc(t.tag)}">${esc(t.tag)} (${t.n})</option>`))
+    .join('');
+  const tmplOpts = ['<option value="">— Load a template —</option>']
+    .concat((templates||[]).map(t => `<option value="${t.id}" data-subject="${esc(t.subject)}" data-body="${esc(t.body)}">${esc(t.name)}</option>`))
     .join('');
   setMain(`
     <div class="page-header"><div class="page-title">Broadcast email</div></div>
     <p style="color:#64748b;font-size:13px;margin-bottom:20px;max-width:600px">Send an email to a group of customers. Use sparingly — recipients did not opt in to marketing. Plain text only. Sends are throttled to one per second.</p>
     <div class="card" style="max-width:680px">
       <div style="padding:24px">
+        <div class="field" style="margin-bottom:16px">
+          <label>Load Template</label>
+          <select id="bc-template" onchange="loadBroadcastTemplate()">${tmplOpts}</select>
+        </div>
         <div class="field" style="margin-bottom:16px">
           <label>Recipients</label>
           <select id="bc-tag" onchange="previewBroadcast()">${tagOpts}</select>
@@ -845,13 +1050,47 @@ async function showBroadcast() {
           <label>Message (plain text)</label>
           <textarea id="bc-body" rows="10" style="min-height:200px" placeholder="Write your message here. An unsubscribe note will be appended automatically."></textarea>
         </div>
-        <div style="display:flex;gap:8px;align-items:center">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
           <button class="btn btn-primary" onclick="sendBroadcast()">Send Broadcast</button>
+          <button class="btn btn-outline" onclick="toggleSaveTemplate()">Save as Template</button>
           <span id="bc-status" style="font-size:13px;display:none"></span>
+        </div>
+        <div id="save-tmpl-form" style="display:none;margin-top:16px;padding:16px;background:#f8fafc;border-radius:6px;border:1px solid #e2e8f0">
+          <div class="form-row" style="margin-bottom:0">
+            <div class="field"><label>Template name</label><input id="tmpl-name" type="text" placeholder="e.g. Holiday greeting"></div>
+            <button class="btn btn-primary btn-sm" style="align-self:flex-end" onclick="saveAsTemplate()">Save</button>
+            <button class="btn btn-outline btn-sm" style="align-self:flex-end" onclick="toggleSaveTemplate()">Cancel</button>
+          </div>
         </div>
       </div>
     </div>`);
   previewBroadcast();
+}
+
+function loadBroadcastTemplate() {
+  const sel = document.getElementById('bc-template');
+  const opt = sel.options[sel.selectedIndex];
+  if (!opt.value) return;
+  const subject = opt.getAttribute('data-subject') || '';
+  const body    = opt.getAttribute('data-body') || '';
+  document.getElementById('bc-subject').value = subject.replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"');
+  document.getElementById('bc-body').value    = body.replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"');
+}
+
+function toggleSaveTemplate() {
+  const f = document.getElementById('save-tmpl-form');
+  f.style.display = f.style.display === 'none' ? 'block' : 'none';
+}
+
+async function saveAsTemplate() {
+  const name    = document.getElementById('tmpl-name').value.trim();
+  const subject = document.getElementById('bc-subject').value.trim();
+  const body    = document.getElementById('bc-body').value.trim();
+  if (!name) return alert('Template name is required.');
+  if (!subject || !body) return alert('Subject and body are required.');
+  const r = await post('/api/admin/templates', { name, subject, body });
+  if (r?.ok) { toggleSaveTemplate(); document.getElementById('tmpl-name').value = ''; alert('Template saved.'); }
+  else alert('Error: ' + (r?.error || 'could not save'));
 }
 
 async function previewBroadcast() {
@@ -876,6 +1115,189 @@ async function sendBroadcast() {
     s.textContent = 'Failed: ' + (r?.error || 'unknown error');
   }
   s.style.display = 'inline';
+}
+
+// ── Insights ─────────────────────────────────────────────────────────────────
+async function showInsights() {
+  setTitle('Insights');
+  const [stats, geoData, chartData, customers] = await Promise.all([
+    api('/api/admin/stats'),
+    api('/api/admin/stats/geo'),
+    api('/api/admin/stats/chart?period=monthly'),
+    api('/api/admin/customers'),
+  ]);
+  if (!stats) return;
+
+  const seg = stats.segments || {};
+  const cutoff = new Date(Date.now() - 60 * 86400 * 1000);
+  const inactive = (customers||[]).filter(c => c.last_order && new Date(c.last_order) < cutoff)
+    .sort((a,b) => new Date(a.last_order) - new Date(b.last_order));
+
+  const geoFromRows = (geoData?.from||[]).map(r => `<tr><td>${esc(r.country||'—')}</td><td>${r.orders}</td></tr>`).join('');
+  const geoToRows   = (geoData?.to  ||[]).map(r => `<tr><td>${esc(r.country||'—')}</td><td>${r.orders}</td></tr>`).join('');
+  const inactiveRows = inactive.map(c => `
+    <tr>
+      <td><button class="link" onclick="go('/admin/customers/${encodeURIComponent(c.email)}')">${esc(c.email)}</button></td>
+      <td>${fmtDate(c.last_order)}</td>
+      <td>${c.order_count}</td>
+      <td><button class="btn btn-outline btn-sm" onclick="go('/admin/customers/${encodeURIComponent(c.email)}')">Message</button></td>
+    </tr>`).join('');
+
+  setMain(`
+    <div class="page-header"><div class="page-title">Insights</div></div>
+    <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:24px">
+      <div class="stat-card">
+        <div class="stat-label">One-time</div>
+        <div class="stat-value">${seg.one_time??0}</div>
+        <div class="stat-sub">1 order</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Returning</div>
+        <div class="stat-value">${seg.returning??0}</div>
+        <div class="stat-sub">2–4 orders</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Loyal</div>
+        <div class="stat-value">${seg.loyal??0}</div>
+        <div class="stat-sub">5+ orders</div>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:8px;padding:12px 20px">
+      <span style="font-size:14px;color:#64748b">
+        Repeat rate: <strong style="color:#0f172a">${stats.repeat_rate??0}%</strong>
+        &nbsp;&nbsp;Avg days between orders: <strong style="color:#0f172a">${stats.avg_days_between_orders!=null?stats.avg_days_between_orders+'d':'—'}</strong>
+      </span>
+    </div>
+    <div class="card" style="margin-bottom:24px">
+      <div class="card-header"><div class="card-title">Revenue Trend (12 months)</div></div>
+      <div style="padding:16px 20px">${renderBarChart(chartData, 120)}</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px">
+      <div class="card">
+        <div class="card-header"><div class="card-title">Letters From</div></div>
+        <table>
+          <thead><tr><th>Country</th><th>Orders</th></tr></thead>
+          <tbody>${geoFromRows||'<tr><td colspan="2" class="empty">No data.</td></tr>'}</tbody>
+        </table>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Letters To</div></div>
+        <table>
+          <thead><tr><th>Country</th><th>Orders</th></tr></thead>
+          <tbody>${geoToRows||'<tr><td colspan="2" class="empty">No data.</td></tr>'}</tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Inactive Customers (60+ days)</div>
+        <span style="font-size:12px;color:#64748b">${inactive.length} customers</span>
+      </div>
+      <table>
+        <thead><tr><th>Email</th><th>Last Order</th><th>Orders</th><th></th></tr></thead>
+        <tbody>${inactiveRows||'<tr><td colspan="4" class="empty">No inactive customers.</td></tr>'}</tbody>
+      </table>
+    </div>`);
+}
+
+// ── Templates ─────────────────────────────────────────────────────────────────
+async function showTemplates() {
+  setTitle('Email Templates');
+  const templates = await api('/api/admin/templates');
+  if (templates === null) return;
+
+  const rows = (templates||[]).map(t => `
+    <tr>
+      <td>${esc(t.name)}</td>
+      <td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(t.subject)}</td>
+      <td>${fmtDate(t.created_at)}</td>
+      <td><button class="btn-ghost" onclick="deleteTemplate(${t.id})">Delete</button></td>
+    </tr>`).join('');
+
+  setMain(`
+    <div class="page-header"><div class="page-title">Email Templates</div></div>
+    <div class="card" style="margin-bottom:24px;max-width:720px">
+      <div class="card-header"><div class="card-title">New Template</div></div>
+      <div style="padding:20px">
+        <div class="field" style="margin-bottom:12px"><label>Name</label><input id="tmpl-new-name" type="text" placeholder="e.g. Holiday greeting"></div>
+        <div class="field" style="margin-bottom:12px"><label>Subject</label><input id="tmpl-new-subject" type="text" placeholder="Email subject line"></div>
+        <div class="field" style="margin-bottom:12px"><label>Body</label><textarea id="tmpl-new-body" rows="8" placeholder="Email body…"></textarea></div>
+        <button class="btn btn-primary btn-sm" onclick="createTemplate()">Save Template</button>
+        <span id="tmpl-save-msg" style="font-size:12px;color:#16a34a;margin-left:12px;display:none">✓ Saved</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">Saved Templates</div></div>
+      <table>
+        <thead><tr><th>Name</th><th>Subject</th><th>Created</th><th></th></tr></thead>
+        <tbody>${rows||'<tr><td colspan="4" class="empty">No templates yet.</td></tr>'}</tbody>
+      </table>
+    </div>`);
+}
+
+async function createTemplate() {
+  const name    = document.getElementById('tmpl-new-name').value.trim();
+  const subject = document.getElementById('tmpl-new-subject').value.trim();
+  const body    = document.getElementById('tmpl-new-body').value.trim();
+  if (!name || !subject || !body) return alert('Name, subject, and body are all required.');
+  const r = await post('/api/admin/templates', { name, subject, body });
+  if (r?.ok) {
+    ['tmpl-new-name','tmpl-new-subject','tmpl-new-body'].forEach(id => document.getElementById(id).value = '');
+    const msg = document.getElementById('tmpl-save-msg');
+    msg.style.display = 'inline';
+    setTimeout(() => { msg.style.display = 'none'; showTemplates(); }, 1200);
+  } else alert('Error: ' + (r?.error || 'could not save'));
+}
+
+async function deleteTemplate(id) {
+  if (!confirm('Delete this template?')) return;
+  await del(`/api/admin/templates/${id}`);
+  showTemplates();
+}
+
+// ── Settings ──────────────────────────────────────────────────────────────────
+async function showSettings() {
+  setTitle('Settings');
+  const settings = await api('/api/admin/settings');
+  if (settings === null) return;
+
+  const paused = settings['service_paused'] === 'true';
+  setMain(`
+    <div class="page-header"><div class="page-title">Settings</div></div>
+    <div class="card" style="max-width:600px">
+      <div class="card-header"><div class="card-title">Service Status</div></div>
+      <div style="padding:20px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div>
+            <div style="font-size:14px;font-weight:600;color:#0f172a;margin-bottom:4px">Service Paused</div>
+            <div style="font-size:12px;color:#64748b">When paused, the /api/create-order endpoint will reject new orders with a 503.</div>
+          </div>
+          <button id="pause-toggle-btn" class="btn ${paused?'btn-primary':'btn-outline'}" onclick="toggleServicePause(${paused})" style="${paused?'background:#dc2626':''}">
+            ${paused ? 'Paused — Click to Resume' : 'Active — Click to Pause'}
+          </button>
+        </div>
+        <div id="settings-msg" style="font-size:12px;color:#16a34a;display:none">✓ Saved</div>
+      </div>
+    </div>`);
+}
+
+async function loadSetting(key, defaultVal) {
+  const s = await api('/api/admin/settings');
+  return s?.[key] ?? defaultVal;
+}
+
+async function saveSetting(key, value) {
+  return post('/api/admin/settings', { key, value: String(value) });
+}
+
+async function toggleServicePause(currentlyPaused) {
+  const newVal = !currentlyPaused;
+  const r = await saveSetting('service_paused', newVal ? 'true' : 'false');
+  if (r?.ok) {
+    const msg = document.getElementById('settings-msg');
+    if (msg) msg.style.display = 'block';
+    setTimeout(() => showSettings(), 800);
+  } else alert('Error saving setting.');
 }
 
 // ── Trash ─────────────────────────────────────────────────────────────────────
