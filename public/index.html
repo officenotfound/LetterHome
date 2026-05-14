@@ -36,6 +36,10 @@
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
+.skip-link { position: absolute; left: -9999px; top: 8px; padding: 8px 16px; background: var(--ink); color: var(--paper); text-decoration: none; border-radius: 2px; z-index: 1000; font-size: 14px; }
+.skip-link:focus { left: 8px; }
+:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; } }
 
 html { scroll-behavior: smooth; }
 
@@ -1095,6 +1099,7 @@ footer {
 </style>
 </head>
 <body>
+<a href="#main" class="skip-link">Skip to main content</a>
 
 <!-- NAV -->
 <nav>
@@ -1114,7 +1119,7 @@ footer {
 </nav>
 
 <!-- HERO -->
-<section class="hero">
+<section id="main" class="hero">
   <div class="hero-grid">
     <div>
       <div class="eyebrow">EST. 2026 · For Canadians abroad</div>
