@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+Disallow: /admin/
+Disallow: /order-success
+Disallow: /api/
+
+Sitemap: https://letterhome.ca/sitemap.xml

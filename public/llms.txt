@@ -1,0 +1,43 @@
+# Letterhome
+
+> A Canadian letter mailing service. We print and mail physical letters and documents from Canada.
+
+## What Letterhome does
+
+Letterhome is an online service that accepts a letter or document from anyone — anywhere in the world — prints it in full colour on standard letter-size paper, seals it in an envelope, applies Canadian postage, and deposits it with Canada Post for delivery.
+
+The service operates from Canada. Every letter carries a Canadian postmark.
+
+## Who uses it
+
+- Canadians living abroad who need to mail something to a Canadian address (government forms, legal documents, letters to family)
+- Immigrants and newcomers to Canada sending documents back home
+- People in Canada who want to mail a letter without buying stamps, envelopes, or making a trip to the post office
+- Anyone outside Canada who needs to send a letter that arrives with Canadian postage
+
+## Pricing
+
+- $10 CAD — letters to any Canadian address (domestic)
+- $20 CAD — letters to any of 160+ international destinations
+
+Both prices include up to 5 pages of full-colour printing, the envelope, postage, and delivery. No account required. Pay once per order.
+
+## How it works
+
+1. Fill in the recipient address, compose or attach your letter, and enter your email.
+2. Pay by credit or debit card through Stripe.
+3. Letterhome prints the letter in full colour and mails it from Canada, usually within one business day.
+4. The customer receives an email confirmation with an order tracking link.
+
+## Delivery
+
+Letters are mailed via Canada Post standard lettermail:
+- Within Canada: typically up to 2 weeks
+- International: typically up to 4 weeks
+
+Tracked and registered options are available on request.
+
+## Contact
+
+Email: hello@letterhome.ca
+Website: https://letterhome.ca
