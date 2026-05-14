@@ -11,6 +11,7 @@ const { Secret, TOTP } = require('otpauth');
 const { DatabaseSync: Database } = require('node:sqlite');
 const path = require('path');
 const fs   = require('fs');
+const { randomUUID } = require('node:crypto');
 
 fs.mkdirSync('uploads', { recursive: true });
 fs.mkdirSync('orders',  { recursive: true });
@@ -101,8 +102,11 @@ function logAudit(req, action, target_type, target_id, details) {
 }
 
 // Add deleted_at to orders if it doesn't exist (idempotent migration)
-try { db.exec(`ALTER TABLE orders ADD COLUMN deleted_at DATETIME`); } catch {}
-try { db.exec(`ALTER TABLE orders ADD COLUMN customer_ip TEXT`);  } catch {}
+try { db.exec(`ALTER TABLE orders ADD COLUMN deleted_at DATETIME`);       } catch {}
+try { db.exec(`ALTER TABLE orders ADD COLUMN customer_ip TEXT`);          } catch {}
+try { db.exec(`ALTER TABLE orders ADD COLUMN printer_ref TEXT`);          } catch {}
+try { db.exec(`ALTER TABLE orders ADD COLUMN estimated_delivery TEXT`);   } catch {}
+try { db.exec(`ALTER TABLE orders ADD COLUMN status_token TEXT`);         } catch {}
 
 // ── Email transport ───────────────────────────────────────────────────────────
 const transport = mailer.createTransport({
@@ -136,6 +140,16 @@ function safeFilePath(dir, originalName) {
   while (fs.existsSync(dest)) dest = path.join(dir, `${base}_${i++}${ext}`);
   return dest;
 }
+
+// Backfill status_token for any orders created before this column was added.
+;(function backfillStatusTokens() {
+  try {
+    const rows = db.prepare('SELECT id FROM orders WHERE status_token IS NULL').all();
+    const stmt = db.prepare('UPDATE orders SET status_token = ? WHERE id = ?');
+    for (const r of rows) stmt.run(randomUUID(), r.id);
+    if (rows.length) console.log(`[init] assigned status tokens to ${rows.length} orders`);
+  } catch (e) { console.error('[init] token backfill failed:', e.message); }
+})();
 
 // Privacy cleanup: delete order folders older than 7 days on every startup.
 // Replaces the unreliable setTimeout approach that was lost on process restart.
@@ -185,6 +199,12 @@ app.use(express.urlencoded({ extended: true }));
 );
 
 app.get('/faq', (req, res) => res.redirect('/#faq'));
+
+app.get('/status/:token', (req, res) => {
+  const order = db.prepare("SELECT * FROM orders WHERE status_token = ? AND deleted_at IS NULL").get(req.params.token);
+  if (!order || order.status === 'awaiting_payment') return res.status(404).send(buildStatusNotFound());
+  res.send(buildStatusPage(order));
+});
 
 app.use(express.static('public'));
 
@@ -245,8 +265,9 @@ app.post('/api/create-order', orderLimiter, upload.array('attachments', 5), asyn
       customer_email, skip_return,
       sender_name, sender_street, sender_city, sender_province, sender_postal, sender_country,
       recipient_name, recipient_street, recipient_city, recipient_province, recipient_postal,
-      destination_country, letter_type, letter_body, attachment_info, price_cents, customer_ip
-    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+      destination_country, letter_type, letter_body, attachment_info, price_cents, customer_ip,
+      status_token
+    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
   `).run(
     rEmail, b['skip-return'] ? 1 : 0,
     b['s-name']     || null, b['s-street']   || null, b['s-city']  || null,
@@ -257,7 +278,8 @@ app.post('/api/create-order', orderLimiter, upload.array('attachments', 5), asyn
     b['letter-body'] || null,
     '[]',
     priceCents,
-    customerIp || null
+    customerIp || null,
+    randomUUID()
   );
 
   const orderId  = row.lastInsertRowid;
@@ -474,7 +496,7 @@ app.get('/api/admin/orders/:id', requireAdmin, (req, res) => {
 });
 
 app.post('/api/admin/orders/:id/status', requireAdmin, async (req, res) => {
-  const valid = ['awaiting_payment', 'paid', 'printing', 'mailed', 'delivered', 'refunded'];
+  const valid = ['awaiting_payment', 'paid', 'submitted_to_printer', 'printing', 'mailed', 'delivered', 'refunded'];
   if (!valid.includes(req.body.status)) return res.status(400).json({ error: 'Invalid status' });
 
   const id = Number(req.params.id);
@@ -482,11 +504,12 @@ app.post('/api/admin/orders/:id/status', requireAdmin, async (req, res) => {
   db.prepare('UPDATE orders SET status = ? WHERE id = ?').run(req.body.status, id);
   logAudit(req, 'order.status_change', 'order', id, { from: before?.status, to: req.body.status });
 
-  // Fire "Letter sent" email when status transitions to 'mailed'
+  // Fire "Letter sent" email when status transitions to 'mailed' via the generic dropdown
   if (req.body.status === 'mailed' && before?.status !== 'mailed') {
     const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(id);
     if (order?.customer_email) {
       const isDomestic = order.destination_country === 'CA';
+      const deliveryText = order.estimated_delivery || (isDomestic ? 'within 2 weeks' : 'within 4 weeks');
       const toAddr = [
         order.recipient_name, order.recipient_street,
         `${order.recipient_city || ''} ${order.recipient_province || ''} ${order.recipient_postal || ''}`.trim(),
@@ -495,11 +518,51 @@ app.post('/api/admin/orders/:id/status', requireAdmin, async (req, res) => {
       transport.sendMail({
         from:    process.env.EMAIL_FROM,
         to:      order.customer_email,
-        subject: `Your Letterhome letter has been mailed — order #${order.id}`,
-        html:    buildMailedEmail(order, toAddr, isDomestic),
+        subject: `Your letter to ${order.recipient_name} has been mailed — order #${order.id}`,
+        html:    buildMailedEmail(order, toAddr, deliveryText),
       }).catch(console.error);
     }
   }
+
+  res.json({ ok: true });
+});
+
+app.post('/api/admin/orders/:id/submit-to-printer', requireAdmin, (req, res) => {
+  const { printer_ref } = req.body;
+  if (!printer_ref?.trim()) return res.status(400).json({ error: 'Printer reference number required' });
+  const id    = Number(req.params.id);
+  const order = db.prepare('SELECT status FROM orders WHERE id = ?').get(id);
+  if (!order) return res.status(404).json({ error: 'Order not found' });
+  db.prepare("UPDATE orders SET status = 'submitted_to_printer', printer_ref = ? WHERE id = ?")
+    .run(printer_ref.trim(), id);
+  logAudit(req, 'order.submitted_to_printer', 'order', id, { printer_ref: printer_ref.trim() });
+  res.json({ ok: true });
+});
+
+app.post('/api/admin/orders/:id/mark-mailed', requireAdmin, async (req, res) => {
+  const { estimated_delivery } = req.body;
+  if (!estimated_delivery?.trim()) return res.status(400).json({ error: 'Estimated delivery required' });
+  const id    = Number(req.params.id);
+  const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(id);
+  if (!order) return res.status(404).json({ error: 'Order not found' });
+  if (order.status === 'mailed') return res.status(400).json({ error: 'Already marked as mailed' });
+
+  db.prepare("UPDATE orders SET status = 'mailed', estimated_delivery = ? WHERE id = ?")
+    .run(estimated_delivery.trim(), id);
+  logAudit(req, 'order.mark_mailed', 'order', id, { estimated_delivery: estimated_delivery.trim() });
+
+  const toAddr = [
+    order.recipient_name, order.recipient_street,
+    `${order.recipient_city || ''} ${order.recipient_province || ''} ${order.recipient_postal || ''}`.trim(),
+    order.destination_country,
+  ].filter(Boolean).join('\n');
+
+  transport.sendMail({
+    from:    process.env.EMAIL_FROM,
+    to:      order.customer_email,
+    subject: `Your letter to ${order.recipient_name} has been mailed — order #${order.id}`,
+    html:    buildMailedEmail(order, toAddr, estimated_delivery.trim()),
+  }).catch(console.error);
 
   res.json({ ok: true });
 });
@@ -719,7 +782,7 @@ app.get('/api/admin/tags', requireAdmin, (req, res) => {
 // Bulk status update — apply a status to a list of order IDs
 app.post('/api/admin/orders/bulk-status', requireAdmin, async (req, res) => {
   const { ids, status } = req.body;
-  const valid = ['awaiting_payment', 'paid', 'printing', 'mailed', 'delivered', 'refunded'];
+  const valid = ['awaiting_payment', 'paid', 'submitted_to_printer', 'printing', 'mailed', 'delivered', 'refunded'];
   if (!valid.includes(status) || !Array.isArray(ids) || !ids.length) return res.status(400).json({ error: 'Invalid input' });
   const stmt = db.prepare('UPDATE orders SET status = ? WHERE id = ?');
   ids.forEach(id => stmt.run(status, Number(id)));
@@ -979,14 +1042,15 @@ function buildCustomerEmail(o, toAddr, amountCAD, isDomestic) {
     </div>
     <div style="border-top:1px solid rgba(42,42,42,0.1);padding-top:20px;font-size:13px;color:#6b6258">
       <p style="margin:0 0 8px">Order #${o.id} &nbsp;·&nbsp; $${amountCAD} CAD</p>
+      ${o.status_token ? `<p style="margin:0 0 8px">Track your letter: <a href="${process.env.BASE_URL}/status/${o.status_token}" style="color:#a8472d">${process.env.BASE_URL}/status/${o.status_token}</a></p>` : ''}
       <p style="margin:0">Questions? Reply to this email.</p>
     </div>
   </div>
 </body></html>`;
 }
 
-function buildMailedEmail(o, toAddr, isDomestic) {
-  const delivery = isDomestic ? 'within 2 weeks' : 'within 4 weeks';
+function buildMailedEmail(o, toAddr, deliveryText) {
+  const delivery = deliveryText || (o.destination_country === 'CA' ? 'within 2 weeks' : 'within 4 weeks');
   return `
 <!DOCTYPE html><html>
 <body style="font-family:Georgia,serif;background:#ede5d3;padding:40px 20px;color:#2a2a2a;margin:0">
@@ -1002,10 +1066,105 @@ function buildMailedEmail(o, toAddr, isDomestic) {
     <p style="color:#6b6258;font-size:14px;line-height:1.7;margin:0 0 24px">Lettermail doesn't have tracking, so we can't tell you exactly when it'll land. If you don't see it after the estimated window, reply to this email and we'll work it out.</p>
     <div style="border-top:1px solid rgba(42,42,42,0.1);padding-top:20px;font-size:13px;color:#6b6258">
       <p style="margin:0 0 8px">Order #${o.id}</p>
+      ${o.status_token ? `<p style="margin:0 0 8px">Track your letter: <a href="${process.env.BASE_URL}/status/${o.status_token}" style="color:#a8472d">${process.env.BASE_URL}/status/${o.status_token}</a></p>` : ''}
       <p style="margin:0">Thank you for trusting us with your letter.</p>
     </div>
   </div>
 </body></html>`;
+}
+
+function buildStatusPage(order) {
+  const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const stageIndex = { paid: 0, submitted_to_printer: 1, printing: 1, mailed: 2, delivered: 2 }[order.status] ?? 0;
+
+  function stepHTML(index, label, desc) {
+    const done    = stageIndex > index;
+    const active  = stageIndex === index;
+    const icon    = done ? '✓' : active ? '◉' : '○';
+    const iconBg  = done ? 'background:#a8472d;color:#faf6ec' : active ? 'background:#2a2a2a;color:#faf6ec' : 'background:transparent;border:2px solid rgba(42,42,42,0.2);color:#968b7d';
+    const labelStyle = done || active ? 'font-size:15px;font-weight:600;color:#2a2a2a;margin-bottom:4px' : 'font-size:15px;font-weight:400;color:#968b7d;margin-bottom:4px';
+    const descStyle  = done || active ? 'font-size:13px;color:#6b6258;line-height:1.6' : 'font-size:13px;color:#b0a898;line-height:1.6';
+    return `
+    <div style="display:flex;gap:18px;padding:20px 0;border-bottom:1px solid rgba(42,42,42,0.1)">
+      <div style="width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;margin-top:2px;${iconBg}">${icon}</div>
+      <div style="flex:1">
+        <div style="${labelStyle}">${label}</div>
+        <div style="${descStyle}">${desc}</div>
+      </div>
+    </div>`;
+  }
+
+  const deliveryLine = order.estimated_delivery ? esc(order.estimated_delivery) : (order.destination_country === 'CA' ? 'within 2 weeks' : 'within 4 weeks');
+  const step3Desc = stageIndex >= 2
+    ? `Dropped off with Canada Post. Estimated arrival: ${deliveryLine}`
+    : 'Once mailed, your estimated delivery will appear here.';
+
+  return `<!DOCTYPE html>
+<html lang="en-CA">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Letter Status — Letterhome</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',system-ui,sans-serif;background:#ede5d3;color:#2a2a2a;min-height:100vh}
+nav{background:rgba(237,229,211,0.94);backdrop-filter:blur(14px);border-bottom:1px solid rgba(42,42,42,0.14);padding:16px 36px;display:flex;align-items:center;justify-content:space-between}
+@media(max-width:600px){nav,.main{padding-left:20px!important;padding-right:20px!important}.main{padding-top:40px!important;padding-bottom:80px!important}}
+</style>
+<script>(function(){try{var t=localStorage.getItem('lh-theme')||(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+<link rel="stylesheet" href="/theme.css">
+</head>
+<body>
+<nav>
+  <a href="/" style="display:flex;align-items:center;gap:10px;font-family:'DM Serif Display',serif;font-size:22px;color:#2a2a2a;text-decoration:none">
+    <span style="width:32px;height:32px;background:#a8472d;display:grid;place-items:center;border-radius:2px;color:#faf6ec;font-size:17px">L</span>
+    Letterhome
+  </a>
+  <a href="/send" style="background:#a8472d;color:#faf6ec;padding:10px 20px;font-size:13px;font-weight:500;text-decoration:none;border-radius:4px">Send a Letter</a>
+</nav>
+<div class="main" style="max-width:580px;margin:0 auto;padding:64px 36px 100px">
+  <div style="display:inline-flex;align-items:center;gap:10px;font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.18em;color:#a8472d;margin-bottom:20px">
+    <span style="width:28px;height:1px;background:#a8472d;display:inline-block"></span>Order #${esc(String(order.id))}
+  </div>
+  <h1 style="font-family:'DM Serif Display',serif;font-size:clamp(28px,5vw,40px);font-weight:400;letter-spacing:-0.02em;margin-bottom:6px">Letter to ${esc(order.recipient_name)}</h1>
+  <p style="font-family:'DM Mono',monospace;font-size:12px;color:#6b6258;letter-spacing:0.08em;margin-bottom:48px">${new Date(order.created_at).toLocaleDateString('en-CA',{year:'numeric',month:'long',day:'numeric'})}</p>
+  <div style="margin-bottom:40px">
+    ${stepHTML(0, 'Order Received', `Payment confirmed &nbsp;·&nbsp; Order #${esc(String(order.id))}`)}
+    ${stepHTML(1, 'Being Prepared', 'Your letter has been submitted for printing.')}
+    <div style="border-bottom:none">${stepHTML(2, 'On Its Way', step3Desc)}</div>
+  </div>
+  ${stageIndex >= 2 && order.estimated_delivery ? `
+  <div style="background:#2a2a2a;color:#faf6ec;padding:24px;border-radius:4px;margin-bottom:32px">
+    <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.15em;color:rgba(250,246,236,0.5);margin-bottom:8px;font-family:'DM Mono',monospace">Estimated delivery</div>
+    <div style="font-family:'DM Serif Display',serif;font-size:24px">${esc(order.estimated_delivery)}</div>
+  </div>` : ''}
+  <p style="font-size:13px;color:#6b6258;line-height:1.6">Questions about your letter? Email <a href="mailto:hello@letterhome.ca" style="color:#a8472d">hello@letterhome.ca</a> and include your order number.</p>
+</div>
+<footer style="background:#2a2a2a;color:rgba(250,246,236,0.6);padding:32px 36px;font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+  <span>© 2026 Letterhome</span>
+  <div style="display:flex;gap:24px">
+    <a href="/privacy" style="color:rgba(250,246,236,0.5);text-decoration:none">Privacy</a>
+    <a href="/terms" style="color:rgba(250,246,236,0.5);text-decoration:none">Terms</a>
+  </div>
+</footer>
+<script src="/theme.js"></script>
+</body>
+</html>`;
+}
+
+function buildStatusNotFound() {
+  return `<!DOCTYPE html>
+<html lang="en-CA"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Not Found — Letterhome</title>
+<style>body{font-family:Georgia,serif;background:#ede5d3;color:#2a2a2a;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}
+.box{text-align:center;padding:40px}h1{font-size:32px;font-weight:400;margin-bottom:12px}p{color:#6b6258;margin-bottom:24px}
+a{color:#a8472d}</style></head>
+<body><div class="box"><h1>Order not found</h1>
+<p>The status link may have expired or the order was not found.</p>
+<a href="/">← Back to Letterhome</a></div></body></html>`;
 }
 
 const PORT = process.env.PORT || 3000;
