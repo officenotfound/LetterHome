@@ -237,20 +237,45 @@ async function showDashboard() {
   setMain(`
     <div class="stats-grid">
       <div class="stat-card">
-        <div class="stat-label">Total Orders</div>
-        <div class="stat-value">${stats.total}</div>
-      </div>
-      <div class="stat-card">
         <div class="stat-label">Paid Orders</div>
         <div class="stat-value">${stats.paid}</div>
+        <div class="stat-sub">${stats.total} total · ${stats.customers} customers</div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">Revenue</div>
+        <div class="stat-label">Gross Revenue</div>
         <div class="stat-value">${fmtCAD(stats.revenue)}</div>
+        <div class="stat-sub">before fees & costs</div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">Customers</div>
-        <div class="stat-value">${stats.customers}</div>
+        <div class="stat-label">Net Profit</div>
+        <div class="stat-value" style="color:#16a34a">${fmtCAD(stats.net)}</div>
+        <div class="stat-sub">after fees & costs</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Avg / Order</div>
+        <div class="stat-value">${stats.paid ? fmtCAD(Math.round(stats.net / stats.paid)) : '$0.00 CAD'}</div>
+        <div class="stat-sub">net per letter</div>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:24px">
+      <div class="card-header"><div class="card-title">Profit Breakdown</div></div>
+      <div style="padding:20px 24px">
+        <div class="detail-row">
+          <span class="detail-label">Gross Revenue</span>
+          <span class="detail-value" style="font-size:15px">${fmtCAD(stats.revenue)}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Stripe Fees <span style="color:#94a3b8;font-size:11px">(2.9% + $0.30 per charge)</span></span>
+          <span class="detail-value" style="color:#dc2626">−${fmtCAD(stats.stripe_fees)}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Print & Postage <span style="color:#94a3b8;font-size:11px">($6 CA · $10 international)</span></span>
+          <span class="detail-value" style="color:#dc2626">−${fmtCAD(stats.cogs)}</span>
+        </div>
+        <div class="detail-row" style="border-top:2px solid #e2e8f0;margin-top:6px;padding-top:14px">
+          <span class="detail-label" style="font-weight:600;color:#0f172a;font-size:14px">Net Profit</span>
+          <span class="detail-value" style="color:#16a34a;font-size:18px;font-weight:700">${fmtCAD(stats.net)}</span>
+        </div>
       </div>
     </div>
     <div class="card">
