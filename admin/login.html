@@ -33,18 +33,23 @@ button:hover{background:#b91c1c}
   </div>
   <h1>Sign in</h1>
   <p class="subtitle">Restricted access — authorized personnel only.</p>
-  <div id="err" class="error" style="display:none">Incorrect username or password.</div>
+  <div id="err"  class="error" style="display:none">Incorrect username or password.</div>
+  <div id="err2" class="error" style="display:none">Invalid or missing 2FA code.</div>
   <form method="POST" action="/admin/login">
     <label for="username">Username</label>
     <input id="username" name="username" type="text" autocomplete="username" required>
     <label for="password">Password</label>
     <input id="password" name="password" type="password" autocomplete="current-password" required>
+    <label for="code">2FA Code <span style="text-transform:none;color:#475569;font-weight:400">(if enabled)</span></label>
+    <input id="code" name="code" type="text" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" placeholder="123456">
     <button type="submit">Sign in →</button>
   </form>
 </div>
 <script>
   if (window.location.search.includes('error=1'))
     document.getElementById('err').style.display = 'block';
+  if (window.location.search.includes('error=2fa'))
+    document.getElementById('err2').style.display = 'block';
 </script>
 </body>
 </html>
