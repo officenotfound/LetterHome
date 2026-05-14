@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en-CA">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Page Not Found — Letterhome</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --kraft:#ede5d3;--kraft-light:#f7f2e6;--paper:#faf6ec;
+  --ink:#2a2a2a;--ink-soft:#3a3835;--ink-muted:#6b6258;--ink-faint:#968b7d;
+  --red:#a8472d;--red-deep:#7d3220;--red-stamp:#b85540;
+  --line:rgba(42,42,42,0.14);--shadow-card:0 2px 6px rgba(42,42,42,0.06),0 14px 40px rgba(42,42,42,0.1);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--kraft);color:var(--ink);line-height:1.6;min-height:100vh;display:flex;flex-direction:column}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:1;opacity:0.5;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.16 0 0 0 0 0.13 0 0 0 0 0.08 0 0 0 0.08 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+nav{position:sticky;top:0;z-index:100;background:rgba(237,229,211,0.94);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.nav-inner{max-width:1280px;margin:0 auto;padding:20px 36px;display:flex;align-items:center;justify-content:space-between}
+.logo{display:flex;align-items:center;gap:12px;font-family:'DM Serif Display',serif;font-size:26px;color:var(--ink);text-decoration:none}
+.logo-mark{width:38px;height:38px;background:var(--red);display:grid;place-items:center;border-radius:2px;color:var(--paper);font-family:'DM Serif Display',serif;font-size:22px;position:relative;box-shadow:0 1px 3px rgba(0,0,0,0.15)}
+.logo-mark::before{content:'';position:absolute;inset:-3px;border:1px dashed var(--ink);border-radius:4px;opacity:0.5}
+.main{flex:1;max-width:640px;margin:0 auto;padding:100px 36px;position:relative;z-index:2;display:flex;flex-direction:column;justify-content:center}
+.stamp{width:80px;height:80px;border:3px solid var(--red);display:grid;place-items:center;margin-bottom:40px;position:relative}
+.stamp::before{content:'';position:absolute;inset:-6px;border:1px dashed var(--red);opacity:0.4}
+.stamp-num{font-family:'DM Serif Display',serif;font-size:36px;font-style:italic;color:var(--red)}
+.eyebrow{display:inline-flex;align-items:center;gap:12px;font-family:'DM Mono',monospace;font-size:12px;text-transform:uppercase;letter-spacing:0.18em;color:var(--red);font-weight:500;margin-bottom:24px}
+.eyebrow::before{content:'';width:40px;height:1px;background:var(--red)}
+h1{font-family:'DM Serif Display',serif;font-size:clamp(36px,5vw,56px);font-weight:400;letter-spacing:-0.025em;margin-bottom:16px;line-height:1.05}
+h1 em{font-style:italic;color:var(--red)}
+.sub{font-size:17px;color:var(--ink-muted);margin-bottom:40px;line-height:1.7}
+.actions{display:flex;gap:16px;flex-wrap:wrap}
+.btn{display:inline-block;padding:14px 28px;border-radius:2px;font-weight:500;font-size:14px;text-decoration:none;transition:all 0.25s;border:none;cursor:pointer;font-family:inherit;letter-spacing:0.02em;text-transform:uppercase}
+.btn-red{background:var(--red);color:var(--paper)}
+.btn-red:hover{background:var(--red-deep);transform:translateY(-1px)}
+.btn-outline{background:transparent;color:var(--ink);border:1.5px solid var(--ink)}
+.btn-outline:hover{background:var(--ink);color:var(--paper)}
+footer{background:var(--ink);color:rgba(250,246,236,0.65);padding:40px 36px;position:relative;z-index:2;margin-top:auto}
+.footer-bottom{max-width:1280px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;flex-wrap:wrap;gap:16px}
+.footer-bottom a{color:rgba(250,246,236,0.5);text-decoration:none}
+.footer-bottom a:hover{color:var(--red-stamp)}
+.footer-bottom-links{display:flex;gap:28px}
+@media(max-width:600px){.main{padding:64px 24px}}
+</style>
+<script>(function(){try{var t=localStorage.getItem('lh-theme')||(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+<link rel="stylesheet" href="/theme.css">
+</head>
+<body>
+<nav>
+  <div class="nav-inner">
+    <a href="/" class="logo"><span class="logo-mark">L</span>Letterhome</a>
+    <button type="button" class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode" title="Toggle dark mode">
+      <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41"/></svg>
+      <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </div>
+</nav>
+
+<div class="main">
+  <div class="stamp"><span class="stamp-num">404</span></div>
+  <div class="eyebrow">Lost in the post</div>
+  <h1>This page <em>got lost</em> somewhere.</h1>
+  <p class="sub">The link may have moved or never existed. Either way, it didn't make it to its destination — much like a letter without a return address.</p>
+  <div class="actions">
+    <a href="/send" class="btn btn-red">Send a letter</a>
+    <a href="/" class="btn btn-outline">Back to Letterhome</a>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-bottom">
+    <div>© 2026 Letterhome</div>
+    <div class="footer-bottom-links">
+      <a href="/privacy">Privacy</a>
+      <a href="/terms">Terms</a>
+    </div>
+  </div>
+</footer>
+<script src="/theme.js"></script>
+</body>
+</html>
