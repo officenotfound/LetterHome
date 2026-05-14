@@ -12,6 +12,7 @@ const { DatabaseSync: Database } = require('node:sqlite');
 const path = require('path');
 const fs   = require('fs');
 const { randomUUID } = require('node:crypto');
+const { BetaAnalyticsDataClient } = require('@google-analytics/data');
 
 fs.mkdirSync('uploads', { recursive: true });
 fs.mkdirSync('orders',  { recursive: true });
@@ -345,6 +346,109 @@ app.get('/status/:token', (req, res) => {
 });
 
 app.use(express.static('public'));
+
+// ── GA4 tracking snippet (served to all public pages) ─────────────────────────
+app.get('/ga.js', (req, res) => {
+  const id = process.env.GA4_MEASUREMENT_ID;
+  res.setHeader('Content-Type', 'application/javascript');
+  res.setHeader('Cache-Control', 'public, max-age=3600');
+  if (!id) return res.send('/* GA4_MEASUREMENT_ID not configured */');
+  res.send(`
+window.dataLayer=window.dataLayer||[];
+function gtag(){dataLayer.push(arguments);}
+gtag('js',new Date());
+gtag('config','${id}');
+(function(){var s=document.createElement('script');s.async=true;
+s.src='https://www.googletagmanager.com/gtag/js?id=${id}';
+document.head.appendChild(s);})();
+`.trim());
+});
+
+// ── GA4 Data API (admin analytics) ────────────────────────────────────────────
+app.get('/api/admin/analytics', requireAdmin, async (req, res) => {
+  const propertyId  = process.env.GA4_PROPERTY_ID;
+  const clientEmail = process.env.GA4_CLIENT_EMAIL;
+  const privateKey  = (process.env.GA4_PRIVATE_KEY || '').replace(/\\n/g, '\n');
+
+  if (!propertyId || !clientEmail || !privateKey) {
+    return res.json({ configured: false });
+  }
+
+  try {
+    const ga = new BetaAnalyticsDataClient({
+      credentials: { client_email: clientEmail, private_key: privateKey },
+    });
+
+    const range28 = { startDate: '28daysAgo', endDate: 'today' };
+
+    const [[overview], [daily], [pages], [sources], [countries]] = await Promise.all([
+      ga.runReport({
+        property: propertyId,
+        dateRanges: [range28],
+        metrics: [{ name: 'sessions' }, { name: 'activeUsers' }, { name: 'screenPageViews' }],
+      }),
+      ga.runReport({
+        property: propertyId,
+        dateRanges: [range28],
+        dimensions: [{ name: 'date' }],
+        metrics: [{ name: 'sessions' }],
+        orderBys: [{ dimension: { dimensionName: 'date' } }],
+      }),
+      ga.runReport({
+        property: propertyId,
+        dateRanges: [range28],
+        dimensions: [{ name: 'pagePath' }],
+        metrics: [{ name: 'screenPageViews' }],
+        orderBys: [{ metric: { metricName: 'screenPageViews' }, desc: true }],
+        limit: 10,
+      }),
+      ga.runReport({
+        property: propertyId,
+        dateRanges: [range28],
+        dimensions: [{ name: 'sessionDefaultChannelGrouping' }],
+        metrics: [{ name: 'sessions' }],
+        orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
+      }),
+      ga.runReport({
+        property: propertyId,
+        dateRanges: [range28],
+        dimensions: [{ name: 'country' }],
+        metrics: [{ name: 'sessions' }],
+        orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
+        limit: 10,
+      }),
+    ]);
+
+    const mv = overview.rows?.[0]?.metricValues || [];
+    res.json({
+      configured: true,
+      overview: {
+        sessions:  parseInt(mv[0]?.value || 0),
+        users:     parseInt(mv[1]?.value || 0),
+        pageviews: parseInt(mv[2]?.value || 0),
+      },
+      daily: (daily.rows || []).map(r => ({
+        date:     r.dimensionValues[0].value,
+        sessions: parseInt(r.metricValues[0].value),
+      })),
+      pages: (pages.rows || []).map(r => ({
+        path:  r.dimensionValues[0].value,
+        views: parseInt(r.metricValues[0].value),
+      })),
+      sources: (sources.rows || []).map(r => ({
+        channel:  r.dimensionValues[0].value,
+        sessions: parseInt(r.metricValues[0].value),
+      })),
+      countries: (countries.rows || []).map(r => ({
+        country:  r.dimensionValues[0].value,
+        sessions: parseInt(r.metricValues[0].value),
+      })),
+    });
+  } catch (err) {
+    console.error('GA4 analytics error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch analytics data.', detail: err.message });
+  }
+});
 
 // ── Rate limiting ─────────────────────────────────────────────────────────────
 const orderLimiter = rateLimit({
