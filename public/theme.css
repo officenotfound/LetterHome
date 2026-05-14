@@ -1,7 +1,13 @@
-/* Letterhome Dark Mode
- * "Ink" theme — late-night letter writing.
- * Overrides the kraft/paper variables when [data-theme="dark"] is on <html>. */
+/* ── Light-mode variable improvements ───────────────────────────────────────
+   theme.css loads after all inline <style> blocks, so same-specificity rules
+   here win. Dark-mode is [data-theme="dark"] which is higher specificity anyway.
+   ─────────────────────────────────────────────────────────────────────────── */
+:root {
+  --ink-muted: #524d47;   /* was #6b6258 — ~5.8:1 on kraft, passes WCAG AA */
+  --ink-faint: #6b6258;   /* was #968b7d — now used only for truly secondary hints */
+}
 
+/* ── Dark mode ────────────────────────────────────────────────────────────── */
 [data-theme="dark"] {
   --kraft:        #1a1410;
   --kraft-light:  #221c16;
@@ -9,8 +15,8 @@
   --paper:        #2b241d;
   --ink:          #ede1c5;
   --ink-soft:     #d4c8ad;
-  --ink-muted:    #a89e8c;
-  --ink-faint:    #82786a;
+  --ink-muted:    #bdb1a1;    /* was #a89e8c — slightly brightened */
+  --ink-faint:    #a89e8c;
   --red:          #c25c40;
   --red-deep:     #a8472d;
   --red-stamp:    #d46a4c;
@@ -18,14 +24,58 @@
   --shadow-soft:  0 1px 2px rgba(0,0,0,0.4), 0 6px 20px rgba(0,0,0,0.3);
   --shadow-card:  0 2px 6px rgba(0,0,0,0.4), 0 14px 40px rgba(0,0,0,0.45);
 }
-
-/* Hide the kraft paper noise texture in dark mode — keeps it clean */
 [data-theme="dark"] body::before { display: none; }
-
-/* Make the sticky nav use the dark bg instead of the kraft tint */
 [data-theme="dark"] nav { background: rgba(26,20,16,0.94) !important; }
 
-/* Theme toggle button */
+/* ── Rounder, more modern shapes ─────────────────────────────────────────── */
+.btn { border-radius: 6px; }
+
+input,
+select,
+textarea {
+  border-radius: 6px;
+  font-size: 16px;  /* prevents iOS auto-zoom on focus */
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--red);
+  box-shadow: 0 0 0 3px rgba(168, 71, 45, 0.11);
+}
+
+/* Cards and panels */
+.panel,
+.price-card,
+.form-card,
+.card,
+.result,
+.preview-envelope,
+.story-quote {
+  border-radius: 10px;
+}
+
+.order-summary { border-radius: 8px; }
+
+/* Autocomplete dropdown — flat top, rounded bottom */
+.ac-drop { border-radius: 0 0 8px 8px; }
+
+/* ── Readability: body copy sizes and contrast ────────────────────────────── */
+
+/* Landing page sections */
+.step p                       { font-size: 16px; line-height: 1.75; }
+.faq-item p                   { font-size: 16px; line-height: 1.75; }
+.usecase p                    { font-size: 15px; line-height: 1.65; }
+.price-includes li            { font-size: 15px; }
+.section-head p               { font-size: 18px; line-height: 1.65; }
+
+/* About page */
+.value p                      { font-size: 16px; line-height: 1.75; }
+
+/* Field hints — use slightly better-contrast faint color */
+.field-note { color: var(--ink-faint); font-size: 12.5px; }
+
+/* ── Theme toggle button ──────────────────────────────────────────────────── */
 .theme-toggle {
   display: inline-flex;
   align-items: center;
@@ -46,6 +96,6 @@
 .theme-toggle:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
 .theme-toggle svg { width: 18px; height: 18px; }
 .theme-toggle .moon-icon { display: none; }
-.theme-toggle .sun-icon { display: block; }
+.theme-toggle .sun-icon  { display: block; }
 [data-theme="dark"] .theme-toggle .moon-icon { display: block; }
-[data-theme="dark"] .theme-toggle .sun-icon { display: none; }
+[data-theme="dark"] .theme-toggle .sun-icon  { display: none; }
