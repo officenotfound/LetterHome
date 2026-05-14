@@ -1,6 +1,8 @@
 node_modules/
 .env
 uploads/
+sessions/
+orders/
 *.db
 *.log
 .DS_Store
