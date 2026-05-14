@@ -81,7 +81,24 @@ db.exec(`
     created_at   DATETIME DEFAULT CURRENT_TIMESTAMP,
     deleted_at   DATETIME
   );
+  CREATE TABLE IF NOT EXISTS audit_log (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    actor        TEXT NOT NULL,
+    action       TEXT NOT NULL,
+    target_type  TEXT,
+    target_id    TEXT,
+    details      TEXT,
+    ip           TEXT,
+    created_at   DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
 `);
+
+function logAudit(req, action, target_type, target_id, details) {
+  try {
+    db.prepare(`INSERT INTO audit_log (actor, action, target_type, target_id, details, ip) VALUES (?,?,?,?,?,?)`)
+      .run(req.session?.admin?.username || 'system', action, target_type || null, String(target_id || ''), details ? JSON.stringify(details) : null, (req.ip || '').replace(/^::ffff:/, ''));
+  } catch (e) { console.error('audit log failed:', e.message); }
+}
 
 // Add deleted_at to orders if it doesn't exist (idempotent migration)
 try { db.exec(`ALTER TABLE orders ADD COLUMN deleted_at DATETIME`); } catch {}
@@ -119,6 +136,24 @@ function safeFilePath(dir, originalName) {
   while (fs.existsSync(dest)) dest = path.join(dir, `${base}_${i++}${ext}`);
   return dest;
 }
+
+// Privacy cleanup: delete order folders older than 7 days on every startup.
+// Replaces the unreliable setTimeout approach that was lost on process restart.
+;(function cleanupOldOrderFolders() {
+  const cutoff = new Date(Date.now() - 7 * 86400 * 1000).toISOString();
+  try {
+    const old = db.prepare(
+      "SELECT id, created_at FROM orders WHERE status != 'awaiting_payment' AND created_at < ?"
+    ).all(cutoff);
+    for (const o of old) {
+      const dir = orderDirPath(o.id, o.created_at);
+      if (fs.existsSync(dir)) {
+        fs.rmSync(dir, { recursive: true, force: true });
+        console.log(`[privacy] deleted order folder: ${path.basename(dir)}`);
+      }
+    }
+  } catch (e) { console.error('[privacy] startup cleanup failed:', e.message); }
+})();
 
 // ── Stripe webhook (must come before express.json middleware) ─────────────────
 app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
@@ -420,11 +455,13 @@ app.get('/api/admin/orders', requireAdmin, (req, res) => {
 
 app.delete('/api/admin/orders/:id', requireAdmin, (req, res) => {
   db.prepare("UPDATE orders SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?").run(Number(req.params.id));
+  logAudit(req, 'order.delete', 'order', req.params.id);
   res.json({ ok: true });
 });
 
 app.post('/api/admin/orders/:id/restore', requireAdmin, (req, res) => {
   db.prepare("UPDATE orders SET deleted_at = NULL WHERE id = ?").run(Number(req.params.id));
+  logAudit(req, 'order.restore', 'order', req.params.id);
   res.json({ ok: true });
 });
 
@@ -437,12 +474,13 @@ app.get('/api/admin/orders/:id', requireAdmin, (req, res) => {
 });
 
 app.post('/api/admin/orders/:id/status', requireAdmin, async (req, res) => {
-  const valid = ['awaiting_payment', 'paid', 'printing', 'mailed', 'delivered'];
+  const valid = ['awaiting_payment', 'paid', 'printing', 'mailed', 'delivered', 'refunded'];
   if (!valid.includes(req.body.status)) return res.status(400).json({ error: 'Invalid status' });
 
   const id = Number(req.params.id);
   const before = db.prepare('SELECT status FROM orders WHERE id = ?').get(id);
   db.prepare('UPDATE orders SET status = ? WHERE id = ?').run(req.body.status, id);
+  logAudit(req, 'order.status_change', 'order', id, { from: before?.status, to: req.body.status });
 
   // Fire "Letter sent" email when status transitions to 'mailed'
   if (req.body.status === 'mailed' && before?.status !== 'mailed') {
@@ -523,6 +561,7 @@ app.delete('/api/admin/customers/:email', requireAdmin, (req, res) => {
   if (exists) db.prepare('UPDATE customers SET deleted_at = CURRENT_TIMESTAMP WHERE email = ?').run(email);
   else        db.prepare('INSERT INTO customers (email, deleted_at) VALUES (?, CURRENT_TIMESTAMP)').run(email);
   db.prepare("UPDATE orders SET deleted_at = CURRENT_TIMESTAMP WHERE customer_email = ? AND deleted_at IS NULL").run(email);
+  logAudit(req, 'customer.delete', 'customer', email);
   res.json({ ok: true });
 });
 
@@ -580,6 +619,7 @@ app.post('/api/admin/orders/:id/message', requireAdmin, async (req, res) => {
       subject: subject.trim(),
       text:    body.trim(),
     });
+    logAudit(req, 'order.message_sent', 'order', req.params.id, { to: order.customer_email, subject: subject.trim() });
     res.json({ ok: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -639,6 +679,7 @@ app.post('/api/admin/broadcast', requireAdmin, async (req, res) => {
   if (!recipients.length) return res.status(400).json({ error: 'No recipients match.' });
 
   // Send in background — don't block the response. Throttle ~1/sec to be nice to SMTP.
+  logAudit(req, 'broadcast.send', 'broadcast', tag || 'all', { subject, recipients: recipients.length });
   res.json({ ok: true, sentTo: recipients.length });
   (async () => {
     for (const email of recipients) {
@@ -673,6 +714,168 @@ app.get('/api/admin/broadcast/preview', requireAdmin, (req, res) => {
 app.get('/api/admin/tags', requireAdmin, (req, res) => {
   const tags = db.prepare(`SELECT tag, COUNT(*) as n FROM customer_tags GROUP BY tag ORDER BY tag`).all();
   res.json(tags);
+});
+
+// Bulk status update — apply a status to a list of order IDs
+app.post('/api/admin/orders/bulk-status', requireAdmin, async (req, res) => {
+  const { ids, status } = req.body;
+  const valid = ['awaiting_payment', 'paid', 'printing', 'mailed', 'delivered', 'refunded'];
+  if (!valid.includes(status) || !Array.isArray(ids) || !ids.length) return res.status(400).json({ error: 'Invalid input' });
+  const stmt = db.prepare('UPDATE orders SET status = ? WHERE id = ?');
+  ids.forEach(id => stmt.run(status, Number(id)));
+  logAudit(req, 'order.bulk_status', 'order', ids.join(','), { status, count: ids.length });
+  res.json({ ok: true, count: ids.length });
+});
+
+// Refund via Stripe — calls stripe.refunds.create with the order's payment_intent
+app.post('/api/admin/orders/:id/refund', requireAdmin, async (req, res) => {
+  const id = Number(req.params.id);
+  const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(id);
+  if (!order)                       return res.status(404).json({ error: 'Order not found' });
+  if (!order.stripe_session_id)     return res.status(400).json({ error: 'No Stripe session for this order' });
+  if (order.status === 'refunded')  return res.status(400).json({ error: 'Order already refunded' });
+  try {
+    const session = await stripe.checkout.sessions.retrieve(order.stripe_session_id);
+    if (!session.payment_intent) return res.status(400).json({ error: 'No payment to refund' });
+    const refund = await stripe.refunds.create({ payment_intent: session.payment_intent });
+    db.prepare("UPDATE orders SET status = 'refunded' WHERE id = ?").run(id);
+    logAudit(req, 'order.refund', 'order', id, { reason: req.body.reason || null, refund_id: refund.id, amount: refund.amount });
+    res.json({ ok: true, refund_id: refund.id });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Generate a prefilled /send URL for reorder (admin shares with customer)
+app.get('/api/admin/orders/:id/reorder-url', requireAdmin, (req, res) => {
+  const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(Number(req.params.id));
+  if (!order) return res.status(404).json({ error: 'Not found' });
+  const params = new URLSearchParams({
+    'r-name':     order.recipient_name || '',
+    'r-street':   order.recipient_street || '',
+    'r-city':     order.recipient_city || '',
+    'r-province': order.recipient_province || '',
+    'r-postal':   order.recipient_postal || '',
+    'r-country':  order.destination_country || 'CA',
+  });
+  const url = `${process.env.BASE_URL || ''}/send?${params.toString()}`;
+  res.json({ url });
+});
+
+// Global search — order ID, customer email, recipient name, street
+app.get('/api/admin/search', requireAdmin, (req, res) => {
+  const q = String(req.query.q || '').trim();
+  if (q.length < 2) return res.json({ orders: [], customers: [] });
+  const like = `%${q}%`;
+  const orders = db.prepare(`
+    SELECT id, recipient_name, customer_email, status, created_at, price_cents, destination_country
+    FROM orders
+    WHERE deleted_at IS NULL AND (
+      CAST(id AS TEXT) = ? OR
+      customer_email LIKE ? OR
+      recipient_name LIKE ? OR
+      recipient_street LIKE ? OR
+      recipient_city LIKE ?
+    )
+    ORDER BY created_at DESC LIMIT 20
+  `).all(q, like, like, like, like);
+  const customers = db.prepare(`
+    SELECT DISTINCT customer_email FROM orders
+    WHERE deleted_at IS NULL AND customer_email LIKE ?
+    LIMIT 10
+  `).all(like).map(r => r.customer_email);
+  res.json({ orders, customers });
+});
+
+// Audit log listing
+app.get('/api/admin/audit', requireAdmin, (req, res) => {
+  const rows = db.prepare(`SELECT * FROM audit_log ORDER BY created_at DESC LIMIT 200`).all();
+  res.json(rows);
+});
+
+// Print-ready view for an order
+app.get('/admin/orders/:id/print', requireAdmin, (req, res) => {
+  const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(Number(req.params.id));
+  if (!order) return res.status(404).send('Not found');
+  const dir = orderDirPath(order.id, order.created_at);
+  let letterBody = order.letter_body || '';
+  if (!letterBody && fs.existsSync(path.join(dir, 'letter.txt'))) {
+    letterBody = fs.readFileSync(path.join(dir, 'letter.txt'), 'utf8');
+  }
+  const attachments = order.attachment_info ? JSON.parse(order.attachment_info).map(a => a.originalName) : [];
+  const fromAddr = order.skip_return
+    ? 'No return address'
+    : [order.sender_name, order.sender_street,
+       [order.sender_city, order.sender_province, order.sender_postal].filter(Boolean).join(' '),
+       order.sender_country].filter(Boolean).join('\n');
+  const toAddr = [order.recipient_name, order.recipient_street,
+       [order.recipient_city, order.recipient_province, order.recipient_postal].filter(Boolean).join(' '),
+       order.destination_country].filter(Boolean).join('\n');
+
+  const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  res.send(`<!DOCTYPE html><html><head><title>Order #${order.id} — Print</title><style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,serif;color:#111;padding:40px;max-width:800px;margin:0 auto;line-height:1.5}
+.head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:30px;padding-bottom:20px;border-bottom:2px solid #111}
+.title{font-size:18px;font-weight:700}
+.meta{font-size:12px;color:#666;font-family:monospace}
+.addr-block{display:grid;grid-template-columns:1fr 1fr;gap:30px;margin-bottom:40px}
+.addr-card{padding:20px;border:1px solid #ccc}
+.addr-label{font-size:10px;text-transform:uppercase;letter-spacing:0.15em;color:#666;margin-bottom:10px}
+.addr-text{font-size:18px;white-space:pre-line;line-height:1.6}
+.to-card{background:#111;color:#fff;border-color:#111}
+.to-card .addr-label{color:rgba(255,255,255,0.6)}
+.letter-section{margin-bottom:30px}
+.letter-label{font-size:10px;text-transform:uppercase;letter-spacing:0.15em;color:#666;margin-bottom:14px;border-bottom:1px solid #ccc;padding-bottom:8px}
+.letter-body{font-size:15px;line-height:1.8;white-space:pre-wrap;font-family:Georgia,serif}
+.attachments{font-size:12px;color:#666;margin-top:20px;padding:10px;background:#f5f5f5;border:1px dashed #999}
+.checklist{margin-top:40px;padding:20px;background:#f5f5f5;font-size:12px}
+.checklist h3{font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:#666;margin-bottom:10px}
+.checklist label{display:block;padding:6px 0;font-size:13px}
+@media print {
+  body{padding:20px}
+  .no-print{display:none}
+  .checklist{page-break-before:always}
+}
+.no-print{position:fixed;top:20px;right:20px;display:flex;gap:10px}
+.no-print button{padding:10px 20px;background:#111;color:#fff;border:none;cursor:pointer;font-family:inherit;font-size:13px;border-radius:4px}
+</style></head><body>
+<div class="no-print">
+  <button onclick="window.print()">Print</button>
+  <button onclick="window.close()">Close</button>
+</div>
+<div class="head">
+  <div class="title">Letterhome · Order #${order.id}</div>
+  <div class="meta">${new Date(order.created_at).toLocaleString('en-CA')}</div>
+</div>
+<div class="addr-block">
+  <div class="addr-card">
+    <div class="addr-label">From</div>
+    <div class="addr-text">${esc(fromAddr)}</div>
+  </div>
+  <div class="addr-card to-card">
+    <div class="addr-label">To</div>
+    <div class="addr-text">${esc(toAddr)}</div>
+  </div>
+</div>
+<div class="letter-section">
+  <div class="letter-label">Letter content</div>
+  <div class="letter-body">${esc(letterBody) || '<em>(no letter body — see attachments)</em>'}</div>
+</div>
+${attachments.length ? `<div class="attachments"><strong>${attachments.length} attached file${attachments.length > 1 ? 's' : ''}:</strong> ${attachments.map(esc).join(' · ')}</div>` : ''}
+<div class="checklist">
+  <h3>Fulfillment checklist</h3>
+  <label><input type="checkbox"> Letter printed on quality paper</label>
+  <label><input type="checkbox"> Attachments printed and included</label>
+  <label><input type="checkbox"> Letter signed (if applicable)</label>
+  <label><input type="checkbox"> Letter folded and sealed in envelope</label>
+  <label><input type="checkbox"> Recipient address written on envelope</label>
+  <label><input type="checkbox"> Return address written (or omitted per customer)</label>
+  <label><input type="checkbox"> Canadian postage applied</label>
+  <label><input type="checkbox"> Dropped at Canada Post</label>
+  <label><input type="checkbox"> Status updated to 'mailed' in admin panel</label>
+</div>
+</body></html>`);
 });
 
 // ── Contact form ──────────────────────────────────────────────────────────────
@@ -738,11 +941,6 @@ async function fulfillOrder(sessionId) {
     html:    buildCustomerEmail(order, toAddr, amountCAD, isDomestic),
   });
 
-  // Delete entire order folder after 7 days per privacy policy
-  const orderDir = orderDirPath(order.id, order.created_at);
-  setTimeout(() => {
-    try { fs.rmSync(orderDir, { recursive: true, force: true }); } catch {}
-  }, 7 * 86400 * 1000);
 }
 
 function buildOperatorEmail(o, fromAddr, toAddr, amountCAD, attachCount) {
