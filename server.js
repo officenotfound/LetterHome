@@ -349,10 +349,9 @@ app.use(express.static('public'));
 
 // ── GA4 tracking snippet (served to all public pages) ─────────────────────────
 app.get('/ga.js', (req, res) => {
-  const id = process.env.GA4_MEASUREMENT_ID;
+  const id = process.env.GA4_MEASUREMENT_ID || 'G-7QB5PQQT5Y';
   res.setHeader('Content-Type', 'application/javascript');
   res.setHeader('Cache-Control', 'public, max-age=3600');
-  if (!id) return res.send('/* GA4_MEASUREMENT_ID not configured */');
   res.send(`
 window.dataLayer=window.dataLayer||[];
 function gtag(){dataLayer.push(arguments);}
