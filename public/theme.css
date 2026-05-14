@@ -2,6 +2,76 @@
    theme.css loads after all inline <style> blocks, so same-specificity rules
    here win. Dark-mode is [data-theme="dark"] which is higher specificity anyway.
    ─────────────────────────────────────────────────────────────────────────── */
+
+/* ── Cross-browser & device baseline ─────────────────────────────────────────
+   Prevents iOS auto-zoom on landscape, removes tap-highlight flash, kills the
+   300ms tap delay on older Mobile Safari, gives the OS a colour-scheme hint
+   so form controls and scrollbars adopt the right tone in dark mode.        */
+html {
+  -webkit-text-size-adjust: 100%;
+  -moz-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+:root { color-scheme: light; }
+[data-theme="dark"] { color-scheme: dark; }
+
+/* iOS Safari's 100vh includes the URL bar; 100dvh tracks the actual visible
+   area. Browsers that don't support 100dvh keep the original 100vh value.   */
+@supports (min-height: 100dvh) {
+  body { min-height: 100dvh; }
+}
+
+/* Remove 300ms tap delay and double-tap zoom on all interactive elements.   */
+button, .btn, a, [role="button"], summary,
+input[type="checkbox"], input[type="radio"],
+.letter-type, .attach-zone, .theme-toggle,
+.nav-link, .nav-links a {
+  touch-action: manipulation;
+}
+
+/* Keyboard focus rings — visible for keyboard users, hidden for mouse users.
+   `:focus-visible` only matches when focus is reached via keyboard/AT.      */
+button:focus-visible,
+.btn:focus-visible,
+a:focus-visible,
+[role="button"]:focus-visible,
+.nav-link:focus-visible,
+.filter-btn:focus-visible,
+summary:focus-visible {
+  outline: 2px solid var(--red);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  /* Inputs already get a coloured border + box-shadow on focus; the
+     focus-visible outline is unnecessary and would draw a double ring.     */
+  outline: none;
+}
+
+/* Disable hover transforms on touch-only devices (they flash on tap and
+   feel laggy). Keep them where a real pointer exists.                       */
+@media (hover: none) {
+  .btn:hover,
+  .btn-red:hover,
+  .btn-primary:hover,
+  .btn-outline:hover,
+  .btn-ink:hover {
+    transform: none !important;
+    box-shadow: none !important;
+  }
+  .theme-toggle:hover { transform: none; }
+}
+
+/* Improve smooth-scroll feel on iOS inside scrollable containers. */
+.ac-drop {
+  -webkit-overflow-scrolling: touch;
+}
+
 :root {
   --ink-muted: #524d47;   /* was #6b6258 — ~5.8:1 on kraft, passes WCAG AA */
   --ink-faint: #6b6258;   /* was #968b7d — now used only for truly secondary hints */
