@@ -498,6 +498,7 @@ async function showOrder(id) {
         <div class="detail-card-title">Order Info</div>
         <div class="detail-row"><span class="detail-label">Customer</span><span class="detail-value"><button class="link" onclick="go('/admin/customers/${encodeURIComponent(o.customer_email)}')">${esc(o.customer_email)}</button></span></div>
         <div class="detail-row"><span class="detail-label">Submitted</span><span class="detail-value">${fmtDateTime(o.created_at)}</span></div>
+        <div class="detail-row"><span class="detail-label">IP address</span><span class="detail-value">${o.customer_ip ? esc(o.customer_ip) : '<span style="color:#94a3b8">—</span>'}</span></div>
         <div class="detail-row"><span class="detail-label">Type</span><span class="detail-value">${esc(o.letter_type||'standard')}</span></div>
         <div class="detail-row"><span class="detail-label">Price</span><span class="detail-value">${fmtCAD(o.price_cents)}</span></div>
       </div>
