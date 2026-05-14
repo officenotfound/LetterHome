@@ -638,24 +638,6 @@ footer { background: var(--ink); color: rgba(250,246,236,0.65); padding: 48px 36
     <h2 class="panel-title serif">Write your letter.</h2>
     <p class="panel-sub">Type your message below. You can also attach PDF or Word documents to be printed alongside your letter.</p>
 
-    <div class="letter-types">
-      <div class="letter-type selected" onclick="selectType(this, 'standard')" data-type="standard">
-        <div class="letter-type-name serif">Standard Letter</div>
-        <div class="letter-type-price">Included</div>
-        <div class="letter-type-desc">Up to 5 pages on quality paper</div>
-      </div>
-      <div class="letter-type" onclick="selectType(this, 'legal')" data-type="legal">
-        <div class="letter-type-name serif">Legal / Formal</div>
-        <div class="letter-type-price">Included</div>
-        <div class="letter-type-desc">Formal layout, letterhead style</div>
-      </div>
-      <div class="letter-type" onclick="selectType(this, 'card')" data-type="card">
-        <div class="letter-type-name serif">Card / Note</div>
-        <div class="letter-type-price">Included</div>
-        <div class="letter-type-desc">Short message, card format</div>
-      </div>
-    </div>
-
     <div class="form-group">
       <label for="letter-body">Your Message</label>
       <textarea id="letter-body" placeholder="Dear Margaret,&#10;&#10;I hope this letter finds you well. I'm writing from..." oninput="updatePreview()"></textarea>
@@ -702,7 +684,6 @@ footer { background: var(--ink); color: rgba(250,246,236,0.65); padding: 48px 36
     </div>
 
     <div class="order-summary">
-      <div class="order-summary-row"><span class="label">Service</span><span class="val" id="summary-service">Standard Letter</span></div>
       <div class="order-summary-row"><span class="label">Destination</span><span class="val" id="summary-dest">Canada (Domestic)</span></div>
       <div class="order-summary-row"><span class="label">Delivery estimate</span><span class="val" id="summary-delivery">Within 2 weeks</span></div>
       <div class="order-summary-row"><span class="label">Includes</span><span class="val">Print · Envelope · Postage · Delivery</span></div>
@@ -743,7 +724,6 @@ footer { background: var(--ink); color: rgba(250,246,236,0.65); padding: 48px 36
 
 <script>
 let currentStep = 1;
-let letterType = 'standard';
 let uploadedFiles = [];
 
 function goTo(step) {
@@ -778,12 +758,6 @@ function setCircleLabel(el, i) {
 function toggleReturn(cb) {
   document.getElementById('sender-fields').style.opacity = cb.checked ? '0.3' : '1';
   document.getElementById('sender-fields').style.pointerEvents = cb.checked ? 'none' : 'auto';
-}
-
-function selectType(el, type) {
-  document.querySelectorAll('.letter-type').forEach(t => t.classList.remove('selected'));
-  el.classList.add('selected');
-  letterType = type;
 }
 
 function updatePricing() {
@@ -841,8 +815,6 @@ function buildPreview() {
   document.getElementById('preview-body-text').textContent =
     document.getElementById('letter-body').value || 'No message entered.';
 
-  const typeLabels = { standard: 'Standard Letter', legal: 'Legal / Formal', card: 'Card / Note' };
-  document.getElementById('summary-service').textContent = typeLabels[letterType] || 'Standard Letter';
   updatePricing();
 }
 
@@ -982,7 +954,6 @@ async function submitOrder() {
     if (el) form.append(id, el.type === 'checkbox' ? (el.checked ? '1' : '') : el.value);
   });
   form.append('r-province', getRecipientProvince());
-  form.append('letter-type', letterType);
   uploadedFiles.filter(Boolean).forEach(f => form.append('attachments', f));
 
   try {
