@@ -142,7 +142,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Clean URLs for all pages
-['send', 'privacy', 'terms', 'refunds', 'about', 'contact', 'track', 'order-success'].forEach(p =>
+['send', 'privacy', 'terms', 'refunds', 'about', 'contact', 'track', 'order-success', 'accessibility'].forEach(p =>
   app.get(`/${p}`, (req, res) =>
     res.sendFile(path.join(__dirname, 'public', `${p}.html`))
   )

@@ -71,6 +71,7 @@ footer{background:var(--ink);color:rgba(250,246,236,0.65);padding:40px 36px;posi
     <div class="footer-bottom-links">
       <a href="/privacy">Privacy</a>
       <a href="/terms">Terms</a>
+      <a href="/accessibility">Accessibility</a>
     </div>
   </div>
 </footer>
@@ -95,7 +96,7 @@ footer{background:var(--ink);color:rgba(250,246,236,0.65);padding:40px 36px;posi
       <div class="detail-row"><span class="label">Order</span><span class="val">#${data.id}</span></div>
       <div class="detail-row"><span class="label">Recipient</span><span class="val">${data.recipientName}${data.recipientCity ? ', ' + data.recipientCity : ''}</span></div>
       <div class="detail-row"><span class="label">Destination</span><span class="val">${destName}</span></div>
-      <div class="detail-row"><span class="label">Price</span><span class="val">${isDomestic ? '$10' : '$16'} CAD</span></div>
+      <div class="detail-row"><span class="label">Price</span><span class="val">${isDomestic ? '$10' : '$20'} CAD</span></div>
       <div class="detail-row"><span class="label">Estimated delivery</span><span class="val">${isDomestic ? 'Within 2 weeks' : 'Within 4 weeks'}</span></div>
       <div class="detail-row"><span class="label">Status</span><span class="val" style="color:var(--red)">Received — preparing to mail</span></div>
     `;
