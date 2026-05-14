@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Letterhome</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',system-ui,sans-serif;background:#f1f5f9;color:#0f172a;min-height:100vh;display:flex}
+/* ── Sidebar ── */
+.sidebar{width:220px;min-height:100vh;background:#0f172a;display:flex;flex-direction:column;flex-shrink:0;position:fixed;top:0;left:0;bottom:0}
+.sidebar-logo{padding:24px 20px 20px;border-bottom:1px solid rgba(255,255,255,0.06)}
+.sidebar-logo-inner{display:flex;align-items:center;gap:10px}
+.logo-mark{width:32px;height:32px;background:#dc2626;border-radius:4px;display:grid;place-items:center;color:#fff;font-size:16px;font-family:Georgia,serif;font-weight:700;flex-shrink:0}
+.logo-text{color:#f8fafc;font-size:15px;font-weight:600;letter-spacing:-0.02em}
+.sidebar-nav{flex:1;padding:16px 12px}
+.nav-label{color:#475569;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;padding:0 8px;margin:16px 0 6px}
+.nav-link{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:6px;color:#94a3b8;font-size:13px;font-weight:500;text-decoration:none;cursor:pointer;transition:all 0.15s;margin-bottom:2px;border:none;background:none;width:100%;text-align:left}
+.nav-link:hover{background:rgba(255,255,255,0.06);color:#e2e8f0}
+.nav-link.active{background:rgba(220,38,38,0.15);color:#fca5a5}
+.nav-icon{font-size:15px;width:18px;text-align:center}
+.sidebar-footer{padding:16px 12px;border-top:1px solid rgba(255,255,255,0.06)}
+.logout-btn{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:6px;color:#64748b;font-size:13px;cursor:pointer;transition:all 0.15s;border:none;background:none;width:100%}
+.logout-btn:hover{color:#94a3b8;background:rgba(255,255,255,0.04)}
+/* ── Content ── */
+.content{margin-left:220px;flex:1;min-height:100vh;display:flex;flex-direction:column}
+.topbar{background:#fff;border-bottom:1px solid #e2e8f0;padding:0 32px;height:60px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.topbar-title{font-size:16px;font-weight:600;color:#0f172a;letter-spacing:-0.01em}
+.topbar-user{font-size:13px;color:#64748b}
+.main{padding:32px;flex:1}
+/* ── Cards & Stats ── */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px}
+.stat-card{background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:20px 24px}
+.stat-label{font-size:12px;color:#64748b;font-weight:500;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px}
+.stat-value{font-size:28px;font-weight:700;color:#0f172a;letter-spacing:-0.03em}
+.stat-sub{font-size:12px;color:#94a3b8;margin-top:4px}
+.card{background:#fff;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;margin-bottom:24px}
+.card-header{padding:16px 20px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between}
+.card-title{font-size:14px;font-weight:600;color:#0f172a}
+/* ── Tables ── */
+table{width:100%;border-collapse:collapse}
+th{padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.08em;background:#f8fafc;border-bottom:1px solid #e2e8f0}
+td{padding:13px 16px;font-size:13px;color:#334155;border-bottom:1px solid #f1f5f9}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#f8fafc}
+.link{color:#dc2626;text-decoration:none;font-weight:500;cursor:pointer;background:none;border:none;font-size:13px;padding:0}
+.link:hover{text-decoration:underline}
+/* ── Status badges ── */
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase}
+.badge-gray{background:#f1f5f9;color:#64748b}
+.badge-blue{background:#eff6ff;color:#1d4ed8}
+.badge-amber{background:#fffbeb;color:#b45309}
+.badge-violet{background:#f5f3ff;color:#6d28d9}
+.badge-green{background:#f0fdf4;color:#15803d}
+/* ── Forms & Inputs ── */
+.form-row{display:flex;gap:12px;align-items:flex-end;margin-bottom:16px}
+.field{display:flex;flex-direction:column;gap:6px;flex:1}
+.field label{font-size:12px;font-weight:500;color:#64748b;text-transform:uppercase;letter-spacing:0.06em}
+input[type=text],input[type=email],textarea,select{width:100%;border:1px solid #e2e8f0;border-radius:6px;padding:9px 12px;font-size:13px;color:#0f172a;outline:none;font-family:inherit;background:#fff;transition:border-color 0.15s}
+input[type=text]:focus,input[type=email]:focus,textarea:focus,select:focus{border-color:#dc2626}
+textarea{resize:vertical;min-height:80px}
+.btn{padding:9px 18px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all 0.15s;letter-spacing:0.01em}
+.btn-primary{background:#dc2626;color:#fff}
+.btn-primary:hover{background:#b91c1c}
+.btn-outline{background:#fff;color:#334155;border:1px solid #e2e8f0}
+.btn-outline:hover{background:#f8fafc}
+.btn-sm{padding:6px 12px;font-size:12px}
+.btn-ghost{background:none;border:none;color:#64748b;cursor:pointer;font-size:12px;padding:4px 8px;border-radius:4px}
+.btn-ghost:hover{background:#f1f5f9;color:#dc2626}
+/* ── Detail views ── */
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px}
+.detail-card{background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:20px}
+.detail-card-title{font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:14px}
+.detail-row{display:flex;justify-content:space-between;align-items:flex-start;padding:7px 0;border-bottom:1px solid #f1f5f9;font-size:13px}
+.detail-row:last-child{border-bottom:none}
+.detail-label{color:#64748b;flex-shrink:0;margin-right:16px}
+.detail-value{color:#0f172a;font-weight:500;text-align:right;word-break:break-word}
+.address-block{font-size:13px;color:#334155;line-height:1.7;white-space:pre-line}
+.letter-body{font-size:13px;color:#334155;line-height:1.75;white-space:pre-wrap;font-family:Georgia,serif;padding:16px;background:#f8fafc;border-radius:6px;border:1px solid #e2e8f0}
+/* ── Tags ── */
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.tag{display:inline-flex;align-items:center;gap:6px;background:#f1f5f9;color:#475569;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:500}
+.tag-remove{background:none;border:none;cursor:pointer;color:#94a3b8;font-size:14px;line-height:1;padding:0}
+.tag-remove:hover{color:#dc2626}
+/* ── Notes ── */
+.note-item{padding:12px 0;border-bottom:1px solid #f1f5f9}
+.note-item:last-child{border-bottom:none}
+.note-meta{font-size:11px;color:#94a3b8;margin-bottom:4px}
+.note-text{font-size:13px;color:#334155;line-height:1.6}
+/* ── Filters ── */
+.filter-row{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.filter-btn{padding:6px 14px;border-radius:999px;border:1px solid #e2e8f0;background:#fff;font-size:12px;font-weight:500;color:#64748b;cursor:pointer;transition:all 0.15s}
+.filter-btn.active,.filter-btn:hover{background:#0f172a;color:#fff;border-color:#0f172a}
+/* ── Misc ── */
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+.page-title{font-size:22px;font-weight:700;color:#0f172a;letter-spacing:-0.03em}
+.empty{text-align:center;padding:60px 20px;color:#94a3b8;font-size:14px}
+.files-list{display:flex;flex-direction:column;gap:8px;padding:16px 20px}
+.file-item{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;font-size:13px}
+.file-name{color:#334155;font-weight:500}
+.back-link{display:inline-flex;align-items:center;gap:6px;color:#64748b;font-size:13px;cursor:pointer;background:none;border:none;margin-bottom:20px;padding:0}
+.back-link:hover{color:#dc2626}
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="sidebar-logo-inner">
+      <div class="logo-mark">L</div>
+      <div class="logo-text">Letterhome</div>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-label">Menu</div>
+    <button class="nav-link" id="nav-dashboard" onclick="go('/admin')"><span class="nav-icon">◈</span> Dashboard</button>
+    <button class="nav-link" id="nav-orders"    onclick="go('/admin/orders')"><span class="nav-icon">✉</span> Orders</button>
+    <button class="nav-link" id="nav-customers" onclick="go('/admin/customers')"><span class="nav-icon">◎</span> Customers</button>
+  </nav>
+  <div class="sidebar-footer">
+    <form method="POST" action="/admin/logout" style="margin:0">
+      <button class="logout-btn" type="submit">⎋ &nbsp;Sign out</button>
+    </form>
+  </div>
+</aside>
+
+<div class="content">
+  <div class="topbar">
+    <div class="topbar-title" id="topbar-title">Dashboard</div>
+    <div class="topbar-user" id="topbar-user"></div>
+  </div>
+  <div class="main" id="main">
+    <div class="empty">Loading…</div>
+  </div>
+</div>
+
+<script>
+let currentUser = '';
+
+// ── Router ────────────────────────────────────────────────────────────────────
+async function init() {
+  const me = await api('/api/admin/me');
+  if (!me) { window.location.href = '/admin/login'; return; }
+  currentUser = me.username;
+  document.getElementById('topbar-user').textContent = me.username;
+  window.addEventListener('popstate', () => route());
+  route();
+}
+
+function go(path) {
+  history.pushState({}, '', path);
+  route();
+}
+
+function route() {
+  const p = window.location.pathname;
+  setActiveNav(p);
+  if (p === '/admin' || p === '/admin/')           return showDashboard();
+  if (p === '/admin/orders')                        return showOrders();
+  if (p.match(/^\/admin\/orders\/\d+$/))            return showOrder(p.split('/').pop());
+  if (p === '/admin/customers')                     return showCustomers();
+  if (p.match(/^\/admin\/customers\/.+$/))          return showCustomer(decodeURIComponent(p.replace('/admin/customers/', '')));
+  showDashboard();
+}
+
+function setActiveNav(p) {
+  ['dashboard','orders','customers'].forEach(k => document.getElementById('nav-'+k)?.classList.remove('active'));
+  if (p.startsWith('/admin/orders'))    document.getElementById('nav-orders')?.classList.add('active');
+  else if (p.startsWith('/admin/customers')) document.getElementById('nav-customers')?.classList.add('active');
+  else                                  document.getElementById('nav-dashboard')?.classList.add('active');
+}
+
+function setTitle(t) { document.getElementById('topbar-title').textContent = t; }
+function setMain(html) { document.getElementById('main').innerHTML = html; }
+
+// ── API helper ────────────────────────────────────────────────────────────────
+async function api(url, opts = {}) {
+  try {
+    const r = await fetch(url, { headers: { 'Content-Type': 'application/json' }, ...opts });
+    if (r.status === 401) { window.location.href = '/admin/login'; return null; }
+    return r.ok ? r.json() : null;
+  } catch { return null; }
+}
+
+async function post(url, body) {
+  return api(url, { method: 'POST', body: JSON.stringify(body) });
+}
+
+async function del(url) {
+  return api(url, { method: 'DELETE' });
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function statusBadge(s) {
+  const map = {
+    awaiting_payment: ['badge-gray',   'Awaiting Payment'],
+    paid:             ['badge-blue',   'Paid'],
+    printing:         ['badge-amber',  'Printing'],
+    mailed:           ['badge-violet', 'Mailed'],
+    delivered:        ['badge-green',  'Delivered'],
+  };
+  const [cls, label] = map[s] || ['badge-gray', s];
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+
+function fmtDate(d) {
+  if (!d) return '—';
+  return new Date(d).toLocaleDateString('en-CA', { year:'numeric', month:'short', day:'numeric' });
+}
+
+function fmtCAD(cents) {
+  return '$' + (cents / 100).toFixed(2) + ' CAD';
+}
+
+// ── Dashboard ─────────────────────────────────────────────────────────────────
+async function showDashboard() {
+  setTitle('Dashboard');
+  const [stats, orders] = await Promise.all([
+    api('/api/admin/stats'),
+    api('/api/admin/orders?status=paid'),
+  ]);
+  if (!stats) return;
+
+  const recentRows = (orders || []).slice(0, 8).map(o => `
+    <tr>
+      <td><button class="link" onclick="go('/admin/orders/${o.id}')">#${o.id}</button></td>
+      <td>${fmtDate(o.created_at)}</td>
+      <td>${esc(o.recipient_name)}</td>
+      <td>${o.destination_country || '—'}</td>
+      <td>${statusBadge(o.status)}</td>
+      <td>${fmtCAD(o.price_cents)}</td>
+    </tr>`).join('');
+
+  setMain(`
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Total Orders</div>
+        <div class="stat-value">${stats.total}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Paid Orders</div>
+        <div class="stat-value">${stats.paid}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Revenue</div>
+        <div class="stat-value">${fmtCAD(stats.revenue)}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Customers</div>
+        <div class="stat-value">${stats.customers}</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">Recent Paid Orders</div></div>
+      <table>
+        <thead><tr><th>#</th><th>Date</th><th>Recipient</th><th>Country</th><th>Status</th><th>Price</th></tr></thead>
+        <tbody>${recentRows || '<tr><td colspan="6" class="empty">No paid orders yet.</td></tr>'}</tbody>
+      </table>
+    </div>`);
+}
+
+// ── Orders list ───────────────────────────────────────────────────────────────
+let orderFilter = '';
+async function showOrders(filter) {
+  if (filter !== undefined) orderFilter = filter;
+  setTitle('Orders');
+  const url = orderFilter ? `/api/admin/orders?status=${orderFilter}` : '/api/admin/orders';
+  const orders = await api(url);
+  if (!orders) return;
+
+  const statuses = ['','awaiting_payment','paid','printing','mailed','delivered'];
+  const labels   = ['All','Awaiting','Paid','Printing','Mailed','Delivered'];
+  const filters  = statuses.map((s,i) => `<button class="filter-btn ${orderFilter===s?'active':''}" onclick="showOrders('${s}')">${labels[i]}</button>`).join('');
+
+  const rows = orders.map(o => `
+    <tr>
+      <td><button class="link" onclick="go('/admin/orders/${o.id}')">#${o.id}</button></td>
+      <td>${fmtDate(o.created_at)}</td>
+      <td>${esc(o.recipient_name)}</td>
+      <td>${esc(o.recipient_city||'')}${o.recipient_city&&o.destination_country?', ':''}${o.destination_country||''}</td>
+      <td>${statusBadge(o.status)}</td>
+      <td>${fmtCAD(o.price_cents)}</td>
+      <td><button class="link" onclick="go('/admin/orders/${o.id}')">View →</button></td>
+    </tr>`).join('');
+
+  setMain(`
+    <div class="page-header"><div class="page-title">Orders</div></div>
+    <div class="filter-row">${filters}</div>
+    <div class="card">
+      <table>
+        <thead><tr><th>#</th><th>Date</th><th>Recipient</th><th>Destination</th><th>Status</th><th>Price</th><th></th></tr></thead>
+        <tbody>${rows || '<tr><td colspan="7" class="empty">No orders.</td></tr>'}</tbody>
+      </table>
+    </div>`);
+}
+
+// ── Order detail ──────────────────────────────────────────────────────────────
+async function showOrder(id) {
+  setTitle(`Order #${id}`);
+  const o = await api(`/api/admin/orders/${id}`);
+  if (!o) return setMain('<div class="empty">Order not found.</div>');
+
+  const fromAddr = o.skip_return ? 'No return address'
+    : [o.sender_name, o.sender_street,
+       [o.sender_city, o.sender_province, o.sender_postal].filter(Boolean).join(' '),
+       o.sender_country].filter(Boolean).join('\n');
+
+  const toAddr = [o.recipient_name, o.recipient_street,
+    [o.recipient_city, o.recipient_province, o.recipient_postal].filter(Boolean).join(' '),
+    o.destination_country].filter(Boolean).join('\n');
+
+  const fileItems = (o.files || [])
+    .filter(f => f !== 'order.json')
+    .map(f => `
+      <div class="file-item">
+        <span class="file-name">📄 ${esc(f)}</span>
+        <a class="btn btn-outline btn-sm" href="/api/admin/orders/${o.id}/files/${encodeURIComponent(f)}" target="_blank">Download</a>
+      </div>`).join('');
+
+  const statuses = ['awaiting_payment','paid','printing','mailed','delivered'];
+  const statusOpts = statuses.map(s => `<option value="${s}" ${o.status===s?'selected':''}>${s.replace('_',' ')}</option>`).join('');
+
+  setMain(`
+    <button class="back-link" onclick="go('/admin/orders')">← Back to Orders</button>
+    <div class="page-header">
+      <div class="page-title">Order #${o.id}</div>
+      ${statusBadge(o.status)}
+    </div>
+    <div class="detail-grid">
+      <div class="detail-card">
+        <div class="detail-card-title">From</div>
+        <div class="address-block">${esc(fromAddr)}</div>
+      </div>
+      <div class="detail-card">
+        <div class="detail-card-title">To</div>
+        <div class="address-block">${esc(toAddr)}</div>
+      </div>
+    </div>
+    <div class="detail-grid">
+      <div class="detail-card">
+        <div class="detail-card-title">Order Info</div>
+        <div class="detail-row"><span class="detail-label">Customer</span><span class="detail-value"><button class="link" onclick="go('/admin/customers/${encodeURIComponent(o.customer_email)}')">${esc(o.customer_email)}</button></span></div>
+        <div class="detail-row"><span class="detail-label">Date</span><span class="detail-value">${fmtDate(o.created_at)}</span></div>
+        <div class="detail-row"><span class="detail-label">Type</span><span class="detail-value">${esc(o.letter_type||'standard')}</span></div>
+        <div class="detail-row"><span class="detail-label">Price</span><span class="detail-value">${fmtCAD(o.price_cents)}</span></div>
+      </div>
+      <div class="detail-card">
+        <div class="detail-card-title">Update Status</div>
+        <div class="form-row" style="margin-bottom:0">
+          <div class="field">
+            <select id="status-select">${statusOpts}</select>
+          </div>
+          <button class="btn btn-primary" onclick="updateStatus(${o.id})">Save</button>
+        </div>
+        <div id="status-msg" style="font-size:12px;color:#16a34a;margin-top:10px;display:none">✓ Status updated</div>
+      </div>
+    </div>
+    ${o.letter_body ? `
+    <div class="card" style="margin-bottom:24px">
+      <div class="card-header"><div class="card-title">Letter Content</div></div>
+      <div style="padding:20px"><div class="letter-body">${esc(o.letter_body)}</div></div>
+    </div>` : ''}
+    ${fileItems ? `
+    <div class="card" style="margin-bottom:24px">
+      <div class="card-header"><div class="card-title">Attachments</div></div>
+      <div class="files-list">${fileItems}</div>
+    </div>` : ''}`);
+}
+
+async function updateStatus(id) {
+  const status = document.getElementById('status-select').value;
+  const r = await post(`/api/admin/orders/${id}/status`, { status });
+  if (r?.ok) {
+    const msg = document.getElementById('status-msg');
+    msg.style.display = 'block';
+    setTimeout(() => msg.style.display = 'none', 2500);
+  }
+}
+
+// ── Customers list ────────────────────────────────────────────────────────────
+async function showCustomers() {
+  setTitle('Customers');
+  const customers = await api('/api/admin/customers');
+  if (!customers) return;
+
+  const rows = customers.map(c => {
+    const tags = c.tags.map(t => `<span class="tag" style="font-size:11px;padding:2px 8px">${esc(t)}</span>`).join('');
+    return `
+    <tr>
+      <td><button class="link" onclick="go('/admin/customers/${encodeURIComponent(c.customer_email)}')">${esc(c.customer_email)}</button></td>
+      <td>${c.order_count}</td>
+      <td>${fmtCAD(c.total_spent)}</td>
+      <td>${fmtDate(c.last_order)}</td>
+      <td>${tags || '<span style="color:#94a3b8;font-size:12px">—</span>'}</td>
+      <td><button class="link" onclick="go('/admin/customers/${encodeURIComponent(c.customer_email)}')">View →</button></td>
+    </tr>`;
+  }).join('');
+
+  setMain(`
+    <div class="page-header"><div class="page-title">Customers</div></div>
+    <div class="card">
+      <table>
+        <thead><tr><th>Email</th><th>Orders</th><th>Spent</th><th>Last Order</th><th>Tags</th><th></th></tr></thead>
+        <tbody>${rows || '<tr><td colspan="6" class="empty">No customers yet.</td></tr>'}</tbody>
+      </table>
+    </div>`);
+}
+
+// ── Customer detail ───────────────────────────────────────────────────────────
+async function showCustomer(email) {
+  setTitle('Customer');
+  const c = await api(`/api/admin/customers/${encodeURIComponent(email)}`);
+  if (!c) return setMain('<div class="empty">Customer not found.</div>');
+
+  const totalSpent = c.orders.filter(o => o.status !== 'awaiting_payment').reduce((s,o) => s + o.price_cents, 0);
+
+  const orderRows = c.orders.map(o => `
+    <tr>
+      <td><button class="link" onclick="go('/admin/orders/${o.id}')">#${o.id}</button></td>
+      <td>${fmtDate(o.created_at)}</td>
+      <td>${esc(o.recipient_name)}</td>
+      <td>${o.destination_country||'—'}</td>
+      <td>${statusBadge(o.status)}</td>
+      <td>${fmtCAD(o.price_cents)}</td>
+    </tr>`).join('');
+
+  const tagChips = c.tags.map(t => `
+    <span class="tag">${esc(t)}
+      <button class="tag-remove" onclick="removeTag('${encodeURIComponent(email)}','${esc(t)}')">×</button>
+    </span>`).join('');
+
+  const noteItems = c.notes.map(n => `
+    <div class="note-item">
+      <div class="note-meta">${fmtDate(n.created_at)}</div>
+      <div class="note-text">${esc(n.note)}</div>
+    </div>`).join('');
+
+  setMain(`
+    <button class="back-link" onclick="go('/admin/customers')">← Back to Customers</button>
+    <div class="page-header">
+      <div class="page-title">${esc(email)}</div>
+    </div>
+    <div class="detail-grid">
+      <div class="detail-card">
+        <div class="detail-card-title">Summary</div>
+        <div class="detail-row"><span class="detail-label">Orders</span><span class="detail-value">${c.orders.length}</span></div>
+        <div class="detail-row"><span class="detail-label">Total Spent</span><span class="detail-value">${fmtCAD(totalSpent)}</span></div>
+        <div class="detail-row"><span class="detail-label">First Order</span><span class="detail-value">${fmtDate(c.orders[c.orders.length-1]?.created_at)}</span></div>
+        <div class="detail-row"><span class="detail-label">Last Order</span><span class="detail-value">${fmtDate(c.orders[0]?.created_at)}</span></div>
+      </div>
+      <div class="detail-card">
+        <div class="detail-card-title">Tags</div>
+        <div class="tags" id="tags-container">${tagChips || '<span style="color:#94a3b8;font-size:13px">No tags yet.</span>'}</div>
+        <div class="form-row" style="margin-top:16px;margin-bottom:0">
+          <div class="field">
+            <input type="text" id="new-tag" placeholder="e.g. vip, repeat-buyer" onkeydown="if(event.key==='Enter')addTag('${encodeURIComponent(email)}')">
+          </div>
+          <button class="btn btn-outline btn-sm" onclick="addTag('${encodeURIComponent(email)}')">Add Tag</button>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:24px">
+      <div class="card-header"><div class="card-title">Order History</div></div>
+      <table>
+        <thead><tr><th>#</th><th>Date</th><th>Recipient</th><th>Country</th><th>Status</th><th>Price</th></tr></thead>
+        <tbody>${orderRows || '<tr><td colspan="6" class="empty">No orders.</td></tr>'}</tbody>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">Notes</div></div>
+      <div style="padding:16px 20px">
+        <div class="field" style="margin-bottom:12px">
+          <textarea id="new-note" placeholder="Add an internal note about this customer…"></textarea>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="addNote('${encodeURIComponent(email)}')">Add Note</button>
+      </div>
+      <div style="padding:0 20px 16px" id="notes-list">
+        ${noteItems || '<div class="empty" style="padding:20px 0">No notes yet.</div>'}
+      </div>
+    </div>`);
+}
+
+async function addNote(encodedEmail) {
+  const note = document.getElementById('new-note').value.trim();
+  if (!note) return;
+  const r = await post(`/api/admin/customers/${encodedEmail}/notes`, { note });
+  if (r?.ok) { document.getElementById('new-note').value = ''; showCustomer(decodeURIComponent(encodedEmail)); }
+}
+
+async function addTag(encodedEmail) {
+  const tag = document.getElementById('new-tag').value.trim();
+  if (!tag) return;
+  const r = await post(`/api/admin/customers/${encodedEmail}/tags`, { tag });
+  if (r?.ok) { document.getElementById('new-tag').value = ''; showCustomer(decodeURIComponent(encodedEmail)); }
+}
+
+async function removeTag(encodedEmail, tag) {
+  await del(`/api/admin/customers/${encodedEmail}/tags/${encodeURIComponent(tag)}`);
+  showCustomer(decodeURIComponent(encodedEmail));
+}
+
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+init();
+</script>
+</body>
+</html>

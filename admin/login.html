@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Login — Letterhome</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',system-ui,sans-serif;background:#0f172a;min-height:100vh;display:flex;align-items:center;justify-content:center}
+.card{background:#1e293b;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:48px 40px;width:100%;max-width:380px}
+.logo{display:flex;align-items:center;gap:12px;margin-bottom:36px}
+.logo-mark{width:36px;height:36px;background:#dc2626;border-radius:4px;display:grid;place-items:center;color:#fff;font-size:18px;font-family:Georgia,serif;font-weight:700;flex-shrink:0}
+.logo-text{color:#f8fafc;font-size:18px;font-weight:600;letter-spacing:-0.02em}
+.logo-sub{color:#64748b;font-size:12px;margin-top:1px}
+h1{color:#f8fafc;font-size:22px;font-weight:600;margin-bottom:6px;letter-spacing:-0.02em}
+.subtitle{color:#64748b;font-size:14px;margin-bottom:28px}
+.error{background:rgba(220,38,38,0.15);border:1px solid rgba(220,38,38,0.3);color:#fca5a5;padding:10px 14px;border-radius:6px;font-size:13px;margin-bottom:20px}
+label{display:block;color:#94a3b8;font-size:12px;font-weight:500;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px}
+input{width:100%;background:#0f172a;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:11px 14px;color:#f8fafc;font-size:14px;outline:none;transition:border-color 0.2s;margin-bottom:16px}
+input:focus{border-color:#dc2626}
+button{width:100%;background:#dc2626;color:#fff;border:none;border-radius:6px;padding:12px;font-size:14px;font-weight:600;cursor:pointer;letter-spacing:0.02em;margin-top:4px;transition:background 0.2s}
+button:hover{background:#b91c1c}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">
+    <div class="logo-mark">L</div>
+    <div>
+      <div class="logo-text">Letterhome</div>
+      <div class="logo-sub">Admin Panel</div>
+    </div>
+  </div>
+  <h1>Sign in</h1>
+  <p class="subtitle">Restricted access — authorized personnel only.</p>
+  <div id="err" class="error" style="display:none">Incorrect username or password.</div>
+  <form method="POST" action="/admin/login">
+    <label for="username">Username</label>
+    <input id="username" name="username" type="text" autocomplete="username" required>
+    <label for="password">Password</label>
+    <input id="password" name="password" type="password" autocomplete="current-password" required>
+    <button type="submit">Sign in →</button>
+  </form>
+</div>
+<script>
+  if (window.location.search.includes('error=1'))
+    document.getElementById('err').style.display = 'block';
+</script>
+</body>
+</html>

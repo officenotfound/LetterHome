@@ -4,15 +4,25 @@ const multer    = require('multer');
 const Stripe    = require('stripe');
 const mailer    = require('nodemailer');
 const rateLimit = require('express-rate-limit');
+const session   = require('express-session');
+const bcrypt    = require('bcryptjs');
 const { DatabaseSync: Database } = require('node:sqlite');
 const path = require('path');
 const fs   = require('fs');
 
 fs.mkdirSync('uploads', { recursive: true });
 fs.mkdirSync('orders',  { recursive: true });
+fs.mkdirSync('admin',   { recursive: true });
 
 const app    = express();
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
+
+app.use(session({
+  secret:            process.env.SESSION_SECRET || 'dev-secret-change-me',
+  resave:            false,
+  saveUninitialized: false,
+  cookie: { httpOnly: true, sameSite: 'lax', maxAge: 8 * 60 * 60 * 1000 },
+}));
 
 // ── Database ──────────────────────────────────────────────────────────────────
 const db = new Database('orders.db', { allowBareNamedParameters: true });
@@ -41,6 +51,21 @@ db.exec(`
     status             TEXT DEFAULT 'awaiting_payment',
     created_at         DATETIME DEFAULT CURRENT_TIMESTAMP
   )
+`);
+db.exec(`
+  CREATE TABLE IF NOT EXISTS customer_notes (
+    id             INTEGER PRIMARY KEY AUTOINCREMENT,
+    customer_email TEXT NOT NULL,
+    note           TEXT NOT NULL,
+    created_at     DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+  CREATE TABLE IF NOT EXISTS customer_tags (
+    id             INTEGER PRIMARY KEY AUTOINCREMENT,
+    customer_email TEXT NOT NULL,
+    tag            TEXT NOT NULL,
+    created_at     DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(customer_email, tag)
+  );
 `);
 
 // ── Email transport ───────────────────────────────────────────────────────────
@@ -125,6 +150,19 @@ const contactLimiter = rateLimit({
   legacyHeaders: false,
   message: { error: 'Too many messages sent. Please try again later.' },
 });
+
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+function requireAdmin(req, res, next) {
+  if (req.session?.admin) return next();
+  if (req.path.startsWith('/api/')) return res.status(401).json({ error: 'Unauthorized' });
+  res.redirect('/admin/login');
+}
 
 // ── Create order ──────────────────────────────────────────────────────────────
 app.post('/api/create-order', orderLimiter, upload.array('attachments', 5), async (req, res) => {
@@ -274,6 +312,120 @@ app.post('/api/track', (req, res) => {
     destinationCountry: order.destination_country,
     createdAt:          order.created_at,
   });
+});
+
+// ── Admin auth ───────────────────────────────────────────────────────────────
+app.get('/admin/login', (req, res) => {
+  if (req.session?.admin) return res.redirect('/admin');
+  res.sendFile(path.join(__dirname, 'admin', 'login.html'));
+});
+
+app.post('/admin/login', loginLimiter, async (req, res) => {
+  const { username, password } = req.body;
+  const validUser = username === process.env.ADMIN_USERNAME;
+  const validPass = process.env.ADMIN_PASSWORD_HASH
+    ? await bcrypt.compare(password || '', process.env.ADMIN_PASSWORD_HASH)
+    : false;
+  if (!validUser || !validPass) return res.redirect('/admin/login?error=1');
+  req.session.admin = { username };
+  res.redirect('/admin');
+});
+
+app.post('/admin/logout', (req, res) => {
+  req.session.destroy();
+  res.redirect('/admin/login');
+});
+
+app.get('/admin', requireAdmin, (req, res) =>
+  res.sendFile(path.join(__dirname, 'admin', 'app.html')));
+app.get('/admin/*', requireAdmin, (req, res) =>
+  res.sendFile(path.join(__dirname, 'admin', 'app.html')));
+
+// ── Admin API ─────────────────────────────────────────────────────────────────
+app.get('/api/admin/me', requireAdmin, (req, res) =>
+  res.json({ username: req.session.admin.username }));
+
+app.get('/api/admin/stats', requireAdmin, (req, res) => {
+  res.json({
+    total:     db.prepare('SELECT COUNT(*) as n FROM orders').get().n,
+    paid:      db.prepare("SELECT COUNT(*) as n FROM orders WHERE status != 'awaiting_payment'").get().n,
+    revenue:   db.prepare("SELECT COALESCE(SUM(price_cents),0) as n FROM orders WHERE status != 'awaiting_payment'").get().n,
+    customers: db.prepare("SELECT COUNT(DISTINCT customer_email) as n FROM orders WHERE status != 'awaiting_payment'").get().n,
+  });
+});
+
+app.get('/api/admin/orders', requireAdmin, (req, res) => {
+  const { status } = req.query;
+  const rows = status
+    ? db.prepare("SELECT * FROM orders WHERE status = ? ORDER BY created_at DESC").all(status)
+    : db.prepare("SELECT * FROM orders ORDER BY created_at DESC").all();
+  res.json(rows);
+});
+
+app.get('/api/admin/orders/:id', requireAdmin, (req, res) => {
+  const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(Number(req.params.id));
+  if (!order) return res.status(404).json({ error: 'Not found' });
+  const dir   = orderDirPath(order.id, order.created_at);
+  const files = fs.existsSync(dir) ? fs.readdirSync(dir) : [];
+  res.json({ ...order, files });
+});
+
+app.post('/api/admin/orders/:id/status', requireAdmin, (req, res) => {
+  const valid = ['awaiting_payment', 'paid', 'printing', 'mailed', 'delivered'];
+  if (!valid.includes(req.body.status)) return res.status(400).json({ error: 'Invalid status' });
+  db.prepare('UPDATE orders SET status = ? WHERE id = ?').run(req.body.status, Number(req.params.id));
+  res.json({ ok: true });
+});
+
+app.get('/api/admin/orders/:id/files/:filename', requireAdmin, (req, res) => {
+  const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(Number(req.params.id));
+  if (!order) return res.status(404).json({ error: 'Not found' });
+  const dir  = orderDirPath(order.id, order.created_at);
+  const file = path.resolve(dir, req.params.filename);
+  if (!file.startsWith(path.resolve(dir))) return res.status(403).json({ error: 'Forbidden' });
+  if (!fs.existsSync(file)) return res.status(404).json({ error: 'File not found' });
+  res.sendFile(file);
+});
+
+app.get('/api/admin/customers', requireAdmin, (req, res) => {
+  const customers = db.prepare(`
+    SELECT customer_email,
+      COUNT(*) as order_count,
+      COALESCE(SUM(CASE WHEN status != 'awaiting_payment' THEN price_cents ELSE 0 END), 0) as total_spent,
+      MAX(created_at) as last_order
+    FROM orders GROUP BY customer_email ORDER BY last_order DESC
+  `).all();
+  const tags = db.prepare('SELECT customer_email, tag FROM customer_tags').all();
+  const tagMap = {};
+  tags.forEach(t => { (tagMap[t.customer_email] = tagMap[t.customer_email] || []).push(t.tag); });
+  res.json(customers.map(c => ({ ...c, tags: tagMap[c.customer_email] || [] })));
+});
+
+app.get('/api/admin/customers/:email', requireAdmin, (req, res) => {
+  const email   = req.params.email;
+  const orders  = db.prepare('SELECT * FROM orders WHERE customer_email = ? ORDER BY created_at DESC').all(email);
+  const notes   = db.prepare('SELECT * FROM customer_notes WHERE customer_email = ? ORDER BY created_at DESC').all(email);
+  const tags    = db.prepare('SELECT tag FROM customer_tags WHERE customer_email = ?').all(email).map(r => r.tag);
+  res.json({ email, orders, notes, tags });
+});
+
+app.post('/api/admin/customers/:email/notes', requireAdmin, (req, res) => {
+  const { note } = req.body;
+  if (!note?.trim()) return res.status(400).json({ error: 'Note is required' });
+  db.prepare('INSERT INTO customer_notes (customer_email, note) VALUES (?,?)').run(req.params.email, note.trim());
+  res.json({ ok: true });
+});
+
+app.post('/api/admin/customers/:email/tags', requireAdmin, (req, res) => {
+  const { tag } = req.body;
+  if (!tag?.trim()) return res.status(400).json({ error: 'Tag required' });
+  try { db.prepare('INSERT INTO customer_tags (customer_email, tag) VALUES (?,?)').run(req.params.email, tag.trim().toLowerCase()); } catch {}
+  res.json({ ok: true });
+});
+
+app.delete('/api/admin/customers/:email/tags/:tag', requireAdmin, (req, res) => {
+  db.prepare('DELETE FROM customer_tags WHERE customer_email = ? AND tag = ?').run(req.params.email, req.params.tag);
+  res.json({ ok: true });
 });
 
 // ── Contact form ──────────────────────────────────────────────────────────────
