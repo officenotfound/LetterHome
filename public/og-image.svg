@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <!-- Background -->
+  <rect width="1200" height="630" fill="#ede5d3"/>
+
+  <!-- Subtle noise texture via pattern -->
+  <defs>
+    <pattern id="grain" x="0" y="0" width="4" height="4" patternUnits="userSpaceOnUse">
+      <rect width="1" height="1" x="1" y="0" fill="#2a2a2a" opacity="0.04"/>
+      <rect width="1" height="1" x="3" y="2" fill="#2a2a2a" opacity="0.03"/>
+    </pattern>
+  </defs>
+  <rect width="1200" height="630" fill="url(#grain)"/>
+
+  <!-- Logo mark -->
+  <rect x="80" y="80" width="72" height="72" rx="4" fill="#a8472d"/>
+  <text x="116" y="134" font-family="Georgia, 'Times New Roman', serif" font-size="48" font-weight="400" text-anchor="middle" fill="#faf6ec">L</text>
+  <!-- Dashed border on logo -->
+  <rect x="74" y="74" width="84" height="84" rx="7" fill="none" stroke="#2a2a2a" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.4"/>
+
+  <!-- Wordmark -->
+  <text x="176" y="131" font-family="Georgia, 'Times New Roman', serif" font-size="48" font-weight="400" fill="#2a2a2a" letter-spacing="-1">Letterhome</text>
+
+  <!-- Divider -->
+  <line x1="80" y1="208" x2="480" y2="208" stroke="#2a2a2a" stroke-width="1" opacity="0.2"/>
+
+  <!-- Tagline -->
+  <text x="80" y="310" font-family="Georgia, 'Times New Roman', serif" font-size="64" font-weight="400" fill="#2a2a2a" letter-spacing="-2">Letters mailed</text>
+  <text x="80" y="390" font-family="Georgia, 'Times New Roman', serif" font-size="64" font-weight="400" fill="#2a2a2a" letter-spacing="-2">from Canada.</text>
+
+  <!-- Sub -->
+  <text x="80" y="460" font-family="'Arial', sans-serif" font-size="24" fill="#6b6258" letter-spacing="0">Full-colour print · Canada Post · From $10 CAD</text>
+
+  <!-- Red accent line -->
+  <rect x="80" y="540" width="60" height="3" fill="#a8472d"/>
+  <text x="154" y="558" font-family="'Arial', sans-serif" font-size="18" fill="#a8472d" letter-spacing="2">LETTERHOME.CA</text>
+</svg>
