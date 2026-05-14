@@ -782,10 +782,15 @@ function toggleReturn(cb) {
   document.getElementById('sender-fields').style.pointerEvents = cb.checked ? 'none' : 'auto';
 }
 
+let _priceDomCents  = 1000;
+let _priceIntlCents = 2000;
+
 function updatePricing() {
   const isDomestic = document.getElementById('r-country').value === 'CA';
-  document.getElementById('preview-price').textContent   = isDomestic ? '$10' : '$20';
-  document.getElementById('summary-total').textContent   = isDomestic ? '$10 CAD' : '$20 CAD';
+  const price = isDomestic ? _priceDomCents : _priceIntlCents;
+  const priceStr = '$' + (price / 100).toFixed(price % 100 === 0 ? 0 : 2);
+  document.getElementById('preview-price').textContent   = priceStr;
+  document.getElementById('summary-total').textContent   = priceStr + ' CAD';
   document.getElementById('summary-dest').textContent    = isDomestic ? 'Canada (Domestic)' : 'International';
   document.getElementById('summary-delivery').textContent = isDomestic ? 'Within 2 weeks' : 'Within 4 weeks';
 
@@ -1000,5 +1005,47 @@ async function submitOrder() {
 </script>
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB74KWQXxUIm2DKB43TEGb7f1-cZAw9rCs&libraries=places&callback=initAutocomplete" async defer></script>
 <script src="/theme.js"></script>
+<script>
+(async () => {
+  try {
+    const cfg = await fetch('/api/site-config').then(r => r.json());
+
+    // Announcement banner
+    if (cfg.announcement) {
+      const bar = document.createElement('div');
+      bar.style.cssText = 'background:#1e293b;color:#f1f5f9;text-align:center;padding:10px 20px;font-size:14px;position:relative;z-index:200';
+      bar.textContent = cfg.announcement;
+      document.body.insertBefore(bar, document.body.firstChild);
+    }
+
+    // Dynamic pricing
+    if (cfg.price_domestic_cents)      _priceDomCents  = cfg.price_domestic_cents;
+    if (cfg.price_international_cents) _priceIntlCents = cfg.price_international_cents;
+    updatePricing();
+
+    // Remove blocked countries from the dropdown
+    if (cfg.blocked_countries?.length) {
+      const sel = document.getElementById('r-country');
+      cfg.blocked_countries.forEach(code => {
+        const opt = sel?.querySelector(`option[value="${code}"]`);
+        if (opt) opt.remove();
+      });
+    }
+
+    // Orders closed
+    if (!cfg.orders_open) {
+      const panels = document.querySelectorAll('.panel');
+      panels.forEach(p => p.style.display = 'none');
+      const main = document.querySelector('.form-section') || document.querySelector('main') || document.querySelector('.main');
+      const msg = document.createElement('div');
+      msg.style.cssText = 'max-width:560px;margin:80px auto;padding:48px 40px;background:var(--paper,#faf6ec);border:1px solid rgba(42,42,42,0.14);border-radius:2px;text-align:center';
+      msg.innerHTML = `<div style="font-size:40px;margin-bottom:20px">✉</div>
+        <h2 style="font-family:\'DM Serif Display\',serif;font-size:28px;font-weight:400;margin-bottom:12px">Not taking orders right now</h2>
+        <p style="color:#6b6258;font-size:16px;line-height:1.6">${cfg.announcement || 'We\'re temporarily closed. Please check back soon.'}</p>`;
+      if (main) main.replaceWith(msg); else document.body.appendChild(msg);
+    }
+  } catch(e) { /* fail silently — don't block the form */ }
+})();
+</script>
 </body>
 </html>
