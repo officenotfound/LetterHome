@@ -167,8 +167,7 @@ textarea{resize:vertical;min-height:80px}
   <nav class="sidebar-nav">
     <div class="nav-label">Menu</div>
     <button class="nav-link" id="nav-dashboard"  onclick="go('/admin')"><span class="nav-icon">◈</span> Dashboard</button>
-    <button class="nav-link" id="nav-analytics"  onclick="go('/admin/analytics')"><span class="nav-icon">↗</span> Analytics</button>
-    <button class="nav-link" id="nav-orders"     onclick="go('/admin/orders')"><span class="nav-icon">✉</span> Orders</button>
+<button class="nav-link" id="nav-orders"     onclick="go('/admin/orders')"><span class="nav-icon">✉</span> Orders</button>
     <button class="nav-link" id="nav-customers" onclick="go('/admin/customers')"><span class="nav-icon">◎</span> Customers</button>
     <button class="nav-link" id="nav-broadcast" onclick="go('/admin/broadcast')"><span class="nav-icon">📢</span> Broadcast</button>
     <button class="nav-link" id="nav-insights"  onclick="go('/admin/insights')"><span class="nav-icon">◑</span> Insights</button>
@@ -228,21 +227,19 @@ function route() {
   if (p.match(/^\/admin\/customers\/.+$/))          return showCustomer(decodeURIComponent(p.replace('/admin/customers/', '')));
   if (p === '/admin/trash')                         return showTrash();
   if (p === '/admin/broadcast')                     return showBroadcast();
-  if (p === '/admin/analytics')                     return showAnalytics();
-  if (p === '/admin/insights')                      return showInsights();
+if (p === '/admin/insights')                      return showInsights();
   if (p === '/admin/templates')                     return showTemplates();
   if (p === '/admin/settings')                      return showSettings();
   showDashboard();
 }
 
 function setActiveNav(p) {
-  ['dashboard','analytics','orders','customers','broadcast','insights','templates','settings','trash'].forEach(k => document.getElementById('nav-'+k)?.classList.remove('active'));
+  ['dashboard','orders','customers','broadcast','insights','templates','settings','trash'].forEach(k => document.getElementById('nav-'+k)?.classList.remove('active'));
   if (p.startsWith('/admin/orders'))          document.getElementById('nav-orders')?.classList.add('active');
   else if (p.startsWith('/admin/customers'))  document.getElementById('nav-customers')?.classList.add('active');
   else if (p.startsWith('/admin/broadcast'))  document.getElementById('nav-broadcast')?.classList.add('active');
   else if (p.startsWith('/admin/insights'))   document.getElementById('nav-insights')?.classList.add('active');
-  else if (p.startsWith('/admin/analytics'))  document.getElementById('nav-analytics')?.classList.add('active');
-  else if (p.startsWith('/admin/templates'))  document.getElementById('nav-templates')?.classList.add('active');
+else if (p.startsWith('/admin/templates'))  document.getElementById('nav-templates')?.classList.add('active');
   else if (p.startsWith('/admin/settings'))   document.getElementById('nav-settings')?.classList.add('active');
   else if (p.startsWith('/admin/trash'))      document.getElementById('nav-trash')?.classList.add('active');
   else                                        document.getElementById('nav-dashboard')?.classList.add('active');
@@ -1120,124 +1117,6 @@ async function sendBroadcast() {
   s.style.display = 'inline';
 }
 
-// ── Analytics (GA4) ──────────────────────────────────────────────────────────
-async function showAnalytics() {
-  setTitle('Analytics');
-  setMain('<div style="padding:40px 0;text-align:center;color:#64748b">Loading analytics…</div>');
-  const data = await api('/api/admin/analytics');
-  if (data === null) return;
-
-  if (!data.configured) {
-    setMain(`
-      <div class="page-header"><div class="page-title">Analytics</div></div>
-      <div class="card" style="max-width:640px">
-        <div class="card-header"><div class="card-title">Setup required</div></div>
-        <div style="padding:20px;font-size:14px;color:#475569;line-height:1.7">
-          <p style="margin-bottom:16px">Connect Google Analytics 4 to see traffic data here. Three steps:</p>
-          <ol style="padding-left:20px;margin-bottom:20px">
-            <li style="margin-bottom:10px"><strong>Create a GA4 property</strong> at <a href="https://analytics.google.com" target="_blank" rel="noopener" style="color:#dc2626">analytics.google.com</a> → Admin → Create Property. Copy the <strong>Measurement ID</strong> (G-XXXXXXXXXX) and the <strong>numeric Property ID</strong>.</li>
-            <li style="margin-bottom:10px"><strong>Create a service account</strong> at <a href="https://console.cloud.google.com/iam-admin/serviceaccounts" target="_blank" rel="noopener" style="color:#dc2626">Google Cloud Console</a> → Create Service Account → create a JSON key → download it. Open the JSON and copy <code>client_email</code> and <code>private_key</code>.</li>
-            <li style="margin-bottom:10px"><strong>Grant access</strong>: in GA4 → Admin → Account Access Management → Add User → paste the service account email → role: Viewer.</li>
-          </ol>
-          <p style="margin-bottom:8px">Then add these to your <code>.env</code> on the server:</p>
-          <pre style="background:#0f172a;color:#e2e8f0;padding:16px;border-radius:4px;font-size:12px;overflow-x:auto">GA4_MEASUREMENT_ID=G-XXXXXXXXXX
-GA4_PROPERTY_ID=properties/XXXXXXXXX
-GA4_CLIENT_EMAIL=your-service-account@project.iam.gserviceaccount.com
-GA4_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\\n...\\n-----END PRIVATE KEY-----\\n"</pre>
-          <p style="margin-top:12px;color:#94a3b8;font-size:13px">Restart the server after updating .env. Tracking starts immediately; historical data appears once GA4 has collected it (usually within 24–48 hours of adding the tracking script to your site).</p>
-        </div>
-      </div>`);
-    return;
-  }
-
-  const { overview, daily, pages, sources, countries } = data;
-  const maxSessions = Math.max(...daily.map(d => d.sessions), 1);
-
-  const dailyBars = daily.map(d => {
-    const pct = Math.round((d.sessions / maxSessions) * 100);
-    const label = d.date.replace(/(\d{4})(\d{2})(\d{2})/, '$2/$3');
-    return `<div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;min-width:0">
-      <div style="font-size:10px;color:#64748b">${d.sessions > 0 ? d.sessions : ''}</div>
-      <div style="width:100%;background:#1e293b;border-radius:2px;height:80px;display:flex;align-items:flex-end">
-        <div style="width:100%;background:#dc2626;border-radius:2px 2px 0 0;height:${pct}%;min-height:${d.sessions > 0 ? 2 : 0}px"></div>
-      </div>
-      <div style="font-size:9px;color:#475569;transform:rotate(-45deg);transform-origin:top center;margin-top:4px;white-space:nowrap">${label}</div>
-    </div>`;
-  }).join('');
-
-  const pageRows = pages.map(p => `
-    <tr>
-      <td style="font-family:monospace;font-size:12px">${esc(p.path)}</td>
-      <td style="text-align:right">${p.views.toLocaleString()}</td>
-    </tr>`).join('');
-
-  const sourceRows = sources.map(s => `
-    <tr>
-      <td>${esc(s.channel)}</td>
-      <td style="text-align:right">${s.sessions.toLocaleString()}</td>
-    </tr>`).join('');
-
-  const countryRows = countries.map(c => `
-    <tr>
-      <td>${esc(c.country)}</td>
-      <td style="text-align:right">${c.sessions.toLocaleString()}</td>
-    </tr>`).join('');
-
-  setMain(`
-    <div class="page-header">
-      <div class="page-title">Analytics</div>
-      <span style="font-size:12px;color:#64748b">Last 28 days · Google Analytics 4</span>
-    </div>
-
-    <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:24px">
-      <div class="stat-card">
-        <div class="stat-label">Sessions</div>
-        <div class="stat-value">${overview.sessions.toLocaleString()}</div>
-        <div class="stat-sub">28-day total</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Users</div>
-        <div class="stat-value">${overview.users.toLocaleString()}</div>
-        <div class="stat-sub">unique visitors</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Pageviews</div>
-        <div class="stat-value">${overview.pageviews.toLocaleString()}</div>
-        <div class="stat-sub">total views</div>
-      </div>
-    </div>
-
-    <div class="card" style="margin-bottom:24px">
-      <div class="card-header"><div class="card-title">Sessions — last 28 days</div></div>
-      <div style="padding:16px 20px 32px;display:flex;align-items:flex-end;gap:2px;height:160px;overflow:hidden">
-        ${dailyBars}
-      </div>
-    </div>
-
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;margin-bottom:24px">
-      <div class="card">
-        <div class="card-header"><div class="card-title">Top Pages</div></div>
-        <table>
-          <thead><tr><th>Path</th><th style="text-align:right">Views</th></tr></thead>
-          <tbody>${pageRows || '<tr><td colspan="2" class="empty">No data yet.</td></tr>'}</tbody>
-        </table>
-      </div>
-      <div class="card">
-        <div class="card-header"><div class="card-title">Traffic Sources</div></div>
-        <table>
-          <thead><tr><th>Channel</th><th style="text-align:right">Sessions</th></tr></thead>
-          <tbody>${sourceRows || '<tr><td colspan="2" class="empty">No data yet.</td></tr>'}</tbody>
-        </table>
-      </div>
-      <div class="card">
-        <div class="card-header"><div class="card-title">Top Countries</div></div>
-        <table>
-          <thead><tr><th>Country</th><th style="text-align:right">Sessions</th></tr></thead>
-          <tbody>${countryRows || '<tr><td colspan="2" class="empty">No data yet.</td></tr>'}</tbody>
-        </table>
-      </div>
-    </div>`);
-}
 
 // ── Insights ─────────────────────────────────────────────────────────────────
 async function showInsights() {
