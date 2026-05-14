@@ -39,7 +39,7 @@
 .skip-link { position: absolute; left: -9999px; top: 8px; padding: 8px 16px; background: var(--ink); color: var(--paper); text-decoration: none; border-radius: 2px; z-index: 1000; font-size: 14px; }
 .skip-link:focus { left: 8px; }
 :focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
-@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; } }
 
 html { scroll-behavior: smooth; }
 
@@ -1122,9 +1122,9 @@ footer {
 <section id="main" class="hero">
   <div class="hero-grid">
     <div>
-      <div class="eyebrow">EST. 2026 · For Canadians abroad</div>
+      <div class="eyebrow">For Canadians abroad</div>
       <h1>Real mail. <em>From wherever you are</em>, to wherever Canada is.</h1>
-      <p class="hero-lede">Write your letter online. We print it on quality paper, seal it in a proper envelope, apply Canadian postage, and drop it in the post. You stay where you are.</p>
+      <p class="hero-lede">Write your letter online. We print it on quality paper, seal it in a proper envelope, apply Canadian postage, and drop it at a Canadian post office. You stay where you are.</p>
       <div class="hero-cta">
         <a href="/send" class="btn btn-red btn-large">Send Your First Letter</a>
         <a href="#how" class="btn btn-outline btn-large">How it works</a>
@@ -1186,7 +1186,7 @@ footer {
   <div class="section-inner">
     <div class="section-head">
       <div class="eyebrow">How it works</div>
-      <h2>Three steps and it's <em>on its way</em>.</h2>
+      <h2>Three steps. About three minutes.</h2>
       <p>From a hostel in Lisbon or a flat in Singapore, the process is the same. Write, pay, done.</p>
     </div>
 
@@ -1224,7 +1224,7 @@ footer {
   <div class="section-inner">
     <div class="section-head">
       <div class="eyebrow">Simple pricing</div>
-      <h2>One flat fee. <em>Everything included</em>.</h2>
+      <h2>One flat fee. Everything included.</h2>
       <p>No subscriptions, no per-page charges, no surprises. Pay only for the letters you send.</p>
     </div>
 
@@ -1269,7 +1269,7 @@ footer {
   <div class="section-inner">
     <div class="section-head">
       <div class="eyebrow">What people send</div>
-      <h2>For when an email <em>won't do</em>.</h2>
+      <h2>For when an email won't do.</h2>
       <p>Some things still have to arrive on paper. Wherever you are, we'll get it there.</p>
     </div>
 
@@ -1330,13 +1330,12 @@ footer {
   <div class="story-inner">
     <div class="story-text">
       <div class="eyebrow">Why Letterhome</div>
-      <h2>Distance shouldn't mean <em>disconnection</em>.</h2>
+      <h2>Distance shouldn't mean disconnection.</h2>
       <p>Living abroad as a Canadian comes with a paperwork problem nobody warns you about. The CRA still wants a signature on paper. Your mum still wants a real card on her birthday. Your accountant still mails you forms to an address you haven't lived at in three years.</p>
-      <p>Letterhome was built for that gap. Whether you're in Berlin or Bangkok, Sydney or San Diego, you can send mail into Canada — or anywhere in the world — without leaving your apartment. Every order is reviewed by a real person before it goes out. Nothing automated, nothing impersonal.</p>
+      <p>Letterhome was built for that gap. Whether you're in Berlin or Bangkok, Sydney or San Diego, you can send mail into Canada (or anywhere else in the world) without leaving your apartment. Every order is read by a person before it's printed.</p>
     </div>
     <div class="story-quote">
-      Every order I send goes through me personally before it hits the post. If something looks off, you get a message — not a silent reprint and a charged card.
-      <cite>— The person reading this who's about to run your order</cite>
+      Every order goes through a real human before it hits the post. If something looks off, you get a message before anything is printed or charged.
     </div>
   </div>
 </section>
