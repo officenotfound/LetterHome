@@ -160,6 +160,76 @@ try {
   )`);
 } catch (e) { console.error('[init] settings table:', e.message); }
 
+try {
+  db.exec(`CREATE TABLE IF NOT EXISTS page_views (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    path         TEXT NOT NULL,
+    ip           TEXT,
+    country_code TEXT,
+    country_name TEXT,
+    referrer     TEXT,
+    device_type  TEXT,
+    browser      TEXT,
+    created_at   DATETIME DEFAULT CURRENT_TIMESTAMP
+  )`);
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_page_views_created ON page_views(created_at)`);
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_page_views_ip      ON page_views(ip)`);
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_page_views_country ON page_views(country_code)`);
+} catch (e) { console.error('[init] page_views table:', e.message); }
+
+// ── IP geolocation (server-side, in-memory cached) ───────────────────────────
+const ipCountryCache = new Map();
+const IP_CACHE_TTL_MS = 24 * 3600 * 1000;
+
+function getClientIp(req) {
+  const xff = ((req.headers['x-forwarded-for'] || '').toString().split(',')[0] || '').trim();
+  const raw = xff || req.socket?.remoteAddress || req.connection?.remoteAddress || '';
+  return raw.replace(/^::ffff:/, '');
+}
+
+function isPrivateIp(ip) {
+  if (!ip) return true;
+  return /^(::1$|127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|fe80:|fc00:|fd)/i.test(ip);
+}
+
+async function lookupCountry(ip) {
+  if (!ip || isPrivateIp(ip)) return null;
+  const cached = ipCountryCache.get(ip);
+  if (cached && Date.now() - cached.time < IP_CACHE_TTL_MS) return cached;
+  try {
+    const r = await fetch(`https://ipwho.is/${encodeURIComponent(ip)}?fields=success,country_code,country`, {
+      signal: AbortSignal.timeout(3000),
+    });
+    if (r.ok) {
+      const d = await r.json();
+      if (d && d.success && d.country_code) {
+        const result = { country_code: d.country_code, country_name: d.country || '', time: Date.now() };
+        if (ipCountryCache.size > 5000) {
+          const sorted = [...ipCountryCache.entries()].sort((a,b) => a[1].time - b[1].time);
+          for (let i = 0; i < sorted.length / 2; i++) ipCountryCache.delete(sorted[i][0]);
+        }
+        ipCountryCache.set(ip, result);
+        return result;
+      }
+    }
+  } catch {}
+  // Fallback: ip-api.com
+  try {
+    const r = await fetch(`http://ip-api.com/json/${encodeURIComponent(ip)}?fields=status,country,countryCode`, {
+      signal: AbortSignal.timeout(3000),
+    });
+    if (r.ok) {
+      const d = await r.json();
+      if (d && d.status === 'success' && d.countryCode) {
+        const result = { country_code: d.countryCode, country_name: d.country || '', time: Date.now() };
+        ipCountryCache.set(ip, result);
+        return result;
+      }
+    }
+  } catch {}
+  return null;
+}
+
 function getSetting(key, fallback = '') {
   const row = db.prepare('SELECT value FROM settings WHERE key = ?').get(key);
   return row ? row.value : fallback;
@@ -382,6 +452,81 @@ app.get('/api/site-config', (req, res) => {
     price_international_cents: parseInt(getSetting('price_international_cents', '2000')) || 2000,
     blocked_countries:         JSON.parse(getSetting('blocked_countries', '[]') || '[]'),
   });
+});
+
+// ── Visitor country (server-side IP detection for the ticker) ────────────────
+app.get('/api/visitor-country', async (req, res) => {
+  try {
+    const ip = getClientIp(req);
+    const result = await lookupCountry(ip);
+    res.json({ country_code: result?.country_code || null });
+  } catch {
+    res.json({ country_code: null });
+  }
+});
+
+// ── Page-view tracking middleware ────────────────────────────────────────────
+function parseUA(ua) {
+  let device = 'desktop';
+  if (/iPad|Android(?!.*Mobile)|Tablet/i.test(ua))    device = 'tablet';
+  else if (/Mobile|iPhone|Android/i.test(ua))         device = 'mobile';
+  let browser = 'Other';
+  if      (/Edg\//i.test(ua))                         browser = 'Edge';
+  else if (/OPR\/|Opera/i.test(ua))                   browser = 'Opera';
+  else if (/Firefox/i.test(ua))                       browser = 'Firefox';
+  else if (/Chrome/i.test(ua) && !/Chromium/i.test(ua)) browser = 'Chrome';
+  else if (/Safari/i.test(ua))                        browser = 'Safari';
+  return { device, browser };
+}
+
+app.use((req, res, next) => {
+  try {
+    if (req.method !== 'GET') return next();
+    if (req.path.startsWith('/api/'))      return next();
+    if (req.path.startsWith('/admin'))     return next();
+    if (req.path === '/webhook')           return next();
+    if (req.path.startsWith('/status/'))   return next();
+    if (req.path === '/ga.js')             return next();
+    if (/\.[a-z0-9]+$/i.test(req.path))    return next();
+
+    const ip  = getClientIp(req);
+    const ua  = req.headers['user-agent'] || '';
+    const ref = req.headers['referer'] || req.headers['referrer'] || '';
+
+    let referrer = '';
+    try {
+      if (ref) {
+        const u = new URL(ref);
+        const host = (req.headers.host || '').split(':')[0];
+        if (u.hostname && u.hostname !== host) referrer = u.hostname;
+      }
+    } catch {}
+
+    const { device, browser } = parseUA(ua);
+
+    let rowId;
+    try {
+      const result = db.prepare(
+        'INSERT INTO page_views (path, ip, referrer, device_type, browser) VALUES (?, ?, ?, ?, ?)'
+      ).run(req.path, ip, referrer, device, browser);
+      rowId = result.lastInsertRowid;
+    } catch (e) {
+      console.error('[pageview]', e.message);
+      return next();
+    }
+
+    if (rowId && ip && !isPrivateIp(ip)) {
+      lookupCountry(ip).then(r => {
+        if (r) {
+          try {
+            db.prepare('UPDATE page_views SET country_code = ?, country_name = ? WHERE id = ?')
+              .run(r.country_code, r.country_name, rowId);
+          } catch {}
+        }
+      }).catch(() => {});
+    }
+  } catch {}
+  next();
 });
 
 // ── Rate limiting ─────────────────────────────────────────────────────────────
@@ -1159,6 +1304,88 @@ app.get('/api/admin/stats/geo', requireAdmin, (req, res) => {
     GROUP BY destination_country ORDER BY orders DESC LIMIT 15
   `).all();
   res.json({ from, to });
+});
+
+// ── Visitor analytics ────────────────────────────────────────────────────────
+app.get('/api/admin/visitors/stats', requireAdmin, (req, res) => {
+  try {
+    const c = (sql, ...args) => db.prepare(sql).get(...args).c;
+    const today      = c(`SELECT COUNT(*) as c FROM page_views WHERE date(created_at) = date('now')`);
+    const week       = c(`SELECT COUNT(*) as c FROM page_views WHERE created_at >= datetime('now', '-7 days')`);
+    const month      = c(`SELECT COUNT(*) as c FROM page_views WHERE created_at >= datetime('now', '-30 days')`);
+    const total      = c(`SELECT COUNT(*) as c FROM page_views`);
+    const todayUniq  = c(`SELECT COUNT(DISTINCT ip) as c FROM page_views WHERE date(created_at) = date('now')`);
+    const weekUniq   = c(`SELECT COUNT(DISTINCT ip) as c FROM page_views WHERE created_at >= datetime('now', '-7 days')`);
+    const monthUniq  = c(`SELECT COUNT(DISTINCT ip) as c FROM page_views WHERE created_at >= datetime('now', '-30 days')`);
+
+    const topPages = db.prepare(`
+      SELECT path, COUNT(*) as count FROM page_views
+      WHERE created_at >= datetime('now', '-30 days')
+      GROUP BY path ORDER BY count DESC LIMIT 10
+    `).all();
+
+    const topCountries = db.prepare(`
+      SELECT country_code, country_name, COUNT(*) as count FROM page_views
+      WHERE country_code IS NOT NULL AND created_at >= datetime('now', '-30 days')
+      GROUP BY country_code ORDER BY count DESC LIMIT 15
+    `).all();
+
+    const devices = db.prepare(`
+      SELECT device_type, COUNT(*) as count FROM page_views
+      WHERE created_at >= datetime('now', '-30 days')
+      GROUP BY device_type ORDER BY count DESC
+    `).all();
+
+    const browsers = db.prepare(`
+      SELECT browser, COUNT(*) as count FROM page_views
+      WHERE created_at >= datetime('now', '-30 days')
+      GROUP BY browser ORDER BY count DESC
+    `).all();
+
+    const referrers = db.prepare(`
+      SELECT referrer, COUNT(*) as count FROM page_views
+      WHERE referrer != '' AND referrer IS NOT NULL AND created_at >= datetime('now', '-30 days')
+      GROUP BY referrer ORDER BY count DESC LIMIT 10
+    `).all();
+
+    const daily = db.prepare(`
+      SELECT date(created_at) as day, COUNT(*) as count, COUNT(DISTINCT ip) as unique_count
+      FROM page_views
+      WHERE created_at >= date('now', '-14 days')
+      GROUP BY day ORDER BY day
+    `).all();
+
+    const hourly = db.prepare(`
+      SELECT CAST(strftime('%H', created_at) AS INTEGER) as hour, COUNT(*) as count
+      FROM page_views
+      WHERE created_at >= datetime('now', '-7 days')
+      GROUP BY hour ORDER BY hour
+    `).all();
+
+    res.json({
+      today, week, month, total,
+      todayUniq, weekUniq, monthUniq,
+      topPages, topCountries, devices, browsers, referrers, daily, hourly,
+    });
+  } catch (e) {
+    console.error('[admin/visitors/stats]', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get('/api/admin/visitors/recent', requireAdmin, (req, res) => {
+  try {
+    const limit = Math.min(parseInt(req.query.limit) || 100, 500);
+    const rows = db.prepare(`
+      SELECT id, path, ip, country_code, country_name, referrer, device_type, browser, created_at
+      FROM page_views
+      ORDER BY created_at DESC LIMIT ?
+    `).all(limit);
+    res.json(rows);
+  } catch (e) {
+    console.error('[admin/visitors/recent]', e.message);
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // Order notes

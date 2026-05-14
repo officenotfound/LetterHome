@@ -1823,22 +1823,12 @@ footer {
   let cc = null;
 
   try {
-    const r = await fetch('https://ipapi.co/json/');
+    const r = await fetch('/api/visitor-country', { credentials: 'same-origin' });
     if (r.ok) {
       const d = await r.json();
-      if (d.country_code && !d.error) cc = d.country_code;
+      if (d && d.country_code) cc = d.country_code;
     }
   } catch {}
-
-  if (!cc) {
-    try {
-      const r = await fetch('https://ipwho.is/');
-      if (r.ok) {
-        const d = await r.json();
-        if (d.success && d.country_code) cc = d.country_code;
-      }
-    } catch {}
-  }
 
   if (!cc || cc === 'CA') return;
   const cities = (COUNTRY_CITIES[cc] || []).slice(0, 5);
