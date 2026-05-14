@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en-CA">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Accessibility — Letterhome</title>
+<meta name="description" content="Letterhome's accessibility statement and commitments. We aim to meet WCAG 2.1 AA standards.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--kraft:#ede5d3;--kraft-light:#f7f2e6;--paper:#faf6ec;--ink:#2a2a2a;--ink-soft:#3a3835;--ink-muted:#6b6258;--red:#a8472d;--red-stamp:#b85540;--line:rgba(42,42,42,0.14)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--kraft);color:var(--ink);line-height:1.6;min-height:100vh}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:1;opacity:0.5;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.16 0 0 0 0 0.13 0 0 0 0 0.08 0 0 0 0.08 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.skip-link{position:absolute;left:-9999px;top:8px;padding:8px 16px;background:var(--ink);color:var(--paper);text-decoration:none;border-radius:2px;z-index:1000;font-size:14px}
+.skip-link:focus{left:8px}
+:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+nav{position:sticky;top:0;z-index:100;background:rgba(237,229,211,0.94);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.nav-inner{max-width:1280px;margin:0 auto;padding:20px 36px;display:flex;align-items:center;justify-content:space-between;gap:24px}
+.logo{display:flex;align-items:center;gap:12px;font-family:'DM Serif Display',serif;font-size:26px;color:var(--ink);text-decoration:none}
+.logo-mark{width:38px;height:38px;background:var(--red);display:grid;place-items:center;border-radius:2px;color:var(--paper);font-family:'DM Serif Display',serif;font-size:22px;position:relative}
+.logo-mark::before{content:'';position:absolute;inset:-3px;border:1px dashed var(--ink);border-radius:4px;opacity:0.5}
+.nav-links{display:flex;gap:36px;align-items:center}
+.nav-links a{color:var(--ink-soft);text-decoration:none;font-size:14px;font-weight:500}
+.nav-links a:hover{color:var(--red)}
+.btn{display:inline-block;padding:13px 26px;border-radius:2px;font-weight:500;font-size:14px;text-decoration:none;border:none;cursor:pointer;font-family:inherit;letter-spacing:0.02em;text-transform:uppercase}
+.btn-red{background:var(--red);color:var(--paper)}
+.btn-red:hover{background:#7d3220}
+.main{max-width:760px;margin:0 auto;padding:80px 36px 120px;position:relative;z-index:2}
+.eyebrow{display:inline-flex;align-items:center;gap:12px;font-family:'DM Mono',monospace;font-size:12px;text-transform:uppercase;letter-spacing:0.18em;color:var(--red);font-weight:500;margin-bottom:28px}
+.eyebrow::before{content:'';width:40px;height:1px;background:var(--red)}
+h1{font-family:'DM Serif Display',serif;font-size:clamp(40px,5vw,64px);font-weight:400;letter-spacing:-0.025em;margin-bottom:16px;line-height:1.05}
+.updated{font-family:'DM Mono',monospace;font-size:12px;color:var(--ink-muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:56px}
+h2{font-family:'DM Serif Display',serif;font-size:26px;font-weight:400;margin:48px 0 16px;letter-spacing:-0.01em}
+p{font-size:16px;color:var(--ink-soft);line-height:1.75;margin-bottom:18px}
+ul{margin:0 0 18px 20px}
+li{font-size:16px;color:var(--ink-soft);line-height:1.75;margin-bottom:8px}
+a{color:var(--red)}
+footer{background:var(--ink);color:rgba(250,246,236,0.75);padding:48px 36px 32px;position:relative;z-index:2}
+.footer-bottom{max-width:1280px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;flex-wrap:wrap;gap:16px}
+.footer-bottom-links{display:flex;gap:28px}
+.footer-bottom a{color:rgba(250,246,236,0.75);text-decoration:none}
+.footer-bottom a:hover{color:var(--red-stamp)}
+@media(max-width:768px){.nav-links{display:none}.main{padding:48px 24px 80px}}
+@media (prefers-reduced-motion: reduce){*,*::before,*::after{animation-duration:0.01ms !important;transition-duration:0.01ms !important}}
+</style>
+</head>
+<body>
+<a href="#main" class="skip-link">Skip to main content</a>
+
+<nav aria-label="Primary">
+  <div class="nav-inner">
+    <a href="/" class="logo"><span class="logo-mark" aria-hidden="true">L</span>Letterhome</a>
+    <div class="nav-links">
+      <a href="/#how">How it works</a>
+      <a href="/#pricing">Pricing</a>
+      <a href="/send" class="btn btn-red">Send a Letter</a>
+    </div>
+  </div>
+</nav>
+
+<main id="main" class="main">
+  <div class="eyebrow">Accessibility</div>
+  <h1>Accessibility statement</h1>
+  <p class="updated">Last updated: May 2026</p>
+
+  <p>Letterhome aims to be usable by everyone, including people with visual, motor, hearing, or cognitive impairments. We target conformance with the <a href="https://www.w3.org/TR/WCAG21/" target="_blank" rel="noopener">Web Content Accessibility Guidelines (WCAG) 2.1 Level AA</a>.</p>
+
+  <h2>What we do</h2>
+  <ul>
+    <li>Text and interface elements meet WCAG 2.1 AA colour-contrast ratios (4.5:1 for normal text, 3:1 for large text).</li>
+    <li>All interactive elements (links, buttons, form fields) are reachable and operable using a keyboard alone.</li>
+    <li>Visible focus indicators are shown on every interactive element when navigating by keyboard.</li>
+    <li>Pages use semantic HTML (proper headings, landmarks, lists, labels) so screen readers can announce content correctly.</li>
+    <li>Form fields have explicit labels and clear error messages. Required fields are marked.</li>
+    <li>We honour the <code>prefers-reduced-motion</code> setting in your operating system or browser.</li>
+    <li>Images that convey information have alternative text. Decorative images are hidden from assistive technology.</li>
+    <li>The site is usable at 200% zoom without horizontal scrolling.</li>
+  </ul>
+
+  <h2>Known limitations</h2>
+  <p>Accessibility is an ongoing effort. Areas we are still improving:</p>
+  <ul>
+    <li>The address autocomplete dropdown on the order form is functional with a keyboard, but ARIA combobox semantics are being refined.</li>
+    <li>Some decorative background textures may slightly reduce contrast on older browsers that don't support modern CSS features.</li>
+  </ul>
+
+  <h2>If something isn't accessible to you</h2>
+  <p>If you run into a page, feature, or content that isn't usable, please email us at <a href="mailto:hello@letterhome.ca">hello@letterhome.ca</a> with a short description of the problem and the assistive technology you're using. We aim to respond within two business days and to publish a fix as soon as we can.</p>
+
+  <h2>Alternatives</h2>
+  <p>If you'd prefer not to use the website, you can email your letter content and recipient address directly to <a href="mailto:hello@letterhome.ca">hello@letterhome.ca</a> and we'll process the order manually. The same pricing applies.</p>
+
+  <h2>Standards and methods</h2>
+  <p>This site is tested against WCAG 2.1 AA criteria using a combination of automated tools (axe, Lighthouse) and manual keyboard, zoom, and screen-reader testing. New pages and features go through the same checks before they're published.</p>
+</main>
+
+<footer>
+  <div class="footer-bottom">
+    <div>© 2026 Letterhome · Made for Canadians abroad</div>
+    <div class="footer-bottom-links">
+      <a href="/privacy">Privacy</a>
+      <a href="/terms">Terms</a>
+      <a href="/accessibility">Accessibility</a>
+    </div>
+  </div>
+</footer>
+</body>
+</html>
