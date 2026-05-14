@@ -169,7 +169,10 @@ textarea{resize:vertical;min-height:80px}
     <button class="nav-link" id="nav-dashboard" onclick="go('/admin')"><span class="nav-icon">◈</span> Dashboard</button>
     <button class="nav-link" id="nav-orders"    onclick="go('/admin/orders')"><span class="nav-icon">✉</span> Orders</button>
     <button class="nav-link" id="nav-customers" onclick="go('/admin/customers')"><span class="nav-icon">◎</span> Customers</button>
+    <button class="nav-link" id="nav-broadcast" onclick="go('/admin/broadcast')"><span class="nav-icon">📢</span> Broadcast</button>
     <button class="nav-link" id="nav-trash"     onclick="go('/admin/trash')"><span class="nav-icon">⌫</span> Trash</button>
+    <div class="nav-label">External</div>
+    <a class="nav-link" href="https://dashboard.stripe.com/payments" target="_blank" rel="noopener" style="text-decoration:none"><span class="nav-icon">↗</span> Stripe Dashboard</a>
   </nav>
   <div class="sidebar-footer">
     <button type="button" class="admin-theme-toggle" onclick="toggleAdminTheme()">
@@ -220,13 +223,15 @@ function route() {
   if (p === '/admin/customers')                     return showCustomers();
   if (p.match(/^\/admin\/customers\/.+$/))          return showCustomer(decodeURIComponent(p.replace('/admin/customers/', '')));
   if (p === '/admin/trash')                         return showTrash();
+  if (p === '/admin/broadcast')                     return showBroadcast();
   showDashboard();
 }
 
 function setActiveNav(p) {
-  ['dashboard','orders','customers','trash'].forEach(k => document.getElementById('nav-'+k)?.classList.remove('active'));
+  ['dashboard','orders','customers','broadcast','trash'].forEach(k => document.getElementById('nav-'+k)?.classList.remove('active'));
   if (p.startsWith('/admin/orders'))         document.getElementById('nav-orders')?.classList.add('active');
   else if (p.startsWith('/admin/customers')) document.getElementById('nav-customers')?.classList.add('active');
+  else if (p.startsWith('/admin/broadcast')) document.getElementById('nav-broadcast')?.classList.add('active');
   else if (p.startsWith('/admin/trash'))     document.getElementById('nav-trash')?.classList.add('active');
   else                                       document.getElementById('nav-dashboard')?.classList.add('active');
 }
@@ -479,7 +484,26 @@ async function showOrder(id) {
       <div class="page-title">Order #${o.id}</div>
       <div style="display:flex;align-items:center;gap:12px">
         ${statusBadge(o.status)}
+        <button class="btn btn-outline btn-sm" onclick="toggleMessageForm(${o.id})">Message Customer</button>
         <button class="btn btn-outline btn-sm" onclick="deleteOrder(${o.id})">Move to Trash</button>
+      </div>
+    </div>
+    <div class="card" id="message-form" style="display:none;margin-bottom:20px">
+      <div class="card-header"><div class="card-title">Email ${esc(o.customer_email)}</div></div>
+      <div style="padding:20px">
+        <div class="field" style="margin-bottom:12px">
+          <label>Subject</label>
+          <input id="msg-subject" type="text" value="Re: Letterhome order #${o.id}">
+        </div>
+        <div class="field" style="margin-bottom:12px">
+          <label>Message</label>
+          <textarea id="msg-body" placeholder="Hi — about your order…"></textarea>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-primary btn-sm" onclick="sendMessage(${o.id})">Send Email</button>
+          <button class="btn btn-outline btn-sm" onclick="toggleMessageForm(${o.id})">Cancel</button>
+          <span id="msg-status" style="font-size:12px;color:#16a34a;align-self:center;display:none">✓ Sent</span>
+        </div>
       </div>
     </div>
     ${slaBanner(o.created_at, o.status)}
@@ -525,6 +549,26 @@ async function showOrder(id) {
     </div>` : ''}`);
 }
 
+function toggleMessageForm() {
+  const f = document.getElementById('message-form');
+  f.style.display = f.style.display === 'none' ? 'block' : 'none';
+}
+
+async function sendMessage(id) {
+  const subject = document.getElementById('msg-subject').value.trim();
+  const body    = document.getElementById('msg-body').value.trim();
+  if (!subject || !body) return alert('Subject and message are required.');
+  const r = await post(`/api/admin/orders/${id}/message`, { subject, body });
+  if (r?.ok) {
+    const s = document.getElementById('msg-status');
+    s.style.display = 'inline';
+    document.getElementById('msg-body').value = '';
+    setTimeout(() => s.style.display = 'none', 3000);
+  } else {
+    alert('Could not send: ' + (r?.error || 'unknown error'));
+  }
+}
+
 async function updateStatus(id) {
   const status = document.getElementById('status-select').value;
   const r = await post(`/api/admin/orders/${id}/status`, { status });
@@ -560,7 +604,10 @@ async function showCustomers() {
   setMain(`
     <div class="page-header">
       <div class="page-title">Customers</div>
-      <button class="btn btn-primary btn-sm" onclick="toggleAddCustomer()">+ Add Customer</button>
+      <div style="display:flex;gap:8px">
+        <a class="btn btn-outline btn-sm" href="/api/admin/customers/export.csv" style="text-decoration:none">Export CSV</a>
+        <button class="btn btn-primary btn-sm" onclick="toggleAddCustomer()">+ Add Customer</button>
+      </div>
     </div>
     <div class="card" id="add-customer-card" style="display:none;margin-bottom:16px">
       <div class="card-header"><div class="card-title">Add Customer</div></div>
@@ -692,6 +739,65 @@ async function addTag(encodedEmail) {
 async function removeTag(encodedEmail, tag) {
   await del(`/api/admin/customers/${encodedEmail}/tags/${encodeURIComponent(tag)}`);
   showCustomer(decodeURIComponent(encodedEmail));
+}
+
+// ── Broadcast ─────────────────────────────────────────────────────────────────
+async function showBroadcast() {
+  setTitle('Broadcast');
+  const tags = await api('/api/admin/tags');
+  if (!tags) return;
+  const tagOpts = ['<option value="">All customers</option>']
+    .concat(tags.map(t => `<option value="${esc(t.tag)}">${esc(t.tag)} (${t.n})</option>`))
+    .join('');
+  setMain(`
+    <div class="page-header"><div class="page-title">Broadcast email</div></div>
+    <p style="color:#64748b;font-size:13px;margin-bottom:20px;max-width:600px">Send an email to a group of customers. Use sparingly — recipients did not opt in to marketing. Plain text only. Sends are throttled to one per second.</p>
+    <div class="card" style="max-width:680px">
+      <div style="padding:24px">
+        <div class="field" style="margin-bottom:16px">
+          <label>Recipients</label>
+          <select id="bc-tag" onchange="previewBroadcast()">${tagOpts}</select>
+          <div id="bc-count" style="font-size:12px;color:#64748b;margin-top:6px"></div>
+        </div>
+        <div class="field" style="margin-bottom:16px">
+          <label>Subject</label>
+          <input id="bc-subject" type="text" placeholder="e.g. Happy holidays from Letterhome">
+        </div>
+        <div class="field" style="margin-bottom:16px">
+          <label>Message (plain text)</label>
+          <textarea id="bc-body" rows="10" style="min-height:200px" placeholder="Write your message here. An unsubscribe note will be appended automatically."></textarea>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn btn-primary" onclick="sendBroadcast()">Send Broadcast</button>
+          <span id="bc-status" style="font-size:13px;display:none"></span>
+        </div>
+      </div>
+    </div>`);
+  previewBroadcast();
+}
+
+async function previewBroadcast() {
+  const tag = document.getElementById('bc-tag').value;
+  const r = await api('/api/admin/broadcast/preview' + (tag ? '?tag=' + encodeURIComponent(tag) : ''));
+  document.getElementById('bc-count').textContent = r ? `Will send to ${r.count} ${r.count === 1 ? 'customer' : 'customers'}.` : '';
+}
+
+async function sendBroadcast() {
+  const tag     = document.getElementById('bc-tag').value;
+  const subject = document.getElementById('bc-subject').value.trim();
+  const body    = document.getElementById('bc-body').value.trim();
+  if (!subject || !body) return alert('Subject and message body are required.');
+  if (!confirm('Send this broadcast? This cannot be undone.')) return;
+  const r = await post('/api/admin/broadcast', { subject, body, tag: tag || null });
+  const s = document.getElementById('bc-status');
+  if (r?.ok) {
+    s.style.color = '#16a34a';
+    s.textContent = `Queued ${r.sentTo} emails — sending in background.`;
+  } else {
+    s.style.color = '#dc2626';
+    s.textContent = 'Failed: ' + (r?.error || 'unknown error');
+  }
+  s.style.display = 'inline';
 }
 
 // ── Trash ─────────────────────────────────────────────────────────────────────

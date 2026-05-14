@@ -566,6 +566,115 @@ app.delete('/api/admin/customers/:email/tags/:tag', requireAdmin, (req, res) => 
   res.json({ ok: true });
 });
 
+// Send a custom message to a specific order's customer
+app.post('/api/admin/orders/:id/message', requireAdmin, async (req, res) => {
+  const { subject, body } = req.body;
+  if (!subject?.trim() || !body?.trim()) return res.status(400).json({ error: 'Subject and body required' });
+  const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(Number(req.params.id));
+  if (!order) return res.status(404).json({ error: 'Order not found' });
+  try {
+    await transport.sendMail({
+      from:    process.env.EMAIL_FROM,
+      to:      order.customer_email,
+      replyTo: process.env.OPERATOR_EMAIL,
+      subject: subject.trim(),
+      text:    body.trim(),
+    });
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// CSV export of customers
+app.get('/api/admin/customers/export.csv', requireAdmin, (req, res) => {
+  const csvEscape = s => {
+    const str = String(s ?? '');
+    return /[,"\n]/.test(str) ? '"' + str.replace(/"/g, '""') + '"' : str;
+  };
+  const fromOrders = db.prepare(`
+    SELECT customer_email as email,
+      COUNT(*) as order_count,
+      COALESCE(SUM(CASE WHEN status != 'awaiting_payment' THEN price_cents ELSE 0 END),0) as total_spent_cents,
+      MAX(created_at) as last_order
+    FROM orders WHERE deleted_at IS NULL GROUP BY customer_email
+  `).all();
+  const manual = db.prepare(`SELECT email, display_name, created_at FROM customers WHERE deleted_at IS NULL`).all();
+  const tagRows = db.prepare('SELECT customer_email, tag FROM customer_tags').all();
+  const tagMap = {};
+  tagRows.forEach(t => { (tagMap[t.customer_email] = tagMap[t.customer_email] || []).push(t.tag); });
+  const map = {};
+  manual.forEach(m => { map[m.email] = { email: m.email, display_name: m.display_name, order_count: 0, total_spent_cents: 0, last_order: m.created_at }; });
+  fromOrders.forEach(o => {
+    if (!map[o.email]) map[o.email] = { email: o.email, display_name: '' };
+    Object.assign(map[o.email], o);
+  });
+  const rows = Object.values(map);
+  const lines = ['email,name,orders,total_spent_cad,last_order,tags'];
+  rows.forEach(r => {
+    lines.push([
+      csvEscape(r.email), csvEscape(r.display_name || ''),
+      r.order_count || 0, ((r.total_spent_cents || 0) / 100).toFixed(2),
+      r.last_order || '', csvEscape((tagMap[r.email] || []).join('|')),
+    ].join(','));
+  });
+  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+  res.setHeader('Content-Disposition', `attachment; filename="letterhome-customers-${new Date().toISOString().slice(0,10)}.csv"`);
+  res.send(lines.join('\n'));
+});
+
+// Broadcast email — to all customers, or filtered by tag
+app.post('/api/admin/broadcast', requireAdmin, async (req, res) => {
+  const { subject, body, tag } = req.body;
+  if (!subject?.trim() || !body?.trim()) return res.status(400).json({ error: 'Subject and body required' });
+  let recipients;
+  if (tag) {
+    recipients = db.prepare(`SELECT DISTINCT customer_email FROM customer_tags WHERE tag = ?`).all(tag.trim().toLowerCase())
+      .map(r => r.customer_email);
+  } else {
+    const fromOrders = db.prepare(`SELECT DISTINCT customer_email as email FROM orders WHERE deleted_at IS NULL AND status != 'awaiting_payment'`).all().map(r => r.email);
+    const manual    = db.prepare(`SELECT email FROM customers WHERE deleted_at IS NULL`).all().map(r => r.email);
+    recipients = Array.from(new Set([...fromOrders, ...manual]));
+  }
+  if (!recipients.length) return res.status(400).json({ error: 'No recipients match.' });
+
+  // Send in background — don't block the response. Throttle ~1/sec to be nice to SMTP.
+  res.json({ ok: true, sentTo: recipients.length });
+  (async () => {
+    for (const email of recipients) {
+      try {
+        await transport.sendMail({
+          from:    process.env.EMAIL_FROM,
+          to:      email,
+          replyTo: process.env.OPERATOR_EMAIL,
+          subject: subject.trim(),
+          text:    body.trim() + '\n\n---\nTo stop receiving these, reply with "unsubscribe".',
+        });
+      } catch (err) { console.error('Broadcast to', email, 'failed:', err.message); }
+      await new Promise(r => setTimeout(r, 1000));
+    }
+  })();
+});
+
+// Preview broadcast recipient count
+app.get('/api/admin/broadcast/preview', requireAdmin, (req, res) => {
+  const { tag } = req.query;
+  if (tag) {
+    const count = db.prepare(`SELECT COUNT(DISTINCT customer_email) as n FROM customer_tags WHERE tag = ?`).get(String(tag).toLowerCase()).n;
+    res.json({ count });
+  } else {
+    const a = db.prepare(`SELECT COUNT(DISTINCT customer_email) as n FROM orders WHERE deleted_at IS NULL AND status != 'awaiting_payment'`).get().n;
+    const b = db.prepare(`SELECT COUNT(*) as n FROM customers WHERE deleted_at IS NULL`).get().n;
+    res.json({ count: a + b });
+  }
+});
+
+// List all unique tags (for broadcast UI)
+app.get('/api/admin/tags', requireAdmin, (req, res) => {
+  const tags = db.prepare(`SELECT tag, COUNT(*) as n FROM customer_tags GROUP BY tag ORDER BY tag`).all();
+  res.json(tags);
+});
+
 // ── Contact form ──────────────────────────────────────────────────────────────
 app.post('/api/contact', contactLimiter, async (req, res) => {
   const { name, email, message } = req.body;
