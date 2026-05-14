@@ -432,10 +432,33 @@ app.get('/api/admin/orders/:id', requireAdmin, (req, res) => {
   res.json({ ...order, files });
 });
 
-app.post('/api/admin/orders/:id/status', requireAdmin, (req, res) => {
+app.post('/api/admin/orders/:id/status', requireAdmin, async (req, res) => {
   const valid = ['awaiting_payment', 'paid', 'printing', 'mailed', 'delivered'];
   if (!valid.includes(req.body.status)) return res.status(400).json({ error: 'Invalid status' });
-  db.prepare('UPDATE orders SET status = ? WHERE id = ?').run(req.body.status, Number(req.params.id));
+
+  const id = Number(req.params.id);
+  const before = db.prepare('SELECT status FROM orders WHERE id = ?').get(id);
+  db.prepare('UPDATE orders SET status = ? WHERE id = ?').run(req.body.status, id);
+
+  // Fire "Letter sent" email when status transitions to 'mailed'
+  if (req.body.status === 'mailed' && before?.status !== 'mailed') {
+    const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(id);
+    if (order?.customer_email) {
+      const isDomestic = order.destination_country === 'CA';
+      const toAddr = [
+        order.recipient_name, order.recipient_street,
+        `${order.recipient_city || ''} ${order.recipient_province || ''} ${order.recipient_postal || ''}`.trim(),
+        order.destination_country,
+      ].filter(Boolean).join('\n');
+      transport.sendMail({
+        from:    process.env.EMAIL_FROM,
+        to:      order.customer_email,
+        subject: `Your Letterhome letter has been mailed — order #${order.id}`,
+        html:    buildMailedEmail(order, toAddr, isDomestic),
+      }).catch(console.error);
+    }
+  }
+
   res.json({ ok: true });
 });
 
@@ -646,6 +669,29 @@ function buildCustomerEmail(o, toAddr, amountCAD, isDomestic) {
     <div style="border-top:1px solid rgba(42,42,42,0.1);padding-top:20px;font-size:13px;color:#6b6258">
       <p style="margin:0 0 8px">Order #${o.id} &nbsp;·&nbsp; $${amountCAD} CAD</p>
       <p style="margin:0">Questions? Reply to this email.</p>
+    </div>
+  </div>
+</body></html>`;
+}
+
+function buildMailedEmail(o, toAddr, isDomestic) {
+  const delivery = isDomestic ? 'within 2 weeks' : 'within 4 weeks';
+  return `
+<!DOCTYPE html><html>
+<body style="font-family:Georgia,serif;background:#ede5d3;padding:40px 20px;color:#2a2a2a;margin:0">
+  <div style="max-width:520px;margin:0 auto;background:#faf6ec;border:1px solid rgba(42,42,42,0.12);padding:48px">
+    <div style="width:38px;height:38px;background:#a8472d;display:inline-flex;align-items:center;justify-content:center;color:#faf6ec;font-size:20px;font-family:Georgia,serif;margin-bottom:28px">L</div>
+    <h1 style="font-size:28px;font-weight:400;margin:0 0 10px;letter-spacing:-0.02em">Your letter is on its way.</h1>
+    <p style="color:#6b6258;margin:0 0 32px;font-size:16px;line-height:1.6">Order #${o.id} has been printed, sealed, stamped, and dropped in the post. From here, it's in Canada Post's hands.</p>
+    <div style="background:#2a2a2a;color:#faf6ec;padding:24px;margin-bottom:28px">
+      <p style="font-size:11px;text-transform:uppercase;letter-spacing:0.15em;color:rgba(250,246,236,0.55);margin:0 0 10px">Delivering to</p>
+      <p style="font-size:18px;line-height:1.5;white-space:pre-line;margin:0 0 16px">${toAddr}</p>
+      <p style="font-size:12px;color:rgba(250,246,236,0.55);margin:0">Estimated arrival: ${delivery}</p>
+    </div>
+    <p style="color:#6b6258;font-size:14px;line-height:1.7;margin:0 0 24px">Lettermail doesn't have tracking, so we can't tell you exactly when it'll land. If you don't see it after the estimated window, reply to this email and we'll work it out.</p>
+    <div style="border-top:1px solid rgba(42,42,42,0.1);padding-top:20px;font-size:13px;color:#6b6258">
+      <p style="margin:0 0 8px">Order #${o.id}</p>
+      <p style="margin:0">Thank you for trusting us with your letter.</p>
     </div>
   </div>
 </body></html>`;
