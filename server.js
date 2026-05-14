@@ -374,12 +374,35 @@ app.get('/admin/*', requireAdmin, (req, res) =>
 app.get('/api/admin/me', requireAdmin, (req, res) =>
   res.json({ username: req.session.admin.username }));
 
+// Cost & fee constants (in cents CAD)
+const COST_DOMESTIC      = 600;     // $6 per Canadian letter
+const COST_INTERNATIONAL = 1000;    // $10 per international letter
+const STRIPE_PCT         = 0.029;   // 2.9% Canadian card rate
+const STRIPE_FIXED       = 30;      // $0.30 per transaction
+
 app.get('/api/admin/stats', requireAdmin, (req, res) => {
+  const paidOrders = db.prepare(`
+    SELECT price_cents, destination_country, customer_email
+    FROM orders WHERE status != 'awaiting_payment' AND deleted_at IS NULL
+  `).all();
+
+  let revenue = 0, stripeFees = 0, cogs = 0;
+  const customers = new Set();
+  paidOrders.forEach(o => {
+    revenue    += o.price_cents;
+    stripeFees += Math.round(o.price_cents * STRIPE_PCT) + STRIPE_FIXED;
+    cogs       += o.destination_country === 'CA' ? COST_DOMESTIC : COST_INTERNATIONAL;
+    customers.add(o.customer_email);
+  });
+
   res.json({
-    total:     db.prepare('SELECT COUNT(*) as n FROM orders WHERE deleted_at IS NULL').get().n,
-    paid:      db.prepare("SELECT COUNT(*) as n FROM orders WHERE status != 'awaiting_payment' AND deleted_at IS NULL").get().n,
-    revenue:   db.prepare("SELECT COALESCE(SUM(price_cents),0) as n FROM orders WHERE status != 'awaiting_payment' AND deleted_at IS NULL").get().n,
-    customers: db.prepare("SELECT COUNT(DISTINCT customer_email) as n FROM orders WHERE status != 'awaiting_payment' AND deleted_at IS NULL").get().n,
+    total:       db.prepare('SELECT COUNT(*) as n FROM orders WHERE deleted_at IS NULL').get().n,
+    paid:        paidOrders.length,
+    revenue,
+    stripe_fees: stripeFees,
+    cogs,
+    net:         revenue - stripeFees - cogs,
+    customers:   customers.size,
   });
 });
 
