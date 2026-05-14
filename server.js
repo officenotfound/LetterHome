@@ -6,6 +6,7 @@ const mailer    = require('nodemailer');
 const rateLimit = require('express-rate-limit');
 const session   = require('express-session');
 const bcrypt    = require('bcryptjs');
+const { Secret, TOTP } = require('otpauth');
 const { DatabaseSync: Database } = require('node:sqlite');
 const path = require('path');
 const fs   = require('fs');
@@ -66,7 +67,16 @@ db.exec(`
     created_at     DATETIME DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(customer_email, tag)
   );
+  CREATE TABLE IF NOT EXISTS customers (
+    email        TEXT PRIMARY KEY,
+    display_name TEXT,
+    created_at   DATETIME DEFAULT CURRENT_TIMESTAMP,
+    deleted_at   DATETIME
+  );
 `);
+
+// Add deleted_at to orders if it doesn't exist (idempotent migration)
+try { db.exec(`ALTER TABLE orders ADD COLUMN deleted_at DATETIME`); } catch {}
 
 // ── Email transport ───────────────────────────────────────────────────────────
 const transport = mailer.createTransport({
@@ -321,12 +331,23 @@ app.get('/admin/login', (req, res) => {
 });
 
 app.post('/admin/login', loginLimiter, async (req, res) => {
-  const { username, password } = req.body;
+  const { username, password, code } = req.body;
   const validUser = username === process.env.ADMIN_USERNAME;
   const validPass = process.env.ADMIN_PASSWORD_HASH
     ? await bcrypt.compare(password || '', process.env.ADMIN_PASSWORD_HASH)
     : false;
   if (!validUser || !validPass) return res.redirect('/admin/login?error=1');
+
+  if (process.env.TOTP_SECRET) {
+    if (!code) return res.redirect('/admin/login?error=2fa');
+    const totp = new TOTP({
+      issuer: 'Letterhome Admin', label: 'admin',
+      secret: Secret.fromBase32(process.env.TOTP_SECRET),
+    });
+    if (totp.validate({ token: code.replace(/\s/g,''), window: 1 }) === null)
+      return res.redirect('/admin/login?error=2fa');
+  }
+
   req.session.admin = { username };
   res.redirect('/admin');
 });
@@ -347,19 +368,29 @@ app.get('/api/admin/me', requireAdmin, (req, res) =>
 
 app.get('/api/admin/stats', requireAdmin, (req, res) => {
   res.json({
-    total:     db.prepare('SELECT COUNT(*) as n FROM orders').get().n,
-    paid:      db.prepare("SELECT COUNT(*) as n FROM orders WHERE status != 'awaiting_payment'").get().n,
-    revenue:   db.prepare("SELECT COALESCE(SUM(price_cents),0) as n FROM orders WHERE status != 'awaiting_payment'").get().n,
-    customers: db.prepare("SELECT COUNT(DISTINCT customer_email) as n FROM orders WHERE status != 'awaiting_payment'").get().n,
+    total:     db.prepare('SELECT COUNT(*) as n FROM orders WHERE deleted_at IS NULL').get().n,
+    paid:      db.prepare("SELECT COUNT(*) as n FROM orders WHERE status != 'awaiting_payment' AND deleted_at IS NULL").get().n,
+    revenue:   db.prepare("SELECT COALESCE(SUM(price_cents),0) as n FROM orders WHERE status != 'awaiting_payment' AND deleted_at IS NULL").get().n,
+    customers: db.prepare("SELECT COUNT(DISTINCT customer_email) as n FROM orders WHERE status != 'awaiting_payment' AND deleted_at IS NULL").get().n,
   });
 });
 
 app.get('/api/admin/orders', requireAdmin, (req, res) => {
   const { status } = req.query;
   const rows = status
-    ? db.prepare("SELECT * FROM orders WHERE status = ? ORDER BY created_at DESC").all(status)
-    : db.prepare("SELECT * FROM orders ORDER BY created_at DESC").all();
+    ? db.prepare("SELECT * FROM orders WHERE status = ? AND deleted_at IS NULL ORDER BY created_at DESC").all(status)
+    : db.prepare("SELECT * FROM orders WHERE deleted_at IS NULL ORDER BY created_at DESC").all();
   res.json(rows);
+});
+
+app.delete('/api/admin/orders/:id', requireAdmin, (req, res) => {
+  db.prepare("UPDATE orders SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?").run(Number(req.params.id));
+  res.json({ ok: true });
+});
+
+app.post('/api/admin/orders/:id/restore', requireAdmin, (req, res) => {
+  db.prepare("UPDATE orders SET deleted_at = NULL WHERE id = ?").run(Number(req.params.id));
+  res.json({ ok: true });
 });
 
 app.get('/api/admin/orders/:id', requireAdmin, (req, res) => {
@@ -388,25 +419,74 @@ app.get('/api/admin/orders/:id/files/:filename', requireAdmin, (req, res) => {
 });
 
 app.get('/api/admin/customers', requireAdmin, (req, res) => {
-  const customers = db.prepare(`
-    SELECT customer_email,
+  const fromOrders = db.prepare(`
+    SELECT customer_email as email,
       COUNT(*) as order_count,
       COALESCE(SUM(CASE WHEN status != 'awaiting_payment' THEN price_cents ELSE 0 END), 0) as total_spent,
       MAX(created_at) as last_order
-    FROM orders GROUP BY customer_email ORDER BY last_order DESC
+    FROM orders WHERE deleted_at IS NULL GROUP BY customer_email
   `).all();
+  const manual = db.prepare(`SELECT email, display_name, created_at FROM customers WHERE deleted_at IS NULL`).all();
+
+  const map = {};
+  manual.forEach(m => { map[m.email] = { email: m.email, display_name: m.display_name, order_count: 0, total_spent: 0, last_order: m.created_at }; });
+  fromOrders.forEach(o => {
+    if (!map[o.email]) map[o.email] = { email: o.email, display_name: null };
+    Object.assign(map[o.email], { order_count: o.order_count, total_spent: o.total_spent, last_order: o.last_order });
+  });
+
+  const deletedEmails = new Set(db.prepare(`SELECT email FROM customers WHERE deleted_at IS NOT NULL`).all().map(r => r.email));
+  const list = Object.values(map).filter(c => !deletedEmails.has(c.email));
+
   const tags = db.prepare('SELECT customer_email, tag FROM customer_tags').all();
   const tagMap = {};
   tags.forEach(t => { (tagMap[t.customer_email] = tagMap[t.customer_email] || []).push(t.tag); });
-  res.json(customers.map(c => ({ ...c, tags: tagMap[c.customer_email] || [] })));
+
+  list.forEach(c => { c.tags = tagMap[c.email] || []; });
+  list.sort((a, b) => (b.last_order || '').localeCompare(a.last_order || ''));
+  res.json(list);
+});
+
+app.post('/api/admin/customers', requireAdmin, (req, res) => {
+  const email = (req.body.email || '').trim().toLowerCase();
+  const name  = (req.body.display_name || '').trim() || null;
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: 'Valid email required' });
+  try {
+    db.prepare('INSERT INTO customers (email, display_name) VALUES (?,?)').run(email, name);
+  } catch {
+    db.prepare('UPDATE customers SET deleted_at = NULL, display_name = COALESCE(?, display_name) WHERE email = ?').run(name, email);
+  }
+  res.json({ ok: true, email });
+});
+
+app.delete('/api/admin/customers/:email', requireAdmin, (req, res) => {
+  const email = req.params.email;
+  const exists = db.prepare('SELECT email FROM customers WHERE email = ?').get(email);
+  if (exists) db.prepare('UPDATE customers SET deleted_at = CURRENT_TIMESTAMP WHERE email = ?').run(email);
+  else        db.prepare('INSERT INTO customers (email, deleted_at) VALUES (?, CURRENT_TIMESTAMP)').run(email);
+  db.prepare("UPDATE orders SET deleted_at = CURRENT_TIMESTAMP WHERE customer_email = ? AND deleted_at IS NULL").run(email);
+  res.json({ ok: true });
+});
+
+app.post('/api/admin/customers/:email/restore', requireAdmin, (req, res) => {
+  db.prepare('UPDATE customers SET deleted_at = NULL WHERE email = ?').run(req.params.email);
+  db.prepare("UPDATE orders SET deleted_at = NULL WHERE customer_email = ?").run(req.params.email);
+  res.json({ ok: true });
 });
 
 app.get('/api/admin/customers/:email', requireAdmin, (req, res) => {
   const email   = req.params.email;
-  const orders  = db.prepare('SELECT * FROM orders WHERE customer_email = ? ORDER BY created_at DESC').all(email);
+  const orders  = db.prepare('SELECT * FROM orders WHERE customer_email = ? AND deleted_at IS NULL ORDER BY created_at DESC').all(email);
   const notes   = db.prepare('SELECT * FROM customer_notes WHERE customer_email = ? ORDER BY created_at DESC').all(email);
   const tags    = db.prepare('SELECT tag FROM customer_tags WHERE customer_email = ?').all(email).map(r => r.tag);
-  res.json({ email, orders, notes, tags });
+  const manual  = db.prepare('SELECT display_name FROM customers WHERE email = ? AND deleted_at IS NULL').get(email);
+  res.json({ email, display_name: manual?.display_name || null, orders, notes, tags });
+});
+
+app.get('/api/admin/trash', requireAdmin, (req, res) => {
+  const customers = db.prepare(`SELECT email, display_name, deleted_at FROM customers WHERE deleted_at IS NOT NULL ORDER BY deleted_at DESC`).all();
+  const orders    = db.prepare(`SELECT id, recipient_name, destination_country, status, price_cents, created_at, deleted_at, customer_email FROM orders WHERE deleted_at IS NOT NULL ORDER BY deleted_at DESC`).all();
+  res.json({ customers, orders });
 });
 
 app.post('/api/admin/customers/:email/notes', requireAdmin, (req, res) => {

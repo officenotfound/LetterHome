@@ -116,6 +116,7 @@ textarea{resize:vertical;min-height:80px}
     <button class="nav-link" id="nav-dashboard" onclick="go('/admin')"><span class="nav-icon">◈</span> Dashboard</button>
     <button class="nav-link" id="nav-orders"    onclick="go('/admin/orders')"><span class="nav-icon">✉</span> Orders</button>
     <button class="nav-link" id="nav-customers" onclick="go('/admin/customers')"><span class="nav-icon">◎</span> Customers</button>
+    <button class="nav-link" id="nav-trash"     onclick="go('/admin/trash')"><span class="nav-icon">⌫</span> Trash</button>
   </nav>
   <div class="sidebar-footer">
     <form method="POST" action="/admin/logout" style="margin:0">
@@ -160,14 +161,16 @@ function route() {
   if (p.match(/^\/admin\/orders\/\d+$/))            return showOrder(p.split('/').pop());
   if (p === '/admin/customers')                     return showCustomers();
   if (p.match(/^\/admin\/customers\/.+$/))          return showCustomer(decodeURIComponent(p.replace('/admin/customers/', '')));
+  if (p === '/admin/trash')                         return showTrash();
   showDashboard();
 }
 
 function setActiveNav(p) {
-  ['dashboard','orders','customers'].forEach(k => document.getElementById('nav-'+k)?.classList.remove('active'));
-  if (p.startsWith('/admin/orders'))    document.getElementById('nav-orders')?.classList.add('active');
+  ['dashboard','orders','customers','trash'].forEach(k => document.getElementById('nav-'+k)?.classList.remove('active'));
+  if (p.startsWith('/admin/orders'))         document.getElementById('nav-orders')?.classList.add('active');
   else if (p.startsWith('/admin/customers')) document.getElementById('nav-customers')?.classList.add('active');
-  else                                  document.getElementById('nav-dashboard')?.classList.add('active');
+  else if (p.startsWith('/admin/trash'))     document.getElementById('nav-trash')?.classList.add('active');
+  else                                       document.getElementById('nav-dashboard')?.classList.add('active');
 }
 
 function setTitle(t) { document.getElementById('topbar-title').textContent = t; }
@@ -324,7 +327,10 @@ async function showOrder(id) {
     <button class="back-link" onclick="go('/admin/orders')">← Back to Orders</button>
     <div class="page-header">
       <div class="page-title">Order #${o.id}</div>
-      ${statusBadge(o.status)}
+      <div style="display:flex;align-items:center;gap:12px">
+        ${statusBadge(o.status)}
+        <button class="btn btn-outline btn-sm" onclick="deleteOrder(${o.id})">Move to Trash</button>
+      </div>
     </div>
     <div class="detail-grid">
       <div class="detail-card">
@@ -387,23 +393,59 @@ async function showCustomers() {
     const tags = c.tags.map(t => `<span class="tag" style="font-size:11px;padding:2px 8px">${esc(t)}</span>`).join('');
     return `
     <tr>
-      <td><button class="link" onclick="go('/admin/customers/${encodeURIComponent(c.customer_email)}')">${esc(c.customer_email)}</button></td>
+      <td><button class="link" onclick="go('/admin/customers/${encodeURIComponent(c.email)}')">${esc(c.email)}${c.display_name ? ` <span style="color:#94a3b8;font-weight:400">(${esc(c.display_name)})</span>` : ''}</button></td>
       <td>${c.order_count}</td>
       <td>${fmtCAD(c.total_spent)}</td>
       <td>${fmtDate(c.last_order)}</td>
       <td>${tags || '<span style="color:#94a3b8;font-size:12px">—</span>'}</td>
-      <td><button class="link" onclick="go('/admin/customers/${encodeURIComponent(c.customer_email)}')">View →</button></td>
+      <td>
+        <button class="link" onclick="go('/admin/customers/${encodeURIComponent(c.email)}')">View</button>
+        &nbsp;<button class="btn-ghost" onclick="deleteCustomer('${encodeURIComponent(c.email)}')">Delete</button>
+      </td>
     </tr>`;
   }).join('');
 
   setMain(`
-    <div class="page-header"><div class="page-title">Customers</div></div>
+    <div class="page-header">
+      <div class="page-title">Customers</div>
+      <button class="btn btn-primary btn-sm" onclick="toggleAddCustomer()">+ Add Customer</button>
+    </div>
+    <div class="card" id="add-customer-card" style="display:none;margin-bottom:16px">
+      <div class="card-header"><div class="card-title">Add Customer</div></div>
+      <div style="padding:20px">
+        <div class="form-row" style="margin-bottom:0">
+          <div class="field"><label>Email</label><input id="new-cust-email" type="email" placeholder="customer@example.com"></div>
+          <div class="field"><label>Name (optional)</label><input id="new-cust-name" type="text" placeholder="Margaret Tremblay"></div>
+          <button class="btn btn-primary" onclick="addCustomer()">Add</button>
+        </div>
+      </div>
+    </div>
     <div class="card">
       <table>
         <thead><tr><th>Email</th><th>Orders</th><th>Spent</th><th>Last Order</th><th>Tags</th><th></th></tr></thead>
         <tbody>${rows || '<tr><td colspan="6" class="empty">No customers yet.</td></tr>'}</tbody>
       </table>
     </div>`);
+}
+
+function toggleAddCustomer() {
+  const card = document.getElementById('add-customer-card');
+  card.style.display = card.style.display === 'none' ? 'block' : 'none';
+}
+
+async function addCustomer() {
+  const email = document.getElementById('new-cust-email').value.trim();
+  const name  = document.getElementById('new-cust-name').value.trim();
+  if (!email) return;
+  const r = await post('/api/admin/customers', { email, display_name: name });
+  if (r?.ok) showCustomers();
+  else alert('Could not add customer. Check the email format.');
+}
+
+async function deleteCustomer(encodedEmail) {
+  if (!confirm('Move this customer and all their orders to Trash? You can restore them later.')) return;
+  await del(`/api/admin/customers/${encodedEmail}`);
+  go('/admin/customers');
 }
 
 // ── Customer detail ───────────────────────────────────────────────────────────
@@ -438,7 +480,8 @@ async function showCustomer(email) {
   setMain(`
     <button class="back-link" onclick="go('/admin/customers')">← Back to Customers</button>
     <div class="page-header">
-      <div class="page-title">${esc(email)}</div>
+      <div class="page-title">${esc(c.display_name || email)}${c.display_name ? ` <span style="font-weight:400;color:#64748b;font-size:14px">${esc(email)}</span>` : ''}</div>
+      <button class="btn btn-outline btn-sm" onclick="deleteCustomer('${encodeURIComponent(email)}')">Move to Trash</button>
     </div>
     <div class="detail-grid">
       <div class="detail-card">
@@ -497,6 +540,66 @@ async function addTag(encodedEmail) {
 async function removeTag(encodedEmail, tag) {
   await del(`/api/admin/customers/${encodedEmail}/tags/${encodeURIComponent(tag)}`);
   showCustomer(decodeURIComponent(encodedEmail));
+}
+
+// ── Trash ─────────────────────────────────────────────────────────────────────
+async function showTrash() {
+  setTitle('Trash');
+  const t = await api('/api/admin/trash');
+  if (!t) return;
+
+  const custRows = t.customers.map(c => `
+    <tr>
+      <td>${esc(c.email)}${c.display_name ? ` <span style="color:#94a3b8">(${esc(c.display_name)})</span>` : ''}</td>
+      <td>${fmtDate(c.deleted_at)}</td>
+      <td><button class="link" onclick="restoreCustomer('${encodeURIComponent(c.email)}')">Restore</button></td>
+    </tr>`).join('');
+
+  const orderRows = t.orders.map(o => `
+    <tr>
+      <td>#${o.id}</td>
+      <td>${fmtDate(o.created_at)}</td>
+      <td>${esc(o.recipient_name)}</td>
+      <td>${o.destination_country || '—'}</td>
+      <td>${statusBadge(o.status)}</td>
+      <td>${fmtCAD(o.price_cents)}</td>
+      <td>${fmtDate(o.deleted_at)}</td>
+      <td><button class="link" onclick="restoreOrder(${o.id})">Restore</button></td>
+    </tr>`).join('');
+
+  setMain(`
+    <div class="page-header"><div class="page-title">Trash</div></div>
+    <p style="color:#64748b;font-size:13px;margin-bottom:20px">Soft-deleted records. Restore them to bring back to active.</p>
+    <div class="card" style="margin-bottom:24px">
+      <div class="card-header"><div class="card-title">Deleted Customers</div></div>
+      <table>
+        <thead><tr><th>Email</th><th>Deleted</th><th></th></tr></thead>
+        <tbody>${custRows || '<tr><td colspan="3" class="empty">No deleted customers.</td></tr>'}</tbody>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">Deleted Orders</div></div>
+      <table>
+        <thead><tr><th>#</th><th>Created</th><th>Recipient</th><th>Country</th><th>Status</th><th>Price</th><th>Deleted</th><th></th></tr></thead>
+        <tbody>${orderRows || '<tr><td colspan="8" class="empty">No deleted orders.</td></tr>'}</tbody>
+      </table>
+    </div>`);
+}
+
+async function restoreCustomer(encodedEmail) {
+  await post(`/api/admin/customers/${encodedEmail}/restore`);
+  showTrash();
+}
+
+async function restoreOrder(id) {
+  await post(`/api/admin/orders/${id}/restore`);
+  showTrash();
+}
+
+async function deleteOrder(id) {
+  if (!confirm('Move this order to Trash? You can restore it later.')) return;
+  await del(`/api/admin/orders/${id}`);
+  go('/admin/orders');
 }
 
 function esc(s) {
