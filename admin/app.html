@@ -259,11 +259,13 @@ async function del(url) {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function statusBadge(s) {
   const map = {
-    awaiting_payment: ['badge-gray',   'Awaiting Payment'],
-    paid:             ['badge-blue',   'Paid'],
-    printing:         ['badge-amber',  'Printing'],
-    mailed:           ['badge-violet', 'Mailed'],
-    delivered:        ['badge-green',  'Delivered'],
+    awaiting_payment:     ['badge-gray',   'Awaiting Payment'],
+    paid:                 ['badge-blue',   'Paid'],
+    submitted_to_printer: ['badge-amber',  'At Printer'],
+    printing:             ['badge-amber',  'Printing'],
+    mailed:               ['badge-violet', 'Mailed'],
+    delivered:            ['badge-green',  'Delivered'],
+    refunded:             ['badge-gray',   'Refunded'],
   };
   const [cls, label] = map[s] || ['badge-gray', s];
   return `<span class="badge ${cls}">${label}</span>`;
@@ -346,13 +348,16 @@ function startCountdownTicker() {
 // ── Dashboard ─────────────────────────────────────────────────────────────────
 async function showDashboard() {
   setTitle('Dashboard');
-  const [stats, orders] = await Promise.all([
+  const [stats, paidOrders, submittedOrders] = await Promise.all([
     api('/api/admin/stats'),
     api('/api/admin/orders?status=paid'),
+    api('/api/admin/orders?status=submitted_to_printer'),
   ]);
   if (!stats) return;
 
-  const recentRows = (orders || []).slice(0, 8).map(o => `
+  const queueRows = [...(paidOrders || []), ...(submittedOrders || [])]
+    .sort((a,b) => new Date(a.created_at) - new Date(b.created_at))
+    .map(o => `
     <tr>
       <td><button class="link" onclick="go('/admin/orders/${o.id}')">#${o.id}</button></td>
       <td>${fmtDateTime(o.created_at)}</td>
@@ -361,6 +366,7 @@ async function showDashboard() {
       <td>${statusBadge(o.status)}</td>
       <td>${timeLeftHTML(o.created_at, o.status)}</td>
       <td>${fmtCAD(o.price_cents)}</td>
+      <td><button class="btn btn-primary btn-sm" onclick="go('/admin/orders/${o.id}')">Action →</button></td>
     </tr>`).join('');
 
   setMain(`
@@ -408,10 +414,13 @@ async function showDashboard() {
       </div>
     </div>
     <div class="card">
-      <div class="card-header"><div class="card-title">Recent Paid Orders</div></div>
+      <div class="card-header">
+        <div class="card-title">Fulfillment Queue</div>
+        <span style="font-size:12px;color:#64748b">${(paidOrders||[]).length} to submit &nbsp;·&nbsp; ${(submittedOrders||[]).length} awaiting mailed confirmation</span>
+      </div>
       <table>
-        <thead><tr><th>#</th><th>Submitted</th><th>Recipient</th><th>Country</th><th>Status</th><th>Time Left</th><th>Price</th></tr></thead>
-        <tbody>${recentRows || '<tr><td colspan="7" class="empty">No paid orders yet.</td></tr>'}</tbody>
+        <thead><tr><th>#</th><th>Submitted</th><th>Recipient</th><th>Country</th><th>Status</th><th>Time Left</th><th>Price</th><th></th></tr></thead>
+        <tbody>${queueRows || '<tr><td colspan="8" class="empty" style="padding:40px">All caught up — no orders need action.</td></tr>'}</tbody>
       </table>
     </div>`);
 }
@@ -425,8 +434,8 @@ async function showOrders(filter) {
   const orders = await api(url);
   if (!orders) return;
 
-  const statuses = ['','awaiting_payment','paid','printing','mailed','delivered'];
-  const labels   = ['All','Awaiting','Paid','Printing','Mailed','Delivered'];
+  const statuses = ['','awaiting_payment','paid','submitted_to_printer','printing','mailed','delivered'];
+  const labels   = ['All','Awaiting','Paid','At Printer','Printing','Mailed','Delivered'];
   const filters  = statuses.map((s,i) => `<button class="filter-btn ${orderFilter===s?'active':''}" onclick="showOrders('${s}')">${labels[i]}</button>`).join('');
 
   const rows = orders.map(o => `
@@ -467,16 +476,15 @@ async function showOrder(id) {
     [o.recipient_city, o.recipient_province, o.recipient_postal].filter(Boolean).join(' '),
     o.destination_country].filter(Boolean).join('\n');
 
-  const fileItems = (o.files || [])
-    .filter(f => f !== 'order.json')
-    .map(f => `
+  const userFiles = (o.files || []).filter(f => f !== 'order.json');
+  const fileItems = userFiles.map(f => `
       <div class="file-item">
         <span class="file-name">📄 ${esc(f)}</span>
         <a class="btn btn-outline btn-sm" href="/api/admin/orders/${o.id}/files/${encodeURIComponent(f)}" target="_blank">Download</a>
       </div>`).join('');
 
-  const statuses = ['awaiting_payment','paid','printing','mailed','delivered'];
-  const statusOpts = statuses.map(s => `<option value="${s}" ${o.status===s?'selected':''}>${s.replace('_',' ')}</option>`).join('');
+  const allStatuses = ['awaiting_payment','paid','submitted_to_printer','printing','mailed','delivered','refunded'];
+  const statusOpts = allStatuses.map(s => `<option value="${s}" ${o.status===s?'selected':''}>${s.replace(/_/g,' ')}</option>`).join('');
 
   setMain(`
     <button class="back-link" onclick="go('/admin/orders')">← Back to Orders</button>
@@ -525,17 +533,11 @@ async function showOrder(id) {
         <div class="detail-row"><span class="detail-label">IP address</span><span class="detail-value">${o.customer_ip ? esc(o.customer_ip) : '<span style="color:#94a3b8">—</span>'}</span></div>
         <div class="detail-row"><span class="detail-label">Type</span><span class="detail-value">${esc(o.letter_type||'standard')}</span></div>
         <div class="detail-row"><span class="detail-label">Price</span><span class="detail-value">${fmtCAD(o.price_cents)}</span></div>
+        ${o.printer_ref ? `<div class="detail-row"><span class="detail-label">Printer Ref</span><span class="detail-value" style="font-family:monospace;font-size:13px">${esc(o.printer_ref)}</span></div>` : ''}
+        ${o.estimated_delivery ? `<div class="detail-row"><span class="detail-label">Est. Delivery</span><span class="detail-value">${esc(o.estimated_delivery)}</span></div>` : ''}
+        ${o.status_token ? `<div class="detail-row"><span class="detail-label">Status Page</span><span class="detail-value"><a href="/status/${o.status_token}" target="_blank" class="link" style="font-size:12px">View →</a></span></div>` : ''}
       </div>
-      <div class="detail-card">
-        <div class="detail-card-title">Update Status</div>
-        <div class="form-row" style="margin-bottom:0">
-          <div class="field">
-            <select id="status-select">${statusOpts}</select>
-          </div>
-          <button class="btn btn-primary" onclick="updateStatus(${o.id})">Save</button>
-        </div>
-        <div id="status-msg" style="font-size:12px;color:#16a34a;margin-top:10px;display:none">✓ Status updated</div>
-      </div>
+      ${fulfillmentCard(o, statusOpts)}
     </div>
     ${o.letter_body ? `
     <div class="card" style="margin-bottom:24px">
@@ -544,7 +546,10 @@ async function showOrder(id) {
     </div>` : ''}
     ${fileItems ? `
     <div class="card" style="margin-bottom:24px">
-      <div class="card-header"><div class="card-title">Attachments</div></div>
+      <div class="card-header">
+        <div class="card-title">Attachments</div>
+        ${userFiles.length > 1 ? `<button class="btn btn-outline btn-sm" onclick="downloadAllFiles(${o.id}, ${JSON.stringify(userFiles)})">Download All</button>` : ''}
+      </div>
       <div class="files-list">${fileItems}</div>
     </div>` : ''}`);
 }
@@ -567,6 +572,79 @@ async function sendMessage(id) {
   } else {
     alert('Could not send: ' + (r?.error || 'unknown error'));
   }
+}
+
+function fulfillmentCard(o, statusOpts) {
+  if (o.status === 'paid') {
+    return `<div class="detail-card">
+      <div class="detail-card-title">Fulfillment — Submit to Printer</div>
+      <p style="font-size:13px;color:#64748b;margin-bottom:16px;line-height:1.6">Upload this order to the printer's portal, then enter the reference number they assign.</p>
+      <div class="field" style="margin-bottom:12px">
+        <label>Printer Reference Number</label>
+        <input id="printer-ref" type="text" placeholder="8-digit ref" maxlength="20" style="font-family:monospace">
+      </div>
+      <button class="btn btn-primary" onclick="submitToPrinter(${o.id})">Mark as Submitted to Printer</button>
+      <div id="submit-msg" style="font-size:12px;color:#16a34a;margin-top:10px;display:none">✓ Saved — status updated to At Printer</div>
+    </div>`;
+  }
+  if (o.status === 'submitted_to_printer') {
+    return `<div class="detail-card">
+      <div class="detail-card-title">Fulfillment — Mark as Mailed</div>
+      <p style="font-size:13px;color:#64748b;margin-bottom:16px;line-height:1.6">When the printer confirms the letter has been dropped with Canada Post, enter the estimated delivery and notify the customer.</p>
+      <div class="field" style="margin-bottom:12px">
+        <label>Estimated Delivery (from printer's email)</label>
+        <input id="est-delivery" type="text" placeholder="e.g. 5–10 business days">
+      </div>
+      <button class="btn btn-primary" onclick="markMailed(${o.id})">Mark as Mailed &amp; Notify Customer</button>
+      <div id="mailed-msg" style="font-size:12px;color:#16a34a;margin-top:10px;display:none">✓ Mailed — customer has been notified</div>
+    </div>`;
+  }
+  return `<div class="detail-card">
+    <div class="detail-card-title">Update Status</div>
+    <div class="form-row" style="margin-bottom:0">
+      <div class="field"><select id="status-select">${statusOpts}</select></div>
+      <button class="btn btn-primary" onclick="updateStatus(${o.id})">Save</button>
+    </div>
+    <div id="status-msg" style="font-size:12px;color:#16a34a;margin-top:10px;display:none">✓ Status updated</div>
+  </div>`;
+}
+
+async function submitToPrinter(id) {
+  const ref = document.getElementById('printer-ref').value.trim();
+  if (!ref) return alert('Enter the printer reference number first.');
+  const r = await post(`/api/admin/orders/${id}/submit-to-printer`, { printer_ref: ref });
+  if (r?.ok) {
+    document.getElementById('submit-msg').style.display = 'block';
+    setTimeout(() => showOrder(id), 1200);
+  } else {
+    alert('Error: ' + (r?.error || 'could not save'));
+  }
+}
+
+async function markMailed(id) {
+  const est = document.getElementById('est-delivery').value.trim();
+  if (!est) return alert('Enter the estimated delivery from the printer\'s email.');
+  if (!confirm(`Mark as mailed and send the customer a notification email with estimated delivery: "${est}"?`)) return;
+  const r = await post(`/api/admin/orders/${id}/mark-mailed`, { estimated_delivery: est });
+  if (r?.ok) {
+    document.getElementById('mailed-msg').style.display = 'block';
+    setTimeout(() => showOrder(id), 1200);
+  } else {
+    alert('Error: ' + (r?.error || 'could not save'));
+  }
+}
+
+function downloadAllFiles(orderId, files) {
+  files.forEach((f, i) => {
+    setTimeout(() => {
+      const a = document.createElement('a');
+      a.href = `/api/admin/orders/${orderId}/files/${encodeURIComponent(f)}`;
+      a.download = f;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }, i * 600);
+  });
 }
 
 async function updateStatus(id) {
