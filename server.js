@@ -5,6 +5,7 @@ const Stripe    = require('stripe');
 const mailer    = require('nodemailer');
 const rateLimit = require('express-rate-limit');
 const session   = require('express-session');
+const FileStore = require('session-file-store')(session);
 const bcrypt    = require('bcryptjs');
 const { Secret, TOTP } = require('otpauth');
 const { DatabaseSync: Database } = require('node:sqlite');
@@ -20,10 +21,16 @@ app.set('trust proxy', 1);
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 
 app.use(session({
+  store:             new FileStore({ path: './sessions', ttl: 30 * 24 * 60 * 60, retries: 1 }),
   secret:            process.env.SESSION_SECRET || 'dev-secret-change-me',
   resave:            false,
   saveUninitialized: false,
-  cookie: { httpOnly: true, sameSite: 'lax', maxAge: 8 * 60 * 60 * 1000 },
+  cookie: {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure:   process.env.NODE_ENV === 'production',
+    maxAge:   30 * 24 * 60 * 60 * 1000,
+  },
 }));
 
 // ── Database ──────────────────────────────────────────────────────────────────
