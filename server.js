@@ -22,7 +22,7 @@ app.set('trust proxy', 1);
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 
 app.use(session({
-  store:             new FileStore({ path: './sessions', ttl: 30 * 24 * 60 * 60, retries: 1 }),
+  store:             new FileStore({ path: './sessions', ttl: 30 * 24 * 60 * 60, retries: 1, reapInterval: 3600, reapAsync: true }),
   secret:            process.env.SESSION_SECRET || 'dev-secret-change-me',
   resave:            false,
   saveUninitialized: false,
@@ -33,6 +33,15 @@ app.use(session({
     maxAge:   30 * 24 * 60 * 60 * 1000,
   },
 }));
+
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  if (process.env.NODE_ENV === 'production') {
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  }
+  next();
+});
 
 // ── Database ──────────────────────────────────────────────────────────────────
 const db = new Database('orders.db', { allowBareNamedParameters: true });
@@ -164,8 +173,15 @@ const upload = multer({
   dest: 'uploads',
   limits: { fileSize: 10 * 1024 * 1024, files: 5 },
   fileFilter(req, file, cb) {
-    const ext = path.extname(file.originalname).toLowerCase();
-    cb(null, ['.pdf', '.doc', '.docx'].includes(ext));
+    const ext  = path.extname(file.originalname).toLowerCase();
+    const mime = file.mimetype;
+    const extOk  = ['.pdf', '.doc', '.docx'].includes(ext);
+    const mimeOk = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    ].includes(mime);
+    cb(null, extOk && mimeOk);
   },
 });
 
@@ -367,7 +383,7 @@ app.post('/api/create-order', orderLimiter, upload.array('attachments', 5), asyn
   if (paused?.value === 'true') return res.status(503).json({ error: 'The service is temporarily paused. Please try again later.' });
 
   const b = req.body;
-  const rEmail  = (b['r-email']  || '').trim();
+  const rEmail  = (b['r-email']  || '').trim().toLowerCase();
   const rName   = (b['r-name']   || '').trim();
   const rStreet = (b['r-street'] || '').trim();
 
@@ -400,7 +416,7 @@ app.post('/api/create-order', orderLimiter, upload.array('attachments', 5), asyn
     b['s-province'] || null, b['s-postal']   || null, b['s-country'] || null,
     rName, rStreet,
     b['r-city']     || null, b['r-province'] || null, b['r-postal'] || null,
-    b['r-country']  || 'CA', b['letter-type'] || 'standard',
+    b['r-country']  || 'CA', ['standard'].includes(b['letter-type']) ? b['letter-type'] : 'standard',
     b['letter-body'] || null,
     '[]',
     priceCents,
@@ -1356,20 +1372,21 @@ async function fulfillOrder(sessionId) {
 }
 
 function buildOperatorEmail(o, fromAddr, toAddr, amountCAD, attachCount) {
+  const esc = s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   return `
 <div style="font-family:Georgia,serif;max-width:600px;padding:24px;color:#2a2a2a">
   <h2 style="font-size:24px;margin:0 0 4px">New Order #${o.id}</h2>
-  <p style="color:#6b6258;margin:0 0 24px;font-size:14px">$${amountCAD} CAD &nbsp;·&nbsp; ${o.destination_country === 'CA' ? 'Domestic' : 'International'} &nbsp;·&nbsp; ${o.letter_type} &nbsp;·&nbsp; ${o.customer_email}</p>
+  <p style="color:#6b6258;margin:0 0 24px;font-size:14px">$${amountCAD} CAD &nbsp;·&nbsp; ${o.destination_country === 'CA' ? 'Domestic' : 'International'} &nbsp;·&nbsp; ${esc(o.letter_type)} &nbsp;·&nbsp; ${esc(o.customer_email)}</p>
   <table style="width:100%;border-collapse:collapse;margin-bottom:24px;font-size:14px">
     <tr style="background:#f7f2e6"><td style="padding:12px 16px;font-weight:bold;width:50%;vertical-align:top">
-      FROM<br><span style="font-weight:400;white-space:pre-line">${fromAddr}</span>
+      FROM<br><span style="font-weight:400;white-space:pre-line">${esc(fromAddr)}</span>
     </td><td style="padding:12px 16px;background:#2a2a2a;color:#faf6ec;vertical-align:top">
-      TO<br><span style="white-space:pre-line">${toAddr}</span>
+      TO<br><span style="white-space:pre-line">${esc(toAddr)}</span>
     </td></tr>
   </table>
   <div style="background:#f7f2e6;padding:20px;border-left:4px solid #a8472d;margin-bottom:16px">
     <p style="font-size:12px;text-transform:uppercase;letter-spacing:0.12em;color:#6b6258;margin:0 0 12px">Letter content</p>
-    <p style="white-space:pre-wrap;font-size:15px;line-height:1.7;margin:0">${o.letter_body || '<em>(no message body — see attachments)</em>'}</p>
+    <p style="white-space:pre-wrap;font-size:15px;line-height:1.7;margin:0">${esc(o.letter_body) || '<em>(no message body — see attachments)</em>'}</p>
   </div>
   ${attachCount > 0 ? `<p style="font-size:13px;color:#6b6258">${attachCount} attachment${attachCount > 1 ? 's' : ''} included in this email.</p>` : ''}
 </div>`;
