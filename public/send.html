@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Send a Letter — Letterhome</title>
+<title>Send a letter — Letterhome</title>
 <meta name="description" content="Send a real letter to Canada from anywhere in the world. We print, stamp, and mail it for you. From $10 CAD.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -637,18 +637,18 @@ footer { background: var(--ink); color: rgba(250,246,236,0.65); padding: 48px 36
   <div class="panel" id="panel-2">
     <div class="eyebrow">Step Two</div>
     <h2 class="panel-title serif">Write your letter.</h2>
-    <p class="panel-sub">Type your message below. You can also attach PDF or Word documents to be printed alongside your letter.</p>
+    <p class="panel-sub">Type your message below. Attach any PDF or Word documents you'd like printed in full colour alongside the letter.</p>
 
     <div class="form-group">
       <label for="letter-body">Your Message</label>
       <textarea id="letter-body" placeholder="Dear Margaret,&#10;&#10;I hope this letter finds you well. I'm writing from..." oninput="updatePreview()"></textarea>
-      <span class="field-note">Max 5 pages (~2,500 words). Plain text only — your letter will be typeset professionally.</span>
+      <span class="field-note">Up to 5 pages (~2,500 words). Plain text — we lay it out in a clean serif typeface.</span>
     </div>
 
     <div class="attach-zone" onclick="document.getElementById('file-input').click()">
       <div class="attach-icon">📎</div>
       <p><strong>Attach documents</strong> — click to upload PDF or Word files</p>
-      <p style="font-size:12px; margin-top:4px;">Max 5 files · PDF or .docx only · 10MB per file</p>
+      <p style="font-size:12px; margin-top:4px;">Up to 5 files · PDF or .docx · 10 MB per file · Printed in full colour</p>
       <input type="file" id="file-input" accept=".pdf,.doc,.docx" multiple style="display:none" onchange="handleFiles(this)">
     </div>
     <ul class="attach-list" id="attach-list"></ul>
@@ -663,7 +663,7 @@ footer { background: var(--ink); color: rgba(250,246,236,0.65); padding: 48px 36
   <div class="panel" id="panel-3">
     <div class="eyebrow">Step Three</div>
     <h2 class="panel-title serif">Review your order.</h2>
-    <p class="panel-sub">Check everything looks right before paying. Once submitted, your letter will be printed and mailed within one business day.</p>
+    <p class="panel-sub">Have one last look before paying. After checkout, your letter is printed in full colour and mailed from Canada within one business day.</p>
 
     <div class="preview-envelope">
       <div class="preview-stamp">
@@ -687,18 +687,18 @@ footer { background: var(--ink); color: rgba(250,246,236,0.65); padding: 48px 36
     <div class="order-summary">
       <div class="order-summary-row"><span class="label">Destination</span><span class="val" id="summary-dest">Canada (Domestic)</span></div>
       <div class="order-summary-row"><span class="label">Delivery estimate</span><span class="val" id="summary-delivery">Within 2 weeks</span></div>
-      <div class="order-summary-row"><span class="label">Includes</span><span class="val">Print · Envelope · Postage · Delivery</span></div>
+      <div class="order-summary-row"><span class="label">Includes</span><span class="val">Full-colour print · Envelope · Postage · Delivery</span></div>
       <div class="order-summary-row total"><span class="label" style="color:rgba(250,246,236,0.7)">Total</span><span class="val" id="summary-total">$10 CAD</span></div>
     </div>
 
     <div class="privacy-note">
       <span>🔒</span>
-      <p>Your letter content is used only for printing. We delete the text and attachments within 7 days of mailing. We never share or store your message for any other purpose. Payment is handled securely by Stripe — we never see your card details.</p>
+      <p>Your letter content is used to print and mail your letter, then deleted within 7 days. We don't read, share or store your message for any other purpose. Payments go through Stripe; we never see card details.</p>
     </div>
 
     <div class="check-row">
       <input type="checkbox" id="agree-terms">
-      <label for="agree-terms">I agree to the <a href="/terms" style="color:var(--red)">Terms of Service</a> and <a href="/privacy" style="color:var(--red)">Privacy Policy</a>. I confirm this letter does not contain threats, scams, or illegal content.</label>
+      <label for="agree-terms">I agree to the <a href="/terms" style="color:var(--red)">Terms of Service</a> and <a href="/privacy" style="color:var(--red)">Privacy Policy</a>. I confirm the letter doesn't contain threats, scams or illegal content.</label>
     </div>
 
     <div class="panel-nav">
