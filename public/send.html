@@ -856,13 +856,17 @@ function setupAuto(inputId, prefix) {
   const svc    = new google.maps.places.AutocompleteService();
   const detSvc = new google.maps.places.PlacesService(document.createElement('div'));
   let   timer;
+  let   reqSeq = 0;
+  let   sessionToken = new google.maps.places.AutocompleteSessionToken();
 
   input.addEventListener('input', () => {
     clearTimeout(timer);
     const q = input.value.trim();
     if (q.length < 3) { drop.innerHTML = ''; return; }
     timer = setTimeout(() => {
-      svc.getPlacePredictions({ input: q, types: ['address'] }, (preds, status) => {
+      const seq = ++reqSeq;
+      svc.getPlacePredictions({ input: q, types: ['address'], sessionToken }, (preds, status) => {
+        if (seq !== reqSeq) return;
         drop.innerHTML = '';
         if (status !== google.maps.places.PlacesServiceStatus.OK || !preds) return;
         preds.forEach(pred => {
@@ -874,8 +878,9 @@ function setupAuto(inputId, prefix) {
             drop.innerHTML = '';
             input.value = pred.structured_formatting.main_text;
             detSvc.getDetails(
-              { placeId: pred.place_id, fields: ['address_components'] },
+              { placeId: pred.place_id, fields: ['address_components'], sessionToken },
               (place, s) => {
+                sessionToken = new google.maps.places.AutocompleteSessionToken();
                 if (s === google.maps.places.PlacesServiceStatus.OK && place)
                   fillPlace(place.address_components, prefix);
               }
