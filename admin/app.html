@@ -4,9 +4,62 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin — Letterhome</title>
+<script>(function(){try{var t=localStorage.getItem('lh-admin-theme')||(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Inter',system-ui,sans-serif;background:#f1f5f9;color:#0f172a;min-height:100vh;display:flex}
+/* ── Dark mode overrides ── */
+html[data-theme="dark"] body{background:#0f172a;color:#f1f5f9}
+html[data-theme="dark"] .topbar{background:#1e293b;border-bottom-color:rgba(255,255,255,0.06)}
+html[data-theme="dark"] .topbar-title{color:#f1f5f9}
+html[data-theme="dark"] .topbar-user{color:#94a3b8}
+html[data-theme="dark"] .stat-card{background:#1e293b;border-color:rgba(255,255,255,0.06)}
+html[data-theme="dark"] .stat-value{color:#f1f5f9}
+html[data-theme="dark"] .stat-label{color:#94a3b8}
+html[data-theme="dark"] .stat-sub{color:#64748b}
+html[data-theme="dark"] .card{background:#1e293b;border-color:rgba(255,255,255,0.06)}
+html[data-theme="dark"] .card-header{border-bottom-color:rgba(255,255,255,0.06)}
+html[data-theme="dark"] .card-title{color:#f1f5f9}
+html[data-theme="dark"] th{background:#0f172a;color:#94a3b8;border-bottom-color:rgba(255,255,255,0.08)}
+html[data-theme="dark"] td{color:#cbd5e1;border-bottom-color:rgba(255,255,255,0.04)}
+html[data-theme="dark"] tr:hover td{background:rgba(255,255,255,0.04)}
+html[data-theme="dark"] .detail-card{background:#1e293b;border-color:rgba(255,255,255,0.06)}
+html[data-theme="dark"] .detail-card-title{color:#94a3b8}
+html[data-theme="dark"] .detail-row{border-bottom-color:rgba(255,255,255,0.04)}
+html[data-theme="dark"] .detail-label{color:#94a3b8}
+html[data-theme="dark"] .detail-value{color:#f1f5f9}
+html[data-theme="dark"] .address-block{color:#cbd5e1}
+html[data-theme="dark"] .letter-body{background:#0f172a;color:#cbd5e1;border-color:rgba(255,255,255,0.06)}
+html[data-theme="dark"] .page-title{color:#f1f5f9}
+html[data-theme="dark"] .filter-btn{background:#1e293b;color:#94a3b8;border-color:rgba(255,255,255,0.08)}
+html[data-theme="dark"] .filter-btn:hover,html[data-theme="dark"] .filter-btn.active{background:#f1f5f9;color:#0f172a;border-color:#f1f5f9}
+html[data-theme="dark"] input[type=text],html[data-theme="dark"] input[type=email],html[data-theme="dark"] textarea,html[data-theme="dark"] select{background:#0f172a;color:#f1f5f9;border-color:rgba(255,255,255,0.1)}
+html[data-theme="dark"] .field label{color:#94a3b8}
+html[data-theme="dark"] .btn-outline{background:#1e293b;color:#cbd5e1;border-color:rgba(255,255,255,0.1)}
+html[data-theme="dark"] .btn-outline:hover{background:#0f172a}
+html[data-theme="dark"] .btn-ghost{color:#94a3b8}
+html[data-theme="dark"] .btn-ghost:hover{background:rgba(255,255,255,0.06);color:#fca5a5}
+html[data-theme="dark"] .tag{background:rgba(255,255,255,0.06);color:#cbd5e1}
+html[data-theme="dark"] .file-item{background:#0f172a;border-color:rgba(255,255,255,0.06)}
+html[data-theme="dark"] .file-name{color:#cbd5e1}
+html[data-theme="dark"] .note-item{border-bottom-color:rgba(255,255,255,0.04)}
+html[data-theme="dark"] .note-text{color:#cbd5e1}
+html[data-theme="dark"] .note-meta{color:#64748b}
+html[data-theme="dark"] .empty{color:#64748b}
+html[data-theme="dark"] .back-link{color:#94a3b8}
+html[data-theme="dark"] .back-link:hover{color:#fca5a5}
+html[data-theme="dark"] .badge-gray{background:rgba(148,163,184,0.15);color:#cbd5e1}
+html[data-theme="dark"] .badge-blue{background:rgba(59,130,246,0.15);color:#93c5fd}
+html[data-theme="dark"] .badge-amber{background:rgba(245,158,11,0.15);color:#fcd34d}
+html[data-theme="dark"] .badge-violet{background:rgba(139,92,246,0.15);color:#c4b5fd}
+html[data-theme="dark"] .badge-green{background:rgba(16,185,129,0.15);color:#6ee7b7}
+/* Admin theme toggle button */
+.admin-theme-toggle{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:6px;color:#64748b;font-size:13px;cursor:pointer;transition:all 0.15s;border:none;background:none;width:100%;font-family:inherit;text-align:left;margin-bottom:6px}
+.admin-theme-toggle:hover{color:#94a3b8;background:rgba(255,255,255,0.04)}
+.admin-theme-toggle .label-light{display:inline}
+.admin-theme-toggle .label-dark{display:none}
+html[data-theme="dark"] .admin-theme-toggle .label-light{display:none}
+html[data-theme="dark"] .admin-theme-toggle .label-dark{display:inline}
 /* ── Sidebar ── */
 .sidebar{width:220px;min-height:100vh;background:#0f172a;display:flex;flex-direction:column;flex-shrink:0;position:fixed;top:0;left:0;bottom:0}
 .sidebar-logo{padding:24px 20px 20px;border-bottom:1px solid rgba(255,255,255,0.06)}
@@ -119,6 +172,10 @@ textarea{resize:vertical;min-height:80px}
     <button class="nav-link" id="nav-trash"     onclick="go('/admin/trash')"><span class="nav-icon">⌫</span> Trash</button>
   </nav>
   <div class="sidebar-footer">
+    <button type="button" class="admin-theme-toggle" onclick="toggleAdminTheme()">
+      <span class="label-light">☾ &nbsp;Dark mode</span>
+      <span class="label-dark">☀ &nbsp;Light mode</span>
+    </button>
     <form method="POST" action="/admin/logout" style="margin:0">
       <button class="logout-btn" type="submit">⎋ &nbsp;Sign out</button>
     </form>
@@ -694,6 +751,13 @@ async function deleteOrder(id) {
   if (!confirm('Move this order to Trash? You can restore it later.')) return;
   await del(`/api/admin/orders/${id}`);
   go('/admin/orders');
+}
+
+function toggleAdminTheme() {
+  const cur = document.documentElement.getAttribute('data-theme');
+  const next = cur === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  try { localStorage.setItem('lh-admin-theme', next); } catch {}
 }
 
 function esc(s) {
