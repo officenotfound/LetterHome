@@ -1,0 +1,51 @@
+/* Letterhome Dark Mode
+ * "Ink" theme — late-night letter writing.
+ * Overrides the kraft/paper variables when [data-theme="dark"] is on <html>. */
+
+[data-theme="dark"] {
+  --kraft:        #1a1410;
+  --kraft-light:  #221c16;
+  --kraft-deep:   #120e0a;
+  --paper:        #2b241d;
+  --ink:          #ede1c5;
+  --ink-soft:     #d4c8ad;
+  --ink-muted:    #a89e8c;
+  --ink-faint:    #82786a;
+  --red:          #c25c40;
+  --red-deep:     #a8472d;
+  --red-stamp:    #d46a4c;
+  --line:         rgba(237,225,197,0.12);
+  --shadow-soft:  0 1px 2px rgba(0,0,0,0.4), 0 6px 20px rgba(0,0,0,0.3);
+  --shadow-card:  0 2px 6px rgba(0,0,0,0.4), 0 14px 40px rgba(0,0,0,0.45);
+}
+
+/* Hide the kraft paper noise texture in dark mode — keeps it clean */
+[data-theme="dark"] body::before { display: none; }
+
+/* Make the sticky nav use the dark bg instead of the kraft tint */
+[data-theme="dark"] nav { background: rgba(26,20,16,0.94) !important; }
+
+/* Theme toggle button */
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 1px solid var(--line);
+  background: transparent;
+  border-radius: 50%;
+  cursor: pointer;
+  color: var(--ink-soft);
+  font-family: inherit;
+  transition: color 0.2s, border-color 0.2s, transform 0.2s;
+  flex-shrink: 0;
+}
+.theme-toggle:hover { color: var(--red); border-color: var(--red); transform: rotate(15deg); }
+.theme-toggle:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
+.theme-toggle svg { width: 18px; height: 18px; }
+.theme-toggle .moon-icon { display: none; }
+.theme-toggle .sun-icon { display: block; }
+[data-theme="dark"] .theme-toggle .moon-icon { display: block; }
+[data-theme="dark"] .theme-toggle .sun-icon { display: none; }
