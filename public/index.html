@@ -1481,5 +1481,80 @@ footer {
   });
 </script>
 
+<script>
+// Personalize ticker with the visitor's city → Canadian destinations
+(async function personalizeTicker(){
+  const CA_CITIES = ['Toronto','Vancouver','Montreal','Calgary','Ottawa','Edmonton','Halifax','Winnipeg','Québec City','Victoria','Saskatoon','St. John\'s'];
+  const COUNTRY_CITIES = {
+    US: ['New York','Los Angeles','Chicago','San Francisco','Boston','Seattle','Miami','Austin','Denver','Portland'],
+    GB: ['London','Manchester','Edinburgh','Glasgow','Birmingham','Bristol','Liverpool','Leeds'],
+    AU: ['Sydney','Melbourne','Brisbane','Perth','Adelaide'],
+    NZ: ['Auckland','Wellington','Christchurch'],
+    DE: ['Berlin','Munich','Hamburg','Frankfurt','Cologne','Stuttgart'],
+    FR: ['Paris','Lyon','Marseille','Toulouse','Nice','Bordeaux'],
+    ES: ['Madrid','Barcelona','Valencia','Seville','Bilbao'],
+    IT: ['Rome','Milan','Florence','Naples','Venice','Bologna'],
+    NL: ['Amsterdam','Rotterdam','The Hague','Utrecht'],
+    BE: ['Brussels','Antwerp','Ghent'],
+    IE: ['Dublin','Cork','Galway'],
+    CH: ['Zürich','Geneva','Basel','Bern'],
+    AT: ['Vienna','Salzburg','Innsbruck'],
+    SE: ['Stockholm','Gothenburg','Malmö'],
+    NO: ['Oslo','Bergen','Trondheim'],
+    DK: ['Copenhagen','Aarhus'],
+    FI: ['Helsinki','Tampere'],
+    PT: ['Lisbon','Porto'],
+    GR: ['Athens','Thessaloniki'],
+    PL: ['Warsaw','Kraków','Gdańsk'],
+    CZ: ['Prague','Brno'],
+    HU: ['Budapest'],
+    JP: ['Tokyo','Osaka','Kyoto','Yokohama','Fukuoka','Sapporo'],
+    KR: ['Seoul','Busan'],
+    CN: ['Beijing','Shanghai','Shenzhen','Guangzhou','Chengdu'],
+    TW: ['Taipei','Kaohsiung'],
+    HK: ['Hong Kong'],
+    SG: ['Singapore'],
+    TH: ['Bangkok','Chiang Mai','Phuket'],
+    VN: ['Hanoi','Ho Chi Minh City','Da Nang'],
+    PH: ['Manila','Cebu'],
+    ID: ['Jakarta','Bali','Surabaya'],
+    MY: ['Kuala Lumpur','Penang'],
+    IN: ['Mumbai','Delhi','Bangalore','Chennai','Hyderabad'],
+    AE: ['Dubai','Abu Dhabi'],
+    IL: ['Tel Aviv','Jerusalem','Haifa'],
+    ZA: ['Cape Town','Johannesburg','Durban'],
+    EG: ['Cairo','Alexandria'],
+    KE: ['Nairobi','Mombasa'],
+    NG: ['Lagos','Abuja'],
+    BR: ['São Paulo','Rio de Janeiro','Brasília'],
+    AR: ['Buenos Aires','Córdoba'],
+    MX: ['Mexico City','Guadalajara','Monterrey'],
+    CL: ['Santiago','Valparaíso'],
+    CO: ['Bogotá','Medellín'],
+    PE: ['Lima','Cusco'],
+    TR: ['Istanbul','Ankara','İzmir'],
+  };
+  try {
+    const r = await fetch('https://ipapi.co/json/', { cache: 'force-cache' });
+    if (!r.ok) return;
+    const data = await r.json();
+    const cc = data.country_code;
+    if (!cc || cc === 'CA') return;
+    const sources = COUNTRY_CITIES[cc] || (data.city ? [data.city] : null);
+    if (!sources?.length) return;
+    const verbs = ['Letters', 'Tax forms', 'Birthday cards', 'Legal notices', 'Postcards', 'Care packages'];
+    const items = [];
+    for (let i = 0; i < 6; i++) {
+      const from = sources[i % sources.length];
+      const to   = CA_CITIES[Math.floor(Math.random() * CA_CITIES.length)];
+      items.push(`${verbs[i % verbs.length]} from ${from} to ${to}`);
+    }
+    const track = document.querySelector('.ticker-track');
+    if (!track) return;
+    track.innerHTML = [...items, ...items].map(t => `<span>${t}</span>`).join('');
+  } catch {}
+})();
+</script>
+
 </body>
 </html>
