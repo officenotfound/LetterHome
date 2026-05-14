@@ -75,6 +75,42 @@ textarea:focus {
 /* Field hints — use slightly better-contrast faint color */
 .field-note { color: var(--ink-faint); font-size: 12.5px; }
 
+/* ── Dark mode: fix sections that use --ink as a dark background ────────────
+   In dark mode --ink flips to #ede1c5 (light cream). Every section that was
+   intentionally dark must be pinned to a dark value, and any hardcoded
+   rgba(250,246,236,...) text colours inside them must be corrected too.     */
+
+/* Story band — index.html and about.html */
+[data-theme="dark"] .story              { background: var(--kraft-deep); color: var(--ink); }
+[data-theme="dark"] .story-quote        { color: var(--ink); }
+[data-theme="dark"] .manifesto p        { color: var(--ink); }
+
+/* Scrolling ticker */
+[data-theme="dark"] .ticker             { background: var(--kraft-deep); color: var(--ink); }
+
+/* Featured price card */
+[data-theme="dark"] .price-card.featured                             { background: var(--kraft-deep); color: var(--ink); }
+[data-theme="dark"] .price-card.featured h3,
+[data-theme="dark"] .price-card.featured .price                      { color: var(--ink); }
+[data-theme="dark"] .price-card.featured .price-sub,
+[data-theme="dark"] .price-card.featured .price-meta,
+[data-theme="dark"] .price-card.featured .price small                { color: var(--ink-muted); }
+[data-theme="dark"] .price-card.featured .price-includes li          { color: var(--ink-soft); border-bottom-color: rgba(237,225,197,0.12); }
+
+/* Order summary (send page) */
+[data-theme="dark"] .order-summary                                   { background: var(--kraft-deep); color: var(--ink); }
+[data-theme="dark"] .order-summary-row .label                        { color: var(--ink-muted); }
+[data-theme="dark"] .order-summary-row .val                          { color: var(--ink); }
+
+/* Footer — appears on every page */
+[data-theme="dark"] footer                                           { background: var(--kraft-deep); color: var(--ink-muted); }
+[data-theme="dark"] .footer-brand p                                  { color: var(--ink-muted); }
+[data-theme="dark"] .footer-col h4                                   { color: var(--ink-soft); }
+[data-theme="dark"] .footer-col a                                    { color: var(--ink-muted); }
+[data-theme="dark"] .footer-bottom                                   { color: var(--ink-faint); }
+[data-theme="dark"] .footer-bottom a,
+[data-theme="dark"] .footer-bottom-links a                           { color: var(--ink-faint); }
+
 /* ── Theme toggle button ──────────────────────────────────────────────────── */
 .theme-toggle {
   display: inline-flex;
