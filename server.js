@@ -13,7 +13,7 @@ const cron      = require('node-cron');
 const { DatabaseSync: Database } = require('node:sqlite');
 const path = require('path');
 const fs   = require('fs');
-const { randomUUID } = require('node:crypto');
+const { randomUUID, createHmac } = require('node:crypto');
 
 fs.mkdirSync('uploads', { recursive: true });
 fs.mkdirSync('orders',  { recursive: true });
@@ -153,6 +153,7 @@ try { db.exec(`ALTER TABLE customers ADD COLUMN sender_postal TEXT`);  } catch {
 try { db.exec(`ALTER TABLE customers ADD COLUMN sender_country TEXT`); } catch {}
 try { db.exec(`ALTER TABLE customers ADD COLUMN password_hash TEXT`);         } catch {}
 try { db.exec(`ALTER TABLE customers ADD COLUMN account_created_at DATETIME`);} catch {}
+try { db.exec(`ALTER TABLE customers ADD COLUMN unsubscribed_at DATETIME`);   } catch {}
 try {
   db.exec(`CREATE TABLE IF NOT EXISTS saved_recipients (
     id                 INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -401,6 +402,15 @@ async function lookupCountry(ip) {
   return null;
 }
 
+function unsubscribeToken(email) {
+  const key = process.env.SESSION_SECRET || 'unsubscribe-fallback-key';
+  return createHmac('sha256', key).update(String(email).toLowerCase()).digest('hex').slice(0, 24);
+}
+function unsubscribeLink(email) {
+  const base = process.env.BASE_URL || '';
+  return `${base}/unsubscribe?email=${encodeURIComponent(email)}&token=${unsubscribeToken(email)}`;
+}
+
 function validateCustomerPassword(pwd) {
   if (!pwd || pwd.length < 8)          return 'Password must be at least 8 characters.';
   if (!/[A-Za-z]/.test(pwd))           return 'Password must include at least one letter.';
@@ -608,6 +618,55 @@ app.get('/account/:page', (req, res) => res.sendFile(path.join(__dirname, 'publi
 
 app.get('/faq', (req, res) => res.redirect('/#faq'));
 
+function unsubPage(state, email = '') {
+  const safeEmail = String(email).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const headings = {
+    invalid:    { title: 'Invalid unsubscribe link', body: "We couldn't verify this unsubscribe link. It may be malformed, or copied incompletely from an email. If you want to opt out, reply to any email from us and we'll handle it manually." },
+    confirm:    { title: 'Unsubscribe from Letterhome emails?', body: `We'll stop sending marketing or update emails to <strong>${safeEmail}</strong>. You'll still receive transactional messages tied to orders you place (payment confirmations, status updates).` },
+    done:       { title: "You've been unsubscribed.", body: `We've removed <strong>${safeEmail}</strong> from our marketing list. You won't receive any more update emails from us. If you change your mind, email <a href="mailto:hello@letterhome.ca">hello@letterhome.ca</a>.` },
+    already:    { title: "Already unsubscribed.", body: `<strong>${safeEmail}</strong> is already opted out of our marketing emails.` },
+  }[state];
+  const action = state === 'confirm' ? `
+    <form method="POST" action="/unsubscribe" style="margin-top:24px">
+      <input type="hidden" name="email" value="${safeEmail}">
+      <input type="hidden" name="token" value="${unsubscribeToken(email)}">
+      <button type="submit" style="background:#a8472d;color:#faf6ec;border:none;padding:14px 28px;font-size:14px;font-weight:500;letter-spacing:0.02em;text-transform:uppercase;border-radius:2px;cursor:pointer;font-family:inherit">Confirm Unsubscribe</button>
+    </form>` : '';
+  return `<!DOCTYPE html><html lang="en-CA"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>${headings.title} — Letterhome</title>
+<meta name="robots" content="noindex,nofollow">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Source+Serif+4:wght@400;500&display=swap" rel="stylesheet">
+<style>body{font-family:'Source Serif 4',Georgia,serif;background:#f1ebde;color:#2a2a2a;margin:0;padding:80px 24px;line-height:1.6}
+.box{max-width:520px;margin:0 auto;background:#faf6ec;border:1px solid rgba(42,42,42,0.14);padding:48px 40px;border-radius:2px;box-shadow:0 2px 6px rgba(42,42,42,0.06)}
+h1{font-family:'DM Serif Display',serif;font-size:32px;font-weight:400;margin:0 0 16px;letter-spacing:-0.02em}
+p{color:#6b6258;font-size:16px;margin:0}
+a{color:#a8472d}</style></head><body>
+<div class="box"><h1>${headings.title}</h1><p>${headings.body}</p>${action}
+<p style="margin-top:32px;font-size:13px"><a href="/">← Back to Letterhome</a></p></div></body></html>`;
+}
+
+app.get('/unsubscribe', (req, res) => {
+  const email = (req.query.email || '').toString().trim().toLowerCase();
+  const token = (req.query.token || '').toString();
+  if (!email || token !== unsubscribeToken(email)) return res.status(400).send(unsubPage('invalid'));
+  const row = db.prepare('SELECT unsubscribed_at FROM customers WHERE email = ?').get(email);
+  if (row?.unsubscribed_at) return res.send(unsubPage('already', email));
+  res.send(unsubPage('confirm', email));
+});
+
+app.post('/unsubscribe', (req, res) => {
+  const email = (req.body.email || '').toString().trim().toLowerCase();
+  const token = (req.body.token || '').toString();
+  if (!email || token !== unsubscribeToken(email)) return res.status(400).send(unsubPage('invalid'));
+  const existing = db.prepare('SELECT email FROM customers WHERE email = ?').get(email);
+  if (existing) {
+    db.prepare('UPDATE customers SET unsubscribed_at = CURRENT_TIMESTAMP WHERE email = ? AND unsubscribed_at IS NULL').run(email);
+  } else {
+    db.prepare('INSERT INTO customers (email, unsubscribed_at) VALUES (?, CURRENT_TIMESTAMP)').run(email);
+  }
+  res.send(unsubPage('done', email));
+});
+
 app.get('/status/:token', (req, res) => {
   const order = db.prepare("SELECT * FROM orders WHERE status_token = ? AND deleted_at IS NULL").get(req.params.token);
   if (!order || order.status === 'awaiting_payment') return res.status(404).send(buildStatusNotFound());
@@ -749,6 +808,14 @@ const accountLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many attempts. Please try again later.' },
+});
+
+const trackLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many tracking requests. Please try again in a few minutes.' },
 });
 
 function requireAdmin(req, res, next) {
@@ -909,7 +976,7 @@ app.get('/api/order-status', (req, res) => {
 });
 
 // ── Order tracking ────────────────────────────────────────────────────────────
-app.post('/api/track', (req, res) => {
+app.post('/api/track', trackLimiter, (req, res) => {
   const { email, order_id } = req.body;
   if (!email || !order_id) return res.status(400).json({ error: 'Email and order ID are required.' });
 
@@ -1412,20 +1479,31 @@ app.post('/api/admin/broadcast', requireAdmin, async (req, res) => {
     const manual    = db.prepare(`SELECT email FROM customers WHERE deleted_at IS NULL`).all().map(r => r.email);
     recipients = Array.from(new Set([...fromOrders, ...manual]));
   }
-  if (!recipients.length) return res.status(400).json({ error: 'No recipients match.' });
+
+  // Filter out unsubscribed customers (CASL compliance)
+  const unsubed = new Set(
+    db.prepare(`SELECT email FROM customers WHERE unsubscribed_at IS NOT NULL`).all().map(r => r.email)
+  );
+  const skipped = recipients.length;
+  recipients = recipients.filter(e => !unsubed.has(e));
+  if (!recipients.length) return res.status(400).json({ error: 'No recipients match (everyone has unsubscribed or no one matches).' });
 
   // Send in background — don't block the response. Throttle ~1/sec to be nice to SMTP.
-  logAudit(req, 'broadcast.send', 'broadcast', tag || 'all', { subject, recipients: recipients.length });
-  res.json({ ok: true, sentTo: recipients.length });
+  logAudit(req, 'broadcast.send', 'broadcast', tag || 'all', { subject, recipients: recipients.length, skipped_unsubscribed: skipped - recipients.length });
+  res.json({ ok: true, sentTo: recipients.length, skippedUnsubscribed: skipped - recipients.length });
   (async () => {
     for (const email of recipients) {
       try {
+        const link = unsubscribeLink(email);
         await sendMail({
           from:    process.env.EMAIL_FROM,
           to:      email,
           replyTo: process.env.OPERATOR_EMAIL,
           subject: subject.trim(),
-          text:    body.trim() + '\n\n---\nTo stop receiving these, reply with "unsubscribe".',
+          text:    body.trim() +
+            '\n\n— Letterhome' +
+            `\nYou're receiving this because you've placed an order with us. To stop receiving update emails, visit:\n${link}`,
+          headers: { 'List-Unsubscribe': `<${link}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' },
         }, 'broadcast');
       } catch (err) { console.error('Broadcast to', email, 'failed:', err.message); }
       await new Promise(r => setTimeout(r, 1000));
@@ -1436,14 +1514,18 @@ app.post('/api/admin/broadcast', requireAdmin, async (req, res) => {
 // Preview broadcast recipient count
 app.get('/api/admin/broadcast/preview', requireAdmin, (req, res) => {
   const { tag } = req.query;
+  const unsubed = new Set(db.prepare(`SELECT email FROM customers WHERE unsubscribed_at IS NOT NULL`).all().map(r => r.email));
+  let emails;
   if (tag) {
-    const count = db.prepare(`SELECT COUNT(DISTINCT customer_email) as n FROM customer_tags WHERE tag = ?`).get(String(tag).toLowerCase()).n;
-    res.json({ count });
+    emails = db.prepare(`SELECT DISTINCT customer_email AS email FROM customer_tags WHERE tag = ?`).all(String(tag).toLowerCase()).map(r => r.email);
   } else {
-    const a = db.prepare(`SELECT COUNT(DISTINCT customer_email) as n FROM orders WHERE deleted_at IS NULL AND status != 'awaiting_payment'`).get().n;
-    const b = db.prepare(`SELECT COUNT(*) as n FROM customers WHERE deleted_at IS NULL`).get().n;
-    res.json({ count: a + b });
+    const fromOrders = db.prepare(`SELECT DISTINCT customer_email AS email FROM orders WHERE deleted_at IS NULL AND status != 'awaiting_payment'`).all().map(r => r.email);
+    const manual    = db.prepare(`SELECT email FROM customers WHERE deleted_at IS NULL`).all().map(r => r.email);
+    emails = Array.from(new Set([...fromOrders, ...manual]));
   }
+  const total = emails.length;
+  const willSend = emails.filter(e => !unsubed.has(e)).length;
+  res.json({ count: willSend, total, unsubscribed: total - willSend });
 });
 
 // List all unique tags (for broadcast UI)

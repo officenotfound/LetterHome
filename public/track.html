@@ -125,6 +125,10 @@ footer{background:var(--ink);color:rgba(250,246,236,0.65);padding:48px 36px 32px
 <script>
 const countryNames = { CA:'Canada', US:'United States', GB:'United Kingdom', AU:'Australia', NZ:'New Zealand', FR:'France', DE:'Germany', JP:'Japan', MX:'Mexico' };
 
+function esc(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
 document.getElementById('track-form').addEventListener('submit', async function(e) {
   e.preventDefault();
   const btn = document.getElementById('track-btn');
@@ -152,11 +156,11 @@ document.getElementById('track-form').addEventListener('submit', async function(
 
     document.getElementById('result-status').textContent = data.statusText;
     document.getElementById('result-details').innerHTML = `
-      <div class="detail-row"><span class="label">Order</span><span class="val">#${data.orderId}</span></div>
-      <div class="detail-row"><span class="label">Recipient</span><span class="val">${data.recipientName}</span></div>
-      <div class="detail-row"><span class="label">Destination</span><span class="val">${dest}</span></div>
-      <div class="detail-row"><span class="label">Expected delivery</span><span class="val">${delivery} after mailing</span></div>
-      <div class="detail-row"><span class="label">Order date</span><span class="val">${date}</span></div>
+      <div class="detail-row"><span class="label">Order</span><span class="val">#${esc(data.orderId)}</span></div>
+      <div class="detail-row"><span class="label">Recipient</span><span class="val">${esc(data.recipientName)}</span></div>
+      <div class="detail-row"><span class="label">Destination</span><span class="val">${esc(dest)}</span></div>
+      <div class="detail-row"><span class="label">Expected delivery</span><span class="val">${esc(delivery)} after mailing</span></div>
+      <div class="detail-row"><span class="label">Order date</span><span class="val">${esc(date)}</span></div>
     `;
     document.getElementById('result').style.display = 'block';
     document.querySelector('.form-card').style.display = 'none';
