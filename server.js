@@ -1822,6 +1822,17 @@ app.post('/api/contact', contactLimiter, async (req, res) => {
     text:    `From: ${name} <${email}>\n\n${message}`,
   }, 'contact_notification');
 
+  const awayOn  = getSetting('away_mode') === 'true';
+  const awayMsg = getSetting('away_message') || "Thanks for reaching out — I'm currently away and will get back to you as soon as possible.";
+  if (awayOn) {
+    await sendMail({
+      from:    process.env.EMAIL_FROM,
+      to:      email,
+      subject: 'We received your message — Letterhome',
+      text:    `Hi ${String(name).split(' ')[0]},\n\n${awayMsg}\n\n— Letterhome`,
+    }, 'away_autoreply');
+  }
+
   res.json({ ok: true });
 });
 
