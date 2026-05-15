@@ -13,7 +13,7 @@ const cron      = require('node-cron');
 const { DatabaseSync: Database } = require('node:sqlite');
 const path = require('path');
 const fs   = require('fs');
-const { randomUUID, createHmac } = require('node:crypto');
+const { randomUUID, createHmac, createHash, createCipheriv, scryptSync, randomBytes, timingSafeEqual } = require('node:crypto');
 
 fs.mkdirSync('uploads', { recursive: true });
 fs.mkdirSync('orders',  { recursive: true });
@@ -65,6 +65,23 @@ app.use(helmet({
     ? { maxAge: 31536000, includeSubDomains: true }
     : false,
 }));
+
+// Prevent caching of authenticated pages and admin/account APIs so they
+// can't be revealed via the back button or shared-browser scenarios.
+app.use((req, res, next) => {
+  const p = req.path;
+  if (
+    p.startsWith('/admin') ||
+    p.startsWith('/account') ||
+    p.startsWith('/api/admin') ||
+    p.startsWith('/api/account')
+  ) {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    res.setHeader('Pragma',        'no-cache');
+    res.setHeader('Expires',       '0');
+  }
+  next();
+});
 
 // ── Database ──────────────────────────────────────────────────────────────────
 const db = new Database('orders.db', { allowBareNamedParameters: true });
@@ -409,6 +426,81 @@ function unsubscribeToken(email) {
 function unsubscribeLink(email) {
   const base = process.env.BASE_URL || '';
   return `${base}/unsubscribe?email=${encodeURIComponent(email)}&token=${unsubscribeToken(email)}`;
+}
+
+// Have-I-Been-Pwned k-anonymity check. Fail-open if the API is down.
+async function isPasswordBreached(password) {
+  try {
+    const sha1 = createHash('sha1').update(password).digest('hex').toUpperCase();
+    const prefix = sha1.slice(0, 5);
+    const suffix = sha1.slice(5);
+    const r = await fetch(`https://api.pwnedpasswords.com/range/${prefix}`, {
+      signal: AbortSignal.timeout(2500),
+      headers: { 'User-Agent': 'Letterhome', 'Add-Padding': 'true' },
+    });
+    if (!r.ok) return false;
+    const text = await r.text();
+    return text.split('\n').some(line => line.split(':')[0].trim() === suffix);
+  } catch { return false; }
+}
+
+// Password reset tokens bind to the current password_hash so they invalidate
+// the moment the password changes.
+function passwordResetToken(email, currentHash) {
+  const ts = Date.now();
+  const key = process.env.SESSION_SECRET || 'reset-fallback-key';
+  const data = `${String(email).toLowerCase()}.${ts}.${currentHash || ''}.reset`;
+  const hmac = createHmac('sha256', key).update(data).digest('hex');
+  return `${ts}.${hmac}`;
+}
+function verifyPasswordResetToken(email, currentHash, token, maxAgeMs = 30 * 60 * 1000) {
+  const [tsStr, hmac] = String(token || '').split('.');
+  const ts = Number(tsStr);
+  if (!ts || !hmac) return false;
+  if (Date.now() - ts > maxAgeMs) return false;
+  const key = process.env.SESSION_SECRET || 'reset-fallback-key';
+  const data = `${String(email).toLowerCase()}.${ts}.${currentHash || ''}.reset`;
+  const expected = createHmac('sha256', key).update(data).digest('hex');
+  try { return timingSafeEqual(Buffer.from(hmac, 'hex'), Buffer.from(expected, 'hex')); }
+  catch { return false; }
+}
+
+// Failed admin-login tracking (in-memory, resets on restart)
+const failedAdminLogins = new Map(); // ip -> [timestamps]
+let lastFailedLoginAlertAt = 0;
+function recordFailedAdminLogin(ip, username) {
+  const now = Date.now();
+  const winMs = 60 * 60 * 1000;
+  const list = (failedAdminLogins.get(ip) || []).filter(t => now - t < winMs);
+  list.push(now);
+  failedAdminLogins.set(ip, list);
+  if (list.length >= 5 && now - lastFailedLoginAlertAt > 30 * 60 * 1000) {
+    lastFailedLoginAlertAt = now;
+    const adminEmail = process.env.ADMIN_EMAIL || process.env.SMTP_USER;
+    if (adminEmail) {
+      sendMail({
+        from:    process.env.EMAIL_FROM,
+        to:      adminEmail,
+        subject: '[Letterhome] Multiple failed admin login attempts',
+        text:    `${list.length} failed admin login attempts in the last hour from IP ${ip}.\n` +
+                 `Last attempted username: ${username || '(blank)'}\n\n` +
+                 `If this is you, you can ignore this. Otherwise consider blocking this IP at Cloudflare.\n\n` +
+                 `Time: ${new Date(now).toISOString()}`,
+      }, 'failed_login_alert').catch(() => {});
+    }
+  }
+}
+
+// Encrypted backup helpers. Format: salt(16) || iv(12) || authTag(16) || ciphertext.
+function encryptFile(srcPath, destPath, passphrase) {
+  const salt = randomBytes(16);
+  const iv   = randomBytes(12);
+  const key  = scryptSync(passphrase, salt, 32);
+  const cipher = createCipheriv('aes-256-gcm', key, iv);
+  const plain  = fs.readFileSync(srcPath);
+  const cipherText = Buffer.concat([cipher.update(plain), cipher.final()]);
+  const authTag = cipher.getAuthTag();
+  fs.writeFileSync(destPath, Buffer.concat([salt, iv, authTag, cipherText]));
 }
 
 function validateCustomerPassword(pwd) {
@@ -818,8 +910,19 @@ const trackLimiter = rateLimit({
   message: { error: 'Too many tracking requests. Please try again in a few minutes.' },
 });
 
+const ADMIN_SESSION_MAX_AGE_MS = 12 * 60 * 60 * 1000;
 function requireAdmin(req, res, next) {
-  if (req.session?.admin) return next();
+  if (req.session?.admin) {
+    const loginAt = req.session.admin.loginAt || 0;
+    if (Date.now() - loginAt > ADMIN_SESSION_MAX_AGE_MS) {
+      delete req.session.admin;
+      return req.session.save(() => {
+        if (req.path.startsWith('/api/')) return res.status(401).json({ error: 'Session expired. Please sign in again.' });
+        res.redirect('/admin/login');
+      });
+    }
+    return next();
+  }
   if (req.path.startsWith('/api/')) return res.status(401).json({ error: 'Unauthorized' });
   res.redirect('/admin/login');
 }
@@ -1011,11 +1114,15 @@ app.get('/admin/login', (req, res) => {
 
 app.post('/admin/login', loginLimiter, async (req, res) => {
   const { username, password, code } = req.body;
+  const ip = getClientIp(req);
   const validUser = username === process.env.ADMIN_USERNAME;
   const validPass = process.env.ADMIN_PASSWORD_HASH
     ? await bcrypt.compare(password || '', process.env.ADMIN_PASSWORD_HASH)
     : false;
-  if (!validUser || !validPass) return res.redirect('/admin/login?error=1');
+  if (!validUser || !validPass) {
+    recordFailedAdminLogin(ip, username);
+    return res.redirect('/admin/login?error=1');
+  }
 
   if (process.env.TOTP_SECRET) {
     if (!code) return res.redirect('/admin/login?error=2fa');
@@ -1023,13 +1130,15 @@ app.post('/admin/login', loginLimiter, async (req, res) => {
       issuer: 'Letterhome Admin', label: 'admin',
       secret: Secret.fromBase32(process.env.TOTP_SECRET),
     });
-    if (totp.validate({ token: code.replace(/\s/g,''), window: 1 }) === null)
+    if (totp.validate({ token: code.replace(/\s/g,''), window: 1 }) === null) {
+      recordFailedAdminLogin(ip, username);
       return res.redirect('/admin/login?error=2fa');
+    }
   }
 
   req.session.regenerate(err => {
     if (err) return res.status(500).send('Session error');
-    req.session.admin = { username };
+    req.session.admin = { username, loginAt: Date.now() };
     req.session.save(err2 => {
       if (err2) return res.status(500).send('Session error');
       res.redirect('/admin');
@@ -1377,6 +1486,21 @@ app.get('/api/admin/customers/:email', requireAdmin, (req, res) => {
   });
 });
 
+app.get('/api/admin/audit-log', requireAdmin, (req, res) => {
+  const limit  = Math.min(500, Math.max(1, Number(req.query.limit) || 200));
+  const search = (req.query.search || '').toString().trim();
+  const action = (req.query.action || '').toString().trim();
+  let where = [], params = [];
+  if (search) {
+    where.push('(actor LIKE ? OR action LIKE ? OR target_id LIKE ? OR ip LIKE ?)');
+    params.push(`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`);
+  }
+  if (action) { where.push('action LIKE ?'); params.push(`${action}%`); }
+  const sql = `SELECT * FROM audit_log ${where.length ? 'WHERE ' + where.join(' AND ') : ''} ORDER BY id DESC LIMIT ?`;
+  params.push(limit);
+  res.json(db.prepare(sql).all(...params));
+});
+
 app.get('/api/admin/accounts', requireAdmin, (req, res) => {
   const accounts = db.prepare(`
     SELECT c.email, c.display_name, c.account_created_at,
@@ -1401,6 +1525,14 @@ app.post('/api/admin/customers/:email/reset-password', requireAdmin, async (req,
   const hash = await bcrypt.hash(new_password, 12);
   db.prepare('UPDATE customers SET password_hash = ? WHERE email = ?').run(hash, email);
   logAudit(req, 'customer.password_reset', 'customer', email);
+  sendMail({
+    from:    process.env.EMAIL_FROM,
+    to:      email,
+    subject: 'Your Letterhome password was reset by support',
+    text:    `Hi,\n\nA Letterhome administrator has reset the password on your account at your request.\n\n` +
+             `Your new password has been shared with you separately. After signing in, you can change it from your account page: ${process.env.BASE_URL}/account\n\n` +
+             `If you did NOT request this, contact us immediately at ${process.env.OPERATOR_EMAIL || 'hello@letterhome.ca'}.\n\n— Letterhome`,
+  }, 'password_reset_admin').catch(() => {});
   res.json({ ok: true });
 });
 
@@ -2010,8 +2142,25 @@ app.post('/api/account/register', accountLimiter, async (req, res) => {
     const pwErr = validateCustomerPassword(password);
     if (pwErr) return res.status(400).json({ error: pwErr });
 
+    if (await isPasswordBreached(password)) {
+      return res.status(400).json({ error: "This password has appeared in known data breaches. Please choose a different one — your security matters." });
+    }
+
     const existing = db.prepare('SELECT email, password_hash FROM customers WHERE email = ?').get(email);
-    if (existing?.password_hash) return res.status(400).json({ error: 'An account with this email already exists.' });
+    if (existing?.password_hash) {
+      // Don't reveal that the email is taken. Notify the rightful owner instead
+      // and return the same shape we'd return on a successful new registration.
+      sendMail({
+        from:    process.env.EMAIL_FROM,
+        to:      email,
+        subject: 'Account already exists — Letterhome',
+        text:    `Hi,\n\nSomeone (possibly you) just tried to register a Letterhome account using this email address. ` +
+                 `An account already exists, so we didn't create a duplicate.\n\n` +
+                 `If this was you:\n  • Sign in: ${process.env.BASE_URL}/account/login\n  • Forgot your password? ${process.env.BASE_URL}/account/forgot\n\n` +
+                 `If this wasn't you, no action is needed — your account is safe.\n\n— Letterhome`,
+      }, 'register_collision').catch(() => {});
+      return res.json({ ok: true });
+    }
 
     const hash = await bcrypt.hash(password, 12);
     if (existing) {
@@ -2065,6 +2214,68 @@ app.post('/api/account/logout', (req, res) => {
   req.session.save(() => res.json({ ok: true }));
 });
 
+app.post('/api/account/forgot', accountLimiter, async (req, res) => {
+  try {
+    const email = (req.body.email || '').trim().toLowerCase();
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      // Same generic response regardless to prevent enumeration.
+      return res.json({ ok: true });
+    }
+    const customer = db.prepare('SELECT email, password_hash FROM customers WHERE email = ? AND deleted_at IS NULL').get(email);
+    if (customer?.password_hash) {
+      const token = passwordResetToken(email, customer.password_hash);
+      const link  = `${process.env.BASE_URL}/account/reset?email=${encodeURIComponent(email)}&token=${encodeURIComponent(token)}`;
+      sendMail({
+        from:    process.env.EMAIL_FROM,
+        to:      email,
+        subject: 'Reset your Letterhome password',
+        text:    `Hi,\n\nWe received a request to reset your Letterhome password. Click the link below within the next 30 minutes to set a new one:\n\n${link}\n\n` +
+                 `If you didn't request this, you can safely ignore this email — your password won't change.\n\n— Letterhome`,
+      }, 'password_reset_request').catch(() => {});
+    }
+    // Always succeed regardless of whether the account exists.
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('[account/forgot]', e.message);
+    res.json({ ok: true });
+  }
+});
+
+app.post('/api/account/reset-password', accountLimiter, async (req, res) => {
+  try {
+    const email    = (req.body.email || '').trim().toLowerCase();
+    const token    = req.body.token || '';
+    const password = req.body.new_password || '';
+    if (!email || !token || !password) return res.status(400).json({ error: 'Missing required fields.' });
+
+    const customer = db.prepare('SELECT email, password_hash FROM customers WHERE email = ? AND deleted_at IS NULL').get(email);
+    if (!customer?.password_hash) return res.status(400).json({ error: 'This reset link is no longer valid.' });
+    if (!verifyPasswordResetToken(email, customer.password_hash, token)) {
+      return res.status(400).json({ error: 'This reset link is invalid or has expired. Please request a new one.' });
+    }
+
+    const pwErr = validateCustomerPassword(password);
+    if (pwErr) return res.status(400).json({ error: pwErr });
+    if (await isPasswordBreached(password)) {
+      return res.status(400).json({ error: "This password has appeared in known data breaches. Please choose a different one." });
+    }
+
+    const hash = await bcrypt.hash(password, 12);
+    db.prepare('UPDATE customers SET password_hash = ? WHERE email = ?').run(hash, email);
+    sendMail({
+      from:    process.env.EMAIL_FROM,
+      to:      email,
+      subject: 'Your Letterhome password was reset',
+      text:    `Hi,\n\nYour Letterhome account password was just reset using the forgot-password link.\n\n` +
+               `If this wasn't you, contact us immediately at ${process.env.OPERATOR_EMAIL || 'hello@letterhome.ca'}.\n\n— Letterhome`,
+    }, 'password_reset_completed').catch(() => {});
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('[account/reset-password]', e.message);
+    res.status(500).json({ error: 'Could not reset password.' });
+  }
+});
+
 app.get('/api/account/me', requireCustomer, (req, res) => {
   const email = req.session.customer.email;
   const customer = db.prepare(
@@ -2112,17 +2323,34 @@ app.delete('/api/account/recipients/:id', requireCustomer, (req, res) => {
 });
 
 app.put('/api/account/password', requireCustomer, accountLimiter, async (req, res) => {
-  const email = req.session.customer.email;
-  const { current_password, new_password } = req.body;
-  const customer = db.prepare('SELECT password_hash FROM customers WHERE email = ?').get(email);
-  if (!customer?.password_hash) return res.status(400).json({ error: 'No password set on this account.' });
-  const match = await bcrypt.compare(current_password || '', customer.password_hash);
-  if (!match) return res.status(401).json({ error: 'Current password is incorrect.' });
-  const pwErr = validateCustomerPassword(new_password);
-  if (pwErr) return res.status(400).json({ error: pwErr });
-  const hash = await bcrypt.hash(new_password, 12);
-  db.prepare('UPDATE customers SET password_hash = ? WHERE email = ?').run(hash, email);
-  res.json({ ok: true });
+  try {
+    const email = req.session.customer.email;
+    const { current_password, new_password } = req.body;
+    const customer = db.prepare('SELECT password_hash FROM customers WHERE email = ?').get(email);
+    if (!customer?.password_hash) return res.status(400).json({ error: 'No password set on this account.' });
+    const match = await bcrypt.compare(current_password || '', customer.password_hash);
+    if (!match) return res.status(401).json({ error: 'Current password is incorrect.' });
+    const pwErr = validateCustomerPassword(new_password);
+    if (pwErr) return res.status(400).json({ error: pwErr });
+    if (await isPasswordBreached(new_password)) {
+      return res.status(400).json({ error: "This password has appeared in known data breaches. Please choose a different one." });
+    }
+    const hash = await bcrypt.hash(new_password, 12);
+    db.prepare('UPDATE customers SET password_hash = ? WHERE email = ?').run(hash, email);
+    sendMail({
+      from:    process.env.EMAIL_FROM,
+      to:      email,
+      subject: 'Your Letterhome password was changed',
+      text:    `Hi,\n\nYour Letterhome account password was just changed.\n\n` +
+               `If this was you, no action is needed.\n\n` +
+               `If you did NOT change your password, contact us immediately at ${process.env.OPERATOR_EMAIL || 'hello@letterhome.ca'} ` +
+               `and reset your password at ${process.env.BASE_URL}/account/forgot\n\n— Letterhome`,
+    }, 'password_changed').catch(() => {});
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('[account/password]', e.message);
+    res.status(500).json({ error: 'Could not change password.' });
+  }
 });
 
 // ── Order fulfilment ──────────────────────────────────────────────────────────
@@ -2646,19 +2874,47 @@ const BACKUP_KEEP     = 14;
 function runBackup() {
   try {
     const ts   = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-    const dest = path.join(BACKUP_DIR, `orders-${ts}.db`);
-    fs.copyFileSync('orders.db', dest);
+    const passphrase = process.env.BACKUP_PASSPHRASE;
+    const ext  = passphrase ? '.db.enc' : '.db';
+    const dest = path.join(BACKUP_DIR, `orders-${ts}${ext}`);
 
-    // Prune old backups — keep newest BACKUP_KEEP files
+    if (passphrase) {
+      encryptFile('orders.db', dest, passphrase);
+    } else {
+      fs.copyFileSync('orders.db', dest);
+    }
+
+    // Prune old backups — keep newest BACKUP_KEEP files (of either format)
     const files = fs.readdirSync(BACKUP_DIR)
-      .filter(f => f.startsWith('orders-') && f.endsWith('.db'))
+      .filter(f => f.startsWith('orders-') && (f.endsWith('.db') || f.endsWith('.db.enc')))
       .map(f => ({ name: f, mtime: fs.statSync(path.join(BACKUP_DIR, f)).mtimeMs }))
       .sort((a, b) => b.mtime - a.mtime);
     files.slice(BACKUP_KEEP).forEach(f => {
       try { fs.unlinkSync(path.join(BACKUP_DIR, f.name)); } catch {}
     });
 
-    console.log(`[backup] created ${path.basename(dest)}`);
+    console.log(`[backup] created ${path.basename(dest)}${passphrase ? ' (encrypted)' : ''}`);
+
+    // Optional: email a copy to the admin (off-site safety net).
+    if (process.env.BACKUP_EMAIL_ENABLED === 'true') {
+      const stat = fs.statSync(dest);
+      const adminEmail = process.env.ADMIN_EMAIL || process.env.SMTP_USER;
+      if (stat.size > 20 * 1024 * 1024) {
+        console.warn(`[backup] email skipped: ${(stat.size/1024/1024).toFixed(1)}MB exceeds 20MB limit`);
+      } else if (!adminEmail) {
+        console.warn('[backup] email skipped: no ADMIN_EMAIL or SMTP_USER set');
+      } else {
+        sendMail({
+          from:    process.env.EMAIL_FROM,
+          to:      adminEmail,
+          subject: `[Letterhome] Backup ${ts}${passphrase ? ' (encrypted)' : ''}`,
+          text:    `Daily Letterhome backup attached. File: ${path.basename(dest)}\nSize: ${(stat.size/1024).toFixed(1)} KB\n` +
+                   (passphrase ? 'This backup is AES-256-GCM encrypted. Use scripts/decrypt-backup.js to restore.\n' : '\n'),
+          attachments: [{ filename: path.basename(dest), path: dest }],
+        }, 'backup_email').catch(err => console.error('[backup] email send failed:', err.message));
+      }
+    }
+
     return { ok: true, filename: path.basename(dest) };
   } catch (e) {
     console.error('[backup] failed:', e.message);
@@ -2676,10 +2932,10 @@ cron.schedule('0 2 * * *', () => {
 app.get('/api/admin/backups', requireAdmin, (req, res) => {
   try {
     const files = fs.readdirSync(BACKUP_DIR)
-      .filter(f => f.startsWith('orders-') && f.endsWith('.db'))
+      .filter(f => f.startsWith('orders-') && (f.endsWith('.db') || f.endsWith('.db.enc')))
       .map(f => {
         const stat = fs.statSync(path.join(BACKUP_DIR, f));
-        return { filename: f, size: stat.size, created_at: stat.mtime.toISOString() };
+        return { filename: f, size: stat.size, created_at: stat.mtime.toISOString(), encrypted: f.endsWith('.db.enc') };
       })
       .sort((a, b) => b.created_at.localeCompare(a.created_at));
     res.json(files);
@@ -2698,7 +2954,7 @@ app.post('/api/admin/backups/run', requireAdmin, (req, res) => {
 // API: download a backup
 app.get('/api/admin/backups/:filename', requireAdmin, (req, res) => {
   const filename = path.basename(req.params.filename); // strip any path traversal
-  if (!filename.startsWith('orders-') || !filename.endsWith('.db')) {
+  if (!filename.startsWith('orders-') || !(filename.endsWith('.db') || filename.endsWith('.db.enc'))) {
     return res.status(400).json({ error: 'Invalid filename' });
   }
   const filepath = path.join(BACKUP_DIR, filename);
