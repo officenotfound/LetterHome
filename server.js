@@ -2076,5 +2076,41 @@ app.use((req, res) => {
   res.status(404).sendFile(path.join(__dirname, 'public', '404.html'));
 });
 
+// ── Error monitoring ──────────────────────────────────────────────────────────
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || process.env.SMTP_USER;
+
+function sendErrorAlert(subject, body) {
+  if (!ADMIN_EMAIL) return;
+  transport.sendMail({
+    from:    process.env.SMTP_FROM || ADMIN_EMAIL,
+    to:      ADMIN_EMAIL,
+    subject: `[Letterhome Error] ${subject}`,
+    text:    body,
+  }).catch(() => {});
+}
+
+app.use((err, req, res, next) => {
+  const detail = [
+    `Method: ${req.method} ${req.originalUrl}`,
+    `IP: ${req.ip}`,
+    `Error: ${err.stack || err.message || err}`,
+  ].join('\n');
+  console.error('[express error]', detail);
+  sendErrorAlert(`Unhandled Express error on ${req.method} ${req.originalUrl}`, detail);
+  res.status(500).json({ error: 'Something went wrong. Please try again.' });
+});
+
+process.on('unhandledRejection', (reason) => {
+  const msg = reason instanceof Error ? reason.stack : String(reason);
+  console.error('[unhandledRejection]', msg);
+  sendErrorAlert('Unhandled Promise Rejection', msg);
+});
+
+process.on('uncaughtException', (err) => {
+  const msg = err.stack || err.message || String(err);
+  console.error('[uncaughtException]', msg);
+  sendErrorAlert('Uncaught Exception — process may be unstable', msg);
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Letterhome running on port ${PORT}`));
