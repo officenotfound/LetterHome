@@ -177,6 +177,18 @@ try {
   db.exec(`CREATE INDEX IF NOT EXISTS idx_page_views_country ON page_views(country_code)`);
 } catch (e) { console.error('[init] page_views table:', e.message); }
 
+try {
+  db.exec(`CREATE TABLE IF NOT EXISTS contact_submissions (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    name       TEXT NOT NULL,
+    email      TEXT NOT NULL,
+    message    TEXT NOT NULL,
+    read_at    DATETIME,
+    ip         TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  )`);
+} catch (e) { console.error('[init] contact_submissions table:', e.message); }
+
 // ── IP geolocation (server-side, in-memory cached) ───────────────────────────
 const ipCountryCache = new Map();
 const IP_CACHE_TTL_MS = 24 * 3600 * 1000;
@@ -1622,6 +1634,11 @@ app.post('/api/contact', contactLimiter, async (req, res) => {
   const { name, email, message } = req.body;
   if (!name || !email || !message) return res.status(400).json({ error: 'All fields are required.' });
 
+  try {
+    db.prepare('INSERT INTO contact_submissions (name, email, message, ip) VALUES (?,?,?,?)')
+      .run(String(name).slice(0, 200), String(email).slice(0, 200), String(message).slice(0, 5000), getClientIp(req));
+  } catch (e) { console.error('[contact] db log failed:', e.message); }
+
   await transport.sendMail({
     from:    process.env.EMAIL_FROM,
     to:      process.env.OPERATOR_EMAIL,
@@ -1890,6 +1907,170 @@ function buildOccasionReminderEmail(occ, lastOrder) {
 </body></html>`,
   };
 }
+
+// ── Admin: contact submissions ────────────────────────────────────────────────
+app.get('/api/admin/contacts/unread', requireAdmin, (req, res) => {
+  const n = db.prepare('SELECT COUNT(*) AS n FROM contact_submissions WHERE read_at IS NULL').get().n;
+  res.json({ unread: n });
+});
+
+app.get('/api/admin/contacts', requireAdmin, (req, res) => {
+  const submissions = db.prepare('SELECT * FROM contact_submissions ORDER BY created_at DESC LIMIT 200').all();
+  const unread = db.prepare('SELECT COUNT(*) AS n FROM contact_submissions WHERE read_at IS NULL').get().n;
+  res.json({ submissions, unread });
+});
+
+app.post('/api/admin/contacts/:id/read', requireAdmin, (req, res) => {
+  db.prepare('UPDATE contact_submissions SET read_at = CURRENT_TIMESTAMP WHERE id = ? AND read_at IS NULL')
+    .run(Number(req.params.id));
+  res.json({ ok: true });
+});
+
+app.post('/api/admin/contacts/read-all', requireAdmin, (req, res) => {
+  db.prepare('UPDATE contact_submissions SET read_at = CURRENT_TIMESTAMP WHERE read_at IS NULL').run();
+  res.json({ ok: true });
+});
+
+// ── Admin: Stripe ─────────────────────────────────────────────────────────────
+app.get('/api/admin/stripe/overview', requireAdmin, async (req, res) => {
+  try {
+    const [balance, disputesList, payoutsList] = await Promise.all([
+      stripe.balance.retrieve(),
+      stripe.disputes.list({ limit: 10 }),
+      stripe.payouts.list({ limit: 5 }),
+    ]);
+    const available = balance.available.reduce((s, b) => s + b.amount, 0);
+    const pending   = balance.pending.reduce((s, b) => s + b.amount, 0);
+    const currency  = (balance.available[0]?.currency || 'cad').toUpperCase();
+    const openDisputes = disputesList.data.filter(d => d.status === 'needs_response' || d.status === 'under_review');
+    const lastPayout = payoutsList.data[0] || null;
+    res.json({
+      available, pending, currency,
+      openDisputeCount: openDisputes.length,
+      lastPayout: lastPayout ? {
+        amount: lastPayout.amount,
+        currency: lastPayout.currency.toUpperCase(),
+        status: lastPayout.status,
+        arrival_date: lastPayout.arrival_date,
+        created: lastPayout.created,
+      } : null,
+    });
+  } catch (e) {
+    console.error('[stripe/overview]', e.message);
+    res.status(502).json({ error: e.message });
+  }
+});
+
+app.get('/api/admin/stripe/payouts', requireAdmin, async (req, res) => {
+  try {
+    const list = await stripe.payouts.list({ limit: 20 });
+    res.json(list.data.map(p => ({
+      id: p.id, amount: p.amount, currency: p.currency.toUpperCase(),
+      status: p.status, arrival_date: p.arrival_date, created: p.created,
+    })));
+  } catch (e) { res.status(502).json({ error: e.message }); }
+});
+
+app.get('/api/admin/stripe/disputes', requireAdmin, async (req, res) => {
+  try {
+    const list = await stripe.disputes.list({ limit: 20 });
+    res.json(list.data.map(d => ({
+      id: d.id, amount: d.amount, currency: d.currency.toUpperCase(),
+      status: d.status, reason: d.reason, created: d.created, charge: d.charge,
+    })));
+  } catch (e) { res.status(502).json({ error: e.message }); }
+});
+
+app.get('/api/admin/stripe/revenue', requireAdmin, async (req, res) => {
+  try {
+    const days  = Math.min(90, Math.max(7, parseInt(req.query.days) || 30));
+    const since = Math.floor((Date.now() - days * 86400 * 1000) / 1000);
+    const charges = await stripe.charges.list({ limit: 100, created: { gte: since } });
+    const byDate = {};
+    for (const c of charges.data) {
+      if (c.status !== 'succeeded') continue;
+      const d = new Date(c.created * 1000).toISOString().slice(0, 10);
+      if (!byDate[d]) byDate[d] = { date: d, amount: 0, count: 0 };
+      byDate[d].amount += c.amount;
+      byDate[d].count++;
+    }
+    const result = [];
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date(Date.now() - i * 86400 * 1000).toISOString().slice(0, 10);
+      result.push(byDate[d] || { date: d, amount: 0, count: 0 });
+    }
+    const total = charges.data.filter(c => c.status === 'succeeded').reduce((s, c) => s + c.amount, 0);
+    res.json({ daily: result, total, days });
+  } catch (e) { res.status(502).json({ error: e.message }); }
+});
+
+// ── Admin: Cloudflare analytics ───────────────────────────────────────────────
+app.get('/api/admin/cloudflare/analytics', requireAdmin, async (req, res) => {
+  const token  = process.env.CF_API_TOKEN;
+  const zoneId = process.env.CF_ZONE_ID;
+  if (!token || !zoneId) return res.status(503).json({ error: 'Cloudflare not configured', configured: false });
+
+  const days  = Math.min(30, Math.max(1, parseInt(req.query.days) || 7));
+  const since = new Date(Date.now() - days * 86400 * 1000).toISOString().slice(0, 10);
+  const until = new Date().toISOString().slice(0, 10);
+
+  try {
+    const r = await fetch('https://api.cloudflare.com/client/v4/graphql', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        query: `{
+          viewer {
+            zones(filter: {zoneTag: "${zoneId}"}) {
+              daily: httpRequests1dGroups(
+                limit: 31,
+                filter: {date_geq: "${since}", date_leq: "${until}"},
+                orderBy: [date_ASC]
+              ) {
+                dimensions { date }
+                sum { requests pageViews cachedRequests bytes threats }
+                uniq { uniques }
+              }
+            }
+          }
+        }`,
+      }),
+      signal: AbortSignal.timeout(10000),
+    });
+    if (!r.ok) throw new Error(`CF API ${r.status}`);
+    const data = await r.json();
+    if (data.errors) throw new Error(data.errors[0]?.message || 'CF GraphQL error');
+    const daily = data?.data?.viewer?.zones?.[0]?.daily || [];
+    const totals = daily.reduce((acc, d) => {
+      acc.requests       += d.sum.requests       || 0;
+      acc.pageViews      += d.sum.pageViews       || 0;
+      acc.cachedRequests += d.sum.cachedRequests  || 0;
+      acc.bytes          += d.sum.bytes           || 0;
+      acc.threats        += d.sum.threats         || 0;
+      acc.uniques        += d.uniq?.uniques       || 0;
+      return acc;
+    }, { requests: 0, pageViews: 0, cachedRequests: 0, bytes: 0, threats: 0, uniques: 0 });
+    res.json({ ok: true, totals, daily, days });
+  } catch (e) {
+    console.error('[CF analytics]', e.message);
+    res.status(502).json({ error: e.message });
+  }
+});
+
+// ── Admin: server health ──────────────────────────────────────────────────────
+app.get('/api/admin/server-health', requireAdmin, (req, res) => {
+  const mem = process.memoryUsage();
+  let dbSize = 0;
+  try { dbSize = fs.statSync('orders.db').size; } catch {}
+  res.json({
+    uptime:      Math.floor(process.uptime()),
+    heapUsed:    mem.heapUsed,
+    heapTotal:   mem.heapTotal,
+    rss:         mem.rss,
+    dbSize,
+    nodeVersion: process.version,
+  });
+});
 
 app.use((req, res) => {
   res.status(404).sendFile(path.join(__dirname, 'public', '404.html'));
