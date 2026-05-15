@@ -878,11 +878,15 @@ function handleFiles(input) {
     uploadedFiles.push(f);
     const li = document.createElement('li');
     const idx = uploadedFiles.length - 1;
-    li.innerHTML =
-      '<span>📄</span>' +
-      '<span>' + f.name + '</span>' +
-      '<span style="font-size:11px;color:var(--ink-faint);margin-left:4px;">(' + (f.size / 1024).toFixed(0) + ' KB)</span>' +
-      '<button class="remove" onclick="removeFile(' + idx + ', this)">×</button>';
+    const icon = document.createElement('span'); icon.textContent = '📄';
+    const name = document.createElement('span'); name.textContent = f.name;
+    const size = document.createElement('span');
+    size.style.cssText = 'font-size:11px;color:var(--ink-faint);margin-left:4px;';
+    size.textContent = '(' + (f.size / 1024).toFixed(0) + ' KB)';
+    const rm   = document.createElement('button');
+    rm.className = 'remove'; rm.type = 'button'; rm.textContent = '×';
+    rm.addEventListener('click', function() { removeFile(idx, this); });
+    li.append(icon, name, size, rm);
     list.appendChild(li);
   });
 
