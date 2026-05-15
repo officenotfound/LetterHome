@@ -2882,7 +2882,7 @@ function getDriveClient() {
     const auth = new google.auth.JWT({
       email: process.env.GA4_CLIENT_EMAIL,
       key:   process.env.GA4_PRIVATE_KEY.replace(/\\n/g, '\n'),
-      scopes: ['https://www.googleapis.com/auth/drive.file'],
+      scopes: ['https://www.googleapis.com/auth/drive'],
     });
     _driveClient = google.drive({ version: 'v3', auth });
     return _driveClient;
@@ -2903,6 +2903,7 @@ async function uploadBackupToDrive(filePath) {
   try {
     const filename = path.basename(filePath);
     const res = await drive.files.create({
+      supportsAllDrives: true,
       requestBody: { name: filename, parents: [folderId] },
       media: { mimeType: 'application/octet-stream', body: fs.createReadStream(filePath) },
       fields: 'id, name, createdTime, size',
@@ -2912,6 +2913,8 @@ async function uploadBackupToDrive(filePath) {
     // Retention: keep newest GDRIVE_BACKUP_KEEP files in that folder
     const keep = Math.max(1, Number(process.env.GDRIVE_BACKUP_KEEP) || 30);
     const list = await drive.files.list({
+      supportsAllDrives: true,
+      includeItemsFromAllDrives: true,
       q: `'${folderId}' in parents and trashed = false and (name contains 'orders-')`,
       orderBy: 'createdTime desc',
       fields: 'files(id, name, createdTime)',
@@ -2919,7 +2922,7 @@ async function uploadBackupToDrive(filePath) {
     });
     const old = (list.data.files || []).slice(keep);
     for (const f of old) {
-      try { await drive.files.delete({ fileId: f.id }); console.log(`[gdrive] pruned ${f.name}`); }
+      try { await drive.files.delete({ fileId: f.id, supportsAllDrives: true }); console.log(`[gdrive] pruned ${f.name}`); }
       catch (err) { console.warn('[gdrive] prune failed for', f.name, err.message); }
     }
     return { id: res.data.id, name: res.data.name };
