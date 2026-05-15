@@ -1046,9 +1046,10 @@ async function deleteCustomer(encodedEmail) {
 // ── Customer detail ───────────────────────────────────────────────────────────
 async function showCustomer(email) {
   setTitle('Customer');
-  const [c, occasions] = await Promise.all([
+  const [c, occasions, emailLog] = await Promise.all([
     api(`/api/admin/customers/${encodeURIComponent(email)}`),
     api(`/api/admin/customers/${encodeURIComponent(email)}/occasions`),
+    api(`/api/admin/customers/${encodeURIComponent(email)}/email-log`),
   ]);
   if (!c) return setMain('<div class="empty">Customer not found.</div>');
 
@@ -1088,6 +1089,8 @@ async function showCustomer(email) {
         <div class="detail-row"><span class="detail-label">Total Spent</span><span class="detail-value">${fmtCAD(totalSpent)}</span></div>
         <div class="detail-row"><span class="detail-label">First Order</span><span class="detail-value">${fmtDate(c.orders[c.orders.length-1]?.created_at)}</span></div>
         <div class="detail-row"><span class="detail-label">Last Order</span><span class="detail-value">${fmtDate(c.orders[0]?.created_at)}</span></div>
+        ${c.ip ? `<div class="detail-row"><span class="detail-label">IP</span><span class="detail-value" style="font-family:monospace;font-size:12px">${esc(c.ip)}</span></div>` : ''}
+        ${c.country_name ? `<div class="detail-row"><span class="detail-label">Country</span><span class="detail-value">${esc(c.country_name)}</span></div>` : ''}
       </div>
       <div class="detail-card">
         <div class="detail-card-title">Tags</div>
@@ -1118,6 +1121,26 @@ async function showCustomer(email) {
       <div style="padding:0 20px 16px" id="notes-list">
         ${noteItems || '<div class="empty" style="padding:20px 0">No notes yet.</div>'}
       </div>
+    </div>
+    ${(c.sender_name || c.sender_street) ? `
+    <div class="card" style="margin-bottom:24px">
+      <div class="card-header"><div class="card-title">Known Return Address</div></div>
+      <div style="padding:16px 20px;font-size:14px;line-height:1.8;color:#334155">
+        ${[c.sender_name, c.sender_street, [c.sender_city, c.sender_province, c.sender_postal].filter(Boolean).join(' '), c.sender_country].filter(Boolean).map(l => esc(l)).join('<br>')}
+      </div>
+    </div>` : ''}
+    <div class="card" style="margin-bottom:24px">
+      <div class="card-header"><div class="card-title">Email Log</div></div>
+      ${(emailLog||[]).length === 0
+        ? '<div class="empty" style="padding:20px">No emails sent yet.</div>'
+        : `<table><thead><tr><th>Date</th><th>Subject</th><th>Type</th><th>Order</th></tr></thead><tbody>
+          ${(emailLog||[]).map(e => `<tr>
+            <td style="font-size:12px;white-space:nowrap">${fmtDateTime(e.created_at)}</td>
+            <td style="font-size:13px">${esc(e.subject)}</td>
+            <td><span style="font-size:11px;background:#f1f5f9;padding:2px 7px;border-radius:4px;color:#64748b">${esc(e.type)}</span></td>
+            <td>${e.order_id ? `<button class="link" onclick="go('/admin/orders/${e.order_id}')">#${e.order_id}</button>` : '—'}</td>
+          </tr>`).join('')}
+          </tbody></table>`}
     </div>
     <div class="card">
       <div class="card-header"><div class="card-title">Occasions &amp; Reminders</div></div>
@@ -1924,9 +1947,16 @@ async function showStripe() {
 async function showContacts() {
   setTitle('Contacts');
   setMain('<div class="empty">Loading…</div>');
-  const data = await api('/api/admin/contacts');
+  const [data, templates] = await Promise.all([
+    api('/api/admin/contacts'),
+    api('/api/admin/templates'),
+  ]);
   if (!data) return;
   updateContactsBadge(data.unread);
+
+  const tmplOpts = ['<option value="">— Load a canned reply —</option>']
+    .concat((templates||[]).map(t => `<option value="${t.id}" data-subject="${esc(t.subject)}" data-body="${esc(t.body)}">${esc(t.name)}</option>`))
+    .join('');
 
   const rows = (data.submissions||[]).map(s => {
     const preview = s.message.length > 90 ? s.message.slice(0, 90) + '…' : s.message;
@@ -1941,10 +1971,30 @@ async function showContacts() {
       <td style="white-space:nowrap">
         ${unread ? `<button class="btn btn-outline btn-sm" style="margin-right:4px" onclick="markContactRead(${s.id})">Mark read</button>` : `<span style="color:#94a3b8;font-size:12px">${fmtDate(s.read_at)}</span> `}
         <button class="btn-ghost" onclick="toggleContactExpand(${s.id})">View</button>
+        <button class="btn-ghost" onclick="toggleContactReply(${s.id})">Reply</button>
       </td>
     </tr>
     <tr id="contact-expand-${s.id}" style="display:none">
       <td colspan="6" style="background:#f8fafc;padding:16px 20px;font-size:13px;color:#334155;white-space:pre-wrap;line-height:1.7;border-bottom:1px solid #e2e8f0">${esc(s.message)}</td>
+    </tr>
+    <tr id="contact-reply-${s.id}" style="display:none">
+      <td colspan="6" style="background:#f0f9ff;padding:16px 20px;border-bottom:1px solid #e2e8f0">
+        <div style="max-width:600px">
+          <div style="margin-bottom:10px">
+            <select onchange="loadContactTemplate(${s.id}, this)" style="font-size:13px;padding:6px 10px;border:1px solid #e2e8f0;border-radius:6px;background:#fff">${tmplOpts}</select>
+          </div>
+          <div style="margin-bottom:8px">
+            <input id="reply-subject-${s.id}" type="text" placeholder="Subject" value="Re: Your Letterhome enquiry" style="width:100%;font-size:13px;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px">
+          </div>
+          <div style="margin-bottom:10px">
+            <textarea id="reply-body-${s.id}" rows="6" placeholder="Type your reply…" style="width:100%;font-size:13px;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;resize:vertical"></textarea>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <button class="btn btn-primary btn-sm" onclick="sendContactReply(${s.id})">Send to ${esc(s.email)}</button>
+            <button class="btn btn-outline btn-sm" onclick="toggleContactReply(${s.id})">Cancel</button>
+          </div>
+        </div>
+      </td>
     </tr>`;
   }).join('') || '<tr><td colspan="6" class="empty">No contact submissions yet.</td></tr>';
 
@@ -1968,6 +2018,33 @@ async function showContacts() {
 function toggleContactExpand(id) {
   const row = document.getElementById('contact-expand-' + id);
   if (row) row.style.display = row.style.display === 'none' ? '' : 'none';
+}
+
+function toggleContactReply(id) {
+  const row = document.getElementById('contact-reply-' + id);
+  if (row) row.style.display = row.style.display === 'none' ? '' : 'none';
+}
+
+function loadContactTemplate(id, select) {
+  const opt = select.options[select.selectedIndex];
+  if (!opt.value) return;
+  const subjectEl = document.getElementById('reply-subject-' + id);
+  const bodyEl    = document.getElementById('reply-body-'    + id);
+  if (subjectEl) subjectEl.value = opt.dataset.subject || '';
+  if (bodyEl)    bodyEl.value    = opt.dataset.body    || '';
+}
+
+async function sendContactReply(id) {
+  const subject = document.getElementById('reply-subject-' + id)?.value.trim();
+  const body    = document.getElementById('reply-body-'    + id)?.value.trim();
+  if (!subject || !body) return alert('Subject and body are required.');
+  const r = await post(`/api/admin/contacts/${id}/reply`, { subject, body });
+  if (r?.ok) {
+    alert('Reply sent.');
+    showContacts();
+  } else {
+    alert('Error: ' + (r?.error || 'could not send reply'));
+  }
 }
 
 async function markContactRead(id) {

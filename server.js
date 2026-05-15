@@ -119,6 +119,15 @@ try { db.exec(`ALTER TABLE orders ADD COLUMN status_token TEXT`);         } catc
 try { db.exec(`ALTER TABLE orders ADD COLUMN recovery_sent_at DATETIME`); } catch {}
 try { db.exec(`ALTER TABLE orders ADD COLUMN actual_cost_cents INTEGER`); } catch {}
 try { db.exec(`ALTER TABLE orders ADD COLUMN sla_alert_sent_at DATETIME`);} catch {}
+try { db.exec(`ALTER TABLE customers ADD COLUMN ip TEXT`);             } catch {}
+try { db.exec(`ALTER TABLE customers ADD COLUMN country_code TEXT`);   } catch {}
+try { db.exec(`ALTER TABLE customers ADD COLUMN country_name TEXT`);   } catch {}
+try { db.exec(`ALTER TABLE customers ADD COLUMN sender_name TEXT`);    } catch {}
+try { db.exec(`ALTER TABLE customers ADD COLUMN sender_street TEXT`);  } catch {}
+try { db.exec(`ALTER TABLE customers ADD COLUMN sender_city TEXT`);    } catch {}
+try { db.exec(`ALTER TABLE customers ADD COLUMN sender_province TEXT`);} catch {}
+try { db.exec(`ALTER TABLE customers ADD COLUMN sender_postal TEXT`);  } catch {}
+try { db.exec(`ALTER TABLE customers ADD COLUMN sender_country TEXT`); } catch {}
 
 // New tables (schema B)
 try {
@@ -188,6 +197,18 @@ try {
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   )`);
 } catch (e) { console.error('[init] contact_submissions table:', e.message); }
+
+try {
+  db.exec(`CREATE TABLE IF NOT EXISTS email_log (
+    id       INTEGER PRIMARY KEY AUTOINCREMENT,
+    to_email TEXT NOT NULL,
+    subject  TEXT NOT NULL,
+    type     TEXT DEFAULT 'general',
+    order_id INTEGER,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  )`);
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_email_log_to ON email_log(to_email)`);
+} catch (e) { console.error('[init] email_log table:', e.message); }
 
 // ── IP geolocation (server-side, in-memory cached) ───────────────────────────
 const ipCountryCache = new Map();
@@ -260,6 +281,15 @@ const transport = mailer.createTransport({
   auth:   { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
 });
 
+async function sendMail(opts, type = 'general', orderId = null) {
+  await transport.sendMail(opts);
+  try {
+    const toAddr = Array.isArray(opts.to) ? opts.to.join(', ') : (opts.to || '');
+    db.prepare('INSERT INTO email_log (to_email, subject, type, order_id) VALUES (?,?,?,?)')
+      .run(toAddr, opts.subject || '', type, orderId || null);
+  } catch (e) { console.error('[email_log]', e.message); }
+}
+
 // ── File uploads ──────────────────────────────────────────────────────────────
 const upload = multer({
   dest: 'uploads',
@@ -317,7 +347,7 @@ function safeFilePath(dir, originalName) {
     `).all(cutoff2d, cutoff7d);
     for (const order of abandoned) {
       try {
-        await transport.sendMail(buildRecoveryEmail(order));
+        await sendMail(buildRecoveryEmail(order), 'recovery', order.id);
         db.prepare("UPDATE orders SET recovery_sent_at = CURRENT_TIMESTAMP WHERE id = ?").run(order.id);
         console.log(`[recovery] sent recovery email for order #${order.id} to ${order.customer_email}`);
       } catch (e) { console.error(`[recovery] failed for order #${order.id}:`, e.message); }
@@ -343,7 +373,7 @@ function safeFilePath(dir, originalName) {
             WHERE customer_email = ? AND status IN ('paid','submitted_to_printer','mailed','delivered')
             ORDER BY created_at DESC LIMIT 1
           `).get(occ.customer_email);
-          await transport.sendMail(buildOccasionReminderEmail(occ, lastOrder));
+          await sendMail(buildOccasionReminderEmail(occ, lastOrder), 'occasion_reminder');
           db.prepare('UPDATE occasions SET last_reminded_year = ? WHERE id = ?').run(currentYear, occ.id);
           console.log(`[occasions] sent reminder for occasion #${occ.id} to ${occ.customer_email}`);
         }
@@ -368,12 +398,12 @@ function safeFilePath(dir, originalName) {
       const lines = overdue.map(o =>
         `  Order #${o.id} — ${o.recipient_name} — ${o.status} — created ${o.created_at}`
       ).join('\n');
-      await transport.sendMail({
+      await sendMail({
         from:    process.env.EMAIL_FROM,
         to:      process.env.OPERATOR_EMAIL,
         subject: `[Letterhome] SLA Alert — ${overdue.length} order${overdue.length > 1 ? 's' : ''} overdue`,
         text:    `The following orders have been in paid/submitted_to_printer status for over 20 hours:\n\n${lines}\n\nPlease take action.`,
-      });
+      }, 'sla_alert');
       const stmt = db.prepare('UPDATE orders SET sla_alert_sent_at = CURRENT_TIMESTAMP WHERE id = ?');
       for (const o of overdue) stmt.run(o.id);
       console.log(`[sla] sent alert for ${overdue.length} overdue orders`);
@@ -932,12 +962,12 @@ app.post('/api/admin/orders/:id/status', requireAdmin, async (req, res) => {
         `${order.recipient_city || ''} ${order.recipient_province || ''} ${order.recipient_postal || ''}`.trim(),
         order.destination_country,
       ].filter(Boolean).join('\n');
-      transport.sendMail({
+      sendMail({
         from:    process.env.EMAIL_FROM,
         to:      order.customer_email,
         subject: `Your letter to ${order.recipient_name} has been mailed — order #${order.id}`,
         html:    buildMailedEmail(order, toAddr, deliveryText),
-      }).catch(console.error);
+      }, 'mailed_notification', id).catch(console.error);
     }
   }
 
@@ -974,12 +1004,12 @@ app.post('/api/admin/orders/:id/mark-mailed', requireAdmin, async (req, res) => 
     order.destination_country,
   ].filter(Boolean).join('\n');
 
-  transport.sendMail({
+  sendMail({
     from:    process.env.EMAIL_FROM,
     to:      order.customer_email,
     subject: `Your letter to ${order.recipient_name} has been mailed — order #${order.id}`,
     html:    buildMailedEmail(order, toAddr, estimated_delivery.trim()),
-  }).catch(console.error);
+  }, 'mailed_notification', id).catch(console.error);
 
   res.json({ ok: true });
 });
@@ -1093,8 +1123,26 @@ app.get('/api/admin/customers/:email', requireAdmin, (req, res) => {
   const orders  = db.prepare('SELECT * FROM orders WHERE customer_email = ? AND deleted_at IS NULL ORDER BY created_at DESC').all(email);
   const notes   = db.prepare('SELECT * FROM customer_notes WHERE customer_email = ? ORDER BY created_at DESC').all(email);
   const tags    = db.prepare('SELECT tag FROM customer_tags WHERE customer_email = ?').all(email).map(r => r.tag);
-  const manual  = db.prepare('SELECT display_name FROM customers WHERE email = ? AND deleted_at IS NULL').get(email);
-  res.json({ email, display_name: manual?.display_name || null, orders, notes, tags });
+  const manual  = db.prepare('SELECT * FROM customers WHERE email = ?').get(email);
+  res.json({
+    email,
+    display_name:    manual?.display_name    || null,
+    ip:              manual?.ip              || null,
+    country_code:    manual?.country_code    || null,
+    country_name:    manual?.country_name    || null,
+    sender_name:     manual?.sender_name     || null,
+    sender_street:   manual?.sender_street   || null,
+    sender_city:     manual?.sender_city     || null,
+    sender_province: manual?.sender_province || null,
+    sender_postal:   manual?.sender_postal   || null,
+    sender_country:  manual?.sender_country  || null,
+    orders, notes, tags,
+  });
+});
+
+app.get('/api/admin/customers/:email/email-log', requireAdmin, (req, res) => {
+  const rows = db.prepare('SELECT id, subject, type, order_id, created_at FROM email_log WHERE to_email = ? ORDER BY created_at DESC LIMIT 100').all(req.params.email);
+  res.json(rows);
 });
 
 app.get('/api/admin/trash', requireAdmin, (req, res) => {
@@ -1129,13 +1177,13 @@ app.post('/api/admin/orders/:id/message', requireAdmin, async (req, res) => {
   const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(Number(req.params.id));
   if (!order) return res.status(404).json({ error: 'Order not found' });
   try {
-    await transport.sendMail({
+    await sendMail({
       from:    process.env.EMAIL_FROM,
       to:      order.customer_email,
       replyTo: process.env.OPERATOR_EMAIL,
       subject: subject.trim(),
       text:    body.trim(),
-    });
+    }, 'operator_message', order.id);
     logAudit(req, 'order.message_sent', 'order', req.params.id, { to: order.customer_email, subject: subject.trim() });
     res.json({ ok: true });
   } catch (err) {
@@ -1164,13 +1212,13 @@ app.post('/api/admin/broadcast', requireAdmin, async (req, res) => {
   (async () => {
     for (const email of recipients) {
       try {
-        await transport.sendMail({
+        await sendMail({
           from:    process.env.EMAIL_FROM,
           to:      email,
           replyTo: process.env.OPERATOR_EMAIL,
           subject: subject.trim(),
           text:    body.trim() + '\n\n---\nTo stop receiving these, reply with "unsubscribe".',
-        });
+        }, 'broadcast');
       } catch (err) { console.error('Broadcast to', email, 'failed:', err.message); }
       await new Promise(r => setTimeout(r, 1000));
     }
@@ -1532,12 +1580,12 @@ app.post('/api/admin/pnl-digest', requireAdmin, async (req, res) => {
   ].filter(l => l !== undefined);
 
   try {
-    await transport.sendMail({
+    await sendMail({
       from:    process.env.EMAIL_FROM,
       to:      process.env.OPERATOR_EMAIL,
       subject: `[Letterhome] P&L Digest — ${month}`,
       text:    lines.join('\n'),
-    });
+    }, 'pl_digest');
     res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ error: e.message });
@@ -1639,13 +1687,13 @@ app.post('/api/contact', contactLimiter, async (req, res) => {
       .run(String(name).slice(0, 200), String(email).slice(0, 200), String(message).slice(0, 5000), getClientIp(req));
   } catch (e) { console.error('[contact] db log failed:', e.message); }
 
-  await transport.sendMail({
+  await sendMail({
     from:    process.env.EMAIL_FROM,
     to:      process.env.OPERATOR_EMAIL,
     replyTo: email,
     subject: `[Letterhome Contact] From ${name}`,
     text:    `From: ${name} <${email}>\n\n${message}`,
-  });
+  }, 'contact_notification');
 
   res.json({ ok: true });
 });
@@ -1682,20 +1730,51 @@ async function fulfillOrder(sessionId) {
     .filter(a => fs.existsSync(a.path))
     .map(a => ({ filename: a.originalName, path: a.path }));
 
-  await transport.sendMail({
+  await sendMail({
     from:        process.env.EMAIL_FROM,
     to:          process.env.OPERATOR_EMAIL,
     subject:     `[Letterhome] Order #${order.id} — ${order.recipient_name}`,
     html:        buildOperatorEmail(order, fromAddr, toAddr, amountCAD, emailAttachments.length),
     attachments: emailAttachments,
-  });
+  }, 'order_operator_notification', order.id);
 
-  await transport.sendMail({
+  await sendMail({
     from:    process.env.EMAIL_FROM,
     to:      order.customer_email,
     subject: `Your Letterhome order is confirmed — letter to ${order.recipient_name}`,
     html:    buildCustomerEmail(order, toAddr, amountCAD, isDomestic),
-  });
+  }, 'order_confirmation', order.id);
+
+  // Upsert customer record — persists even if this order is later deleted
+  try {
+    const geo = await lookupCountry(order.customer_ip).catch(() => null);
+    db.prepare(`
+      INSERT INTO customers (email, ip, country_code, country_name, sender_name, sender_street, sender_city, sender_province, sender_postal, sender_country)
+      VALUES (?,?,?,?,?,?,?,?,?,?)
+      ON CONFLICT(email) DO UPDATE SET
+        deleted_at      = NULL,
+        ip              = COALESCE(excluded.ip,              ip),
+        country_code    = COALESCE(excluded.country_code,    country_code),
+        country_name    = COALESCE(excluded.country_name,    country_name),
+        sender_name     = COALESCE(excluded.sender_name,     sender_name),
+        sender_street   = COALESCE(excluded.sender_street,   sender_street),
+        sender_city     = COALESCE(excluded.sender_city,     sender_city),
+        sender_province = COALESCE(excluded.sender_province, sender_province),
+        sender_postal   = COALESCE(excluded.sender_postal,   sender_postal),
+        sender_country  = COALESCE(excluded.sender_country,  sender_country)
+    `).run(
+      order.customer_email,
+      order.customer_ip    || null,
+      geo?.country_code    || null,
+      geo?.country_name    || null,
+      order.sender_name    || null,
+      order.sender_street  || null,
+      order.sender_city    || null,
+      order.sender_province || null,
+      order.sender_postal  || null,
+      order.sender_country || null,
+    );
+  } catch (e) { console.error('[fulfillOrder] customer upsert failed:', e.message); }
 
 }
 
@@ -1929,6 +2008,27 @@ app.post('/api/admin/contacts/:id/read', requireAdmin, (req, res) => {
 app.post('/api/admin/contacts/read-all', requireAdmin, (req, res) => {
   db.prepare('UPDATE contact_submissions SET read_at = CURRENT_TIMESTAMP WHERE read_at IS NULL').run();
   res.json({ ok: true });
+});
+
+app.post('/api/admin/contacts/:id/reply', requireAdmin, async (req, res) => {
+  const { subject, body } = req.body;
+  if (!subject?.trim() || !body?.trim()) return res.status(400).json({ error: 'Subject and body required' });
+  const sub = db.prepare('SELECT * FROM contact_submissions WHERE id = ?').get(Number(req.params.id));
+  if (!sub) return res.status(404).json({ error: 'Not found' });
+  try {
+    await sendMail({
+      from:    process.env.EMAIL_FROM,
+      to:      sub.email,
+      replyTo: process.env.OPERATOR_EMAIL,
+      subject: subject.trim(),
+      text:    body.trim(),
+    }, 'contact_reply');
+    db.prepare('UPDATE contact_submissions SET read_at = COALESCE(read_at, CURRENT_TIMESTAMP) WHERE id = ?').run(sub.id);
+    logAudit(req, 'contact.reply_sent', 'contact', req.params.id, { to: sub.email, subject: subject.trim() });
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // ── Admin: Stripe ─────────────────────────────────────────────────────────────
