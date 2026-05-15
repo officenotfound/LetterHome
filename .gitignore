@@ -3,6 +3,7 @@ node_modules/
 uploads/
 sessions/
 orders/
+backups/
 .claude/
 *.db
 *.log

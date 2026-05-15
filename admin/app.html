@@ -1634,7 +1634,10 @@ const COUNTRIES = {CA:'Canada',US:'United States',GB:'United Kingdom',AU:'Austra
 // ── Settings ──────────────────────────────────────────────────────────────────
 async function showSettings() {
   setTitle('Settings');
-  const settings = await api('/api/admin/settings');
+  const [settings, backups] = await Promise.all([
+    api('/api/admin/settings'),
+    api('/api/admin/backups'),
+  ]);
   if (settings === null) return;
 
   const paused       = settings['service_paused'] === 'true';
@@ -1711,6 +1714,31 @@ async function showSettings() {
         </div>
         <div id="settings-msg" style="font-size:12px;color:#16a34a;display:none;margin-top:8px">✓ Saved</div>
       </div>
+    </div>
+
+    <div class="card" style="max-width:640px;margin-bottom:20px">
+      <div class="card-header">
+        <div class="card-title">Database Backups</div>
+        <button class="btn btn-outline btn-sm" id="backup-now-btn" onclick="runBackupNow()">Backup Now</button>
+      </div>
+      <div style="padding:16px 20px">
+        <p style="font-size:13px;color:#64748b;margin:0 0 16px">Automatic backups run daily at 2:00 AM. The last 14 backups are kept. Only <code>orders.db</code> is backed up — your code lives on GitHub.</p>
+        ${(backups||[]).length === 0
+          ? '<div class="empty" style="padding:8px 0">No backups yet. Click "Backup Now" to create the first one.</div>'
+          : `<table>
+              <thead><tr><th>File</th><th>Size</th><th>Created</th><th></th></tr></thead>
+              <tbody id="backup-list">
+                ${(backups||[]).map((b, i) => `
+                  <tr>
+                    <td style="font-family:monospace;font-size:12px">${esc(b.filename)}${i === 0 ? ' <span style="font-size:10px;background:#dcfce7;color:#16a34a;padding:1px 6px;border-radius:4px">latest</span>' : ''}</td>
+                    <td style="font-size:12px;color:#64748b">${fmtBytes(b.size)}</td>
+                    <td style="font-size:12px;color:#64748b;white-space:nowrap">${fmtDateTime(b.created_at)}</td>
+                    <td><a href="/api/admin/backups/${encodeURIComponent(b.filename)}" class="link" style="font-size:12px" download>Download</a></td>
+                  </tr>`).join('')}
+              </tbody>
+            </table>`}
+        <div id="backup-status" style="font-size:12px;margin-top:10px"></div>
+      </div>
     </div>`);
 
   window._blockedCountries = [...blocked];
@@ -1775,6 +1803,26 @@ async function toggleServicePause(currentlyPaused) {
   const r = await saveSetting('service_paused', newVal ? 'true' : 'false');
   if (r?.ok) showSettings();
   else alert('Error saving setting.');
+}
+
+async function runBackupNow() {
+  const btn = document.getElementById('backup-now-btn');
+  const msg = document.getElementById('backup-status');
+  if (btn) { btn.disabled = true; btn.textContent = 'Running…'; }
+  const r = await post('/api/admin/backups/run', {});
+  if (btn) { btn.disabled = false; btn.textContent = 'Backup Now'; }
+  if (r?.ok) {
+    if (msg) { msg.style.color = '#16a34a'; msg.textContent = `✓ Backup created: ${r.filename}`; }
+    setTimeout(() => showSettings(), 800);
+  } else {
+    if (msg) { msg.style.color = '#dc2626'; msg.textContent = `Error: ${r?.error || 'unknown'}`; }
+  }
+}
+
+function fmtBytes(bytes) {
+  if (bytes < 1024)        return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
 }
 
 // ── Trash ─────────────────────────────────────────────────────────────────────
