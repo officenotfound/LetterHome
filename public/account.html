@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en-CA">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Account — Letterhome</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --kraft:#f1ebde;--kraft-light:#f7f2e6;--paper:#faf6ec;
+  --ink:#2a2a2a;--ink-soft:#3a3835;--ink-muted:#6b6258;--ink-faint:#968b7d;
+  --red:#a8472d;--red-deep:#7d3220;--red-stamp:#b85540;
+  --line:rgba(42,42,42,0.14);--shadow-card:0 2px 6px rgba(42,42,42,0.06),0 14px 40px rgba(42,42,42,0.1);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Source Serif 4',Georgia,serif;background:var(--kraft);color:var(--ink);line-height:1.55;min-height:100vh}
+nav{position:sticky;top:0;z-index:100;background:rgba(241,235,222,0.94);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.nav-inner{max-width:1280px;margin:0 auto;padding:20px 36px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.logo{display:flex;align-items:center;gap:12px;font-family:'DM Serif Display',serif;font-size:26px;color:var(--ink);text-decoration:none}
+.logo-mark{width:38px;height:38px;background:var(--red);display:grid;place-items:center;border-radius:2px;color:var(--paper);font-family:'DM Serif Display',serif;font-size:22px;position:relative;box-shadow:0 1px 3px rgba(0,0,0,0.15)}
+.logo-mark::before{content:'';position:absolute;inset:-3px;border:1px dashed var(--ink);border-radius:4px;opacity:0.5}
+.main{max-width:720px;margin:0 auto;padding:60px 36px 80px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:2px;box-shadow:var(--shadow-card);margin-bottom:24px}
+.card-header{padding:20px 28px 0;border-bottom:1px solid var(--line);padding-bottom:16px;display:flex;align-items:center;justify-content:space-between}
+.card-title{font-family:'DM Serif Display',serif;font-size:20px;font-weight:400}
+.card-body{padding:24px 28px}
+label{display:block;font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:var(--ink-muted);margin-bottom:5px}
+input,select,textarea{width:100%;padding:10px 12px;border:1.5px solid var(--line);background:var(--paper);color:var(--ink);border-radius:2px;font-family:'Source Serif 4',Georgia,serif;font-size:15px;outline:none;transition:border-color 0.15s}
+input:focus,select:focus,textarea:focus{border-color:var(--red)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.field{margin-bottom:16px}
+.btn{display:inline-block;padding:11px 24px;border-radius:2px;font-weight:500;font-size:13px;text-decoration:none;transition:all 0.2s;border:none;cursor:pointer;font-family:'Source Serif 4',Georgia,serif;letter-spacing:0.02em;text-transform:uppercase}
+.btn-primary{background:var(--red);color:var(--paper);border:1.5px solid var(--red)}
+.btn-primary:hover{background:var(--red-deep);border-color:var(--red-deep)}
+.btn-outline{background:transparent;color:var(--ink);border:1.5px solid rgba(42,42,42,0.35)}
+.btn-outline:hover{background:var(--ink);color:var(--paper)}
+.btn-ghost{background:none;border:none;color:var(--ink-muted);cursor:pointer;font-size:13px;font-family:inherit;padding:6px 0}
+.btn-ghost:hover{color:var(--red)}
+.btn-sm{padding:7px 14px;font-size:12px}
+.eyebrow{font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.18em;color:var(--red);margin-bottom:20px;display:flex;align-items:center;gap:12px}
+.eyebrow::before{content:'';width:32px;height:1px;background:var(--red)}
+h1{font-family:'DM Serif Display',serif;font-size:clamp(32px,5vw,48px);font-weight:400;letter-spacing:-0.02em;margin-bottom:8px;line-height:1.1}
+h1 em{font-style:italic;color:var(--red)}
+.sub{font-size:16px;color:var(--ink-muted);margin-bottom:40px;line-height:1.6}
+.err{color:#b91c1c;font-size:13px;margin-top:8px;display:none}
+.ok-msg{color:#15803d;font-size:13px;margin-top:8px;display:none}
+.strength-bar{height:4px;border-radius:2px;margin-top:6px;background:var(--line);overflow:hidden}
+.strength-fill{height:100%;width:0;border-radius:2px;transition:width 0.3s,background 0.3s}
+.strength-label{font-size:11px;font-family:'DM Mono',monospace;margin-top:4px;color:var(--ink-faint)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{font-family:'DM Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.12em;color:var(--ink-muted);padding:0 0 10px;text-align:left;border-bottom:1px solid var(--line)}
+td{padding:12px 0;border-bottom:1px solid rgba(42,42,42,0.07);vertical-align:top}
+tr:last-child td{border-bottom:none}
+.status-badge{display:inline-block;padding:2px 8px;border-radius:2px;font-size:11px;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:0.08em}
+.status-paid{background:#fef3c7;color:#92400e}
+.status-printing{background:#dbeafe;color:#1e40af}
+.status-mailed{background:#dcfce7;color:#166534}
+.tag{display:inline-block;padding:2px 8px;background:#f1ebde;border:1px solid var(--line);border-radius:2px;font-size:12px;font-family:'DM Mono',monospace;margin:2px}
+.divider{border:none;border-top:1px solid var(--line);margin:20px 0}
+footer{background:var(--ink);color:rgba(250,246,236,0.65);padding:40px 36px;margin-top:80px}
+.footer-bottom{max-width:1280px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;flex-wrap:wrap;gap:16px}
+.footer-bottom a{color:rgba(250,246,236,0.5);text-decoration:none}
+.footer-bottom a:hover{color:var(--red-stamp)}
+.footer-bottom-links{display:flex;gap:28px}
+@media(max-width:600px){.grid2{grid-template-columns:1fr}.main{padding:40px 20px 60px}.nav-inner{padding:16px 20px}}
+</style>
+<script>(function(){try{var t=localStorage.getItem('lh-theme')||(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+<link rel="stylesheet" href="/theme.css">
+</head>
+<body>
+<nav>
+  <div class="nav-inner">
+    <a href="/" class="logo"><span class="logo-mark">L</span>Letterhome</a>
+    <button type="button" class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode" title="Toggle dark mode">
+      <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41"/></svg>
+      <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </div>
+</nav>
+
+<div class="main" id="app"><div style="color:var(--ink-muted);padding:40px 0;font-style:italic">Loading…</div></div>
+
+<footer>
+  <div class="footer-bottom">
+    <div>© 2026 Letterhome</div>
+    <div class="footer-bottom-links">
+      <a href="/privacy">Privacy</a>
+      <a href="/terms">Terms</a>
+    </div>
+  </div>
+</footer>
+
+<script src="/theme.js"></script>
+<script>
+const app = document.getElementById('app');
+const path = window.location.pathname;
+
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+async function post(url, data) {
+  const r = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data) });
+  return r.json();
+}
+async function put(url, data) {
+  const r = await fetch(url, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data) });
+  return r.json();
+}
+async function del(url) {
+  const r = await fetch(url, { method:'DELETE' });
+  return r.json();
+}
+function showErr(id, msg) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+function clearErr(id) {
+  const el = document.getElementById(id);
+  if (el) el.style.display = 'none';
+}
+function showOk(id, msg) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = msg;
+  el.style.display = 'block';
+  setTimeout(() => { el.style.display = 'none'; }, 3000);
+}
+
+// ── Password strength ──────────────────────────────────────────────────────────
+function checkStrength(pwd) {
+  let score = 0;
+  if (pwd.length >= 8)  score++;
+  if (pwd.length >= 12) score++;
+  if (/[A-Za-z]/.test(pwd) && /[0-9]/.test(pwd)) score++;
+  if (/[!@#$%^&*()\-_=+[\]{}|;:,.<>?]/.test(pwd)) score++;
+  return score; // 0–4
+}
+function updateStrength(inputId, barId, labelId) {
+  const pwd = document.getElementById(inputId)?.value || '';
+  const score = checkStrength(pwd);
+  const fill = document.getElementById(barId);
+  const lbl  = document.getElementById(labelId);
+  if (!fill || !lbl) return;
+  const pct  = pwd.length === 0 ? 0 : Math.max(20, score * 25);
+  const colors = ['#ef4444','#f97316','#eab308','#22c55e'];
+  const labels = ['Too weak','Weak','Fair','Strong','Very strong'];
+  fill.style.width  = pct + '%';
+  fill.style.background = pwd.length === 0 ? 'var(--line)' : colors[Math.min(score, 3)];
+  lbl.textContent   = pwd.length === 0 ? '' : labels[Math.min(score, 4)];
+  lbl.style.color   = pwd.length === 0 ? 'var(--ink-faint)' : colors[Math.min(score, 3)];
+}
+
+// ── Router ─────────────────────────────────────────────────────────────────────
+(async () => {
+  if (path === '/account/login') { renderLogin(); return; }
+  if (path === '/account/register') { renderRegister(); return; }
+
+  // /account — check if logged in
+  const me = await fetch('/api/account/me').then(r => r.ok ? r.json() : null).catch(() => null);
+  if (!me?.ok) {
+    window.location.replace('/account/login');
+    return;
+  }
+  renderPortal(me);
+})();
+
+// ── Login ──────────────────────────────────────────────────────────────────────
+function renderLogin() {
+  document.title = 'Sign In — Letterhome';
+  app.innerHTML = `
+    <div class="eyebrow">Customer Account</div>
+    <h1>Welcome <em>back.</em></h1>
+    <p class="sub">Sign in to manage your saved addresses and order history.</p>
+    <div class="card" style="max-width:460px">
+      <div class="card-body">
+        <div class="field"><label>Email</label><input id="login-email" type="email" autocomplete="email" placeholder="you@example.com"></div>
+        <div class="field"><label>Password</label><input id="login-pwd" type="password" autocomplete="current-password" placeholder="••••••••"></div>
+        <div class="err" id="login-err"></div>
+        <div style="display:flex;align-items:center;gap:16px;margin-top:8px">
+          <button class="btn btn-primary" onclick="doLogin()">Sign In →</button>
+          <a href="/account/register" style="font-size:13px;color:var(--ink-muted)">Create account</a>
+        </div>
+      </div>
+    </div>`;
+  document.getElementById('login-pwd').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+}
+
+async function doLogin() {
+  clearErr('login-err');
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-pwd').value;
+  if (!email || !password) { showErr('login-err', 'Please enter your email and password.'); return; }
+  const btn = document.querySelector('[onclick="doLogin()"]');
+  btn.disabled = true; btn.textContent = 'Signing in…';
+  const r = await post('/api/account/login', { email, password });
+  btn.disabled = false; btn.textContent = 'Sign In →';
+  if (r.ok) { window.location.replace('/account'); return; }
+  showErr('login-err', r.error || 'Sign in failed.');
+}
+
+// ── Register ───────────────────────────────────────────────────────────────────
+function renderRegister() {
+  document.title = 'Create Account — Letterhome';
+  app.innerHTML = `
+    <div class="eyebrow">Customer Account</div>
+    <h1>Save your <em>details.</em></h1>
+    <p class="sub">Create a free account to save your return address and your frequent recipients — so you never have to type them again.</p>
+    <div class="card" style="max-width:460px">
+      <div class="card-body">
+        <div class="field"><label>Email</label><input id="reg-email" type="email" autocomplete="email" placeholder="you@example.com"></div>
+        <div class="field">
+          <label>Password</label>
+          <input id="reg-pwd" type="password" autocomplete="new-password" placeholder="At least 8 characters" oninput="updateStrength('reg-pwd','reg-strength-fill','reg-strength-lbl')">
+          <div class="strength-bar"><div class="strength-fill" id="reg-strength-fill"></div></div>
+          <div class="strength-label" id="reg-strength-lbl"></div>
+        </div>
+        <div class="field"><label>Confirm Password</label><input id="reg-pwd2" type="password" autocomplete="new-password" placeholder="••••••••"></div>
+        <div class="err" id="reg-err"></div>
+        <p style="font-size:12px;color:var(--ink-faint);margin-bottom:16px;line-height:1.5">An account is never required to place an order. Your password must be at least 8 characters and include a letter and a number or symbol.</p>
+        <div style="display:flex;align-items:center;gap:16px">
+          <button class="btn btn-primary" onclick="doRegister()">Create Account →</button>
+          <a href="/account/login" style="font-size:13px;color:var(--ink-muted)">Already have one? Sign in</a>
+        </div>
+      </div>
+    </div>`;
+  document.getElementById('reg-pwd2').addEventListener('keydown', e => { if (e.key === 'Enter') doRegister(); });
+}
+
+async function doRegister() {
+  clearErr('reg-err');
+  const email    = document.getElementById('reg-email').value.trim();
+  const password = document.getElementById('reg-pwd').value;
+  const confirm  = document.getElementById('reg-pwd2').value;
+  if (!email || !password) { showErr('reg-err', 'Please fill in all fields.'); return; }
+  if (password !== confirm) { showErr('reg-err', 'Passwords do not match.'); return; }
+  const btn = document.querySelector('[onclick="doRegister()"]');
+  btn.disabled = true; btn.textContent = 'Creating…';
+  const r = await post('/api/account/register', { email, password });
+  btn.disabled = false; btn.textContent = 'Create Account →';
+  if (r.ok) { window.location.replace('/account'); return; }
+  showErr('reg-err', r.error || 'Registration failed.');
+}
+
+// ── Portal ─────────────────────────────────────────────────────────────────────
+function renderPortal(me) {
+  const c = me.customer;
+  const orders = me.orders || [];
+  const recipients = me.recipients || [];
+
+  const statusClass = { paid:'status-paid', printing:'status-printing', mailed:'status-mailed' };
+  const statusLabel = { paid:'Preparing', printing:'Printing', mailed:'Mailed', awaiting_payment:'Pending' };
+
+  const orderRows = orders.length === 0
+    ? '<tr><td colspan="4" style="color:var(--ink-faint);font-style:italic;padding:20px 0">No orders yet.</td></tr>'
+    : orders.map(o => `
+        <tr>
+          <td style="font-family:'DM Mono',monospace;font-size:12px">#${o.id}</td>
+          <td>${esc(o.recipient_name)}<br><span style="font-size:12px;color:var(--ink-faint)">${esc(o.destination_country)}</span></td>
+          <td><span class="status-badge ${statusClass[o.status]||''}">${statusLabel[o.status]||o.status}</span></td>
+          <td style="font-size:12px;color:var(--ink-faint);white-space:nowrap">${o.created_at.slice(0,10)}</td>
+        </tr>`).join('');
+
+  const recipientCards = recipients.length === 0
+    ? '<p style="color:var(--ink-faint);font-style:italic;font-size:14px">No saved recipients yet. Add one below.</p>'
+    : recipients.map(r => `
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;padding:12px 0;border-bottom:1px solid rgba(42,42,42,0.07)" id="recip-${r.id}">
+          <div>
+            <div style="font-weight:500;font-size:14px">${esc(r.label || r.recipient_name)}</div>
+            <div style="font-size:12px;color:var(--ink-muted)">${esc(r.recipient_name)}${r.recipient_city ? ', ' + esc(r.recipient_city) : ''} · ${esc(r.destination_country)}</div>
+          </div>
+          <button class="btn-ghost" onclick="deleteRecipient(${r.id})" style="font-size:12px;flex-shrink:0;margin-left:16px">Remove</button>
+        </div>`).join('');
+
+  document.title = 'My Account — Letterhome';
+  app.innerHTML = `
+    <div style="display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:40px">
+      <div>
+        <div class="eyebrow">My Account</div>
+        <h1>${esc(c.display_name || c.email.split('@')[0])}</h1>
+        <p style="color:var(--ink-muted);font-size:14px">${esc(c.email)}</p>
+      </div>
+      <button class="btn btn-outline btn-sm" onclick="doLogout()">Sign Out</button>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="card-title">Order History</div></div>
+      <div class="card-body">
+        <table>
+          <thead><tr><th>#</th><th>Recipient</th><th>Status</th><th>Date</th></tr></thead>
+          <tbody>${orderRows}</tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="card-title">Return Address</div><span style="font-size:12px;color:var(--ink-faint)">Pre-fills your sender fields at checkout</span></div>
+      <div class="card-body">
+        <div class="grid2">
+          <div class="field"><label>Full Name</label><input id="s-name" value="${esc(c.sender_name||'')}"></div>
+          <div class="field"><label>Country</label><input id="s-country" value="${esc(c.sender_country||'')}"></div>
+        </div>
+        <div class="field"><label>Street Address</label><input id="s-street" value="${esc(c.sender_street||'')}"></div>
+        <div class="grid2">
+          <div class="field"><label>City</label><input id="s-city" value="${esc(c.sender_city||'')}"></div>
+          <div class="field"><label>Province / State</label><input id="s-province" value="${esc(c.sender_province||'')}"></div>
+        </div>
+        <div class="field" style="max-width:200px"><label>Postal Code</label><input id="s-postal" value="${esc(c.sender_postal||'')}"></div>
+        <div class="ok-msg" id="addr-ok"></div>
+        <div class="err" id="addr-err"></div>
+        <button class="btn btn-primary" onclick="saveReturnAddress()">Save Address</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="card-title">Saved Recipients</div><span style="font-size:12px;color:var(--ink-faint)">Pick from a dropdown at checkout</span></div>
+      <div class="card-body">
+        <div id="recipients-list">${recipientCards}</div>
+        <hr class="divider">
+        <div style="font-weight:600;font-size:14px;margin-bottom:16px">Add a Recipient</div>
+        <div class="field"><label>Nickname / Label (optional)</label><input id="new-label" placeholder="e.g. Mum's house"></div>
+        <div class="grid2">
+          <div class="field"><label>Full Name</label><input id="new-name" placeholder="Jane Smith"></div>
+          <div class="field"><label>Destination Country</label>
+            <select id="new-country">
+              <option value="CA">Canada</option>
+              <option value="US">United States</option>
+              <option value="GB">United Kingdom</option>
+              <option value="AU">Australia</option>
+              <option value="FR">France</option>
+              <option value="DE">Germany</option>
+              <option value="JP">Japan</option>
+              <option value="NZ">New Zealand</option>
+              <option value="MX">Mexico</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="field"><label>Street Address</label><input id="new-street" placeholder="123 Main St"></div>
+        <div class="grid2">
+          <div class="field"><label>City</label><input id="new-city"></div>
+          <div class="field"><label>Province / State</label><input id="new-province"></div>
+        </div>
+        <div class="field" style="max-width:200px"><label>Postal Code</label><input id="new-postal"></div>
+        <div class="err" id="recip-err"></div>
+        <button class="btn btn-primary" onclick="addRecipient()">Save Recipient</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="card-title">Change Password</div></div>
+      <div class="card-body" style="max-width:400px">
+        <div class="field"><label>Current Password</label><input id="pwd-current" type="password" autocomplete="current-password"></div>
+        <div class="field">
+          <label>New Password</label>
+          <input id="pwd-new" type="password" autocomplete="new-password" oninput="updateStrength('pwd-new','pwd-strength-fill','pwd-strength-lbl')">
+          <div class="strength-bar"><div class="strength-fill" id="pwd-strength-fill"></div></div>
+          <div class="strength-label" id="pwd-strength-lbl"></div>
+        </div>
+        <div class="field"><label>Confirm New Password</label><input id="pwd-confirm" type="password" autocomplete="new-password"></div>
+        <div class="err" id="pwd-err"></div>
+        <div class="ok-msg" id="pwd-ok"></div>
+        <button class="btn btn-primary" onclick="changePassword()">Update Password</button>
+      </div>
+    </div>`;
+}
+
+async function doLogout() {
+  await post('/api/account/logout', {});
+  window.location.replace('/account/login');
+}
+
+async function saveReturnAddress() {
+  clearErr('addr-err');
+  const r = await put('/api/account/return-address', {
+    sender_name:     document.getElementById('s-name').value.trim(),
+    sender_street:   document.getElementById('s-street').value.trim(),
+    sender_city:     document.getElementById('s-city').value.trim(),
+    sender_province: document.getElementById('s-province').value.trim(),
+    sender_postal:   document.getElementById('s-postal').value.trim(),
+    sender_country:  document.getElementById('s-country').value.trim(),
+  });
+  if (r.ok) showOk('addr-ok', '✓ Address saved');
+  else showErr('addr-err', r.error || 'Error saving address.');
+}
+
+async function addRecipient() {
+  clearErr('recip-err');
+  const r = await post('/api/account/recipients', {
+    label:              document.getElementById('new-label').value.trim(),
+    recipient_name:     document.getElementById('new-name').value.trim(),
+    recipient_street:   document.getElementById('new-street').value.trim(),
+    recipient_city:     document.getElementById('new-city').value.trim(),
+    recipient_province: document.getElementById('new-province').value.trim(),
+    recipient_postal:   document.getElementById('new-postal').value.trim(),
+    destination_country: document.getElementById('new-country').value,
+  });
+  if (r.ok) {
+    window.location.reload();
+  } else {
+    showErr('recip-err', r.error || 'Error saving recipient.');
+  }
+}
+
+async function deleteRecipient(id) {
+  if (!confirm('Remove this saved recipient?')) return;
+  const r = await del('/api/account/recipients/' + id);
+  if (r.ok) {
+    const el = document.getElementById('recip-' + id);
+    if (el) el.remove();
+  } else {
+    alert(r.error || 'Error removing recipient.');
+  }
+}
+
+async function changePassword() {
+  clearErr('pwd-err');
+  const current = document.getElementById('pwd-current').value;
+  const newPwd  = document.getElementById('pwd-new').value;
+  const confirm = document.getElementById('pwd-confirm').value;
+  if (!current || !newPwd) { showErr('pwd-err', 'Please fill in all fields.'); return; }
+  if (newPwd !== confirm)  { showErr('pwd-err', 'New passwords do not match.'); return; }
+  const btn = document.querySelector('[onclick="changePassword()"]');
+  btn.disabled = true; btn.textContent = 'Updating…';
+  const r = await put('/api/account/password', { current_password: current, new_password: newPwd });
+  btn.disabled = false; btn.textContent = 'Update Password';
+  if (r.ok) {
+    document.getElementById('pwd-current').value = '';
+    document.getElementById('pwd-new').value = '';
+    document.getElementById('pwd-confirm').value = '';
+    showOk('pwd-ok', '✓ Password updated');
+  } else {
+    showErr('pwd-err', r.error || 'Error updating password.');
+  }
+}
+</script>
+</body>
+</html>

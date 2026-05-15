@@ -1071,7 +1071,63 @@ async function submitOrder() {
       if (main) main.replaceWith(msg); else document.body.appendChild(msg);
     }
   } catch(e) { /* fail silently — don't block the form */ }
+
+  // Pre-fill from account if logged in
+  try {
+    const me = await fetch('/api/account/me').then(r => r.ok ? r.json() : null).catch(() => null);
+    if (me?.ok && me.customer) {
+      const c = me.customer;
+      if (c.sender_name)     document.getElementById('s-name').value     = c.sender_name;
+      if (c.sender_street)   document.getElementById('s-street').value   = c.sender_street;
+      if (c.sender_city)     document.getElementById('s-city').value     = c.sender_city;
+      if (c.sender_province) document.getElementById('s-province').value = c.sender_province;
+      if (c.sender_postal)   document.getElementById('s-postal').value   = c.sender_postal;
+      if (c.sender_country)  document.getElementById('s-country').value  = c.sender_country;
+
+      // Saved recipients dropdown
+      if (me.recipients?.length) {
+        const recipCol = document.querySelector('#sender-fields')?.closest('.address-col')?.nextElementSibling;
+        if (recipCol) {
+          const heading = recipCol.querySelector('h3');
+          const wrap = document.createElement('div');
+          wrap.style.cssText = 'margin-bottom:18px';
+          wrap.innerHTML = `
+            <div style="font-size:11px;font-family:\'DM Mono\',monospace;text-transform:uppercase;letter-spacing:0.12em;color:var(--ink-muted);margin-bottom:5px">Saved Recipients</div>
+            <select id="saved-recipient-select" onchange="fillSavedRecipient(this)" style="width:100%;padding:10px 12px;border:1.5px solid var(--line,rgba(42,42,42,0.14));background:var(--paper,#faf6ec);color:var(--ink,#2a2a2a);border-radius:2px;font-family:inherit;font-size:15px">
+              <option value="">— Select a saved recipient —</option>
+              ${me.recipients.map(r => `<option value='${JSON.stringify(r).replace(/'/g, '&#39;')}'>${(r.label || r.recipient_name).replace(/</g,'&lt;')}</option>`).join('')}
+            </select>`;
+          if (heading) recipCol.insertBefore(wrap, heading.nextSibling);
+        }
+      }
+    }
+  } catch(e) { /* fail silently */ }
 })();
+
+function fillSavedRecipient(sel) {
+  if (!sel.value) return;
+  try {
+    const r = JSON.parse(sel.value);
+    if (r.recipient_name)   document.getElementById('r-name').value   = r.recipient_name;
+    if (r.recipient_street) document.getElementById('r-street').value = r.recipient_street;
+    if (r.recipient_city)   document.getElementById('r-city').value   = r.recipient_city;
+    if (r.recipient_postal) document.getElementById('r-postal').value = r.recipient_postal;
+    // Province/state
+    if (r.destination_country === 'CA') {
+      const sel2 = document.getElementById('r-province');
+      if (sel2 && r.recipient_province) sel2.value = r.recipient_province;
+    } else {
+      const txt = document.getElementById('r-province-text');
+      if (txt && r.recipient_province) txt.value = r.recipient_province;
+    }
+    // Country
+    const cSel = document.getElementById('r-country');
+    if (cSel && r.destination_country) {
+      cSel.value = r.destination_country;
+      updatePricing();
+    }
+  } catch(e) {}
+}
 </script>
 </body>
 </html>

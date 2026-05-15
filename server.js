@@ -151,6 +151,23 @@ try { db.exec(`ALTER TABLE customers ADD COLUMN sender_city TEXT`);    } catch {
 try { db.exec(`ALTER TABLE customers ADD COLUMN sender_province TEXT`);} catch {}
 try { db.exec(`ALTER TABLE customers ADD COLUMN sender_postal TEXT`);  } catch {}
 try { db.exec(`ALTER TABLE customers ADD COLUMN sender_country TEXT`); } catch {}
+try { db.exec(`ALTER TABLE customers ADD COLUMN password_hash TEXT`);         } catch {}
+try { db.exec(`ALTER TABLE customers ADD COLUMN account_created_at DATETIME`);} catch {}
+try {
+  db.exec(`CREATE TABLE IF NOT EXISTS saved_recipients (
+    id                 INTEGER PRIMARY KEY AUTOINCREMENT,
+    customer_email     TEXT NOT NULL,
+    label              TEXT,
+    recipient_name     TEXT NOT NULL,
+    recipient_street   TEXT,
+    recipient_city     TEXT,
+    recipient_province TEXT,
+    recipient_postal   TEXT,
+    destination_country TEXT DEFAULT 'CA',
+    created_at         DATETIME DEFAULT CURRENT_TIMESTAMP
+  )`);
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_saved_recipients_email ON saved_recipients(customer_email)`);
+} catch (e) { console.error('[init] saved_recipients:', e.message); }
 
 // New tables (schema B)
 try {
@@ -384,6 +401,14 @@ async function lookupCountry(ip) {
   return null;
 }
 
+function validateCustomerPassword(pwd) {
+  if (!pwd || pwd.length < 8)          return 'Password must be at least 8 characters.';
+  if (!/[A-Za-z]/.test(pwd))           return 'Password must include at least one letter.';
+  if (!/[0-9!@#$%^&*()\-_=+[\]{}|;:,.<>?]/.test(pwd))
+    return 'Password must include at least one number or symbol.';
+  return null;
+}
+
 function getSetting(key, fallback = '') {
   const row = db.prepare('SELECT value FROM settings WHERE key = ?').get(key);
   return row ? row.value : fallback;
@@ -578,6 +603,8 @@ app.use(express.urlencoded({ limit: '64kb', extended: true }));
     res.sendFile(path.join(__dirname, 'public', `${p}.html`))
   )
 );
+app.get('/account', (req, res) => res.sendFile(path.join(__dirname, 'public', 'account.html')));
+app.get('/account/:page', (req, res) => res.sendFile(path.join(__dirname, 'public', 'account.html')));
 
 app.get('/faq', (req, res) => res.redirect('/#faq'));
 
@@ -716,10 +743,23 @@ const loginLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+const accountLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many attempts. Please try again later.' },
+});
+
 function requireAdmin(req, res, next) {
   if (req.session?.admin) return next();
   if (req.path.startsWith('/api/')) return res.status(401).json({ error: 'Unauthorized' });
   res.redirect('/admin/login');
+}
+
+function requireCustomer(req, res, next) {
+  if (req.session?.customer?.email) return next();
+  res.status(401).json({ error: 'Not logged in.' });
 }
 
 // ── Create order ──────────────────────────────────────────────────────────────
@@ -1833,6 +1873,121 @@ app.post('/api/contact', contactLimiter, async (req, res) => {
     }, 'away_autoreply');
   }
 
+  res.json({ ok: true });
+});
+
+// ── Customer accounts ─────────────────────────────────────────────────────────
+app.post('/api/account/register', accountLimiter, async (req, res) => {
+  const email = (req.body.email || '').trim().toLowerCase();
+  const { password } = req.body;
+  if (!email || !password) return res.status(400).json({ error: 'Email and password are required.' });
+
+  const pwErr = validateCustomerPassword(password);
+  if (pwErr) return res.status(400).json({ error: pwErr });
+
+  const existing = db.prepare('SELECT email, password_hash FROM customers WHERE email = ?').get(email);
+  if (existing?.password_hash) return res.status(400).json({ error: 'An account with this email already exists.' });
+
+  const hash = await bcrypt.hash(password, 12);
+  if (existing) {
+    db.prepare('UPDATE customers SET password_hash = ?, account_created_at = CURRENT_TIMESTAMP WHERE email = ?').run(hash, email);
+  } else {
+    db.prepare('INSERT INTO customers (email, password_hash, account_created_at, first_seen) VALUES (?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)').run(email, hash);
+  }
+
+  req.session.regenerate(err => {
+    if (err) return res.status(500).json({ error: 'Session error.' });
+    req.session.customer = { email };
+    req.session.save(err2 => {
+      if (err2) return res.status(500).json({ error: 'Session error.' });
+      res.json({ ok: true });
+    });
+  });
+});
+
+app.post('/api/account/login', accountLimiter, async (req, res) => {
+  const email = (req.body.email || '').trim().toLowerCase();
+  const { password } = req.body;
+  if (!email || !password) return res.status(400).json({ error: 'Email and password are required.' });
+
+  const customer = db.prepare('SELECT * FROM customers WHERE email = ?').get(email);
+  if (!customer?.password_hash) return res.status(401).json({ error: 'Invalid email or password.' });
+
+  const match = await bcrypt.compare(password, customer.password_hash);
+  if (!match) return res.status(401).json({ error: 'Invalid email or password.' });
+
+  req.session.regenerate(err => {
+    if (err) return res.status(500).json({ error: 'Session error.' });
+    req.session.customer = { email: customer.email };
+    req.session.save(err2 => {
+      if (err2) return res.status(500).json({ error: 'Session error.' });
+      res.json({ ok: true });
+    });
+  });
+});
+
+app.post('/api/account/logout', (req, res) => {
+  delete req.session.customer;
+  req.session.save(() => res.json({ ok: true }));
+});
+
+app.get('/api/account/me', requireCustomer, (req, res) => {
+  const email = req.session.customer.email;
+  const customer = db.prepare(
+    'SELECT email, display_name, sender_name, sender_street, sender_city, sender_province, sender_postal, sender_country, account_created_at FROM customers WHERE email = ?'
+  ).get(email);
+  if (!customer) return res.status(404).json({ error: 'Account not found.' });
+  const orders = db.prepare(
+    'SELECT id, created_at, status, recipient_name, destination_country, price_cents FROM orders WHERE customer_email = ? AND deleted_at IS NULL ORDER BY created_at DESC LIMIT 50'
+  ).all(email);
+  const recipients = db.prepare('SELECT * FROM saved_recipients WHERE customer_email = ? ORDER BY created_at DESC').all(email);
+  res.json({ ok: true, customer, orders, recipients });
+});
+
+app.put('/api/account/return-address', requireCustomer, (req, res) => {
+  const email = req.session.customer.email;
+  const { sender_name, sender_street, sender_city, sender_province, sender_postal, sender_country } = req.body;
+  db.prepare('UPDATE customers SET sender_name=?,sender_street=?,sender_city=?,sender_province=?,sender_postal=?,sender_country=? WHERE email=?')
+    .run(sender_name||null, sender_street||null, sender_city||null, sender_province||null, sender_postal||null, sender_country||null, email);
+  res.json({ ok: true });
+});
+
+app.get('/api/account/recipients', requireCustomer, (req, res) => {
+  const rows = db.prepare('SELECT * FROM saved_recipients WHERE customer_email = ? ORDER BY created_at DESC').all(req.session.customer.email);
+  res.json({ ok: true, recipients: rows });
+});
+
+app.post('/api/account/recipients', requireCustomer, (req, res) => {
+  const email = req.session.customer.email;
+  const { label, recipient_name, recipient_street, recipient_city, recipient_province, recipient_postal, destination_country } = req.body;
+  if (!recipient_name || !recipient_street) return res.status(400).json({ error: 'Name and street address are required.' });
+  const count = db.prepare('SELECT COUNT(*) as n FROM saved_recipients WHERE customer_email = ?').get(email).n;
+  if (count >= 20) return res.status(400).json({ error: 'Maximum 20 saved recipients.' });
+  db.prepare('INSERT INTO saved_recipients (customer_email, label, recipient_name, recipient_street, recipient_city, recipient_province, recipient_postal, destination_country) VALUES (?,?,?,?,?,?,?,?)')
+    .run(email, (label||'').slice(0,100)||null, String(recipient_name).slice(0,200), String(recipient_street).slice(0,200), (recipient_city||'').slice(0,100)||null, (recipient_province||'').slice(0,50)||null, (recipient_postal||'').slice(0,20)||null, destination_country||'CA');
+  res.json({ ok: true });
+});
+
+app.delete('/api/account/recipients/:id', requireCustomer, (req, res) => {
+  const email = req.session.customer.email;
+  const id = Number(req.params.id);
+  const row = db.prepare('SELECT id FROM saved_recipients WHERE id = ? AND customer_email = ?').get(id, email);
+  if (!row) return res.status(404).json({ error: 'Recipient not found.' });
+  db.prepare('DELETE FROM saved_recipients WHERE id = ?').run(id);
+  res.json({ ok: true });
+});
+
+app.put('/api/account/password', requireCustomer, accountLimiter, async (req, res) => {
+  const email = req.session.customer.email;
+  const { current_password, new_password } = req.body;
+  const customer = db.prepare('SELECT password_hash FROM customers WHERE email = ?').get(email);
+  if (!customer?.password_hash) return res.status(400).json({ error: 'No password set on this account.' });
+  const match = await bcrypt.compare(current_password || '', customer.password_hash);
+  if (!match) return res.status(401).json({ error: 'Current password is incorrect.' });
+  const pwErr = validateCustomerPassword(new_password);
+  if (pwErr) return res.status(400).json({ error: pwErr });
+  const hash = await bcrypt.hash(new_password, 12);
+  db.prepare('UPDATE customers SET password_hash = ? WHERE email = ?').run(hash, email);
   res.json({ ok: true });
 });
 
