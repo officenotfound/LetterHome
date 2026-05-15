@@ -1,5 +1,6 @@
 require('dotenv').config();
 const express   = require('express');
+const helmet    = require('helmet');
 const multer    = require('multer');
 const Stripe    = require('stripe');
 const mailer    = require('nodemailer');
@@ -34,14 +35,33 @@ app.use(session({
   },
 }));
 
-app.use((req, res, next) => {
-  res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
-  if (process.env.NODE_ENV === 'production') {
-    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
-  }
-  next();
-});
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc:  ["'self'"],
+      scriptSrc:   ["'self'", "'unsafe-inline'",
+                    'https://maps.googleapis.com',
+                    'https://www.googletagmanager.com',
+                    'https://www.google-analytics.com'],
+      styleSrc:    ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+      fontSrc:     ["'self'", 'https://fonts.gstatic.com'],
+      imgSrc:      ["'self'", 'data:',
+                    'https://www.googletagmanager.com',
+                    'https://www.google-analytics.com'],
+      connectSrc:  ["'self'",
+                    'https://maps.googleapis.com',
+                    'https://maps.gstatic.com'],
+      frameSrc:    ["'none'"],
+      objectSrc:   ["'none'"],
+      baseUri:     ["'self'"],
+      formAction:  ["'self'"],
+    },
+  },
+  crossOriginEmbedderPolicy: false,
+  hsts: process.env.NODE_ENV === 'production'
+    ? { maxAge: 31536000, includeSubDomains: true }
+    : false,
+}));
 
 // ── Database ──────────────────────────────────────────────────────────────────
 const db = new Database('orders.db', { allowBareNamedParameters: true });
@@ -546,8 +566,8 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
 });
 
 // ── Middleware ────────────────────────────────────────────────────────────────
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '64kb' }));
+app.use(express.urlencoded({ limit: '64kb', extended: true }));
 
 // Clean URLs for all pages
 ['send', 'privacy', 'terms', 'refunds', 'about', 'contact', 'track', 'order-success'].forEach(p =>
@@ -688,7 +708,7 @@ const contactLimiter = rateLimit({
 
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10,
+  max: 5,
   standardHeaders: true,
   legacyHeaders: false,
 });
@@ -897,8 +917,14 @@ app.post('/admin/login', loginLimiter, async (req, res) => {
       return res.redirect('/admin/login?error=2fa');
   }
 
-  req.session.admin = { username };
-  res.redirect('/admin');
+  req.session.regenerate(err => {
+    if (err) return res.status(500).send('Session error');
+    req.session.admin = { username };
+    req.session.save(err2 => {
+      if (err2) return res.status(500).send('Session error');
+      res.redirect('/admin');
+    });
+  });
 });
 
 app.post('/admin/logout', (req, res) => {
