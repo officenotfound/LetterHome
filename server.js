@@ -1919,52 +1919,63 @@ app.post('/api/contact', contactLimiter, async (req, res) => {
 
 // ── Customer accounts ─────────────────────────────────────────────────────────
 app.post('/api/account/register', accountLimiter, async (req, res) => {
-  const email = (req.body.email || '').trim().toLowerCase();
-  const { password } = req.body;
-  if (!email || !password) return res.status(400).json({ error: 'Email and password are required.' });
+  try {
+    const email = (req.body.email || '').trim().toLowerCase();
+    const { password } = req.body;
+    if (!email || !password) return res.status(400).json({ error: 'Email and password are required.' });
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: 'Please enter a valid email address.' });
 
-  const pwErr = validateCustomerPassword(password);
-  if (pwErr) return res.status(400).json({ error: pwErr });
+    const pwErr = validateCustomerPassword(password);
+    if (pwErr) return res.status(400).json({ error: pwErr });
 
-  const existing = db.prepare('SELECT email, password_hash FROM customers WHERE email = ?').get(email);
-  if (existing?.password_hash) return res.status(400).json({ error: 'An account with this email already exists.' });
+    const existing = db.prepare('SELECT email, password_hash FROM customers WHERE email = ?').get(email);
+    if (existing?.password_hash) return res.status(400).json({ error: 'An account with this email already exists.' });
 
-  const hash = await bcrypt.hash(password, 12);
-  if (existing) {
-    db.prepare('UPDATE customers SET password_hash = ?, account_created_at = CURRENT_TIMESTAMP WHERE email = ?').run(hash, email);
-  } else {
-    db.prepare('INSERT INTO customers (email, password_hash, account_created_at, first_seen) VALUES (?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)').run(email, hash);
-  }
+    const hash = await bcrypt.hash(password, 12);
+    if (existing) {
+      db.prepare('UPDATE customers SET password_hash = ?, account_created_at = CURRENT_TIMESTAMP, deleted_at = NULL WHERE email = ?').run(hash, email);
+    } else {
+      db.prepare('INSERT INTO customers (email, password_hash, account_created_at) VALUES (?,?,CURRENT_TIMESTAMP)').run(email, hash);
+    }
 
-  req.session.regenerate(err => {
-    if (err) return res.status(500).json({ error: 'Session error.' });
-    req.session.customer = { email };
-    req.session.save(err2 => {
-      if (err2) return res.status(500).json({ error: 'Session error.' });
-      res.json({ ok: true });
+    req.session.regenerate(err => {
+      if (err) return res.status(500).json({ error: 'Session error.' });
+      req.session.customer = { email };
+      req.session.save(err2 => {
+        if (err2) return res.status(500).json({ error: 'Session error.' });
+        res.json({ ok: true });
+      });
     });
-  });
+  } catch (e) {
+    console.error('[account/register]', e.message);
+    res.status(500).json({ error: 'Could not create account. Please try again.' });
+  }
 });
 
 app.post('/api/account/login', accountLimiter, async (req, res) => {
-  const email = (req.body.email || '').trim().toLowerCase();
-  const { password } = req.body;
-  if (!email || !password) return res.status(400).json({ error: 'Email and password are required.' });
+  try {
+    const email = (req.body.email || '').trim().toLowerCase();
+    const { password } = req.body;
+    if (!email || !password) return res.status(400).json({ error: 'Email and password are required.' });
 
-  const customer = db.prepare('SELECT * FROM customers WHERE email = ?').get(email);
-  if (!customer?.password_hash) return res.status(401).json({ error: 'Invalid email or password.' });
+    const customer = db.prepare('SELECT * FROM customers WHERE email = ? AND deleted_at IS NULL').get(email);
+    if (!customer?.password_hash) return res.status(401).json({ error: 'Invalid email or password.' });
 
-  const match = await bcrypt.compare(password, customer.password_hash);
-  if (!match) return res.status(401).json({ error: 'Invalid email or password.' });
+    const match = await bcrypt.compare(password, customer.password_hash);
+    if (!match) return res.status(401).json({ error: 'Invalid email or password.' });
 
-  req.session.regenerate(err => {
-    if (err) return res.status(500).json({ error: 'Session error.' });
-    req.session.customer = { email: customer.email };
-    req.session.save(err2 => {
-      if (err2) return res.status(500).json({ error: 'Session error.' });
-      res.json({ ok: true });
+    req.session.regenerate(err => {
+      if (err) return res.status(500).json({ error: 'Session error.' });
+      req.session.customer = { email: customer.email };
+      req.session.save(err2 => {
+        if (err2) return res.status(500).json({ error: 'Session error.' });
+        res.json({ ok: true });
+      });
     });
-  });
+  } catch (e) {
+    console.error('[account/login]', e.message);
+    res.status(500).json({ error: 'Sign in failed. Please try again.' });
+  }
 });
 
 app.post('/api/account/logout', (req, res) => {
