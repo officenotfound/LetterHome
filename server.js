@@ -2871,7 +2871,65 @@ process.on('uncaughtException', (err) => {
 const BACKUP_DIR      = path.join(__dirname, 'backups');
 const BACKUP_KEEP     = 14;
 
-function runBackup() {
+// Google Drive off-site backup (uses the GA4 service account credentials).
+// Set GDRIVE_BACKUP_FOLDER_ID to enable.
+let _driveClient = null;
+function getDriveClient() {
+  if (_driveClient) return _driveClient;
+  if (!process.env.GA4_CLIENT_EMAIL || !process.env.GA4_PRIVATE_KEY) return null;
+  try {
+    const { google } = require('googleapis');
+    const auth = new google.auth.JWT({
+      email: process.env.GA4_CLIENT_EMAIL,
+      key:   process.env.GA4_PRIVATE_KEY.replace(/\\n/g, '\n'),
+      scopes: ['https://www.googleapis.com/auth/drive.file'],
+    });
+    _driveClient = google.drive({ version: 'v3', auth });
+    return _driveClient;
+  } catch (e) {
+    console.error('[gdrive] init failed:', e.message);
+    return null;
+  }
+}
+
+async function uploadBackupToDrive(filePath) {
+  const folderId = process.env.GDRIVE_BACKUP_FOLDER_ID;
+  if (!folderId) return null;
+  const drive = getDriveClient();
+  if (!drive) {
+    console.warn('[gdrive] skip: GA4 service account env vars not set');
+    return null;
+  }
+  try {
+    const filename = path.basename(filePath);
+    const res = await drive.files.create({
+      requestBody: { name: filename, parents: [folderId] },
+      media: { mimeType: 'application/octet-stream', body: fs.createReadStream(filePath) },
+      fields: 'id, name, createdTime, size',
+    });
+    console.log(`[gdrive] uploaded ${filename} (${res.data.id})`);
+
+    // Retention: keep newest GDRIVE_BACKUP_KEEP files in that folder
+    const keep = Math.max(1, Number(process.env.GDRIVE_BACKUP_KEEP) || 30);
+    const list = await drive.files.list({
+      q: `'${folderId}' in parents and trashed = false and (name contains 'orders-')`,
+      orderBy: 'createdTime desc',
+      fields: 'files(id, name, createdTime)',
+      pageSize: 200,
+    });
+    const old = (list.data.files || []).slice(keep);
+    for (const f of old) {
+      try { await drive.files.delete({ fileId: f.id }); console.log(`[gdrive] pruned ${f.name}`); }
+      catch (err) { console.warn('[gdrive] prune failed for', f.name, err.message); }
+    }
+    return { id: res.data.id, name: res.data.name };
+  } catch (e) {
+    console.error('[gdrive] upload failed:', e.message);
+    return { error: e.message };
+  }
+}
+
+async function runBackup() {
   try {
     const ts   = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
     const passphrase = process.env.BACKUP_PASSPHRASE;
@@ -2915,7 +2973,13 @@ function runBackup() {
       }
     }
 
-    return { ok: true, filename: path.basename(dest) };
+    // Optional: upload to Google Drive (off-site, off-machine)
+    let drive = null;
+    if (process.env.GDRIVE_BACKUP_FOLDER_ID) {
+      drive = await uploadBackupToDrive(dest);
+    }
+
+    return { ok: true, filename: path.basename(dest), drive };
   } catch (e) {
     console.error('[backup] failed:', e.message);
     return { ok: false, error: e.message };
@@ -2923,9 +2987,9 @@ function runBackup() {
 }
 
 // Daily at 2:00 AM
-cron.schedule('0 2 * * *', () => {
+cron.schedule('0 2 * * *', async () => {
   console.log('[backup] running scheduled backup');
-  runBackup();
+  await runBackup();
 });
 
 // API: list backups
@@ -2938,15 +3002,23 @@ app.get('/api/admin/backups', requireAdmin, (req, res) => {
         return { filename: f, size: stat.size, created_at: stat.mtime.toISOString(), encrypted: f.endsWith('.db.enc') };
       })
       .sort((a, b) => b.created_at.localeCompare(a.created_at));
-    res.json(files);
+    res.json({
+      files,
+      config: {
+        encrypted:      !!process.env.BACKUP_PASSPHRASE,
+        email_enabled:  process.env.BACKUP_EMAIL_ENABLED === 'true',
+        gdrive_enabled: !!(process.env.GDRIVE_BACKUP_FOLDER_ID && process.env.GA4_CLIENT_EMAIL && process.env.GA4_PRIVATE_KEY),
+        gdrive_keep:    Math.max(1, Number(process.env.GDRIVE_BACKUP_KEEP) || 30),
+      },
+    });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
 });
 
 // API: trigger manual backup
-app.post('/api/admin/backups/run', requireAdmin, (req, res) => {
-  const result = runBackup();
+app.post('/api/admin/backups/run', requireAdmin, async (req, res) => {
+  const result = await runBackup();
   if (result.ok) logAudit(req, 'backup.manual', 'backup', result.filename);
   res.json(result);
 });

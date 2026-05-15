@@ -1883,11 +1883,13 @@ function clearAuditFilter() {
 
 async function showSettings() {
   setTitle('Settings');
-  const [settings, backups] = await Promise.all([
+  const [settings, backupData] = await Promise.all([
     api('/api/admin/settings'),
     api('/api/admin/backups'),
   ]);
   if (settings === null) return;
+  const backups = Array.isArray(backupData) ? backupData : (backupData?.files || []);
+  const backupCfg = (backupData && backupData.config) || {};
 
   const paused       = settings['service_paused'] === 'true';
   const announcement = settings['announcement'] || '';
@@ -1998,7 +2000,12 @@ async function showSettings() {
         <button class="btn btn-outline btn-sm" id="backup-now-btn" onclick="runBackupNow()">Backup Now</button>
       </div>
       <div style="padding:16px 20px">
-        <p style="font-size:13px;color:#64748b;margin:0 0 16px">Automatic backups run daily at 2:00 AM. The last 14 backups are kept. Only <code>orders.db</code> is backed up — your code lives on GitHub.</p>
+        <p style="font-size:13px;color:#64748b;margin:0 0 16px">Automatic backups run daily at 2:00 AM. The last 14 backups are kept locally. Only <code>orders.db</code> is backed up — your code lives on GitHub.</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;font-size:11px;font-family:monospace">
+          <span style="background:${backupCfg.encrypted ? '#dcfce7' : '#f1f5f9'};color:${backupCfg.encrypted ? '#166534' : '#64748b'};padding:3px 10px;border-radius:4px;text-transform:uppercase;letter-spacing:0.06em">${backupCfg.encrypted ? '✓ Encrypted' : '○ Plain'}</span>
+          <span style="background:${backupCfg.gdrive_enabled ? '#dbeafe' : '#f1f5f9'};color:${backupCfg.gdrive_enabled ? '#1e40af' : '#64748b'};padding:3px 10px;border-radius:4px;text-transform:uppercase;letter-spacing:0.06em">${backupCfg.gdrive_enabled ? `☁ Google Drive (keep ${backupCfg.gdrive_keep})` : '○ No Google Drive'}</span>
+          <span style="background:${backupCfg.email_enabled ? '#fef3c7' : '#f1f5f9'};color:${backupCfg.email_enabled ? '#92400e' : '#64748b'};padding:3px 10px;border-radius:4px;text-transform:uppercase;letter-spacing:0.06em">${backupCfg.email_enabled ? '✉ Email Copy' : '○ No Email'}</span>
+        </div>
         ${(backups||[]).length === 0
           ? '<div class="empty" style="padding:8px 0">No backups yet. Click "Backup Now" to create the first one.</div>'
           : `<table>
@@ -2104,8 +2111,14 @@ async function runBackupNow() {
   const r = await post('/api/admin/backups/run', {});
   if (btn) { btn.disabled = false; btn.textContent = 'Backup Now'; }
   if (r?.ok) {
-    if (msg) { msg.style.color = '#16a34a'; msg.textContent = `✓ Backup created: ${r.filename}`; }
-    setTimeout(() => showSettings(), 800);
+    if (msg) {
+      msg.style.color = '#16a34a';
+      let line = `✓ Backup created: ${r.filename}`;
+      if (r.drive?.id)        line += ' · uploaded to Google Drive';
+      else if (r.drive?.error) line += ` · Drive upload failed: ${r.drive.error}`;
+      msg.textContent = line;
+    }
+    setTimeout(() => showSettings(), 1200);
   } else {
     if (msg) { msg.style.color = '#dc2626'; msg.textContent = `Error: ${r?.error || 'unknown'}`; }
   }
