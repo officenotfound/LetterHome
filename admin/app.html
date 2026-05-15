@@ -172,11 +172,11 @@ textarea{resize:vertical;min-height:80px}
     <button class="nav-link" id="nav-broadcast" onclick="go('/admin/broadcast')"><span class="nav-icon">📢</span> Broadcast</button>
     <button class="nav-link" id="nav-insights"  onclick="go('/admin/insights')"><span class="nav-icon">◑</span> Insights</button>
     <button class="nav-link" id="nav-visitors"  onclick="go('/admin/visitors')"><span class="nav-icon">◉</span> Visitors</button>
+    <button class="nav-link" id="nav-stripe"    onclick="go('/admin/stripe')"><span class="nav-icon">$</span> Stripe</button>
+    <button class="nav-link" id="nav-contacts"  onclick="go('/admin/contacts')" style="justify-content:space-between"><span style="display:flex;align-items:center;gap:10px"><span class="nav-icon">✉</span> Contacts</span><span id="contacts-badge" style="display:none;background:#dc2626;color:#fff;border-radius:999px;font-size:10px;padding:1px 7px;font-weight:700">0</span></button>
     <button class="nav-link" id="nav-templates" onclick="go('/admin/templates')"><span class="nav-icon">☰</span> Templates</button>
     <button class="nav-link" id="nav-settings"  onclick="go('/admin/settings')"><span class="nav-icon">⚙</span> Settings</button>
     <button class="nav-link" id="nav-trash"     onclick="go('/admin/trash')"><span class="nav-icon">⌫</span> Trash</button>
-    <div class="nav-label">External</div>
-    <a class="nav-link" href="https://dashboard.stripe.com/payments" target="_blank" rel="noopener" style="text-decoration:none"><span class="nav-icon">↗</span> Stripe Dashboard</a>
   </nav>
   <div class="sidebar-footer">
     <button type="button" class="admin-theme-toggle" onclick="toggleAdminTheme()">
@@ -210,6 +210,7 @@ async function init() {
   document.getElementById('topbar-user').textContent = me.username;
   window.addEventListener('popstate', () => route());
   startCountdownTicker();
+  api('/api/admin/contacts/unread').then(d => { if (d) updateContactsBadge(d.unread); });
   route();
 }
 
@@ -231,18 +232,22 @@ function route() {
   if (p === '/admin/print-queue')                   return showPrintQueue();
   if (p === '/admin/insights')                      return showInsights();
   if (p === '/admin/visitors')                      return showVisitors();
+  if (p === '/admin/stripe')                        return showStripe();
+  if (p === '/admin/contacts')                      return showContacts();
   if (p === '/admin/templates')                     return showTemplates();
   if (p === '/admin/settings')                      return showSettings();
   showDashboard();
 }
 
 function setActiveNav(p) {
-  ['dashboard','orders','customers','broadcast','insights','visitors','templates','settings','trash'].forEach(k => document.getElementById('nav-'+k)?.classList.remove('active'));
+  ['dashboard','orders','customers','broadcast','insights','visitors','stripe','contacts','templates','settings','trash'].forEach(k => document.getElementById('nav-'+k)?.classList.remove('active'));
   if (p.startsWith('/admin/orders'))          document.getElementById('nav-orders')?.classList.add('active');
   else if (p.startsWith('/admin/customers'))  document.getElementById('nav-customers')?.classList.add('active');
   else if (p.startsWith('/admin/broadcast'))  document.getElementById('nav-broadcast')?.classList.add('active');
   else if (p.startsWith('/admin/insights'))   document.getElementById('nav-insights')?.classList.add('active');
   else if (p.startsWith('/admin/visitors'))   document.getElementById('nav-visitors')?.classList.add('active');
+  else if (p.startsWith('/admin/stripe'))     document.getElementById('nav-stripe')?.classList.add('active');
+  else if (p.startsWith('/admin/contacts'))   document.getElementById('nav-contacts')?.classList.add('active');
   else if (p.startsWith('/admin/templates'))  document.getElementById('nav-templates')?.classList.add('active');
   else if (p.startsWith('/admin/settings'))   document.getElementById('nav-settings')?.classList.add('active');
   else if (p.startsWith('/admin/trash'))      document.getElementById('nav-trash')?.classList.add('active');
@@ -363,16 +368,18 @@ let dashChartPeriod = 'monthly';
 
 async function showDashboard() {
   setTitle('Dashboard');
-  const [stats, paidOrders, submittedOrders, chartData, geoData] = await Promise.all([
+  const [stats, paidOrders, submittedOrders, chartData, geoData, stripeOv, health] = await Promise.all([
     api('/api/admin/stats'),
     api('/api/admin/orders?status=paid'),
     api('/api/admin/orders?status=submitted_to_printer'),
     api('/api/admin/stats/chart?period=monthly'),
     api('/api/admin/stats/geo'),
+    api('/api/admin/stripe/overview'),
+    api('/api/admin/server-health'),
   ]);
   if (!stats) return;
 
-  renderDashboard(stats, paidOrders, submittedOrders, chartData, geoData, 'monthly');
+  renderDashboard(stats, paidOrders, submittedOrders, chartData, geoData, 'monthly', stripeOv, health);
 }
 
 async function reloadDashChart(period) {
@@ -406,7 +413,7 @@ async function sendPnlDigest() {
   else alert('Error: ' + (r?.error || 'unknown'));
 }
 
-function renderDashboard(stats, paidOrders, submittedOrders, chartData, geoData, period) {
+function renderDashboard(stats, paidOrders, submittedOrders, chartData, geoData, period, stripeOv, health) {
   const queueRows = [...(paidOrders || []), ...(submittedOrders || [])]
     .sort((a,b) => new Date(a.created_at) - new Date(b.created_at))
     .map(o => `
@@ -453,6 +460,34 @@ function renderDashboard(stats, paidOrders, submittedOrders, chartData, geoData,
         <div class="stat-sub">of customers reordered</div>
       </div>
     </div>
+    ${stripeOv ? `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px">
+      <div class="stat-card" style="cursor:pointer" onclick="go('/admin/stripe')">
+        <div class="stat-label">Stripe Available</div>
+        <div class="stat-value" style="color:#16a34a;font-size:22px">$${(stripeOv.available/100).toFixed(2)}</div>
+        <div class="stat-sub">${stripeOv.currency}</div>
+      </div>
+      <div class="stat-card" style="cursor:pointer" onclick="go('/admin/stripe')">
+        <div class="stat-label">Stripe Pending</div>
+        <div class="stat-value" style="font-size:22px">$${(stripeOv.pending/100).toFixed(2)}</div>
+        <div class="stat-sub">in transit</div>
+      </div>
+      <div class="stat-card" style="cursor:pointer${stripeOv.openDisputeCount > 0 ? ';border-left:3px solid #dc2626' : ''}" onclick="go('/admin/stripe')">
+        <div class="stat-label">Open Disputes</div>
+        <div class="stat-value" style="font-size:22px;color:${stripeOv.openDisputeCount > 0 ? '#dc2626' : '#16a34a'}">${stripeOv.openDisputeCount}</div>
+        <div class="stat-sub">${stripeOv.openDisputeCount > 0 ? '⚠ needs attention' : 'all clear'}</div>
+      </div>
+      <div class="stat-card" style="cursor:pointer" onclick="go('/admin/stripe')">
+        <div class="stat-label">Last Payout</div>
+        ${stripeOv.lastPayout ? `<div class="stat-value" style="font-size:16px">$${(stripeOv.lastPayout.amount/100).toFixed(2)}</div><div class="stat-sub">${new Date(stripeOv.lastPayout.arrival_date*1000).toLocaleDateString('en-CA',{month:'short',day:'numeric'})}</div>` : `<div class="stat-value" style="font-size:16px;color:#94a3b8">—</div><div class="stat-sub">no payouts yet</div>`}
+      </div>
+    </div>` : ''}
+    ${health ? `<div style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:12px 20px;margin-bottom:24px;display:flex;gap:32px;align-items:center;font-size:12px;color:#64748b;flex-wrap:wrap">
+      <span style="font-weight:600;color:#0f172a">Server</span>
+      <span>Uptime: <strong>${health.uptime < 3600 ? Math.floor(health.uptime/60)+'m' : Math.floor(health.uptime/3600)+'h '+Math.floor((health.uptime%3600)/60)+'m'}</strong></span>
+      <span>Memory: <strong>${Math.round(health.heapUsed/1048576)}MB used / ${Math.round(health.heapTotal/1048576)}MB total</strong></span>
+      <span>DB: <strong>${health.dbSize > 1048576 ? (health.dbSize/1048576).toFixed(1)+'MB' : Math.round(health.dbSize/1024)+'KB'}</strong></span>
+      <span>Node: <strong>${esc(health.nodeVersion)}</strong></span>
+    </div>` : ''}
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px">
       <div class="card">
         <div class="card-header">
@@ -1342,147 +1377,159 @@ const FLAG_EMOJI = cc => {
          String.fromCodePoint(A + cc.toUpperCase().charCodeAt(1) - base);
 };
 
-async function showVisitors() {
+let visitorsCFDays = 7;
+
+async function showVisitors(cfDays) {
+  if (cfDays !== undefined) visitorsCFDays = cfDays;
   setTitle('Visitors');
   setMain('<div class="empty">Loading…</div>');
-  const [stats, recent] = await Promise.all([
+  const [cf, dbStats, recent] = await Promise.all([
+    api(`/api/admin/cloudflare/analytics?days=${visitorsCFDays}`),
     api('/api/admin/visitors/stats'),
-    api('/api/admin/visitors/recent?limit=100'),
+    api('/api/admin/visitors/recent?limit=50'),
   ]);
-  if (!stats) return;
-  renderVisitors(stats, recent || []);
+  renderVisitors(cf, dbStats, recent || []);
 }
 
-function renderVisitors(s, recent) {
-  const maxDaily = Math.max(1, ...(s.daily || []).map(d => d.count));
-  const dailyBars = (s.daily || []).map(d => {
-    const h = Math.max(4, Math.round((d.count / maxDaily) * 140));
-    const label = d.day.slice(5); // MM-DD
-    return `<div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;min-width:0">
-      <span style="font-size:10px;color:#64748b">${d.count}</span>
-      <div style="width:100%;height:${h}px;background:#a8472d;border-radius:2px 2px 0 0;min-height:4px" title="${d.day}: ${d.count} views, ${d.unique_count} unique"></div>
-      <span style="font-size:10px;color:#94a3b8">${esc(label)}</span>
-    </div>`;
-  }).join('') || '<div class="empty" style="padding:20px;width:100%">No visitors yet — analytics starts now.</div>';
+function renderVisitors(cf, s, recent) {
+  const fmtBytes = b => b > 1073741824 ? (b/1073741824).toFixed(1)+' GB' : b > 1048576 ? (b/1048576).toFixed(1)+' MB' : Math.round(b/1024)+' KB';
 
-  const hourCounts = Array.from({length:24}, (_,h) => ({hour:h, count:0}));
-  (s.hourly || []).forEach(r => { hourCounts[r.hour].count = r.count; });
-  const maxHour = Math.max(1, ...hourCounts.map(h => h.count));
-  const hourlyBars = hourCounts.map(h => {
-    const ht = Math.max(2, Math.round((h.count / maxHour) * 70));
-    return `<div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;min-width:0" title="${h.hour}:00 — ${h.count} views">
-      <div style="width:100%;height:${ht}px;background:#3b82f6;border-radius:2px 2px 0 0;min-height:2px"></div>
-      <span style="font-size:9px;color:#94a3b8">${String(h.hour).padStart(2,'0')}</span>
-    </div>`;
-  }).join('');
+  // ── Cloudflare section ────────────────────────────────────────────────────
+  let cfHtml = '';
+  if (!cf || cf.configured === false) {
+    cfHtml = `<div class="card" style="margin-bottom:24px;padding:20px 24px;color:#64748b;font-size:13px">
+      <strong>Cloudflare Analytics</strong> — not configured. Add <code>CF_API_TOKEN</code> and <code>CF_ZONE_ID</code> to your .env and restart.</div>`;
+  } else if (cf.error) {
+    cfHtml = `<div class="card" style="margin-bottom:24px;padding:20px 24px;color:#dc2626;font-size:13px">
+      Cloudflare error: ${esc(cf.error)}</div>`;
+  } else {
+    const t = cf.totals;
+    const cachedPct = t.requests > 0 ? Math.round((t.cachedRequests / t.requests) * 100) : 0;
+    const maxCF = Math.max(1, ...(cf.daily || []).map(d => d.sum?.requests || 0));
+    const cfBars = (cf.daily || []).map(d => {
+      const req = d.sum?.requests || 0;
+      const pv  = d.sum?.pageViews || 0;
+      const h   = Math.max(4, Math.round((req / maxCF) * 110));
+      const pvH = Math.max(0, Math.round((pv / maxCF) * 110));
+      const label = (d.dimensions?.date || '').slice(5);
+      return `<div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;min-width:0"
+          title="${d.dimensions?.date}: ${req.toLocaleString()} requests · ${pv.toLocaleString()} page views · ${(d.uniq?.uniques||0).toLocaleString()} unique">
+        <div style="width:100%;height:${h}px;background:#bfdbfe;border-radius:2px 2px 0 0;min-height:4px;position:relative">
+          <div style="position:absolute;bottom:0;left:0;right:0;height:${pvH}px;background:#2563eb;border-radius:2px 2px 0 0"></div>
+        </div>
+        <span style="font-size:9px;color:#94a3b8">${esc(label)}</span>
+      </div>`;
+    }).join('') || '<div class="empty" style="padding:20px;width:100%">No data.</div>';
 
-  const topPagesRows = (s.topPages || []).map(p =>
-    `<tr><td style="font-family:'DM Mono',monospace;font-size:12px">${esc(p.path)}</td><td style="text-align:right">${p.count}</td></tr>`
-  ).join('') || '<tr><td colspan="2" class="empty">—</td></tr>';
+    const periodBtns = [7, 14, 30].map(d =>
+      `<button class="filter-btn ${visitorsCFDays===d?'active':''}" onclick="showVisitors(${d})">${d}d</button>`
+    ).join('');
 
-  const topCountriesRows = (s.topCountries || []).map(c =>
-    `<tr><td>${FLAG_EMOJI(c.country_code)} ${esc(c.country_name || c.country_code)}</td><td style="text-align:right">${c.count}</td></tr>`
-  ).join('') || '<tr><td colspan="2" class="empty">No country data yet.</td></tr>';
-
-  const totalDevices = (s.devices || []).reduce((sum, d) => sum + d.count, 0) || 1;
-  const deviceRows = (s.devices || []).map(d => {
-    const pct = Math.round((d.count / totalDevices) * 100);
-    return `<tr><td style="text-transform:capitalize">${esc(d.device_type || 'unknown')}</td><td style="text-align:right">${d.count} <span style="color:#94a3b8">(${pct}%)</span></td></tr>`;
-  }).join('') || '<tr><td colspan="2" class="empty">—</td></tr>';
-
-  const browserRows = (s.browsers || []).map(b =>
-    `<tr><td>${esc(b.browser)}</td><td style="text-align:right">${b.count}</td></tr>`
-  ).join('') || '<tr><td colspan="2" class="empty">—</td></tr>';
-
-  const referrerRows = (s.referrers || []).map(r =>
-    `<tr><td style="font-family:'DM Mono',monospace;font-size:12px">${esc(r.referrer)}</td><td style="text-align:right">${r.count}</td></tr>`
-  ).join('') || '<tr><td colspan="2" class="empty">No external referrers yet.</td></tr>';
-
-  const recentRows = (recent || []).map(r => `
-    <tr>
-      <td style="white-space:nowrap;font-size:12px">${fmtDateTime(r.created_at)}</td>
-      <td>${r.country_code ? FLAG_EMOJI(r.country_code) + ' ' + esc(r.country_name || r.country_code) : '<span style="color:#94a3b8">—</span>'}</td>
-      <td style="font-family:'DM Mono',monospace;font-size:11px;color:#64748b">${esc(r.ip || '')}</td>
-      <td style="font-family:'DM Mono',monospace;font-size:11px">${esc(r.path)}</td>
-      <td style="text-transform:capitalize">${esc(r.device_type || '')}</td>
-      <td>${esc(r.browser || '')}</td>
-      <td style="font-size:11px;color:#64748b">${esc(r.referrer || '')}</td>
-    </tr>
-  `).join('') || '<tr><td colspan="7" class="empty">No visitors recorded yet.</td></tr>';
-
-  setMain(`
-    <div class="stats-grid" style="grid-template-columns:repeat(4,1fr)">
-      <div class="stat-card">
-        <div class="stat-label">Today</div>
-        <div class="stat-value">${s.today}</div>
-        <div class="stat-sub">${s.todayUniq} unique</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Last 7 Days</div>
-        <div class="stat-value">${s.week}</div>
-        <div class="stat-sub">${s.weekUniq} unique</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Last 30 Days</div>
-        <div class="stat-value">${s.month}</div>
-        <div class="stat-sub">${s.monthUniq} unique</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">All Time</div>
-        <div class="stat-value">${s.total}</div>
-        <div class="stat-sub">pageviews logged</div>
-      </div>
-    </div>
-
+    cfHtml = `
     <div class="card" style="margin-bottom:24px">
-      <div class="card-header"><div class="card-title">Daily Visitors — Last 14 Days</div></div>
-      <div style="padding:16px 20px"><div style="display:flex;align-items:flex-end;gap:4px;height:180px">${dailyBars}</div></div>
-    </div>
-
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px">
-      <div class="card">
-        <div class="card-header"><div class="card-title">Top Countries</div></div>
-        <table><thead><tr><th>Country</th><th style="text-align:right">Views</th></tr></thead>
-          <tbody>${topCountriesRows}</tbody>
-        </table>
+      <div class="card-header">
+        <div class="card-title">Cloudflare — Last ${cf.days} Days <span style="font-size:11px;color:#94a3b8;font-weight:400;margin-left:8px">█ requests &nbsp; █ page views</span></div>
+        <div style="display:flex;gap:6px">${periodBtns}</div>
       </div>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:0;border-bottom:1px solid #f1f5f9">
+        <div style="padding:14px 20px;border-right:1px solid #f1f5f9">
+          <div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">Requests</div>
+          <div style="font-size:22px;font-weight:700;color:#0f172a">${t.requests.toLocaleString()}</div>
+        </div>
+        <div style="padding:14px 20px;border-right:1px solid #f1f5f9">
+          <div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">Page Views</div>
+          <div style="font-size:22px;font-weight:700;color:#0f172a">${t.pageViews.toLocaleString()}</div>
+        </div>
+        <div style="padding:14px 20px;border-right:1px solid #f1f5f9">
+          <div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">Unique Visitors</div>
+          <div style="font-size:22px;font-weight:700;color:#0f172a">${t.uniques.toLocaleString()}</div>
+        </div>
+        <div style="padding:14px 20px;border-right:1px solid #f1f5f9">
+          <div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">Bandwidth</div>
+          <div style="font-size:22px;font-weight:700;color:#0f172a">${fmtBytes(t.bytes)}</div>
+          <div style="font-size:11px;color:#94a3b8;margin-top:2px">${cachedPct}% cached</div>
+        </div>
+        <div style="padding:14px 20px">
+          <div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">Threats Blocked</div>
+          <div style="font-size:22px;font-weight:700;color:${t.threats > 0 ? '#dc2626' : '#16a34a'}">${t.threats.toLocaleString()}</div>
+        </div>
+      </div>
+      <div style="padding:16px 20px">
+        <div style="display:flex;align-items:flex-end;gap:3px;height:130px">${cfBars}</div>
+      </div>
+    </div>`;
+  }
+
+  // ── App-level page detail (from our DB) ───────────────────────────────────
+  let dbHtml = '';
+  if (s) {
+    const topPagesRows = (s.topPages || []).map(p =>
+      `<tr><td style="font-family:monospace;font-size:12px">${esc(p.path)}</td><td style="text-align:right">${p.count}</td></tr>`
+    ).join('') || '<tr><td colspan="2" class="empty">No page data yet.</td></tr>';
+
+    const topCountriesRows = (s.topCountries || []).map(c =>
+      `<tr><td>${FLAG_EMOJI(c.country_code)} ${esc(c.country_name || c.country_code)}</td><td style="text-align:right">${c.count}</td></tr>`
+    ).join('') || '<tr><td colspan="2" class="empty">No country data yet.</td></tr>';
+
+    const totalDevices = (s.devices || []).reduce((sum, d) => sum + d.count, 0) || 1;
+    const deviceRows = (s.devices || []).map(d => {
+      const pct = Math.round((d.count / totalDevices) * 100);
+      return `<tr><td style="text-transform:capitalize">${esc(d.device_type || 'unknown')}</td><td style="text-align:right">${d.count} <span style="color:#94a3b8">(${pct}%)</span></td></tr>`;
+    }).join('') || '<tr><td colspan="2" class="empty">—</td></tr>';
+
+    const browserRows = (s.browsers || []).map(b =>
+      `<tr><td>${esc(b.browser)}</td><td style="text-align:right">${b.count}</td></tr>`
+    ).join('') || '<tr><td colspan="2" class="empty">—</td></tr>';
+
+    const referrerRows = (s.referrers || []).map(r =>
+      `<tr><td style="font-family:monospace;font-size:12px">${esc(r.referrer)}</td><td style="text-align:right">${r.count}</td></tr>`
+    ).join('') || '<tr><td colspan="2" class="empty">No referrers yet.</td></tr>';
+
+    const recentRows = (recent || []).map(r => `
+      <tr>
+        <td style="white-space:nowrap;font-size:12px">${fmtDateTime(r.created_at)}</td>
+        <td>${r.country_code ? FLAG_EMOJI(r.country_code) + ' ' + esc(r.country_name || r.country_code) : '<span style="color:#94a3b8">—</span>'}</td>
+        <td style="font-family:monospace;font-size:11px;color:#64748b">${esc(r.ip || '')}</td>
+        <td style="font-family:monospace;font-size:11px">${esc(r.path)}</td>
+        <td style="text-transform:capitalize">${esc(r.device_type || '')}</td>
+        <td>${esc(r.browser || '')}</td>
+        <td style="font-size:11px;color:#64748b">${esc(r.referrer || '')}</td>
+      </tr>`).join('') || '<tr><td colspan="7" class="empty">No app-level sessions recorded yet — will populate after deployment.</td></tr>';
+
+    dbHtml = `
+    <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:#94a3b8;margin-bottom:12px">App-level detail (30 days · ${s.total} total logged)</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
       <div class="card">
         <div class="card-header"><div class="card-title">Top Pages</div></div>
         <table><thead><tr><th>Path</th><th style="text-align:right">Views</th></tr></thead>
-          <tbody>${topPagesRows}</tbody>
-        </table>
+          <tbody>${topPagesRows}</tbody></table>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Top Countries</div></div>
+        <table><thead><tr><th>Country</th><th style="text-align:right">Views</th></tr></thead>
+          <tbody>${topCountriesRows}</tbody></table>
       </div>
     </div>
-
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;margin-bottom:24px">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;margin-bottom:20px">
       <div class="card">
         <div class="card-header"><div class="card-title">Devices</div></div>
         <table><thead><tr><th>Type</th><th style="text-align:right">Views</th></tr></thead>
-          <tbody>${deviceRows}</tbody>
-        </table>
+          <tbody>${deviceRows}</tbody></table>
       </div>
       <div class="card">
         <div class="card-header"><div class="card-title">Browsers</div></div>
         <table><thead><tr><th>Browser</th><th style="text-align:right">Views</th></tr></thead>
-          <tbody>${browserRows}</tbody>
-        </table>
+          <tbody>${browserRows}</tbody></table>
       </div>
       <div class="card">
-        <div class="card-header"><div class="card-title">Top Referrers</div></div>
+        <div class="card-header"><div class="card-title">Referrers</div></div>
         <table><thead><tr><th>Source</th><th style="text-align:right">Views</th></tr></thead>
-          <tbody>${referrerRows}</tbody>
-        </table>
+          <tbody>${referrerRows}</tbody></table>
       </div>
     </div>
-
-    <div class="card" style="margin-bottom:24px">
-      <div class="card-header"><div class="card-title">Hourly Pattern — Last 7 Days</div></div>
-      <div style="padding:16px 20px"><div style="display:flex;align-items:flex-end;gap:3px;height:100px">${hourlyBars}</div></div>
-    </div>
-
     <div class="card">
       <div class="card-header">
-        <div class="card-title">Recent Visitors</div>
+        <div class="card-title">Recent Sessions</div>
         <button class="btn btn-outline btn-sm" onclick="showVisitors()">Refresh</button>
       </div>
       <div style="overflow-x:auto">
@@ -1491,7 +1538,15 @@ function renderVisitors(s, recent) {
           <tbody>${recentRows}</tbody>
         </table>
       </div>
+    </div>`;
+  }
+
+  setMain(`
+    <div class="page-header">
+      <div class="page-title">Visitors</div>
     </div>
+    ${cfHtml}
+    ${dbHtml}
   `);
 }
 
@@ -1764,6 +1819,172 @@ function toggleAdminTheme() {
   const next = cur === 'dark' ? 'light' : 'dark';
   document.documentElement.setAttribute('data-theme', next);
   try { localStorage.setItem('lh-admin-theme', next); } catch {}
+}
+
+// ── Stripe ────────────────────────────────────────────────────────────────────
+async function showStripe() {
+  setTitle('Stripe');
+  setMain('<div class="empty">Loading…</div>');
+  const [overview, payouts, disputes, revenue] = await Promise.all([
+    api('/api/admin/stripe/overview'),
+    api('/api/admin/stripe/payouts'),
+    api('/api/admin/stripe/disputes'),
+    api('/api/admin/stripe/revenue?days=30'),
+  ]);
+  if (!overview) return setMain('<div class="empty">Could not load Stripe data. Check STRIPE_SECRET_KEY.</div>');
+
+  const fmtAmt = (amt, cur) => '$' + (amt/100).toFixed(2) + ' ' + (cur||'CAD').toUpperCase();
+
+  const payoutStatusHTML = s => {
+    const m = { paid:'#16a34a', pending:'#d97706', failed:'#dc2626', in_transit:'#2563eb' };
+    return `<span style="color:${m[s]||'#64748b'};font-weight:600;text-transform:capitalize">${(s||'').replace(/_/g,' ')}</span>`;
+  };
+
+  const maxRev = Math.max(1, ...(revenue?.daily||[]).map(d => d.amount));
+  const revBars = (revenue?.daily||[]).map(d => {
+    const h = Math.max(4, Math.round((d.amount / maxRev) * 110));
+    return `<div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;min-width:0"
+        title="${d.date}: ${fmtAmt(d.amount,'CAD')} · ${d.count} orders">
+      <div style="width:100%;height:${h}px;background:#16a34a;border-radius:2px 2px 0 0;min-height:4px"></div>
+      <span style="font-size:9px;color:#94a3b8">${esc(d.date.slice(5))}</span>
+    </div>`;
+  }).join('') || '<div class="empty" style="padding:20px;width:100%">No charges yet.</div>';
+
+  const payoutRows = (payouts||[]).map(p => `
+    <tr>
+      <td>${new Date(p.created*1000).toLocaleDateString('en-CA',{month:'short',day:'numeric',year:'numeric'})}</td>
+      <td>${fmtAmt(p.amount, p.currency)}</td>
+      <td>${payoutStatusHTML(p.status)}</td>
+      <td>${p.arrival_date ? new Date(p.arrival_date*1000).toLocaleDateString('en-CA',{month:'short',day:'numeric',year:'numeric'}) : '—'}</td>
+      <td style="font-family:monospace;font-size:11px;color:#94a3b8">${esc(p.id)}</td>
+    </tr>`).join('') || '<tr><td colspan="5" class="empty">No payouts yet.</td></tr>';
+
+  const disputeColor = s => ({needs_response:'#dc2626',under_review:'#d97706',won:'#16a34a',lost:'#7c3aed'}[s]||'#64748b');
+
+  const disputeRows = (disputes||[]).map(d => `
+    <tr>
+      <td>${new Date(d.created*1000).toLocaleDateString('en-CA',{month:'short',day:'numeric',year:'numeric'})}</td>
+      <td>${fmtAmt(d.amount, d.currency)}</td>
+      <td><span style="color:${disputeColor(d.status)};font-weight:600;text-transform:capitalize">${esc((d.status||'').replace(/_/g,' '))}</span></td>
+      <td style="text-transform:capitalize">${esc((d.reason||'—').replace(/_/g,' '))}</td>
+      <td><a href="https://dashboard.stripe.com/disputes/${esc(d.id)}" target="_blank" rel="noopener" class="link">View ↗</a></td>
+    </tr>`).join('') || '<tr><td colspan="5" class="empty" style="color:#16a34a">No disputes — all clear!</td></tr>';
+
+  const lp = overview.lastPayout;
+  setMain(`
+    <div class="page-header">
+      <div class="page-title">Stripe</div>
+      <a href="https://dashboard.stripe.com" target="_blank" rel="noopener" class="btn btn-outline btn-sm">Open Stripe ↗</a>
+    </div>
+    <div class="stats-grid" style="grid-template-columns:repeat(4,1fr)">
+      <div class="stat-card">
+        <div class="stat-label">Available Balance</div>
+        <div class="stat-value" style="color:#16a34a">${fmtAmt(overview.available, overview.currency)}</div>
+        <div class="stat-sub">ready to pay out</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Pending Balance</div>
+        <div class="stat-value">${fmtAmt(overview.pending, overview.currency)}</div>
+        <div class="stat-sub">in transit</div>
+      </div>
+      <div class="stat-card" ${overview.openDisputeCount > 0 ? 'style="border-left:3px solid #dc2626"' : ''}>
+        <div class="stat-label">Open Disputes</div>
+        <div class="stat-value" style="color:${overview.openDisputeCount > 0 ? '#dc2626' : '#16a34a'}">${overview.openDisputeCount}</div>
+        <div class="stat-sub">${overview.openDisputeCount > 0 ? '⚠ needs action' : 'all clear'}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Last Payout</div>
+        ${lp ? `<div class="stat-value" style="font-size:18px">${fmtAmt(lp.amount,lp.currency)}</div><div class="stat-sub">${new Date(lp.arrival_date*1000).toLocaleDateString('en-CA',{month:'short',day:'numeric'})} · ${payoutStatusHTML(lp.status)}</div>` : `<div class="stat-value" style="font-size:18px;color:#94a3b8">—</div><div class="stat-sub">no payouts yet</div>`}
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:24px">
+      <div class="card-header">
+        <div class="card-title">Revenue — Last 30 Days (from Stripe)</div>
+        <div style="font-size:12px;color:#64748b">${revenue ? fmtAmt(revenue.total,'CAD') + ' total' : ''}</div>
+      </div>
+      <div style="padding:16px 20px"><div style="display:flex;align-items:flex-end;gap:3px;height:140px">${revBars}</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+      <div class="card">
+        <div class="card-header"><div class="card-title">Recent Payouts</div></div>
+        <table><thead><tr><th>Date</th><th>Amount</th><th>Status</th><th>Arrival</th><th>ID</th></tr></thead>
+        <tbody>${payoutRows}</tbody></table>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Disputes ${overview.openDisputeCount > 0 ? `<span style="background:#dc2626;color:#fff;border-radius:999px;padding:1px 8px;font-size:10px;margin-left:6px">${overview.openDisputeCount} open</span>` : ''}</div>
+        </div>
+        <table><thead><tr><th>Date</th><th>Amount</th><th>Status</th><th>Reason</th><th></th></tr></thead>
+        <tbody>${disputeRows}</tbody></table>
+      </div>
+    </div>`);
+}
+
+// ── Contacts ──────────────────────────────────────────────────────────────────
+async function showContacts() {
+  setTitle('Contacts');
+  setMain('<div class="empty">Loading…</div>');
+  const data = await api('/api/admin/contacts');
+  if (!data) return;
+  updateContactsBadge(data.unread);
+
+  const rows = (data.submissions||[]).map(s => {
+    const preview = s.message.length > 90 ? s.message.slice(0, 90) + '…' : s.message;
+    const unread = !s.read_at;
+    return `
+    <tr id="contact-row-${s.id}">
+      <td style="white-space:nowrap;font-size:12px">${fmtDateTime(s.created_at)}</td>
+      <td style="${unread ? 'font-weight:600' : ''}">${esc(s.name)} ${unread ? '<span style="background:#dc2626;color:#fff;border-radius:999px;font-size:9px;padding:1px 5px;vertical-align:middle">NEW</span>' : ''}</td>
+      <td><a href="mailto:${esc(s.email)}" class="link">${esc(s.email)}</a></td>
+      <td style="color:#64748b;font-size:12px;max-width:300px">${esc(preview)}</td>
+      <td style="font-family:monospace;font-size:11px;color:#94a3b8">${esc(s.ip||'')}</td>
+      <td style="white-space:nowrap">
+        ${unread ? `<button class="btn btn-outline btn-sm" style="margin-right:4px" onclick="markContactRead(${s.id})">Mark read</button>` : `<span style="color:#94a3b8;font-size:12px">${fmtDate(s.read_at)}</span> `}
+        <button class="btn-ghost" onclick="toggleContactExpand(${s.id})">View</button>
+      </td>
+    </tr>
+    <tr id="contact-expand-${s.id}" style="display:none">
+      <td colspan="6" style="background:#f8fafc;padding:16px 20px;font-size:13px;color:#334155;white-space:pre-wrap;line-height:1.7;border-bottom:1px solid #e2e8f0">${esc(s.message)}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="6" class="empty">No contact submissions yet.</td></tr>';
+
+  setMain(`
+    <div class="page-header">
+      <div class="page-title">Contact Submissions</div>
+      ${data.unread > 0 ? `<button class="btn btn-outline btn-sm" onclick="markAllContactsRead()">Mark all read</button>` : ''}
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Messages</div>
+        <div style="font-size:12px;color:#64748b">${data.unread} unread · ${data.submissions.length} total</div>
+      </div>
+      <table>
+        <thead><tr><th>Date</th><th>Name</th><th>Email</th><th>Message</th><th>IP</th><th>Status</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`);
+}
+
+function toggleContactExpand(id) {
+  const row = document.getElementById('contact-expand-' + id);
+  if (row) row.style.display = row.style.display === 'none' ? '' : 'none';
+}
+
+async function markContactRead(id) {
+  await post(`/api/admin/contacts/${id}/read`, {});
+  showContacts();
+}
+
+async function markAllContactsRead() {
+  await post('/api/admin/contacts/read-all', {});
+  showContacts();
+}
+
+function updateContactsBadge(unread) {
+  const badge = document.getElementById('contacts-badge');
+  if (!badge) return;
+  if (unread > 0) { badge.textContent = unread; badge.style.display = 'inline'; }
+  else { badge.style.display = 'none'; }
 }
 
 function esc(s) {
