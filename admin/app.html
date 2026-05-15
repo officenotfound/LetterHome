@@ -1646,6 +1646,8 @@ async function showSettings() {
   const priceIntl    = settings['price_international_cents'] || '2000';
   const dailyCap     = settings['daily_order_cap']           || '0';
   const blockedRaw   = settings['blocked_countries']         || '[]';
+  const awayOn       = settings['away_mode'] === 'true';
+  const awayMessage  = settings['away_message'] || '';
   let blocked = [];
   try { blocked = JSON.parse(blockedRaw); } catch {}
 
@@ -1713,6 +1715,31 @@ async function showSettings() {
           <span id="settings-saved-msg" style="font-size:12px;color:#16a34a;display:none">✓ Saved</span>
         </div>
         <div id="settings-msg" style="font-size:12px;color:#16a34a;display:none;margin-top:8px">✓ Saved</div>
+      </div>
+    </div>
+
+    <div class="card" style="max-width:640px;margin-bottom:20px">
+      <div class="card-header"><div class="card-title">Away Auto-Reply</div></div>
+      <div style="padding:20px">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:16px;border-bottom:1px solid #f1f5f9;margin-bottom:16px">
+          <div>
+            <div style="font-size:14px;font-weight:600;color:#0f172a;margin-bottom:3px">Auto-Reply to Contact Form</div>
+            <div style="font-size:12px;color:#64748b">When on, anyone who submits the contact form gets an automatic reply with your message below.</div>
+          </div>
+          <button id="away-toggle-btn" class="btn ${awayOn ? 'btn-primary' : 'btn-outline'}"
+            onclick="toggleAwayMode(${awayOn})"
+            style="${awayOn ? 'background:#d97706;border-color:#d97706;color:#fff' : ''}">
+            ${awayOn ? '✈ Away — Click to Disable' : '◎ Off — Click to Enable'}
+          </button>
+        </div>
+        <div class="field" style="margin-bottom:16px">
+          <label>Auto-Reply Message</label>
+          <textarea id="away-message" rows="4" style="width:100%;resize:vertical" placeholder="e.g. Thanks for reaching out — I'm currently away and will get back to you within 3–5 business days.">${esc(awayMessage)}</textarea>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <button class="btn btn-primary" onclick="saveAwaySettings()">Save Message</button>
+          <span id="away-saved-msg" style="font-size:12px;color:#16a34a;display:none">✓ Saved</span>
+        </div>
       </div>
     </div>
 
@@ -1803,6 +1830,22 @@ async function toggleServicePause(currentlyPaused) {
   const r = await saveSetting('service_paused', newVal ? 'true' : 'false');
   if (r?.ok) showSettings();
   else alert('Error saving setting.');
+}
+
+async function toggleAwayMode(currentlyOn) {
+  const r = await saveSetting('away_mode', currentlyOn ? 'false' : 'true');
+  if (r?.ok) showSettings();
+  else alert('Error saving setting.');
+}
+
+async function saveAwaySettings() {
+  const msg = document.getElementById('away-message')?.value || '';
+  const r = await saveSetting('away_message', msg);
+  const el = document.getElementById('away-saved-msg');
+  if (r?.ok && el) {
+    el.style.display = 'inline';
+    setTimeout(() => { el.style.display = 'none'; }, 2500);
+  } else alert('Error saving: ' + (r?.error || 'unknown'));
 }
 
 async function runBackupNow() {
