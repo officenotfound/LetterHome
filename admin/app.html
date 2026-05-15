@@ -176,6 +176,7 @@ textarea{resize:vertical;min-height:80px}
     <button class="nav-link" id="nav-stripe"    onclick="go('/admin/stripe')"><span class="nav-icon">$</span> Stripe</button>
     <button class="nav-link" id="nav-contacts"  onclick="go('/admin/contacts')" style="justify-content:space-between"><span style="display:flex;align-items:center;gap:10px"><span class="nav-icon">✉</span> Contacts</span><span id="contacts-badge" style="display:none;background:#dc2626;color:#fff;border-radius:999px;font-size:10px;padding:1px 7px;font-weight:700">0</span></button>
     <button class="nav-link" id="nav-templates" onclick="go('/admin/templates')"><span class="nav-icon">☰</span> Templates</button>
+    <button class="nav-link" id="nav-audit"     onclick="go('/admin/audit-log')"><span class="nav-icon">⌥</span> Audit Log</button>
     <button class="nav-link" id="nav-settings"  onclick="go('/admin/settings')"><span class="nav-icon">⚙</span> Settings</button>
     <button class="nav-link" id="nav-trash"     onclick="go('/admin/trash')"><span class="nav-icon">⌫</span> Trash</button>
   </nav>
@@ -239,11 +240,12 @@ function route() {
   if (p === '/admin/contacts')                      return showContacts();
   if (p === '/admin/templates')                     return showTemplates();
   if (p === '/admin/settings')                      return showSettings();
+  if (p === '/admin/audit-log')                     return showAuditLog();
   showDashboard();
 }
 
 function setActiveNav(p) {
-  ['dashboard','orders','customers','accounts','broadcast','insights','visitors','stripe','contacts','templates','settings','trash'].forEach(k => document.getElementById('nav-'+k)?.classList.remove('active'));
+  ['dashboard','orders','customers','accounts','broadcast','insights','visitors','stripe','contacts','templates','settings','audit','trash'].forEach(k => document.getElementById('nav-'+k)?.classList.remove('active'));
   if (p.startsWith('/admin/orders'))          document.getElementById('nav-orders')?.classList.add('active');
   else if (p.startsWith('/admin/accounts'))   document.getElementById('nav-accounts')?.classList.add('active');
   else if (p.startsWith('/admin/customers'))  document.getElementById('nav-customers')?.classList.add('active');
@@ -254,6 +256,7 @@ function setActiveNav(p) {
   else if (p.startsWith('/admin/contacts'))   document.getElementById('nav-contacts')?.classList.add('active');
   else if (p.startsWith('/admin/templates'))  document.getElementById('nav-templates')?.classList.add('active');
   else if (p.startsWith('/admin/settings'))   document.getElementById('nav-settings')?.classList.add('active');
+  else if (p.startsWith('/admin/audit-log'))  document.getElementById('nav-audit')?.classList.add('active');
   else if (p.startsWith('/admin/trash'))      document.getElementById('nav-trash')?.classList.add('active');
   else                                        document.getElementById('nav-dashboard')?.classList.add('active');
 }
@@ -1807,6 +1810,77 @@ async function deleteTemplate(id) {
 const COUNTRIES = {CA:'Canada',US:'United States',GB:'United Kingdom',AU:'Australia',NZ:'New Zealand',FR:'France',DE:'Germany',JP:'Japan',MX:'Mexico',IN:'India',BR:'Brazil',ZA:'South Africa',SG:'Singapore',HK:'Hong Kong',IE:'Ireland',NL:'Netherlands',BE:'Belgium',CH:'Switzerland',AT:'Austria',SE:'Sweden',NO:'Norway',DK:'Denmark',FI:'Finland',ES:'Spain',IT:'Italy',PT:'Portugal',PL:'Poland',CZ:'Czech Republic',HU:'Hungary',RO:'Romania',BG:'Bulgaria',HR:'Croatia',SK:'Slovakia',SI:'Slovenia',EE:'Estonia',LV:'Latvia',LT:'Lithuania',GR:'Greece',CY:'Cyprus',MT:'Malta',LU:'Luxembourg',IS:'Iceland',AL:'Albania',DZ:'Algeria',AD:'Andorra',AO:'Angola',AG:'Antigua and Barbuda',AR:'Argentina',AM:'Armenia',AZ:'Azerbaijan',BS:'Bahamas',BH:'Bahrain',BD:'Bangladesh',BB:'Barbados',BZ:'Belize',BJ:'Benin',BT:'Bhutan',BO:'Bolivia',BA:'Bosnia and Herzegovina',BW:'Botswana',BN:'Brunei',BI:'Burundi',KH:'Cambodia',CM:'Cameroon',CV:'Cape Verde',TD:'Chad',CL:'Chile',CN:'China',CO:'Colombia',KM:'Comoros',CG:'Congo',CR:'Costa Rica',CU:'Cuba',DJ:'Djibouti',DM:'Dominica',DO:'Dominican Republic',EC:'Ecuador',EG:'Egypt',SV:'El Salvador',GQ:'Equatorial Guinea',ER:'Eritrea',SZ:'Eswatini',ET:'Ethiopia',FJ:'Fiji',GA:'Gabon',GM:'Gambia',GE:'Georgia',GH:'Ghana',GD:'Grenada',GT:'Guatemala',GN:'Guinea',GW:'Guinea-Bissau',GY:'Guyana',HT:'Haiti',HN:'Honduras',ID:'Indonesia',IR:'Iran',IQ:'Iraq',IL:'Israel',JM:'Jamaica',JO:'Jordan',KZ:'Kazakhstan',KE:'Kenya',KI:'Kiribati',KW:'Kuwait',KG:'Kyrgyzstan',LA:'Laos',LB:'Lebanon',LS:'Lesotho',LR:'Liberia',LY:'Libya',LI:'Liechtenstein',MG:'Madagascar',MW:'Malawi',MY:'Malaysia',MV:'Maldives',ML:'Mali',MH:'Marshall Islands',MR:'Mauritania',MU:'Mauritius',FM:'Micronesia',MD:'Moldova',MC:'Monaco',MN:'Mongolia',ME:'Montenegro',MA:'Morocco',MZ:'Mozambique',MM:'Myanmar',NA:'Namibia',NR:'Nauru',NP:'Nepal',NI:'Nicaragua',NE:'Niger',NG:'Nigeria',OM:'Oman',PK:'Pakistan',PW:'Palau',PA:'Panama',PG:'Papua New Guinea',PY:'Paraguay',PE:'Peru',PH:'Philippines',QA:'Qatar',RU:'Russia',RW:'Rwanda',KN:'Saint Kitts and Nevis',LC:'Saint Lucia',VC:'Saint Vincent',WS:'Samoa',SM:'San Marino',ST:'São Tomé and Príncipe',SA:'Saudi Arabia',SN:'Senegal',RS:'Serbia',SC:'Seychelles',SL:'Sierra Leone',SB:'Solomon Islands',SD:'Sudan',SR:'Suriname',SY:'Syria',TW:'Taiwan',TJ:'Tajikistan',TZ:'Tanzania',TH:'Thailand',TL:'Timor-Leste',TG:'Togo',TO:'Tonga',TT:'Trinidad and Tobago',TN:'Tunisia',TR:'Turkey',TM:'Turkmenistan',TV:'Tuvalu',UG:'Uganda',UA:'Ukraine',AE:'United Arab Emirates',UY:'Uruguay',UZ:'Uzbekistan',VU:'Vanuatu',VE:'Venezuela',VN:'Vietnam',YE:'Yemen',ZM:'Zambia',ZW:'Zimbabwe'};
 
 // ── Settings ──────────────────────────────────────────────────────────────────
+async function showAuditLog() {
+  setTitle('Audit Log');
+  setMain('<div class="empty">Loading…</div>');
+  const search = window._auditSearch || '';
+  const action = window._auditAction || '';
+  const qs = new URLSearchParams();
+  if (search) qs.set('search', search);
+  if (action) qs.set('action', action);
+  const rows = await api('/api/admin/audit-log?' + qs.toString());
+  if (!rows) return;
+
+  const tableRows = rows.length === 0
+    ? '<tr><td colspan="5" class="empty">No audit log entries match.</td></tr>'
+    : rows.map(r => `
+      <tr>
+        <td style="font-size:12px;color:#64748b;white-space:nowrap">${fmtDateTime(r.created_at)}</td>
+        <td style="font-size:13px">${esc(r.actor || '—')}</td>
+        <td><span style="font-family:monospace;font-size:11px;background:#f1f5f9;padding:2px 7px;border-radius:4px">${esc(r.action)}</span></td>
+        <td style="font-size:13px">${r.target_type ? `${esc(r.target_type)} <span style="color:#94a3b8;font-family:monospace;font-size:12px">${esc(r.target_id || '')}</span>` : '—'}</td>
+        <td style="font-family:monospace;font-size:11px;color:#94a3b8">${esc(r.ip || '')}</td>
+      </tr>${r.details ? `<tr><td colspan="5" style="padding:0 0 12px"><pre style="background:#f8fafc;border:1px solid #f1f5f9;padding:10px;border-radius:4px;font-size:11px;color:#475569;white-space:pre-wrap;word-break:break-all;margin:0 0 0 8px;max-width:920px">${esc(r.details)}</pre></td></tr>` : ''}`).join('');
+
+  setMain(`
+    <div class="page-header">
+      <div class="page-title">Audit Log</div>
+      <div style="font-size:13px;color:#64748b">${rows.length} entries${rows.length === 500 ? ' (showing latest 500)' : ''}</div>
+    </div>
+    <div class="card" style="margin-bottom:16px">
+      <div style="padding:16px 20px;display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
+        <div class="field" style="margin:0;flex:1;min-width:200px">
+          <label>Search (actor, action, target, IP)</label>
+          <input id="audit-search" type="text" value="${esc(search)}" placeholder="customer.password_reset, hello@…, 192.168…">
+        </div>
+        <div class="field" style="margin:0;min-width:180px">
+          <label>Action prefix</label>
+          <select id="audit-action">
+            <option value="">All actions</option>
+            <option value="admin"${action==='admin'?' selected':''}>admin.*</option>
+            <option value="customer"${action==='customer'?' selected':''}>customer.*</option>
+            <option value="order"${action==='order'?' selected':''}>order.*</option>
+            <option value="contact"${action==='contact'?' selected':''}>contact.*</option>
+            <option value="broadcast"${action==='broadcast'?' selected':''}>broadcast.*</option>
+            <option value="settings"${action==='settings'?' selected':''}>settings.*</option>
+            <option value="backup"${action==='backup'?' selected':''}>backup.*</option>
+          </select>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="applyAuditFilter()">Apply</button>
+        ${search || action ? `<button class="btn btn-outline btn-sm" onclick="clearAuditFilter()">Clear</button>` : ''}
+      </div>
+    </div>
+    <div class="card">
+      <table>
+        <thead><tr><th style="white-space:nowrap">When</th><th>Actor</th><th>Action</th><th>Target</th><th>IP</th></tr></thead>
+        <tbody>${tableRows}</tbody>
+      </table>
+    </div>`);
+  document.getElementById('audit-search')?.addEventListener('keydown', e => { if (e.key === 'Enter') applyAuditFilter(); });
+}
+
+function applyAuditFilter() {
+  window._auditSearch = document.getElementById('audit-search')?.value.trim() || '';
+  window._auditAction = document.getElementById('audit-action')?.value || '';
+  showAuditLog();
+}
+
+function clearAuditFilter() {
+  window._auditSearch = '';
+  window._auditAction = '';
+  showAuditLog();
+}
+
 async function showSettings() {
   setTitle('Settings');
   const [settings, backups] = await Promise.all([

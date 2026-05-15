@@ -160,8 +160,10 @@ function updateStrength(inputId, barId, labelId) {
 
 // ── Router ─────────────────────────────────────────────────────────────────────
 (async () => {
-  if (path === '/account/login') { renderLogin(); return; }
+  if (path === '/account/login')    { renderLogin();    return; }
   if (path === '/account/register') { renderRegister(); return; }
+  if (path === '/account/forgot')   { renderForgot();   return; }
+  if (path === '/account/reset')    { renderReset();    return; }
 
   // /account — check if logged in
   const me = await fetch('/api/account/me').then(r => r.ok ? r.json() : null).catch(() => null);
@@ -184,13 +186,107 @@ function renderLogin() {
         <div class="field"><label>Email</label><input id="login-email" type="email" autocomplete="email" placeholder="you@example.com"></div>
         <div class="field"><label>Password</label><input id="login-pwd" type="password" autocomplete="current-password" placeholder="••••••••"></div>
         <div class="err" id="login-err"></div>
-        <div style="display:flex;align-items:center;gap:16px;margin-top:8px">
+        <div style="display:flex;align-items:center;gap:16px;margin-top:8px;flex-wrap:wrap">
           <button class="btn btn-primary" onclick="doLogin()">Sign In →</button>
-          <a href="/account/register" style="font-size:13px;color:var(--ink-muted)">Create account</a>
+          <a href="/account/forgot" style="font-size:13px;color:var(--ink-muted)">Forgot password?</a>
+          <a href="/account/register" style="font-size:13px;color:var(--ink-muted);margin-left:auto">Create account</a>
         </div>
       </div>
     </div>`;
   document.getElementById('login-pwd').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+}
+
+// ── Forgot Password ────────────────────────────────────────────────────────────
+function renderForgot() {
+  document.title = 'Forgot Password — Letterhome';
+  app.innerHTML = `
+    <div class="eyebrow">Customer Account</div>
+    <h1>Forgot your <em>password?</em></h1>
+    <p class="sub">Enter your email and we'll send you a reset link. The link is valid for 30 minutes.</p>
+    <div class="card" style="max-width:460px">
+      <div class="card-body" id="forgot-body">
+        <div class="field"><label>Email</label><input id="forgot-email" type="email" autocomplete="email" placeholder="you@example.com"></div>
+        <div class="err" id="forgot-err"></div>
+        <div style="display:flex;align-items:center;gap:16px;margin-top:8px">
+          <button class="btn btn-primary" onclick="doForgot()">Send Reset Link →</button>
+          <a href="/account/login" style="font-size:13px;color:var(--ink-muted)">Back to sign in</a>
+        </div>
+      </div>
+    </div>`;
+  document.getElementById('forgot-email').addEventListener('keydown', e => { if (e.key === 'Enter') doForgot(); });
+}
+
+async function doForgot() {
+  clearErr('forgot-err');
+  const email = document.getElementById('forgot-email').value.trim();
+  if (!email) { showErr('forgot-err', 'Please enter your email.'); return; }
+  const btn = document.querySelector('[onclick="doForgot()"]');
+  btn.disabled = true; btn.textContent = 'Sending…';
+  await post('/api/account/forgot', { email });
+  document.getElementById('forgot-body').innerHTML = `
+    <p style="color:var(--ink-soft);font-size:15px;line-height:1.6">
+      If an account exists for <strong>${esc(email)}</strong>, we've sent a password reset link to that address.
+      Check your inbox — the link is valid for 30 minutes.
+    </p>
+    <p style="margin-top:18px"><a href="/account/login" style="font-size:13px;color:var(--ink-muted)">← Back to sign in</a></p>`;
+}
+
+// ── Reset Password ─────────────────────────────────────────────────────────────
+function renderReset() {
+  document.title = 'Set a New Password — Letterhome';
+  const qs = new URLSearchParams(window.location.search);
+  const email = (qs.get('email') || '').trim();
+  const token = qs.get('token') || '';
+  if (!email || !token) {
+    app.innerHTML = `
+      <div class="eyebrow">Customer Account</div>
+      <h1>This link is <em>invalid.</em></h1>
+      <p class="sub">The reset link is missing required pieces. Request a new one from the <a href="/account/forgot" style="color:var(--red)">forgot password page</a>.</p>`;
+    return;
+  }
+  app.innerHTML = `
+    <div class="eyebrow">Customer Account</div>
+    <h1>Set a new <em>password.</em></h1>
+    <p class="sub">For <strong>${esc(email)}</strong>. This link expires 30 minutes after it was sent.</p>
+    <div class="card" style="max-width:460px">
+      <div class="card-body">
+        <div class="field">
+          <label>New Password</label>
+          <input id="reset-pwd" type="password" autocomplete="new-password" placeholder="At least 8 characters" oninput="updateStrength('reset-pwd','reset-strength-fill','reset-strength-lbl')">
+          <div class="strength-bar"><div class="strength-fill" id="reset-strength-fill"></div></div>
+          <div class="strength-label" id="reset-strength-lbl"></div>
+        </div>
+        <div class="field"><label>Confirm New Password</label><input id="reset-pwd2" type="password" autocomplete="new-password" placeholder="••••••••"></div>
+        <div class="err" id="reset-err"></div>
+        <p style="font-size:12px;color:var(--ink-faint);margin-bottom:16px;line-height:1.5">Must be at least 8 characters and include a letter and a number or symbol. We also check it against the Have-I-Been-Pwned breach database.</p>
+        <div style="display:flex;align-items:center;gap:16px">
+          <button class="btn btn-primary" onclick="doReset('${esc(email)}','${esc(token)}')">Update Password →</button>
+          <a href="/account/login" style="font-size:13px;color:var(--ink-muted)">Cancel</a>
+        </div>
+      </div>
+    </div>`;
+  document.getElementById('reset-pwd2').addEventListener('keydown', e => { if (e.key === 'Enter') doReset(email, token); });
+}
+
+async function doReset(email, token) {
+  clearErr('reset-err');
+  const password = document.getElementById('reset-pwd').value;
+  const confirm  = document.getElementById('reset-pwd2').value;
+  if (!password) { showErr('reset-err', 'Please enter a new password.'); return; }
+  if (password !== confirm) { showErr('reset-err', 'Passwords do not match.'); return; }
+  const btn = document.querySelector('[onclick^="doReset"]');
+  btn.disabled = true; btn.textContent = 'Updating…';
+  const r = await post('/api/account/reset-password', { email, token, new_password: password });
+  btn.disabled = false; btn.textContent = 'Update Password →';
+  if (r.ok) {
+    app.innerHTML = `
+      <div class="eyebrow">Customer Account</div>
+      <h1>Password <em>updated.</em></h1>
+      <p class="sub">You can now sign in with your new password.</p>
+      <div style="margin-top:24px"><a href="/account/login" class="btn btn-primary">Sign In →</a></div>`;
+    return;
+  }
+  showErr('reset-err', r.error || 'Could not reset password.');
 }
 
 async function doLogin() {
