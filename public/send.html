@@ -368,6 +368,7 @@ footer { background: var(--ink); color: rgba(250,246,236,0.65); padding: 48px 36
       <a href="/#how">How it works</a>
       <a href="/#pricing">Pricing</a>
       <a href="/#faq">FAQ</a>
+      <a href="/account" id="nav-account-link">Sign In</a>
       <button type="button" class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode" title="Toggle dark mode">
         <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41"/></svg>
         <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
@@ -413,6 +414,8 @@ footer { background: var(--ink); color: rgba(250,246,236,0.65); padding: 48px 36
     <div class="eyebrow">Step One</div>
     <h2 class="panel-title serif">Who is this going to?</h2>
     <p class="panel-sub">Enter the sender and recipient addresses. The sender address appears as the return address on the envelope.</p>
+
+    <div id="account-banner" style="display:none"></div>
 
     <div class="address-columns">
       <div class="address-col">
@@ -1072,10 +1075,14 @@ async function submitOrder() {
     }
   } catch(e) { /* fail silently — don't block the form */ }
 
-  // Pre-fill from account if logged in
+  // Account banner + pre-fill
   try {
     const me = await fetch('/api/account/me').then(r => r.ok ? r.json() : null).catch(() => null);
     if (me?.ok && me.customer) {
+      renderAccountBanner(true, me.customer.email);
+      const link = document.getElementById('nav-account-link');
+      if (link) link.textContent = 'My Account';
+
       const c = me.customer;
       if (c.sender_name)     document.getElementById('s-name').value     = c.sender_name;
       if (c.sender_street)   document.getElementById('s-street').value   = c.sender_street;
@@ -1084,7 +1091,6 @@ async function submitOrder() {
       if (c.sender_postal)   document.getElementById('s-postal').value   = c.sender_postal;
       if (c.sender_country)  document.getElementById('s-country').value  = c.sender_country;
 
-      // Saved recipients dropdown
       if (me.recipients?.length) {
         const recipCol = document.querySelector('#sender-fields')?.closest('.address-col')?.nextElementSibling;
         if (recipCol) {
@@ -1100,9 +1106,126 @@ async function submitOrder() {
           if (heading) recipCol.insertBefore(wrap, heading.nextSibling);
         }
       }
+    } else {
+      renderAccountBanner(false);
     }
-  } catch(e) { /* fail silently */ }
+  } catch(e) { renderAccountBanner(false); }
 })();
+
+function renderAccountBanner(loggedIn, email) {
+  const el = document.getElementById('account-banner');
+  if (!el) return;
+  el.style.display = 'block';
+  if (loggedIn) {
+    el.innerHTML = `
+      <div style="background:var(--paper,#faf6ec);border:1px solid var(--line,rgba(42,42,42,0.14));border-left:3px solid #16a34a;border-radius:2px;padding:16px 22px;margin-bottom:32px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+        <div style="font-size:14px;color:var(--ink-soft,#3a3835)">
+          <span style="color:#16a34a;font-weight:600">✓ Signed in as ${email.replace(/</g,'&lt;')}</span>
+          <span style="color:var(--ink-muted,#6b6258)"> — your saved details have been filled in.</span>
+        </div>
+        <div style="display:flex;gap:14px;font-size:13px">
+          <a href="/account" style="color:var(--ink-soft,#3a3835);text-decoration:underline">My Account</a>
+          <button type="button" onclick="signOutFromSend()" style="background:none;border:none;color:var(--ink-muted,#6b6258);cursor:pointer;font:inherit;font-size:13px;padding:0;text-decoration:underline">Sign out</button>
+        </div>
+      </div>`;
+  } else {
+    el.innerHTML = `
+      <div style="background:var(--paper,#faf6ec);border:1px solid var(--line,rgba(42,42,42,0.14));border-left:3px solid var(--red,#a8472d);border-radius:2px;padding:22px 26px;margin-bottom:32px">
+        <div id="account-banner-collapsed" style="display:flex;align-items:flex-start;justify-content:space-between;gap:20px;flex-wrap:wrap">
+          <div style="flex:1;min-width:240px">
+            <div style="font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.14em;color:var(--red,#a8472d);margin-bottom:8px">Optional · Save time next order</div>
+            <p style="font-size:15px;line-height:1.5;color:var(--ink-soft,#3a3835);margin:0">Create a free account in a few seconds — we'll save your return address and recipients so you never have to type them again.</p>
+          </div>
+          <div style="display:flex;gap:8px;flex-shrink:0">
+            <button type="button" onclick="showAccountForm('register')" style="background:var(--red,#a8472d);color:#faf6ec;border:1.5px solid var(--red,#a8472d);padding:9px 18px;border-radius:2px;font:inherit;font-size:13px;font-weight:500;letter-spacing:0.02em;text-transform:uppercase;cursor:pointer">Create Account</button>
+            <button type="button" onclick="showAccountForm('login')" style="background:transparent;color:var(--ink,#2a2a2a);border:1.5px solid rgba(42,42,42,0.35);padding:9px 18px;border-radius:2px;font:inherit;font-size:13px;font-weight:500;letter-spacing:0.02em;text-transform:uppercase;cursor:pointer">Sign In</button>
+          </div>
+        </div>
+        <div id="account-banner-form" style="display:none;margin-top:18px;padding-top:18px;border-top:1px solid var(--line,rgba(42,42,42,0.14))"></div>
+      </div>`;
+  }
+}
+
+function showAccountForm(mode) {
+  const wrap = document.getElementById('account-banner-form');
+  if (!wrap) return;
+  const isReg = mode === 'register';
+  wrap.style.display = 'block';
+  wrap.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+      <div>
+        <label style="display:block;font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:var(--ink-muted,#6b6258);margin-bottom:4px">Email</label>
+        <input id="acct-email" type="email" autocomplete="email" placeholder="you@example.com" style="width:100%;padding:10px 12px;border:1.5px solid var(--line,rgba(42,42,42,0.14));background:var(--paper,#faf6ec);color:var(--ink,#2a2a2a);border-radius:2px;font:inherit;font-size:15px">
+      </div>
+      <div>
+        <label style="display:block;font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:var(--ink-muted,#6b6258);margin-bottom:4px">Password${isReg ? ' <span style=\"text-transform:none;letter-spacing:0;color:var(--ink-faint,#968b7d);font-family:inherit\">— 8+ chars, letter + number/symbol</span>' : ''}</label>
+        <input id="acct-pwd" type="password" autocomplete="${isReg ? 'new-password' : 'current-password'}" placeholder="••••••••" style="width:100%;padding:10px 12px;border:1.5px solid var(--line,rgba(42,42,42,0.14));background:var(--paper,#faf6ec);color:var(--ink,#2a2a2a);border-radius:2px;font:inherit;font-size:15px"${isReg ? ' oninput="updateAcctBannerStrength()"' : ''}>
+        ${isReg ? '<div style="height:3px;background:rgba(42,42,42,0.1);border-radius:2px;margin-top:5px;overflow:hidden"><div id="acct-strength-fill" style="height:100%;width:0;background:#94a3b8;transition:width 0.3s,background 0.3s"></div></div>' : ''}
+      </div>
+    </div>
+    <div id="acct-err" style="color:#b91c1c;font-size:13px;margin-bottom:10px;display:none"></div>
+    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+      <button type="button" onclick="${isReg ? 'doInlineRegister()' : 'doInlineLogin()'}" id="acct-submit-btn" style="background:var(--red,#a8472d);color:#faf6ec;border:1.5px solid var(--red,#a8472d);padding:10px 22px;border-radius:2px;font:inherit;font-size:13px;font-weight:500;letter-spacing:0.02em;text-transform:uppercase;cursor:pointer">${isReg ? 'Create Account →' : 'Sign In →'}</button>
+      <button type="button" onclick="showAccountForm('${isReg ? 'login' : 'register'}')" style="background:none;border:none;color:var(--ink-muted,#6b6258);cursor:pointer;font:inherit;font-size:13px;padding:0;text-decoration:underline">${isReg ? 'Already have one? Sign in' : 'Need an account? Create one'}</button>
+      <button type="button" onclick="hideAccountForm()" style="background:none;border:none;color:var(--ink-faint,#968b7d);cursor:pointer;font:inherit;font-size:13px;padding:0;margin-left:auto">Continue as guest →</button>
+    </div>`;
+  setTimeout(() => document.getElementById('acct-email')?.focus(), 50);
+}
+
+function hideAccountForm() {
+  const f = document.getElementById('account-banner-form');
+  if (f) { f.style.display = 'none'; f.innerHTML = ''; }
+}
+
+function updateAcctBannerStrength() {
+  const pwd = document.getElementById('acct-pwd')?.value || '';
+  let score = 0;
+  if (pwd.length >= 8)  score++;
+  if (pwd.length >= 12) score++;
+  if (/[A-Za-z]/.test(pwd) && /[0-9]/.test(pwd)) score++;
+  if (/[!@#$%^&*()\-_=+[\]{}|;:,.<>?]/.test(pwd)) score++;
+  const colors = ['#ef4444','#f97316','#eab308','#22c55e'];
+  const fill = document.getElementById('acct-strength-fill');
+  if (fill) {
+    fill.style.width = pwd.length === 0 ? '0' : Math.max(20, score * 25) + '%';
+    fill.style.background = pwd.length === 0 ? '#94a3b8' : colors[Math.min(score, 3)];
+  }
+}
+
+async function doInlineRegister() {
+  const errEl = document.getElementById('acct-err');
+  const btn   = document.getElementById('acct-submit-btn');
+  errEl.style.display = 'none';
+  const email    = document.getElementById('acct-email').value.trim();
+  const password = document.getElementById('acct-pwd').value;
+  if (!email || !password) { errEl.textContent = 'Please enter an email and password.'; errEl.style.display = 'block'; return; }
+  btn.disabled = true; btn.textContent = 'Creating…';
+  const r = await fetch('/api/account/register', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email, password }) }).then(r => r.json()).catch(() => ({ error:'Network error' }));
+  btn.disabled = false; btn.textContent = 'Create Account →';
+  if (r.ok) { window.location.reload(); return; }
+  errEl.textContent = r.error || 'Could not create account.';
+  errEl.style.display = 'block';
+}
+
+async function doInlineLogin() {
+  const errEl = document.getElementById('acct-err');
+  const btn   = document.getElementById('acct-submit-btn');
+  errEl.style.display = 'none';
+  const email    = document.getElementById('acct-email').value.trim();
+  const password = document.getElementById('acct-pwd').value;
+  if (!email || !password) { errEl.textContent = 'Please enter your email and password.'; errEl.style.display = 'block'; return; }
+  btn.disabled = true; btn.textContent = 'Signing in…';
+  const r = await fetch('/api/account/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email, password }) }).then(r => r.json()).catch(() => ({ error:'Network error' }));
+  btn.disabled = false; btn.textContent = 'Sign In →';
+  if (r.ok) { window.location.reload(); return; }
+  errEl.textContent = r.error || 'Sign in failed.';
+  errEl.style.display = 'block';
+}
+
+async function signOutFromSend() {
+  await fetch('/api/account/logout', { method:'POST', headers:{'Content-Type':'application/json'}, body:'{}' }).catch(() => {});
+  window.location.reload();
+}
 
 function fillSavedRecipient(sel) {
   if (!sel.value) return;
