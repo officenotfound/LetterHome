@@ -29,7 +29,7 @@ console.log('✓ googleapis package loaded');
 const auth = new google.auth.JWT({
   email: clientEmail,
   key:   privateKey.replace(/\\n/g, '\n'),
-  scopes: ['https://www.googleapis.com/auth/drive.file'],
+  scopes: ['https://www.googleapis.com/auth/drive'],
 });
 
 const drive = google.drive({ version: 'v3', auth });
@@ -47,7 +47,7 @@ const drive = google.drive({ version: 'v3', auth });
 
   // 2. Folder check
   try {
-    const r = await drive.files.get({ fileId: folderId, fields: 'id, name, mimeType' });
+    const r = await drive.files.get({ fileId: folderId, fields: 'id, name, mimeType', supportsAllDrives: true });
     console.log(`✓ Folder accessible: "${r.data.name}" (${r.data.mimeType})`);
     if (r.data.mimeType !== 'application/vnd.google-apps.folder') {
       console.warn('  ⚠ That ID is not a folder!');
@@ -64,6 +64,7 @@ const drive = google.drive({ version: 'v3', auth });
   fs.writeFileSync(testPath, `Drive backup test from Letterhome at ${new Date().toISOString()}\n`);
   try {
     const r = await drive.files.create({
+      supportsAllDrives: true,
       requestBody: { name: `letterhome-test-${Date.now()}.txt`, parents: [folderId] },
       media:       { mimeType: 'text/plain', body: fs.createReadStream(testPath) },
       fields:      'id, name, webViewLink',
@@ -73,7 +74,7 @@ const drive = google.drive({ version: 'v3', auth });
 
     // Clean up the test file we just uploaded
     try {
-      await drive.files.delete({ fileId: r.data.id });
+      await drive.files.delete({ fileId: r.data.id, supportsAllDrives: true });
       console.log('✓ Test file deleted from Drive (cleanup)');
     } catch (e) {
       console.warn('  ⚠ Could not delete test file:', e.message);
