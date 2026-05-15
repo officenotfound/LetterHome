@@ -169,6 +169,7 @@ textarea{resize:vertical;min-height:80px}
     <button class="nav-link" id="nav-dashboard"  onclick="go('/admin')"><span class="nav-icon">◈</span> Dashboard</button>
 <button class="nav-link" id="nav-orders"     onclick="go('/admin/orders')"><span class="nav-icon">✉</span> Orders</button>
     <button class="nav-link" id="nav-customers" onclick="go('/admin/customers')"><span class="nav-icon">◎</span> Customers</button>
+    <button class="nav-link" id="nav-accounts"  onclick="go('/admin/accounts')"><span class="nav-icon">◐</span> Accounts</button>
     <button class="nav-link" id="nav-broadcast" onclick="go('/admin/broadcast')"><span class="nav-icon">📢</span> Broadcast</button>
     <button class="nav-link" id="nav-insights"  onclick="go('/admin/insights')"><span class="nav-icon">◑</span> Insights</button>
     <button class="nav-link" id="nav-visitors"  onclick="go('/admin/visitors')"><span class="nav-icon">◉</span> Visitors</button>
@@ -227,6 +228,8 @@ function route() {
   if (p.match(/^\/admin\/orders\/\d+$/))            return showOrder(p.split('/').pop());
   if (p === '/admin/customers')                     return showCustomers();
   if (p.match(/^\/admin\/customers\/.+$/))          return showCustomer(decodeURIComponent(p.replace('/admin/customers/', '')));
+  if (p === '/admin/accounts')                      return showAccounts();
+  if (p.match(/^\/admin\/accounts\/.+$/))           return showAccount(decodeURIComponent(p.replace('/admin/accounts/', '')));
   if (p === '/admin/trash')                         return showTrash();
   if (p === '/admin/broadcast')                     return showBroadcast();
   if (p === '/admin/print-queue')                   return showPrintQueue();
@@ -240,8 +243,9 @@ function route() {
 }
 
 function setActiveNav(p) {
-  ['dashboard','orders','customers','broadcast','insights','visitors','stripe','contacts','templates','settings','trash'].forEach(k => document.getElementById('nav-'+k)?.classList.remove('active'));
+  ['dashboard','orders','customers','accounts','broadcast','insights','visitors','stripe','contacts','templates','settings','trash'].forEach(k => document.getElementById('nav-'+k)?.classList.remove('active'));
   if (p.startsWith('/admin/orders'))          document.getElementById('nav-orders')?.classList.add('active');
+  else if (p.startsWith('/admin/accounts'))   document.getElementById('nav-accounts')?.classList.add('active');
   else if (p.startsWith('/admin/customers'))  document.getElementById('nav-customers')?.classList.add('active');
   else if (p.startsWith('/admin/broadcast'))  document.getElementById('nav-broadcast')?.classList.add('active');
   else if (p.startsWith('/admin/insights'))   document.getElementById('nav-insights')?.classList.add('active');
@@ -1250,6 +1254,108 @@ async function removeCustomerAccount(encodedEmail) {
   if (!confirm('Remove this customer account?\n\nThis clears their password and saved recipients. Their customer record and order history will be kept.')) return;
   const r = await post(`/api/admin/customers/${encodedEmail}/remove-account`, {});
   if (r?.ok) showCustomer(decodeURIComponent(encodedEmail));
+  else alert(r?.error || 'Error removing account.');
+}
+
+// ── Accounts (dedicated tab) ──────────────────────────────────────────────────
+async function showAccounts() {
+  setTitle('Accounts');
+  const accounts = await api('/api/admin/accounts');
+  if (!accounts) return;
+
+  const rows = accounts.map(a => `
+    <tr>
+      <td><button class="link" onclick="go('/admin/accounts/${encodeURIComponent(a.email)}')">${esc(a.email)}${a.display_name ? ` <span style="color:#94a3b8;font-weight:400">(${esc(a.display_name)})</span>` : ''}</button></td>
+      <td style="font-size:12px;color:#64748b;white-space:nowrap">${fmtDate(a.account_created_at) || '—'}</td>
+      <td>${a.order_count}</td>
+      <td>${a.recipients_count}</td>
+      <td style="font-size:12px;color:#64748b;white-space:nowrap">${fmtDate(a.last_order) || '—'}</td>
+      <td>
+        <button class="link" onclick="go('/admin/accounts/${encodeURIComponent(a.email)}')">Manage</button>
+        &nbsp;<button class="link" onclick="go('/admin/customers/${encodeURIComponent(a.email)}')">View Customer</button>
+      </td>
+    </tr>`).join('');
+
+  setMain(`
+    <div class="page-header">
+      <div class="page-title">Accounts</div>
+      <div style="font-size:13px;color:#64748b">${accounts.length} customer${accounts.length === 1 ? '' : 's'} with accounts</div>
+    </div>
+    <div class="card">
+      <table>
+        <thead><tr><th>Email</th><th>Account Created</th><th>Orders</th><th>Saved Recipients</th><th>Last Order</th><th></th></tr></thead>
+        <tbody>${rows || '<tr><td colspan="6" class="empty">No customer accounts yet. Customers can sign up at /account/register.</td></tr>'}</tbody>
+      </table>
+    </div>`);
+}
+
+async function showAccount(email) {
+  setTitle('Account');
+  const c = await api(`/api/admin/customers/${encodeURIComponent(email)}`);
+  if (!c) return setMain('<div class="empty">Customer not found.</div>');
+  if (!c.has_account) return setMain(`
+    <button class="back-link" onclick="go('/admin/accounts')">← Back to Accounts</button>
+    <div class="empty" style="padding:40px">This customer does not have an account.</div>`);
+
+  const totalSpent = c.orders.filter(o => o.status !== 'awaiting_payment').reduce((s,o) => s + o.price_cents, 0);
+
+  setMain(`
+    <button class="back-link" onclick="go('/admin/accounts')">← Back to Accounts</button>
+    <div class="page-header">
+      <div class="page-title">${esc(email)} <span style="font-size:11px;background:#dbeafe;color:#1e40af;padding:2px 8px;border-radius:4px;font-weight:600;vertical-align:middle;margin-left:8px">ACCOUNT</span></div>
+      <button class="btn btn-outline btn-sm" onclick="go('/admin/customers/${encodeURIComponent(email)}')">View Full Customer →</button>
+    </div>
+
+    <div class="detail-grid">
+      <div class="detail-card">
+        <div class="detail-card-title">Account</div>
+        <div class="detail-row"><span class="detail-label">Created</span><span class="detail-value">${fmtDate(c.account_created_at) || '—'}</span></div>
+        <div class="detail-row"><span class="detail-label">Saved Recipients</span><span class="detail-value">${c.saved_recipients_count}</span></div>
+        <div class="detail-row"><span class="detail-label">Orders</span><span class="detail-value">${c.orders.length}</span></div>
+        <div class="detail-row"><span class="detail-label">Total Spent</span><span class="detail-value">${fmtCAD(totalSpent)}</span></div>
+      </div>
+      ${(c.sender_name || c.sender_street) ? `
+      <div class="detail-card">
+        <div class="detail-card-title">Saved Return Address</div>
+        <div style="font-size:14px;line-height:1.8;color:#334155">
+          ${[c.sender_name, c.sender_street, [c.sender_city, c.sender_province, c.sender_postal].filter(Boolean).join(' '), c.sender_country].filter(Boolean).map(l => esc(l)).join('<br>')}
+        </div>
+      </div>` : `
+      <div class="detail-card">
+        <div class="detail-card-title">Saved Return Address</div>
+        <div style="color:#94a3b8;font-size:13px;font-style:italic">No return address saved.</div>
+      </div>`}
+    </div>
+
+    <div class="card" style="margin-bottom:24px">
+      <div class="card-header"><div class="card-title">Reset Password</div></div>
+      <div style="padding:20px">
+        <p style="font-size:13px;color:#64748b;margin-bottom:14px">Set a new password and share it with the customer through a secure channel. Their old password will stop working immediately.</p>
+        <div style="display:flex;gap:8px;align-items:flex-start;max-width:520px">
+          <div class="field" style="flex:1;margin-bottom:0">
+            <input id="acct-new-pwd" type="password" placeholder="At least 8 chars, letter + number/symbol" oninput="updateAcctStrength()">
+            <div style="height:3px;background:#f1f5f9;border-radius:2px;margin-top:6px;overflow:hidden"><div id="acct-pwd-fill" style="height:100%;width:0;background:#94a3b8;transition:width 0.3s,background 0.3s"></div></div>
+            <div id="acct-pwd-lbl" style="font-size:11px;color:#94a3b8;margin-top:4px;font-family:monospace"></div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="resetCustomerPassword('${encodeURIComponent(email)}')">Reset Password</button>
+        </div>
+        <div id="acct-msg" style="font-size:12px;margin-top:10px"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="card-title" style="color:#dc2626">Danger Zone</div></div>
+      <div style="padding:20px">
+        <p style="font-size:13px;color:#64748b;margin-bottom:14px">Removing the account clears the password and all saved recipients. The customer record and order history are kept.</p>
+        <button class="btn btn-outline btn-sm" style="color:#dc2626;border-color:#dc2626" onclick="removeAccountFromAccountsTab('${encodeURIComponent(email)}')">Remove Account</button>
+      </div>
+    </div>`);
+}
+
+async function removeAccountFromAccountsTab(encodedEmail) {
+  if (!confirm('Remove this customer account?\n\nThis clears their password and saved recipients. Their customer record and order history will be kept.')) return;
+  const r = await post(`/api/admin/customers/${encodedEmail}/remove-account`, {});
+  if (r?.ok) go('/admin/accounts');
   else alert(r?.error || 'Error removing account.');
 }
 

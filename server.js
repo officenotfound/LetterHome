@@ -1310,6 +1310,19 @@ app.get('/api/admin/customers/:email', requireAdmin, (req, res) => {
   });
 });
 
+app.get('/api/admin/accounts', requireAdmin, (req, res) => {
+  const accounts = db.prepare(`
+    SELECT c.email, c.display_name, c.account_created_at,
+           (SELECT COUNT(*) FROM saved_recipients WHERE customer_email = c.email) AS recipients_count,
+           (SELECT COUNT(*) FROM orders WHERE customer_email = c.email AND deleted_at IS NULL) AS order_count,
+           (SELECT MAX(created_at) FROM orders WHERE customer_email = c.email AND deleted_at IS NULL) AS last_order
+    FROM customers c
+    WHERE c.password_hash IS NOT NULL AND c.deleted_at IS NULL
+    ORDER BY c.account_created_at DESC
+  `).all();
+  res.json(accounts);
+});
+
 app.post('/api/admin/customers/:email/reset-password', requireAdmin, async (req, res) => {
   const email = req.params.email;
   const { new_password } = req.body;
