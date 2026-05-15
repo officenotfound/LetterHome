@@ -161,6 +161,104 @@ try {
   )`);
 } catch (e) { console.error('[init] email_templates table:', e.message); }
 
+// Seed default canned reply templates (INSERT OR IGNORE — never overwrites edits)
+const defaultTemplates = [
+  {
+    name:    'Where is my letter?',
+    subject: 'Re: Your Letterhome letter',
+    body:
+`Hi there,
+
+Thanks for reaching out. Canada Post lettermail doesn't include tracking, so once we drop it at the post office we can't see exactly where it is in transit.
+
+The typical delivery windows are:
+  • Within Canada: within 2 weeks
+  • International: within 4 weeks
+
+If you're still within that window, it's most likely on its way. If the full window has passed and nothing has arrived, please reply and we'll arrange a resend at no charge.
+
+Thanks for your patience,
+Letterhome`,
+  },
+  {
+    name:    'Delivery delay explanation',
+    subject: 'Re: Your Letterhome letter — delivery update',
+    body:
+`Hi there,
+
+Thanks for getting in touch. Canada Post is currently experiencing delays in some regions, which can push delivery past the usual window. We're sorry for the inconvenience.
+
+We'd ask you to allow a few extra days before considering the letter lost. If it hasn't arrived within [X weeks from mailing date], please reply and we'll make it right with a resend.
+
+We appreciate your patience.
+
+Letterhome`,
+  },
+  {
+    name:    'Non-delivery — goodwill resend',
+    subject: 'Re: Your Letterhome letter — resend arranged',
+    body:
+`Hi there,
+
+We're sorry your letter hasn't arrived. Since your delivery window has passed, we'd like to resend it at no additional charge.
+
+Could you confirm:
+  1. The full mailing address for the recipient is still the same
+  2. That it's possible the letter was missed (e.g. no one home, full mailbox)
+
+Once you confirm, we'll reprint and repost your letter right away.
+
+Apologies again for the trouble,
+Letterhome`,
+  },
+  {
+    name:    'General enquiry — acknowledged',
+    subject: 'Re: Your Letterhome enquiry',
+    body:
+`Hi there,
+
+Thanks for getting in touch. We've received your message and will get back to you shortly.
+
+If you have an order number handy, feel free to include it in your reply and we can look into it right away.
+
+Letterhome`,
+  },
+  {
+    name:    'Order confirmed — follow-up',
+    subject: 'Re: Your Letterhome order',
+    body:
+`Hi there,
+
+Just a quick note to confirm we've received your order and it's in the queue to be printed and mailed. You'll receive an update once it's been posted.
+
+If you have any questions in the meantime, just reply here.
+
+Thanks,
+Letterhome`,
+  },
+  {
+    name:    'Wrong address — please confirm',
+    subject: 'Re: Your Letterhome order — address check',
+    body:
+`Hi there,
+
+Before we print and post your letter, we wanted to flag a possible issue with the recipient address. Could you double-check the following and reply to confirm?
+
+  Recipient: [name]
+  Address: [address]
+
+We want to make sure your letter gets where it needs to go.
+
+Thanks,
+Letterhome`,
+  },
+];
+
+try {
+  const insertTmpl = db.prepare('INSERT OR IGNORE INTO email_templates (name, subject, body) VALUES (?,?,?)');
+  for (const t of defaultTemplates) insertTmpl.run(t.name, t.subject, t.body);
+} catch (e) { console.error('[init] template seed:', e.message); }
+
 try {
   db.exec(`CREATE TABLE IF NOT EXISTS settings (
     key        TEXT PRIMARY KEY,
