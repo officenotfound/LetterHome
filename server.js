@@ -1199,12 +1199,12 @@ app.get('/api/admin/customers', requireAdmin, (req, res) => {
       MAX(created_at) as last_order
     FROM orders WHERE deleted_at IS NULL GROUP BY customer_email
   `).all();
-  const manual = db.prepare(`SELECT email, display_name, created_at FROM customers WHERE deleted_at IS NULL`).all();
+  const manual = db.prepare(`SELECT email, display_name, created_at, password_hash FROM customers WHERE deleted_at IS NULL`).all();
 
   const map = {};
-  manual.forEach(m => { map[m.email] = { email: m.email, display_name: m.display_name, order_count: 0, total_spent: 0, last_order: m.created_at }; });
+  manual.forEach(m => { map[m.email] = { email: m.email, display_name: m.display_name, order_count: 0, total_spent: 0, last_order: m.created_at, has_account: !!m.password_hash }; });
   fromOrders.forEach(o => {
-    if (!map[o.email]) map[o.email] = { email: o.email, display_name: null };
+    if (!map[o.email]) map[o.email] = { email: o.email, display_name: null, has_account: false };
     Object.assign(map[o.email], { order_count: o.order_count, total_spent: o.total_spent, last_order: o.last_order });
   });
 
@@ -1303,8 +1303,36 @@ app.get('/api/admin/customers/:email', requireAdmin, (req, res) => {
     sender_province: manual?.sender_province || null,
     sender_postal:   manual?.sender_postal   || null,
     sender_country:  manual?.sender_country  || null,
+    has_account:        !!manual?.password_hash,
+    account_created_at: manual?.account_created_at || null,
+    saved_recipients_count: db.prepare('SELECT COUNT(*) as n FROM saved_recipients WHERE customer_email = ?').get(email).n,
     orders, notes, tags,
   });
+});
+
+app.post('/api/admin/customers/:email/reset-password', requireAdmin, async (req, res) => {
+  const email = req.params.email;
+  const { new_password } = req.body;
+  const customer = db.prepare('SELECT email, password_hash FROM customers WHERE email = ? AND deleted_at IS NULL').get(email);
+  if (!customer) return res.status(404).json({ error: 'Customer not found.' });
+  if (!customer.password_hash) return res.status(400).json({ error: 'This customer does not have an account.' });
+  const pwErr = validateCustomerPassword(new_password);
+  if (pwErr) return res.status(400).json({ error: pwErr });
+  const hash = await bcrypt.hash(new_password, 12);
+  db.prepare('UPDATE customers SET password_hash = ? WHERE email = ?').run(hash, email);
+  logAudit(req, 'customer.password_reset', 'customer', email);
+  res.json({ ok: true });
+});
+
+app.post('/api/admin/customers/:email/remove-account', requireAdmin, (req, res) => {
+  const email = req.params.email;
+  const customer = db.prepare('SELECT email, password_hash FROM customers WHERE email = ?').get(email);
+  if (!customer) return res.status(404).json({ error: 'Customer not found.' });
+  if (!customer.password_hash) return res.status(400).json({ error: 'This customer does not have an account.' });
+  db.prepare('UPDATE customers SET password_hash = NULL, account_created_at = NULL WHERE email = ?').run(email);
+  db.prepare('DELETE FROM saved_recipients WHERE customer_email = ?').run(email);
+  logAudit(req, 'customer.account_removed', 'customer', email);
+  res.json({ ok: true });
 });
 
 app.get('/api/admin/customers/:email/email-log', requireAdmin, (req, res) => {

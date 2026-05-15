@@ -983,9 +983,12 @@ async function showCustomers() {
 
   const rows = customers.map(c => {
     const tags = c.tags.map(t => `<span class="tag" style="font-size:11px;padding:2px 8px">${esc(t)}</span>`).join('');
+    const acctBadge = c.has_account
+      ? '<span title="Has account" style="display:inline-block;font-size:10px;background:#dbeafe;color:#1e40af;padding:1px 7px;border-radius:4px;font-weight:600;margin-left:6px">ACCOUNT</span>'
+      : '';
     return `
     <tr>
-      <td><button class="link" onclick="go('/admin/customers/${encodeURIComponent(c.email)}')">${esc(c.email)}${c.display_name ? ` <span style="color:#94a3b8;font-weight:400">(${esc(c.display_name)})</span>` : ''}</button></td>
+      <td><button class="link" onclick="go('/admin/customers/${encodeURIComponent(c.email)}')">${esc(c.email)}${acctBadge}${c.display_name ? ` <span style="color:#94a3b8;font-weight:400">(${esc(c.display_name)})</span>` : ''}</button></td>
       <td>${c.order_count}</td>
       <td>${fmtCAD(c.total_spent)}</td>
       <td>${fmtDate(c.last_order)}</td>
@@ -1130,6 +1133,31 @@ async function showCustomer(email) {
       </div>
     </div>` : ''}
     <div class="card" style="margin-bottom:24px">
+      <div class="card-header"><div class="card-title">Customer Account</div>${c.has_account ? '<span style="font-size:11px;background:#dbeafe;color:#1e40af;padding:2px 8px;border-radius:4px;font-weight:600">ACTIVE</span>' : '<span style="font-size:11px;background:#f1f5f9;color:#64748b;padding:2px 8px;border-radius:4px">NONE</span>'}</div>
+      <div style="padding:20px">
+        ${c.has_account ? `
+          <div class="detail-row" style="border:none;padding:0 0 14px"><span class="detail-label">Account Created</span><span class="detail-value">${fmtDate(c.account_created_at) || '—'}</span></div>
+          <div class="detail-row" style="border:none;padding:0 0 18px"><span class="detail-label">Saved Recipients</span><span class="detail-value">${c.saved_recipients_count}</span></div>
+          <div style="border-top:1px solid #f1f5f9;padding-top:18px">
+            <div style="font-size:13px;font-weight:600;color:#0f172a;margin-bottom:10px">Set New Password</div>
+            <div style="display:flex;gap:8px;align-items:flex-start">
+              <div class="field" style="flex:1;margin-bottom:0">
+                <input id="acct-new-pwd" type="password" placeholder="At least 8 chars, letter + number/symbol" oninput="updateAcctStrength()">
+                <div style="height:3px;background:#f1f5f9;border-radius:2px;margin-top:6px;overflow:hidden"><div id="acct-pwd-fill" style="height:100%;width:0;background:#94a3b8;transition:width 0.3s,background 0.3s"></div></div>
+                <div id="acct-pwd-lbl" style="font-size:11px;color:#94a3b8;margin-top:4px;font-family:monospace"></div>
+              </div>
+              <button class="btn btn-primary btn-sm" onclick="resetCustomerPassword('${encodeURIComponent(email)}')">Reset Password</button>
+            </div>
+            <div id="acct-msg" style="font-size:12px;margin-top:10px"></div>
+            <div style="border-top:1px solid #f1f5f9;margin-top:18px;padding-top:14px">
+              <button class="btn btn-outline btn-sm" style="color:#dc2626;border-color:#dc2626" onclick="removeCustomerAccount('${encodeURIComponent(email)}')">Remove Account</button>
+              <span style="font-size:12px;color:#64748b;margin-left:10px">Clears password &amp; saved recipients. Customer record &amp; orders are kept.</span>
+            </div>
+          </div>
+        ` : '<div style="color:#64748b;font-size:13px">This customer has not created an account.</div>'}
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:24px">
       <div class="card-header"><div class="card-title">Email Log</div></div>
       ${(emailLog||[]).length === 0
         ? '<div class="empty" style="padding:20px">No emails sent yet.</div>'
@@ -1182,6 +1210,47 @@ async function addTag(encodedEmail) {
 async function removeTag(encodedEmail, tag) {
   await del(`/api/admin/customers/${encodedEmail}/tags/${encodeURIComponent(tag)}`);
   showCustomer(decodeURIComponent(encodedEmail));
+}
+
+function updateAcctStrength() {
+  const pwd = document.getElementById('acct-new-pwd')?.value || '';
+  let score = 0;
+  if (pwd.length >= 8)  score++;
+  if (pwd.length >= 12) score++;
+  if (/[A-Za-z]/.test(pwd) && /[0-9]/.test(pwd)) score++;
+  if (/[!@#$%^&*()\-_=+[\]{}|;:,.<>?]/.test(pwd)) score++;
+  const colors = ['#ef4444','#f97316','#eab308','#22c55e'];
+  const labels = ['Too weak','Weak','Fair','Strong','Very strong'];
+  const fill = document.getElementById('acct-pwd-fill');
+  const lbl  = document.getElementById('acct-pwd-lbl');
+  if (!fill || !lbl) return;
+  fill.style.width = pwd.length === 0 ? '0' : Math.max(20, score * 25) + '%';
+  fill.style.background = pwd.length === 0 ? '#94a3b8' : colors[Math.min(score, 3)];
+  lbl.textContent = pwd.length === 0 ? '' : labels[Math.min(score, 4)];
+  lbl.style.color = pwd.length === 0 ? '#94a3b8' : colors[Math.min(score, 3)];
+}
+
+async function resetCustomerPassword(encodedEmail) {
+  const pwd = document.getElementById('acct-new-pwd').value;
+  const msg = document.getElementById('acct-msg');
+  if (!pwd) { msg.style.color = '#dc2626'; msg.textContent = 'Enter a new password.'; return; }
+  const r = await post(`/api/admin/customers/${encodedEmail}/reset-password`, { new_password: pwd });
+  if (r?.ok) {
+    msg.style.color = '#16a34a';
+    msg.textContent = '✓ Password updated. Share it with the customer through a secure channel.';
+    document.getElementById('acct-new-pwd').value = '';
+    updateAcctStrength();
+  } else {
+    msg.style.color = '#dc2626';
+    msg.textContent = r?.error || 'Error updating password.';
+  }
+}
+
+async function removeCustomerAccount(encodedEmail) {
+  if (!confirm('Remove this customer account?\n\nThis clears their password and saved recipients. Their customer record and order history will be kept.')) return;
+  const r = await post(`/api/admin/customers/${encodedEmail}/remove-account`, {});
+  if (r?.ok) showCustomer(decodeURIComponent(encodedEmail));
+  else alert(r?.error || 'Error removing account.');
 }
 
 function formatOccasionDate(mmdd) {
