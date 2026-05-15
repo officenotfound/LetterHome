@@ -9,6 +9,7 @@ const session   = require('express-session');
 const FileStore = require('session-file-store')(session);
 const bcrypt    = require('bcryptjs');
 const { Secret, TOTP } = require('otpauth');
+const cron      = require('node-cron');
 const { DatabaseSync: Database } = require('node:sqlite');
 const path = require('path');
 const fs   = require('fs');
@@ -17,6 +18,7 @@ const { randomUUID } = require('node:crypto');
 fs.mkdirSync('uploads', { recursive: true });
 fs.mkdirSync('orders',  { recursive: true });
 fs.mkdirSync('admin',   { recursive: true });
+fs.mkdirSync('backups', { recursive: true });
 
 const app    = express();
 app.set('trust proxy', 1);
@@ -2334,6 +2336,73 @@ process.on('uncaughtException', (err) => {
   const msg = err.stack || err.message || String(err);
   console.error('[uncaughtException]', msg);
   sendErrorAlert('Uncaught Exception — process may be unstable', msg);
+});
+
+// ── Automated backups ─────────────────────────────────────────────────────────
+const BACKUP_DIR      = path.join(__dirname, 'backups');
+const BACKUP_KEEP     = 14;
+
+function runBackup() {
+  try {
+    const ts   = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    const dest = path.join(BACKUP_DIR, `orders-${ts}.db`);
+    fs.copyFileSync('orders.db', dest);
+
+    // Prune old backups — keep newest BACKUP_KEEP files
+    const files = fs.readdirSync(BACKUP_DIR)
+      .filter(f => f.startsWith('orders-') && f.endsWith('.db'))
+      .map(f => ({ name: f, mtime: fs.statSync(path.join(BACKUP_DIR, f)).mtimeMs }))
+      .sort((a, b) => b.mtime - a.mtime);
+    files.slice(BACKUP_KEEP).forEach(f => {
+      try { fs.unlinkSync(path.join(BACKUP_DIR, f.name)); } catch {}
+    });
+
+    console.log(`[backup] created ${path.basename(dest)}`);
+    return { ok: true, filename: path.basename(dest) };
+  } catch (e) {
+    console.error('[backup] failed:', e.message);
+    return { ok: false, error: e.message };
+  }
+}
+
+// Daily at 2:00 AM
+cron.schedule('0 2 * * *', () => {
+  console.log('[backup] running scheduled backup');
+  runBackup();
+});
+
+// API: list backups
+app.get('/api/admin/backups', requireAdmin, (req, res) => {
+  try {
+    const files = fs.readdirSync(BACKUP_DIR)
+      .filter(f => f.startsWith('orders-') && f.endsWith('.db'))
+      .map(f => {
+        const stat = fs.statSync(path.join(BACKUP_DIR, f));
+        return { filename: f, size: stat.size, created_at: stat.mtime.toISOString() };
+      })
+      .sort((a, b) => b.created_at.localeCompare(a.created_at));
+    res.json(files);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// API: trigger manual backup
+app.post('/api/admin/backups/run', requireAdmin, (req, res) => {
+  const result = runBackup();
+  if (result.ok) logAudit(req, 'backup.manual', 'backup', result.filename);
+  res.json(result);
+});
+
+// API: download a backup
+app.get('/api/admin/backups/:filename', requireAdmin, (req, res) => {
+  const filename = path.basename(req.params.filename); // strip any path traversal
+  if (!filename.startsWith('orders-') || !filename.endsWith('.db')) {
+    return res.status(400).json({ error: 'Invalid filename' });
+  }
+  const filepath = path.join(BACKUP_DIR, filename);
+  if (!fs.existsSync(filepath)) return res.status(404).json({ error: 'Not found' });
+  res.download(filepath, filename);
 });
 
 const PORT = process.env.PORT || 3000;
