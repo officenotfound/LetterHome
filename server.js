@@ -2871,66 +2871,6 @@ process.on('uncaughtException', (err) => {
 const BACKUP_DIR      = path.join(__dirname, 'backups');
 const BACKUP_KEEP     = 14;
 
-// Google Drive off-site backup (uses the GA4 service account credentials).
-// Set GDRIVE_BACKUP_FOLDER_ID to enable.
-let _driveClient = null;
-function getDriveClient() {
-  if (_driveClient) return _driveClient;
-  if (!process.env.GA4_CLIENT_EMAIL || !process.env.GA4_PRIVATE_KEY) return null;
-  try {
-    const { google } = require('googleapis');
-    const auth = new google.auth.JWT({
-      email: process.env.GA4_CLIENT_EMAIL,
-      key:   process.env.GA4_PRIVATE_KEY.replace(/\\n/g, '\n'),
-      scopes: ['https://www.googleapis.com/auth/drive'],
-    });
-    _driveClient = google.drive({ version: 'v3', auth });
-    return _driveClient;
-  } catch (e) {
-    console.error('[gdrive] init failed:', e.message);
-    return null;
-  }
-}
-
-async function uploadBackupToDrive(filePath) {
-  const folderId = process.env.GDRIVE_BACKUP_FOLDER_ID;
-  if (!folderId) return null;
-  const drive = getDriveClient();
-  if (!drive) {
-    console.warn('[gdrive] skip: GA4 service account env vars not set');
-    return null;
-  }
-  try {
-    const filename = path.basename(filePath);
-    const res = await drive.files.create({
-      supportsAllDrives: true,
-      requestBody: { name: filename, parents: [folderId] },
-      media: { mimeType: 'application/octet-stream', body: fs.createReadStream(filePath) },
-      fields: 'id, name, createdTime, size',
-    });
-    console.log(`[gdrive] uploaded ${filename} (${res.data.id})`);
-
-    // Retention: keep newest GDRIVE_BACKUP_KEEP files in that folder
-    const keep = Math.max(1, Number(process.env.GDRIVE_BACKUP_KEEP) || 30);
-    const list = await drive.files.list({
-      supportsAllDrives: true,
-      includeItemsFromAllDrives: true,
-      q: `'${folderId}' in parents and trashed = false and (name contains 'orders-')`,
-      orderBy: 'createdTime desc',
-      fields: 'files(id, name, createdTime)',
-      pageSize: 200,
-    });
-    const old = (list.data.files || []).slice(keep);
-    for (const f of old) {
-      try { await drive.files.delete({ fileId: f.id, supportsAllDrives: true }); console.log(`[gdrive] pruned ${f.name}`); }
-      catch (err) { console.warn('[gdrive] prune failed for', f.name, err.message); }
-    }
-    return { id: res.data.id, name: res.data.name };
-  } catch (e) {
-    console.error('[gdrive] upload failed:', e.message);
-    return { error: e.message };
-  }
-}
 
 async function runBackup() {
   try {
@@ -2976,13 +2916,7 @@ async function runBackup() {
       }
     }
 
-    // Optional: upload to Google Drive (off-site, off-machine)
-    let drive = null;
-    if (process.env.GDRIVE_BACKUP_FOLDER_ID) {
-      drive = await uploadBackupToDrive(dest);
-    }
-
-    return { ok: true, filename: path.basename(dest), drive };
+    return { ok: true, filename: path.basename(dest) };
   } catch (e) {
     console.error('[backup] failed:', e.message);
     return { ok: false, error: e.message };
@@ -3008,10 +2942,8 @@ app.get('/api/admin/backups', requireAdmin, (req, res) => {
     res.json({
       files,
       config: {
-        encrypted:      !!process.env.BACKUP_PASSPHRASE,
-        email_enabled:  process.env.BACKUP_EMAIL_ENABLED === 'true',
-        gdrive_enabled: !!(process.env.GDRIVE_BACKUP_FOLDER_ID && process.env.GA4_CLIENT_EMAIL && process.env.GA4_PRIVATE_KEY),
-        gdrive_keep:    Math.max(1, Number(process.env.GDRIVE_BACKUP_KEEP) || 30),
+        encrypted:     !!process.env.BACKUP_PASSPHRASE,
+        email_enabled: process.env.BACKUP_EMAIL_ENABLED === 'true',
       },
     });
   } catch (e) {
