@@ -2867,6 +2867,19 @@ app.get('/api/admin/backups/:filename', requireAdmin, (req, res) => {
   res.download(filepath, filename);
 });
 
+// API: delete a backup
+app.delete('/api/admin/backups/:filename', requireAdmin, (req, res) => {
+  const filename = path.basename(req.params.filename);
+  if (!filename.startsWith('orders-') || !(filename.endsWith('.db') || filename.endsWith('.db.enc'))) {
+    return res.status(400).json({ error: 'Invalid filename' });
+  }
+  const filepath = path.join(BACKUP_DIR, filename);
+  if (!fs.existsSync(filepath)) return res.status(404).json({ error: 'Not found' });
+  fs.unlinkSync(filepath);
+  logAudit(req, 'backup.delete', 'backup', filename);
+  res.json({ ok: true });
+});
+
 app.use((req, res) => {
   res.status(404).sendFile(path.join(__dirname, 'public', '404.html'));
 });
