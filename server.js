@@ -2827,6 +2827,46 @@ app.get('/api/admin/server-health', requireAdmin, (req, res) => {
   });
 });
 
+// API: list backups
+app.get('/api/admin/backups', requireAdmin, (req, res) => {
+  try {
+    const files = fs.readdirSync(BACKUP_DIR)
+      .filter(f => f.startsWith('orders-') && (f.endsWith('.db') || f.endsWith('.db.enc')))
+      .map(f => {
+        const stat = fs.statSync(path.join(BACKUP_DIR, f));
+        return { filename: f, size: stat.size, created_at: stat.mtime.toISOString(), encrypted: f.endsWith('.db.enc') };
+      })
+      .sort((a, b) => b.created_at.localeCompare(a.created_at));
+    res.json({
+      files,
+      config: {
+        encrypted:     !!process.env.BACKUP_PASSPHRASE,
+        email_enabled: process.env.BACKUP_EMAIL_ENABLED === 'true',
+      },
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// API: trigger manual backup
+app.post('/api/admin/backups/run', requireAdmin, async (req, res) => {
+  const result = await runBackup();
+  if (result.ok) logAudit(req, 'backup.manual', 'backup', result.filename);
+  res.json(result);
+});
+
+// API: download a backup
+app.get('/api/admin/backups/:filename', requireAdmin, (req, res) => {
+  const filename = path.basename(req.params.filename);
+  if (!filename.startsWith('orders-') || !(filename.endsWith('.db') || filename.endsWith('.db.enc'))) {
+    return res.status(400).json({ error: 'Invalid filename' });
+  }
+  const filepath = path.join(BACKUP_DIR, filename);
+  if (!fs.existsSync(filepath)) return res.status(404).json({ error: 'Not found' });
+  res.download(filepath, filename);
+});
+
 app.use((req, res) => {
   res.status(404).sendFile(path.join(__dirname, 'public', '404.html'));
 });
@@ -2927,46 +2967,6 @@ async function runBackup() {
 cron.schedule('0 2 * * *', async () => {
   console.log('[backup] running scheduled backup');
   await runBackup();
-});
-
-// API: list backups
-app.get('/api/admin/backups', requireAdmin, (req, res) => {
-  try {
-    const files = fs.readdirSync(BACKUP_DIR)
-      .filter(f => f.startsWith('orders-') && (f.endsWith('.db') || f.endsWith('.db.enc')))
-      .map(f => {
-        const stat = fs.statSync(path.join(BACKUP_DIR, f));
-        return { filename: f, size: stat.size, created_at: stat.mtime.toISOString(), encrypted: f.endsWith('.db.enc') };
-      })
-      .sort((a, b) => b.created_at.localeCompare(a.created_at));
-    res.json({
-      files,
-      config: {
-        encrypted:     !!process.env.BACKUP_PASSPHRASE,
-        email_enabled: process.env.BACKUP_EMAIL_ENABLED === 'true',
-      },
-    });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-
-// API: trigger manual backup
-app.post('/api/admin/backups/run', requireAdmin, async (req, res) => {
-  const result = await runBackup();
-  if (result.ok) logAudit(req, 'backup.manual', 'backup', result.filename);
-  res.json(result);
-});
-
-// API: download a backup
-app.get('/api/admin/backups/:filename', requireAdmin, (req, res) => {
-  const filename = path.basename(req.params.filename); // strip any path traversal
-  if (!filename.startsWith('orders-') || !(filename.endsWith('.db') || filename.endsWith('.db.enc'))) {
-    return res.status(400).json({ error: 'Invalid filename' });
-  }
-  const filepath = path.join(BACKUP_DIR, filename);
-  if (!fs.existsSync(filepath)) return res.status(404).json({ error: 'Not found' });
-  res.download(filepath, filename);
 });
 
 const PORT = process.env.PORT || 3000;
