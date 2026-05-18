@@ -1075,6 +1075,7 @@ app.get('/api/order-status', (req, res) => {
     recipientCity:      order.recipient_city,
     destinationCountry: order.destination_country,
     createdAt:          order.created_at,
+    priceCents:         order.price_cents,
   });
 });
 
