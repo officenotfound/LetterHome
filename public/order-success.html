@@ -115,7 +115,7 @@ function esc(s) {
       <div class="detail-row"><span class="label">Order</span><span class="val">#${esc(data.id)}</span></div>
       <div class="detail-row"><span class="label">Recipient</span><span class="val">${esc(data.recipientName)}${data.recipientCity ? ', ' + esc(data.recipientCity) : ''}</span></div>
       <div class="detail-row"><span class="label">Destination</span><span class="val">${esc(destName)}</span></div>
-      <div class="detail-row"><span class="label">Price</span><span class="val">${isDomestic ? '$10' : '$20'} CAD</span></div>
+      <div class="detail-row"><span class="label">Price</span><span class="val">${data.priceCents ? '$' + (data.priceCents / 100).toFixed(0) : (isDomestic ? '$10' : '$20')} CAD</span></div>
       <div class="detail-row"><span class="label">Estimated delivery</span><span class="val">${isDomestic ? 'Within 2 weeks' : 'Within 4 weeks'}</span></div>
       <div class="detail-row"><span class="label">Status</span><span class="val" style="color:var(--red)">Received — preparing to mail</span></div>
     `;
