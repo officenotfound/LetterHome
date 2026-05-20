@@ -715,6 +715,19 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
 app.use(express.json({ limit: '64kb' }));
 app.use(express.urlencoded({ limit: '64kb', extended: true }));
 
+// ── Health check ──────────────────────────────────────────────────────────────
+// Used by uptime monitoring (UptimeRobot, etc.). Lightweight, no auth.
+// Returns 200 + DB ping if alive, 503 if the DB is unreachable.
+app.get('/health', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  try {
+    db.prepare('SELECT 1').get();
+    res.json({ status: 'ok', db: 'ok', uptime: Math.floor(process.uptime()) });
+  } catch (e) {
+    res.status(503).json({ status: 'error', db: 'error', message: e.message });
+  }
+});
+
 // Clean URLs for all pages
 ['send', 'privacy', 'terms', 'refunds', 'about', 'contact', 'track', 'order-success'].forEach(p =>
   app.get(`/${p}`, (req, res) =>
