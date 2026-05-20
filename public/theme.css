@@ -244,19 +244,22 @@ textarea:focus {
    theme.css loads after inline <style>, so these rules win same-specificity.
    ─────────────────────────────────────────────────────────────────────────── */
 
-/* A. Bigger, tighter display type — pushes from "polished web" toward "editorial print". */
+/* A. Tightened display type (v0.2.4) — compact but still confident.
+   v0.2.1 went 112px / 88px which felt over-large after stripping decoration. */
 h1 {
-  font-size: clamp(48px, 8.5vw, 112px);
-  letter-spacing: -0.025em;
-  line-height: 1.02;
+  font-size: clamp(44px, 6.5vw, 88px);
+  letter-spacing: -0.022em;
+  line-height: 1.05;
 }
 .section-head h2,
 .story-text h2,
 .cta-band h2 {
-  font-size: clamp(40px, 6.5vw, 88px);
-  letter-spacing: -0.02em;
-  line-height: 1.05;
+  font-size: clamp(36px, 5vw, 64px);
+  letter-spacing: -0.018em;
+  line-height: 1.08;
 }
+.section-head { margin-bottom: 36px !important; }
+.section-head p { margin-top: 12px; }
 
 /* Paper texture removed in v0.2.3 — pure minimalist B&W has no grain. */
 
