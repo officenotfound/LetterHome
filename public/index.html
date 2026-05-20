@@ -299,17 +299,23 @@ nav {
 /* ========== HERO ========== */
 .hero {
   position: relative;
-  padding: 80px 36px 100px;
+  padding: 140px 36px 160px;
   max-width: 1280px;
   margin: 0 auto;
   z-index: 2;
+  border-bottom: 1px solid var(--line);
 }
 
 .hero-grid {
-  display: grid;
-  grid-template-columns: 1.15fr 0.85fr;
-  gap: 80px;
-  align-items: center;
+  display: block;
+  max-width: 1100px;
+}
+
+.hero-lede {
+  max-width: 640px !important;
+  font-size: 22px !important;
+  line-height: 1.45 !important;
+  margin-bottom: 56px !important;
 }
 
 .eyebrow {
@@ -1121,27 +1127,15 @@ section { position: relative; z-index: 2; }
 
 /* ========== CTA BAND ========== */
 .cta-band {
-  text-align: center;
+  text-align: left;
   background: var(--paper);
-  padding: 90px 36px;
+  padding: 140px 36px;
   border-top: 1px solid var(--line);
   position: relative;
-  overflow: hidden;
 }
 
-.cta-band::before, .cta-band::after {
-  content: '✺';
-  position: absolute;
-  font-size: 200px;
-  color: var(--red);
-  opacity: 0.06;
-  font-family: serif;
-}
-
-.cta-band::before { top: -60px; left: 4%; }
-.cta-band::after { bottom: -80px; right: 4%; }
-
-.cta-band-inner { position: relative; z-index: 2; }
+.cta-band-inner { max-width: 1100px; margin: 0 auto; }
+.cta-band p { margin: 0 0 40px !important; max-width: 640px; }
 
 .cta-band h2 {
   font-family: 'DM Serif Display', serif;
@@ -1315,50 +1309,8 @@ footer {
       </div>
     </div>
 
-    <div class="envelope-stage">
-      <div class="floating-letter fl-1">
-        <div class="corner-stamp"></div>
-        <span>Calgary, AB</span>
-      </div>
-      <div class="envelope">
-        <div class="stamp">
-          <div class="stamp-inner">
-            <strong>$10</strong>
-            CAD
-          </div>
-        </div>
-        <div class="postmark">
-          Letterhome<br>·&nbsp;CANADA&nbsp;·<br>2026
-        </div>
-        <div class="address">
-          <div class="address-label">→ Deliver to</div>
-          Margaret Tremblay<br>
-          427 Oak Ridge Lane<br>
-          Halifax, NS B3H 2L6<br>
-          Canada
-        </div>
-      </div>
-      <div class="floating-letter fl-2">
-        <div class="corner-stamp"></div>
-        <span>From Tokyo</span>
-      </div>
-    </div>
   </div>
 </section>
-
-<!-- TICKER -->
-<div class="ticker">
-  <div class="ticker-track">
-    <span>Letters from Berlin to Halifax</span>
-    <span>Tax forms from Tokyo to the CRA</span>
-    <span>A signed contract from Auckland to Toronto</span>
-    <span>Wedding invitations posted from Canada worldwide</span>
-    <span>Letters from Berlin to Halifax</span>
-    <span>Tax forms from Tokyo to the CRA</span>
-    <span>A signed contract from Auckland to Toronto</span>
-    <span>Wedding invitations posted from Canada worldwide</span>
-  </div>
-</div>
 
 <!-- HOW IT WORKS -->
 <section id="how">

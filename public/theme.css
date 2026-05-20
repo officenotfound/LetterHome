@@ -130,13 +130,13 @@ footer { color: rgba(255,255,255,0.65) !important; }
 [data-theme="dark"] body::before { display: none; }
 [data-theme="dark"] nav { background: rgba(10,10,10,0.92) !important; }
 
-/* ── Rounder, more modern shapes ─────────────────────────────────────────── */
-.btn { border-radius: 6px; }
+/* ── Sharp, editorial shapes ──────────────────────────────────────────────── */
+.btn { border-radius: 0 !important; }
 
 input,
 select,
 textarea {
-  border-radius: 6px;
+  border-radius: 0 !important;
   font-size: 16px;  /* prevents iOS auto-zoom on focus */
 }
 
@@ -258,20 +258,9 @@ h1 {
   line-height: 1.05;
 }
 
-/* F. Paper texture — subtle SVG noise overlay so kraft reads as printed, not flat.
-   Uses ::after to avoid conflicting with the existing ::before in inline page CSS.
-   pointer-events: none keeps clicks/scrolling unaffected. */
-body::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 9999;
-  opacity: 0.035;
-  background-image: url("data:image/svg+xml;utf8,<svg viewBox='0 0 240 240' xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
-  mix-blend-mode: multiply;
-}
-[data-theme="dark"] body::after {
-  opacity: 0.06;
-  mix-blend-mode: screen;
-}
+/* Paper texture removed in v0.2.3 — pure minimalist B&W has no grain. */
+
+/* Strip box-shadows on cards/panels — minimalism uses borders and space, not depth. */
+.price-card, .panel, .form-card, .result, .card { box-shadow: none !important; }
+.price-card:hover { transform: none !important; box-shadow: none !important; }
+.btn:hover, .btn-red:hover, .btn-primary:hover, .btn-outline:hover, .btn-ink:hover { box-shadow: none !important; }
