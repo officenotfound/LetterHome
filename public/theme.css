@@ -87,9 +87,9 @@ textarea:focus-visible {
   --ink-soft:     #2a2a2a;   /* body / display */
   --ink-muted:    #6b6b6b;   /* secondary text — ~5.7:1 on #fafafa, passes WCAG AA */
   --ink-faint:    #9a9a9a;   /* tertiary hints, captions */
-  --red:          #e63946;   /* single VICE-red accent — links, focus, brand mark */
-  --red-deep:     #b82c39;   /* hover state for red */
-  --red-stamp:    #ff4d5e;   /* slightly brighter for stamp/decorative elements */
+  --red:          #FF0000;   /* Canadian flag red — Government of Canada spec (Pantone 186 → digital) */
+  --red-deep:     #C40000;   /* hover/deep state */
+  --red-stamp:    #FF1A1A;   /* brighter variant for decorative moments */
   --taupe:        #cccccc;   /* old taupe -> neutral light gray */
   --line:         rgba(0,0,0,0.10);
   --shadow-soft:  0 1px 2px rgba(0,0,0,0.04), 0 6px 20px rgba(0,0,0,0.06);
@@ -120,9 +120,9 @@ footer { color: rgba(255,255,255,0.65) !important; }
   --ink-soft:     #e0e0e0;
   --ink-muted:    #a8a8a8;
   --ink-faint:    #707070;
-  --red:          #ff4d5e;   /* slightly brighter on dark */
-  --red-deep:     #e63946;
-  --red-stamp:    #ff6b78;
+  --red:          #FF1A1A;   /* slightly brighter on dark for legibility */
+  --red-deep:     #FF0000;
+  --red-stamp:    #FF3333;
   --line:         rgba(255,255,255,0.10);
   --shadow-soft:  0 1px 2px rgba(0,0,0,0.5), 0 6px 20px rgba(0,0,0,0.4);
   --shadow-card:  0 2px 6px rgba(0,0,0,0.5), 0 14px 40px rgba(0,0,0,0.55);
