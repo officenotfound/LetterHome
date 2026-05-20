@@ -299,7 +299,7 @@ nav {
 /* ========== HERO ========== */
 .hero {
   position: relative;
-  padding: 140px 36px 160px;
+  padding: 72px 36px 88px;
   max-width: 1280px;
   margin: 0 auto;
   z-index: 2;
@@ -312,10 +312,10 @@ nav {
 }
 
 .hero-lede {
-  max-width: 640px !important;
-  font-size: 22px !important;
-  line-height: 1.45 !important;
-  margin-bottom: 56px !important;
+  max-width: 600px !important;
+  font-size: 18px !important;
+  line-height: 1.5 !important;
+  margin-bottom: 32px !important;
 }
 
 .eyebrow {
@@ -646,13 +646,13 @@ section { position: relative; z-index: 2; }
 .section-inner {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 110px 36px;
+  padding: 64px 36px;
 }
 
-#how > .section-inner       { padding-top: 90px;  padding-bottom: 90px; }
-#pricing > .section-inner   { padding-top: 130px; padding-bottom: 130px; }
-#usecases > .section-inner  { padding-top: 80px;  padding-bottom: 80px; }
-#faq > .section-inner       { padding-top: 100px; padding-bottom: 100px; }
+#how > .section-inner       { padding-top: 56px; padding-bottom: 56px; }
+#pricing > .section-inner   { padding-top: 72px; padding-bottom: 72px; }
+#usecases > .section-inner  { padding-top: 48px; padding-bottom: 48px; }
+#faq > .section-inner       { padding-top: 56px; padding-bottom: 56px; }
 
 .section-head {
   margin-bottom: 72px;
@@ -690,34 +690,34 @@ section { position: relative; z-index: 2; }
     "one one"
     "two three";
   column-gap: 56px;
-  row-gap: 88px;
+  row-gap: 56px;
   position: relative;
 }
 .steps .step:nth-child(1) { grid-area: one; }
 .steps .step:nth-child(2) { grid-area: two; }
 .steps .step:nth-child(3) { grid-area: three; }
 
-/* Step 01 becomes the hero — bigger number, bigger title, two-column internal layout */
+/* Step 01 hero — slightly bigger, internal 2-col, modest underline divider */
 .steps .step:nth-child(1) {
   display: grid;
   grid-template-columns: auto 1fr;
-  gap: 48px;
+  gap: 36px;
   align-items: start;
-  padding-bottom: 64px;
+  padding-bottom: 36px;
   border-bottom: 1px dashed var(--line);
 }
 .steps .step:nth-child(1) .step-num { margin-bottom: 0; }
 .steps .step:nth-child(1) .step-num-mark {
-  width: 140px;
-  height: 140px;
-  font-size: 64px;
+  width: 96px;
+  height: 96px;
+  font-size: 44px;
 }
 .steps .step:nth-child(1) h3 {
-  font-size: clamp(36px, 4vw, 52px);
-  margin-bottom: 20px;
+  font-size: clamp(28px, 3vw, 40px);
+  margin-bottom: 14px;
 }
 .steps .step:nth-child(1) p {
-  font-size: 17px;
+  font-size: 16px;
   max-width: 56ch;
 }
 
@@ -1129,13 +1129,13 @@ section { position: relative; z-index: 2; }
 .cta-band {
   text-align: left;
   background: var(--paper);
-  padding: 140px 36px;
+  padding: 72px 36px;
   border-top: 1px solid var(--line);
   position: relative;
 }
 
 .cta-band-inner { max-width: 1100px; margin: 0 auto; }
-.cta-band p { margin: 0 0 40px !important; max-width: 640px; }
+.cta-band p { margin: 0 0 28px !important; max-width: 640px; }
 
 .cta-band h2 {
   font-family: 'DM Serif Display', serif;
