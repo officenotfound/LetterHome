@@ -1,6 +1,7 @@
 require('dotenv').config();
-const express   = require('express');
-const helmet    = require('helmet');
+const express      = require('express');
+const compression  = require('compression');
+const helmet       = require('helmet');
 const multer    = require('multer');
 const Stripe    = require('stripe');
 const mailer    = require('nodemailer');
@@ -22,6 +23,7 @@ fs.mkdirSync('backups', { recursive: true });
 
 const app    = express();
 app.set('trust proxy', 1);
+app.use(compression());
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 
 app.use(session({
@@ -52,19 +54,28 @@ app.use(helmet({
                     'https://www.google-analytics.com'],
       connectSrc:  ["'self'",
                     'https://maps.googleapis.com',
-                    'https://maps.gstatic.com'],
+                    'https://maps.gstatic.com',
+                    'https://www.google-analytics.com',
+                    'https://analytics.google.com'],
       frameSrc:    ["'none'"],
       objectSrc:   ["'none'"],
       baseUri:     ["'self'"],
       formAction:    ["'self'"],
       scriptSrcAttr: ["'unsafe-inline'"],
+      upgradeInsecureRequests: [],
     },
   },
   crossOriginEmbedderPolicy: false,
   hsts: process.env.NODE_ENV === 'production'
-    ? { maxAge: 31536000, includeSubDomains: true }
+    ? { maxAge: 31536000, includeSubDomains: true, preload: true }
     : false,
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
 }));
+
+app.use((_req, res, next) => {
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()');
+  next();
+});
 
 // Prevent caching of authenticated pages and admin/account APIs so they
 // can't be revealed via the back button or shared-browser scenarios.
@@ -171,6 +182,10 @@ try { db.exec(`ALTER TABLE customers ADD COLUMN sender_country TEXT`); } catch {
 try { db.exec(`ALTER TABLE customers ADD COLUMN password_hash TEXT`);         } catch {}
 try { db.exec(`ALTER TABLE customers ADD COLUMN account_created_at DATETIME`);} catch {}
 try { db.exec(`ALTER TABLE customers ADD COLUMN unsubscribed_at DATETIME`);   } catch {}
+try { db.exec(`CREATE INDEX IF NOT EXISTS idx_orders_email      ON orders(customer_email)`); } catch {}
+try { db.exec(`CREATE INDEX IF NOT EXISTS idx_orders_status     ON orders(status)`);         } catch {}
+try { db.exec(`CREATE INDEX IF NOT EXISTS idx_orders_deleted    ON orders(deleted_at)`);     } catch {}
+try { db.exec(`CREATE INDEX IF NOT EXISTS idx_customers_deleted ON customers(deleted_at)`);  } catch {}
 try {
   db.exec(`CREATE TABLE IF NOT EXISTS saved_recipients (
     id                 INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -765,7 +780,15 @@ app.get('/status/:token', (req, res) => {
   res.send(buildStatusPage(order));
 });
 
-app.use(express.static('public'));
+app.use(express.static('public', {
+  setHeaders(res, filePath) {
+    if (filePath.endsWith('.html')) {
+      res.setHeader('Cache-Control', 'public, max-age=0');
+    } else {
+      res.setHeader('Cache-Control', 'public, max-age=604800');
+    }
+  },
+}));
 
 // ── GA4 tracking snippet (served to all public pages) ─────────────────────────
 app.get('/ga.js', (req, res) => {
