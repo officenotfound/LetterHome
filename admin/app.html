@@ -7,152 +7,150 @@
 <script>(function(){try{var t=localStorage.getItem('lh-admin-theme')||(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Inter',system-ui,sans-serif;background:#f1f5f9;color:#0f172a;min-height:100vh;display:flex}
+body{font-family:'Inter',system-ui,sans-serif;background:#fafafa;color:#111111;min-height:100vh;display:flex}
 /* ── Dark mode overrides ── */
-html[data-theme="dark"] body{background:#0f172a;color:#f1f5f9}
+html[data-theme="dark"] body{background:#111111;color:#fafafa}
 html[data-theme="dark"] .topbar{background:#1e293b;border-bottom-color:rgba(255,255,255,0.06)}
-html[data-theme="dark"] .topbar-title{color:#f1f5f9}
-html[data-theme="dark"] .topbar-user{color:#94a3b8}
+html[data-theme="dark"] .topbar-title{color:#fafafa}
+html[data-theme="dark"] .topbar-user{color:#9a9a9a}
 html[data-theme="dark"] .stat-card{background:#1e293b;border-color:rgba(255,255,255,0.06)}
-html[data-theme="dark"] .stat-value{color:#f1f5f9}
-html[data-theme="dark"] .stat-label{color:#94a3b8}
-html[data-theme="dark"] .stat-sub{color:#64748b}
+html[data-theme="dark"] .stat-value{color:#fafafa}
+html[data-theme="dark"] .stat-label{color:#9a9a9a}
+html[data-theme="dark"] .stat-sub{color:#6b6b6b}
 html[data-theme="dark"] .card{background:#1e293b;border-color:rgba(255,255,255,0.06)}
 html[data-theme="dark"] .card-header{border-bottom-color:rgba(255,255,255,0.06)}
-html[data-theme="dark"] .card-title{color:#f1f5f9}
-html[data-theme="dark"] th{background:#0f172a;color:#94a3b8;border-bottom-color:rgba(255,255,255,0.08)}
+html[data-theme="dark"] .card-title{color:#fafafa}
+html[data-theme="dark"] th{background:#111111;color:#9a9a9a;border-bottom-color:rgba(255,255,255,0.08)}
 html[data-theme="dark"] td{color:#cbd5e1;border-bottom-color:rgba(255,255,255,0.04)}
 html[data-theme="dark"] tr:hover td{background:rgba(255,255,255,0.04)}
 html[data-theme="dark"] .detail-card{background:#1e293b;border-color:rgba(255,255,255,0.06)}
-html[data-theme="dark"] .detail-card-title{color:#94a3b8}
+html[data-theme="dark"] .detail-card-title{color:#9a9a9a}
 html[data-theme="dark"] .detail-row{border-bottom-color:rgba(255,255,255,0.04)}
-html[data-theme="dark"] .detail-label{color:#94a3b8}
-html[data-theme="dark"] .detail-value{color:#f1f5f9}
+html[data-theme="dark"] .detail-label{color:#9a9a9a}
+html[data-theme="dark"] .detail-value{color:#fafafa}
 html[data-theme="dark"] .address-block{color:#cbd5e1}
-html[data-theme="dark"] .letter-body{background:#0f172a;color:#cbd5e1;border-color:rgba(255,255,255,0.06)}
-html[data-theme="dark"] .page-title{color:#f1f5f9}
-html[data-theme="dark"] .filter-btn{background:#1e293b;color:#94a3b8;border-color:rgba(255,255,255,0.08)}
-html[data-theme="dark"] .filter-btn:hover,html[data-theme="dark"] .filter-btn.active{background:#f1f5f9;color:#0f172a;border-color:#f1f5f9}
-html[data-theme="dark"] input[type=text],html[data-theme="dark"] input[type=email],html[data-theme="dark"] textarea,html[data-theme="dark"] select{background:#0f172a;color:#f1f5f9;border-color:rgba(255,255,255,0.1)}
-html[data-theme="dark"] .field label{color:#94a3b8}
+html[data-theme="dark"] .letter-body{background:#111111;color:#cbd5e1;border-color:rgba(255,255,255,0.06)}
+html[data-theme="dark"] .page-title{color:#fafafa}
+html[data-theme="dark"] .filter-btn{background:#1e293b;color:#9a9a9a;border-color:rgba(255,255,255,0.08)}
+html[data-theme="dark"] .filter-btn:hover,html[data-theme="dark"] .filter-btn.active{background:#fafafa;color:#111111;border-color:#fafafa}
+html[data-theme="dark"] input[type=text],html[data-theme="dark"] input[type=email],html[data-theme="dark"] textarea,html[data-theme="dark"] select{background:#111111;color:#fafafa;border-color:rgba(255,255,255,0.1)}
+html[data-theme="dark"] .field label{color:#9a9a9a}
 html[data-theme="dark"] .btn-outline{background:#1e293b;color:#cbd5e1;border-color:rgba(255,255,255,0.1)}
-html[data-theme="dark"] .btn-outline:hover{background:#0f172a}
-html[data-theme="dark"] .btn-ghost{color:#94a3b8}
-html[data-theme="dark"] .btn-ghost:hover{background:rgba(255,255,255,0.06);color:#fca5a5}
+html[data-theme="dark"] .btn-outline:hover{background:#111111}
+html[data-theme="dark"] .btn-ghost{color:#9a9a9a}
+html[data-theme="dark"] .btn-ghost:hover{background:rgba(255,255,255,0.06);color:#ff7a82}
 html[data-theme="dark"] .tag{background:rgba(255,255,255,0.06);color:#cbd5e1}
-html[data-theme="dark"] .file-item{background:#0f172a;border-color:rgba(255,255,255,0.06)}
+html[data-theme="dark"] .file-item{background:#111111;border-color:rgba(255,255,255,0.06)}
 html[data-theme="dark"] .file-name{color:#cbd5e1}
 html[data-theme="dark"] .note-item{border-bottom-color:rgba(255,255,255,0.04)}
 html[data-theme="dark"] .note-text{color:#cbd5e1}
-html[data-theme="dark"] .note-meta{color:#64748b}
-html[data-theme="dark"] .empty{color:#64748b}
-html[data-theme="dark"] .back-link{color:#94a3b8}
-html[data-theme="dark"] .back-link:hover{color:#fca5a5}
-html[data-theme="dark"] .badge-gray{background:rgba(148,163,184,0.15);color:#cbd5e1}
-html[data-theme="dark"] .badge-blue{background:rgba(59,130,246,0.15);color:#93c5fd}
-html[data-theme="dark"] .badge-amber{background:rgba(245,158,11,0.15);color:#fcd34d}
-html[data-theme="dark"] .badge-violet{background:rgba(139,92,246,0.15);color:#c4b5fd}
-html[data-theme="dark"] .badge-green{background:rgba(16,185,129,0.15);color:#6ee7b7}
+html[data-theme="dark"] .note-meta{color:#6b6b6b}
+html[data-theme="dark"] .empty{color:#6b6b6b}
+html[data-theme="dark"] .back-link{color:#9a9a9a}
+html[data-theme="dark"] .back-link:hover{color:#ff7a82}
+html[data-theme="dark"] .badge{background:transparent;color:#f5f5f5;border-color:rgba(255,255,255,0.5)}
+html[data-theme="dark"] .badge-gray{color:#9a9a9a;border-color:rgba(255,255,255,0.3)}
+html[data-theme="dark"] .badge-blue,html[data-theme="dark"] .badge-amber,html[data-theme="dark"] .badge-violet,html[data-theme="dark"] .badge-green{color:#f5f5f5;border-color:rgba(255,255,255,0.5)}
+html[data-theme="dark"] .badge-green{color:#ff7a82;border-color:#ff7a82}
 /* Admin theme toggle button */
-.admin-theme-toggle{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:6px;color:#64748b;font-size:13px;cursor:pointer;transition:all 0.15s;border:none;background:none;width:100%;font-family:inherit;text-align:left;margin-bottom:6px}
-.admin-theme-toggle:hover{color:#94a3b8;background:rgba(255,255,255,0.04)}
+.admin-theme-toggle{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:0;color:#6b6b6b;font-size:13px;cursor:pointer;transition:all 0.15s;border:none;background:none;width:100%;font-family:inherit;text-align:left;margin-bottom:6px}
+.admin-theme-toggle:hover{color:#9a9a9a;background:rgba(255,255,255,0.04)}
 .admin-theme-toggle .label-light{display:inline}
 .admin-theme-toggle .label-dark{display:none}
 html[data-theme="dark"] .admin-theme-toggle .label-light{display:none}
 html[data-theme="dark"] .admin-theme-toggle .label-dark{display:inline}
 /* ── Sidebar ── */
-.sidebar{width:220px;min-height:100vh;background:#0f172a;display:flex;flex-direction:column;flex-shrink:0;position:fixed;top:0;left:0;bottom:0}
+.sidebar{width:220px;min-height:100vh;background:#111111;display:flex;flex-direction:column;flex-shrink:0;position:fixed;top:0;left:0;bottom:0}
 .sidebar-logo{padding:24px 20px 20px;border-bottom:1px solid rgba(255,255,255,0.06)}
 .sidebar-logo-inner{display:flex;align-items:center;gap:10px}
-.logo-mark{width:32px;height:32px;background:#dc2626;border-radius:4px;display:grid;place-items:center;color:#fff;font-size:16px;font-family:Georgia,serif;font-weight:700;flex-shrink:0}
-.logo-text{color:#f8fafc;font-size:15px;font-weight:600;letter-spacing:-0.02em}
+.logo-mark{width:32px;height:32px;background:#e63946;border-radius:0;display:grid;place-items:center;color:#fff;font-size:16px;font-family:Georgia,serif;font-weight:700;flex-shrink:0}
+.logo-text{color:#f5f5f5;font-size:15px;font-weight:600;letter-spacing:-0.02em}
 .sidebar-nav{flex:1;padding:16px 12px}
 .nav-label{color:#475569;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;padding:0 8px;margin:16px 0 6px}
-.nav-link{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:6px;color:#94a3b8;font-size:13px;font-weight:500;text-decoration:none;cursor:pointer;transition:all 0.15s;margin-bottom:2px;border:none;background:none;width:100%;text-align:left}
-.nav-link:hover{background:rgba(255,255,255,0.06);color:#e2e8f0}
-.nav-link.active{background:rgba(220,38,38,0.15);color:#fca5a5}
+.nav-link{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:0;color:#9a9a9a;font-size:13px;font-weight:500;text-decoration:none;cursor:pointer;transition:all 0.15s;margin-bottom:2px;border:none;background:none;width:100%;text-align:left}
+.nav-link:hover{background:rgba(255,255,255,0.06);color:#ececec}
+.nav-link.active{background:rgba(230,57,70,0.12);color:#ff7a82}
 .nav-icon{font-size:15px;width:18px;text-align:center}
 .sidebar-footer{padding:16px 12px;border-top:1px solid rgba(255,255,255,0.06)}
-.logout-btn{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:6px;color:#64748b;font-size:13px;cursor:pointer;transition:all 0.15s;border:none;background:none;width:100%}
-.logout-btn:hover{color:#94a3b8;background:rgba(255,255,255,0.04)}
+.logout-btn{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:0;color:#6b6b6b;font-size:13px;cursor:pointer;transition:all 0.15s;border:none;background:none;width:100%}
+.logout-btn:hover{color:#9a9a9a;background:rgba(255,255,255,0.04)}
 /* ── Content ── */
 .content{margin-left:220px;flex:1;min-height:100vh;display:flex;flex-direction:column}
-.topbar{background:#fff;border-bottom:1px solid #e2e8f0;padding:0 32px;height:60px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
-.topbar-title{font-size:16px;font-weight:600;color:#0f172a;letter-spacing:-0.01em}
-.topbar-user{font-size:13px;color:#64748b}
-.main{padding:32px;flex:1}
+.topbar{background:#fff;border-bottom:1px solid #ececec;padding:0 32px;height:60px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.topbar-title{font-size:16px;font-weight:600;color:#111111;letter-spacing:-0.01em}
+.topbar-user{font-size:13px;color:#6b6b6b}
+.main{padding:24px 28px;flex:1}
 /* ── Cards & Stats ── */
 .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px}
-.stat-card{background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:20px 24px}
-.stat-label{font-size:12px;color:#64748b;font-weight:500;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px}
-.stat-value{font-size:28px;font-weight:700;color:#0f172a;letter-spacing:-0.03em}
-.stat-sub{font-size:12px;color:#94a3b8;margin-top:4px}
-.card{background:#fff;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;margin-bottom:24px}
-.card-header{padding:16px 20px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between}
-.card-title{font-size:14px;font-weight:600;color:#0f172a}
+.stat-card{background:#fff;border:1px solid #ececec;border-radius:0;padding:16px 20px}
+.stat-label{font-size:10px;color:#6b6b6b;font-weight:500;text-transform:uppercase;letter-spacing:0.12em;margin-bottom:6px;font-family:'DM Mono',ui-monospace,monospace}
+.stat-value{font-size:24px;font-weight:600;color:#111111;letter-spacing:-0.03em}
+.stat-sub{font-size:12px;color:#9a9a9a;margin-top:4px}
+.card{background:#fff;border:1px solid #ececec;border-radius:0;overflow:hidden;margin-bottom:24px}
+.card-header{padding:16px 20px;border-bottom:1px solid #fafafa;display:flex;align-items:center;justify-content:space-between}
+.card-title{font-size:14px;font-weight:600;color:#111111}
 /* ── Tables ── */
 table{width:100%;border-collapse:collapse}
-th{padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.08em;background:#f8fafc;border-bottom:1px solid #e2e8f0}
-td{padding:13px 16px;font-size:13px;color:#334155;border-bottom:1px solid #f1f5f9}
+th{padding:8px 14px;text-align:left;font-size:10px;font-weight:600;color:#6b6b6b;text-transform:uppercase;letter-spacing:0.12em;background:transparent;border-bottom:1px solid #111111;font-family:'DM Mono',ui-monospace,monospace}
+td{padding:10px 14px;font-size:12.5px;color:#2a2a2a;border-bottom:1px solid #ececec}
 tr:last-child td{border-bottom:none}
-tr:hover td{background:#f8fafc}
-.link{color:#dc2626;text-decoration:none;font-weight:500;cursor:pointer;background:none;border:none;font-size:13px;padding:0}
+tr:hover td{background:#f5f5f5}
+.link{color:#e63946;text-decoration:none;font-weight:500;cursor:pointer;background:none;border:none;font-size:13px;padding:0}
 .link:hover{text-decoration:underline}
 /* ── Status badges ── */
-.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase}
-.badge-gray{background:#f1f5f9;color:#64748b}
-.badge-blue{background:#eff6ff;color:#1d4ed8}
-.badge-amber{background:#fffbeb;color:#b45309}
-.badge-violet{background:#f5f3ff;color:#6d28d9}
-.badge-green{background:#f0fdf4;color:#15803d}
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:0;font-size:11px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase}
+.badge{border:1px solid #111111;background:transparent;color:#111111;font-family:'DM Mono',ui-monospace,monospace}
+.badge-gray{color:#6b6b6b;border-color:#9a9a9a}
+.badge-blue,.badge-amber,.badge-violet,.badge-green{color:#111111;border-color:#111111;background:transparent}
+.badge-green{color:#e63946;border-color:#e63946}
 /* ── Forms & Inputs ── */
 .form-row{display:flex;gap:12px;align-items:flex-end;margin-bottom:16px}
 .field{display:flex;flex-direction:column;gap:6px;flex:1}
-.field label{font-size:12px;font-weight:500;color:#64748b;text-transform:uppercase;letter-spacing:0.06em}
-input[type=text],input[type=email],textarea,select{width:100%;border:1px solid #e2e8f0;border-radius:6px;padding:9px 12px;font-size:13px;color:#0f172a;outline:none;font-family:inherit;background:#fff;transition:border-color 0.15s}
-input[type=text]:focus,input[type=email]:focus,textarea:focus,select:focus{border-color:#dc2626}
+.field label{font-size:12px;font-weight:500;color:#6b6b6b;text-transform:uppercase;letter-spacing:0.06em}
+input[type=text],input[type=email],textarea,select{width:100%;border:1px solid #ececec;border-radius:0;padding:9px 12px;font-size:13px;color:#111111;outline:none;font-family:inherit;background:#fff;transition:border-color 0.15s}
+input[type=text]:focus,input[type=email]:focus,textarea:focus,select:focus{border-color:#e63946}
 textarea{resize:vertical;min-height:80px}
-.btn{padding:9px 18px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all 0.15s;letter-spacing:0.01em}
-.btn-primary{background:#dc2626;color:#fff}
-.btn-primary:hover{background:#b91c1c}
-.btn-outline{background:#fff;color:#334155;border:1px solid #e2e8f0}
-.btn-outline:hover{background:#f8fafc}
+.btn{padding:9px 18px;border-radius:0;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all 0.15s;letter-spacing:0.01em}
+.btn-primary{background:#e63946;color:#fff}
+.btn-primary:hover{background:#b82c39}
+.btn-outline{background:#fff;color:#2a2a2a;border:1px solid #ececec}
+.btn-outline:hover{background:#f5f5f5}
 .btn-sm{padding:6px 12px;font-size:12px}
-.btn-ghost{background:none;border:none;color:#64748b;cursor:pointer;font-size:12px;padding:4px 8px;border-radius:4px}
-.btn-ghost:hover{background:#f1f5f9;color:#dc2626}
+.btn-ghost{background:none;border:none;color:#6b6b6b;cursor:pointer;font-size:12px;padding:4px 8px;border-radius:0}
+.btn-ghost:hover{background:#fafafa;color:#e63946}
 /* ── Detail views ── */
 .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px}
-.detail-card{background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:20px}
-.detail-card-title{font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:14px}
-.detail-row{display:flex;justify-content:space-between;align-items:flex-start;padding:7px 0;border-bottom:1px solid #f1f5f9;font-size:13px}
+.detail-card{background:#fff;border:1px solid #ececec;border-radius:0;padding:20px}
+.detail-card-title{font-size:11px;font-weight:600;color:#6b6b6b;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:14px}
+.detail-row{display:flex;justify-content:space-between;align-items:flex-start;padding:7px 0;border-bottom:1px solid #fafafa;font-size:13px}
 .detail-row:last-child{border-bottom:none}
-.detail-label{color:#64748b;flex-shrink:0;margin-right:16px}
-.detail-value{color:#0f172a;font-weight:500;text-align:right;word-break:break-word}
-.address-block{font-size:13px;color:#334155;line-height:1.7;white-space:pre-line}
-.letter-body{font-size:13px;color:#334155;line-height:1.75;white-space:pre-wrap;font-family:Georgia,serif;padding:16px;background:#f8fafc;border-radius:6px;border:1px solid #e2e8f0}
+.detail-label{color:#6b6b6b;flex-shrink:0;margin-right:16px}
+.detail-value{color:#111111;font-weight:500;text-align:right;word-break:break-word}
+.address-block{font-size:13px;color:#2a2a2a;line-height:1.7;white-space:pre-line}
+.letter-body{font-size:13px;color:#2a2a2a;line-height:1.75;white-space:pre-wrap;font-family:Georgia,serif;padding:16px;background:#f5f5f5;border-radius:0;border:1px solid #ececec}
 /* ── Tags ── */
 .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
-.tag{display:inline-flex;align-items:center;gap:6px;background:#f1f5f9;color:#475569;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:500}
-.tag-remove{background:none;border:none;cursor:pointer;color:#94a3b8;font-size:14px;line-height:1;padding:0}
-.tag-remove:hover{color:#dc2626}
+.tag{display:inline-flex;align-items:center;gap:6px;background:#fafafa;color:#475569;padding:4px 10px;border-radius:0;font-size:12px;font-weight:500}
+.tag-remove{background:none;border:none;cursor:pointer;color:#9a9a9a;font-size:14px;line-height:1;padding:0}
+.tag-remove:hover{color:#e63946}
 /* ── Notes ── */
-.note-item{padding:12px 0;border-bottom:1px solid #f1f5f9}
+.note-item{padding:12px 0;border-bottom:1px solid #fafafa}
 .note-item:last-child{border-bottom:none}
-.note-meta{font-size:11px;color:#94a3b8;margin-bottom:4px}
-.note-text{font-size:13px;color:#334155;line-height:1.6}
+.note-meta{font-size:11px;color:#9a9a9a;margin-bottom:4px}
+.note-text{font-size:13px;color:#2a2a2a;line-height:1.6}
 /* ── Filters ── */
 .filter-row{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
-.filter-btn{padding:6px 14px;border-radius:999px;border:1px solid #e2e8f0;background:#fff;font-size:12px;font-weight:500;color:#64748b;cursor:pointer;transition:all 0.15s}
-.filter-btn.active,.filter-btn:hover{background:#0f172a;color:#fff;border-color:#0f172a}
+.filter-btn{padding:6px 14px;border-radius:0;border:1px solid #ececec;background:#fff;font-size:12px;font-weight:500;color:#6b6b6b;cursor:pointer;transition:all 0.15s}
+.filter-btn.active,.filter-btn:hover{background:#111111;color:#fff;border-color:#111111}
 /* ── Misc ── */
 .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
-.page-title{font-size:22px;font-weight:700;color:#0f172a;letter-spacing:-0.03em}
-.empty{text-align:center;padding:60px 20px;color:#94a3b8;font-size:14px}
+.page-title{font-size:20px;font-weight:600;color:#111111;letter-spacing:-0.02em}
+.empty{text-align:center;padding:60px 20px;color:#9a9a9a;font-size:14px}
 .files-list{display:flex;flex-direction:column;gap:8px;padding:16px 20px}
-.file-item{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;font-size:13px}
-.file-name{color:#334155;font-weight:500}
-.back-link{display:inline-flex;align-items:center;gap:6px;color:#64748b;font-size:13px;cursor:pointer;background:none;border:none;margin-bottom:20px;padding:0}
-.back-link:hover{color:#dc2626}
+.file-item{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#f5f5f5;border:1px solid #ececec;border-radius:0;font-size:13px}
+.file-name{color:#2a2a2a;font-weight:500}
+.back-link{display:inline-flex;align-items:center;gap:6px;color:#6b6b6b;font-size:13px;cursor:pointer;background:none;border:none;margin-bottom:20px;padding:0}
+.back-link:hover{color:#e63946}
 </style>
 </head>
 <body>
@@ -174,7 +172,7 @@ textarea{resize:vertical;min-height:80px}
     <button class="nav-link" id="nav-insights"  onclick="go('/admin/insights')"><span class="nav-icon">◑</span> Insights</button>
     <button class="nav-link" id="nav-visitors"  onclick="go('/admin/visitors')"><span class="nav-icon">◉</span> Visitors</button>
     <button class="nav-link" id="nav-stripe"    onclick="go('/admin/stripe')"><span class="nav-icon">$</span> Stripe</button>
-    <button class="nav-link" id="nav-contacts"  onclick="go('/admin/contacts')" style="justify-content:space-between"><span style="display:flex;align-items:center;gap:10px"><span class="nav-icon">✉</span> Contacts</span><span id="contacts-badge" style="display:none;background:#dc2626;color:#fff;border-radius:999px;font-size:10px;padding:1px 7px;font-weight:700">0</span></button>
+    <button class="nav-link" id="nav-contacts"  onclick="go('/admin/contacts')" style="justify-content:space-between"><span style="display:flex;align-items:center;gap:10px"><span class="nav-icon">✉</span> Contacts</span><span id="contacts-badge" style="display:none;background:#e63946;color:#fff;border-radius:0;font-size:10px;padding:1px 7px;font-weight:700">0</span></button>
     <button class="nav-link" id="nav-templates" onclick="go('/admin/templates')"><span class="nav-icon">☰</span> Templates</button>
     <button class="nav-link" id="nav-audit"     onclick="go('/admin/audit-log')"><span class="nav-icon">⌥</span> Audit Log</button>
     <button class="nav-link" id="nav-settings"  onclick="go('/admin/settings')"><span class="nav-icon">⚙</span> Settings</button>
@@ -316,9 +314,9 @@ function fmtCAD(cents) {
 // ── 24h fulfillment countdown ─────────────────────────────────────────────────
 function timeLeftHTML(createdAt, status) {
   if (status === 'mailed' || status === 'delivered')
-    return `<span data-countdown-created="${createdAt}" data-countdown-status="${status}" style="color:#64748b;font-size:12px">Completed</span>`;
+    return `<span data-countdown-created="${createdAt}" data-countdown-status="${status}" style="color:#6b6b6b;font-size:12px">Completed</span>`;
   if (status === 'awaiting_payment')
-    return `<span data-countdown-created="${createdAt}" data-countdown-status="${status}" style="color:#94a3b8;font-size:12px">—</span>`;
+    return `<span data-countdown-created="${createdAt}" data-countdown-status="${status}" style="color:#9a9a9a;font-size:12px">—</span>`;
 
   const deadline  = new Date(createdAt).getTime() + 24 * 3600000;
   const remaining = deadline - Date.now();
@@ -326,8 +324,8 @@ function timeLeftHTML(createdAt, status) {
   const m = Math.floor((Math.abs(remaining) % 3600000) / 60000);
 
   let color, text;
-  if (remaining < 0)                  { color='#dc2626'; text=`⚠ Overdue ${h}h ${m}m`; }
-  else if (remaining < 4 * 3600000)   { color='#dc2626'; text=`${h}h ${m}m left`; }
+  if (remaining < 0)                  { color='#e63946'; text=`⚠ Overdue ${h}h ${m}m`; }
+  else if (remaining < 4 * 3600000)   { color='#e63946'; text=`${h}h ${m}m left`; }
   else if (remaining < 12 * 3600000)  { color='#d97706'; text=`${h}h ${m}m left`; }
   else                                { color='#16a34a'; text=`${h}h ${m}m left`; }
   return `<span data-countdown-created="${createdAt}" data-countdown-status="${status}" style="color:${color};font-weight:600;font-size:12px">${text}</span>`;
@@ -345,7 +343,7 @@ function slaBanner(createdAt, status) {
   else if (remaining < 4 * 3600000)   { bg='#fef2f2'; color='#991b1b'; icon='⚠'; text=`${h}h ${m}m left to mail this order.`; }
   else if (remaining < 12 * 3600000)  { bg='#fffbeb'; color='#92400e'; icon='⏱'; text=`${h}h ${m}m left to mail this order.`; }
   else                                { bg='#f0fdf4'; color='#166534'; icon='✓'; text=`${h}h ${m}m left to mail this order.`; }
-  return `<div data-sla-created="${createdAt}" data-sla-status="${status}" style="background:${bg};color:${color};padding:14px 20px;border-radius:6px;margin-bottom:20px;font-size:14px;display:flex;align-items:center;gap:12px;border:1px solid ${color}33">
+  return `<div data-sla-created="${createdAt}" data-sla-status="${status}" style="background:${bg};color:${color};padding:14px 20px;border-radius:0;margin-bottom:20px;font-size:14px;display:flex;align-items:center;gap:12px;border:1px solid ${color}33">
     <span style="font-size:18px">${icon}</span>
     <span><strong>24-hour fulfillment SLA — </strong>${text}</span>
   </div>`;
@@ -405,9 +403,9 @@ function renderBarChart(data, maxBarPx) {
   const bars = data.map(d => {
     const h = Math.max(4, Math.round((d.revenue_cents / maxRev) * maxBarPx));
     return `<div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;min-width:0">
-      <span style="font-size:10px;color:#64748b">${fmtCAD(d.revenue_cents).replace(' CAD','')}</span>
+      <span style="font-size:10px;color:#6b6b6b">${fmtCAD(d.revenue_cents).replace(' CAD','')}</span>
       <div style="width:100%;height:${h}px;background:#a8472d;border-radius:2px 2px 0 0;min-height:4px" title="${d.label}: ${d.orders} orders, ${fmtCAD(d.revenue_cents)}"></div>
-      <span style="font-size:10px;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%">${esc(d.label)}</span>
+      <span style="font-size:10px;color:#9a9a9a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%">${esc(d.label)}</span>
     </div>`;
   }).join('');
   return `<div style="display:flex;align-items:flex-end;gap:4px;height:${maxBarPx + 50}px;padding:0 4px">${bars}</div>`;
@@ -478,18 +476,18 @@ function renderDashboard(stats, paidOrders, submittedOrders, chartData, geoData,
         <div class="stat-value" style="font-size:22px">$${(stripeOv.pending/100).toFixed(2)}</div>
         <div class="stat-sub">in transit</div>
       </div>
-      <div class="stat-card" style="cursor:pointer${stripeOv.openDisputeCount > 0 ? ';border-left:3px solid #dc2626' : ''}" onclick="go('/admin/stripe')">
+      <div class="stat-card" style="cursor:pointer${stripeOv.openDisputeCount > 0 ? ';border-left:3px solid #e63946' : ''}" onclick="go('/admin/stripe')">
         <div class="stat-label">Open Disputes</div>
-        <div class="stat-value" style="font-size:22px;color:${stripeOv.openDisputeCount > 0 ? '#dc2626' : '#16a34a'}">${stripeOv.openDisputeCount}</div>
+        <div class="stat-value" style="font-size:22px;color:${stripeOv.openDisputeCount > 0 ? '#e63946' : '#16a34a'}">${stripeOv.openDisputeCount}</div>
         <div class="stat-sub">${stripeOv.openDisputeCount > 0 ? '⚠ needs attention' : 'all clear'}</div>
       </div>
       <div class="stat-card" style="cursor:pointer" onclick="go('/admin/stripe')">
         <div class="stat-label">Last Payout</div>
-        ${stripeOv.lastPayout ? `<div class="stat-value" style="font-size:16px">$${(stripeOv.lastPayout.amount/100).toFixed(2)}</div><div class="stat-sub">${new Date(stripeOv.lastPayout.arrival_date*1000).toLocaleDateString('en-CA',{month:'short',day:'numeric'})}</div>` : `<div class="stat-value" style="font-size:16px;color:#94a3b8">—</div><div class="stat-sub">no payouts yet</div>`}
+        ${stripeOv.lastPayout ? `<div class="stat-value" style="font-size:16px">$${(stripeOv.lastPayout.amount/100).toFixed(2)}</div><div class="stat-sub">${new Date(stripeOv.lastPayout.arrival_date*1000).toLocaleDateString('en-CA',{month:'short',day:'numeric'})}</div>` : `<div class="stat-value" style="font-size:16px;color:#9a9a9a">—</div><div class="stat-sub">no payouts yet</div>`}
       </div>
     </div>` : ''}
-    ${health ? `<div style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:12px 20px;margin-bottom:24px;display:flex;gap:32px;align-items:center;font-size:12px;color:#64748b;flex-wrap:wrap">
-      <span style="font-weight:600;color:#0f172a">Server</span>
+    ${health ? `<div style="background:#fff;border:1px solid #ececec;border-radius:0;padding:12px 20px;margin-bottom:24px;display:flex;gap:32px;align-items:center;font-size:12px;color:#6b6b6b;flex-wrap:wrap">
+      <span style="font-weight:600;color:#111111">Server</span>
       <span>Uptime: <strong>${health.uptime < 3600 ? Math.floor(health.uptime/60)+'m' : Math.floor(health.uptime/3600)+'h '+Math.floor((health.uptime%3600)/60)+'m'}</strong></span>
       <span>Memory: <strong>${Math.round(health.heapUsed/1048576)}MB used / ${Math.round(health.heapTotal/1048576)}MB total</strong></span>
       <span>DB: <strong>${health.dbSize > 1048576 ? (health.dbSize/1048576).toFixed(1)+'MB' : Math.round(health.dbSize/1024)+'KB'}</strong></span>
@@ -507,15 +505,15 @@ function renderDashboard(stats, paidOrders, submittedOrders, chartData, geoData,
             <span class="detail-value" style="font-size:15px">${fmtCAD(stats.revenue)}</span>
           </div>
           <div class="detail-row">
-            <span class="detail-label">Stripe Fees <span style="color:#94a3b8;font-size:11px">(2.9% + $0.30)</span></span>
-            <span class="detail-value" style="color:#dc2626">−${fmtCAD(stats.stripe_fees)}</span>
+            <span class="detail-label">Stripe Fees <span style="color:#9a9a9a;font-size:11px">(2.9% + $0.30)</span></span>
+            <span class="detail-value" style="color:#e63946">−${fmtCAD(stats.stripe_fees)}</span>
           </div>
           <div class="detail-row">
-            <span class="detail-label">Print &amp; Postage <span style="color:#94a3b8;font-size:11px">($6 CA · $12 intl)</span></span>
-            <span class="detail-value" style="color:#dc2626">−${fmtCAD(stats.cogs)}</span>
+            <span class="detail-label">Print &amp; Postage <span style="color:#9a9a9a;font-size:11px">($6 CA · $12 intl)</span></span>
+            <span class="detail-value" style="color:#e63946">−${fmtCAD(stats.cogs)}</span>
           </div>
-          <div class="detail-row" style="border-top:2px solid #e2e8f0;margin-top:6px;padding-top:14px">
-            <span class="detail-label" style="font-weight:600;color:#0f172a;font-size:14px">Net Profit</span>
+          <div class="detail-row" style="border-top:2px solid #ececec;margin-top:6px;padding-top:14px">
+            <span class="detail-label" style="font-weight:600;color:#111111;font-size:14px">Net Profit</span>
             <span class="detail-value" style="color:#16a34a;font-size:18px;font-weight:700">${fmtCAD(stats.net)}</span>
           </div>
         </div>
@@ -570,7 +568,7 @@ function renderDashboard(stats, paidOrders, submittedOrders, chartData, geoData,
     <div class="card">
       <div class="card-header">
         <div class="card-title">Fulfillment Queue</div>
-        <span style="font-size:12px;color:#64748b">${(paidOrders||[]).length} to submit &nbsp;·&nbsp; ${(submittedOrders||[]).length} awaiting mailed confirmation</span>
+        <span style="font-size:12px;color:#6b6b6b">${(paidOrders||[]).length} to submit &nbsp;·&nbsp; ${(submittedOrders||[]).length} awaiting mailed confirmation</span>
       </div>
       <table>
         <thead><tr><th>#</th><th>Submitted</th><th>Recipient</th><th>Country</th><th>Status</th><th>Time Left</th><th>Price</th><th></th></tr></thead>
@@ -603,11 +601,11 @@ async function showOrders(filter) {
     </div>
     <div class="filter-row" style="justify-content:space-between;align-items:center">
       <div style="display:flex;gap:8px;flex-wrap:wrap">${filters}</div>
-      <input type="text" id="order-search" placeholder="Search name, email, #ID…" style="width:220px;padding:6px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px" oninput="renderOrdersTable()">
+      <input type="text" id="order-search" placeholder="Search name, email, #ID…" style="width:220px;padding:6px 10px;border:1px solid #ececec;border-radius:0;font-size:13px" oninput="renderOrdersTable()">
     </div>
-    <div id="bulk-bar" style="display:none;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:10px 16px;margin-bottom:12px;display:none;align-items:center;gap:12px">
-      <span id="bulk-count" style="font-size:13px;color:#64748b"></span>
-      <select id="bulk-status-select" style="font-size:13px;border:1px solid #e2e8f0;border-radius:4px;padding:5px 8px">
+    <div id="bulk-bar" style="display:none;background:#f5f5f5;border:1px solid #ececec;border-radius:0;padding:10px 16px;margin-bottom:12px;display:none;align-items:center;gap:12px">
+      <span id="bulk-count" style="font-size:13px;color:#6b6b6b"></span>
+      <select id="bulk-status-select" style="font-size:13px;border:1px solid #ececec;border-radius:0;padding:5px 8px">
         <option value="">Set status…</option>
         <option value="paid">Paid</option>
         <option value="submitted_to_printer">At Printer</option>
@@ -717,16 +715,16 @@ async function showPrintQueue() {
     const fromAddr = o.skip_return ? '' : [o.sender_name, o.sender_street,
       [o.sender_city, o.sender_province, o.sender_postal].filter(Boolean).join(' '),
       o.sender_country].filter(Boolean).join('\n');
-    return `<div style="border:1px solid #e2e8f0;border-radius:6px;padding:20px;break-inside:avoid;margin-bottom:16px">
-      <div style="font-size:11px;color:#94a3b8;margin-bottom:10px;font-family:monospace">ORDER #${o.id} · ${fmtDate(o.created_at)} · ${statusBadge(o.status)}</div>
+    return `<div style="border:1px solid #ececec;border-radius:0;padding:20px;break-inside:avoid;margin-bottom:16px">
+      <div style="font-size:11px;color:#9a9a9a;margin-bottom:10px;font-family:monospace">ORDER #${o.id} · ${fmtDate(o.created_at)} · ${statusBadge(o.status)}</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
         <div>
-          <div style="font-size:10px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">From</div>
-          <div style="font-size:13px;line-height:1.7;white-space:pre-line;color:#334155">${fromAddr ? esc(fromAddr) : '<em style="color:#94a3b8">No return address</em>'}</div>
+          <div style="font-size:10px;font-weight:600;color:#6b6b6b;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">From</div>
+          <div style="font-size:13px;line-height:1.7;white-space:pre-line;color:#2a2a2a">${fromAddr ? esc(fromAddr) : '<em style="color:#9a9a9a">No return address</em>'}</div>
         </div>
         <div>
-          <div style="font-size:10px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">To</div>
-          <div style="font-size:13px;line-height:1.7;white-space:pre-line;color:#0f172a;font-weight:500">${esc(toAddr)}</div>
+          <div style="font-size:10px;font-weight:600;color:#6b6b6b;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">To</div>
+          <div style="font-size:13px;line-height:1.7;white-space:pre-line;color:#111111;font-weight:500">${esc(toAddr)}</div>
         </div>
       </div>
     </div>`;
@@ -736,7 +734,7 @@ async function showPrintQueue() {
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px" class="no-print">
       <button class="back-link" onclick="go('/admin/orders')" style="margin:0">← Back to Orders</button>
       <div style="display:flex;gap:8px">
-        <span style="font-size:13px;color:#64748b;align-self:center">${orders.length} order${orders.length>1?'s':''} to mail</span>
+        <span style="font-size:13px;color:#6b6b6b;align-self:center">${orders.length} order${orders.length>1?'s':''} to mail</span>
         <button class="btn btn-primary btn-sm" onclick="window.print()">Print this page</button>
       </div>
     </div>
@@ -816,7 +814,7 @@ async function showOrder(id) {
         <div class="detail-card-title">Order Info</div>
         <div class="detail-row"><span class="detail-label">Customer</span><span class="detail-value"><button class="link" onclick="go('/admin/customers/${encodeURIComponent(o.customer_email)}')">${esc(o.customer_email)}</button></span></div>
         <div class="detail-row"><span class="detail-label">Submitted</span><span class="detail-value">${fmtDateTime(o.created_at)}</span></div>
-        <div class="detail-row"><span class="detail-label">IP address</span><span class="detail-value">${o.customer_ip ? esc(o.customer_ip) : '<span style="color:#94a3b8">—</span>'}</span></div>
+        <div class="detail-row"><span class="detail-label">IP address</span><span class="detail-value">${o.customer_ip ? esc(o.customer_ip) : '<span style="color:#9a9a9a">—</span>'}</span></div>
         <div class="detail-row"><span class="detail-label">Type</span><span class="detail-value">${esc(o.letter_type||'standard')}</span></div>
         <div class="detail-row"><span class="detail-label">Price</span><span class="detail-value">${fmtCAD(o.price_cents)}</span></div>
         ${o.actual_cost_cents != null ? `<div class="detail-row"><span class="detail-label">Actual Cost</span><span class="detail-value">${fmtCAD(o.actual_cost_cents)}</span></div>` : ''}
@@ -826,9 +824,9 @@ async function showOrder(id) {
         <div class="detail-row" style="border-bottom:none;flex-direction:column;gap:8px;align-items:flex-start">
           <span class="detail-label">Record actual cost</span>
           <div style="display:flex;gap:8px;align-items:center;width:100%">
-            <span style="font-size:13px;color:#64748b">$</span>
+            <span style="font-size:13px;color:#6b6b6b">$</span>
             <input type="number" id="actual-cost-input" min="0" step="0.01" placeholder="0.00" style="width:100px" value="${o.actual_cost_cents != null ? (o.actual_cost_cents/100).toFixed(2) : ''}">
-            <span style="font-size:13px;color:#64748b">CAD</span>
+            <span style="font-size:13px;color:#6b6b6b">CAD</span>
             <button class="btn btn-outline btn-sm" onclick="saveActualCost(${o.id})">Save</button>
           </div>
         </div>
@@ -903,7 +901,7 @@ function fulfillmentCard(o, statusOpts) {
   if (o.status === 'paid') {
     return `<div class="detail-card">
       <div class="detail-card-title">Fulfillment — Submit to Printer</div>
-      <p style="font-size:13px;color:#64748b;margin-bottom:16px;line-height:1.6">Upload this order to the printer's portal, then enter the reference number they assign.</p>
+      <p style="font-size:13px;color:#6b6b6b;margin-bottom:16px;line-height:1.6">Upload this order to the printer's portal, then enter the reference number they assign.</p>
       <div class="field" style="margin-bottom:12px">
         <label>Printer Reference Number</label>
         <input id="printer-ref" type="text" placeholder="8-digit ref" maxlength="20" style="font-family:monospace">
@@ -915,7 +913,7 @@ function fulfillmentCard(o, statusOpts) {
   if (o.status === 'submitted_to_printer') {
     return `<div class="detail-card">
       <div class="detail-card-title">Fulfillment — Mark as Mailed</div>
-      <p style="font-size:13px;color:#64748b;margin-bottom:16px;line-height:1.6">When the printer confirms the letter has been dropped with Canada Post, enter the estimated delivery and notify the customer.</p>
+      <p style="font-size:13px;color:#6b6b6b;margin-bottom:16px;line-height:1.6">When the printer confirms the letter has been dropped with Canada Post, enter the estimated delivery and notify the customer.</p>
       <div class="field" style="margin-bottom:12px">
         <label>Estimated Delivery (from printer's email)</label>
         <input id="est-delivery" type="text" placeholder="e.g. 5–10 business days">
@@ -991,15 +989,15 @@ async function showCustomers() {
   const rows = customers.map(c => {
     const tags = c.tags.map(t => `<span class="tag" style="font-size:11px;padding:2px 8px">${esc(t)}</span>`).join('');
     const acctBadge = c.has_account
-      ? '<span title="Has account" style="display:inline-block;font-size:10px;background:#dbeafe;color:#1e40af;padding:1px 7px;border-radius:4px;font-weight:600;margin-left:6px">ACCOUNT</span>'
+      ? '<span title="Has account" style="display:inline-block;font-size:10px;background:#dbeafe;color:#1e40af;padding:1px 7px;border-radius:0;font-weight:600;margin-left:6px">ACCOUNT</span>'
       : '';
     return `
     <tr>
-      <td><button class="link" onclick="go('/admin/customers/${encodeURIComponent(c.email)}')">${esc(c.email)}${acctBadge}${c.display_name ? ` <span style="color:#94a3b8;font-weight:400">(${esc(c.display_name)})</span>` : ''}</button></td>
+      <td><button class="link" onclick="go('/admin/customers/${encodeURIComponent(c.email)}')">${esc(c.email)}${acctBadge}${c.display_name ? ` <span style="color:#9a9a9a;font-weight:400">(${esc(c.display_name)})</span>` : ''}</button></td>
       <td>${c.order_count}</td>
       <td>${fmtCAD(c.total_spent)}</td>
       <td>${fmtDate(c.last_order)}</td>
-      <td>${tags || '<span style="color:#94a3b8;font-size:12px">—</span>'}</td>
+      <td>${tags || '<span style="color:#9a9a9a;font-size:12px">—</span>'}</td>
       <td>
         <button class="link" onclick="go('/admin/customers/${encodeURIComponent(c.email)}')">View</button>
         &nbsp;<button class="btn-ghost" onclick="deleteCustomer('${encodeURIComponent(c.email)}')">Delete</button>
@@ -1089,7 +1087,7 @@ async function showCustomer(email) {
   setMain(`
     <button class="back-link" onclick="go('/admin/customers')">← Back to Customers</button>
     <div class="page-header">
-      <div class="page-title">${esc(c.display_name || email)}${c.display_name ? ` <span style="font-weight:400;color:#64748b;font-size:14px">${esc(email)}</span>` : ''}</div>
+      <div class="page-title">${esc(c.display_name || email)}${c.display_name ? ` <span style="font-weight:400;color:#6b6b6b;font-size:14px">${esc(email)}</span>` : ''}</div>
       <button class="btn btn-outline btn-sm" onclick="deleteCustomer('${encodeURIComponent(email)}')">Move to Trash</button>
     </div>
     <div class="detail-grid">
@@ -1104,7 +1102,7 @@ async function showCustomer(email) {
       </div>
       <div class="detail-card">
         <div class="detail-card-title">Tags</div>
-        <div class="tags" id="tags-container">${tagChips || '<span style="color:#94a3b8;font-size:13px">No tags yet.</span>'}</div>
+        <div class="tags" id="tags-container">${tagChips || '<span style="color:#9a9a9a;font-size:13px">No tags yet.</span>'}</div>
         <div class="form-row" style="margin-top:16px;margin-bottom:0">
           <div class="field">
             <input type="text" id="new-tag" placeholder="e.g. vip, repeat-buyer" onkeydown="if(event.key==='Enter')addTag('${encodeURIComponent(email)}')">
@@ -1135,33 +1133,33 @@ async function showCustomer(email) {
     ${(c.sender_name || c.sender_street) ? `
     <div class="card" style="margin-bottom:24px">
       <div class="card-header"><div class="card-title">Known Return Address</div></div>
-      <div style="padding:16px 20px;font-size:14px;line-height:1.8;color:#334155">
+      <div style="padding:16px 20px;font-size:14px;line-height:1.8;color:#2a2a2a">
         ${[c.sender_name, c.sender_street, [c.sender_city, c.sender_province, c.sender_postal].filter(Boolean).join(' '), c.sender_country].filter(Boolean).map(l => esc(l)).join('<br>')}
       </div>
     </div>` : ''}
     <div class="card" style="margin-bottom:24px">
-      <div class="card-header"><div class="card-title">Customer Account</div>${c.has_account ? '<span style="font-size:11px;background:#dbeafe;color:#1e40af;padding:2px 8px;border-radius:4px;font-weight:600">ACTIVE</span>' : '<span style="font-size:11px;background:#f1f5f9;color:#64748b;padding:2px 8px;border-radius:4px">NONE</span>'}</div>
+      <div class="card-header"><div class="card-title">Customer Account</div>${c.has_account ? '<span style="font-size:11px;background:#dbeafe;color:#1e40af;padding:2px 8px;border-radius:0;font-weight:600">ACTIVE</span>' : '<span style="font-size:11px;background:#fafafa;color:#6b6b6b;padding:2px 8px;border-radius:0">NONE</span>'}</div>
       <div style="padding:20px">
         ${c.has_account ? `
           <div class="detail-row" style="border:none;padding:0 0 14px"><span class="detail-label">Account Created</span><span class="detail-value">${fmtDate(c.account_created_at) || '—'}</span></div>
           <div class="detail-row" style="border:none;padding:0 0 18px"><span class="detail-label">Saved Recipients</span><span class="detail-value">${c.saved_recipients_count}</span></div>
-          <div style="border-top:1px solid #f1f5f9;padding-top:18px">
-            <div style="font-size:13px;font-weight:600;color:#0f172a;margin-bottom:10px">Set New Password</div>
+          <div style="border-top:1px solid #fafafa;padding-top:18px">
+            <div style="font-size:13px;font-weight:600;color:#111111;margin-bottom:10px">Set New Password</div>
             <div style="display:flex;gap:8px;align-items:flex-start">
               <div class="field" style="flex:1;margin-bottom:0">
                 <input id="acct-new-pwd" type="password" placeholder="At least 8 chars, letter + number/symbol" oninput="updateAcctStrength()">
-                <div style="height:3px;background:#f1f5f9;border-radius:2px;margin-top:6px;overflow:hidden"><div id="acct-pwd-fill" style="height:100%;width:0;background:#94a3b8;transition:width 0.3s,background 0.3s"></div></div>
-                <div id="acct-pwd-lbl" style="font-size:11px;color:#94a3b8;margin-top:4px;font-family:monospace"></div>
+                <div style="height:3px;background:#fafafa;border-radius:2px;margin-top:6px;overflow:hidden"><div id="acct-pwd-fill" style="height:100%;width:0;background:#9a9a9a;transition:width 0.3s,background 0.3s"></div></div>
+                <div id="acct-pwd-lbl" style="font-size:11px;color:#9a9a9a;margin-top:4px;font-family:monospace"></div>
               </div>
               <button class="btn btn-primary btn-sm" onclick="resetCustomerPassword('${encodeURIComponent(email)}')">Reset Password</button>
             </div>
             <div id="acct-msg" style="font-size:12px;margin-top:10px"></div>
-            <div style="border-top:1px solid #f1f5f9;margin-top:18px;padding-top:14px">
-              <button class="btn btn-outline btn-sm" style="color:#dc2626;border-color:#dc2626" onclick="removeCustomerAccount('${encodeURIComponent(email)}')">Remove Account</button>
-              <span style="font-size:12px;color:#64748b;margin-left:10px">Clears password &amp; saved recipients. Customer record &amp; orders are kept.</span>
+            <div style="border-top:1px solid #fafafa;margin-top:18px;padding-top:14px">
+              <button class="btn btn-outline btn-sm" style="color:#e63946;border-color:#e63946" onclick="removeCustomerAccount('${encodeURIComponent(email)}')">Remove Account</button>
+              <span style="font-size:12px;color:#6b6b6b;margin-left:10px">Clears password &amp; saved recipients. Customer record &amp; orders are kept.</span>
             </div>
           </div>
-        ` : '<div style="color:#64748b;font-size:13px">This customer has not created an account.</div>'}
+        ` : '<div style="color:#6b6b6b;font-size:13px">This customer has not created an account.</div>'}
       </div>
     </div>
     <div class="card" style="margin-bottom:24px">
@@ -1172,7 +1170,7 @@ async function showCustomer(email) {
           ${(emailLog||[]).map(e => `<tr>
             <td style="font-size:12px;white-space:nowrap">${fmtDateTime(e.created_at)}</td>
             <td style="font-size:13px">${esc(e.subject)}</td>
-            <td><span style="font-size:11px;background:#f1f5f9;padding:2px 7px;border-radius:4px;color:#64748b">${esc(e.type)}</span></td>
+            <td><span style="font-size:11px;background:#fafafa;padding:2px 7px;border-radius:0;color:#6b6b6b">${esc(e.type)}</span></td>
             <td>${e.order_id ? `<button class="link" onclick="go('/admin/orders/${e.order_id}')">#${e.order_id}</button>` : '—'}</td>
           </tr>`).join('')}
           </tbody></table>`}
@@ -1188,7 +1186,7 @@ async function showCustomer(email) {
             </div>
             <button class="btn-ghost" onclick="deleteOccasion(${occ.id}, '${encodeURIComponent(email)}')">Delete</button>
           </div>`).join('') || '<div class="empty" style="padding:10px 0">No reminders set.</div>'}
-        <div style="border-top:1px solid #f1f5f9;margin-top:16px;padding-top:16px">
+        <div style="border-top:1px solid #fafafa;margin-top:16px;padding-top:16px">
           <div class="form-row" style="flex-wrap:wrap;margin-bottom:0">
             <div class="field"><label>Name</label><input id="occ-name" type="text" placeholder="e.g. Mom's Birthday"></div>
             <div class="field"><label>Date (MM-DD)</label><input id="occ-date" type="text" placeholder="e.g. 06-15" maxlength="5"></div>
@@ -1232,15 +1230,15 @@ function updateAcctStrength() {
   const lbl  = document.getElementById('acct-pwd-lbl');
   if (!fill || !lbl) return;
   fill.style.width = pwd.length === 0 ? '0' : Math.max(20, score * 25) + '%';
-  fill.style.background = pwd.length === 0 ? '#94a3b8' : colors[Math.min(score, 3)];
+  fill.style.background = pwd.length === 0 ? '#9a9a9a' : colors[Math.min(score, 3)];
   lbl.textContent = pwd.length === 0 ? '' : labels[Math.min(score, 4)];
-  lbl.style.color = pwd.length === 0 ? '#94a3b8' : colors[Math.min(score, 3)];
+  lbl.style.color = pwd.length === 0 ? '#9a9a9a' : colors[Math.min(score, 3)];
 }
 
 async function resetCustomerPassword(encodedEmail) {
   const pwd = document.getElementById('acct-new-pwd').value;
   const msg = document.getElementById('acct-msg');
-  if (!pwd) { msg.style.color = '#dc2626'; msg.textContent = 'Enter a new password.'; return; }
+  if (!pwd) { msg.style.color = '#e63946'; msg.textContent = 'Enter a new password.'; return; }
   const r = await post(`/api/admin/customers/${encodedEmail}/reset-password`, { new_password: pwd });
   if (r?.ok) {
     msg.style.color = '#16a34a';
@@ -1248,7 +1246,7 @@ async function resetCustomerPassword(encodedEmail) {
     document.getElementById('acct-new-pwd').value = '';
     updateAcctStrength();
   } else {
-    msg.style.color = '#dc2626';
+    msg.style.color = '#e63946';
     msg.textContent = r?.error || 'Error updating password.';
   }
 }
@@ -1268,11 +1266,11 @@ async function showAccounts() {
 
   const rows = accounts.map(a => `
     <tr>
-      <td><button class="link" onclick="go('/admin/accounts/${encodeURIComponent(a.email)}')">${esc(a.email)}${a.display_name ? ` <span style="color:#94a3b8;font-weight:400">(${esc(a.display_name)})</span>` : ''}</button></td>
-      <td style="font-size:12px;color:#64748b;white-space:nowrap">${fmtDate(a.account_created_at) || '—'}</td>
+      <td><button class="link" onclick="go('/admin/accounts/${encodeURIComponent(a.email)}')">${esc(a.email)}${a.display_name ? ` <span style="color:#9a9a9a;font-weight:400">(${esc(a.display_name)})</span>` : ''}</button></td>
+      <td style="font-size:12px;color:#6b6b6b;white-space:nowrap">${fmtDate(a.account_created_at) || '—'}</td>
       <td>${a.order_count}</td>
       <td>${a.recipients_count}</td>
-      <td style="font-size:12px;color:#64748b;white-space:nowrap">${fmtDate(a.last_order) || '—'}</td>
+      <td style="font-size:12px;color:#6b6b6b;white-space:nowrap">${fmtDate(a.last_order) || '—'}</td>
       <td>
         <button class="link" onclick="go('/admin/accounts/${encodeURIComponent(a.email)}')">Manage</button>
         &nbsp;<button class="link" onclick="go('/admin/customers/${encodeURIComponent(a.email)}')">View Customer</button>
@@ -1282,7 +1280,7 @@ async function showAccounts() {
   setMain(`
     <div class="page-header">
       <div class="page-title">Accounts</div>
-      <div style="font-size:13px;color:#64748b">${accounts.length} customer${accounts.length === 1 ? '' : 's'} with accounts</div>
+      <div style="font-size:13px;color:#6b6b6b">${accounts.length} customer${accounts.length === 1 ? '' : 's'} with accounts</div>
     </div>
     <div class="card">
       <table>
@@ -1305,7 +1303,7 @@ async function showAccount(email) {
   setMain(`
     <button class="back-link" onclick="go('/admin/accounts')">← Back to Accounts</button>
     <div class="page-header">
-      <div class="page-title">${esc(email)} <span style="font-size:11px;background:#dbeafe;color:#1e40af;padding:2px 8px;border-radius:4px;font-weight:600;vertical-align:middle;margin-left:8px">ACCOUNT</span></div>
+      <div class="page-title">${esc(email)} <span style="font-size:11px;background:#dbeafe;color:#1e40af;padding:2px 8px;border-radius:0;font-weight:600;vertical-align:middle;margin-left:8px">ACCOUNT</span></div>
       <button class="btn btn-outline btn-sm" onclick="go('/admin/customers/${encodeURIComponent(email)}')">View Full Customer →</button>
     </div>
 
@@ -1320,25 +1318,25 @@ async function showAccount(email) {
       ${(c.sender_name || c.sender_street) ? `
       <div class="detail-card">
         <div class="detail-card-title">Saved Return Address</div>
-        <div style="font-size:14px;line-height:1.8;color:#334155">
+        <div style="font-size:14px;line-height:1.8;color:#2a2a2a">
           ${[c.sender_name, c.sender_street, [c.sender_city, c.sender_province, c.sender_postal].filter(Boolean).join(' '), c.sender_country].filter(Boolean).map(l => esc(l)).join('<br>')}
         </div>
       </div>` : `
       <div class="detail-card">
         <div class="detail-card-title">Saved Return Address</div>
-        <div style="color:#94a3b8;font-size:13px;font-style:italic">No return address saved.</div>
+        <div style="color:#9a9a9a;font-size:13px;font-style:italic">No return address saved.</div>
       </div>`}
     </div>
 
     <div class="card" style="margin-bottom:24px">
       <div class="card-header"><div class="card-title">Reset Password</div></div>
       <div style="padding:20px">
-        <p style="font-size:13px;color:#64748b;margin-bottom:14px">Set a new password and share it with the customer through a secure channel. Their old password will stop working immediately.</p>
+        <p style="font-size:13px;color:#6b6b6b;margin-bottom:14px">Set a new password and share it with the customer through a secure channel. Their old password will stop working immediately.</p>
         <div style="display:flex;gap:8px;align-items:flex-start;max-width:520px">
           <div class="field" style="flex:1;margin-bottom:0">
             <input id="acct-new-pwd" type="password" placeholder="At least 8 chars, letter + number/symbol" oninput="updateAcctStrength()">
-            <div style="height:3px;background:#f1f5f9;border-radius:2px;margin-top:6px;overflow:hidden"><div id="acct-pwd-fill" style="height:100%;width:0;background:#94a3b8;transition:width 0.3s,background 0.3s"></div></div>
-            <div id="acct-pwd-lbl" style="font-size:11px;color:#94a3b8;margin-top:4px;font-family:monospace"></div>
+            <div style="height:3px;background:#fafafa;border-radius:2px;margin-top:6px;overflow:hidden"><div id="acct-pwd-fill" style="height:100%;width:0;background:#9a9a9a;transition:width 0.3s,background 0.3s"></div></div>
+            <div id="acct-pwd-lbl" style="font-size:11px;color:#9a9a9a;margin-top:4px;font-family:monospace"></div>
           </div>
           <button class="btn btn-primary btn-sm" onclick="resetCustomerPassword('${encodeURIComponent(email)}')">Reset Password</button>
         </div>
@@ -1347,10 +1345,10 @@ async function showAccount(email) {
     </div>
 
     <div class="card">
-      <div class="card-header"><div class="card-title" style="color:#dc2626">Danger Zone</div></div>
+      <div class="card-header"><div class="card-title" style="color:#e63946">Danger Zone</div></div>
       <div style="padding:20px">
-        <p style="font-size:13px;color:#64748b;margin-bottom:14px">Removing the account clears the password and all saved recipients. The customer record and order history are kept.</p>
-        <button class="btn btn-outline btn-sm" style="color:#dc2626;border-color:#dc2626" onclick="removeAccountFromAccountsTab('${encodeURIComponent(email)}')">Remove Account</button>
+        <p style="font-size:13px;color:#6b6b6b;margin-bottom:14px">Removing the account clears the password and all saved recipients. The customer record and order history are kept.</p>
+        <button class="btn btn-outline btn-sm" style="color:#e63946;border-color:#e63946" onclick="removeAccountFromAccountsTab('${encodeURIComponent(email)}')">Remove Account</button>
       </div>
     </div>`);
 }
@@ -1399,7 +1397,7 @@ async function showBroadcast() {
     .join('');
   setMain(`
     <div class="page-header"><div class="page-title">Broadcast email</div></div>
-    <p style="color:#64748b;font-size:13px;margin-bottom:20px;max-width:600px">Send an email to a group of customers. Use sparingly — recipients did not opt in to marketing. Plain text only. Sends are throttled to one per second.</p>
+    <p style="color:#6b6b6b;font-size:13px;margin-bottom:20px;max-width:600px">Send an email to a group of customers. Use sparingly — recipients did not opt in to marketing. Plain text only. Sends are throttled to one per second.</p>
     <div class="card" style="max-width:680px">
       <div style="padding:24px">
         <div class="field" style="margin-bottom:16px">
@@ -1409,7 +1407,7 @@ async function showBroadcast() {
         <div class="field" style="margin-bottom:16px">
           <label>Recipients</label>
           <select id="bc-tag" onchange="previewBroadcast()">${tagOpts}</select>
-          <div id="bc-count" style="font-size:12px;color:#64748b;margin-top:6px"></div>
+          <div id="bc-count" style="font-size:12px;color:#6b6b6b;margin-top:6px"></div>
         </div>
         <div class="field" style="margin-bottom:16px">
           <label>Subject</label>
@@ -1424,7 +1422,7 @@ async function showBroadcast() {
           <button class="btn btn-outline" onclick="toggleSaveTemplate()">Save as Template</button>
           <span id="bc-status" style="font-size:13px;display:none"></span>
         </div>
-        <div id="save-tmpl-form" style="display:none;margin-top:16px;padding:16px;background:#f8fafc;border-radius:6px;border:1px solid #e2e8f0">
+        <div id="save-tmpl-form" style="display:none;margin-top:16px;padding:16px;background:#f5f5f5;border-radius:0;border:1px solid #ececec">
           <div class="form-row" style="margin-bottom:0">
             <div class="field"><label>Template name</label><input id="tmpl-name" type="text" placeholder="e.g. Holiday greeting"></div>
             <button class="btn btn-primary btn-sm" style="align-self:flex-end" onclick="saveAsTemplate()">Save</button>
@@ -1480,7 +1478,7 @@ async function sendBroadcast() {
     s.style.color = '#16a34a';
     s.textContent = `Queued ${r.sentTo} emails — sending in background.`;
   } else {
-    s.style.color = '#dc2626';
+    s.style.color = '#e63946';
     s.textContent = 'Failed: ' + (r?.error || 'unknown error');
   }
   s.style.display = 'inline';
@@ -1533,9 +1531,9 @@ async function showInsights() {
       </div>
     </div>
     <div class="card" style="margin-bottom:8px;padding:12px 20px">
-      <span style="font-size:14px;color:#64748b">
-        Repeat rate: <strong style="color:#0f172a">${stats.repeat_rate??0}%</strong>
-        &nbsp;&nbsp;Avg days between orders: <strong style="color:#0f172a">${stats.avg_days_between_orders!=null?stats.avg_days_between_orders+'d':'—'}</strong>
+      <span style="font-size:14px;color:#6b6b6b">
+        Repeat rate: <strong style="color:#111111">${stats.repeat_rate??0}%</strong>
+        &nbsp;&nbsp;Avg days between orders: <strong style="color:#111111">${stats.avg_days_between_orders!=null?stats.avg_days_between_orders+'d':'—'}</strong>
       </span>
     </div>
     <div class="card" style="margin-bottom:24px">
@@ -1561,7 +1559,7 @@ async function showInsights() {
     <div class="card">
       <div class="card-header">
         <div class="card-title">Inactive Customers (60+ days)</div>
-        <span style="font-size:12px;color:#64748b">${inactive.length} customers</span>
+        <span style="font-size:12px;color:#6b6b6b">${inactive.length} customers</span>
       </div>
       <table>
         <thead><tr><th>Email</th><th>Last Order</th><th>Orders</th><th></th></tr></thead>
@@ -1598,10 +1596,10 @@ function renderVisitors(cf, s, recent) {
   // ── Cloudflare section ────────────────────────────────────────────────────
   let cfHtml = '';
   if (!cf || cf.configured === false) {
-    cfHtml = `<div class="card" style="margin-bottom:24px;padding:20px 24px;color:#64748b;font-size:13px">
+    cfHtml = `<div class="card" style="margin-bottom:24px;padding:20px 24px;color:#6b6b6b;font-size:13px">
       <strong>Cloudflare Analytics</strong> — not configured. Add <code>CF_API_TOKEN</code> and <code>CF_ZONE_ID</code> to your .env and restart.</div>`;
   } else if (cf.error) {
-    cfHtml = `<div class="card" style="margin-bottom:24px;padding:20px 24px;color:#dc2626;font-size:13px">
+    cfHtml = `<div class="card" style="margin-bottom:24px;padding:20px 24px;color:#e63946;font-size:13px">
       Cloudflare error: ${esc(cf.error)}</div>`;
   } else {
     const t = cf.totals;
@@ -1618,7 +1616,7 @@ function renderVisitors(cf, s, recent) {
         <div style="width:100%;height:${h}px;background:#bfdbfe;border-radius:2px 2px 0 0;min-height:4px;position:relative">
           <div style="position:absolute;bottom:0;left:0;right:0;height:${pvH}px;background:#2563eb;border-radius:2px 2px 0 0"></div>
         </div>
-        <span style="font-size:9px;color:#94a3b8">${esc(label)}</span>
+        <span style="font-size:9px;color:#9a9a9a">${esc(label)}</span>
       </div>`;
     }).join('') || '<div class="empty" style="padding:20px;width:100%">No data.</div>';
 
@@ -1629,30 +1627,30 @@ function renderVisitors(cf, s, recent) {
     cfHtml = `
     <div class="card" style="margin-bottom:24px">
       <div class="card-header">
-        <div class="card-title">Cloudflare — Last ${cf.days} Days <span style="font-size:11px;color:#94a3b8;font-weight:400;margin-left:8px">█ requests &nbsp; █ page views</span></div>
+        <div class="card-title">Cloudflare — Last ${cf.days} Days <span style="font-size:11px;color:#9a9a9a;font-weight:400;margin-left:8px">█ requests &nbsp; █ page views</span></div>
         <div style="display:flex;gap:6px">${periodBtns}</div>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:0;border-bottom:1px solid #f1f5f9">
-        <div style="padding:14px 20px;border-right:1px solid #f1f5f9">
-          <div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">Requests</div>
-          <div style="font-size:22px;font-weight:700;color:#0f172a">${t.requests.toLocaleString()}</div>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:0;border-bottom:1px solid #fafafa">
+        <div style="padding:14px 20px;border-right:1px solid #fafafa">
+          <div style="font-size:11px;color:#6b6b6b;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">Requests</div>
+          <div style="font-size:22px;font-weight:700;color:#111111">${t.requests.toLocaleString()}</div>
         </div>
-        <div style="padding:14px 20px;border-right:1px solid #f1f5f9">
-          <div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">Page Views</div>
-          <div style="font-size:22px;font-weight:700;color:#0f172a">${t.pageViews.toLocaleString()}</div>
+        <div style="padding:14px 20px;border-right:1px solid #fafafa">
+          <div style="font-size:11px;color:#6b6b6b;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">Page Views</div>
+          <div style="font-size:22px;font-weight:700;color:#111111">${t.pageViews.toLocaleString()}</div>
         </div>
-        <div style="padding:14px 20px;border-right:1px solid #f1f5f9">
-          <div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">Unique Visitors</div>
-          <div style="font-size:22px;font-weight:700;color:#0f172a">${t.uniques.toLocaleString()}</div>
+        <div style="padding:14px 20px;border-right:1px solid #fafafa">
+          <div style="font-size:11px;color:#6b6b6b;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">Unique Visitors</div>
+          <div style="font-size:22px;font-weight:700;color:#111111">${t.uniques.toLocaleString()}</div>
         </div>
-        <div style="padding:14px 20px;border-right:1px solid #f1f5f9">
-          <div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">Bandwidth</div>
-          <div style="font-size:22px;font-weight:700;color:#0f172a">${fmtBytes(t.bytes)}</div>
-          <div style="font-size:11px;color:#94a3b8;margin-top:2px">${cachedPct}% cached</div>
+        <div style="padding:14px 20px;border-right:1px solid #fafafa">
+          <div style="font-size:11px;color:#6b6b6b;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">Bandwidth</div>
+          <div style="font-size:22px;font-weight:700;color:#111111">${fmtBytes(t.bytes)}</div>
+          <div style="font-size:11px;color:#9a9a9a;margin-top:2px">${cachedPct}% cached</div>
         </div>
         <div style="padding:14px 20px">
-          <div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">Threats Blocked</div>
-          <div style="font-size:22px;font-weight:700;color:${t.threats > 0 ? '#dc2626' : '#16a34a'}">${t.threats.toLocaleString()}</div>
+          <div style="font-size:11px;color:#6b6b6b;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">Threats Blocked</div>
+          <div style="font-size:22px;font-weight:700;color:${t.threats > 0 ? '#e63946' : '#16a34a'}">${t.threats.toLocaleString()}</div>
         </div>
       </div>
       <div style="padding:16px 20px">
@@ -1675,7 +1673,7 @@ function renderVisitors(cf, s, recent) {
     const totalDevices = (s.devices || []).reduce((sum, d) => sum + d.count, 0) || 1;
     const deviceRows = (s.devices || []).map(d => {
       const pct = Math.round((d.count / totalDevices) * 100);
-      return `<tr><td style="text-transform:capitalize">${esc(d.device_type || 'unknown')}</td><td style="text-align:right">${d.count} <span style="color:#94a3b8">(${pct}%)</span></td></tr>`;
+      return `<tr><td style="text-transform:capitalize">${esc(d.device_type || 'unknown')}</td><td style="text-align:right">${d.count} <span style="color:#9a9a9a">(${pct}%)</span></td></tr>`;
     }).join('') || '<tr><td colspan="2" class="empty">—</td></tr>';
 
     const browserRows = (s.browsers || []).map(b =>
@@ -1689,16 +1687,16 @@ function renderVisitors(cf, s, recent) {
     const recentRows = (recent || []).map(r => `
       <tr>
         <td style="white-space:nowrap;font-size:12px">${fmtDateTime(r.created_at)}</td>
-        <td>${r.country_code ? FLAG_EMOJI(r.country_code) + ' ' + esc(r.country_name || r.country_code) : '<span style="color:#94a3b8">—</span>'}</td>
-        <td style="font-family:monospace;font-size:11px;color:#64748b">${esc(r.ip || '')}</td>
+        <td>${r.country_code ? FLAG_EMOJI(r.country_code) + ' ' + esc(r.country_name || r.country_code) : '<span style="color:#9a9a9a">—</span>'}</td>
+        <td style="font-family:monospace;font-size:11px;color:#6b6b6b">${esc(r.ip || '')}</td>
         <td style="font-family:monospace;font-size:11px">${esc(r.path)}</td>
         <td style="text-transform:capitalize">${esc(r.device_type || '')}</td>
         <td>${esc(r.browser || '')}</td>
-        <td style="font-size:11px;color:#64748b">${esc(r.referrer || '')}</td>
+        <td style="font-size:11px;color:#6b6b6b">${esc(r.referrer || '')}</td>
       </tr>`).join('') || '<tr><td colspan="7" class="empty">No app-level sessions recorded yet — will populate after deployment.</td></tr>';
 
     dbHtml = `
-    <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:#94a3b8;margin-bottom:12px">App-level detail (30 days · ${s.total} total logged)</div>
+    <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:#9a9a9a;margin-bottom:12px">App-level detail (30 days · ${s.total} total logged)</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
       <div class="card">
         <div class="card-header"><div class="card-title">Top Pages</div></div>
@@ -1825,17 +1823,17 @@ async function showAuditLog() {
     ? '<tr><td colspan="5" class="empty">No audit log entries match.</td></tr>'
     : rows.map(r => `
       <tr>
-        <td style="font-size:12px;color:#64748b;white-space:nowrap">${fmtDateTime(r.created_at)}</td>
+        <td style="font-size:12px;color:#6b6b6b;white-space:nowrap">${fmtDateTime(r.created_at)}</td>
         <td style="font-size:13px">${esc(r.actor || '—')}</td>
-        <td><span style="font-family:monospace;font-size:11px;background:#f1f5f9;padding:2px 7px;border-radius:4px">${esc(r.action)}</span></td>
-        <td style="font-size:13px">${r.target_type ? `${esc(r.target_type)} <span style="color:#94a3b8;font-family:monospace;font-size:12px">${esc(r.target_id || '')}</span>` : '—'}</td>
-        <td style="font-family:monospace;font-size:11px;color:#94a3b8">${esc(r.ip || '')}</td>
-      </tr>${r.details ? `<tr><td colspan="5" style="padding:0 0 12px"><pre style="background:#f8fafc;border:1px solid #f1f5f9;padding:10px;border-radius:4px;font-size:11px;color:#475569;white-space:pre-wrap;word-break:break-all;margin:0 0 0 8px;max-width:920px">${esc(r.details)}</pre></td></tr>` : ''}`).join('');
+        <td><span style="font-family:monospace;font-size:11px;background:#fafafa;padding:2px 7px;border-radius:0">${esc(r.action)}</span></td>
+        <td style="font-size:13px">${r.target_type ? `${esc(r.target_type)} <span style="color:#9a9a9a;font-family:monospace;font-size:12px">${esc(r.target_id || '')}</span>` : '—'}</td>
+        <td style="font-family:monospace;font-size:11px;color:#9a9a9a">${esc(r.ip || '')}</td>
+      </tr>${r.details ? `<tr><td colspan="5" style="padding:0 0 12px"><pre style="background:#f5f5f5;border:1px solid #fafafa;padding:10px;border-radius:0;font-size:11px;color:#475569;white-space:pre-wrap;word-break:break-all;margin:0 0 0 8px;max-width:920px">${esc(r.details)}</pre></td></tr>` : ''}`).join('');
 
   setMain(`
     <div class="page-header">
       <div class="page-title">Audit Log</div>
-      <div style="font-size:13px;color:#64748b">${rows.length} entries${rows.length === 500 ? ' (showing latest 500)' : ''}</div>
+      <div style="font-size:13px;color:#6b6b6b">${rows.length} entries${rows.length === 500 ? ' (showing latest 500)' : ''}</div>
     </div>
     <div class="card" style="margin-bottom:16px">
       <div style="padding:16px 20px;display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
@@ -1908,7 +1906,7 @@ async function showSettings() {
     .join('');
 
   const blockedChips = blocked.map(code => `
-    <span style="display:inline-flex;align-items:center;gap:5px;background:#fee2e2;color:#991b1b;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:500;margin:3px">
+    <span style="display:inline-flex;align-items:center;gap:5px;background:#fee2e2;color:#991b1b;padding:3px 10px;border-radius:0;font-size:12px;font-weight:500;margin:3px">
       ${esc(COUNTRIES[code] || code)} (${code})
       <button onclick="removeBlockedCountry('${code}')" style="background:none;border:none;cursor:pointer;color:#991b1b;font-size:14px;line-height:1;padding:0">×</button>
     </span>`).join('');
@@ -1919,35 +1917,35 @@ async function showSettings() {
     <div class="card" style="max-width:640px;margin-bottom:20px">
       <div class="card-header"><div class="card-title">Orders</div></div>
       <div style="padding:20px">
-        <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:16px;border-bottom:1px solid #f1f5f9;margin-bottom:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:16px;border-bottom:1px solid #fafafa;margin-bottom:16px">
           <div>
-            <div style="font-size:14px;font-weight:600;color:#0f172a;margin-bottom:3px">Accept Orders</div>
-            <div style="font-size:12px;color:#64748b">When off, checkout is blocked and the site shows a closed message.</div>
+            <div style="font-size:14px;font-weight:600;color:#111111;margin-bottom:3px">Accept Orders</div>
+            <div style="font-size:12px;color:#6b6b6b">When off, checkout is blocked and the site shows a closed message.</div>
           </div>
           <button id="pause-toggle-btn" class="btn ${paused?'btn-primary':'btn-outline'}"
             onclick="toggleServicePause(${paused})"
-            style="${paused?'background:#dc2626;border-color:#dc2626;color:#fff':''}">
+            style="${paused?'background:#e63946;border-color:#e63946;color:#fff':''}">
             ${paused ? '⏸ Orders Off — Click to Open' : '✓ Orders Open — Click to Close'}
           </button>
         </div>
         <div class="field" style="margin-bottom:12px">
-          <label>Announcement Banner <span style="color:#94a3b8;font-weight:400">(shown on the site — leave blank to hide)</span></label>
+          <label>Announcement Banner <span style="color:#9a9a9a;font-weight:400">(shown on the site — leave blank to hide)</span></label>
           <input id="setting-announcement" type="text" value="${esc(announcement)}" placeholder="e.g. Holiday closure Dec 24–Jan 2. Orders resume Jan 3.">
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
           <div class="field">
             <label>Domestic Price (CAD cents)</label>
             <input id="setting-price-dom" type="number" min="100" step="100" value="${priceDom}">
-            <span style="font-size:11px;color:#94a3b8">Currently $${(parseInt(priceDom)/100).toFixed(2)} CAD</span>
+            <span style="font-size:11px;color:#9a9a9a">Currently $${(parseInt(priceDom)/100).toFixed(2)} CAD</span>
           </div>
           <div class="field">
             <label>International Price (CAD cents)</label>
             <input id="setting-price-intl" type="number" min="100" step="100" value="${priceIntl}">
-            <span style="font-size:11px;color:#94a3b8">Currently $${(parseInt(priceIntl)/100).toFixed(2)} CAD</span>
+            <span style="font-size:11px;color:#9a9a9a">Currently $${(parseInt(priceIntl)/100).toFixed(2)} CAD</span>
           </div>
         </div>
         <div class="field" style="margin-bottom:16px">
-          <label>Daily Order Cap <span style="color:#94a3b8;font-weight:400">(0 = unlimited)</span></label>
+          <label>Daily Order Cap <span style="color:#9a9a9a;font-weight:400">(0 = unlimited)</span></label>
           <input id="setting-daily-cap" type="number" min="0" value="${dailyCap}" style="max-width:120px">
         </div>
         <div class="field" style="margin-bottom:16px">
@@ -1959,7 +1957,7 @@ async function showSettings() {
             </select>
             <button class="btn btn-outline btn-sm" onclick="addBlockedCountry()">Block</button>
           </div>
-          <div id="blocked-chips" style="min-height:28px">${blockedChips || '<span style="font-size:12px;color:#94a3b8">No countries blocked.</span>'}</div>
+          <div id="blocked-chips" style="min-height:28px">${blockedChips || '<span style="font-size:12px;color:#9a9a9a">No countries blocked.</span>'}</div>
         </div>
         <div style="display:flex;align-items:center;gap:12px">
           <button class="btn btn-primary" onclick="saveAllSettings()">Save Settings</button>
@@ -1972,10 +1970,10 @@ async function showSettings() {
     <div class="card" style="max-width:640px;margin-bottom:20px">
       <div class="card-header"><div class="card-title">Away Auto-Reply</div></div>
       <div style="padding:20px">
-        <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:16px;border-bottom:1px solid #f1f5f9;margin-bottom:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:16px;border-bottom:1px solid #fafafa;margin-bottom:16px">
           <div>
-            <div style="font-size:14px;font-weight:600;color:#0f172a;margin-bottom:3px">Auto-Reply to Contact Form</div>
-            <div style="font-size:12px;color:#64748b">When on, anyone who submits the contact form gets an automatic reply with your message below.</div>
+            <div style="font-size:14px;font-weight:600;color:#111111;margin-bottom:3px">Auto-Reply to Contact Form</div>
+            <div style="font-size:12px;color:#6b6b6b">When on, anyone who submits the contact form gets an automatic reply with your message below.</div>
           </div>
           <button id="away-toggle-btn" class="btn ${awayOn ? 'btn-primary' : 'btn-outline'}"
             onclick="toggleAwayMode(${awayOn})"
@@ -2000,10 +1998,10 @@ async function showSettings() {
         <button class="btn btn-outline btn-sm" id="backup-now-btn" onclick="runBackupNow()">Backup Now</button>
       </div>
       <div style="padding:16px 20px">
-        <p style="font-size:13px;color:#64748b;margin:0 0 16px">Automatic backups run daily at 2:00 AM. The last 14 backups are kept locally. Only <code>orders.db</code> is backed up — your code lives on GitHub.</p>
+        <p style="font-size:13px;color:#6b6b6b;margin:0 0 16px">Automatic backups run daily at 2:00 AM. The last 14 backups are kept locally. Only <code>orders.db</code> is backed up — your code lives on GitHub.</p>
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;font-size:11px;font-family:monospace">
-          <span style="background:${backupCfg.encrypted ? '#dcfce7' : '#f1f5f9'};color:${backupCfg.encrypted ? '#166534' : '#64748b'};padding:3px 10px;border-radius:4px;text-transform:uppercase;letter-spacing:0.06em">${backupCfg.encrypted ? '✓ Encrypted' : '○ Plain'}</span>
-<span style="background:${backupCfg.email_enabled ? '#fef3c7' : '#f1f5f9'};color:${backupCfg.email_enabled ? '#92400e' : '#64748b'};padding:3px 10px;border-radius:4px;text-transform:uppercase;letter-spacing:0.06em">${backupCfg.email_enabled ? '✉ Email Copy' : '○ No Email'}</span>
+          <span style="background:${backupCfg.encrypted ? '#dcfce7' : '#fafafa'};color:${backupCfg.encrypted ? '#166534' : '#6b6b6b'};padding:3px 10px;border-radius:0;text-transform:uppercase;letter-spacing:0.06em">${backupCfg.encrypted ? '✓ Encrypted' : '○ Plain'}</span>
+<span style="background:${backupCfg.email_enabled ? '#fef3c7' : '#fafafa'};color:${backupCfg.email_enabled ? '#92400e' : '#6b6b6b'};padding:3px 10px;border-radius:0;text-transform:uppercase;letter-spacing:0.06em">${backupCfg.email_enabled ? '✉ Email Copy' : '○ No Email'}</span>
         </div>
         ${(backups||[]).length === 0
           ? '<div class="empty" style="padding:8px 0">No backups yet. Click "Backup Now" to create the first one.</div>'
@@ -2012,12 +2010,12 @@ async function showSettings() {
               <tbody id="backup-list">
                 ${(backups||[]).map((b, i) => `
                   <tr>
-                    <td style="font-family:monospace;font-size:12px">${esc(b.filename)}${i === 0 ? ' <span style="font-size:10px;background:#dcfce7;color:#16a34a;padding:1px 6px;border-radius:4px">latest</span>' : ''}</td>
-                    <td style="font-size:12px;color:#64748b">${fmtBytes(b.size)}</td>
-                    <td style="font-size:12px;color:#64748b;white-space:nowrap">${fmtDateTime(b.created_at)}</td>
+                    <td style="font-family:monospace;font-size:12px">${esc(b.filename)}${i === 0 ? ' <span style="font-size:10px;background:#dcfce7;color:#16a34a;padding:1px 6px;border-radius:0">latest</span>' : ''}</td>
+                    <td style="font-size:12px;color:#6b6b6b">${fmtBytes(b.size)}</td>
+                    <td style="font-size:12px;color:#6b6b6b;white-space:nowrap">${fmtDateTime(b.created_at)}</td>
                     <td style="display:flex;gap:12px;align-items:center">
                       <a href="/api/admin/backups/${encodeURIComponent(b.filename)}" class="link" style="font-size:12px" download>Download</a>
-                      <button class="btn-link" style="font-size:12px;color:#dc2626" onclick="deleteBackup('${esc(b.filename)}')">Delete</button>
+                      <button class="btn-link" style="font-size:12px;color:#e63946" onclick="deleteBackup('${esc(b.filename)}')">Delete</button>
                     </td>
                   </tr>`).join('')}
               </tbody>
@@ -2051,11 +2049,11 @@ function renderBlockedChips() {
   const blocked = window._blockedCountries || [];
   el.innerHTML = blocked.length
     ? blocked.map(code => `
-        <span style="display:inline-flex;align-items:center;gap:5px;background:#fee2e2;color:#991b1b;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:500;margin:3px">
+        <span style="display:inline-flex;align-items:center;gap:5px;background:#fee2e2;color:#991b1b;padding:3px 10px;border-radius:0;font-size:12px;font-weight:500;margin:3px">
           ${esc(COUNTRIES[code] || code)} (${code})
           <button onclick="removeBlockedCountry('${code}')" style="background:none;border:none;cursor:pointer;color:#991b1b;font-size:14px;line-height:1;padding:0">×</button>
         </span>`).join('')
-    : '<span style="font-size:12px;color:#94a3b8">No countries blocked.</span>';
+    : '<span style="font-size:12px;color:#9a9a9a">No countries blocked.</span>';
 }
 
 async function saveAllSettings() {
@@ -2120,7 +2118,7 @@ async function runBackupNow() {
     }
     setTimeout(() => showSettings(), 1200);
   } else {
-    if (msg) { msg.style.color = '#dc2626'; msg.textContent = `Error: ${r?.error || 'unknown'}`; }
+    if (msg) { msg.style.color = '#e63946'; msg.textContent = `Error: ${r?.error || 'unknown'}`; }
   }
 }
 
@@ -2145,7 +2143,7 @@ async function showTrash() {
 
   const custRows = t.customers.map(c => `
     <tr>
-      <td>${esc(c.email)}${c.display_name ? ` <span style="color:#94a3b8">(${esc(c.display_name)})</span>` : ''}</td>
+      <td>${esc(c.email)}${c.display_name ? ` <span style="color:#9a9a9a">(${esc(c.display_name)})</span>` : ''}</td>
       <td>${fmtDate(c.deleted_at)}</td>
       <td><button class="link" onclick="restoreCustomer('${encodeURIComponent(c.email)}')">Restore</button></td>
     </tr>`).join('');
@@ -2164,7 +2162,7 @@ async function showTrash() {
 
   setMain(`
     <div class="page-header"><div class="page-title">Trash</div></div>
-    <p style="color:#64748b;font-size:13px;margin-bottom:20px">Soft-deleted records. Restore them to bring back to active.</p>
+    <p style="color:#6b6b6b;font-size:13px;margin-bottom:20px">Soft-deleted records. Restore them to bring back to active.</p>
     <div class="card" style="margin-bottom:24px">
       <div class="card-header"><div class="card-title">Deleted Customers</div></div>
       <table>
@@ -2219,8 +2217,8 @@ async function showStripe() {
   const fmtAmt = (amt, cur) => '$' + (amt/100).toFixed(2) + ' ' + (cur||'CAD').toUpperCase();
 
   const payoutStatusHTML = s => {
-    const m = { paid:'#16a34a', pending:'#d97706', failed:'#dc2626', in_transit:'#2563eb' };
-    return `<span style="color:${m[s]||'#64748b'};font-weight:600;text-transform:capitalize">${(s||'').replace(/_/g,' ')}</span>`;
+    const m = { paid:'#16a34a', pending:'#d97706', failed:'#e63946', in_transit:'#2563eb' };
+    return `<span style="color:${m[s]||'#6b6b6b'};font-weight:600;text-transform:capitalize">${(s||'').replace(/_/g,' ')}</span>`;
   };
 
   const maxRev = Math.max(1, ...(revenue?.daily||[]).map(d => d.amount));
@@ -2229,7 +2227,7 @@ async function showStripe() {
     return `<div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;min-width:0"
         title="${d.date}: ${fmtAmt(d.amount,'CAD')} · ${d.count} orders">
       <div style="width:100%;height:${h}px;background:#16a34a;border-radius:2px 2px 0 0;min-height:4px"></div>
-      <span style="font-size:9px;color:#94a3b8">${esc(d.date.slice(5))}</span>
+      <span style="font-size:9px;color:#9a9a9a">${esc(d.date.slice(5))}</span>
     </div>`;
   }).join('') || '<div class="empty" style="padding:20px;width:100%">No charges yet.</div>';
 
@@ -2239,10 +2237,10 @@ async function showStripe() {
       <td>${fmtAmt(p.amount, p.currency)}</td>
       <td>${payoutStatusHTML(p.status)}</td>
       <td>${p.arrival_date ? new Date(p.arrival_date*1000).toLocaleDateString('en-CA',{month:'short',day:'numeric',year:'numeric'}) : '—'}</td>
-      <td style="font-family:monospace;font-size:11px;color:#94a3b8">${esc(p.id)}</td>
+      <td style="font-family:monospace;font-size:11px;color:#9a9a9a">${esc(p.id)}</td>
     </tr>`).join('') || '<tr><td colspan="5" class="empty">No payouts yet.</td></tr>';
 
-  const disputeColor = s => ({needs_response:'#dc2626',under_review:'#d97706',won:'#16a34a',lost:'#7c3aed'}[s]||'#64748b');
+  const disputeColor = s => ({needs_response:'#e63946',under_review:'#d97706',won:'#16a34a',lost:'#7c3aed'}[s]||'#6b6b6b');
 
   const disputeRows = (disputes||[]).map(d => `
     <tr>
@@ -2270,20 +2268,20 @@ async function showStripe() {
         <div class="stat-value">${fmtAmt(overview.pending, overview.currency)}</div>
         <div class="stat-sub">in transit</div>
       </div>
-      <div class="stat-card" ${overview.openDisputeCount > 0 ? 'style="border-left:3px solid #dc2626"' : ''}>
+      <div class="stat-card" ${overview.openDisputeCount > 0 ? 'style="border-left:3px solid #e63946"' : ''}>
         <div class="stat-label">Open Disputes</div>
-        <div class="stat-value" style="color:${overview.openDisputeCount > 0 ? '#dc2626' : '#16a34a'}">${overview.openDisputeCount}</div>
+        <div class="stat-value" style="color:${overview.openDisputeCount > 0 ? '#e63946' : '#16a34a'}">${overview.openDisputeCount}</div>
         <div class="stat-sub">${overview.openDisputeCount > 0 ? '⚠ needs action' : 'all clear'}</div>
       </div>
       <div class="stat-card">
         <div class="stat-label">Last Payout</div>
-        ${lp ? `<div class="stat-value" style="font-size:18px">${fmtAmt(lp.amount,lp.currency)}</div><div class="stat-sub">${new Date(lp.arrival_date*1000).toLocaleDateString('en-CA',{month:'short',day:'numeric'})} · ${payoutStatusHTML(lp.status)}</div>` : `<div class="stat-value" style="font-size:18px;color:#94a3b8">—</div><div class="stat-sub">no payouts yet</div>`}
+        ${lp ? `<div class="stat-value" style="font-size:18px">${fmtAmt(lp.amount,lp.currency)}</div><div class="stat-sub">${new Date(lp.arrival_date*1000).toLocaleDateString('en-CA',{month:'short',day:'numeric'})} · ${payoutStatusHTML(lp.status)}</div>` : `<div class="stat-value" style="font-size:18px;color:#9a9a9a">—</div><div class="stat-sub">no payouts yet</div>`}
       </div>
     </div>
     <div class="card" style="margin-bottom:24px">
       <div class="card-header">
         <div class="card-title">Revenue — Last 30 Days (from Stripe)</div>
-        <div style="font-size:12px;color:#64748b">${revenue ? fmtAmt(revenue.total,'CAD') + ' total' : ''}</div>
+        <div style="font-size:12px;color:#6b6b6b">${revenue ? fmtAmt(revenue.total,'CAD') + ' total' : ''}</div>
       </div>
       <div style="padding:16px 20px"><div style="display:flex;align-items:flex-end;gap:3px;height:140px">${revBars}</div></div>
     </div>
@@ -2295,7 +2293,7 @@ async function showStripe() {
       </div>
       <div class="card">
         <div class="card-header">
-          <div class="card-title">Disputes ${overview.openDisputeCount > 0 ? `<span style="background:#dc2626;color:#fff;border-radius:999px;padding:1px 8px;font-size:10px;margin-left:6px">${overview.openDisputeCount} open</span>` : ''}</div>
+          <div class="card-title">Disputes ${overview.openDisputeCount > 0 ? `<span style="background:#e63946;color:#fff;border-radius:0;padding:1px 8px;font-size:10px;margin-left:6px">${overview.openDisputeCount} open</span>` : ''}</div>
         </div>
         <table><thead><tr><th>Date</th><th>Amount</th><th>Status</th><th>Reason</th><th></th></tr></thead>
         <tbody>${disputeRows}</tbody></table>
@@ -2324,30 +2322,30 @@ async function showContacts() {
     return `
     <tr id="contact-row-${s.id}">
       <td style="white-space:nowrap;font-size:12px">${fmtDateTime(s.created_at)}</td>
-      <td style="${unread ? 'font-weight:600' : ''}">${esc(s.name)} ${unread ? '<span style="background:#dc2626;color:#fff;border-radius:999px;font-size:9px;padding:1px 5px;vertical-align:middle">NEW</span>' : ''}</td>
+      <td style="${unread ? 'font-weight:600' : ''}">${esc(s.name)} ${unread ? '<span style="background:#e63946;color:#fff;border-radius:0;font-size:9px;padding:1px 5px;vertical-align:middle">NEW</span>' : ''}</td>
       <td><a href="mailto:${esc(s.email)}" class="link">${esc(s.email)}</a></td>
-      <td style="color:#64748b;font-size:12px;max-width:300px">${esc(preview)}</td>
-      <td style="font-family:monospace;font-size:11px;color:#94a3b8">${esc(s.ip||'')}</td>
+      <td style="color:#6b6b6b;font-size:12px;max-width:300px">${esc(preview)}</td>
+      <td style="font-family:monospace;font-size:11px;color:#9a9a9a">${esc(s.ip||'')}</td>
       <td style="white-space:nowrap">
-        ${unread ? `<button class="btn btn-outline btn-sm" style="margin-right:4px" onclick="markContactRead(${s.id})">Mark read</button>` : `<span style="color:#94a3b8;font-size:12px">${fmtDate(s.read_at)}</span> `}
+        ${unread ? `<button class="btn btn-outline btn-sm" style="margin-right:4px" onclick="markContactRead(${s.id})">Mark read</button>` : `<span style="color:#9a9a9a;font-size:12px">${fmtDate(s.read_at)}</span> `}
         <button class="btn-ghost" onclick="toggleContactExpand(${s.id})">View</button>
         <button class="btn-ghost" onclick="toggleContactReply(${s.id})">Reply</button>
       </td>
     </tr>
     <tr id="contact-expand-${s.id}" style="display:none">
-      <td colspan="6" style="background:#f8fafc;padding:16px 20px;font-size:13px;color:#334155;white-space:pre-wrap;line-height:1.7;border-bottom:1px solid #e2e8f0">${esc(s.message)}</td>
+      <td colspan="6" style="background:#f5f5f5;padding:16px 20px;font-size:13px;color:#2a2a2a;white-space:pre-wrap;line-height:1.7;border-bottom:1px solid #ececec">${esc(s.message)}</td>
     </tr>
     <tr id="contact-reply-${s.id}" style="display:none">
-      <td colspan="6" style="background:#f0f9ff;padding:16px 20px;border-bottom:1px solid #e2e8f0">
+      <td colspan="6" style="background:#f0f9ff;padding:16px 20px;border-bottom:1px solid #ececec">
         <div style="max-width:600px">
           <div style="margin-bottom:10px">
-            <select onchange="loadContactTemplate(${s.id}, this)" style="font-size:13px;padding:6px 10px;border:1px solid #e2e8f0;border-radius:6px;background:#fff">${tmplOpts}</select>
+            <select onchange="loadContactTemplate(${s.id}, this)" style="font-size:13px;padding:6px 10px;border:1px solid #ececec;border-radius:0;background:#fff">${tmplOpts}</select>
           </div>
           <div style="margin-bottom:8px">
-            <input id="reply-subject-${s.id}" type="text" placeholder="Subject" value="Re: Your Letterhome enquiry" style="width:100%;font-size:13px;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px">
+            <input id="reply-subject-${s.id}" type="text" placeholder="Subject" value="Re: Your Letterhome enquiry" style="width:100%;font-size:13px;padding:8px 10px;border:1px solid #ececec;border-radius:0">
           </div>
           <div style="margin-bottom:10px">
-            <textarea id="reply-body-${s.id}" rows="6" placeholder="Type your reply…" style="width:100%;font-size:13px;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;resize:vertical"></textarea>
+            <textarea id="reply-body-${s.id}" rows="6" placeholder="Type your reply…" style="width:100%;font-size:13px;padding:8px 10px;border:1px solid #ececec;border-radius:0;resize:vertical"></textarea>
           </div>
           <div style="display:flex;gap:8px;align-items:center">
             <button class="btn btn-primary btn-sm" onclick="sendContactReply(${s.id})">Send to ${esc(s.email)}</button>
@@ -2366,7 +2364,7 @@ async function showContacts() {
     <div class="card">
       <div class="card-header">
         <div class="card-title">Messages</div>
-        <div style="font-size:12px;color:#64748b">${data.unread} unread · ${data.submissions.length} total</div>
+        <div style="font-size:12px;color:#6b6b6b">${data.unread} unread · ${data.submissions.length} total</div>
       </div>
       <table>
         <thead><tr><th>Date</th><th>Name</th><th>Email</th><th>Message</th><th>IP</th><th>Status</th></tr></thead>
