@@ -205,3 +205,40 @@ textarea:focus {
 .theme-toggle .sun-icon  { display: block; }
 [data-theme="dark"] .theme-toggle .moon-icon { display: block; }
 [data-theme="dark"] .theme-toggle .sun-icon  { display: none; }
+
+/* ── Design Pass v0.2.1 ──────────────────────────────────────────────────────
+   Editorial polish: bigger and tighter display type, subtle paper texture.
+   theme.css loads after inline <style>, so these rules win same-specificity.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+/* A. Bigger, tighter display type — pushes from "polished web" toward "editorial print". */
+h1 {
+  font-size: clamp(48px, 8.5vw, 112px);
+  letter-spacing: -0.025em;
+  line-height: 1.02;
+}
+.section-head h2,
+.story-text h2,
+.cta-band h2 {
+  font-size: clamp(40px, 6.5vw, 88px);
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+}
+
+/* F. Paper texture — subtle SVG noise overlay so kraft reads as printed, not flat.
+   Uses ::after to avoid conflicting with the existing ::before in inline page CSS.
+   pointer-events: none keeps clicks/scrolling unaffected. */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml;utf8,<svg viewBox='0 0 240 240' xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  mix-blend-mode: multiply;
+}
+[data-theme="dark"] body::after {
+  opacity: 0.06;
+  mix-blend-mode: screen;
+}

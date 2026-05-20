@@ -675,22 +675,44 @@ section { position: relative; z-index: 2; }
 }
 
 /* ========== HOW IT WORKS ========== */
+/* Editorial layout: step 01 takes full width as the hero moment, steps 02 + 03
+   stack two-up below at half-size. Pure CSS — HTML structure unchanged. */
 .steps {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 48px;
+  grid-template-columns: 1fr 1fr;
+  grid-template-areas:
+    "one one"
+    "two three";
+  column-gap: 56px;
+  row-gap: 88px;
   position: relative;
 }
+.steps .step:nth-child(1) { grid-area: one; }
+.steps .step:nth-child(2) { grid-area: two; }
+.steps .step:nth-child(3) { grid-area: three; }
 
-.steps::before {
-  content: '';
-  position: absolute;
-  top: 40px;
-  left: 12%;
-  right: 12%;
-  height: 1px;
-  background: repeating-linear-gradient(to right, var(--ink-faint) 0, var(--ink-faint) 6px, transparent 6px, transparent 14px);
-  z-index: 0;
+/* Step 01 becomes the hero — bigger number, bigger title, two-column internal layout */
+.steps .step:nth-child(1) {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 48px;
+  align-items: start;
+  padding-bottom: 64px;
+  border-bottom: 1px dashed var(--line);
+}
+.steps .step:nth-child(1) .step-num { margin-bottom: 0; }
+.steps .step:nth-child(1) .step-num-mark {
+  width: 140px;
+  height: 140px;
+  font-size: 64px;
+}
+.steps .step:nth-child(1) h3 {
+  font-size: clamp(36px, 4vw, 52px);
+  margin-bottom: 20px;
+}
+.steps .step:nth-child(1) p {
+  font-size: 17px;
+  max-width: 56ch;
 }
 
 .step {
@@ -749,11 +771,37 @@ section { position: relative; z-index: 2; }
   border-bottom: 1px solid var(--line);
 }
 
+/* Editorial pricing: domestic dominates as the cover number,
+   international lives as a secondary tier alongside. */
 .pricing-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 32px;
+  grid-template-columns: 2fr 1fr;
+  gap: 48px;
   margin-top: 64px;
+  align-items: stretch;
+}
+/* The dominant card (first one — "featured") gets a magazine-cover-sized price */
+.pricing-grid .price-card.featured .price {
+  font-size: clamp(96px, 12vw, 168px);
+  letter-spacing: -0.05em;
+}
+.pricing-grid .price-card.featured .price small {
+  font-size: 22px;
+}
+.pricing-grid .price-card.featured h3 {
+  font-size: clamp(36px, 4vw, 48px);
+}
+/* The secondary card stays compact */
+.pricing-grid .price-card:not(.featured) {
+  padding: 40px 32px;
+}
+.pricing-grid .price-card:not(.featured) .price {
+  font-size: 56px;
+}
+@media (max-width: 900px) {
+  .pricing-grid .price-card.featured .price {
+    font-size: clamp(80px, 18vw, 120px);
+  }
 }
 
 .price-card {
