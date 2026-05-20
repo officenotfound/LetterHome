@@ -491,7 +491,7 @@ function recordFailedAdminLogin(ip, username) {
   failedAdminLogins.set(ip, list);
   if (list.length >= 5 && now - lastFailedLoginAlertAt > 30 * 60 * 1000) {
     lastFailedLoginAlertAt = now;
-    const adminEmail = process.env.ADMIN_EMAIL || process.env.SMTP_USER;
+    const adminEmail = process.env.ADMIN_EMAIL || process.env.OPERATOR_EMAIL || process.env.SMTP_USER;
     if (adminEmail) {
       sendMail({
         from:    process.env.EMAIL_FROM,
@@ -607,6 +607,7 @@ function safeFilePath(dir, originalName) {
         AND created_at > ?
         AND recovery_sent_at IS NULL
         AND customer_email IS NOT NULL
+        AND customer_email LIKE '%_@_%.__%'
     `).all(cutoff2d, cutoff7d);
     for (const order of abandoned) {
       try {
@@ -2909,7 +2910,7 @@ app.use((req, res) => {
 });
 
 // ── Error monitoring ──────────────────────────────────────────────────────────
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || process.env.SMTP_USER;
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || process.env.OPERATOR_EMAIL || process.env.SMTP_USER;
 
 function sendErrorAlert(subject, body) {
   if (!ADMIN_EMAIL) return;
@@ -2976,11 +2977,11 @@ async function runBackup() {
     // Optional: email a copy to the admin (off-site safety net).
     if (process.env.BACKUP_EMAIL_ENABLED === 'true') {
       const stat = fs.statSync(dest);
-      const adminEmail = process.env.ADMIN_EMAIL || process.env.SMTP_USER;
+      const adminEmail = process.env.ADMIN_EMAIL || process.env.OPERATOR_EMAIL || process.env.SMTP_USER;
       if (stat.size > 20 * 1024 * 1024) {
         console.warn(`[backup] email skipped: ${(stat.size/1024/1024).toFixed(1)}MB exceeds 20MB limit`);
-      } else if (!adminEmail) {
-        console.warn('[backup] email skipped: no ADMIN_EMAIL or SMTP_USER set');
+      } else if (!adminEmail || !adminEmail.includes('@')) {
+        console.warn('[backup] email skipped: no valid ADMIN_EMAIL, OPERATOR_EMAIL, or SMTP_USER set');
       } else {
         sendMail({
           from:    process.env.EMAIL_FROM,
