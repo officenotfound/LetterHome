@@ -72,30 +72,63 @@ textarea:focus-visible {
   -webkit-overflow-scrolling: touch;
 }
 
+/* ── Color tokens (v0.2.2) ────────────────────────────────────────────────────
+   Swapped from kraft+postmark warm palette to editorial B&W + single red accent.
+   Inspiration: VICE design system — restrained, type-driven, one strategic
+   moment of color. theme.css loads after all inline :root blocks, so these
+   overrides win the cascade for every page that includes it.
+   ─────────────────────────────────────────────────────────────────────────── */
 :root {
-  --ink-muted: #524d47;   /* was #6b6258 — ~5.8:1 on kraft, passes WCAG AA */
-  --ink-faint: #6b6258;   /* was #968b7d — now used only for truly secondary hints */
+  --kraft:        #fafafa;   /* off-white background — faint warmth, not clinical */
+  --kraft-light:  #f5f5f5;   /* subtle alt section background */
+  --kraft-deep:   #ececec;   /* darker neutral section */
+  --paper:        #ffffff;   /* pure white card/panel surface */
+  --ink:          #111111;   /* near-black */
+  --ink-soft:     #2a2a2a;   /* body / display */
+  --ink-muted:    #6b6b6b;   /* secondary text — ~5.7:1 on #fafafa, passes WCAG AA */
+  --ink-faint:    #9a9a9a;   /* tertiary hints, captions */
+  --red:          #e63946;   /* single VICE-red accent — links, focus, brand mark */
+  --red-deep:     #b82c39;   /* hover state for red */
+  --red-stamp:    #ff4d5e;   /* slightly brighter for stamp/decorative elements */
+  --taupe:        #cccccc;   /* old taupe -> neutral light gray */
+  --line:         rgba(0,0,0,0.10);
+  --shadow-soft:  0 1px 2px rgba(0,0,0,0.04), 0 6px 20px rgba(0,0,0,0.06);
+  --shadow-card:  0 2px 6px rgba(0,0,0,0.06), 0 14px 40px rgba(0,0,0,0.10);
 }
+
+/* Override hardcoded nav rgba in every page's inline CSS so the sticky nav
+   matches the new off-white palette (was rgba(241,235,222,0.94) — old kraft). */
+nav { background: rgba(250,250,250,0.92) !important; }
+
+/* Featured price card + footer hardcoded paper-cream rgba → neutralize to white.
+   These were tuned for the warm palette; pure-white reads cleaner on black. */
+.price-card.featured .price-sub,
+.price-card.featured .price-meta,
+.price-card.featured .price small { color: rgba(255,255,255,0.65) !important; }
+.price-card.featured .price-includes li { color: rgba(255,255,255,0.88) !important; border-bottom-color: rgba(255,255,255,0.18) !important; }
+footer { color: rgba(255,255,255,0.65) !important; }
+.footer-bottom a { color: rgba(255,255,255,0.5) !important; }
+.footer-brand p, .footer-col a { color: rgba(255,255,255,0.65) !important; }
 
 /* ── Dark mode ────────────────────────────────────────────────────────────── */
 [data-theme="dark"] {
-  --kraft:        #1a1410;
-  --kraft-light:  #221c16;
-  --kraft-deep:   #120e0a;
-  --paper:        #2b241d;
-  --ink:          #ede1c5;
-  --ink-soft:     #d4c8ad;
-  --ink-muted:    #bdb1a1;    /* was #a89e8c — slightly brightened */
-  --ink-faint:    #a89e8c;
-  --red:          #c25c40;
-  --red-deep:     #a8472d;
-  --red-stamp:    #d46a4c;
-  --line:         rgba(237,225,197,0.12);
-  --shadow-soft:  0 1px 2px rgba(0,0,0,0.4), 0 6px 20px rgba(0,0,0,0.3);
-  --shadow-card:  0 2px 6px rgba(0,0,0,0.4), 0 14px 40px rgba(0,0,0,0.45);
+  --kraft:        #0a0a0a;   /* near-black, not pure */
+  --kraft-light:  #141414;
+  --kraft-deep:   #050505;
+  --paper:        #1a1a1a;
+  --ink:          #f5f5f5;
+  --ink-soft:     #e0e0e0;
+  --ink-muted:    #a8a8a8;
+  --ink-faint:    #707070;
+  --red:          #ff4d5e;   /* slightly brighter on dark */
+  --red-deep:     #e63946;
+  --red-stamp:    #ff6b78;
+  --line:         rgba(255,255,255,0.10);
+  --shadow-soft:  0 1px 2px rgba(0,0,0,0.5), 0 6px 20px rgba(0,0,0,0.4);
+  --shadow-card:  0 2px 6px rgba(0,0,0,0.5), 0 14px 40px rgba(0,0,0,0.55);
 }
 [data-theme="dark"] body::before { display: none; }
-[data-theme="dark"] nav { background: rgba(26,20,16,0.94) !important; }
+[data-theme="dark"] nav { background: rgba(10,10,10,0.92) !important; }
 
 /* ── Rounder, more modern shapes ─────────────────────────────────────────── */
 .btn { border-radius: 6px; }
