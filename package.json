@@ -8,6 +8,8 @@
     "dev": "node --watch server.js"
   },
   "dependencies": {
+    "@sentry/node": "^10.53.1",
+    "backblaze-b2": "^1.7.1",
     "bcryptjs": "^3.0.3",
     "compression": "^1.8.1",
     "dotenv": "^16.4.5",

@@ -1,4 +1,16 @@
 require('dotenv').config();
+
+// Sentry must be required and initialized BEFORE express so its v8 SDK
+// can patch the HTTP and Express modules at import time.
+const Sentry = require('@sentry/node');
+if (process.env.SENTRY_DSN) {
+  Sentry.init({
+    dsn:              process.env.SENTRY_DSN,
+    environment:      process.env.NODE_ENV || 'production',
+    tracesSampleRate: 0,  // performance monitoring off — errors only
+  });
+}
+
 const express      = require('express');
 const compression  = require('compression');
 const helmet       = require('helmet');
@@ -2922,6 +2934,10 @@ app.use((req, res) => {
   res.status(404).sendFile(path.join(__dirname, 'public', '404.html'));
 });
 
+// Sentry's Express error handler — captures any error thrown from a route
+// or middleware and forwards the stack + request context to Sentry.
+if (process.env.SENTRY_DSN) Sentry.setupExpressErrorHandler(app);
+
 // ── Error monitoring ──────────────────────────────────────────────────────────
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || process.env.OPERATOR_EMAIL || process.env.SMTP_USER;
 
@@ -2962,6 +2978,29 @@ process.on('uncaughtException', (err) => {
 const BACKUP_DIR      = path.join(__dirname, 'backups');
 const BACKUP_KEEP     = 14;
 
+// Upload a backup file to Backblaze B2. No-op if env vars are missing.
+// Authorizes fresh on each call — auth tokens are short-lived but daily
+// uploads are infrequent enough that this is fine.
+async function uploadToB2(filePath) {
+  if (!process.env.B2_KEY_ID || !process.env.B2_APPLICATION_KEY || !process.env.B2_BUCKET_ID) {
+    return;
+  }
+  const B2 = require('backblaze-b2');
+  const b2 = new B2({
+    applicationKeyId: process.env.B2_KEY_ID,
+    applicationKey:   process.env.B2_APPLICATION_KEY,
+  });
+  await b2.authorize();
+  const { data: up } = await b2.getUploadUrl({ bucketId: process.env.B2_BUCKET_ID });
+  const data = fs.readFileSync(filePath);
+  await b2.uploadFile({
+    uploadUrl:       up.uploadUrl,
+    uploadAuthToken: up.authorizationToken,
+    fileName:        path.basename(filePath),
+    data,
+  });
+  console.log(`[backup] uploaded to B2: ${path.basename(filePath)}`);
+}
 
 async function runBackup() {
   try {
@@ -2986,6 +3025,9 @@ async function runBackup() {
     });
 
     console.log(`[backup] created ${path.basename(dest)}${passphrase ? ' (encrypted)' : ''}`);
+
+    // Optional: push to Backblaze B2 (off-server safety net).
+    uploadToB2(dest).catch(err => console.error('[backup] B2 upload failed:', err.message));
 
     // Optional: email a copy to the admin (off-site safety net).
     if (process.env.BACKUP_EMAIL_ENABLED === 'true') {
