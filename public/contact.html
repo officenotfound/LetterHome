@@ -62,16 +62,16 @@ h1 em{font-style:italic;color:var(--red)}
 .intro{font-size:17px;color:var(--ink-muted);line-height:1.7;margin-bottom:48px}
 .contact-meta{display:flex;flex-direction:column;gap:24px}
 .meta-item{display:flex;gap:20px;align-items:flex-start}
-.meta-icon{width:44px;height:44px;background:var(--paper);border:1px solid var(--line);display:grid;place-items:center;font-size:20px;flex-shrink:0;border-radius:2px}
+.meta-icon{width:44px;flex-shrink:0;font-family:'DM Mono',monospace;font-size:13px;font-weight:500;color:var(--red);letter-spacing:0.05em;padding-top:4px}
 .meta-item h3{font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.15em;color:var(--ink-muted);margin-bottom:6px}
 .meta-item p{font-size:15px;color:var(--ink-soft);line-height:1.6}
 .meta-item a{color:var(--red);text-decoration:none}
 .form-card{background:var(--paper);border:1px solid var(--line);padding:48px;box-shadow:var(--shadow-card)}
 .form-group{display:flex;flex-direction:column;gap:6px;margin-bottom:20px}
 label{font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.15em;color:var(--ink-muted);font-weight:500}
-input,textarea{width:100%;padding:13px 16px;border:1px solid rgba(42,42,42,0.2);background:var(--kraft-light);color:var(--ink);font-family:'Source Serif 4',Georgia,serif;font-size:15px;border-radius:2px;transition:border-color 0.2s,box-shadow 0.2s;outline:none;appearance:none}
-input:focus,textarea:focus{border-color:var(--ink);box-shadow:0 0 0 3px rgba(42,42,42,0.06)}
-textarea{resize:vertical;min-height:160px;line-height:1.6}
+input,textarea{width:100%;padding:14px 2px 12px 0;border:none;border-bottom:1.5px solid var(--ink);background:transparent;color:var(--ink);font-family:'Source Serif 4',Georgia,serif;font-size:17px;border-radius:0;transition:border-color 0.2s;outline:none;appearance:none}
+input:focus,textarea:focus{border-bottom-color:var(--red);box-shadow:none}
+textarea{resize:vertical;min-height:160px;line-height:1.6;border-top:1px dashed var(--line);padding-top:14px}
 .success-msg{background:var(--kraft-light);border-left:4px solid var(--red);padding:20px 24px;font-size:15px;color:var(--ink-soft);display:none}
 footer{background:var(--ink);color:rgba(250,246,236,0.65);padding:48px 36px 32px;position:relative;z-index:2}
 .footer-bottom{max-width:1280px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;flex-wrap:wrap;gap:16px}
@@ -108,21 +108,21 @@ footer{background:var(--ink);color:rgba(250,246,236,0.65);padding:48px 36px 32px
 
     <div class="contact-meta">
       <div class="meta-item">
-        <div class="meta-icon">✉</div>
+        <div class="meta-icon">01 /</div>
         <div>
           <h3>Email</h3>
           <p><a href="mailto:hello@letterhome.ca">hello@letterhome.ca</a><br>Replies within one business day.</p>
         </div>
       </div>
       <div class="meta-item">
-        <div class="meta-icon">📦</div>
+        <div class="meta-icon">02 /</div>
         <div>
           <h3>Order support</h3>
           <p>Have your order number handy. We can cancel an order before printing, fix address mistakes, and follow up on any letter that hasn't arrived in its expected window.</p>
         </div>
       </div>
       <div class="meta-item">
-        <div class="meta-icon">📋</div>
+        <div class="meta-icon">03 /</div>
         <div>
           <h3>Bulk &amp; business mail</h3>
           <p>Sending the same letter to multiple addresses, or need volume pricing for a campaign? Mention it in your message and we'll quote it.</p>
