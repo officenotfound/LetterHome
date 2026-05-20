@@ -375,27 +375,20 @@ h1 em {
 }
 
 .hero-meta {
-  display: flex;
-  gap: 32px;
   font-family: 'DM Mono', monospace;
-  font-size: 12px;
+  font-size: 11px;
   color: var(--ink-muted);
-  flex-wrap: wrap;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
+  line-height: 1.6;
 }
-
-.hero-meta span {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+.hero-meta span { white-space: nowrap; }
+.hero-meta span + span::before {
+  content: ' / ';
+  color: var(--ink-faint);
+  margin: 0 12px;
 }
-
-.hero-meta .dot {
-  width: 4px;
-  height: 4px;
-  background: var(--red);
-}
+.hero-meta .dot { display: none; }
 
 /* Hero visual — parcel/envelope illustration */
 .envelope-stage {
@@ -811,37 +804,31 @@ section { position: relative; z-index: 2; }
 }
 
 .price-card {
-  background: var(--kraft-light);
-  padding: 52px 44px;
-  border-radius: 2px;
+  background: transparent;
+  padding: 0 0 0 0;
+  border: none;
+  border-radius: 0;
   position: relative;
-  border: 1px solid var(--line);
-  box-shadow: var(--shadow-soft);
-  transition: transform 0.3s, box-shadow 0.3s;
+  box-shadow: none;
 }
-
-.price-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-card);
-}
+.price-card:hover { transform: none; box-shadow: none; }
+.pricing-grid .price-card:not(.featured) { padding-left: 32px; border-left: 1px solid var(--line); }
 
 .price-tag {
-  position: absolute;
-  top: -1px;
-  right: 32px;
+  position: static;
+  display: inline-block;
+  margin-bottom: 16px;
   font-family: 'DM Mono', monospace;
-  font-size: 10px;
+  font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.18em;
-  color: var(--paper);
+  color: var(--ink-muted);
   font-weight: 500;
-  background: var(--ink);
-  padding: 8px 14px;
+  background: transparent;
+  padding: 0;
 }
 
-.price-card.featured .price-tag {
-  background: var(--red);
-}
+.price-card.featured .price-tag { color: var(--red); background: transparent; }
 
 .price-card h3 {
   font-family: 'DM Serif Display', serif;
@@ -916,47 +903,32 @@ section { position: relative; z-index: 2; }
   font-family: 'DM Mono', monospace;
 }
 
-.price-card.featured {
-  background: var(--ink);
-  color: var(--paper);
-}
-
+.price-card.featured { background: transparent; color: var(--ink); }
 .price-card.featured h3,
-.price-card.featured .price { color: var(--paper); }
-
-.price-card.featured .price-sub,
-.price-card.featured .price-meta,
-.price-card.featured .price small { color: rgba(250,246,236,0.65); }
-
-.price-card.featured .price-includes li {
-  color: rgba(250,246,236,0.88);
-  border-bottom-color: rgba(250,246,236,0.18);
-}
-
-.price-card.featured .price-includes li::before { color: var(--red-stamp); }
+.price-card.featured .price { color: var(--ink); }
+.price-card.featured .price-includes li::before { color: var(--red); }
 
 /* ========== USE CASES ========== */
 .usecases-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 0;
-  margin-top: 64px;
+  column-gap: 64px;
+  row-gap: 36px;
+  margin-top: 48px;
   border-top: 1px solid var(--line);
-  border-left: 1px solid var(--line);
+  padding-top: 36px;
 }
 
 .usecase {
-  background: var(--kraft);
-  padding: 40px;
-  border-right: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
+  background: transparent;
+  padding: 0;
+  border: none;
   display: flex;
-  gap: 24px;
+  gap: 20px;
   align-items: flex-start;
-  transition: background 0.25s;
 }
 
-.usecase:hover { background: var(--kraft-light); }
+.usecase:hover { background: transparent; }
 
 .usecase-num {
   font-family: 'DM Mono', monospace;
@@ -985,13 +957,12 @@ section { position: relative; z-index: 2; }
 
 /* ========== STORY BAND ========== */
 .story {
-  background: var(--ink);
-  color: var(--paper);
-  padding: 140px 0;
+  background: transparent;
+  color: var(--ink);
+  padding: 72px 0;
   position: relative;
-  overflow: hidden;
-  border-top: 4px solid var(--red);
-  border-bottom: 4px solid var(--red);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
 }
 
 .story-inner {
