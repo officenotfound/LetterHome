@@ -12,9 +12,9 @@ Currently on Stripe **test mode**. All orders in DB are test data. v0.2 ends by 
 - [x] **2. UptimeRobot** — free tier (50 monitors, 5-min interval) hitting `https://letterhome.ca/health`. Email + SMS alerts on downtime.
 - [x] **3. Sentry error tracking** — free tier (5k events/mo). Wire into Express to capture uncaught exceptions and `sendErrorAlert()` calls.
 - [x] **4. Offsite encrypted backup** — daily push of `backups/orders-*.db.enc` to Backblaze B2 (~$0.50/mo). Beyond the existing email backup.
-- [ ] **5. Backup restore drill** — actually decrypt and restore a backup on a fresh machine. Proves the backups work end-to-end.
-- [ ] **6. Runbook** — `docs/RUNBOOK.md` with: deploy steps, restore steps, add-admin steps, common troubleshooting. Write as we work through 1–5.
-- [ ] **7. Wipe test data** — truncate `orders`, `customers`, `email_log`, `audit_log`, reset auto-increment IDs. **Very last step before flipping Stripe to live.**
+- [x] **5. Backup restore drill** — `scripts/restore-drill.js`. Verified end-to-end: B2 download → decrypt → valid SQLite. Run monthly to keep proven.
+- [x] **6. Runbook** — `docs/RUNBOOK.md` covers deploy, downtime triage, restore (two scenarios), backup ops, admin management, env vars, and the launch-day checklist.
+- [ ] **7. Wipe test data** — **deferred to launch day.** Procedure documented in `docs/RUNBOOK.md` → Pre-launch checklist. Truncates orders/customers/email_log/audit_log + resets auto-increment IDs.
 
 ### Strongly recommended (do if time)
 
