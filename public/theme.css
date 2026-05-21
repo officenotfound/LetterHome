@@ -340,7 +340,7 @@ section.story[style*="background:var(--ink)"] .manifesto p { color: var(--paper)
 .logo-mark { background: var(--red) !important; box-shadow: none !important; border-radius: 2px !important; width: 40px !important; height: 26px !important; }
 .logo-mark::before { display: none !important; }
 .logo { font-style: italic !important; font-size: 22px !important; letter-spacing: -0.01em !important; gap: 10px !important; }
-.nav-inner { justify-content: center !important; position: relative !important; }
+.nav-inner { position: relative !important; }
 .nav-links { display: none !important; }
 .nav-cta { position: absolute !important; right: 36px !important; top: 50% !important; transform: translateY(-50%) !important; }
 @media (max-width: 480px) { .nav-cta { right: 18px !important; padding: 10px 16px !important; font-size: 12px !important; } }
@@ -377,9 +377,15 @@ section.story[style*="background:var(--ink)"] .manifesto p { color: var(--paper)
 }
 
 /* Footer text on dark bg — ensure readable on the now-pure-#111 footer */
-footer { color: rgba(255,255,255,0.72) !important; }
+footer { color: rgba(255,255,255,0.72) !important; padding: 20px 36px !important; }
 .footer-bottom a, .footer-col a, .footer-brand p { color: rgba(255,255,255,0.65) !important; }
 .footer-bottom { color: rgba(255,255,255,0.55) !important; }
+/* Hide multi-column link grid — keep only the single copyright bar */
+.footer-grid { display: none !important; }
+@media (max-width: 768px) {
+  footer { padding: 14px 18px !important; }
+  .footer-bottom { font-size: 10px !important; letter-spacing: 0.06em !important; gap: 10px !important; }
+}
 
 /* ── Responsive overrides (site-wide) ──────────────────────────────────────── */
 @media (max-width: 900px) {
