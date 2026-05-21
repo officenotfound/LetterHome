@@ -185,7 +185,7 @@ textarea{resize:vertical;min-height:120px;border:1px solid #111111;padding:12px 
 <button class="nav-link" id="nav-orders"     onclick="go('/admin/orders')"><span class="nav-icon">✉</span> Orders</button>
     <button class="nav-link" id="nav-customers" onclick="go('/admin/customers')"><span class="nav-icon">◎</span> Customers</button>
     <button class="nav-link" id="nav-accounts"  onclick="go('/admin/accounts')"><span class="nav-icon">◐</span> Accounts</button>
-    <button class="nav-link" id="nav-broadcast" onclick="go('/admin/broadcast')"><span class="nav-icon">📢</span> Broadcast</button>
+    <button class="nav-link" id="nav-broadcast" onclick="go('/admin/broadcast')"><span class="nav-icon">≋</span> Broadcast</button>
     <button class="nav-link" id="nav-insights"  onclick="go('/admin/insights')"><span class="nav-icon">◑</span> Insights</button>
     <button class="nav-link" id="nav-visitors"  onclick="go('/admin/visitors')"><span class="nav-icon">◉</span> Visitors</button>
     <button class="nav-link" id="nav-stripe"    onclick="go('/admin/stripe')"><span class="nav-icon">$</span> Stripe</button>
@@ -194,6 +194,8 @@ textarea{resize:vertical;min-height:120px;border:1px solid #111111;padding:12px 
     <button class="nav-link" id="nav-audit"     onclick="go('/admin/audit-log')"><span class="nav-icon">⌥</span> Audit Log</button>
     <button class="nav-link" id="nav-settings"  onclick="go('/admin/settings')"><span class="nav-icon">⚙</span> Settings</button>
     <button class="nav-link" id="nav-trash"     onclick="go('/admin/trash')"><span class="nav-icon">⌫</span> Trash</button>
+    <div class="nav-label">Break</div>
+    <button class="nav-link" id="nav-arcade"    onclick="go('/admin/arcade')"><span class="nav-icon">▣</span> Arcade</button>
   </nav>
   <div class="sidebar-footer">
     <button type="button" class="admin-theme-toggle" onclick="toggleAdminTheme()">
@@ -256,11 +258,12 @@ function route() {
   if (p === '/admin/templates')                     return showTemplates();
   if (p === '/admin/settings')                      return showSettings();
   if (p === '/admin/audit-log')                     return showAuditLog();
+  if (p === '/admin/arcade')                        return showArcade();
   showDashboard();
 }
 
 function setActiveNav(p) {
-  ['dashboard','orders','customers','accounts','broadcast','insights','visitors','stripe','contacts','templates','settings','audit','trash'].forEach(k => document.getElementById('nav-'+k)?.classList.remove('active'));
+  ['dashboard','orders','customers','accounts','broadcast','insights','visitors','stripe','contacts','templates','settings','audit','trash','arcade'].forEach(k => document.getElementById('nav-'+k)?.classList.remove('active'));
   if (p.startsWith('/admin/orders'))          document.getElementById('nav-orders')?.classList.add('active');
   else if (p.startsWith('/admin/accounts'))   document.getElementById('nav-accounts')?.classList.add('active');
   else if (p.startsWith('/admin/customers'))  document.getElementById('nav-customers')?.classList.add('active');
@@ -273,6 +276,7 @@ function setActiveNav(p) {
   else if (p.startsWith('/admin/settings'))   document.getElementById('nav-settings')?.classList.add('active');
   else if (p.startsWith('/admin/audit-log'))  document.getElementById('nav-audit')?.classList.add('active');
   else if (p.startsWith('/admin/trash'))      document.getElementById('nav-trash')?.classList.add('active');
+  else if (p.startsWith('/admin/arcade'))     document.getElementById('nav-arcade')?.classList.add('active');
   else                                        document.getElementById('nav-dashboard')?.classList.add('active');
 }
 
@@ -632,6 +636,7 @@ async function showOrders(filter) {
         <option value="refunded">Refunded</option>
       </select>
       <button class="btn btn-primary btn-sm" onclick="applyBulkStatus()">Apply</button>
+      <button class="btn btn-outline btn-sm" onclick="confirmBulkDelete()" style="margin-left:auto;color:#e63946;border-color:#e63946">Delete selected</button>
       <button class="btn btn-outline btn-sm" onclick="clearSelection()">Clear</button>
     </div>
     <div class="card">
@@ -707,6 +712,41 @@ async function applyBulkStatus() {
   if (!confirm(`Mark ${ids.length} order(s) as "${status}"?`)) return;
   const r = await post('/api/admin/orders/bulk-status', { ids, status });
   if (r?.ok) { showOrders(); }
+  else alert('Error: ' + (r?.error || 'unknown'));
+}
+
+function confirmBulkDelete() {
+  const ids = [...document.querySelectorAll('.order-cb:checked')].map(cb => Number(cb.value));
+  if (!ids.length) return;
+  const modal = document.getElementById('bulk-delete-modal');
+  document.getElementById('bulk-delete-count').textContent = ids.length;
+  const input = document.getElementById('bulk-delete-input');
+  const btn   = document.getElementById('bulk-delete-confirm');
+  input.value = '';
+  btn.disabled = true;
+  modal.style.display = 'flex';
+  setTimeout(() => input.focus(), 30);
+}
+
+function closeBulkDeleteModal() {
+  document.getElementById('bulk-delete-modal').style.display = 'none';
+}
+
+function onBulkDeleteInput(v) {
+  document.getElementById('bulk-delete-confirm').disabled = (String(v || '').trim().toLowerCase() !== 'delete');
+}
+
+async function runBulkDelete() {
+  const input = document.getElementById('bulk-delete-input');
+  if (String(input.value || '').trim().toLowerCase() !== 'delete') return;
+  const ids = [...document.querySelectorAll('.order-cb:checked')].map(cb => Number(cb.value));
+  if (!ids.length) { closeBulkDeleteModal(); return; }
+  const btn = document.getElementById('bulk-delete-confirm');
+  btn.disabled = true; btn.textContent = 'Deleting…';
+  const r = await post('/api/admin/orders/bulk-delete', { ids });
+  closeBulkDeleteModal();
+  btn.textContent = 'Delete';
+  if (r?.ok) showOrders();
   else alert('Error: ' + (r?.error || 'unknown'));
 }
 
@@ -2443,7 +2483,261 @@ function esc(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+// ── Arcade (Tetris) ───────────────────────────────────────────────────────────
+const TETRIS = {
+  cols: 10, rows: 20, cell: 26,
+  loopId: null, keyHandler: null,
+  board: null, piece: null, next: null,
+  score: 0, lines: 0, level: 1, dropMs: 800, lastDrop: 0, paused: false, over: false,
+};
+
+const TETROMINOES = {
+  I: { color:'#67e8f9', shapes:[[[0,1],[1,1],[2,1],[3,1]],[[2,0],[2,1],[2,2],[2,3]],[[0,2],[1,2],[2,2],[3,2]],[[1,0],[1,1],[1,2],[1,3]]] },
+  O: { color:'#fde047', shapes:[[[1,0],[2,0],[1,1],[2,1]]] },
+  T: { color:'#c084fc', shapes:[[[1,0],[0,1],[1,1],[2,1]],[[1,0],[1,1],[2,1],[1,2]],[[0,1],[1,1],[2,1],[1,2]],[[1,0],[0,1],[1,1],[1,2]]] },
+  S: { color:'#86efac', shapes:[[[1,0],[2,0],[0,1],[1,1]],[[1,0],[1,1],[2,1],[2,2]]] },
+  Z: { color:'#fca5a5', shapes:[[[0,0],[1,0],[1,1],[2,1]],[[2,0],[1,1],[2,1],[1,2]]] },
+  J: { color:'#93c5fd', shapes:[[[0,0],[0,1],[1,1],[2,1]],[[1,0],[2,0],[1,1],[1,2]],[[0,1],[1,1],[2,1],[2,2]],[[1,0],[1,1],[0,2],[1,2]]] },
+  L: { color:'#fdba74', shapes:[[[2,0],[0,1],[1,1],[2,1]],[[1,0],[1,1],[1,2],[2,2]],[[0,1],[1,1],[2,1],[0,2]],[[0,0],[1,0],[1,1],[1,2]]] },
+};
+const TPIECES = Object.keys(TETROMINOES);
+
+function tNewPiece() {
+  const t = TPIECES[Math.floor(Math.random()*TPIECES.length)];
+  return { type:t, rot:0, x: Math.floor(TETRIS.cols/2) - 2, y: -1 };
+}
+function tShape(p)  { return TETROMINOES[p.type].shapes[p.rot % TETROMINOES[p.type].shapes.length]; }
+function tCells(p)  { return tShape(p).map(([cx,cy]) => [p.x+cx, p.y+cy]); }
+function tCollides(p) {
+  for (const [x,y] of tCells(p)) {
+    if (x < 0 || x >= TETRIS.cols || y >= TETRIS.rows) return true;
+    if (y >= 0 && TETRIS.board[y][x]) return true;
+  }
+  return false;
+}
+function tLockPiece() {
+  for (const [x,y] of tCells(TETRIS.piece)) {
+    if (y < 0) { TETRIS.over = true; return; }
+    TETRIS.board[y][x] = TETROMINOES[TETRIS.piece.type].color;
+  }
+  let cleared = 0;
+  for (let y = TETRIS.rows - 1; y >= 0; y--) {
+    if (TETRIS.board[y].every(c => c)) {
+      TETRIS.board.splice(y, 1);
+      TETRIS.board.unshift(new Array(TETRIS.cols).fill(null));
+      cleared++; y++;
+    }
+  }
+  if (cleared) {
+    const pts = [0, 100, 300, 500, 800][cleared] * TETRIS.level;
+    TETRIS.score += pts;
+    TETRIS.lines += cleared;
+    const newLevel = 1 + Math.floor(TETRIS.lines / 10);
+    if (newLevel !== TETRIS.level) {
+      TETRIS.level = newLevel;
+      TETRIS.dropMs = Math.max(80, 800 - (TETRIS.level - 1) * 70);
+    }
+  }
+  TETRIS.piece = TETRIS.next;
+  TETRIS.next  = tNewPiece();
+  if (tCollides(TETRIS.piece)) TETRIS.over = true;
+}
+function tMove(dx) { const p = { ...TETRIS.piece, x: TETRIS.piece.x + dx }; if (!tCollides(p)) TETRIS.piece = p; }
+function tDrop()   { const p = { ...TETRIS.piece, y: TETRIS.piece.y + 1 }; if (!tCollides(p)) { TETRIS.piece = p; return true; } tLockPiece(); return false; }
+function tHardDrop() { while (tDrop()) { TETRIS.score += 2; } }
+function tRotate() {
+  const rots = TETROMINOES[TETRIS.piece.type].shapes.length;
+  const p = { ...TETRIS.piece, rot: (TETRIS.piece.rot + 1) % rots };
+  for (const dx of [0, -1, 1, -2, 2]) {
+    const q = { ...p, x: p.x + dx };
+    if (!tCollides(q)) { TETRIS.piece = q; return; }
+  }
+}
+function tDraw() {
+  const c = document.getElementById('tetris-canvas');
+  if (!c) return;
+  const ctx = c.getContext('2d');
+  const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+  const cell = TETRIS.cell;
+  ctx.fillStyle = dark ? '#0a0a0a' : '#fafafa';
+  ctx.fillRect(0,0,c.width,c.height);
+  ctx.strokeStyle = dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
+  for (let x = 0; x <= TETRIS.cols; x++) { ctx.beginPath(); ctx.moveTo(x*cell, 0); ctx.lineTo(x*cell, TETRIS.rows*cell); ctx.stroke(); }
+  for (let y = 0; y <= TETRIS.rows; y++) { ctx.beginPath(); ctx.moveTo(0, y*cell); ctx.lineTo(TETRIS.cols*cell, y*cell); ctx.stroke(); }
+  for (let y = 0; y < TETRIS.rows; y++) for (let x = 0; x < TETRIS.cols; x++) {
+    if (TETRIS.board[y][x]) tDrawCell(ctx, x, y, TETRIS.board[y][x]);
+  }
+  if (TETRIS.piece && !TETRIS.over) {
+    let ghost = { ...TETRIS.piece };
+    while (!tCollides({ ...ghost, y: ghost.y + 1 })) ghost.y++;
+    for (const [x,y] of tCells(ghost)) if (y >= 0) tDrawCell(ctx, x, y, TETROMINOES[TETRIS.piece.type].color, true);
+    for (const [x,y] of tCells(TETRIS.piece)) if (y >= 0) tDrawCell(ctx, x, y, TETROMINOES[TETRIS.piece.type].color);
+  }
+  tDrawNext();
+  document.getElementById('tetris-score').textContent = TETRIS.score;
+  document.getElementById('tetris-lines').textContent = TETRIS.lines;
+  document.getElementById('tetris-level').textContent = TETRIS.level;
+  const overlay = document.getElementById('tetris-overlay');
+  if (overlay) {
+    if (TETRIS.over)        { overlay.style.display = 'flex'; overlay.innerHTML = `<div style="text-align:center"><div style="font-family:Georgia,serif;font-size:28px;font-weight:600;margin-bottom:6px">Game Over</div><div style="font-size:12px;color:#9a9a9a;margin-bottom:14px;font-family:'DM Mono',ui-monospace,monospace;letter-spacing:0.1em">Final score: ${TETRIS.score}</div><button class="btn btn-primary btn-sm" onclick="tetrisReset()">Play again</button></div>`; }
+    else if (TETRIS.paused) { overlay.style.display = 'flex'; overlay.innerHTML = `<div style="text-align:center"><div style="font-family:Georgia,serif;font-size:26px;font-weight:600">Paused</div><div style="font-size:11px;color:#9a9a9a;margin-top:6px;font-family:'DM Mono',ui-monospace,monospace;letter-spacing:0.1em">Press P to resume</div></div>`; }
+    else                    { overlay.style.display = 'none'; }
+  }
+}
+function tDrawCell(ctx, x, y, color, ghost) {
+  const cell = TETRIS.cell, pad = 1;
+  if (ghost) {
+    ctx.fillStyle = color + '33';
+    ctx.fillRect(x*cell + pad, y*cell + pad, cell - pad*2, cell - pad*2);
+    ctx.strokeStyle = color + '88';
+    ctx.strokeRect(x*cell + pad + 0.5, y*cell + pad + 0.5, cell - pad*2 - 1, cell - pad*2 - 1);
+  } else {
+    ctx.fillStyle = color;
+    ctx.fillRect(x*cell + pad, y*cell + pad, cell - pad*2, cell - pad*2);
+    ctx.fillStyle = 'rgba(255,255,255,0.25)';
+    ctx.fillRect(x*cell + pad, y*cell + pad, cell - pad*2, 3);
+    ctx.fillStyle = 'rgba(0,0,0,0.18)';
+    ctx.fillRect(x*cell + pad, y*cell + cell - pad - 3, cell - pad*2, 3);
+  }
+}
+function tDrawNext() {
+  const c = document.getElementById('tetris-next');
+  if (!c || !TETRIS.next) return;
+  const ctx = c.getContext('2d');
+  const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+  ctx.fillStyle = dark ? '#0a0a0a' : '#fafafa';
+  ctx.fillRect(0,0,c.width,c.height);
+  const cell = 18;
+  const shape = TETROMINOES[TETRIS.next.type].shapes[0];
+  const xs = shape.map(s => s[0]), ys = shape.map(s => s[1]);
+  const w = (Math.max(...xs) - Math.min(...xs) + 1) * cell;
+  const h = (Math.max(...ys) - Math.min(...ys) + 1) * cell;
+  const ox = (c.width - w) / 2 - Math.min(...xs) * cell;
+  const oy = (c.height - h) / 2 - Math.min(...ys) * cell;
+  ctx.fillStyle = TETROMINOES[TETRIS.next.type].color;
+  for (const [x,y] of shape) ctx.fillRect(ox + x*cell + 1, oy + y*cell + 1, cell - 2, cell - 2);
+}
+
+function tetrisStep(ts) {
+  if (!document.getElementById('tetris-canvas')) { TETRIS.loopId = null; return; }
+  if (!TETRIS.paused && !TETRIS.over) {
+    if (!TETRIS.lastDrop) TETRIS.lastDrop = ts;
+    if (ts - TETRIS.lastDrop >= TETRIS.dropMs) { tDrop(); TETRIS.lastDrop = ts; }
+  } else {
+    TETRIS.lastDrop = ts;
+  }
+  tDraw();
+  TETRIS.loopId = requestAnimationFrame(tetrisStep);
+}
+
+function tetrisReset() {
+  TETRIS.board = Array.from({length:TETRIS.rows}, () => new Array(TETRIS.cols).fill(null));
+  TETRIS.piece = tNewPiece();
+  TETRIS.next  = tNewPiece();
+  TETRIS.score = 0; TETRIS.lines = 0; TETRIS.level = 1;
+  TETRIS.dropMs = 800; TETRIS.lastDrop = 0; TETRIS.paused = false; TETRIS.over = false;
+}
+
+function tetrisStop() {
+  if (TETRIS.loopId) { cancelAnimationFrame(TETRIS.loopId); TETRIS.loopId = null; }
+  if (TETRIS.keyHandler) { window.removeEventListener('keydown', TETRIS.keyHandler); TETRIS.keyHandler = null; }
+}
+
+function showArcade() {
+  tetrisStop();
+  setTitle('Arcade');
+  const w = TETRIS.cols * TETRIS.cell, h = TETRIS.rows * TETRIS.cell;
+  setMain(`
+    <div class="page-header">
+      <div class="page-title">Arcade — Tetris</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-outline btn-sm" onclick="TETRIS.paused=!TETRIS.paused">Pause / Resume</button>
+        <button class="btn btn-outline btn-sm" onclick="tetrisReset()">Reset</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:32px;align-items:flex-start;flex-wrap:wrap">
+      <div style="position:relative;border:1px solid #ececec;background:#fafafa" id="tetris-frame">
+        <canvas id="tetris-canvas" width="${w}" height="${h}" style="display:block"></canvas>
+        <div id="tetris-overlay" style="display:none;position:absolute;inset:0;background:rgba(250,250,250,0.85);align-items:center;justify-content:center;color:#111;backdrop-filter:blur(2px)"></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:18px;min-width:180px">
+        <div class="card" style="margin:0;padding:18px 20px">
+          <div style="font-family:'DM Mono',ui-monospace,monospace;font-size:9px;text-transform:uppercase;letter-spacing:0.18em;color:#9a9a9a;margin-bottom:6px">Score</div>
+          <div id="tetris-score" style="font-family:Georgia,serif;font-size:28px;font-weight:600;letter-spacing:-0.02em">0</div>
+        </div>
+        <div class="card" style="margin:0;padding:18px 20px;display:flex;gap:24px">
+          <div>
+            <div style="font-family:'DM Mono',ui-monospace,monospace;font-size:9px;text-transform:uppercase;letter-spacing:0.18em;color:#9a9a9a;margin-bottom:6px">Lines</div>
+            <div id="tetris-lines" style="font-family:Georgia,serif;font-size:22px;font-weight:600">0</div>
+          </div>
+          <div>
+            <div style="font-family:'DM Mono',ui-monospace,monospace;font-size:9px;text-transform:uppercase;letter-spacing:0.18em;color:#9a9a9a;margin-bottom:6px">Level</div>
+            <div id="tetris-level" style="font-family:Georgia,serif;font-size:22px;font-weight:600">1</div>
+          </div>
+        </div>
+        <div class="card" style="margin:0;padding:18px 20px">
+          <div style="font-family:'DM Mono',ui-monospace,monospace;font-size:9px;text-transform:uppercase;letter-spacing:0.18em;color:#9a9a9a;margin-bottom:10px">Next</div>
+          <canvas id="tetris-next" width="120" height="90" style="display:block;border:1px solid #ececec;background:#fafafa"></canvas>
+        </div>
+        <div style="font-family:'DM Mono',ui-monospace,monospace;font-size:10px;line-height:1.7;color:#6b6b6b;text-transform:uppercase;letter-spacing:0.1em">
+          ← → &nbsp; Move<br>
+          ↑ &nbsp;&nbsp; Rotate<br>
+          ↓ &nbsp;&nbsp; Soft drop<br>
+          Space &nbsp; Hard drop<br>
+          P &nbsp;&nbsp; Pause
+        </div>
+      </div>
+    </div>`);
+
+  tetrisReset();
+
+  TETRIS.keyHandler = (e) => {
+    if (window.location.pathname !== '/admin/arcade') return;
+    if (TETRIS.over && e.key !== 'Enter') return;
+    if (['ArrowLeft','ArrowRight','ArrowUp','ArrowDown',' '].includes(e.key)) e.preventDefault();
+    if (e.key === 'ArrowLeft')  tMove(-1);
+    else if (e.key === 'ArrowRight') tMove(1);
+    else if (e.key === 'ArrowDown')  { if (tDrop()) TETRIS.score += 1; TETRIS.lastDrop = performance.now(); }
+    else if (e.key === 'ArrowUp')    tRotate();
+    else if (e.key === ' ')          tHardDrop();
+    else if (e.key === 'p' || e.key === 'P') TETRIS.paused = !TETRIS.paused;
+    else if (e.key === 'Enter' && TETRIS.over) tetrisReset();
+  };
+  window.addEventListener('keydown', TETRIS.keyHandler);
+
+  TETRIS.loopId = requestAnimationFrame(tetrisStep);
+}
+
+// Stop the Tetris loop whenever we navigate away
+const _origGo = go;
+go = function(path) {
+  if (window.location.pathname === '/admin/arcade' && path !== '/admin/arcade') tetrisStop();
+  return _origGo(path);
+};
+
 init();
 </script>
+
+<div id="bulk-delete-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;padding:20px">
+  <div style="background:#ffffff;border:1px solid #ececec;border-radius:0;max-width:480px;width:100%;padding:28px 32px;font-family:'Inter',system-ui,sans-serif" id="bulk-delete-modal-card">
+    <div style="font-family:Georgia,serif;font-size:22px;font-weight:600;letter-spacing:-0.02em;color:#111;margin-bottom:8px">Move orders to Trash</div>
+    <div style="font-size:13px;color:#6b6b6b;line-height:1.55;margin-bottom:18px">
+      You are about to move <strong id="bulk-delete-count" style="color:#111">0</strong> order(s) to Trash. They can be restored from the Trash page.<br>
+      <span style="color:#9a9a9a;font-size:12px">Customer accounts are not affected.</span>
+    </div>
+    <div style="font-size:11px;font-family:'DM Mono',ui-monospace,monospace;text-transform:uppercase;letter-spacing:0.12em;color:#6b6b6b;margin-bottom:8px">Type <strong style="color:#e63946">delete</strong> to confirm</div>
+    <input id="bulk-delete-input" type="text" autocomplete="off" oninput="onBulkDeleteInput(this.value)" onkeydown="if(event.key==='Enter'&&!document.getElementById('bulk-delete-confirm').disabled)runBulkDelete();if(event.key==='Escape')closeBulkDeleteModal()" style="width:100%;padding:10px 12px;border:1px solid #ececec;border-radius:0;font-size:14px;font-family:'DM Mono',ui-monospace,monospace;margin-bottom:20px;background:#fafafa">
+    <div style="display:flex;justify-content:flex-end;gap:10px">
+      <button class="btn btn-outline btn-sm" onclick="closeBulkDeleteModal()">Cancel</button>
+      <button id="bulk-delete-confirm" class="btn btn-primary btn-sm" onclick="runBulkDelete()" disabled style="background:#e63946;border-color:#e63946">Delete</button>
+    </div>
+  </div>
+</div>
+<style>
+html[data-theme="dark"] #bulk-delete-modal-card{background:#141414;border-color:rgba(255,255,255,0.08)}
+html[data-theme="dark"] #bulk-delete-modal-card div[style*="color:#111"]{color:#f5f5f5!important}
+html[data-theme="dark"] #bulk-delete-input{background:#0a0a0a;border-color:rgba(255,255,255,0.15);color:#f5f5f5}
+#bulk-delete-confirm:disabled{opacity:0.45;cursor:not-allowed}
+</style>
 </body>
 </html>
