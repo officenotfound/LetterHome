@@ -54,6 +54,28 @@ textarea:focus-visible {
   outline: none;
 }
 
+/* ── Custom checkboxes — site-wide ───────────────────────────────────────── */
+input[type="checkbox"] {
+  appearance: none; -webkit-appearance: none;
+  width: 20px; height: 20px; min-width: 20px;
+  border: 2px solid var(--ink); border-radius: 2px; background: transparent;
+  cursor: pointer; position: relative; flex-shrink: 0;
+  transition: background 0.15s, border-color 0.15s;
+  vertical-align: middle;
+}
+input[type="checkbox"]:hover:not(:checked) { border-color: var(--red); }
+input[type="checkbox"]:checked {
+  background: var(--red); border-color: var(--red);
+}
+input[type="checkbox"]:checked::after {
+  content: '';
+  position: absolute; left: 5px; top: 1px;
+  width: 5px; height: 10px;
+  border: 2px solid #fff; border-top: none; border-left: none;
+  transform: rotate(45deg);
+}
+input[type="checkbox"]:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
+
 /* Disable hover transforms on touch-only devices (they flash on tap and
    feel laggy). Keep them where a real pointer exists.                       */
 @media (hover: none) {
