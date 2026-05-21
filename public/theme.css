@@ -336,8 +336,8 @@ section.story[style*="background:var(--ink)"] .manifesto p { color: var(--paper)
 /* Nav: every page has its own inline nav with hardcoded warm kraft blur.
    The base override "nav { background: rgba(250,250,250,0.92) }" from v0.2.2
    handles light mode. Make sure the logo mark uses the new red. */
-.logo-mark { background: var(--red) !important; box-shadow: none !important; border-radius: 2px !important; }
-.logo-mark::before { display: none !important; } /* drop the dashed border halo around L */
+.logo-mark { background: var(--red) !important; box-shadow: none !important; border-radius: 2px !important; width: 46px !important; height: 30px !important; }
+.logo-mark::before { display: none !important; }
 
 /* Buttons: enforce sharp corners across .btn-red, .btn-ink (old kraft button classes) */
 .btn-red, .btn-ink, .btn-primary, .btn-outline { border-radius: 0 !important; }
