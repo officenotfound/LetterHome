@@ -377,14 +377,14 @@ section.story[style*="background:var(--ink)"] .manifesto p { color: var(--paper)
 }
 
 /* Footer text on dark bg — ensure readable on the now-pure-#111 footer */
-footer { color: rgba(255,255,255,0.72) !important; padding: 20px 36px !important; }
+footer { color: rgba(255,255,255,0.72) !important; padding: 12px 36px !important; }
 .footer-bottom a, .footer-col a, .footer-brand p { color: rgba(255,255,255,0.65) !important; }
-.footer-bottom { color: rgba(255,255,255,0.55) !important; }
+.footer-bottom { color: rgba(255,255,255,0.55) !important; flex-wrap: nowrap !important; white-space: nowrap !important; }
 /* Hide multi-column link grid — keep only the single copyright bar */
 .footer-grid { display: none !important; }
 @media (max-width: 768px) {
-  footer { padding: 14px 18px !important; }
-  .footer-bottom { font-size: 10px !important; letter-spacing: 0.06em !important; gap: 10px !important; }
+  footer { padding: 10px 18px !important; }
+  .footer-bottom { font-size: 10px !important; letter-spacing: 0.04em !important; gap: 8px !important; }
 }
 
 /* ── Responsive overrides (site-wide) ──────────────────────────────────────── */
