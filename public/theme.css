@@ -350,4 +350,13 @@ footer { color: rgba(255,255,255,0.72) !important; }
   h1 { font-size: clamp(30px, 8vw, 48px); }
   .section-head h2, .story-text h2, .cta-band h2 { font-size: clamp(24px, 6vw, 40px); }
   .main { padding: 40px 18px 80px; }
+  .footer-bottom { flex-direction: column !important; text-align: center; gap: 12px !important; }
+  .footer-bottom-links { justify-content: center; }
+  .form-card, .result { padding: 24px 18px !important; }
 }
+
+/* ── Account page — dark mode fixes ──────────────────────────────────────── */
+[data-theme="dark"] .status-paid     { background: rgba(251,191,36,0.15)  !important; color: #fbbf24 !important; }
+[data-theme="dark"] .status-printing { background: rgba(59,130,246,0.15)  !important; color: #60a5fa !important; }
+[data-theme="dark"] .status-mailed   { background: rgba(34,197,94,0.15)   !important; color: #4ade80 !important; }
+[data-theme="dark"] td { border-bottom-color: rgba(250,246,236,0.08) !important; }
