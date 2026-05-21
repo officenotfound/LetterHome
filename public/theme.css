@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Pinyon+Script&display=swap');
+
 /* ── Light-mode variable improvements ───────────────────────────────────────
    theme.css loads after all inline <style> blocks, so same-specificity rules
    here win. Dark-mode is [data-theme="dark"] which is higher specificity anyway.
@@ -339,7 +341,7 @@ section.story[style*="background:var(--ink)"] .manifesto p { color: var(--paper)
    handles light mode. Make sure the logo mark uses the new red. */
 .logo-mark { background: var(--red) !important; box-shadow: none !important; border-radius: 2px !important; width: 40px !important; height: 26px !important; }
 .logo-mark::before { display: none !important; }
-.logo { font-style: italic !important; font-size: 22px !important; letter-spacing: -0.01em !important; gap: 10px !important; }
+.logo { font-family: 'Pinyon Script', cursive !important; font-style: normal !important; font-size: 34px !important; letter-spacing: 0.01em !important; gap: 10px !important; }
 .nav-inner { position: relative !important; padding: 8px 36px !important; }
 .nav-links { display: none !important; }
 .nav-cta { position: absolute !important; right: 36px !important; top: 50% !important; transform: translateY(-50%) !important; }
