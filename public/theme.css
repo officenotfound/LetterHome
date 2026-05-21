@@ -404,8 +404,8 @@ footer { color: rgba(255,255,255,0.72) !important; padding: 20px 36px !important
   h1 { font-size: clamp(30px, 8vw, 48px); }
   .section-head h2, .story-text h2, .cta-band h2 { font-size: clamp(24px, 6vw, 40px); }
   .main { padding: 40px 18px 80px; }
-  .footer-bottom { flex-direction: column !important; text-align: center; gap: 12px !important; }
-  .footer-bottom-links { justify-content: center; }
+  .footer-bottom { flex-direction: row !important; flex-wrap: nowrap !important; gap: 12px !important; }
+  .footer-bottom-links { flex-shrink: 0; }
   .form-card, .result { padding: 24px 18px !important; }
   /* Hero CTAs: full-width stacked buttons on small phones */
   .hero-cta { flex-direction: column !important; align-items: stretch !important; gap: 10px !important; }
