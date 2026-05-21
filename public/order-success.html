@@ -103,7 +103,14 @@ function esc(s) {
   const params = new URLSearchParams(window.location.search);
   const sessionId = params.get('session_id');
   const el = document.getElementById('order-details');
-  if (!sessionId) { el.innerHTML = '<p style="color:var(--ink-muted)">No order found.</p>'; return; }
+  if (!sessionId) {
+    document.querySelector('.eyebrow').textContent = 'Order lookup';
+    document.querySelector('.success-icon').style.display = 'none';
+    document.querySelector('h1').textContent = 'No order found.';
+    document.querySelector('.sub').textContent = 'No session ID was provided. If you just completed a payment, check your email for a confirmation.';
+    el.innerHTML = '<p style="color:var(--ink-muted)">If something went wrong, <a href="/contact" style="color:var(--red)">contact us</a>.</p>';
+    return;
+  }
 
   try {
     const res  = await fetch('/api/order-status?session_id=' + encodeURIComponent(sessionId));
