@@ -13,6 +13,7 @@ html {
   text-size-adjust: 100%;
   -webkit-tap-highlight-color: transparent;
   overflow-x: hidden; /* Set on html (not just body) so propagation doesn't leave body overflow:visible */
+  scroll-behavior: smooth;
 }
 
 :root { color-scheme: light; }
@@ -339,8 +340,10 @@ section.story[style*="background:var(--ink)"] .manifesto p { color: var(--paper)
 .logo-mark { background: var(--red) !important; box-shadow: none !important; border-radius: 2px !important; width: 40px !important; height: 26px !important; }
 .logo-mark::before { display: none !important; }
 .logo { font-style: italic !important; font-size: 22px !important; letter-spacing: -0.01em !important; gap: 10px !important; }
-.nav-inner { justify-content: center !important; }
-.nav-links { display: none !important; }
+.nav-inner { display: grid !important; grid-template-columns: 1fr auto 1fr !important; align-items: center !important; justify-content: unset !important; }
+.logo { grid-column: 2 !important; justify-self: center !important; }
+.nav-links { display: flex !important; grid-column: 3 !important; justify-content: flex-end !important; }
+.nav-links > a:not(.btn-red), .nav-links > button { display: none !important; }
 
 /* Buttons: enforce sharp corners across .btn-red, .btn-ink (old kraft button classes) */
 .btn-red, .btn-ink, .btn-primary, .btn-outline { border-radius: 0 !important; }
@@ -404,6 +407,30 @@ footer { color: rgba(255,255,255,0.72) !important; }
   /* About hero: stack CTA buttons */
   .hero-cta { flex-direction: column !important; }
 }
+
+/* ── Link underline slide-in animation ───────────────────────────────────── */
+.footer-col a, .footer-bottom a, .main a, .nav-links a:not(.btn) {
+  text-decoration: none;
+  background-image: linear-gradient(currentColor, currentColor);
+  background-size: 0 1px;
+  background-repeat: no-repeat;
+  background-position: left bottom;
+  transition: background-size 0.2s ease, color 0.2s;
+}
+.footer-col a:hover, .footer-bottom a:hover, .main a:hover, .nav-links a:not(.btn):hover {
+  background-size: 100% 1px;
+}
+
+/* ── Footer colophon logo (simple-footer pages) ─────────────────────────── */
+.footer-logo {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px 36px 28px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  margin-bottom: 8px;
+}
+.footer-logo .logo-mark { opacity: 0.5; }
 
 /* ── Account page — dark mode fixes ──────────────────────────────────────── */
 [data-theme="dark"] .status-paid     { background: rgba(251,191,36,0.15)  !important; color: #fbbf24 !important; }
