@@ -350,7 +350,14 @@ section.story[style*="background:var(--ink)"] .manifesto p { color: var(--paper)
 .btn-red:hover, .btn-ink:hover { transform: none !important; }
 
 /* Stitched border on all red buttons — mirrors the envelope logo aesthetic */
-.btn-red { outline: 1px dashed rgba(255,255,255,0.5) !important; outline-offset: 3px !important; }
+.btn-red { position: relative !important; }
+.btn-red::before {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border: 1px dashed rgba(255,255,255,0.55);
+  pointer-events: none;
+}
 
 /* Inputs across legacy pages: enforce underline-only treatment even where
    the inline CSS still has the old kraft-light boxed input style. */
