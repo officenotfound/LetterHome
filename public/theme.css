@@ -340,7 +340,7 @@ section.story[style*="background:var(--ink)"] .manifesto p { color: var(--paper)
 .logo-mark { background: var(--red) !important; box-shadow: none !important; border-radius: 2px !important; width: 40px !important; height: 26px !important; }
 .logo-mark::before { display: none !important; }
 .logo { font-style: italic !important; font-size: 22px !important; letter-spacing: -0.01em !important; gap: 10px !important; }
-.nav-inner { position: relative !important; }
+.nav-inner { position: relative !important; padding: 12px 36px !important; }
 .nav-links { display: none !important; }
 .nav-cta { position: absolute !important; right: 36px !important; top: 50% !important; transform: translateY(-50%) !important; }
 @media (max-width: 480px) { .nav-cta { right: 18px !important; padding: 10px 16px !important; font-size: 12px !important; } }
@@ -392,7 +392,7 @@ footer { color: rgba(255,255,255,0.72) !important; padding: 8px 36px !important;
 
 /* ── Responsive overrides (site-wide) ──────────────────────────────────────── */
 @media (max-width: 900px) {
-  .nav-inner { padding: 16px 24px !important; }
+  .nav-inner { padding: 12px 24px !important; }
 }
 /* Hide hero-meta ("From $10 CAD / Mailed within one business day / ...") below
    768px — the spans use white-space:nowrap and together span ~620px, which
@@ -402,7 +402,7 @@ footer { color: rgba(255,255,255,0.72) !important; padding: 8px 36px !important;
   .hero-meta { display: none !important; }
 }
 @media (max-width: 480px) {
-  .nav-inner { padding: 14px 18px !important; }
+  .nav-inner { padding: 10px 18px !important; }
   .logo { font-size: 22px !important; }
   h1 { font-size: clamp(30px, 8vw, 48px); }
   .section-head h2, .story-text h2, .cta-band h2 { font-size: clamp(24px, 6vw, 40px); }
