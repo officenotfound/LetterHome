@@ -337,8 +337,10 @@ section.story[style*="background:var(--ink)"] .manifesto p { color: var(--paper)
 /* Nav: every page has its own inline nav with hardcoded warm kraft blur.
    The base override "nav { background: rgba(250,250,250,0.92) }" from v0.2.2
    handles light mode. Make sure the logo mark uses the new red. */
-.logo-mark { background: var(--red) !important; box-shadow: none !important; border-radius: 2px !important; width: 40px !important; height: 26px !important; }
+.logo-mark { background: transparent !important; box-shadow: none !important; border-radius: 0 !important; width: 22px !important; height: 14px !important; }
 .logo-mark::before { display: none !important; }
+.logo-mark svg path { stroke: var(--ink) !important; }
+[data-theme="dark"] .logo-mark svg path { stroke: rgba(255,255,255,0.85) !important; }
 .logo { font-style: italic !important; font-size: 22px !important; letter-spacing: -0.01em !important; gap: 10px !important; }
 .nav-inner { position: relative !important; padding: 8px 36px !important; }
 .nav-links { display: none !important; }
