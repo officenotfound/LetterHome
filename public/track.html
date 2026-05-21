@@ -11,14 +11,14 @@
   gtag('js', new Date());
   gtag('config', 'G-DF3XQ6ML41');
 </script>
-<title>Track Your Order â€” Letterhome</title>
+<title>Track Your Order — Letterhome</title>
 <meta name="description" content="Check the status of your Letterhome order. Enter your order number and email address to see where your letter is.">
 <link rel="canonical" href="https://letterhome.ca/track">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <meta name="theme-color" content="#f1ebde" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#1a1410" media="(prefers-color-scheme: dark)">
 <meta name="robots" content="noindex, follow">
-<meta property="og:title" content="Track Your Order â€” Letterhome">
+<meta property="og:title" content="Track Your Order — Letterhome">
 <meta property="og:description" content="Check the status of your Letterhome order. Enter your order number and email address to see where your letter is.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://letterhome.ca/track">
@@ -28,7 +28,7 @@
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Track Your Order â€” Letterhome">
+<meta name="twitter:title" content="Track Your Order — Letterhome">
 <meta name="twitter:description" content="Check the status of your Letterhome order. Enter your order number and email address to see where your letter is.">
 <meta name="twitter:image" content="https://letterhome.ca/og-image.png">
 <script type="application/ld+json">
@@ -113,7 +113,7 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:48px 36px 32px
       <div class="form-group">
         <label for="order-id">Order number</label>
         <input id="order-id" name="order_id" type="text" placeholder="e.g. 42" required inputmode="numeric">
-        <span class="field-note">Found in your confirmation email â€” subject line says "Order #â€¦"</span>
+        <span class="field-note">Found in your confirmation email — subject line says "Order #…"</span>
       </div>
       <div class="form-group" style="margin-bottom:28px">
         <label for="email">Email address</label>
@@ -132,7 +132,7 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:48px 36px 32px
 
 <footer>
   <div class="footer-bottom">
-    <div>Â© 2026 Letterhome Â· Letters posted from Canada</div>
+    <div>© 2026 Letterhome · Letters posted from Canada</div>
     <div class="footer-bottom-links">
       <a href="/privacy">Privacy</a>
       <a href="/terms">Terms</a>
@@ -153,7 +153,7 @@ document.getElementById('track-form').addEventListener('submit', async function(
   const err = document.getElementById('error-msg');
   err.style.display = 'none';
   btn.disabled = true;
-  btn.textContent = 'Checkingâ€¦';
+  btn.textContent = 'Checking…';
 
   try {
     const res = await fetch('/api/track', {
@@ -169,7 +169,7 @@ document.getElementById('track-form').addEventListener('submit', async function(
 
     const dest = countryNames[data.destinationCountry] || data.destinationCountry || 'Canada';
     const isDomestic = data.destinationCountry === 'CA';
-    const delivery = isDomestic ? '2â€“4 business days' : '6â€“10 business days';
+    const delivery = isDomestic ? '2–4 business days' : '6–10 business days';
     const date = new Date(data.createdAt).toLocaleDateString('en-CA', { year:'numeric', month:'long', day:'numeric' });
 
     document.getElementById('result-status').textContent = data.statusText;

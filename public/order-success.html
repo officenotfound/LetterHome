@@ -11,7 +11,7 @@
   gtag('js', new Date());
   gtag('config', 'G-DF3XQ6ML41');
 </script>
-<title>Order Confirmed â€” Letterhome</title>
+<title>Order Confirmed — Letterhome</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <meta name="theme-color" content="#f1ebde" media="(prefers-color-scheme: light)">
@@ -71,12 +71,12 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:40px 36px;posi
 
 <div class="main">
   <div class="eyebrow">Order confirmed</div>
-  <div class="success-icon">âœ“</div>
+  <div class="success-icon">✓</div>
   <h1>Your letter is on its way.</h1>
   <p class="sub">Payment received. We'll print your letter in full colour and mail it from Canada within one business day. A confirmation has been sent to your email.</p>
 
   <div class="card" id="order-details">
-    <div class="loading">Loading order detailsâ€¦</div>
+    <div class="loading">Loading order details…</div>
   </div>
 
   <div id="account-prompt"></div>
@@ -85,7 +85,7 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:40px 36px;posi
 
 <footer>
   <div class="footer-bottom">
-    <div>Â© 2026 Letterhome</div>
+    <div>© 2026 Letterhome</div>
     <div class="footer-bottom-links">
       <a href="/privacy">Privacy</a>
       <a href="/terms">Terms</a>
@@ -119,10 +119,10 @@ function esc(s) {
       <div class="detail-row"><span class="label">Destination</span><span class="val">${esc(destName)}</span></div>
       <div class="detail-row"><span class="label">Price</span><span class="val">${data.priceCents ? '$' + (data.priceCents / 100).toFixed(0) : (isDomestic ? '$10' : '$20')} CAD</span></div>
       <div class="detail-row"><span class="label">Estimated delivery</span><span class="val">${isDomestic ? 'Within 2 weeks' : 'Within 4 weeks'}</span></div>
-      <div class="detail-row"><span class="label">Status</span><span class="val" style="color:var(--red)">Received â€” preparing to mail</span></div>
+      <div class="detail-row"><span class="label">Status</span><span class="val" style="color:var(--red)">Received — preparing to mail</span></div>
     `;
   } catch (err) {
-    el.innerHTML = '<p style="color:var(--ink-muted);font-size:14px">Your payment went through â€” we\'ll send a confirmation email shortly. If you have questions, contact us.</p>';
+    el.innerHTML = '<p style="color:var(--ink-muted);font-size:14px">Your payment went through — we\'ll send a confirmation email shortly. If you have questions, contact us.</p>';
   }
 
   // Show "create account" prompt only if not already logged in
@@ -133,8 +133,8 @@ function esc(s) {
         <div class="card" style="margin-bottom:28px;border-left:3px solid var(--red)">
           <div style="padding:28px 32px">
             <div style="font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.14em;color:var(--red);margin-bottom:10px">Save time next order</div>
-            <p style="font-size:16px;margin-bottom:20px;line-height:1.5">Create a free account to save your return address and frequent recipients â€” so you never have to type them again.</p>
-            <a href="/account/register" class="btn btn-outline" style="font-size:13px">Create Account â†’</a>
+            <p style="font-size:16px;margin-bottom:20px;line-height:1.5">Create a free account to save your return address and frequent recipients — so you never have to type them again.</p>
+            <a href="/account/register" class="btn btn-outline" style="font-size:13px">Create Account →</a>
           </div>
         </div>`;
     }
