@@ -333,10 +333,11 @@ section.story[style], section.story {
 .logo-mark { background: var(--red) !important; box-shadow: none !important; border-radius: 2px !important; width: 40px !important; height: 26px !important; }
 .logo-mark::before { display: none !important; }
 .logo { font-family: 'DM Serif Display', serif !important; font-style: italic !important; font-size: 22px !important; letter-spacing: -0.01em !important; gap: 10px !important; }
-.nav-inner { padding: 8px 36px !important; }
+.nav-inner { height: 56px !important; padding: 0 36px !important; }
 .nav-links { display: none !important; }
 .nav-cta { margin-left: auto !important; }
-@media (max-width: 480px) { .nav-cta { padding: 10px 16px !important; font-size: 12px !important; } }
+@media (max-width: 900px) { .nav-inner { padding: 0 24px !important; height: 52px !important; } }
+@media (max-width: 480px) { .nav-inner { padding: 0 18px !important; height: 48px !important; } .nav-cta { padding: 10px 16px !important; font-size: 12px !important; } }
 
 /* Buttons: enforce sharp corners across .btn-red, .btn-ink (old kraft button classes) */
 .btn-red, .btn-ink, .btn-primary, .btn-outline { border-radius: 0 !important; }
@@ -375,18 +376,14 @@ section.story[style], section.story {
 }
 
 /* Footer text on dark bg — ensure readable on the now-pure-#111 footer */
-footer { color: rgba(255,255,255,0.72) !important; padding: 8px 36px !important; }
-.footer-bottom a, .footer-col a, .footer-brand p { color: rgba(255,255,255,0.65) !important; }
-.footer-bottom { color: rgba(255,255,255,0.55) !important; flex-wrap: nowrap !important; }
+footer { height: 44px !important; padding: 0 36px !important; display: flex !important; align-items: center !important; color: rgba(255,255,255,0.72) !important; }
+.footer-bottom { width: 100% !important; max-width: 1280px !important; margin: 0 auto !important; display: flex !important; justify-content: space-between !important; align-items: center !important; flex-wrap: nowrap !important; color: rgba(255,255,255,0.55) !important; font-family: 'DM Mono', monospace !important; font-size: 11px !important; text-transform: uppercase !important; letter-spacing: 0.12em !important; gap: 16px !important; }
 .footer-bottom > div:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.footer-bottom-links { flex-shrink: 0 !important; }
-/* Hide multi-column link grid — keep only the single copyright bar */
-.footer-grid { display: none !important; }
-@media (max-width: 768px) {
-  footer { padding: 8px 18px !important; }
-  .footer-bottom { font-size: 10px !important; letter-spacing: 0.04em !important; gap: 8px !important; }
-  .footer-bottom-links { gap: 12px !important; }
-}
+.footer-bottom a, .footer-col a, .footer-brand p { color: rgba(255,255,255,0.55) !important; text-decoration: none !important; }
+.footer-bottom-links { display: flex !important; gap: 28px !important; flex-shrink: 0 !important; }
+.footer-grid, .footer-inner { display: contents !important; }
+@media (max-width: 900px) { footer { padding: 0 24px !important; } }
+@media (max-width: 480px) { footer { padding: 0 18px !important; height: 40px !important; } .footer-bottom { font-size: 10px !important; gap: 8px !important; } .footer-bottom-links { gap: 12px !important; } }
 
 /* ── Responsive overrides (site-wide) ──────────────────────────────────────── */
 @media (max-width: 900px) {
