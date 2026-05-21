@@ -350,7 +350,7 @@ section.story[style*="background:var(--ink)"] .manifesto p { color: var(--paper)
 .btn-red:hover, .btn-ink:hover { transform: none !important; }
 
 /* Stitched border — direct border property, unaffected by transition:all or overflow */
-.btn-red { border: 1px dashed rgba(255,255,255,0.55) !important; }
+.btn-red { border: 2px dashed white !important; }
 
 /* Inputs across legacy pages: enforce underline-only treatment even where
    the inline CSS still has the old kraft-light boxed input style. */
