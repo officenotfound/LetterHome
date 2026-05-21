@@ -12,6 +12,7 @@ html {
   -moz-text-size-adjust: 100%;
   text-size-adjust: 100%;
   -webkit-tap-highlight-color: transparent;
+  overflow-x: hidden; /* Set on html (not just body) so propagation doesn't leave body overflow:visible */
 }
 
 :root { color-scheme: light; }
@@ -344,6 +345,13 @@ footer { color: rgba(255,255,255,0.72) !important; }
 @media (max-width: 900px) {
   .nav-inner { padding: 16px 24px !important; }
 }
+/* Hide hero-meta ("From $10 CAD / Mailed within one business day / ...") below
+   768px — the spans use white-space:nowrap and together span ~620px, which
+   overflows at any viewport narrower than ~668px. The info is duplicated in
+   the pricing section just below the fold so hiding it on mobile is safe. */
+@media (max-width: 768px) {
+  .hero-meta { display: none !important; }
+}
 @media (max-width: 480px) {
   .nav-inner { padding: 14px 18px !important; }
   .logo { font-size: 22px !important; }
@@ -353,6 +361,11 @@ footer { color: rgba(255,255,255,0.72) !important; }
   .footer-bottom { flex-direction: column !important; text-align: center; gap: 12px !important; }
   .footer-bottom-links { justify-content: center; }
   .form-card, .result { padding: 24px 18px !important; }
+  /* Hero CTAs: full-width stacked buttons on small phones */
+  .hero-cta { flex-direction: column !important; align-items: stretch !important; gap: 10px !important; }
+  .hero-cta .btn-large { width: 100% !important; text-align: center !important; box-sizing: border-box !important; }
+  /* About hero: stack CTA buttons */
+  .hero-cta { flex-direction: column !important; }
 }
 
 /* ── Account page — dark mode fixes ──────────────────────────────────────── */
