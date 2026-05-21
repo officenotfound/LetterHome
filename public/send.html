@@ -363,6 +363,20 @@ footer { background: var(--ink); color: rgba(250,246,236,0.65); padding: 48px 36
   .progress-wrap { padding: 20px 20px; }
   .step-label { display: none; }
 }
+
+/* Per-step validation (v0.2.8) */
+.field-error { border-bottom-color: var(--red) !important; }
+textarea.field-error { border-color: var(--red) !important; }
+.validation-banner {
+  position: fixed; top: 24px; left: 50%; transform: translateX(-50%);
+  background: var(--ink); color: var(--paper);
+  padding: 14px 24px; border-radius: 0; z-index: 1000;
+  font-family: 'DM Mono', ui-monospace, monospace;
+  font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+  max-width: calc(100vw - 48px); text-align: center;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+}
+.validation-banner::before { content: '!  '; color: var(--red); font-weight: 600; }
 </style>
 <script>(function(){try{var t=localStorage.getItem('lh-theme')||(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 <link rel="stylesheet" href="/theme.css">
@@ -660,7 +674,7 @@ footer { background: var(--ink); color: rgba(250,246,236,0.65); padding: 48px 36
 
     <div class="panel-nav">
       <span></span>
-      <button class="btn btn-ink btn-large" onclick="goTo(2)">Continue to Letter →</button>
+      <button class="btn btn-ink btn-large" onclick="tryNext(2)">Continue to Letter →</button>
     </div>
   </div>
 
@@ -686,7 +700,7 @@ footer { background: var(--ink); color: rgba(250,246,236,0.65); padding: 48px 36
 
     <div class="panel-nav">
       <button class="btn btn-outline" onclick="goTo(1)">← Back</button>
-      <button class="btn btn-ink btn-large" onclick="goTo(3)">Preview & Review →</button>
+      <button class="btn btn-ink btn-large" onclick="tryNext(3)">Preview & Review →</button>
     </div>
   </div>
 
@@ -1004,19 +1018,118 @@ function fillPlace(components, prefix) {
   }
 }
 
-async function submitOrder() {
-  if (!document.getElementById('agree-terms').checked) {
-    alert('Please agree to the Terms of Service before proceeding.');
-    return;
+/* ── Per-step validation ─────────────────────────────────────────────────────
+   Validate the current step's fields before advancing. Back navigation always
+   allowed (no validation guard on the Back buttons). Errors mark the invalid
+   fields with .field-error and show a top banner listing what's missing.   */
+
+function tryNext(targetStep) {
+  if (validateStep(currentStep)) {
+    clearValidation();
+    goTo(targetStep);
   }
-  const rName   = document.getElementById('r-name').value.trim();
-  const rStreet = document.getElementById('r-street').value.trim();
-  const rEmail  = document.getElementById('r-email').value.trim();
-  const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(rEmail);
-  if (!rName)   { goTo(1); alert('Please enter the recipient\'s full name.'); return; }
-  if (!rStreet) { goTo(1); alert('Please enter the recipient\'s street address.'); return; }
-  if (!rEmail)  { goTo(1); alert('Please enter your email address so we can send your confirmation.'); return; }
-  if (!emailOk) { goTo(1); alert('That email address doesn\'t look right — please double-check it.'); return; }
+}
+
+function validateStep(step) {
+  clearValidation();
+  const missing = [];
+
+  if (step === 1) {
+    // Sender — only required if return address is NOT being skipped
+    if (!document.getElementById('skip-return').checked) {
+      requireField('s-name',    'Sender name',    missing);
+      requireField('s-street',  'Sender street',  missing);
+      requireField('s-city',    'Sender city',    missing);
+      requireField('s-province','Sender province',missing);
+      requireField('s-postal',  'Sender postal',  missing);
+      requireField('s-country', 'Sender country', missing);
+    }
+    // Recipient — always required
+    requireField('r-name',   'Recipient name',   missing);
+    requireField('r-street', 'Recipient street', missing);
+    requireField('r-city',   'Recipient city',   missing);
+    requireField('r-postal', 'Recipient postal', missing);
+    // Province depends on destination — CA uses select, others use text input
+    const isCA = document.getElementById('r-country').value === 'CA';
+    if (isCA) requireField('r-province',      'Recipient province',     missing);
+    else      requireField('r-province-text', 'Recipient state/region', missing);
+    // Email — required AND must look like an email
+    const email = document.getElementById('r-email').value.trim();
+    if (!email) {
+      missing.push('Your email');
+      markError('r-email');
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      missing.push('A valid email address');
+      markError('r-email');
+    }
+  } else if (step === 2) {
+    const body = document.getElementById('letter-body').value.trim();
+    if (body.length < 5) {
+      missing.push('Letter message');
+      markError('letter-body');
+    }
+  } else if (step === 3) {
+    if (!document.getElementById('agree-terms').checked) {
+      missing.push('Agreement to Terms & Privacy');
+    }
+  }
+
+  if (missing.length) {
+    showValidationBanner('Please complete: ' + missing.join(' · '));
+    const first = document.querySelector('.field-error');
+    if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return false;
+  }
+  return true;
+}
+
+function requireField(id, label, missing) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (!el.value || !el.value.trim()) {
+    missing.push(label);
+    markError(id);
+  }
+}
+
+function markError(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.add('field-error');
+}
+
+function clearValidation() {
+  document.querySelectorAll('.field-error').forEach(el => el.classList.remove('field-error'));
+  const banner = document.getElementById('validation-banner');
+  if (banner) banner.remove();
+}
+
+function showValidationBanner(msg) {
+  let banner = document.getElementById('validation-banner');
+  if (!banner) {
+    banner = document.createElement('div');
+    banner.id = 'validation-banner';
+    banner.className = 'validation-banner';
+    document.body.appendChild(banner);
+  }
+  banner.textContent = msg;
+  // Auto-dismiss after 6 seconds
+  clearTimeout(banner._dismissTimer);
+  banner._dismissTimer = setTimeout(() => banner.remove(), 6000);
+}
+
+// Clear a field's error state as soon as the user starts fixing it
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('input, textarea, select').forEach(el => {
+    el.addEventListener('input', () => el.classList.remove('field-error'));
+    el.addEventListener('change', () => el.classList.remove('field-error'));
+  });
+});
+
+async function submitOrder() {
+  // tryNext(...) already validates step 1 and step 2 before reaching this point,
+  // but we re-check the agreement box here since users can pay directly without
+  // re-triggering step transitions.
+  if (!validateStep(3)) return;
 
   const btn = document.querySelector('[onclick="submitOrder()"]');
   btn.disabled = true;
