@@ -107,7 +107,7 @@ app.use((req, res, next) => {
 });
 
 // ── Database ──────────────────────────────────────────────────────────────────
-const db = new Database('orders.db', { allowBareNamedParameters: true });
+const db = new Database(process.env.DB_PATH || 'orders.db', { allowBareNamedParameters: true });
 db.exec(`
   CREATE TABLE IF NOT EXISTS orders (
     id                 INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -557,6 +557,7 @@ const transport = mailer.createTransport({
 });
 
 async function sendMail(opts, type = 'general', orderId = null) {
+  if (!process.env.SMTP_HOST) return;
   await transport.sendMail(opts);
   try {
     const toAddr = Array.isArray(opts.to) ? opts.to.join(', ') : (opts.to || '');
@@ -3063,4 +3064,7 @@ cron.schedule('0 2 * * *', async () => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Letterhome running on port ${PORT}`));
+if (!process.env.TEST_MODE) {
+  app.listen(PORT, () => console.log(`Letterhome running on port ${PORT}`));
+}
+module.exports = { app, db };
