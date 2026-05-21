@@ -349,26 +349,8 @@ section.story[style*="background:var(--ink)"] .manifesto p { color: var(--paper)
 .btn-red, .btn-ink, .btn-primary, .btn-outline { border-radius: 0 !important; }
 .btn-red:hover, .btn-ink:hover { transform: none !important; }
 
-/* Stitched border on all red buttons — 4 repeating gradient lines inset 4px from edges */
-.btn-red {
-  background-color: var(--red) !important;
-  background-image:
-    repeating-linear-gradient(90deg, rgba(255,255,255,0.45) 0, rgba(255,255,255,0.45) 3px, transparent 3px, transparent 7px),
-    repeating-linear-gradient(90deg, rgba(255,255,255,0.45) 0, rgba(255,255,255,0.45) 3px, transparent 3px, transparent 7px),
-    repeating-linear-gradient(0deg,  rgba(255,255,255,0.45) 0, rgba(255,255,255,0.45) 3px, transparent 3px, transparent 7px),
-    repeating-linear-gradient(0deg,  rgba(255,255,255,0.45) 0, rgba(255,255,255,0.45) 3px, transparent 3px, transparent 7px) !important;
-  background-size:
-    calc(100% - 8px) 1px,
-    calc(100% - 8px) 1px,
-    1px calc(100% - 8px),
-    1px calc(100% - 8px) !important;
-  background-position:
-    4px 4px,
-    4px calc(100% - 4px),
-    4px 4px,
-    calc(100% - 4px) 4px !important;
-  background-repeat: no-repeat !important;
-}
+/* Stitched border — negative outline-offset draws it inside the button */
+.btn-red { outline: 1px dashed rgba(255,255,255,0.6) !important; outline-offset: -5px !important; }
 
 /* Inputs across legacy pages: enforce underline-only treatment even where
    the inline CSS still has the old kraft-light boxed input style. */
