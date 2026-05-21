@@ -33,6 +33,17 @@ fs.mkdirSync('orders',  { recursive: true });
 fs.mkdirSync('admin',   { recursive: true });
 fs.mkdirSync('backups', { recursive: true });
 
+// Fail loudly at startup if critical secrets are missing — prevents silent
+// production misconfiguration where fallback values would be used instead.
+if (process.env.NODE_ENV === 'production') {
+  const required = ['SESSION_SECRET', 'STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET', 'SMTP_HOST', 'SMTP_USER', 'SMTP_PASS'];
+  const missing  = required.filter(k => !process.env[k]);
+  if (missing.length) {
+    console.error('[startup] Missing required env vars:', missing.join(', '));
+    process.exit(1);
+  }
+}
+
 const app    = express();
 app.set('trust proxy', 1);
 app.use(compression());
@@ -1986,9 +1997,15 @@ app.get('/api/admin/settings', requireAdmin, (req, res) => {
   res.json(obj);
 });
 
+const ALLOWED_SETTING_KEYS = new Set([
+  'service_paused', 'announcement', 'price_domestic_cents', 'price_international_cents',
+  'daily_order_cap', 'blocked_countries', 'away_mode', 'away_message',
+]);
+
 app.post('/api/admin/settings', requireAdmin, (req, res) => {
   const { key, value } = req.body;
   if (!key?.trim() || typeof value !== 'string') return res.status(400).json({ error: 'key and value are required' });
+  if (!ALLOWED_SETTING_KEYS.has(key.trim())) return res.status(400).json({ error: 'Unknown setting key.' });
   setSetting(key.trim(), value);
   logAudit(req, 'settings.change', 'settings', key.trim(), { value });
   res.json({ ok: true });
@@ -2154,6 +2171,7 @@ ${attachments.length ? `<div class="attachments"><strong>${attachments.length} a
 app.post('/api/contact', contactLimiter, async (req, res) => {
   const { name, email, message } = req.body;
   if (!name || !email || !message) return res.status(400).json({ error: 'All fields are required.' });
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(email))) return res.status(400).json({ error: 'Invalid email address.' });
 
   try {
     db.prepare('INSERT INTO contact_submissions (name, email, message, ip) VALUES (?,?,?,?)')
