@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en-CA">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>My Account — Letterhome</title>
+<title>My Account â€” Letterhome</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -61,9 +61,9 @@ tr:last-child td{border-bottom:none}
 .status-mailed{background:#dcfce7;color:#166534}
 .tag{display:inline-block;padding:2px 8px;background:#f1ebde;border:1px solid var(--line);border-radius:2px;font-size:12px;font-family:'DM Mono',monospace;margin:2px}
 .divider{border:none;border-top:1px solid var(--line);margin:20px 0}
-footer{background:var(--ink);color:rgba(250,246,236,0.65);padding:40px 36px;margin-top:80px}
+footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:40px 36px;margin-top:80px}
 .footer-bottom{max-width:1280px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;flex-wrap:wrap;gap:16px}
-.footer-bottom a{color:rgba(250,246,236,0.5);text-decoration:none}
+.footer-bottom a{color:rgba(255,255,255,0.5);text-decoration:none}
 .footer-bottom a:hover{color:var(--red-stamp)}
 .footer-bottom-links{display:flex;gap:28px}
 @media(max-width:600px){.grid2{grid-template-columns:1fr}.main{padding:40px 20px 60px}.nav-inner{padding:16px 20px}}
@@ -82,11 +82,11 @@ footer{background:var(--ink);color:rgba(250,246,236,0.65);padding:40px 36px;marg
   </div>
 </nav>
 
-<div class="main" id="app"><div style="color:var(--ink-muted);padding:40px 0;font-style:italic">Loading…</div></div>
+<div class="main" id="app"><div style="color:var(--ink-muted);padding:40px 0;font-style:italic">Loadingâ€¦</div></div>
 
 <footer>
   <div class="footer-bottom">
-    <div>© 2026 Letterhome</div>
+    <div>Â© 2026 Letterhome</div>
     <div class="footer-bottom-links">
       <a href="/privacy">Privacy</a>
       <a href="/terms">Terms</a>
@@ -134,14 +134,14 @@ function showOk(id, msg) {
   setTimeout(() => { el.style.display = 'none'; }, 3000);
 }
 
-// ── Password strength ──────────────────────────────────────────────────────────
+// â”€â”€ Password strength â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function checkStrength(pwd) {
   let score = 0;
   if (pwd.length >= 8)  score++;
   if (pwd.length >= 12) score++;
   if (/[A-Za-z]/.test(pwd) && /[0-9]/.test(pwd)) score++;
   if (/[!@#$%^&*()\-_=+[\]{}|;:,.<>?]/.test(pwd)) score++;
-  return score; // 0–4
+  return score; // 0â€“4
 }
 function updateStrength(inputId, barId, labelId) {
   const pwd = document.getElementById(inputId)?.value || '';
@@ -158,14 +158,14 @@ function updateStrength(inputId, barId, labelId) {
   lbl.style.color   = pwd.length === 0 ? 'var(--ink-faint)' : colors[Math.min(score, 3)];
 }
 
-// ── Router ─────────────────────────────────────────────────────────────────────
+// â”€â”€ Router â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 (async () => {
   if (path === '/account/login')    { renderLogin();    return; }
   if (path === '/account/register') { renderRegister(); return; }
   if (path === '/account/forgot')   { renderForgot();   return; }
   if (path === '/account/reset')    { renderReset();    return; }
 
-  // /account — check if logged in
+  // /account â€” check if logged in
   const me = await fetch('/api/account/me').then(r => r.ok ? r.json() : null).catch(() => null);
   if (!me?.ok) {
     window.location.replace('/account/login');
@@ -174,9 +174,9 @@ function updateStrength(inputId, barId, labelId) {
   renderPortal(me);
 })();
 
-// ── Login ──────────────────────────────────────────────────────────────────────
+// â”€â”€ Login â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function renderLogin() {
-  document.title = 'Sign In — Letterhome';
+  document.title = 'Sign In â€” Letterhome';
   app.innerHTML = `
     <div class="eyebrow">Customer Account</div>
     <h1>Welcome <em>back.</em></h1>
@@ -184,10 +184,10 @@ function renderLogin() {
     <div class="card" style="max-width:460px">
       <div class="card-body">
         <div class="field"><label>Email</label><input id="login-email" type="email" autocomplete="email" placeholder="you@example.com"></div>
-        <div class="field"><label>Password</label><input id="login-pwd" type="password" autocomplete="current-password" placeholder="••••••••"></div>
+        <div class="field"><label>Password</label><input id="login-pwd" type="password" autocomplete="current-password" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"></div>
         <div class="err" id="login-err"></div>
         <div style="display:flex;align-items:center;gap:16px;margin-top:8px;flex-wrap:wrap">
-          <button class="btn btn-primary" onclick="doLogin()">Sign In →</button>
+          <button class="btn btn-primary" onclick="doLogin()">Sign In â†’</button>
           <a href="/account/forgot" style="font-size:13px;color:var(--ink-muted)">Forgot password?</a>
           <a href="/account/register" style="font-size:13px;color:var(--ink-muted);margin-left:auto">Create account</a>
         </div>
@@ -196,9 +196,9 @@ function renderLogin() {
   document.getElementById('login-pwd').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
 }
 
-// ── Forgot Password ────────────────────────────────────────────────────────────
+// â”€â”€ Forgot Password â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function renderForgot() {
-  document.title = 'Forgot Password — Letterhome';
+  document.title = 'Forgot Password â€” Letterhome';
   app.innerHTML = `
     <div class="eyebrow">Customer Account</div>
     <h1>Forgot your <em>password?</em></h1>
@@ -208,7 +208,7 @@ function renderForgot() {
         <div class="field"><label>Email</label><input id="forgot-email" type="email" autocomplete="email" placeholder="you@example.com"></div>
         <div class="err" id="forgot-err"></div>
         <div style="display:flex;align-items:center;gap:16px;margin-top:8px">
-          <button class="btn btn-primary" onclick="doForgot()">Send Reset Link →</button>
+          <button class="btn btn-primary" onclick="doForgot()">Send Reset Link â†’</button>
           <a href="/account/login" style="font-size:13px;color:var(--ink-muted)">Back to sign in</a>
         </div>
       </div>
@@ -221,19 +221,19 @@ async function doForgot() {
   const email = document.getElementById('forgot-email').value.trim();
   if (!email) { showErr('forgot-err', 'Please enter your email.'); return; }
   const btn = document.querySelector('[onclick="doForgot()"]');
-  btn.disabled = true; btn.textContent = 'Sending…';
+  btn.disabled = true; btn.textContent = 'Sendingâ€¦';
   await post('/api/account/forgot', { email });
   document.getElementById('forgot-body').innerHTML = `
     <p style="color:var(--ink-soft);font-size:15px;line-height:1.6">
       If an account exists for <strong>${esc(email)}</strong>, we've sent a password reset link to that address.
-      Check your inbox — the link is valid for 30 minutes.
+      Check your inbox â€” the link is valid for 30 minutes.
     </p>
-    <p style="margin-top:18px"><a href="/account/login" style="font-size:13px;color:var(--ink-muted)">← Back to sign in</a></p>`;
+    <p style="margin-top:18px"><a href="/account/login" style="font-size:13px;color:var(--ink-muted)">â† Back to sign in</a></p>`;
 }
 
-// ── Reset Password ─────────────────────────────────────────────────────────────
+// â”€â”€ Reset Password â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function renderReset() {
-  document.title = 'Set a New Password — Letterhome';
+  document.title = 'Set a New Password â€” Letterhome';
   const qs = new URLSearchParams(window.location.search);
   const email = (qs.get('email') || '').trim();
   const token = qs.get('token') || '';
@@ -256,11 +256,11 @@ function renderReset() {
           <div class="strength-bar"><div class="strength-fill" id="reset-strength-fill"></div></div>
           <div class="strength-label" id="reset-strength-lbl"></div>
         </div>
-        <div class="field"><label>Confirm New Password</label><input id="reset-pwd2" type="password" autocomplete="new-password" placeholder="••••••••"></div>
+        <div class="field"><label>Confirm New Password</label><input id="reset-pwd2" type="password" autocomplete="new-password" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"></div>
         <div class="err" id="reset-err"></div>
         <p style="font-size:12px;color:var(--ink-faint);margin-bottom:16px;line-height:1.5">Must be at least 8 characters and include a letter and a number or symbol. We also check it against the Have-I-Been-Pwned breach database.</p>
         <div style="display:flex;align-items:center;gap:16px">
-          <button class="btn btn-primary" onclick="doReset('${esc(email)}','${esc(token)}')">Update Password →</button>
+          <button class="btn btn-primary" onclick="doReset('${esc(email)}','${esc(token)}')">Update Password â†’</button>
           <a href="/account/login" style="font-size:13px;color:var(--ink-muted)">Cancel</a>
         </div>
       </div>
@@ -275,15 +275,15 @@ async function doReset(email, token) {
   if (!password) { showErr('reset-err', 'Please enter a new password.'); return; }
   if (password !== confirm) { showErr('reset-err', 'Passwords do not match.'); return; }
   const btn = document.querySelector('[onclick^="doReset"]');
-  btn.disabled = true; btn.textContent = 'Updating…';
+  btn.disabled = true; btn.textContent = 'Updatingâ€¦';
   const r = await post('/api/account/reset-password', { email, token, new_password: password });
-  btn.disabled = false; btn.textContent = 'Update Password →';
+  btn.disabled = false; btn.textContent = 'Update Password â†’';
   if (r.ok) {
     app.innerHTML = `
       <div class="eyebrow">Customer Account</div>
       <h1>Password <em>updated.</em></h1>
       <p class="sub">You can now sign in with your new password.</p>
-      <div style="margin-top:24px"><a href="/account/login" class="btn btn-primary">Sign In →</a></div>`;
+      <div style="margin-top:24px"><a href="/account/login" class="btn btn-primary">Sign In â†’</a></div>`;
     return;
   }
   showErr('reset-err', r.error || 'Could not reset password.');
@@ -295,20 +295,20 @@ async function doLogin() {
   const password = document.getElementById('login-pwd').value;
   if (!email || !password) { showErr('login-err', 'Please enter your email and password.'); return; }
   const btn = document.querySelector('[onclick="doLogin()"]');
-  btn.disabled = true; btn.textContent = 'Signing in…';
+  btn.disabled = true; btn.textContent = 'Signing inâ€¦';
   const r = await post('/api/account/login', { email, password });
-  btn.disabled = false; btn.textContent = 'Sign In →';
+  btn.disabled = false; btn.textContent = 'Sign In â†’';
   if (r.ok) { window.location.replace('/account'); return; }
   showErr('login-err', r.error || 'Sign in failed.');
 }
 
-// ── Register ───────────────────────────────────────────────────────────────────
+// â”€â”€ Register â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function renderRegister() {
-  document.title = 'Create Account — Letterhome';
+  document.title = 'Create Account â€” Letterhome';
   app.innerHTML = `
     <div class="eyebrow">Customer Account</div>
     <h1>Save your <em>details.</em></h1>
-    <p class="sub">Create a free account to save your return address and your frequent recipients — so you never have to type them again.</p>
+    <p class="sub">Create a free account to save your return address and your frequent recipients â€” so you never have to type them again.</p>
     <div class="card" style="max-width:460px">
       <div class="card-body">
         <div class="field"><label>Email</label><input id="reg-email" type="email" autocomplete="email" placeholder="you@example.com"></div>
@@ -318,11 +318,11 @@ function renderRegister() {
           <div class="strength-bar"><div class="strength-fill" id="reg-strength-fill"></div></div>
           <div class="strength-label" id="reg-strength-lbl"></div>
         </div>
-        <div class="field"><label>Confirm Password</label><input id="reg-pwd2" type="password" autocomplete="new-password" placeholder="••••••••"></div>
+        <div class="field"><label>Confirm Password</label><input id="reg-pwd2" type="password" autocomplete="new-password" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"></div>
         <div class="err" id="reg-err"></div>
         <p style="font-size:12px;color:var(--ink-faint);margin-bottom:16px;line-height:1.5">An account is never required to place an order. Your password must be at least 8 characters and include a letter and a number or symbol.</p>
         <div style="display:flex;align-items:center;gap:16px">
-          <button class="btn btn-primary" onclick="doRegister()">Create Account →</button>
+          <button class="btn btn-primary" onclick="doRegister()">Create Account â†’</button>
           <a href="/account/login" style="font-size:13px;color:var(--ink-muted)">Already have one? Sign in</a>
         </div>
       </div>
@@ -338,14 +338,14 @@ async function doRegister() {
   if (!email || !password) { showErr('reg-err', 'Please fill in all fields.'); return; }
   if (password !== confirm) { showErr('reg-err', 'Passwords do not match.'); return; }
   const btn = document.querySelector('[onclick="doRegister()"]');
-  btn.disabled = true; btn.textContent = 'Creating…';
+  btn.disabled = true; btn.textContent = 'Creatingâ€¦';
   const r = await post('/api/account/register', { email, password });
-  btn.disabled = false; btn.textContent = 'Create Account →';
+  btn.disabled = false; btn.textContent = 'Create Account â†’';
   if (r.ok) { window.location.replace('/account'); return; }
   showErr('reg-err', r.error || 'Registration failed.');
 }
 
-// ── Portal ─────────────────────────────────────────────────────────────────────
+// â”€â”€ Portal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function renderPortal(me) {
   const c = me.customer;
   const orders = me.orders || [];
@@ -370,12 +370,12 @@ function renderPortal(me) {
         <div style="display:flex;align-items:flex-start;justify-content:space-between;padding:12px 0;border-bottom:1px solid rgba(42,42,42,0.07)" id="recip-${r.id}">
           <div>
             <div style="font-weight:500;font-size:14px">${esc(r.label || r.recipient_name)}</div>
-            <div style="font-size:12px;color:var(--ink-muted)">${esc(r.recipient_name)}${r.recipient_city ? ', ' + esc(r.recipient_city) : ''} · ${esc(r.destination_country)}</div>
+            <div style="font-size:12px;color:var(--ink-muted)">${esc(r.recipient_name)}${r.recipient_city ? ', ' + esc(r.recipient_city) : ''} Â· ${esc(r.destination_country)}</div>
           </div>
           <button class="btn-ghost" onclick="deleteRecipient(${r.id})" style="font-size:12px;flex-shrink:0;margin-left:16px">Remove</button>
         </div>`).join('');
 
-  document.title = 'My Account — Letterhome';
+  document.title = 'My Account â€” Letterhome';
   app.innerHTML = `
     <div style="display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:40px">
       <div>
@@ -483,7 +483,7 @@ async function saveReturnAddress() {
     sender_postal:   document.getElementById('s-postal').value.trim(),
     sender_country:  document.getElementById('s-country').value.trim(),
   });
-  if (r.ok) showOk('addr-ok', '✓ Address saved');
+  if (r.ok) showOk('addr-ok', 'âœ“ Address saved');
   else showErr('addr-err', r.error || 'Error saving address.');
 }
 
@@ -524,14 +524,14 @@ async function changePassword() {
   if (!current || !newPwd) { showErr('pwd-err', 'Please fill in all fields.'); return; }
   if (newPwd !== confirm)  { showErr('pwd-err', 'New passwords do not match.'); return; }
   const btn = document.querySelector('[onclick="changePassword()"]');
-  btn.disabled = true; btn.textContent = 'Updating…';
+  btn.disabled = true; btn.textContent = 'Updatingâ€¦';
   const r = await put('/api/account/password', { current_password: current, new_password: newPwd });
   btn.disabled = false; btn.textContent = 'Update Password';
   if (r.ok) {
     document.getElementById('pwd-current').value = '';
     document.getElementById('pwd-new').value = '';
     document.getElementById('pwd-confirm').value = '';
-    showOk('pwd-ok', '✓ Password updated');
+    showOk('pwd-ok', 'âœ“ Password updated');
   } else {
     showErr('pwd-err', r.error || 'Error updating password.');
   }

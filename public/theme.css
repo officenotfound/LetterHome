@@ -266,4 +266,82 @@ h1 {
 /* Strip box-shadows on cards/panels — minimalism uses borders and space, not depth. */
 .price-card, .panel, .form-card, .result, .card { box-shadow: none !important; }
 .price-card:hover { transform: none !important; box-shadow: none !important; }
-.btn:hover, .btn-red:hover, .btn-primary:hover, .btn-outline:hover, .btn-ink:hover { box-shadow: none !important; }
+.btn:hover, .btn-red:hover, .btn-primary:hover, .btn-outline:hover, .btn-ink:hover { box-shadow: none !important; transform: none !important; }
+
+/* ── Cohesion pass v0.2.10 — enforce site-wide consistency ──────────────────
+   Every public page has its own inline <style> with patterns from the kraft
+   era. These overrides normalize the most visible inconsistencies so all
+   pages read as one site, not eleven slightly-different islands.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+/* Form cards: strip the warm-era soft shadow + cream background */
+.form-card, .result {
+  background: transparent !important;
+  border: 1px solid var(--line) !important;
+  padding: 36px !important;
+}
+
+/* Story / story-quote blocks across all pages — ensure light-text-on-warm-bg
+   from the old kraft era doesn't leave invisible text on the new white bg.
+   These selectors apply to both index.html (transparent story) and about.html
+   (still has a dark story band, but with lighter borders now). */
+.story-text p, .story-text .founder-intro { color: var(--ink) !important; }
+.story-text .eyebrow { color: var(--red) !important; }
+.story-text .eyebrow::before { background: var(--red) !important; }
+.story-text h2 em { color: var(--red) !important; }
+.story-quote { color: var(--ink) !important; background: var(--kraft-light) !important; border-left-color: var(--red) !important; }
+.story-quote::before { color: var(--red) !important; opacity: 0.3 !important; }
+.story-quote cite { color: var(--ink-muted) !important; }
+/* about.html story band has hardcoded warm bg + 4px red borders — modernize */
+section.story[style], section.story {
+  border-top-width: 1px !important;
+  border-bottom-width: 1px !important;
+}
+.manifesto { background: var(--kraft-light) !important; border-left: 3px solid var(--red) !important; }
+.manifesto p { color: var(--ink) !important; }
+/* On about.html the story still has a dark bg — keep text light there */
+section.story[style*="background:var(--ink)"] .story-text p,
+section.story[style*="background:var(--ink)"] .story-text .founder-intro,
+section.story[style*="background:var(--ink)"] .manifesto p { color: var(--paper) !important; }
+
+/* Nav: every page has its own inline nav with hardcoded warm kraft blur.
+   The base override "nav { background: rgba(250,250,250,0.92) }" from v0.2.2
+   handles light mode. Make sure the logo mark uses the new red. */
+.logo-mark { background: var(--red) !important; box-shadow: none !important; border-radius: 2px !important; }
+.logo-mark::before { display: none !important; } /* drop the dashed border halo around L */
+
+/* Buttons: enforce sharp corners across .btn-red, .btn-ink (old kraft button classes) */
+.btn-red, .btn-ink, .btn-primary, .btn-outline { border-radius: 0 !important; }
+.btn-red:hover, .btn-ink:hover { transform: none !important; }
+
+/* Inputs across legacy pages: enforce underline-only treatment even where
+   the inline CSS still has the old kraft-light boxed input style. */
+.form-card input[type=text],
+.form-card input[type=email],
+.form-card input[type=password],
+.form-card input[type=tel],
+.form-card textarea,
+.form-card select,
+.result input,
+.result textarea {
+  border: none !important;
+  border-bottom: 1.5px solid var(--ink) !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+  padding: 12px 2px !important;
+}
+.form-card input:focus, .form-card textarea:focus, .form-card select:focus,
+.result input:focus, .result textarea:focus {
+  border-bottom-color: var(--red) !important;
+  box-shadow: none !important;
+}
+/* Textareas need a visible frame since they wrap */
+.form-card textarea, .result textarea {
+  border: 1px solid var(--ink) !important;
+  padding: 14px 14px !important;
+}
+
+/* Footer text on dark bg — ensure readable on the now-pure-#111 footer */
+footer { color: rgba(255,255,255,0.72) !important; }
+.footer-bottom a, .footer-col a, .footer-brand p { color: rgba(255,255,255,0.65) !important; }
+.footer-bottom { color: rgba(255,255,255,0.55) !important; }
