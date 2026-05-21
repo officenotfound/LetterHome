@@ -340,7 +340,7 @@ section.story[style*="background:var(--ink)"] .manifesto p { color: var(--paper)
 .logo-mark { background: var(--red) !important; box-shadow: none !important; border-radius: 2px !important; width: 40px !important; height: 26px !important; }
 .logo-mark::before { display: none !important; }
 .logo { font-style: italic !important; font-size: 22px !important; letter-spacing: -0.01em !important; gap: 10px !important; }
-.nav-inner { position: relative !important; padding: 12px 36px !important; }
+.nav-inner { position: relative !important; padding: 8px 36px !important; }
 .nav-links { display: none !important; }
 .nav-cta { position: absolute !important; right: 36px !important; top: 50% !important; transform: translateY(-50%) !important; }
 @media (max-width: 480px) { .nav-cta { right: 18px !important; padding: 10px 16px !important; font-size: 12px !important; } }
@@ -348,6 +348,17 @@ section.story[style*="background:var(--ink)"] .manifesto p { color: var(--paper)
 /* Buttons: enforce sharp corners across .btn-red, .btn-ink (old kraft button classes) */
 .btn-red, .btn-ink, .btn-primary, .btn-outline { border-radius: 0 !important; }
 .btn-red:hover, .btn-ink:hover { transform: none !important; }
+
+/* Stitched border on all red buttons — mirrors the envelope logo aesthetic */
+.btn-red { position: relative !important; overflow: visible !important; }
+.btn-red::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border: 1px dashed rgba(255,255,255,0.45);
+  border-radius: 1px;
+  pointer-events: none;
+}
 
 /* Inputs across legacy pages: enforce underline-only treatment even where
    the inline CSS still has the old kraft-light boxed input style. */
