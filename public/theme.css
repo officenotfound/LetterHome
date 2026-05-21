@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Pinyon+Script&display=swap');
-
 /* ── Light-mode variable improvements ───────────────────────────────────────
    theme.css loads after all inline <style> blocks, so same-specificity rules
    here win. Dark-mode is [data-theme="dark"] which is higher specificity anyway.
@@ -138,9 +136,6 @@ nav { background: rgba(250,250,250,0.92) !important; }
 .nav-links a:hover { color: var(--red); }
 @media (max-width: 900px) { .nav-links { display: none; } }
 
-footer { color: rgba(255,255,255,0.65) !important; }
-.footer-bottom a { color: rgba(255,255,255,0.5) !important; }
-.footer-brand p, .footer-col a { color: rgba(255,255,255,0.65) !important; }
 
 /* ── Dark mode ────────────────────────────────────────────────────────────── */
 [data-theme="dark"] {
@@ -331,17 +326,13 @@ section.story[style], section.story {
 }
 .manifesto { background: var(--kraft-light) !important; border-left: 3px solid var(--red) !important; }
 .manifesto p { color: var(--ink) !important; }
-/* On about.html the story still has a dark bg — keep text light there */
-section.story[style*="background:var(--ink)"] .story-text p,
-section.story[style*="background:var(--ink)"] .story-text .founder-intro,
-section.story[style*="background:var(--ink)"] .manifesto p { color: var(--paper) !important; }
 
 /* Nav: every page has its own inline nav with hardcoded warm kraft blur.
    The base override "nav { background: rgba(250,250,250,0.92) }" from v0.2.2
    handles light mode. Make sure the logo mark uses the new red. */
 .logo-mark { background: var(--red) !important; box-shadow: none !important; border-radius: 2px !important; width: 40px !important; height: 26px !important; }
 .logo-mark::before { display: none !important; }
-.logo { font-family: 'Pinyon Script', cursive !important; font-style: normal !important; font-size: 34px !important; letter-spacing: 0.01em !important; gap: 10px !important; }
+.logo { font-family: 'DM Serif Display', serif !important; font-style: italic !important; font-size: 22px !important; letter-spacing: -0.01em !important; gap: 10px !important; }
 .nav-inner { position: relative !important; padding: 8px 36px !important; }
 .nav-links { display: none !important; }
 .nav-cta { position: absolute !important; right: 36px !important; top: 50% !important; transform: translateY(-50%) !important; }
@@ -353,6 +344,8 @@ section.story[style*="background:var(--ink)"] .manifesto p { color: var(--paper)
 
 /* Stitched border — direct border property, unaffected by transition:all or overflow */
 .btn-red { border: 2px dashed white !important; }
+.btn-outline { border: 2px dashed var(--ink) !important; }
+.btn-primary, .btn-ink { border: 2px dashed rgba(255,255,255,0.45) !important; }
 
 /* Inputs across legacy pages: enforce underline-only treatment even where
    the inline CSS still has the old kraft-light boxed input style. */
