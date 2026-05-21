@@ -121,7 +121,7 @@ nav {
   background: var(--paper); border-bottom: 1px solid var(--line);
   padding: 24px 36px; position: relative; z-index: 2;
 }
-.progress-inner { max-width: 860px; margin: 0 auto; }
+.progress-inner { max-width: 960px; margin: 0 auto; }
 .progress-steps { display: flex; align-items: center; gap: 0; }
 .progress-step {
   display: flex; flex-direction: column; align-items: center; flex: 1;
@@ -160,7 +160,7 @@ nav {
 .ac-item:hover { background: var(--kraft-light); color: var(--ink); }
 .ac-item:last-child { border-bottom: none; }
 .send-wrap {
-  max-width: 860px; margin: 0 auto; padding: 48px 36px 80px;
+  max-width: 960px; margin: 0 auto; padding: 48px 36px 80px;
   position: relative; z-index: 2;
 }
 
@@ -203,8 +203,18 @@ input:focus, select:focus, textarea:focus {
 textarea {
   border-top: 1px dashed var(--line); padding-top: 14px;
 }
-textarea { resize: vertical; min-height: 180px; line-height: 1.6; }
+textarea { resize: vertical; min-height: 260px; line-height: 1.6; }
 .field-note { font-size: 12px; color: var(--ink-faint); margin-top: 4px; }
+
+/* DESTINATION PICKER */
+.destination-picker {
+  background: var(--kraft); border: 1px solid var(--line);
+  border-left: 3px solid var(--red); padding: 24px 28px; margin-bottom: 36px; border-radius: 2px;
+}
+.destination-picker-header {
+  font-family: 'DM Mono', monospace; font-size: 11px; text-transform: uppercase;
+  letter-spacing: 0.15em; color: var(--red); font-weight: 500; margin-bottom: 16px;
+}
 
 /* ADDRESS COLUMNS */
 .address-columns {
@@ -448,32 +458,11 @@ textarea.field-error { border-color: var(--red) !important; }
 
     <div id="account-banner" style="display:none"></div>
 
-    <div class="address-columns">
-      <div class="address-col">
-        <h3>From — Sender</h3>
-        <div class="check-row" style="margin-bottom:20px;">
-          <input type="checkbox" id="skip-return" onchange="toggleReturn(this)">
-          <label for="skip-return">Skip return address (anonymous send)</label>
-        </div>
-        <div id="sender-fields">
-          <div class="form-group"><label for="s-name">Full Name</label><input id="s-name" type="text" placeholder="Margaret Tremblay" autocomplete="name"></div>
-          <div class="form-group"><label for="s-street">Street Address</label><input id="s-street" type="text" placeholder="123 Main Street" autocomplete="off"></div>
-          <div class="form-grid-2">
-            <div class="form-group"><label for="s-city">City</label><input id="s-city" type="text" placeholder="Toronto" autocomplete="address-level2"></div>
-            <div class="form-group"><label for="s-province">Province / State</label><input id="s-province" type="text" placeholder="ON"></div>
-          </div>
-          <div class="form-grid-2">
-            <div class="form-group"><label for="s-postal">Postal Code</label><input id="s-postal" type="text" placeholder="V6B 1A1" maxlength="10"></div>
-            <div class="form-group"><label for="s-country">Country</label><input id="s-country" type="text" placeholder="Canada" autocomplete="country-name"></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="address-col">
-        <h3>To — Recipient</h3>
-        <div class="form-group">
-          <label for="r-country">Destination Country</label>
-          <select id="r-country" onchange="updatePricing()">
+    <div class="destination-picker">
+      <div class="destination-picker-header">First — where is this going?</div>
+      <div class="form-group" style="max-width:520px;margin-bottom:0">
+        <label for="r-country">Destination Country</label>
+        <select id="r-country" onchange="updatePricing()">
             <option value="CA">Canada — $10 CAD</option>
             <option value="AL">Albania — $20 CAD</option>
             <option value="DZ">Algeria — $20 CAD</option>
@@ -650,9 +639,34 @@ textarea.field-error { border-color: var(--red) !important; }
             <option value="VE">Venezuela — $20 CAD</option>
             <option value="VN">Vietnam — $20 CAD</option>
             <option value="ZM">Zambia — $20 CAD</option>
-          </select>
-          <span class="field-note">Domestic (Canada) $10 · International $20 — all prices CAD</span>
+        </select>
+        <span class="field-note">Domestic (Canada) $10 · International $20 — all prices CAD</span>
+      </div>
+    </div>
+
+    <div class="address-columns">
+      <div class="address-col">
+        <h3>From — Sender</h3>
+        <div class="check-row" style="margin-bottom:20px;">
+          <input type="checkbox" id="skip-return" onchange="toggleReturn(this)">
+          <label for="skip-return">Skip return address (anonymous send)</label>
         </div>
+        <div id="sender-fields">
+          <div class="form-group"><label for="s-name">Full Name</label><input id="s-name" type="text" placeholder="Margaret Tremblay" autocomplete="name"></div>
+          <div class="form-group"><label for="s-street">Street Address</label><input id="s-street" type="text" placeholder="123 Main Street" autocomplete="off"></div>
+          <div class="form-grid-2">
+            <div class="form-group"><label for="s-city">City</label><input id="s-city" type="text" placeholder="Toronto" autocomplete="address-level2"></div>
+            <div class="form-group"><label for="s-province">Province / State</label><input id="s-province" type="text" placeholder="ON"></div>
+          </div>
+          <div class="form-grid-2">
+            <div class="form-group"><label for="s-postal">Postal Code</label><input id="s-postal" type="text" placeholder="V6B 1A1" maxlength="10"></div>
+            <div class="form-group"><label for="s-country">Country</label><input id="s-country" type="text" placeholder="Canada" autocomplete="country-name"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="address-col">
+        <h3>To — Recipient</h3>
         <div class="form-group"><label for="r-name">Full Name</label><input id="r-name" type="text" placeholder="James Okafor"></div>
         <div class="form-group"><label for="r-street">Street Address</label><input id="r-street" type="text" placeholder="456 Oak Avenue, Apt 3" autocomplete="off"></div>
         <div class="form-grid-2">
@@ -671,11 +685,14 @@ textarea.field-error { border-color: var(--red) !important; }
             <input id="r-province-text" type="text" placeholder="State / Region / Province" style="display:none">
           </div>
         </div>
-        <div class="form-grid-2">
-          <div class="form-group"><label for="r-postal">Postal / ZIP Code</label><input id="r-postal" type="text" placeholder="B3H 2L6"></div>
-          <div class="form-group"><label for="r-email">Your Email (confirmation)</label><input id="r-email" type="email" placeholder="you@example.com" autocomplete="email"></div>
-        </div>
+        <div class="form-group"><label for="r-postal">Postal / ZIP Code</label><input id="r-postal" type="text" placeholder="B3H 2L6"></div>
       </div>
+    </div>
+
+    <div class="form-group" style="margin-top:32px;padding-top:28px;border-top:1px dashed var(--line);max-width:520px">
+      <label for="r-email">Your Email (confirmation)</label>
+      <input id="r-email" type="email" placeholder="you@example.com" autocomplete="email">
+      <span class="field-note">Your order confirmation goes here — used only for this order.</span>
     </div>
 
     <div class="panel-nav">
@@ -694,6 +711,7 @@ textarea.field-error { border-color: var(--red) !important; }
       <label for="letter-body">Your Message</label>
       <textarea id="letter-body" placeholder="Dear Margaret,&#10;&#10;I hope this letter finds you well. I'm writing from..." oninput="updatePreview()"></textarea>
       <span class="field-note">Up to 5 pages (~2,500 words). Plain text — we lay it out in a clean serif typeface.</span>
+      <span class="field-note" id="word-count" style="margin-top:2px;text-align:right">0 words</span>
     </div>
 
     <div class="attach-zone" onclick="document.getElementById('file-input').click()">
@@ -743,7 +761,7 @@ textarea.field-error { border-color: var(--red) !important; }
     </div>
 
     <div class="privacy-note">
-      <span>🔒</span>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--red);flex-shrink:0;margin-top:3px"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
       <p>Your letter content is used to print and mail your letter, then deleted within 7 days. We don't read, share or store your message for any other purpose. Payments go through Stripe; we never see card details.</p>
     </div>
 
@@ -843,6 +861,9 @@ function updatePreview() {
   const body = document.getElementById('letter-body').value;
   const el = document.getElementById('preview-body-text');
   if (el) el.textContent = body || 'Your letter will appear here as you type it in Step 2.';
+  const wordCount = body.trim() ? body.trim().split(/\s+/).length : 0;
+  const wc = document.getElementById('word-count');
+  if (wc) wc.textContent = wordCount + ' word' + (wordCount !== 1 ? 's' : '');
 }
 
 function getRecipientProvince() {
