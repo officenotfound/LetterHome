@@ -387,6 +387,7 @@ footer { color: rgba(255,255,255,0.72) !important; padding: 8px 36px !important;
 @media (max-width: 768px) {
   footer { padding: 8px 18px !important; }
   .footer-bottom { font-size: 10px !important; letter-spacing: 0.04em !important; gap: 8px !important; }
+  .footer-bottom-links { gap: 12px !important; }
 }
 
 /* ── Responsive overrides (site-wide) ──────────────────────────────────────── */
