@@ -349,8 +349,8 @@ section.story[style*="background:var(--ink)"] .manifesto p { color: var(--paper)
 .btn-red, .btn-ink, .btn-primary, .btn-outline { border-radius: 0 !important; }
 .btn-red:hover, .btn-ink:hover { transform: none !important; }
 
-/* Stitched border — negative outline-offset draws it inside the button */
-.btn-red { outline: 1px dashed rgba(255,255,255,0.6) !important; outline-offset: -5px !important; }
+/* Stitched border — direct border property, unaffected by transition:all or overflow */
+.btn-red { border: 1px dashed rgba(255,255,255,0.55) !important; }
 
 /* Inputs across legacy pages: enforce underline-only treatment even where
    the inline CSS still has the old kraft-light boxed input style. */
