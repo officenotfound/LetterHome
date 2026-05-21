@@ -1235,6 +1235,50 @@ footer {
   .envelope { transform: rotate(0deg); }
   .price-card { padding: 40px 28px; }
 }
+
+/* ── Ticker (re-introduced v0.2.9, minimalist treatment) ─────────────────────
+   Marquee band below the hero. JS at bottom of page personalizes the text
+   per visitor's country via /api/visitor-country. */
+.ticker {
+  background: var(--ink);
+  color: var(--paper);
+  padding: 16px 0;
+  overflow: hidden;
+  position: relative;
+  z-index: 2;
+  border-top: 1px solid var(--ink);
+  border-bottom: 1px solid var(--ink);
+}
+.ticker-track {
+  display: flex;
+  gap: 48px;
+  white-space: nowrap;
+  animation: tickerScroll 38s linear infinite;
+  font-family: 'DM Serif Display', serif;
+  font-style: italic;
+  font-size: 18px;
+  will-change: transform;
+}
+.ticker-track span {
+  display: inline-flex;
+  align-items: center;
+  gap: 48px;
+}
+.ticker-track span::after {
+  content: '/';
+  color: var(--red);
+  font-style: normal;
+  font-size: 14px;
+  font-family: 'DM Mono', ui-monospace, monospace;
+}
+@keyframes tickerScroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+@media (max-width: 768px) {
+  .ticker-track { font-size: 15px; gap: 36px; animation-duration: 24s; }
+  .ticker-track span { gap: 36px; }
+}
 </style>
 <script>(function(){try{var t=localStorage.getItem('lh-theme')||(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 <link rel="stylesheet" href="/theme.css">
@@ -1282,6 +1326,20 @@ footer {
 
   </div>
 </section>
+
+<!-- TICKER (personalized via IP geolocation — see script at bottom of page) -->
+<div class="ticker">
+  <div class="ticker-track">
+    <span>Letters from Berlin to Halifax</span>
+    <span>Tax forms from Tokyo to the CRA</span>
+    <span>A signed contract from Auckland to Toronto</span>
+    <span>Wedding invitations posted from Canada worldwide</span>
+    <span>Letters from Berlin to Halifax</span>
+    <span>Tax forms from Tokyo to the CRA</span>
+    <span>A signed contract from Auckland to Toronto</span>
+    <span>Wedding invitations posted from Canada worldwide</span>
+  </div>
+</div>
 
 <!-- HOW IT WORKS -->
 <section id="how">
@@ -1772,6 +1830,98 @@ footer {
 })();
 </script>
 
+<script>
+// Personalize ticker: detect visitor's country via server-side IP lookup,
+// replace static city-pairs with 5 lines using cities from their country
+// mailing to randomized Canadian cities. Falls back silently to the static
+// text if the API fails or the visitor is in Canada / an unmapped country.
+(async function personalizeTicker(){
+  const CA_CITIES = [
+    'Toronto','Vancouver','Montreal','Calgary','Ottawa','Edmonton',
+    'Winnipeg','Halifax','Saskatoon','Regina','Québec City','Victoria',
+    'Kelowna','Kitchener','Hamilton','London','Windsor','Barrie',
+    'Thunder Bay','Sudbury','Kingston','Fredericton','Moncton','Saint John',
+    'Charlottetown','St. John\'s','Whitehorse','Yellowknife','Iqaluit',
+    'Sherbrooke','Gatineau','Red Deer','Lethbridge','Prince George',
+    'Nanaimo','Abbotsford','Brandon','Truro','Sydney','Brampton',
+    'Mississauga','Oshawa','St. Catharines','Niagara Falls','Peterborough'
+  ];
+  const COUNTRY_CITIES = {
+    AU:['Sydney','Melbourne','Brisbane','Perth','Adelaide'],
+    AT:['Vienna','Salzburg','Innsbruck','Graz','Linz'],
+    BE:['Brussels','Antwerp','Ghent','Bruges','Liège'],
+    BR:['São Paulo','Rio de Janeiro','Brasília','Salvador','Belo Horizonte'],
+    CN:['Beijing','Shanghai','Shenzhen','Guangzhou','Chengdu'],
+    HR:['Zagreb','Split','Dubrovnik','Rijeka','Osijek'],
+    CZ:['Prague','Brno','Ostrava','Plzeň','Liberec'],
+    DK:['Copenhagen','Aarhus','Odense','Aalborg','Esbjerg'],
+    EG:['Cairo','Alexandria','Giza','Luxor','Port Said'],
+    FI:['Helsinki','Tampere','Turku','Oulu','Espoo'],
+    FR:['Paris','Lyon','Marseille','Toulouse','Nice'],
+    DE:['Berlin','Munich','Hamburg','Frankfurt','Cologne'],
+    GR:['Athens','Thessaloniki','Patras','Larissa','Heraklion'],
+    HK:['Hong Kong','Kowloon','Mong Kok','Sha Tin','Tuen Mun'],
+    HU:['Budapest','Debrecen','Szeged','Pécs','Győr'],
+    IS:['Reykjavík','Akureyri','Hafnarfjörður','Kópavogur','Selfoss'],
+    IN:['Mumbai','Delhi','Bangalore','Chennai','Hyderabad'],
+    ID:['Jakarta','Surabaya','Bandung','Medan','Bali'],
+    IE:['Dublin','Cork','Galway','Limerick','Waterford'],
+    IL:['Tel Aviv','Jerusalem','Haifa','Rishon LeZion','Petah Tikva'],
+    IT:['Rome','Milan','Florence','Naples','Venice'],
+    JP:['Tokyo','Osaka','Kyoto','Yokohama','Fukuoka'],
+    KE:['Nairobi','Mombasa','Kisumu','Nakuru','Eldoret'],
+    KR:['Seoul','Busan','Incheon','Daegu','Gwangju'],
+    LB:['Beirut','Tripoli','Sidon','Tyre','Nabatieh'],
+    MY:['Kuala Lumpur','Penang','Johor Bahru','Ipoh','Shah Alam'],
+    MX:['Mexico City','Guadalajara','Monterrey','Puebla','Tijuana'],
+    NL:['Amsterdam','Rotterdam','The Hague','Utrecht','Eindhoven'],
+    NZ:['Auckland','Wellington','Christchurch','Hamilton','Tauranga'],
+    NG:['Lagos','Abuja','Ibadan','Kano','Port Harcourt'],
+    NO:['Oslo','Bergen','Trondheim','Stavanger','Tromsø'],
+    PK:['Karachi','Lahore','Islamabad','Faisalabad','Rawalpindi'],
+    PH:['Manila','Cebu','Davao','Quezon City','Zamboanga'],
+    PL:['Warsaw','Kraków','Gdańsk','Wrocław','Poznań'],
+    PT:['Lisbon','Porto','Coimbra','Braga','Setúbal'],
+    QA:['Doha','Al Wakrah','Al Khor','Umm Salal','Mesaieed'],
+    RO:['Bucharest','Cluj-Napoca','Timișoara','Iași','Constanța'],
+    SA:['Riyadh','Jeddah','Mecca','Medina','Dammam'],
+    SG:['Singapore','Jurong East','Tampines','Woodlands','Bedok'],
+    ZA:['Cape Town','Johannesburg','Durban','Pretoria','East London'],
+    ES:['Madrid','Barcelona','Valencia','Seville','Bilbao'],
+    SE:['Stockholm','Gothenburg','Malmö','Uppsala','Västerås'],
+    CH:['Zürich','Geneva','Basel','Bern','Lausanne'],
+    TW:['Taipei','Kaohsiung','Taichung','Tainan','Keelung'],
+    TH:['Bangkok','Chiang Mai','Phuket','Pattaya','Chiang Rai'],
+    TR:['Istanbul','Ankara','İzmir','Antalya','Bursa'],
+    AE:['Dubai','Abu Dhabi','Sharjah','Ajman','Ras Al Khaimah'],
+    GB:['London','Manchester','Edinburgh','Glasgow','Birmingham'],
+    UA:['Kyiv','Lviv','Odesa','Kharkiv','Dnipro'],
+    US:['New York','Los Angeles','Chicago','San Francisco','Boston'],
+    VN:['Hanoi','Ho Chi Minh City','Da Nang','Hải Phòng','Huế'],
+  };
+
+  let cc = null;
+  try {
+    const r = await fetch('/api/visitor-country', { credentials: 'same-origin' });
+    if (r.ok) {
+      const d = await r.json();
+      if (d && d.country_code) cc = d.country_code;
+    }
+  } catch {}
+
+  if (!cc || cc === 'CA') return;
+  const cities = (COUNTRY_CITIES[cc] || []).slice(0, 5);
+  if (!cities.length) return;
+
+  const types = ['Letters','Documents','Tax forms','Birthday letters','Legal papers'];
+  const caShuffled = CA_CITIES.slice().sort(() => Math.random() - 0.5);
+  const items = cities.map((from, i) => `${types[i]} from ${from} to ${caShuffled[i]}`);
+
+  const track = document.querySelector('.ticker-track');
+  if (!track) return;
+  track.innerHTML = [...items, ...items].map(t => `<span>${t}</span>`).join('');
+})();
+</script>
 <script src="/theme.js"></script>
 <script>
 (async () => {
