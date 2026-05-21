@@ -1181,37 +1181,57 @@ footer {
 .hero-grid > div:nth-child(2) { animation-delay: 0.15s; }
 
 /* ========== RESPONSIVE ========== */
+/* ── 1024px: Medium desktop — tighten 3-col step padding ── */
+@media (max-width: 1024px) {
+  .steps .step { padding: 0 24px; }
+}
+
+/* ── 900px: Main layout break ── */
 @media (max-width: 900px) {
   .nav-links { display: none; }
-  .hero-grid { max-width: 100%; }
+  .nav-inner { padding: 16px 24px; }
   .hero { padding: 32px 24px 40px; }
-  .steps { grid-template-columns: 1fr; gap: 0; }
-  .steps .step { padding: 24px 0 !important; border-right: none !important; border-bottom: 1px solid var(--line); text-align: left; }
-  .steps .step:last-child { border-bottom: none; }
-  .pricing-grid { grid-template-columns: 1fr; gap: 36px; }
+  .hero-grid { max-width: 100%; }
+  .pricing-grid { grid-template-columns: 1fr; }
   .pricing-grid .price-card.featured { padding-right: 0; }
-  .pricing-grid .price-card:not(.featured) { padding-left: 0; border-left: none; border-top: 1px solid var(--line); padding-top: 36px; }
+  .pricing-grid .price-card:not(.featured) { padding-left: 0; border-left: none; border-top: 1px solid var(--line); padding-top: 32px; margin-top: 32px; }
   .usecases-grid { grid-template-columns: 1fr; }
   .story-inner { grid-template-columns: 1fr; gap: 36px; }
+  .story { padding: 48px 0; }
   .section-inner { padding: 40px 24px; }
   #how > .section-inner, #pricing > .section-inner,
-  #usecases > .section-inner, #faq > .section-inner {
-    padding-top: 36px; padding-bottom: 36px;
-  }
-  .story { padding: 48px 0; }
+  #usecases > .section-inner, #faq > .section-inner { padding-top: 32px; padding-bottom: 32px; }
   .cta-band { padding: 40px 24px; }
   .footer-grid { grid-template-columns: 1fr 1fr; gap: 28px; }
   .floating-letter { display: none; }
   .envelope-stage { min-height: 380px; }
-  .ticker-track { font-size: 18px; gap: 48px; animation-duration: 22s; }
-  .ticker-track span { gap: 48px; }
 }
 
-@media (max-width: 540px) {
-  .footer-grid { grid-template-columns: 1fr; }
-  .footer-bottom { flex-direction: column; text-align: center; }
-  .envelope { transform: rotate(0deg); }
-  .price-card { padding: 40px 28px; }
+/* ── 768px: Collapse steps, shrink quote ── */
+@media (max-width: 768px) {
+  .steps { grid-template-columns: 1fr; }
+  .steps .step { padding: 20px 0 !important; border-right: none !important; border-bottom: 1px solid var(--line); text-align: left; }
+  .steps .step:last-child { border-bottom: none; }
+  .story-quote { padding: 20px 22px; }
+  .story-quote::before { font-size: 56px; top: 4px; left: 12px; }
+  .usecases-grid { column-gap: 32px; }
+}
+
+/* ── 480px: Small phones ── */
+@media (max-width: 480px) {
+  .nav-inner { padding: 14px 18px; }
+  .logo { font-size: 22px; }
+  .hero { padding: 24px 18px 32px; }
+  .hero-lede { font-size: 15px !important; }
+  .section-inner { padding: 28px 18px; }
+  .section-head { margin-bottom: 28px !important; }
+  .cta-band { padding: 32px 18px; }
+  .story-inner { padding: 0 18px; }
+  .faq-item summary { font-size: 16px; }
+  .faq-item { padding: 14px 0; }
+  .price { font-size: 52px; }
+  .footer-grid { grid-template-columns: 1fr; gap: 24px; }
+  .footer-bottom { flex-direction: column; text-align: center; gap: 12px; }
 }
 
 /* ── Ticker (re-introduced v0.2.9, minimalist treatment) ─────────────────────
@@ -1254,8 +1274,12 @@ footer {
   to   { transform: translateX(-50%); }
 }
 @media (max-width: 768px) {
-  .ticker-track { font-size: 15px; gap: 36px; animation-duration: 24s; }
-  .ticker-track span { gap: 36px; }
+  .ticker-track { font-size: 15px; gap: 32px; animation-duration: 24s; }
+  .ticker-track span { gap: 32px; }
+}
+@media (max-width: 480px) {
+  .ticker-track { font-size: 13px; gap: 24px; animation-duration: 20s; }
+  .ticker-track span { gap: 24px; }
 }
 </style>
 <script>(function(){try{var t=localStorage.getItem('lh-theme')||(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
