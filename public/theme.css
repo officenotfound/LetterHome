@@ -379,7 +379,9 @@ section.story[style*="background:var(--ink)"] .manifesto p { color: var(--paper)
 /* Footer text on dark bg — ensure readable on the now-pure-#111 footer */
 footer { color: rgba(255,255,255,0.72) !important; padding: 8px 36px !important; }
 .footer-bottom a, .footer-col a, .footer-brand p { color: rgba(255,255,255,0.65) !important; }
-.footer-bottom { color: rgba(255,255,255,0.55) !important; flex-wrap: nowrap !important; white-space: nowrap !important; }
+.footer-bottom { color: rgba(255,255,255,0.55) !important; flex-wrap: nowrap !important; }
+.footer-bottom > div:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.footer-bottom-links { flex-shrink: 0 !important; }
 /* Hide multi-column link grid — keep only the single copyright bar */
 .footer-grid { display: none !important; }
 @media (max-width: 768px) {
