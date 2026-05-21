@@ -1109,56 +1109,12 @@ section { position: relative; z-index: 2; }
 footer {
   background: var(--ink);
   color: rgba(255,255,255,0.65);
-  padding: 48px 36px 28px;
-  position: relative;
-  z-index: 2;
+  padding: 20px 36px;
 }
-
-.footer-inner {
-  max-width: 1280px;
-  margin: 0 auto;
-}
-
-.footer-grid {
-  display: grid;
-  grid-template-columns: 1.5fr 1fr 1fr 1fr;
-  gap: 36px;
-  margin-bottom: 36px;
-}
-
-.footer-brand .logo { color: var(--paper); margin-bottom: 20px; }
-
-.footer-brand p {
-  font-size: 14px;
-  line-height: 1.65;
-  max-width: 340px;
-}
-
-.footer-col h4 {
-  color: var(--paper);
-  font-family: 'DM Mono', monospace;
-  font-size: 11px;
-  font-weight: 500;
-  margin-bottom: 18px;
-  text-transform: uppercase;
-  letter-spacing: 0.18em;
-}
-
-.footer-col ul { list-style: none; }
-.footer-col li { margin-bottom: 12px; }
-
-.footer-col a {
-  color: rgba(255,255,255,0.65);
-  text-decoration: none;
-  font-size: 14px;
-  transition: color 0.2s;
-}
-
-.footer-col a:hover { color: var(--red-stamp); }
 
 .footer-bottom {
-  border-top: 1px solid rgba(255,255,255,0.12);
-  padding-top: 28px;
+  max-width: 1280px;
+  margin: 0 auto;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -1166,13 +1122,13 @@ footer {
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  flex-wrap: wrap;
   gap: 16px;
 }
 
 .footer-bottom-links {
   display: flex;
   gap: 28px;
+  flex-shrink: 0;
 }
 
 /* ========== ANIMATIONS ========== */
@@ -1544,51 +1500,11 @@ footer {
 
 <!-- FOOTER -->
 <footer>
-  <div class="footer-inner">
-    <div class="footer-grid">
-      <div class="footer-brand">
-        <a href="#" class="logo">
-          <span class="logo-mark"><svg width="22" height="14" viewBox="0 0 22 14" fill="none" stroke="white" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2 2"><rect x="1" y="1" width="20" height="12" rx="1"/><path d="M1 1.5l10 8 10-8"/></svg></span>
-          Letterhome
-        </a>
-        <p>Letters and documents printed in full colour and mailed from Canada. Built for Canadians abroad, and useful to anyone who needs Canadian post without the trip.</p>
-      </div>
-
-      <div class="footer-col">
-        <h4>Service</h4>
-        <ul>
-          <li><a href="/send">Send a letter</a></li>
-          <li><a href="#pricing">Pricing</a></li>
-          <li><a href="#usecases">Use cases</a></li>
-          <li><a href="/track">Track an order</a></li>
-        </ul>
-      </div>
-
-      <div class="footer-col">
-        <h4>Company</h4>
-        <ul>
-          <li><a href="/about">About</a></li>
-          <li><a href="/contact">Contact</a></li>
-          <li><a href="/faq">FAQ</a></li>
-        </ul>
-      </div>
-
-      <div class="footer-col">
-        <h4>Legal</h4>
-        <ul>
-          <li><a href="/privacy">Privacy policy</a></li>
-          <li><a href="/terms">Terms of service</a></li>
-          <li><a href="/refunds">Refund policy</a></li>
-        </ul>
-      </div>
-    </div>
-
-    <div class="footer-bottom">
-      <div>© 2026 Letterhome · Letters posted from Canada</div>
-      <div class="footer-bottom-links">
-        <a href="/privacy">Privacy</a>
-        <a href="/terms">Terms</a>
-      </div>
+  <div class="footer-bottom">
+    <div>© 2026 Letterhome · Letters posted from Canada</div>
+    <div class="footer-bottom-links">
+      <a href="/privacy">Privacy</a>
+      <a href="/terms">Terms</a>
     </div>
   </div>
 </footer>
