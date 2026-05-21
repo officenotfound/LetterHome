@@ -346,9 +346,26 @@ textarea { resize: vertical; min-height: 260px; line-height: 1.6; }
 .eyebrow::before { content: ''; width: 40px; height: 1px; background: var(--red); }
 
 /* CHECKBOX */
-.check-row { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 16px; }
-.check-row input[type="checkbox"] { width: 16px; height: 16px; flex-shrink: 0; margin-top: 3px; accent-color: var(--ink); }
-.check-row label { font-family: 'Source Serif 4', Georgia, serif; font-size: 13px; color: var(--ink-muted); text-transform: none; letter-spacing: 0; font-weight: 400; cursor: pointer; }
+.check-row { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 16px; }
+.check-row input[type="checkbox"] {
+  appearance: none; -webkit-appearance: none;
+  width: 20px; height: 20px; min-width: 20px; flex-shrink: 0; margin-top: 1px;
+  border: 2px solid var(--ink); border-radius: 2px; background: transparent;
+  cursor: pointer; position: relative; transition: background 0.15s, border-color 0.15s;
+}
+.check-row input[type="checkbox"]:hover:not(:checked) { border-color: var(--red); }
+.check-row input[type="checkbox"]:checked {
+  background: var(--red); border-color: var(--red);
+}
+.check-row input[type="checkbox"]:checked::after {
+  content: '';
+  position: absolute; left: 5px; top: 1px;
+  width: 5px; height: 10px;
+  border: 2px solid #fff; border-top: none; border-left: none;
+  transform: rotate(45deg);
+}
+.check-row input[type="checkbox"]:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
+.check-row label { font-family: 'Source Serif 4', Georgia, serif; font-size: 13px; color: var(--ink-muted); text-transform: none; letter-spacing: 0; font-weight: 400; cursor: pointer; line-height: 1.5; }
 
 /* FOOTER */
 footer { background: var(--ink); color: rgba(255,255,255,0.65); padding: 48px 36px 32px; position: relative; z-index: 2; }
