@@ -340,10 +340,10 @@ section.story[style*="background:var(--ink)"] .manifesto p { color: var(--paper)
 .logo-mark { background: var(--red) !important; box-shadow: none !important; border-radius: 2px !important; width: 40px !important; height: 26px !important; }
 .logo-mark::before { display: none !important; }
 .logo { font-style: italic !important; font-size: 22px !important; letter-spacing: -0.01em !important; gap: 10px !important; }
-.nav-inner { display: grid !important; grid-template-columns: 1fr auto 1fr !important; align-items: center !important; justify-content: unset !important; }
-.logo { grid-column: 2 !important; justify-self: center !important; }
-.nav-links { display: flex !important; grid-column: 3 !important; justify-content: flex-end !important; }
-.nav-links > a:not(.btn-red), .nav-links > button { display: none !important; }
+.nav-inner { justify-content: center !important; position: relative !important; }
+.nav-links { display: none !important; }
+.nav-cta { position: absolute !important; right: 36px !important; top: 50% !important; transform: translateY(-50%) !important; }
+@media (max-width: 480px) { .nav-cta { right: 18px !important; padding: 10px 16px !important; font-size: 12px !important; } }
 
 /* Buttons: enforce sharp corners across .btn-red, .btn-ink (old kraft button classes) */
 .btn-red, .btn-ink, .btn-primary, .btn-outline { border-radius: 0 !important; }
@@ -421,17 +421,6 @@ footer { color: rgba(255,255,255,0.72) !important; }
   background-size: 100% 1px;
 }
 
-/* ── Footer colophon logo (simple-footer pages) ─────────────────────────── */
-.footer-logo {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 40px 36px 28px;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
-  margin-bottom: 8px;
-}
-.footer-logo .logo-mark { opacity: 0.5; }
-@media (max-width: 768px) { .footer-logo { display: none; } }
 
 /* ── Account page — dark mode fixes ──────────────────────────────────────── */
 [data-theme="dark"] .status-paid     { background: rgba(251,191,36,0.15)  !important; color: #fbbf24 !important; }
