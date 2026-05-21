@@ -299,7 +299,7 @@ nav {
 /* ========== HERO ========== */
 .hero {
   position: relative;
-  padding: 72px 36px 88px;
+  padding: 48px 36px 56px;
   max-width: 1280px;
   margin: 0 auto;
   z-index: 2;
@@ -328,7 +328,7 @@ nav {
   letter-spacing: 0.18em;
   color: var(--red);
   font-weight: 500;
-  margin-bottom: 32px;
+  margin-bottom: 20px;
 }
 
 .eyebrow::before {
@@ -340,12 +340,12 @@ nav {
 
 h1 {
   font-family: 'DM Serif Display', serif;
-  font-size: clamp(46px, 6.5vw, 84px);
+  font-size: clamp(40px, 5.5vw, 72px);
   line-height: 1.0;
   font-weight: 400;
   letter-spacing: -0.025em;
   color: var(--ink);
-  margin-bottom: 32px;
+  margin-bottom: 20px;
 }
 
 h1 em {
@@ -354,10 +354,10 @@ h1 em {
 }
 
 .hero-lede {
-  font-size: 19px;
+  font-size: 17px;
   line-height: 1.5;
   color: var(--ink-muted);
-  margin-bottom: 44px;
+  margin-bottom: 28px;
   max-width: 520px;
 }
 
@@ -366,7 +366,7 @@ h1 em {
   gap: 14px;
   align-items: center;
   flex-wrap: wrap;
-  margin-bottom: 36px;
+  margin-bottom: 24px;
 }
 
 .btn-large {
@@ -639,26 +639,26 @@ section { position: relative; z-index: 2; }
 .section-inner {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 64px 36px;
+  padding: 48px 36px;
 }
 
-#how > .section-inner       { padding-top: 56px; padding-bottom: 56px; }
-#pricing > .section-inner   { padding-top: 72px; padding-bottom: 72px; }
-#usecases > .section-inner  { padding-top: 48px; padding-bottom: 48px; }
-#faq > .section-inner       { padding-top: 56px; padding-bottom: 56px; }
+#how > .section-inner       { padding-top: 40px; padding-bottom: 40px; }
+#pricing > .section-inner   { padding-top: 48px; padding-bottom: 48px; }
+#usecases > .section-inner  { padding-top: 36px; padding-bottom: 36px; }
+#faq > .section-inner       { padding-top: 40px; padding-bottom: 40px; }
 
 .section-head {
-  margin-bottom: 72px;
+  margin-bottom: 40px;
   max-width: 760px;
 }
 
 .section-head h2 {
   font-family: 'DM Serif Display', serif;
-  font-size: clamp(38px, 5vw, 64px);
+  font-size: clamp(32px, 4vw, 52px);
   line-height: 1.05;
   font-weight: 400;
   letter-spacing: -0.025em;
-  margin-bottom: 24px;
+  margin-bottom: 14px;
 }
 
 .section-head h2 em {
@@ -682,8 +682,8 @@ section { position: relative; z-index: 2; }
   grid-template-areas:
     "one one"
     "two three";
-  column-gap: 56px;
-  row-gap: 56px;
+  column-gap: 40px;
+  row-gap: 36px;
   position: relative;
 }
 .steps .step:nth-child(1) { grid-area: one; }
@@ -694,9 +694,9 @@ section { position: relative; z-index: 2; }
 .steps .step:nth-child(1) {
   display: grid;
   grid-template-columns: auto 1fr;
-  gap: 36px;
+  gap: 28px;
   align-items: start;
-  padding-bottom: 36px;
+  padding-bottom: 24px;
   border-bottom: 1px dashed var(--line);
 }
 .steps .step:nth-child(1) .step-num { margin-bottom: 0; }
@@ -729,7 +729,7 @@ section { position: relative; z-index: 2; }
   text-transform: uppercase;
   letter-spacing: 0.2em;
   color: var(--ink-muted);
-  margin-bottom: 24px;
+  margin-bottom: 14px;
   background: var(--kraft);
   padding-right: 14px;
 }
@@ -776,19 +776,19 @@ section { position: relative; z-index: 2; }
   display: grid;
   grid-template-columns: 2fr 1fr;
   gap: 48px;
-  margin-top: 64px;
+  margin-top: 32px;
   align-items: stretch;
 }
 /* The dominant card (first one — "featured") gets a magazine-cover-sized price */
 .pricing-grid .price-card.featured .price {
-  font-size: clamp(96px, 12vw, 168px);
+  font-size: clamp(64px, 8vw, 108px);
   letter-spacing: -0.05em;
 }
 .pricing-grid .price-card.featured .price small {
-  font-size: 22px;
+  font-size: 18px;
 }
 .pricing-grid .price-card.featured h3 {
-  font-size: clamp(36px, 4vw, 48px);
+  font-size: clamp(28px, 3vw, 38px);
 }
 /* The secondary card stays compact */
 .pricing-grid .price-card:not(.featured) {
@@ -841,7 +841,7 @@ section { position: relative; z-index: 2; }
 .price-card .price-sub {
   color: var(--ink-muted);
   font-size: 15px;
-  margin-bottom: 36px;
+  margin-bottom: 16px;
   font-family: 'DM Mono', monospace;
   font-size: 12px;
   text-transform: uppercase;
@@ -875,16 +875,16 @@ section { position: relative; z-index: 2; }
   text-transform: uppercase;
   letter-spacing: 0.15em;
   color: var(--ink-muted);
-  margin-bottom: 36px;
+  margin-bottom: 20px;
 }
 
 .price-includes {
   list-style: none;
-  margin-bottom: 40px;
+  margin-bottom: 24px;
 }
 
 .price-includes li {
-  padding: 12px 0;
+  padding: 8px 0;
   border-bottom: 1px dashed var(--line);
   font-size: 14.5px;
   color: var(--ink-soft);
@@ -912,11 +912,11 @@ section { position: relative; z-index: 2; }
 .usecases-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  column-gap: 64px;
-  row-gap: 36px;
-  margin-top: 48px;
+  column-gap: 48px;
+  row-gap: 24px;
+  margin-top: 32px;
   border-top: 1px solid var(--line);
-  padding-top: 36px;
+  padding-top: 24px;
 }
 
 .usecase {
@@ -959,7 +959,7 @@ section { position: relative; z-index: 2; }
 .story {
   background: transparent;
   color: var(--ink);
-  padding: 72px 0;
+  padding: 48px 0;
   position: relative;
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
@@ -971,7 +971,7 @@ section { position: relative; z-index: 2; }
   padding: 0 36px;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 80px;
+  gap: 56px;
   align-items: center;
 }
 
@@ -980,11 +980,11 @@ section { position: relative; z-index: 2; }
 
 .story-text h2 {
   font-family: 'DM Serif Display', serif;
-  font-size: clamp(38px, 5vw, 60px);
+  font-size: clamp(30px, 3.5vw, 46px);
   line-height: 1.05;
   font-weight: 400;
   letter-spacing: -0.025em;
-  margin-bottom: 28px;
+  margin-bottom: 18px;
 }
 
 .story-text h2 em { font-style: italic; color: var(--red-stamp); }
@@ -1006,7 +1006,7 @@ section { position: relative; z-index: 2; }
 
 .story-quote {
   position: relative;
-  padding: 44px;
+  padding: 28px 32px;
   background: var(--kraft-light);
   border-left: 3px solid var(--red);
   font-family: 'DM Serif Display', serif;
@@ -1040,7 +1040,7 @@ section { position: relative; z-index: 2; }
 }
 
 /* ========== FAQ ========== */
-.faq-head { text-align: center; margin: 0 auto 64px; }
+.faq-head { text-align: center; margin: 0 auto 36px; }
 .faq-head .eyebrow { justify-content: center; }
 
 .faq-grid {
@@ -1050,14 +1050,14 @@ section { position: relative; z-index: 2; }
 
 .faq-item {
   border-top: 1px solid var(--line);
-  padding: 28px 0;
+  padding: 18px 0;
 }
 
 .faq-item:last-child { border-bottom: 1px solid var(--line); }
 
 .faq-item summary {
   font-family: 'DM Serif Display', serif;
-  font-size: 22px;
+  font-size: 19px;
   font-weight: 400;
   cursor: pointer;
   list-style: none;
@@ -1100,7 +1100,7 @@ section { position: relative; z-index: 2; }
 .cta-band {
   text-align: left;
   background: var(--paper);
-  padding: 72px 36px;
+  padding: 48px 36px;
   border-top: 1px solid var(--line);
   position: relative;
 }
@@ -1110,7 +1110,7 @@ section { position: relative; z-index: 2; }
 
 .cta-band h2 {
   font-family: 'DM Serif Display', serif;
-  font-size: clamp(40px, 5.5vw, 64px);
+  font-size: clamp(32px, 4vw, 48px);
   line-height: 1.05;
   font-weight: 400;
   letter-spacing: -0.025em;
@@ -1130,7 +1130,7 @@ section { position: relative; z-index: 2; }
 footer {
   background: var(--ink);
   color: rgba(255,255,255,0.65);
-  padding: 72px 36px 32px;
+  padding: 48px 36px 28px;
   position: relative;
   z-index: 2;
 }
@@ -1143,8 +1143,8 @@ footer {
 .footer-grid {
   display: grid;
   grid-template-columns: 1.5fr 1fr 1fr 1fr;
-  gap: 48px;
-  margin-bottom: 56px;
+  gap: 36px;
+  margin-bottom: 36px;
 }
 
 .footer-brand .logo { color: var(--paper); margin-bottom: 20px; }
@@ -1208,21 +1208,21 @@ footer {
 /* ========== RESPONSIVE ========== */
 @media (max-width: 900px) {
   .nav-links { display: none; }
-  .hero-grid { grid-template-columns: 1fr; gap: 60px; }
-  .hero { padding: 48px 24px 60px; }
-  .steps { grid-template-columns: 1fr; gap: 40px; }
+  .hero-grid { grid-template-columns: 1fr; gap: 40px; }
+  .hero { padding: 32px 24px 40px; }
+  .steps { grid-template-columns: 1fr; gap: 28px; }
   .steps::before { display: none; }
   .pricing-grid { grid-template-columns: 1fr; }
   .usecases-grid { grid-template-columns: 1fr; }
-  .story-inner { grid-template-columns: 1fr; gap: 56px; }
-  .section-inner { padding: 72px 24px; }
+  .story-inner { grid-template-columns: 1fr; gap: 36px; }
+  .section-inner { padding: 40px 24px; }
   #how > .section-inner, #pricing > .section-inner,
   #usecases > .section-inner, #faq > .section-inner {
-    padding-top: 64px; padding-bottom: 64px;
+    padding-top: 36px; padding-bottom: 36px;
   }
-  .story { padding: 88px 0; }
-  .cta-band { padding: 64px 24px; }
-  .footer-grid { grid-template-columns: 1fr 1fr; gap: 36px; }
+  .story { padding: 48px 0; }
+  .cta-band { padding: 40px 24px; }
+  .footer-grid { grid-template-columns: 1fr 1fr; gap: 28px; }
   .floating-letter { display: none; }
   .envelope-stage { min-height: 380px; }
   .ticker-track { font-size: 18px; gap: 48px; animation-duration: 22s; }
