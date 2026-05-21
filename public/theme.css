@@ -335,7 +335,7 @@ section.story[style], section.story {
 .logo { font-family: 'DM Serif Display', serif !important; font-style: italic !important; font-size: 22px !important; letter-spacing: -0.01em !important; gap: 10px !important; }
 .nav-inner { height: 56px !important; padding: 0 36px !important; }
 .nav-links { display: none !important; }
-.nav-cta { margin-left: auto !important; }
+.nav-cta { margin-left: auto !important; padding: 8px 18px !important; font-size: 12px !important; }
 @media (max-width: 900px) { .nav-inner { padding: 0 24px !important; height: 52px !important; } }
 @media (max-width: 480px) { .nav-inner { padding: 0 18px !important; height: 48px !important; } .nav-cta { padding: 10px 16px !important; font-size: 12px !important; } }
 
