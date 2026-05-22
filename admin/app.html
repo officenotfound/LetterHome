@@ -2708,39 +2708,43 @@ function showArcade() {
         <canvas id="tetris-canvas" width="${w}" height="${h}" style="display:block"></canvas>
         <div id="tetris-overlay" style="display:none;position:absolute;inset:0;background:rgba(250,250,250,0.85);align-items:center;justify-content:center;color:#111;backdrop-filter:blur(2px)"></div>
       </div>
-      <div style="display:flex;flex-direction:column;gap:18px;min-width:180px">
-        <div class="card" style="margin:0;padding:18px 20px">
-          <div style="font-family:'DM Mono',ui-monospace,monospace;font-size:9px;text-transform:uppercase;letter-spacing:0.18em;color:#9a9a9a;margin-bottom:6px">Score</div>
-          <div id="tetris-score" style="font-family:Georgia,serif;font-size:28px;font-weight:600;letter-spacing:-0.02em">0</div>
-        </div>
-        <div class="card" style="margin:0;padding:18px 20px;display:flex;gap:24px">
-          <div>
-            <div style="font-family:'DM Mono',ui-monospace,monospace;font-size:9px;text-transform:uppercase;letter-spacing:0.18em;color:#9a9a9a;margin-bottom:6px">Lines</div>
-            <div id="tetris-lines" style="font-family:Georgia,serif;font-size:22px;font-weight:600">0</div>
+      <div style="display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap">
+        <div style="display:flex;flex-direction:column;gap:18px;min-width:180px">
+          <div class="card" style="margin:0;padding:18px 20px">
+            <div style="font-family:'DM Mono',ui-monospace,monospace;font-size:9px;text-transform:uppercase;letter-spacing:0.18em;color:#9a9a9a;margin-bottom:6px">Score</div>
+            <div id="tetris-score" style="font-family:Georgia,serif;font-size:28px;font-weight:600;letter-spacing:-0.02em">0</div>
           </div>
-          <div>
-            <div style="font-family:'DM Mono',ui-monospace,monospace;font-size:9px;text-transform:uppercase;letter-spacing:0.18em;color:#9a9a9a;margin-bottom:6px">Level</div>
-            <div id="tetris-level" style="font-family:Georgia,serif;font-size:22px;font-weight:600">1</div>
+          <div class="card" style="margin:0;padding:18px 20px;display:flex;gap:24px">
+            <div>
+              <div style="font-family:'DM Mono',ui-monospace,monospace;font-size:9px;text-transform:uppercase;letter-spacing:0.18em;color:#9a9a9a;margin-bottom:6px">Lines</div>
+              <div id="tetris-lines" style="font-family:Georgia,serif;font-size:22px;font-weight:600">0</div>
+            </div>
+            <div>
+              <div style="font-family:'DM Mono',ui-monospace,monospace;font-size:9px;text-transform:uppercase;letter-spacing:0.18em;color:#9a9a9a;margin-bottom:6px">Level</div>
+              <div id="tetris-level" style="font-family:Georgia,serif;font-size:22px;font-weight:600">1</div>
+            </div>
+          </div>
+          <div class="card" style="margin:0;padding:18px 20px">
+            <div style="font-family:'DM Mono',ui-monospace,monospace;font-size:9px;text-transform:uppercase;letter-spacing:0.18em;color:#9a9a9a;margin-bottom:10px">Next</div>
+            <canvas id="tetris-next" width="120" height="90" style="display:block;border:1px solid #ececec;background:#fafafa"></canvas>
+          </div>
+          <div style="font-family:'DM Mono',ui-monospace,monospace;font-size:10px;line-height:1.7;color:#6b6b6b;text-transform:uppercase;letter-spacing:0.1em">
+            ← → &nbsp; Move<br>
+            ↑ &nbsp;&nbsp; Rotate<br>
+            ↓ &nbsp;&nbsp; Soft drop<br>
+            Space &nbsp; Hard drop<br>
+            P &nbsp;&nbsp; Pause
           </div>
         </div>
-        <div class="card" style="margin:0;padding:18px 20px">
-          <div style="font-family:'DM Mono',ui-monospace,monospace;font-size:9px;text-transform:uppercase;letter-spacing:0.18em;color:#9a9a9a;margin-bottom:10px">Next</div>
-          <canvas id="tetris-next" width="120" height="90" style="display:block;border:1px solid #ececec;background:#fafafa"></canvas>
-        </div>
-        <div style="font-family:'DM Mono',ui-monospace,monospace;font-size:10px;line-height:1.7;color:#6b6b6b;text-transform:uppercase;letter-spacing:0.1em">
-          ← → &nbsp; Move<br>
-          ↑ &nbsp;&nbsp; Rotate<br>
-          ↓ &nbsp;&nbsp; Soft drop<br>
-          Space &nbsp; Hard drop<br>
-          P &nbsp;&nbsp; Pause
-        </div>
-        <div class="card" style="margin:0;padding:18px 20px;min-width:180px">
-          <div style="font-family:'DM Mono',ui-monospace,monospace;font-size:9px;text-transform:uppercase;letter-spacing:0.18em;color:#9a9a9a;margin-bottom:10px">🏆 High Scores</div>
-          <div id="tetris-leaderboard"><div style="color:#9a9a9a;font-size:11px;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:0.1em;padding:8px 0">Loading…</div></div>
-        </div>
-        <div class="card" style="margin:0;padding:18px 20px;min-width:180px">
-          <div style="font-family:'DM Mono',ui-monospace,monospace;font-size:9px;text-transform:uppercase;letter-spacing:0.18em;color:#9a9a9a;margin-bottom:12px">Score Chart</div>
-          <div id="tetris-chart"><div style="color:#9a9a9a;font-size:11px;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:0.1em;padding:8px 0">Loading…</div></div>
+        <div style="display:flex;flex-direction:column;gap:18px;min-width:200px">
+          <div class="card" style="margin:0;padding:18px 20px">
+            <div style="font-family:'DM Mono',ui-monospace,monospace;font-size:9px;text-transform:uppercase;letter-spacing:0.18em;color:#9a9a9a;margin-bottom:10px">🏆 High Scores</div>
+            <div id="tetris-leaderboard"><div style="color:#9a9a9a;font-size:11px;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:0.1em;padding:8px 0">Loading…</div></div>
+          </div>
+          <div class="card" style="margin:0;padding:18px 20px">
+            <div style="font-family:'DM Mono',ui-monospace,monospace;font-size:9px;text-transform:uppercase;letter-spacing:0.18em;color:#9a9a9a;margin-bottom:12px">Score Chart</div>
+            <div id="tetris-chart"><div style="color:#9a9a9a;font-size:11px;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:0.1em;padding:8px 0">Loading…</div></div>
+          </div>
         </div>
       </div>
     </div>`);
