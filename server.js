@@ -404,6 +404,18 @@ try {
   db.exec(`CREATE INDEX IF NOT EXISTS idx_email_log_to ON email_log(to_email)`);
 } catch (e) { console.error('[init] email_log table:', e.message); }
 
+try {
+  db.exec(`CREATE TABLE IF NOT EXISTS tetris_scores (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    username   TEXT NOT NULL,
+    score      INTEGER NOT NULL,
+    lines      INTEGER NOT NULL,
+    level      INTEGER NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  )`);
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_tetris_score ON tetris_scores(score DESC)`);
+} catch (e) { console.error('[init] tetris_scores table:', e.message); }
+
 // ── IP geolocation (server-side, in-memory cached) ───────────────────────────
 const ipCountryCache = new Map();
 const IP_CACHE_TTL_MS = 24 * 3600 * 1000;
@@ -1229,6 +1241,27 @@ app.get('/admin/*', requireAdmin, (req, res) =>
 // ── Admin API ─────────────────────────────────────────────────────────────────
 app.get('/api/admin/me', requireAdmin, (req, res) =>
   res.json({ username: req.session.admin.username }));
+
+app.get('/api/admin/tetris/scores', requireAdmin, (req, res) => {
+  try {
+    const rows = db.prepare(
+      'SELECT username, score, lines, level, created_at FROM tetris_scores ORDER BY score DESC LIMIT 10'
+    ).all();
+    res.json(rows);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/admin/tetris/scores', requireAdmin, (req, res) => {
+  try {
+    const { score, lines, level } = req.body;
+    if (typeof score !== 'number' || score < 0) return res.status(400).json({ error: 'Invalid score' });
+    const username = req.session.admin.username;
+    const info = db.prepare(
+      'INSERT INTO tetris_scores (username, score, lines, level) VALUES (?, ?, ?, ?)'
+    ).run(username, Math.round(score), Math.round(lines || 0), Math.round(level || 1));
+    res.json({ id: info.lastInsertRowid });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
 
 // Cost & fee constants (in cents CAD)
 const COST_DOMESTIC      = 600;     // $6 per Canadian letter

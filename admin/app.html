@@ -2488,7 +2488,7 @@ const TETRIS = {
   cols: 10, rows: 20, cell: 26,
   loopId: null, keyHandler: null,
   board: null, piece: null, next: null,
-  score: 0, lines: 0, level: 1, dropMs: 800, lastDrop: 0, paused: false, over: false,
+  score: 0, lines: 0, level: 1, dropMs: 800, lastDrop: 0, paused: false, over: false, submitted: false,
 };
 
 const TETROMINOES = {
@@ -2579,7 +2579,7 @@ function tDraw() {
   document.getElementById('tetris-level').textContent = TETRIS.level;
   const overlay = document.getElementById('tetris-overlay');
   if (overlay) {
-    if (TETRIS.over)        { overlay.style.display = 'flex'; overlay.innerHTML = `<div style="text-align:center"><div style="font-family:Georgia,serif;font-size:28px;font-weight:600;margin-bottom:6px">Game Over</div><div style="font-size:12px;color:#9a9a9a;margin-bottom:14px;font-family:'DM Mono',ui-monospace,monospace;letter-spacing:0.1em">Final score: ${TETRIS.score}</div><button class="btn btn-primary btn-sm" onclick="tetrisReset()">Play again</button></div>`; }
+    if (TETRIS.over)        { overlay.style.display = 'flex'; overlay.innerHTML = `<div style="text-align:center"><div style="font-family:Georgia,serif;font-size:28px;font-weight:600;margin-bottom:6px">Game Over</div><div style="font-size:12px;color:#9a9a9a;margin-bottom:14px;font-family:'DM Mono',ui-monospace,monospace;letter-spacing:0.1em">Final score: ${TETRIS.score.toLocaleString()}</div><button class="btn btn-primary btn-sm" onclick="tetrisReset()">Play again</button></div>`; tetrisSubmitScore(); }
     else if (TETRIS.paused) { overlay.style.display = 'flex'; overlay.innerHTML = `<div style="text-align:center"><div style="font-family:Georgia,serif;font-size:26px;font-weight:600">Paused</div><div style="font-size:11px;color:#9a9a9a;margin-top:6px;font-family:'DM Mono',ui-monospace,monospace;letter-spacing:0.1em">Press P to resume</div></div>`; }
     else                    { overlay.style.display = 'none'; }
   }
@@ -2635,7 +2635,39 @@ function tetrisReset() {
   TETRIS.piece = tNewPiece();
   TETRIS.next  = tNewPiece();
   TETRIS.score = 0; TETRIS.lines = 0; TETRIS.level = 1;
-  TETRIS.dropMs = 800; TETRIS.lastDrop = 0; TETRIS.paused = false; TETRIS.over = false;
+  TETRIS.dropMs = 800; TETRIS.lastDrop = 0; TETRIS.paused = false; TETRIS.over = false; TETRIS.submitted = false;
+}
+
+async function tetrisSubmitScore() {
+  if (TETRIS.submitted || TETRIS.score === 0) return;
+  TETRIS.submitted = true;
+  try {
+    await fetch('/api/admin/tetris/scores', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ score: TETRIS.score, lines: TETRIS.lines, level: TETRIS.level })
+    });
+    tetrisLoadLeaderboard();
+  } catch(e) {}
+}
+
+async function tetrisLoadLeaderboard() {
+  try {
+    const res = await fetch('/api/admin/tetris/scores');
+    const scores = await res.json();
+    const lb = document.getElementById('tetris-leaderboard');
+    if (!lb) return;
+    if (!scores.length) {
+      lb.innerHTML = '<div style="color:#9a9a9a;font-size:11px;font-family:\'DM Mono\',monospace;text-transform:uppercase;letter-spacing:0.1em;padding:8px 0">No scores yet — play!</div>';
+      return;
+    }
+    lb.innerHTML = scores.map((s, i) => `
+      <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px">
+        <span style="font-family:'DM Mono',monospace;font-size:10px;color:#9a9a9a;min-width:16px;text-align:right">${i+1}</span>
+        <span style="flex:1;font-weight:${i===0?'700':'500'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:${i===0?'var(--accent)':'inherit'}">${esc(s.username)}</span>
+        <span style="font-family:'DM Mono',monospace;font-size:11px;font-weight:700;letter-spacing:-0.02em">${Number(s.score).toLocaleString()}</span>
+      </div>`).join('');
+  } catch(e) {}
 }
 
 function tetrisStop() {
@@ -2686,10 +2718,15 @@ function showArcade() {
           Space &nbsp; Hard drop<br>
           P &nbsp;&nbsp; Pause
         </div>
+        <div class="card" style="margin:0;padding:18px 20px;min-width:180px">
+          <div style="font-family:'DM Mono',ui-monospace,monospace;font-size:9px;text-transform:uppercase;letter-spacing:0.18em;color:#9a9a9a;margin-bottom:10px">🏆 High Scores</div>
+          <div id="tetris-leaderboard"><div style="color:#9a9a9a;font-size:11px;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:0.1em;padding:8px 0">Loading…</div></div>
+        </div>
       </div>
     </div>`);
 
   tetrisReset();
+  tetrisLoadLeaderboard();
 
   TETRIS.keyHandler = (e) => {
     if (window.location.pathname !== '/admin/arcade') return;
