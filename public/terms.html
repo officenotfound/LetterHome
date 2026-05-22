@@ -70,10 +70,10 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:48px 36px 32px
   <div class="nav-inner">
     <a href="/" class="logo"><span class="logo-mark"><svg width="22" height="14" viewBox="0 0 22 14" fill="none" stroke="white" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2 2"><rect x="1" y="1" width="20" height="12" rx="1"/><path d="M1 1.5l10 8 10-8"/></svg></span>Letterhome</a>
     <div class="nav-links">
-      <a href="/#how">How it works</a>
-      <a href="/#pricing">Pricing</a>
-      <a href="/about">About</a>
-      <a href="/contact">Contact</a>
+      <a href="/#how" data-i18n="nav.how">How it works</a>
+      <a href="/#pricing" data-i18n="nav.pricing">Pricing</a>
+      <a href="/about" data-i18n="nav.about">About</a>
+      <a href="/contact" data-i18n="nav.contact">Contact</a>
     </div>
     <div class="nav-right">
       <button type="button" class="lang-toggle" onclick="toggleLang()" aria-label="Toggle language">FR</button>
@@ -87,46 +87,91 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:48px 36px 32px
 </nav>
 
 <div class="main">
-  <div class="eyebrow">Legal</div>
-  <h1>Terms of Service</h1>
-  <p class="updated">Last updated: May 2026</p>
+  <div data-lang-show="en">
+    <div class="eyebrow">Legal</div>
+    <h1>Terms of Service</h1>
+    <p class="updated">Last updated: May 2026</p>
 
-  <p>By using Letterhome ("the Service"), you agree to these terms.</p>
+    <p>By using Letterhome ("the Service"), you agree to these terms.</p>
 
-  <h2>What the service does</h2>
-  <p>Letterhome prints the letter content you submit in full colour, places it in an envelope addressed to the recipient you specify, applies Canadian postage, and deposits the envelope with Canada Post for delivery. We are a printing and mailing intermediary. We are not a carrier or a courier.</p>
+    <h2>What the service does</h2>
+    <p>Letterhome prints the letter content you submit in full colour, places it in an envelope addressed to the recipient you specify, applies Canadian postage, and deposits the envelope with Canada Post for delivery. We are a printing and mailing intermediary. We are not a carrier or a courier.</p>
 
-  <h2>Your responsibilities</h2>
-  <p>You are responsible for:</p>
-  <ul>
-    <li>Providing accurate sender and recipient addresses. We cannot redeliver or refund for undeliverable mail due to incorrect addresses.</li>
-    <li>Ensuring the content of your letter is lawful. You may not send threats, harassment, scam material, fraudulent documents, or any content that violates Canadian postal law.</li>
-    <li>Ensuring you have the right to send any documents you attach — do not attach documents containing third-party confidential information without authorisation.</li>
-  </ul>
+    <h2>Your responsibilities</h2>
+    <p>You are responsible for:</p>
+    <ul>
+      <li>Providing accurate sender and recipient addresses. We cannot redeliver or refund for undeliverable mail due to incorrect addresses.</li>
+      <li>Ensuring the content of your letter is lawful. You may not send threats, harassment, scam material, fraudulent documents, or any content that violates Canadian postal law.</li>
+      <li>Ensuring you have the right to send any documents you attach — do not attach documents containing third-party confidential information without authorisation.</li>
+    </ul>
 
-  <h2>Pricing and payment</h2>
-  <p>All prices are in Canadian dollars (CAD). Domestic letters (to a Canadian address) are $10 CAD. International letters are $20 CAD. These prices include up to 5 documents of full-colour printing, the envelope, postage, and delivery. Payment is processed by Stripe at the time of order. Prices are subject to change; the price displayed at checkout is the price you pay.</p>
+    <h2>Pricing and payment</h2>
+    <p>All prices are in Canadian dollars (CAD). Domestic letters (to a Canadian address) are $10 CAD. International letters are $20 CAD. These prices include up to 5 documents of full-colour printing, the envelope, postage, and delivery. Payment is processed by Stripe at the time of order. Prices are subject to change; the price displayed at checkout is the price you pay.</p>
 
-  <h2>Delivery</h2>
-  <p>We aim to mail your letter within one business day of receiving payment. Delivery timelines are estimates based on Canada Post's published service standards and are not guaranteed. We are not responsible for delays caused by Canada Post, customs, or postal services in the destination country.</p>
+    <h2>Delivery</h2>
+    <p>We aim to mail your letter within one business day of receiving payment. Delivery timelines are estimates based on Canada Post's published service standards and are not guaranteed. We are not responsible for delays caused by Canada Post, customs, or postal services in the destination country.</p>
 
-  <h2>Prohibited content</h2>
-  <p>You may not use Letterhome to send threats, harassment, fraudulent or deceptive material, illegal content, bulk unsolicited commercial mail (spam), or anything that violates the laws of Canada or the destination country. We reserve the right to refuse any order that we determine violates these conditions, with a full refund.</p>
+    <h2>Prohibited content</h2>
+    <p>You may not use Letterhome to send threats, harassment, fraudulent or deceptive material, illegal content, bulk unsolicited commercial mail (spam), or anything that violates the laws of Canada or the destination country. We reserve the right to refuse any order that we determine violates these conditions, with a full refund.</p>
 
-  <h2>Order review</h2>
-  <p>Each order is reviewed by a person before printing. The review checks for things that would stop the mail from going through — incomplete addresses, unreadable attachments, obvious abuse or illegal content. It is not a content review of your message. If we find a delivery problem, we'll contact you before printing or charging. If an order contains prohibited content, we'll cancel and refund it in full. We don't read, share or store your letter content beyond what's needed to print and post it.</p>
+    <h2>Order review</h2>
+    <p>Each order is reviewed by a person before printing. The review checks for things that would stop the mail from going through — incomplete addresses, unreadable attachments, obvious abuse or illegal content. It is not a content review of your message. If we find a delivery problem, we'll contact you before printing or charging. If an order contains prohibited content, we'll cancel and refund it in full. We don't read, share or store your letter content beyond what's needed to print and post it.</p>
 
-  <h2>Refund policy</h2>
-  <p>All sales are final. Once payment is received, the printing, postage and trip to the post office are committed and refunds are not available. If a letter doesn't arrive in its expected window and the order details on our end were correct, we'll reprint and resend at no charge. Full details in our <a href="/refunds">Refund Policy</a>.</p>
+    <h2>Refund policy</h2>
+    <p>All sales are final. Once payment is received, the printing, postage and trip to the post office are committed and refunds are not available. If a letter doesn't arrive in its expected window and the order details on our end were correct, we'll reprint and resend at no charge. Full details in our <a href="/refunds">Refund Policy</a>.</p>
 
-  <h2>Limitation of liability</h2>
-  <p>Letterhome's liability is limited to the amount you paid for the order in question. We are not liable for consequential damages, missed deadlines, or losses arising from postal delays, lost mail or incorrect addresses. For time-sensitive legal documents, we recommend a tracked or registered mail option. Contact us before placing your order for a quote.</p>
+    <h2>Limitation of liability</h2>
+    <p>Letterhome's liability is limited to the amount you paid for the order in question. We are not liable for consequential damages, missed deadlines, or losses arising from postal delays, lost mail or incorrect addresses. For time-sensitive legal documents, we recommend a tracked or registered mail option. Contact us before placing your order for a quote.</p>
 
-  <h2>Changes to these terms</h2>
-  <p>We may update these terms from time to time. Material changes will be noted on this page with an updated date. Continued use of the Service after changes constitutes acceptance.</p>
+    <h2>Changes to these terms</h2>
+    <p>We may update these terms from time to time. Material changes will be noted on this page with an updated date. Continued use of the Service after changes constitutes acceptance.</p>
 
-  <h2>Contact</h2>
-  <p>Questions? Email <a href="mailto:hello@letterhome.ca">hello@letterhome.ca</a>.</p>
+    <h2>Contact</h2>
+    <p>Questions? Email <a href="mailto:hello@letterhome.ca">hello@letterhome.ca</a>.</p>
+  </div>
+
+  <div data-lang-show="fr">
+    <div class="eyebrow">Juridique</div>
+    <h1>Conditions d'utilisation</h1>
+    <p class="updated">Dernière mise à jour : mai 2026</p>
+
+    <p>En utilisant Letterhome (« le Service »), vous acceptez les présentes conditions.</p>
+
+    <h2>Ce que fait le service</h2>
+    <p>Letterhome imprime le contenu de la lettre que vous soumettez en couleurs, la place dans une enveloppe adressée au destinataire que vous indiquez, y appose un affranchissement canadien et la dépose auprès de Postes Canada pour livraison. Nous sommes un intermédiaire d'impression et d'envoi postal. Nous ne sommes ni un transporteur ni un service de messagerie.</p>
+
+    <h2>Vos responsabilités</h2>
+    <p>Vous êtes responsable de :</p>
+    <ul>
+      <li>Fournir des adresses d'expéditeur et de destinataire exactes. Nous ne pouvons pas renvoyer ni rembourser pour un courrier non livrable en raison d'adresses incorrectes.</li>
+      <li>Vous assurer que le contenu de votre lettre est légal. Vous ne pouvez pas envoyer des menaces, du harcèlement, du matériel frauduleux ou tout contenu contraire à la loi postale canadienne.</li>
+      <li>Vous assurer d'avoir le droit d'envoyer les documents que vous joignez — ne joignez pas de documents contenant des informations confidentielles de tiers sans autorisation.</li>
+    </ul>
+
+    <h2>Tarification et paiement</h2>
+    <p>Tous les prix sont en dollars canadiens (CAD). Les lettres nationales (vers une adresse canadienne) sont à 10 $ CAD. Les lettres internationales sont à 20 $ CAD. Ces prix comprennent jusqu'à 5 documents imprimés en couleurs, l'enveloppe, l'affranchissement et la livraison. Le paiement est traité par Stripe au moment de la commande. Les prix sont susceptibles de changer ; le prix affiché au moment du paiement est celui que vous payez.</p>
+
+    <h2>Livraison</h2>
+    <p>Nous visons à poster votre lettre dans un délai d'un jour ouvrable après réception du paiement. Les délais de livraison sont des estimations basées sur les normes de service publiées par Postes Canada et ne sont pas garantis. Nous ne sommes pas responsables des retards causés par Postes Canada, la douane ou les services postaux du pays de destination.</p>
+
+    <h2>Contenu interdit</h2>
+    <p>Vous ne pouvez pas utiliser Letterhome pour envoyer des menaces, du harcèlement, du matériel frauduleux ou trompeur, du contenu illégal, du courrier commercial non sollicité en masse (pourriel) ou tout ce qui enfreint les lois du Canada ou du pays de destination. Nous nous réservons le droit de refuser toute commande que nous estimons contraire à ces conditions, avec remboursement intégral.</p>
+
+    <h2>Révision des commandes</h2>
+    <p>Chaque commande est vérifiée par une personne avant l'impression. La vérification porte sur ce qui pourrait empêcher le courrier de passer — adresses incomplètes, pièces jointes illisibles, abus évidents ou contenu illégal. Il ne s'agit pas d'une lecture de votre message. Si nous constatons un problème de livraison, nous vous contacterons avant l'impression ou la facturation. Si une commande contient du contenu interdit, nous l'annulerons et la rembourserons intégralement. Nous ne lisons, ne partageons ni ne stockons le contenu de votre lettre au-delà de ce qui est nécessaire pour l'imprimer et la poster.</p>
+
+    <h2>Politique de remboursement</h2>
+    <p>Toutes les ventes sont définitives. Une fois le paiement reçu, l'impression, l'affranchissement et le dépôt à la poste sont engagés et les remboursements ne sont pas disponibles. Si une lettre n'arrive pas dans le délai prévu et que les détails de la commande de notre côté étaient corrects, nous la réimprimerons et la renverrons sans frais. Tous les détails dans notre <a href="/refunds">Politique de remboursement</a>.</p>
+
+    <h2>Limitation de responsabilité</h2>
+    <p>La responsabilité de Letterhome est limitée au montant que vous avez payé pour la commande en question. Nous ne sommes pas responsables des dommages indirects, des délais manqués ou des pertes résultant de retards postaux, de courrier perdu ou d'adresses incorrectes. Pour les documents juridiques urgents, nous recommandons une option de courrier recommandé ou suivi. Contactez-nous avant de passer votre commande pour un devis.</p>
+
+    <h2>Modifications des présentes conditions</h2>
+    <p>Nous pouvons mettre à jour ces conditions de temps à autre. Les modifications importantes seront signalées sur cette page avec une date de mise à jour. L'utilisation continue du Service après les modifications vaut acceptation.</p>
+
+    <h2>Nous joindre</h2>
+    <p>Des questions ? Écrivez-nous à <a href="mailto:hello@letterhome.ca">hello@letterhome.ca</a>.</p>
+  </div>
 </div>
 
 <footer>

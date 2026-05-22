@@ -70,10 +70,10 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:48px 36px 32px
   <div class="nav-inner">
     <a href="/" class="logo"><span class="logo-mark"><svg width="22" height="14" viewBox="0 0 22 14" fill="none" stroke="white" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2 2"><rect x="1" y="1" width="20" height="12" rx="1"/><path d="M1 1.5l10 8 10-8"/></svg></span>Letterhome</a>
     <div class="nav-links">
-      <a href="/#how">How it works</a>
-      <a href="/#pricing">Pricing</a>
-      <a href="/about">About</a>
-      <a href="/contact">Contact</a>
+      <a href="/#how" data-i18n="nav.how">How it works</a>
+      <a href="/#pricing" data-i18n="nav.pricing">Pricing</a>
+      <a href="/about" data-i18n="nav.about">About</a>
+      <a href="/contact" data-i18n="nav.contact">Contact</a>
     </div>
     <div class="nav-right">
       <button type="button" class="lang-toggle" onclick="toggleLang()" aria-label="Toggle language">FR</button>
@@ -87,45 +87,89 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:48px 36px 32px
 </nav>
 
 <div class="main">
-  <div class="eyebrow">Legal</div>
-  <h1>Privacy Policy</h1>
-  <p class="updated">Last updated: May 2026</p>
+  <div data-lang-show="en">
+    <div class="eyebrow">Legal</div>
+    <h1>Privacy Policy</h1>
+    <p class="updated">Last updated: May 2026</p>
 
-  <p>Letterhome is a small mail service operating from Canada. This policy explains what we collect when you place an order, how we use it, and when we delete it.</p>
+    <p>Letterhome is a small mail service operating from Canada. This policy explains what we collect when you place an order, how we use it, and when we delete it.</p>
 
-  <h2>What we collect</h2>
-  <p>When you place an order, we collect:</p>
-  <ul>
-    <li>Your email address, for the order confirmation and any follow-up about the order</li>
-    <li>The sender and recipient addresses you enter</li>
-    <li>The content of your letter and any documents you attach</li>
-    <li>Payment information — handled by Stripe; we never see or store card details</li>
-    <li>The IP address of the device that placed the order, for fraud prevention and abuse detection</li>
-  </ul>
+    <h2>What we collect</h2>
+    <p>When you place an order, we collect:</p>
+    <ul>
+      <li>Your email address, for the order confirmation and any follow-up about the order</li>
+      <li>The sender and recipient addresses you enter</li>
+      <li>The content of your letter and any documents you attach</li>
+      <li>Payment information — handled by Stripe; we never see or store card details</li>
+      <li>The IP address of the device that placed the order, for fraud prevention and abuse detection</li>
+    </ul>
 
-  <h2>How we use your information</h2>
-  <p>Your information is used to fulfil your order:</p>
-  <ul>
-    <li>The letter content and addresses are used to print and mail your letter</li>
-    <li>Your email is used to confirm the order and contact you if there's a problem with it</li>
-    <li>Your IP address is stored with the order record to help identify fraudulent or duplicate orders. It is not shared outside Letterhome.</li>
-    <li>We do not use your information for marketing, profiling, or any other purpose</li>
-  </ul>
+    <h2>How we use your information</h2>
+    <p>Your information is used to fulfil your order:</p>
+    <ul>
+      <li>The letter content and addresses are used to print and mail your letter</li>
+      <li>Your email is used to confirm the order and contact you if there's a problem with it</li>
+      <li>Your IP address is stored with the order record to help identify fraudulent or duplicate orders. It is not shared outside Letterhome.</li>
+      <li>We do not use your information for marketing, profiling, or any other purpose</li>
+    </ul>
 
-  <h2>Data retention</h2>
-  <p>The content of your letter and any attached documents is deleted from our systems within 7 days of mailing. We keep a basic order record — date, amount, and your email address — for the period required by Canadian tax and accounting regulations. We do not retain the text of your letter or recipient details beyond the 7-day window.</p>
+    <h2>Data retention</h2>
+    <p>The content of your letter and any attached documents is deleted from our systems within 7 days of mailing. We keep a basic order record — date, amount, and your email address — for the period required by Canadian tax and accounting regulations. We do not retain the text of your letter or recipient details beyond the 7-day window.</p>
 
-  <h2>Third-party services</h2>
-  <p>We use <strong>Stripe</strong> to process payments. Stripe's privacy policy is available at <a href="https://stripe.com/privacy" target="_blank" rel="noopener">stripe.com/privacy</a>. We use <strong>Canada Post</strong> to deliver physical mail. Beyond these, no third parties have access to your order information.</p>
+    <h2>Third-party services</h2>
+    <p>We use <strong>Stripe</strong> to process payments. Stripe's privacy policy is available at <a href="https://stripe.com/privacy" target="_blank" rel="noopener">stripe.com/privacy</a>. We use <strong>Canada Post</strong> to deliver physical mail. Beyond these, no third parties have access to your order information.</p>
 
-  <h2>Order review</h2>
-  <p>Each order is reviewed by a person before printing. The review checks for things that would stop the mail from going through — incomplete addresses, unreadable files, obvious abuse or illegal content. It is not a content review of your message; we don't read, summarise or share what you wrote. If we find a delivery problem, we'll contact you before printing. If an order contains prohibited content, we'll cancel and refund it. Your letter and attachments are deleted within 7 days of mailing.</p>
+    <h2>Order review</h2>
+    <p>Each order is reviewed by a person before printing. The review checks for things that would stop the mail from going through — incomplete addresses, unreadable files, obvious abuse or illegal content. It is not a content review of your message; we don't read, summarise or share what you wrote. If we find a delivery problem, we'll contact you before printing. If an order contains prohibited content, we'll cancel and refund it. Your letter and attachments are deleted within 7 days of mailing.</p>
 
-  <h2>Your rights</h2>
-  <p>You may request access to, correction of, or deletion of your personal information at any time by emailing <a href="mailto:hello@letterhome.ca">hello@letterhome.ca</a>. We will respond within 30 days.</p>
+    <h2>Your rights</h2>
+    <p>You may request access to, correction of, or deletion of your personal information at any time by emailing <a href="mailto:hello@letterhome.ca">hello@letterhome.ca</a>. We will respond within 30 days.</p>
 
-  <h2>Contact</h2>
-  <p>Questions about this policy? Email <a href="mailto:hello@letterhome.ca">hello@letterhome.ca</a> or use the <a href="/contact">contact form</a>.</p>
+    <h2>Contact</h2>
+    <p>Questions about this policy? Email <a href="mailto:hello@letterhome.ca">hello@letterhome.ca</a> or use the <a href="/contact">contact form</a>.</p>
+  </div>
+
+  <div data-lang-show="fr">
+    <div class="eyebrow">Juridique</div>
+    <h1>Politique de confidentialité</h1>
+    <p class="updated">Dernière mise à jour : mai 2026</p>
+
+    <p>Letterhome est un petit service de courrier exploité depuis le Canada. Cette politique explique ce que nous collectons lorsque vous passez une commande, comment nous l'utilisons et quand nous le supprimons.</p>
+
+    <h2>Ce que nous collectons</h2>
+    <p>Lorsque vous passez une commande, nous collectons :</p>
+    <ul>
+      <li>Votre adresse courriel, pour la confirmation de commande et tout suivi lié à celle-ci</li>
+      <li>Les adresses de l'expéditeur et du destinataire que vous saisissez</li>
+      <li>Le contenu de votre lettre et les documents que vous joignez</li>
+      <li>Les informations de paiement — traitées par Stripe ; nous ne voyons ni ne stockons jamais les données de carte bancaire</li>
+      <li>L'adresse IP de l'appareil ayant passé la commande, à des fins de prévention de la fraude et de détection des abus</li>
+    </ul>
+
+    <h2>Comment nous utilisons vos informations</h2>
+    <p>Vos informations servent à traiter votre commande :</p>
+    <ul>
+      <li>Le contenu de la lettre et les adresses servent à imprimer et à poster votre lettre</li>
+      <li>Votre adresse courriel sert à confirmer la commande et à vous contacter en cas de problème</li>
+      <li>Votre adresse IP est conservée avec le dossier de commande pour aider à identifier les commandes frauduleuses ou en double. Elle n'est pas partagée en dehors de Letterhome.</li>
+      <li>Nous n'utilisons pas vos informations à des fins de marketing, de profilage ou à toute autre fin</li>
+    </ul>
+
+    <h2>Conservation des données</h2>
+    <p>Le contenu de votre lettre et les documents joints sont supprimés de nos systèmes dans les 7 jours suivant l'envoi. Nous conservons un dossier de commande de base — date, montant et adresse courriel — pour la période requise par la réglementation fiscale et comptable canadienne. Nous ne conservons pas le texte de votre lettre ni les coordonnées du destinataire au-delà de la fenêtre de 7 jours.</p>
+
+    <h2>Services tiers</h2>
+    <p>Nous utilisons <strong>Stripe</strong> pour traiter les paiements. La politique de confidentialité de Stripe est disponible à <a href="https://stripe.com/privacy" target="_blank" rel="noopener">stripe.com/privacy</a>. Nous utilisons <strong>Postes Canada</strong> pour la livraison du courrier physique. Au-delà de ces deux partenaires, aucun tiers n'a accès à vos informations de commande.</p>
+
+    <h2>Révision des commandes</h2>
+    <p>Chaque commande est vérifiée par une personne avant l'impression. La vérification porte sur ce qui pourrait empêcher le courrier de passer — adresses incomplètes, fichiers illisibles, abus évidents ou contenu illégal. Il ne s'agit pas d'une lecture de votre message ; nous ne lisons, ne résumons ni ne partageons ce que vous avez écrit. Si nous constatons un problème de livraison, nous vous contacterons avant l'impression. Si une commande contient du contenu interdit, nous l'annulerons et la rembourserons. Votre lettre et vos pièces jointes sont supprimées dans les 7 jours suivant l'envoi.</p>
+
+    <h2>Vos droits</h2>
+    <p>Vous pouvez demander l'accès, la correction ou la suppression de vos renseignements personnels à tout moment en écrivant à <a href="mailto:hello@letterhome.ca">hello@letterhome.ca</a>. Nous répondrons dans un délai de 30 jours.</p>
+
+    <h2>Nous joindre</h2>
+    <p>Des questions sur cette politique ? Écrivez-nous à <a href="mailto:hello@letterhome.ca">hello@letterhome.ca</a> ou utilisez le <a href="/contact">formulaire de contact</a>.</p>
+  </div>
 </div>
 
 <footer>

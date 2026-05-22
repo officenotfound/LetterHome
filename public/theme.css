@@ -451,6 +451,10 @@ footer { height: 44px !important; padding: 0 36px !important; display: flex !imp
 }
 
 
+/* ── Language-section visibility (legal pages use full-block FR/EN divs) ─── */
+[data-lang="en"] [data-lang-show="fr"] { display: none !important; }
+[data-lang="fr"] [data-lang-show="en"] { display: none !important; }
+
 /* ── Account page — dark mode fixes ──────────────────────────────────────── */
 [data-theme="dark"] .status-paid     { background: rgba(251,191,36,0.15)  !important; color: #fbbf24 !important; }
 [data-theme="dark"] .status-printing { background: rgba(59,130,246,0.15)  !important; color: #60a5fa !important; }

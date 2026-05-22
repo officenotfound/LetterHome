@@ -58,9 +58,9 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:40px 36px;posi
   <div class="nav-inner">
     <a href="/" class="logo"><span class="logo-mark"><svg width="22" height="14" viewBox="0 0 22 14" fill="none" stroke="white" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2 2"><rect x="1" y="1" width="20" height="12" rx="1"/><path d="M1 1.5l10 8 10-8"/></svg></span>Letterhome</a>
     <div class="nav-links">
-      <a href="/track">Track an order</a>
-      <a href="/about">About</a>
-      <a href="/contact">Contact</a>
+      <a href="/track" data-i18n="nav.track">Track an order</a>
+      <a href="/about" data-i18n="nav.about">About</a>
+      <a href="/contact" data-i18n="nav.contact">Contact</a>
     </div>
     <div class="nav-right">
       <button type="button" class="lang-toggle" onclick="toggleLang()" aria-label="Toggle language">FR</button>
@@ -107,11 +107,11 @@ function esc(s) {
   const sessionId = params.get('session_id');
   const el = document.getElementById('order-details');
   if (!sessionId) {
-    document.querySelector('.eyebrow').textContent = 'Order lookup';
+    document.querySelector('.eyebrow').textContent = LH_T('success.lookup.eyebrow');
     document.querySelector('.success-icon').style.display = 'none';
-    document.querySelector('h1').textContent = 'No order found.';
-    document.querySelector('.sub').textContent = 'No session ID was provided. If you just completed a payment, check your email for a confirmation.';
-    el.innerHTML = '<p style="color:var(--ink-muted)">If something went wrong, <a href="/contact" style="color:var(--red)">contact us</a>.</p>';
+    document.querySelector('h1').textContent = LH_T('success.no_order');
+    document.querySelector('.sub').textContent = LH_T('success.no_session');
+    el.innerHTML = '<p style="color:var(--ink-muted)">' + LH_T('success.error.p') + '</p>';
     return;
   }
 
@@ -120,8 +120,7 @@ function esc(s) {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error);
 
-    const countryNames = { CA:'Canada', US:'United States', GB:'United Kingdom', AU:'Australia', NZ:'New Zealand', FR:'France', DE:'Germany', JP:'Japan', MX:'Mexico' };
-    const destName = countryNames[data.destinationCountry] || data.destinationCountry;
+    const destName = LH_T('country.' + data.destinationCountry) !== ('country.' + data.destinationCountry) ? LH_T('country.' + data.destinationCountry) : data.destinationCountry;
     const isDomestic = data.destinationCountry === 'CA';
 
     el.innerHTML = `
@@ -133,7 +132,7 @@ function esc(s) {
       <div class="detail-row"><span class="label">${LH_T('success.label.status')}</span><span class="val" style="color:var(--red)">${LH_T('success.status.val')}</span></div>
     `;
   } catch (err) {
-    el.innerHTML = '<p style="color:var(--ink-muted);font-size:14px">Your payment went through — we\'ll send a confirmation email shortly. If you have questions, contact us.</p>';
+    el.innerHTML = '<p style="color:var(--ink-muted);font-size:14px">' + LH_T('success.catch_p') + '</p>';
   }
 
   // Show "create account" prompt only if not already logged in

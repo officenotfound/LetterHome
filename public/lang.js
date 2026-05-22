@@ -294,6 +294,43 @@
       '404.sub': 'The link may have moved or never existed. Either way, it didn’t make it to its destination — much like a letter without a return address.',
       '404.send': 'Send a letter',
       '404.back': 'Back to Letterhome',
+      // TICKER
+      'ticker.1': 'Letters from Berlin to Halifax',
+      'ticker.2': 'Tax forms from Tokyo to the CRA',
+      'ticker.3': 'A signed contract from Auckland to Toronto',
+      'ticker.4': 'Wedding invitations posted from Canada worldwide',
+      'ticker.type.letters': 'Letters',
+      'ticker.type.docs': 'Documents',
+      'ticker.type.tax': 'Tax forms',
+      'ticker.type.bday': 'Birthday letters',
+      'ticker.type.legal': 'Legal papers',
+      'ticker.from': 'from',
+      'ticker.to': 'to',
+      // COUNTRY NAMES (for track/success pages)
+      'country.CA': 'Canada',
+      'country.US': 'United States',
+      'country.GB': 'United Kingdom',
+      'country.AU': 'Australia',
+      'country.NZ': 'New Zealand',
+      'country.FR': 'France',
+      'country.DE': 'Germany',
+      'country.JP': 'Japan',
+      'country.MX': 'Mexico',
+      // CONTACT errors
+      'contact.err.server': 'Something went wrong. Please email us directly at hello@letterhome.ca',
+      // TRACK errors
+      'track.after_mailing': 'after mailing',
+      'track.order_not_found': 'Order not found.',
+      // ORDER SUCCESS errors
+      'success.lookup.eyebrow': 'Order lookup',
+      'success.no_order': 'No order found.',
+      'success.no_session': 'No session ID was provided. If you just completed a payment, check your email for a confirmation.',
+      'success.error.p': 'If something went wrong, <a href="/contact" style="color:var(--red)">contact us</a>.',
+      'success.catch_p': 'Your payment went through — we\’ll send a confirmation email shortly. If you have questions, contact us.',
+      // SEND extras
+      'send.word.zero': '0 words',
+      'send.pwd.hint': '— 8+ chars, letter + number/symbol',
+      'send.err.submit': 'Something went wrong. Please try again or contact us.',
     },
 
     fr: {
@@ -588,6 +625,43 @@
       '404.sub': 'Le lien a peut-être été déplacé ou n’a jamais existé. Dans tous les cas, elle n’a pas atteint sa destination — comme une lettre sans adresse de retour.',
       '404.send': 'Envoyer une lettre',
       '404.back': 'Retour à Letterhome',
+      // TICKER
+      'ticker.1': 'Lettres de Berlin à Halifax',
+      'ticker.2': 'Formulaires fiscaux de Tokyo vers l’ARC',
+      'ticker.3': 'Un contrat signé d’Auckland à Toronto',
+      'ticker.4': 'Invitations de mariage postées du Canada dans le monde entier',
+      'ticker.type.letters': 'Lettres',
+      'ticker.type.docs': 'Documents',
+      'ticker.type.tax': 'Formulaires fiscaux',
+      'ticker.type.bday': 'Lettres d’anniversaire',
+      'ticker.type.legal': 'Documents légaux',
+      'ticker.from': 'de',
+      'ticker.to': 'à',
+      // COUNTRY NAMES (for track/success pages)
+      'country.CA': 'Canada',
+      'country.US': 'États-Unis',
+      'country.GB': 'Royaume-Uni',
+      'country.AU': 'Australie',
+      'country.NZ': 'Nouvelle-Zélande',
+      'country.FR': 'France',
+      'country.DE': 'Allemagne',
+      'country.JP': 'Japon',
+      'country.MX': 'Mexique',
+      // CONTACT errors
+      'contact.err.server': 'Une erreur est survenue. Veuillez nous écrire directement à hello@letterhome.ca',
+      // TRACK errors
+      'track.after_mailing': 'après la mise à la poste',
+      'track.order_not_found': 'Commande introuvable.',
+      // ORDER SUCCESS errors
+      'success.lookup.eyebrow': 'Recherche de commande',
+      'success.no_order': 'Commande introuvable.',
+      'success.no_session': 'Aucun identifiant de session fourni. Si vous venez d’effectuer un paiement, vérifiez votre courriel pour une confirmation.',
+      'success.error.p': 'Si quelque chose a mal tourné, <a href="/contact" style="color:var(--red)">contactez-nous</a>.',
+      'success.catch_p': 'Votre paiement a été reçu — nous vous enverrons un courriel de confirmation sous peu. Si vous avez des questions, contactez-nous.',
+      // SEND extras
+      'send.word.zero': '0 mot',
+      'send.pwd.hint': '— 8+ car., lettre + chiffre/symbole',
+      'send.err.submit': 'Une erreur est survenue. Veuillez réessayer ou nous contacter.',
     }
   };
 

@@ -84,10 +84,10 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:48px 36px 32px
   <div class="nav-inner">
     <a href="/" class="logo"><span class="logo-mark"><svg width="22" height="14" viewBox="0 0 22 14" fill="none" stroke="white" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2 2"><rect x="1" y="1" width="20" height="12" rx="1"/><path d="M1 1.5l10 8 10-8"/></svg></span>Letterhome</a>
     <div class="nav-links">
-      <a href="/#how">How it works</a>
-      <a href="/#pricing">Pricing</a>
-      <a href="/about">About</a>
-      <a href="/contact">Contact</a>
+      <a href="/#how" data-i18n="nav.how">How it works</a>
+      <a href="/#pricing" data-i18n="nav.pricing">Pricing</a>
+      <a href="/about" data-i18n="nav.about">About</a>
+      <a href="/contact" data-i18n="nav.contact">Contact</a>
     </div>
     <div class="nav-right">
       <button type="button" class="lang-toggle" onclick="toggleLang()" aria-label="Toggle language">FR</button>
@@ -140,7 +140,7 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:48px 36px 32px
 </footer>
 
 <script>
-const countryNames = { CA:'Canada', US:'United States', GB:'United Kingdom', AU:'Australia', NZ:'New Zealand', FR:'France', DE:'Germany', JP:'Japan', MX:'Mexico' };
+function getCountryName(code) { return LH_T('country.' + code) !== ('country.' + code) ? LH_T('country.' + code) : code; }
 
 function esc(s) {
   return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -164,9 +164,9 @@ document.getElementById('track-form').addEventListener('submit', async function(
       }),
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Order not found.');
+    if (!res.ok) throw new Error(data.error || LH_T('track.order_not_found'));
 
-    const dest = countryNames[data.destinationCountry] || data.destinationCountry || 'Canada';
+    const dest = getCountryName(data.destinationCountry) || 'Canada';
     const isDomestic = data.destinationCountry === 'CA';
     const delivery = isDomestic ? LH_T('track.dom.delivery') : LH_T('track.intl.delivery');
     const date = new Date(data.createdAt).toLocaleDateString('en-CA', { year:'numeric', month:'long', day:'numeric' });
@@ -176,7 +176,7 @@ document.getElementById('track-form').addEventListener('submit', async function(
       <div class="detail-row"><span class="label">${LH_T('track.result.order')}</span><span class="val">#${esc(data.orderId)}</span></div>
       <div class="detail-row"><span class="label">${LH_T('track.result.recipient')}</span><span class="val">${esc(data.recipientName)}</span></div>
       <div class="detail-row"><span class="label">${LH_T('track.result.dest')}</span><span class="val">${esc(dest)}</span></div>
-      <div class="detail-row"><span class="label">${LH_T('track.result.delivery')}</span><span class="val">${esc(delivery)} after mailing</span></div>
+      <div class="detail-row"><span class="label">${LH_T('track.result.delivery')}</span><span class="val">${esc(delivery)} ${LH_T('track.after_mailing')}</span></div>
       <div class="detail-row"><span class="label">${LH_T('track.result.date')}</span><span class="val">${esc(date)}</span></div>
     `;
     document.getElementById('result').style.display = 'block';
