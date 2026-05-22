@@ -115,7 +115,7 @@ SMTP_SECURE=false
 SMTP_USER=you@gmail.com
 SMTP_PASS=your-app-password
 
-EMAIL_FROM="Letterhome <hello@letterhome.ca>"
+EMAIL_FROM="Letterhome <support@letterhome.ca>"
 OPERATOR_EMAIL=you@gmail.com
 ```
 
