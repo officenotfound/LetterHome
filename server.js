@@ -780,7 +780,7 @@ function unsubPage(state, email = '') {
   const headings = {
     invalid:    { title: 'Invalid unsubscribe link', body: "We couldn't verify this unsubscribe link. It may be malformed, or copied incompletely from an email. If you want to opt out, reply to any email from us and we'll handle it manually." },
     confirm:    { title: 'Unsubscribe from Letterhome emails?', body: `We'll stop sending marketing or update emails to <strong>${safeEmail}</strong>. You'll still receive transactional messages tied to orders you place (payment confirmations, status updates).` },
-    done:       { title: "You've been unsubscribed.", body: `We've removed <strong>${safeEmail}</strong> from our marketing list. You won't receive any more update emails from us. If you change your mind, email <a href="mailto:hello@letterhome.ca">hello@letterhome.ca</a>.` },
+    done:       { title: "You've been unsubscribed.", body: `We've removed <strong>${safeEmail}</strong> from our marketing list. You won't receive any more update emails from us. If you change your mind, email <a href="mailto:support@letterhome.ca">support@letterhome.ca</a>.` },
     already:    { title: "Already unsubscribed.", body: `<strong>${safeEmail}</strong> is already opted out of our marketing emails.` },
   }[state];
   const action = state === 'confirm' ? `
@@ -1651,7 +1651,7 @@ app.post('/api/admin/customers/:email/reset-password', requireAdmin, async (req,
     subject: 'Your Letterhome password was reset by support',
     text:    `Hi,\n\nA Letterhome administrator has reset the password on your account at your request.\n\n` +
              `Your new password has been shared with you separately. After signing in, you can change it from your account page: ${process.env.BASE_URL}/account\n\n` +
-             `If you did NOT request this, contact us immediately at ${process.env.OPERATOR_EMAIL || 'hello@letterhome.ca'}.\n\n— Letterhome`,
+             `If you did NOT request this, contact us immediately at ${process.env.OPERATOR_EMAIL || 'support@letterhome.ca'}.\n\n— Letterhome`,
   }, 'password_reset_admin').catch(() => {});
   res.json({ ok: true });
 });
@@ -2422,7 +2422,7 @@ app.post('/api/account/reset-password', accountLimiter, async (req, res) => {
       to:      email,
       subject: 'Your Letterhome password was reset',
       text:    `Hi,\n\nYour Letterhome account password was just reset using the forgot-password link.\n\n` +
-               `If this wasn't you, contact us immediately at ${process.env.OPERATOR_EMAIL || 'hello@letterhome.ca'}.\n\n— Letterhome`,
+               `If this wasn't you, contact us immediately at ${process.env.OPERATOR_EMAIL || 'support@letterhome.ca'}.\n\n— Letterhome`,
     }, 'password_reset_completed').catch(() => {});
     res.json({ ok: true });
   } catch (e) {
@@ -2498,7 +2498,7 @@ app.put('/api/account/password', requireCustomer, accountLimiter, async (req, re
       subject: 'Your Letterhome password was changed',
       text:    `Hi,\n\nYour Letterhome account password was just changed.\n\n` +
                `If this was you, no action is needed.\n\n` +
-               `If you did NOT change your password, contact us immediately at ${process.env.OPERATOR_EMAIL || 'hello@letterhome.ca'} ` +
+               `If you did NOT change your password, contact us immediately at ${process.env.OPERATOR_EMAIL || 'support@letterhome.ca'} ` +
                `and reset your password at ${process.env.BASE_URL}/account/forgot\n\n— Letterhome`,
     }, 'password_changed').catch(() => {});
     res.json({ ok: true });
@@ -2724,7 +2724,7 @@ nav{background:rgba(237,229,211,0.94);backdrop-filter:blur(14px);border-bottom:1
     <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.15em;color:rgba(250,246,236,0.5);margin-bottom:8px;font-family:'DM Mono',monospace">Estimated delivery</div>
     <div style="font-family:'DM Serif Display',serif;font-size:24px">${esc(order.estimated_delivery)}</div>
   </div>` : ''}
-  <p style="font-size:13px;color:#6b6258;line-height:1.6">Questions about your letter? Email <a href="mailto:hello@letterhome.ca" style="color:#a8472d">hello@letterhome.ca</a> and include your order number.</p>
+  <p style="font-size:13px;color:#6b6258;line-height:1.6">Questions about your letter? Email <a href="mailto:support@letterhome.ca" style="color:#a8472d">support@letterhome.ca</a> and include your order number.</p>
 </div>
 <footer style="background:#2a2a2a;color:rgba(250,246,236,0.6);padding:32px 36px;font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
   <span>© 2026 Letterhome</span>
