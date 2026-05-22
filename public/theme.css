@@ -372,7 +372,7 @@ nav { border-bottom: 1.5px solid rgba(42,42,42,0.18) !important; }
 .btn-red:hover, .btn-ink:hover { transform: none !important; }
 
 /* Stitched border — direct border property, unaffected by transition:all or overflow */
-.btn-red { border: 2px dashed white !important; }
+.btn-red { border: 2px dashed var(--ink) !important; }
 .btn-outline { border: 2px dashed var(--ink) !important; }
 .btn-primary, .btn-ink { border: 2px dashed rgba(255,255,255,0.45) !important; }
 
