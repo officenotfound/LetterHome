@@ -206,3 +206,100 @@ test('GET /api/order-status returns 404 for unknown session', async () => {
   const res = await fetch(`${base}/api/order-status?session_id=cs_does_not_exist`);
   assert.equal(res.status, 404);
 });
+
+test('POST /api/create-order with missing required fields returns 400', async () => {
+  const form = new URLSearchParams({
+    'r-email':   'missing@example.com',
+    'r-country': 'CA',
+    // r-name and r-street intentionally omitted
+  });
+  const res  = await fetch(`${base}/api/create-order`, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body:    form.toString(),
+  });
+  assert.equal(res.status, 400);
+  const body = await res.json();
+  assert.ok(body.error, 'error field missing from 400 response');
+});
+
+test('POST /api/track returns order data for valid email + order_id', async () => {
+  const sessionId = seedOrder({ email: 'track@example.com', status: 'paid', recipientName: 'Bob Track' });
+  const row = db.prepare('SELECT id FROM orders WHERE stripe_session_id = ?').get(sessionId);
+
+  const res  = await fetch(`${base}/api/track`, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify({ email: 'track@example.com', order_id: row.id }),
+  });
+  const body = await res.json();
+  assert.equal(res.status, 200, `Expected 200, got ${res.status}: ${JSON.stringify(body)}`);
+  assert.equal(body.status, 'paid');
+  assert.equal(body.recipientName, 'Bob Track');
+  assert.ok(body.orderId > 0);
+});
+
+test('POST /api/track returns 404 for wrong email', async () => {
+  const sessionId = seedOrder({ email: 'realowner@example.com', status: 'paid' });
+  const row = db.prepare('SELECT id FROM orders WHERE stripe_session_id = ?').get(sessionId);
+
+  const res = await fetch(`${base}/api/track`, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify({ email: 'attacker@example.com', order_id: row.id }),
+  });
+  assert.equal(res.status, 404);
+});
+
+test('POST /api/track returns 404 for awaiting_payment orders', async () => {
+  const sessionId = seedOrder({ email: 'unpaid@example.com', status: 'awaiting_payment' });
+  const row = db.prepare('SELECT id FROM orders WHERE stripe_session_id = ?').get(sessionId);
+
+  const res = await fetch(`${base}/api/track`, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify({ email: 'unpaid@example.com', order_id: row.id }),
+  });
+  assert.equal(res.status, 404);
+});
+
+test('GET /status/:token returns status page HTML for a paid order', async () => {
+  const sessionId = seedOrder({ email: 'statuspg@example.com', status: 'paid', recipientName: 'Dana Status' });
+  const row = db.prepare('SELECT status_token FROM orders WHERE stripe_session_id = ?').get(sessionId);
+
+  const res  = await fetch(`${base}/status/${row.status_token}`);
+  assert.equal(res.status, 200);
+  const html = await res.text();
+  assert.ok(html.includes('Dana Status'), 'recipient name not in status page');
+  assert.ok(html.includes('<!DOCTYPE html'), 'not an HTML response');
+});
+
+test('GET /status/:token returns 404 for an awaiting_payment order', async () => {
+  const sessionId = seedOrder({ status: 'awaiting_payment' });
+  const row = db.prepare('SELECT status_token FROM orders WHERE stripe_session_id = ?').get(sessionId);
+
+  const res = await fetch(`${base}/status/${row.status_token}`);
+  assert.equal(res.status, 404);
+});
+
+test('POST /api/contact returns 400 for missing fields', async () => {
+  const res  = await fetch(`${base}/api/contact`, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify({ name: 'Tester', email: 'tester@example.com' /* message omitted */ }),
+  });
+  assert.equal(res.status, 400);
+  const body = await res.json();
+  assert.ok(body.error);
+});
+
+test('POST /api/contact returns 400 for invalid email', async () => {
+  const res  = await fetch(`${base}/api/contact`, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify({ name: 'Tester', email: 'not-an-email', message: 'Hello' }),
+  });
+  assert.equal(res.status, 400);
+  const body = await res.json();
+  assert.ok(body.error);
+});
