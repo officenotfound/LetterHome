@@ -2579,7 +2579,7 @@ function tDraw() {
   document.getElementById('tetris-level').textContent = TETRIS.level;
   const overlay = document.getElementById('tetris-overlay');
   if (overlay) {
-    if (TETRIS.over)        { overlay.style.display = 'flex'; overlay.innerHTML = `<div style="text-align:center"><div style="font-family:Georgia,serif;font-size:28px;font-weight:600;margin-bottom:6px">Game Over</div><div style="font-size:12px;color:#9a9a9a;margin-bottom:14px;font-family:'DM Mono',ui-monospace,monospace;letter-spacing:0.1em">Final score: ${TETRIS.score.toLocaleString()}</div><button class="btn btn-primary btn-sm" onclick="tetrisReset()">Play again</button></div>`; tetrisSubmitScore(); }
+    if (TETRIS.over)        { overlay.style.display = 'flex'; if (!overlay.querySelector('button')) { overlay.innerHTML = `<div style="text-align:center"><div style="font-family:Georgia,serif;font-size:28px;font-weight:600;margin-bottom:6px">Game Over</div><div style="font-size:12px;color:#9a9a9a;margin-bottom:14px;font-family:'DM Mono',ui-monospace,monospace;letter-spacing:0.1em">Final score: ${TETRIS.score.toLocaleString()}</div><button class="btn btn-primary btn-sm" onclick="tetrisReset()">Play again</button></div>`; } tetrisSubmitScore(); }
     else if (TETRIS.paused) { overlay.style.display = 'flex'; overlay.innerHTML = `<div style="text-align:center"><div style="font-family:Georgia,serif;font-size:26px;font-weight:600">Paused</div><div style="font-size:11px;color:#9a9a9a;margin-top:6px;font-family:'DM Mono',ui-monospace,monospace;letter-spacing:0.1em">Press P to resume</div></div>`; }
     else                    { overlay.style.display = 'none'; }
   }
@@ -2659,6 +2659,8 @@ async function tetrisLoadLeaderboard() {
     if (!lb) return;
     if (!scores.length) {
       lb.innerHTML = '<div style="color:#9a9a9a;font-size:11px;font-family:\'DM Mono\',monospace;text-transform:uppercase;letter-spacing:0.1em;padding:8px 0">No scores yet — play!</div>';
+      const chart = document.getElementById('tetris-chart');
+      if (chart) chart.innerHTML = '<div style="color:#9a9a9a;font-size:11px;font-family:\'DM Mono\',monospace;text-transform:uppercase;letter-spacing:0.1em;padding:8px 0">No scores yet</div>';
       return;
     }
     lb.innerHTML = scores.map((s, i) => `
@@ -2667,6 +2669,20 @@ async function tetrisLoadLeaderboard() {
         <span style="flex:1;font-weight:${i===0?'700':'500'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:${i===0?'var(--accent)':'inherit'}">${esc(s.username)}</span>
         <span style="font-family:'DM Mono',monospace;font-size:11px;font-weight:700;letter-spacing:-0.02em">${Number(s.score).toLocaleString()}</span>
       </div>`).join('');
+    const chart = document.getElementById('tetris-chart');
+    if (chart) {
+      const max = scores[0].score;
+      chart.innerHTML = scores.slice(0, 7).map((s, i) => `
+        <div style="margin-bottom:9px">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;font-size:10px;font-family:'DM Mono',monospace;margin-bottom:3px">
+            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:90px;color:${i===0?'var(--accent)':'inherit'};font-weight:${i===0?700:500}">${esc(s.username)}</span>
+            <span style="color:#9a9a9a;letter-spacing:-0.02em">${Number(s.score).toLocaleString()}</span>
+          </div>
+          <div style="height:7px;background:#f0f0f0;border-radius:1px;overflow:hidden">
+            <div style="height:100%;width:${Math.round((s.score/max)*100)}%;background:${i===0?'var(--accent)':'#c8b89a'};border-radius:1px"></div>
+          </div>
+        </div>`).join('');
+    }
   } catch(e) {}
 }
 
@@ -2721,6 +2737,10 @@ function showArcade() {
         <div class="card" style="margin:0;padding:18px 20px;min-width:180px">
           <div style="font-family:'DM Mono',ui-monospace,monospace;font-size:9px;text-transform:uppercase;letter-spacing:0.18em;color:#9a9a9a;margin-bottom:10px">🏆 High Scores</div>
           <div id="tetris-leaderboard"><div style="color:#9a9a9a;font-size:11px;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:0.1em;padding:8px 0">Loading…</div></div>
+        </div>
+        <div class="card" style="margin:0;padding:18px 20px;min-width:180px">
+          <div style="font-family:'DM Mono',ui-monospace,monospace;font-size:9px;text-transform:uppercase;letter-spacing:0.18em;color:#9a9a9a;margin-bottom:12px">Score Chart</div>
+          <div id="tetris-chart"><div style="color:#9a9a9a;font-size:11px;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:0.1em;padding:8px 0">Loading…</div></div>
         </div>
       </div>
     </div>`);
