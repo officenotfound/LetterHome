@@ -929,6 +929,8 @@ footer {
   .pricing-grid .price-card:not(.featured) { padding-left: 0; border-left: none; border-top: 1px solid var(--line); padding-top: 32px; margin-top: 32px; }
   .usecases-grid { grid-template-columns: 1fr; }
   .story-inner { grid-template-columns: 1fr; gap: 36px; }
+  .story-text { text-align: center; }
+  .story-text .eyebrow { justify-content: center; }
   .story { padding: 48px 0; }
   .section-inner { padding: 40px 24px; }
   #how > .section-inner, #pricing > .section-inner,
@@ -942,7 +944,8 @@ footer {
 /* ── 768px: Collapse steps, shrink quote ── */
 @media (max-width: 768px) {
   .steps { grid-template-columns: 1fr; }
-  .steps .step { padding: 20px 0 !important; border-right: none !important; border-bottom: 1px solid var(--line); text-align: left; }
+  .steps .step { padding: 20px 0 !important; border-right: none !important; border-bottom: 1px solid var(--line); text-align: center; }
+  .step-num { justify-content: center; }
   .steps .step:last-child { border-bottom: none; }
   .story-quote { padding: 20px 22px; }
   .story-quote::before { font-size: 56px; top: 4px; left: 12px; }
