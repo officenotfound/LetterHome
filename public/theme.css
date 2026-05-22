@@ -3,6 +3,15 @@
    here win. Dark-mode is [data-theme="dark"] which is higher specificity anyway.
    ─────────────────────────────────────────────────────────────────────────── */
 
+/* ── Warm ink palette override (site-wide) ───────────────────────────────────
+   Shift neutral gray-black to warm dark brown to harmonise with kraft paper. */
+:root {
+  --ink:      #261d14;
+  --ink-soft: #362a20;
+  --ink-muted:#6b5e50;
+  --line:     rgba(38,29,20,0.14);
+}
+
 /* ── Cross-browser & device baseline ─────────────────────────────────────────
    Prevents iOS auto-zoom on landscape, removes tap-highlight flash, kills the
    300ms tap delay on older Mobile Safari, gives the OS a colour-scheme hint
