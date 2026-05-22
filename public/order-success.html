@@ -50,6 +50,7 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:40px 36px;posi
 @media(max-width:768px){.main{padding:48px 24px}.card{padding:28px 24px!important}.sub{font-size:16px}}
 </style>
 <script>(function(){try{var t=localStorage.getItem('lh-theme')||(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+<script>(function(){try{var l=localStorage.getItem('lh-lang')||'en';document.documentElement.setAttribute('data-lang',l);}catch(e){}})();</script>
 <link rel="stylesheet" href="/theme.css">
 </head>
 <body>
@@ -60,35 +61,38 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:40px 36px;posi
       <a href="/track">Track an order</a>
       <a href="/about">About</a>
       <a href="/contact">Contact</a>
+    </div>
+    <div class="nav-right">
+      <button type="button" class="lang-toggle" onclick="toggleLang()" aria-label="Toggle language">FR</button>
       <button type="button" class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode" title="Toggle dark mode">
         <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41"/></svg>
         <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
       </button>
+      <a href="/send" class="btn btn-red nav-cta" data-i18n="nav.sendanother">Send another</a>
     </div>
-    <a href="/send" class="btn btn-red nav-cta">Send another</a>
   </div>
 </nav>
 
 <div class="main">
-  <div class="eyebrow">Order confirmed</div>
+  <div class="eyebrow" data-i18n="success.eyebrow">Order confirmed</div>
   <div class="success-icon">✓</div>
-  <h1>Your letter is on its way.</h1>
-  <p class="sub">Payment received. We'll print your letter in full colour and mail it from Canada within one business day. A confirmation has been sent to your email.</p>
+  <h1 data-i18n="success.h1">Your letter is on its way.</h1>
+  <p class="sub" data-i18n="success.sub">Payment received. We'll print your letter in full colour and mail it from Canada within one business day. A confirmation has been sent to your email.</p>
 
   <div class="card" id="order-details">
-    <div class="loading">Loading order details…</div>
+    <div class="loading" data-i18n="success.loading">Loading order details…</div>
   </div>
 
   <div id="account-prompt"></div>
-  <a href="/" class="btn btn-outline">Back to Letterhome</a>
+  <a href="/" class="btn btn-outline" data-i18n="success.back">Back to Letterhome</a>
 </div>
 
 <footer>
   <div class="footer-bottom">
     <div>© 2026 Letterhome</div>
     <div class="footer-bottom-links">
-      <a href="/privacy">Privacy</a>
-      <a href="/terms">Terms</a>
+      <a href="/privacy" data-i18n="footer.privacy">Privacy</a>
+      <a href="/terms" data-i18n="footer.terms">Terms</a>
     </div>
   </div>
 </footer>
@@ -121,12 +125,12 @@ function esc(s) {
     const isDomestic = data.destinationCountry === 'CA';
 
     el.innerHTML = `
-      <div class="detail-row"><span class="label">Order</span><span class="val">#${esc(data.id)}</span></div>
-      <div class="detail-row"><span class="label">Recipient</span><span class="val">${esc(data.recipientName)}${data.recipientCity ? ', ' + esc(data.recipientCity) : ''}</span></div>
-      <div class="detail-row"><span class="label">Destination</span><span class="val">${esc(destName)}</span></div>
-      <div class="detail-row"><span class="label">Price</span><span class="val">${data.priceCents ? '$' + (data.priceCents / 100).toFixed(0) : (isDomestic ? '$10' : '$20')} CAD</span></div>
-      <div class="detail-row"><span class="label">Estimated delivery</span><span class="val">${isDomestic ? 'Within 2 weeks' : 'Within 4 weeks'}</span></div>
-      <div class="detail-row"><span class="label">Status</span><span class="val" style="color:var(--red)">Received — preparing to mail</span></div>
+      <div class="detail-row"><span class="label">${LH_T('success.label.order')}</span><span class="val">#${esc(data.id)}</span></div>
+      <div class="detail-row"><span class="label">${LH_T('success.label.recipient')}</span><span class="val">${esc(data.recipientName)}${data.recipientCity ? ', ' + esc(data.recipientCity) : ''}</span></div>
+      <div class="detail-row"><span class="label">${LH_T('success.label.destination')}</span><span class="val">${esc(destName)}</span></div>
+      <div class="detail-row"><span class="label">${LH_T('success.label.price')}</span><span class="val">${data.priceCents ? '$' + (data.priceCents / 100).toFixed(0) : (isDomestic ? '$10' : '$20')} CAD</span></div>
+      <div class="detail-row"><span class="label">${LH_T('success.label.delivery')}</span><span class="val">${isDomestic ? LH_T('success.dom.delivery') : LH_T('success.intl.delivery')}</span></div>
+      <div class="detail-row"><span class="label">${LH_T('success.label.status')}</span><span class="val" style="color:var(--red)">${LH_T('success.status.val')}</span></div>
     `;
   } catch (err) {
     el.innerHTML = '<p style="color:var(--ink-muted);font-size:14px">Your payment went through — we\'ll send a confirmation email shortly. If you have questions, contact us.</p>';
@@ -139,9 +143,9 @@ function esc(s) {
       document.getElementById('account-prompt').innerHTML = `
         <div class="card" style="margin-bottom:28px;border-left:3px solid var(--red)">
           <div style="padding:28px 32px">
-            <div style="font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.14em;color:var(--red);margin-bottom:10px">Save time next order</div>
-            <p style="font-size:16px;margin-bottom:20px;line-height:1.5">Create a free account to save your return address and frequent recipients — so you never have to type them again.</p>
-            <a href="/account/register" class="btn btn-outline" style="font-size:13px">Create Account →</a>
+            <div style="font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.14em;color:var(--red);margin-bottom:10px">${LH_T('success.acct.eyebrow')}</div>
+            <p style="font-size:16px;margin-bottom:20px;line-height:1.5">${LH_T('success.acct.p')}</p>
+            <a href="/account/register" class="btn btn-outline" style="font-size:13px">${LH_T('success.acct.btn')}</a>
           </div>
         </div>`;
     }
@@ -149,5 +153,6 @@ function esc(s) {
 })();
 </script>
 <script src="/theme.js"></script>
+<script src="/lang.js"></script>
 </body>
 </html>

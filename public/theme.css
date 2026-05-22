@@ -28,7 +28,7 @@ html {
 /* Remove 300ms tap delay and double-tap zoom on all interactive elements.   */
 button, .btn, a, [role="button"], summary,
 input[type="checkbox"], input[type="radio"],
-.letter-type, .attach-zone, .theme-toggle,
+.letter-type, .attach-zone, .theme-toggle, .lang-toggle,
 .nav-link, .nav-links a {
   touch-action: manipulation;
 }
@@ -84,6 +84,7 @@ input[type="checkbox"]:focus-visible { outline: 2px solid var(--red); outline-of
     box-shadow: none !important;
   }
   .theme-toggle:hover { transform: none; }
+  .lang-toggle:hover { color: var(--ink-soft); border-color: var(--line); }
 }
 
 /* Improve smooth-scroll feel on iOS inside scrollable containers. */
@@ -266,6 +267,29 @@ textarea:focus {
 [data-theme="dark"] .theme-toggle .moon-icon { display: block; }
 [data-theme="dark"] .theme-toggle .sun-icon  { display: none; }
 
+/* ── Language toggle button ───────────────────────────────────────────────── */
+.lang-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 38px;
+  height: 38px;
+  padding: 0 8px;
+  border: 1px solid var(--line);
+  background: transparent;
+  border-radius: 2px;
+  cursor: pointer;
+  color: var(--ink-soft);
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  transition: color 0.2s, border-color 0.2s;
+  flex-shrink: 0;
+}
+.lang-toggle:hover { color: var(--red); border-color: var(--red); }
+.lang-toggle:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
+
 /* ── Design Pass v0.2.1 ──────────────────────────────────────────────────────
    Editorial polish: bigger and tighter display type, subtle paper texture.
    theme.css loads after inline <style>, so these rules win same-specificity.
@@ -335,7 +359,8 @@ section.story[style], section.story {
 .logo { font-family: 'DM Serif Display', serif !important; font-style: italic !important; font-size: 22px !important; letter-spacing: -0.01em !important; gap: 10px !important; }
 .nav-inner { height: 56px !important; padding: 0 36px !important; }
 .nav-links { display: none !important; }
-.nav-cta { margin-left: auto !important; padding: 8px 18px !important; font-size: 12px !important; }
+.nav-right { display: flex !important; align-items: center !important; gap: 8px !important; margin-left: auto !important; flex-shrink: 0 !important; }
+.nav-cta { margin-left: 0 !important; padding: 8px 18px !important; font-size: 12px !important; }
 @media (max-width: 900px) { .nav-inner { padding: 0 24px !important; height: 52px !important; } }
 @media (max-width: 480px) { .nav-inner { padding: 0 18px !important; height: 48px !important; } .nav-cta { padding: 10px 16px !important; font-size: 12px !important; } }
 

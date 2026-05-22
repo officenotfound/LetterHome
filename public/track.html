@@ -76,6 +76,7 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:48px 36px 32px
 @media(max-width:768px){.nav-links{display:none}.main{padding:48px 24px 80px}.form-card,.result{padding:28px 24px}}
 </style>
 <script>(function(){try{var t=localStorage.getItem('lh-theme')||(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+<script>(function(){try{var l=localStorage.getItem('lh-lang')||'en';document.documentElement.setAttribute('data-lang',l);}catch(e){}})();</script>
 <link rel="stylesheet" href="/theme.css">
 </head>
 <body>
@@ -87,41 +88,44 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:48px 36px 32px
       <a href="/#pricing">Pricing</a>
       <a href="/about">About</a>
       <a href="/contact">Contact</a>
+    </div>
+    <div class="nav-right">
+      <button type="button" class="lang-toggle" onclick="toggleLang()" aria-label="Toggle language">FR</button>
       <button type="button" class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode" title="Toggle dark mode">
         <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41"/></svg>
         <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
       </button>
+      <a href="/send" class="btn btn-red nav-cta" data-i18n="nav.send">Send a letter</a>
     </div>
-    <a href="/send" class="btn btn-red nav-cta">Send a letter</a>
   </div>
 </nav>
 
 <div class="main">
-  <div class="eyebrow">Order tracking</div>
-  <h1>Check on your letter.</h1>
-  <p class="intro">Enter the order number from your confirmation email and the email address you used at checkout.</p>
+  <div class="eyebrow" data-i18n="track.eyebrow">Order tracking</div>
+  <h1 data-i18n="track.h1">Check on your letter.</h1>
+  <p class="intro" data-i18n="track.intro">Enter the order number from your confirmation email and the email address you used at checkout.</p>
 
   <div id="error-msg" class="error-msg"></div>
 
   <div class="form-card">
     <form id="track-form">
       <div class="form-group">
-        <label for="order-id">Order number</label>
-        <input id="order-id" name="order_id" type="text" placeholder="e.g. 42" required inputmode="numeric">
-        <span class="field-note">Found in your confirmation email — subject line says "Order #…"</span>
+        <label for="order-id" data-i18n="track.orderid.label">Order number</label>
+        <input id="order-id" name="order_id" type="text" placeholder="e.g. 42" data-i18n-placeholder="track.orderid.placeholder" required inputmode="numeric">
+        <span class="field-note" data-i18n="track.orderid.note">Found in your confirmation email — subject line says "Order #…"</span>
       </div>
       <div class="form-group" style="margin-bottom:28px">
-        <label for="email">Email address</label>
-        <input id="email" name="email" type="email" placeholder="you@example.com" required>
+        <label for="email" data-i18n="track.email.label">Email address</label>
+        <input id="email" name="email" type="email" placeholder="you@example.com" data-i18n-placeholder="track.email.placeholder" required>
       </div>
-      <button type="submit" class="btn btn-ink" id="track-btn" style="width:100%;text-align:center;padding:16px">Track Order</button>
+      <button type="submit" class="btn btn-ink" id="track-btn" data-i18n="track.btn" style="width:100%;text-align:center;padding:16px">Track Order</button>
     </form>
   </div>
 
   <div class="result" id="result">
     <div class="result-status" id="result-status"></div>
     <div id="result-details"></div>
-    <p style="font-size:13px;color:var(--ink-muted);margin-top:20px">Questions? <a href="/contact" style="color:var(--red)">Contact us</a> with your order number.</p>
+    <p style="font-size:13px;color:var(--ink-muted);margin-top:20px" data-i18n-html="track.result.note">Questions? <a href="/contact" style="color:var(--red)">Contact us</a> with your order number.</p>
   </div>
 </div>
 
@@ -129,8 +133,8 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:48px 36px 32px
   <div class="footer-bottom">
     <div>© 2026 Letterhome</div>
     <div class="footer-bottom-links">
-      <a href="/privacy">Privacy</a>
-      <a href="/terms">Terms</a>
+      <a href="/privacy" data-i18n="footer.privacy">Privacy</a>
+      <a href="/terms" data-i18n="footer.terms">Terms</a>
     </div>
   </div>
 </footer>
@@ -148,7 +152,7 @@ document.getElementById('track-form').addEventListener('submit', async function(
   const err = document.getElementById('error-msg');
   err.style.display = 'none';
   btn.disabled = true;
-  btn.textContent = 'Checking…';
+  btn.textContent = LH_T('track.checking');
 
   try {
     const res = await fetch('/api/track', {
@@ -164,16 +168,16 @@ document.getElementById('track-form').addEventListener('submit', async function(
 
     const dest = countryNames[data.destinationCountry] || data.destinationCountry || 'Canada';
     const isDomestic = data.destinationCountry === 'CA';
-    const delivery = isDomestic ? '2–4 business days' : '6–10 business days';
+    const delivery = isDomestic ? LH_T('track.dom.delivery') : LH_T('track.intl.delivery');
     const date = new Date(data.createdAt).toLocaleDateString('en-CA', { year:'numeric', month:'long', day:'numeric' });
 
     document.getElementById('result-status').textContent = data.statusText;
     document.getElementById('result-details').innerHTML = `
-      <div class="detail-row"><span class="label">Order</span><span class="val">#${esc(data.orderId)}</span></div>
-      <div class="detail-row"><span class="label">Recipient</span><span class="val">${esc(data.recipientName)}</span></div>
-      <div class="detail-row"><span class="label">Destination</span><span class="val">${esc(dest)}</span></div>
-      <div class="detail-row"><span class="label">Expected delivery</span><span class="val">${esc(delivery)} after mailing</span></div>
-      <div class="detail-row"><span class="label">Order date</span><span class="val">${esc(date)}</span></div>
+      <div class="detail-row"><span class="label">${LH_T('track.result.order')}</span><span class="val">#${esc(data.orderId)}</span></div>
+      <div class="detail-row"><span class="label">${LH_T('track.result.recipient')}</span><span class="val">${esc(data.recipientName)}</span></div>
+      <div class="detail-row"><span class="label">${LH_T('track.result.dest')}</span><span class="val">${esc(dest)}</span></div>
+      <div class="detail-row"><span class="label">${LH_T('track.result.delivery')}</span><span class="val">${esc(delivery)} after mailing</span></div>
+      <div class="detail-row"><span class="label">${LH_T('track.result.date')}</span><span class="val">${esc(date)}</span></div>
     `;
     document.getElementById('result').style.display = 'block';
     document.querySelector('.form-card').style.display = 'none';
@@ -182,10 +186,11 @@ document.getElementById('track-form').addEventListener('submit', async function(
     err.style.display = 'block';
   } finally {
     btn.disabled = false;
-    btn.textContent = 'Track Order';
+    btn.textContent = LH_T('track.btn');
   }
 });
 </script>
 <script src="/theme.js"></script>
+<script src="/lang.js"></script>
 </body>
 </html>

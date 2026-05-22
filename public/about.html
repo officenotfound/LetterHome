@@ -88,6 +88,7 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:48px 36px 32px
 @media(max-width:480px){.hero{padding:28px 18px 40px}.hero p{font-size:17px}.values-inner{padding:40px 18px}.story{padding:48px 0}.cta{padding:40px 18px}.value{padding:28px 20px}.manifesto{padding:24px 20px}}
 </style>
 <script>(function(){try{var t=localStorage.getItem('lh-theme')||(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+<script>(function(){try{var l=localStorage.getItem('lh-lang')||'en';document.documentElement.setAttribute('data-lang',l);}catch(e){}})();</script>
 <link rel="stylesheet" href="/theme.css">
 </head>
 <body>
@@ -98,93 +99,97 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:48px 36px 32px
       <a href="/#how">How it works</a>
       <a href="/#pricing">Pricing</a>
       <a href="/contact">Contact</a>
+    </div>
+    <div class="nav-right">
+      <button type="button" class="lang-toggle" onclick="toggleLang()" aria-label="Toggle language">FR</button>
       <button type="button" class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode" title="Toggle dark mode">
         <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41"/></svg>
         <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
       </button>
+      <a href="/send" class="btn btn-red nav-cta" data-i18n="nav.send">Send a letter</a>
     </div>
-    <a href="/send" class="btn btn-red nav-cta">Send a letter</a>
   </div>
 </nav>
 
 <div class="hero">
-  <div class="eyebrow">About Letterhome</div>
-  <h1>A small mail service, run from Canada.</h1>
-  <p>Letterhome prints and posts letters and documents from inside Canada on your behalf. Each order is handled by a person — checked for obvious problems, printed in full colour, packed into a stamped envelope, and dropped at the post office.</p>
+  <div class="eyebrow" data-i18n="about.eyebrow">About Letterhome</div>
+  <h1 data-i18n="about.h1">A small mail service, run from Canada.</h1>
+  <p data-i18n="about.p">Letterhome prints and posts letters and documents from inside Canada on your behalf. Each order is handled by a person — checked for obvious problems, printed in full colour, packed into a stamped envelope, and dropped at the post office.</p>
   <div class="hero-cta" style="display:flex;gap:14px;flex-wrap:wrap">
-    <a href="/send" class="btn btn-red btn-large">Send a letter</a>
-    <a href="/contact" class="btn btn-outline btn-large">Get in touch</a>
+    <a href="/send" class="btn btn-red btn-large" data-i18n="about.cta.send">Send a letter</a>
+    <a href="/contact" class="btn btn-outline btn-large" data-i18n="about.cta.contact">Get in touch</a>
   </div>
 </div>
 
 <section class="story">
   <div class="story-inner">
     <div>
-      <div class="eyebrow">Why we built this</div>
-      <h2>The gap we're filling.</h2>
-      <p>If you live outside Canada, mailing something back home is harder than it should be. The CRA wants signed paper. Family expect a letter on the right day. Banks and accountants keep sending mail to addresses you no longer use. From Berlin, Bangkok or Auckland, none of that is easy to deal with.</p>
-      <p>Letterhome is the workaround. You write the letter, attach any documents, pay, and we mail it from Canada — just like dropping it off at a Canada Post box yourself. We also mail outwards from Canada to 160+ countries, so it works the other way around too.</p>
-      <p>Orders are checked before printing for things that would stop delivery — bad addresses, unreadable PDFs, obvious abuse or illegal content. Not for what you wrote. Your letter and attachments are deleted within 7 days of mailing.</p>
+      <div class="eyebrow" data-i18n="about.story.eyebrow">Why we built this</div>
+      <h2 data-i18n="about.story.h2">The gap we're filling.</h2>
+      <p data-i18n="about.story.p1">If you live outside Canada, mailing something back home is harder than it should be. The CRA wants signed paper. Family expect a letter on the right day. Banks and accountants keep sending mail to addresses you no longer use. From Berlin, Bangkok or Auckland, none of that is easy to deal with.</p>
+      <p data-i18n="about.story.p2">Letterhome is the workaround. You write the letter, attach any documents, pay, and we mail it from Canada — just like dropping it off at a Canada Post box yourself. We also mail outwards from Canada to 160+ countries, so it works the other way around too.</p>
+      <p data-i18n="about.story.p3">Orders are checked before printing for things that would stop delivery — bad addresses, unreadable PDFs, obvious abuse or illegal content. Not for what you wrote. Your letter and attachments are deleted within 7 days of mailing.</p>
     </div>
     <div class="manifesto">
-      <p>A small operation, run from Canada. Every order is reviewed and prepared by hand before it goes in the post.</p>
+      <p data-i18n="about.manifesto">A small operation, run from Canada. Every order is reviewed and prepared by hand before it goes in the post.</p>
     </div>
   </div>
 </section>
 
 <section class="values">
   <div class="values-inner">
-    <h2>How we operate.</h2>
+    <h2 data-i18n="about.values.h2">How we operate.</h2>
     <div class="values-grid">
       <div class="value">
         <div class="value-num">01</div>
-        <h3>Hand-checked before printing</h3>
-        <p>Every order is reviewed by a person before it's printed — for addressing errors, unreadable attachments, or anything else that would stop the mail from getting through. If there's a problem, we email you before charging or printing.</p>
+        <h3 data-i18n="about.v01.h3">Hand-checked before printing</h3>
+        <p data-i18n="about.v01.p">Every order is reviewed by a person before it's printed — for addressing errors, unreadable attachments, or anything else that would stop the mail from getting through. If there's a problem, we email you before charging or printing.</p>
       </div>
       <div class="value">
         <div class="value-num">02</div>
-        <h3>We don't keep your letters</h3>
-        <p>Your letter and any attachments are deleted from our systems within 7 days of mailing. We keep a basic order record — date, amount, your email — for Canadian tax purposes. Not what you wrote.</p>
+        <h3 data-i18n="about.v02.h3">We don't keep your letters</h3>
+        <p data-i18n="about.v02.p">Your letter and any attachments are deleted from our systems within 7 days of mailing. We keep a basic order record — date, amount, your email — for Canadian tax purposes. Not what you wrote.</p>
       </div>
       <div class="value">
         <div class="value-num">03</div>
-        <h3>Flat pricing</h3>
-        <p>$10 to a Canadian address, $20 to anywhere else. The price includes up to 5 documents of full-colour printing, the envelope, postage, and the trip to the post office. No per-page charges or surprise add-ons.</p>
+        <h3 data-i18n="about.v03.h3">Flat pricing</h3>
+        <p data-i18n="about.v03.p">$10 to a Canadian address, $20 to anywhere else. The price includes up to 5 documents of full-colour printing, the envelope, postage, and the trip to the post office. No per-page charges or surprise add-ons.</p>
       </div>
       <div class="value">
         <div class="value-num">04</div>
-        <h3>Payments through Stripe</h3>
-        <p>Payments are processed by Stripe. We don't see or store your card details, and your financial information doesn't touch our systems.</p>
+        <h3 data-i18n="about.v04.h3">Payments through Stripe</h3>
+        <p data-i18n="about.v04.p">Payments are processed by Stripe. We don't see or store your card details, and your financial information doesn't touch our systems.</p>
       </div>
       <div class="value">
         <div class="value-num">05</div>
-        <h3>Canada Post for delivery</h3>
-        <p>Letters go through Canada Post's network with the same postage and service level you'd get if you'd mailed it yourself from a Canadian address.</p>
+        <h3 data-i18n="about.v05.h3">Canada Post for delivery</h3>
+        <p data-i18n="about.v05.p">Letters go through Canada Post's network with the same postage and service level you'd get if you'd mailed it yourself from a Canadian address.</p>
       </div>
       <div class="value">
         <div class="value-num">06</div>
-        <h3>Direct replies</h3>
-        <p>No ticket queues. If something goes wrong with your order, the person who replies is the person who handled it. We aim to respond within one business day.</p>
+        <h3 data-i18n="about.v06.h3">Direct replies</h3>
+        <p data-i18n="about.v06.p">No ticket queues. If something goes wrong with your order, the person who replies is the person who handled it. We aim to respond within one business day.</p>
       </div>
     </div>
   </div>
 </section>
 
 <section class="cta">
-  <h2>Ready to send one?</h2>
-  <p>Write your letter, attach any documents, and pay. We'll mail it from Canada within one business day.</p>
-  <a href="/send" class="btn btn-red btn-large">Send a letter — from $10 CAD</a>
+  <h2 data-i18n="about.cta.h2">Ready to send one?</h2>
+  <p data-i18n="about.cta.p">Write your letter, attach any documents, and pay. We'll mail it from Canada within one business day.</p>
+  <a href="/send" class="btn btn-red btn-large" data-i18n="about.cta.btn">Send a letter — from $10 CAD</a>
 </section>
 
 <footer>
   <div class="footer-bottom">
     <div>© 2026 Letterhome</div>
     <div class="footer-bottom-links">
-      <a href="/privacy">Privacy</a>
-      <a href="/terms">Terms</a>
+      <a href="/privacy" data-i18n="footer.privacy">Privacy</a>
+      <a href="/terms" data-i18n="footer.terms">Terms</a>
     </div>
   </div>
 </footer>
 <script src="/theme.js"></script>
+<script src="/lang.js"></script>
 </body>
 </html>
