@@ -510,8 +510,16 @@ section { position: relative; z-index: 2; }
 /* ========== PRICING ========== */
 .pricing-wrap {
   background: var(--paper);
-  border-top: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
+  border-top: none;
+  border-bottom: none;
+  -webkit-mask-image:
+    radial-gradient(circle 9px at 50% 0,   transparent 99%, black 100%) top    center / 22px 9px repeat-x,
+    radial-gradient(circle 9px at 50% 100%, transparent 99%, black 100%) bottom center / 22px 9px repeat-x,
+    linear-gradient(black, black) center / 100% calc(100% - 18px) no-repeat;
+  mask-image:
+    radial-gradient(circle 9px at 50% 0,   transparent 99%, black 100%) top    center / 22px 9px repeat-x,
+    radial-gradient(circle 9px at 50% 100%, transparent 99%, black 100%) bottom center / 22px 9px repeat-x,
+    linear-gradient(black, black) center / 100% calc(100% - 18px) no-repeat;
 }
 
 /* Editorial pricing: domestic dominates as the cover number,
@@ -832,8 +840,19 @@ section { position: relative; z-index: 2; }
   text-align: center;
   background: var(--paper);
   padding: 48px 36px;
-  border-top: 1px solid var(--line);
+  border-top: none;
   position: relative;
+}
+.cta-band::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 5px;
+  background: repeating-linear-gradient(
+    -45deg,
+    rgba(168,71,45,0.45) 0px, rgba(168,71,45,0.45) 3px,
+    transparent 3px, transparent 7px
+  );
 }
 
 .cta-band-inner { max-width: 640px; margin: 0 auto; text-align: center; }
