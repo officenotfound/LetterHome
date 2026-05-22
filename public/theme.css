@@ -356,7 +356,7 @@ section.story[style], section.story {
    handles light mode. Make sure the logo mark uses the new red. */
 .logo-mark { background: var(--red) !important; box-shadow: none !important; border-radius: 2px !important; width: 44px !important; height: 28px !important; }
 .logo-mark::before { display: block !important; inset: -4px !important; border: 1px dashed rgba(42,42,42,0.35) !important; border-radius: 4px !important; opacity: 1 !important; }
-.logo { font-family: 'DM Serif Display', serif !important; font-style: italic !important; font-size: 29px !important; letter-spacing: -0.02em !important; gap: 12px !important; }
+.logo { font-family: 'DM Serif Display', serif !important; font-style: italic !important; font-size: 27px !important; letter-spacing: -0.02em !important; gap: 12px !important; }
 .logo-wordmark { font-style: italic; letter-spacing: -0.02em; }
 .logo-accent { color: var(--red) !important; }
 nav { border-bottom: 1.5px solid rgba(42,42,42,0.18) !important; }
