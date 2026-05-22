@@ -272,18 +272,18 @@ textarea:focus {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 38px;
+  width: 38px;
   height: 38px;
-  padding: 0 8px;
+  padding: 0;
   border: 1px solid var(--line);
   background: transparent;
-  border-radius: 2px;
+  border-radius: 50%;
   cursor: pointer;
   color: var(--ink-soft);
   font-family: 'DM Mono', monospace;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   transition: color 0.2s, border-color 0.2s;
   flex-shrink: 0;
 }
