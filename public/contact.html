@@ -75,6 +75,7 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:48px 36px 32px
 @media(max-width:480px){.main{padding:32px 18px 60px}.intro{font-size:15px}.meta-item{gap:14px}}
 </style>
 <script>(function(){try{var t=localStorage.getItem('lh-theme')||(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+<script>(function(){try{var l=localStorage.getItem('lh-lang')||'en';document.documentElement.setAttribute('data-lang',l);}catch(e){}})();</script>
 <link rel="stylesheet" href="/theme.css">
 </head>
 <body>
@@ -85,64 +86,67 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:48px 36px 32px
       <a href="/#how">How it works</a>
       <a href="/#pricing">Pricing</a>
       <a href="/about">About</a>
+    </div>
+    <div class="nav-right">
+      <button type="button" class="lang-toggle" onclick="toggleLang()" aria-label="Toggle language">FR</button>
       <button type="button" class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode" title="Toggle dark mode">
         <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41"/></svg>
         <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
       </button>
+      <a href="/send" class="btn btn-red nav-cta" data-i18n="nav.send">Send a letter</a>
     </div>
-    <a href="/send" class="btn btn-red nav-cta">Send a letter</a>
   </div>
 </nav>
 
 <div class="main">
   <div>
-    <div class="eyebrow">Contact</div>
-    <h1>Get in touch.</h1>
-    <p class="intro">Questions about an order, bulk mail enquiries, or anything else — email us at hello@letterhome.ca or use the form. Replies usually come within one business day.</p>
+    <div class="eyebrow" data-i18n="contact.eyebrow">Contact</div>
+    <h1 data-i18n="contact.h1">Get in touch.</h1>
+    <p class="intro" data-i18n="contact.intro">Questions about an order, bulk mail enquiries, or anything else — email us at hello@letterhome.ca or use the form. Replies usually come within one business day.</p>
 
     <div class="contact-meta">
       <div class="meta-item">
         <div class="meta-icon">01 /</div>
         <div>
-          <h3>Email</h3>
-          <p><a href="mailto:hello@letterhome.ca">hello@letterhome.ca</a><br>Replies within one business day.</p>
+          <h3 data-i18n="contact.meta1.h3">Email</h3>
+          <p data-i18n-html="contact.meta1.p"><a href="mailto:hello@letterhome.ca">hello@letterhome.ca</a><br>Replies within one business day.</p>
         </div>
       </div>
       <div class="meta-item">
         <div class="meta-icon">02 /</div>
         <div>
-          <h3>Order support</h3>
-          <p>Have your order number handy. We can cancel an order before printing, fix address mistakes, and follow up on any letter that hasn't arrived in its expected window.</p>
+          <h3 data-i18n="contact.meta2.h3">Order support</h3>
+          <p data-i18n="contact.meta2.p">Have your order number handy. We can cancel an order before printing, fix address mistakes, and follow up on any letter that hasn't arrived in its expected window.</p>
         </div>
       </div>
       <div class="meta-item">
         <div class="meta-icon">03 /</div>
         <div>
-          <h3>Bulk &amp; business mail</h3>
-          <p>Sending the same letter to multiple addresses, or need volume pricing for a campaign? Mention it in your message and we'll quote it.</p>
+          <h3 data-i18n="contact.meta3.h3">Bulk &amp; business mail</h3>
+          <p data-i18n="contact.meta3.p">Sending the same letter to multiple addresses, or need volume pricing for a campaign? Mention it in your message and we'll quote it.</p>
         </div>
       </div>
     </div>
   </div>
 
   <div class="form-card">
-    <div id="success-msg" class="success-msg">
+    <div id="success-msg" class="success-msg" data-i18n="contact.success">
       Message sent. We'll get back to you within one business day.
     </div>
     <form id="contact-form">
       <div class="form-group">
-        <label for="name">Your name</label>
-        <input id="name" name="name" type="text" placeholder="Margaret Tremblay" required>
+        <label for="name" data-i18n="contact.name.label">Your name</label>
+        <input id="name" name="name" type="text" placeholder="Margaret Tremblay" data-i18n-placeholder="contact.name.placeholder" required>
       </div>
       <div class="form-group">
-        <label for="email">Your email</label>
-        <input id="email" name="email" type="email" placeholder="you@example.com" required>
+        <label for="email" data-i18n="contact.email.label">Your email</label>
+        <input id="email" name="email" type="email" placeholder="you@example.com" data-i18n-placeholder="contact.email.placeholder" required>
       </div>
       <div class="form-group">
-        <label for="message">Message</label>
-        <textarea id="message" name="message" placeholder="I have a question about…" required></textarea>
+        <label for="message" data-i18n="contact.msg.label">Message</label>
+        <textarea id="message" name="message" placeholder="I have a question about…" data-i18n-placeholder="contact.msg.placeholder" required></textarea>
       </div>
-      <button type="submit" class="btn btn-ink" id="submit-btn" style="width:100%;text-align:center;padding:16px">Send Message</button>
+      <button type="submit" class="btn btn-ink" id="submit-btn" data-i18n="contact.btn" style="width:100%;text-align:center;padding:16px">Send Message</button>
     </form>
   </div>
 </div>
@@ -151,8 +155,8 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:48px 36px 32px
   <div class="footer-bottom">
     <div>© 2026 Letterhome</div>
     <div class="footer-bottom-links">
-      <a href="/privacy">Privacy</a>
-      <a href="/terms">Terms</a>
+      <a href="/privacy" data-i18n="footer.privacy">Privacy</a>
+      <a href="/terms" data-i18n="footer.terms">Terms</a>
     </div>
   </div>
 </footer>
@@ -162,7 +166,7 @@ document.getElementById('contact-form').addEventListener('submit', async functio
   e.preventDefault();
   const btn = document.getElementById('submit-btn');
   btn.disabled = true;
-  btn.textContent = 'Sending…';
+  btn.textContent = LH_T('contact.sending');
 
   try {
     const res = await fetch('/api/contact', {
@@ -179,11 +183,12 @@ document.getElementById('contact-form').addEventListener('submit', async functio
     document.getElementById('success-msg').style.display = 'block';
   } catch {
     btn.disabled = false;
-    btn.textContent = 'Send Message';
+    btn.textContent = LH_T('contact.btn');
     alert('Something went wrong. Please email us directly at hello@letterhome.ca');
   }
 });
 </script>
 <script src="/theme.js"></script>
+<script src="/lang.js"></script>
 </body>
 </html>

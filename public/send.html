@@ -400,6 +400,7 @@ textarea.field-error { border-color: var(--red) !important; }
 .validation-banner::before { content: '!  '; color: var(--red); font-weight: 600; }
 </style>
 <script>(function(){try{var t=localStorage.getItem('lh-theme')||(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+<script>(function(){try{var l=localStorage.getItem('lh-lang')||'en';document.documentElement.setAttribute('data-lang',l);}catch(e){}})();</script>
 <link rel="stylesheet" href="/theme.css">
 </head>
 <body>
@@ -415,6 +416,9 @@ textarea.field-error { border-color: var(--red) !important; }
       <a href="/#pricing">Pricing</a>
       <a href="/#faq">FAQ</a>
       <a href="/account" id="nav-account-link">Sign In</a>
+    </div>
+    <div class="nav-right">
+      <button type="button" class="lang-toggle" onclick="toggleLang()" aria-label="Toggle language">FR</button>
       <button type="button" class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode" title="Toggle dark mode">
         <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41"/></svg>
         <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
@@ -432,21 +436,21 @@ textarea.field-error { border-color: var(--red) !important; }
           <div class="step-circle active" id="circle-1">i</div>
           <div class="step-line" id="line-1"></div>
         </div>
-        <div class="step-label active" id="label-1">Addresses</div>
+        <div class="step-label active" id="label-1" data-i18n="send.step1.label">Addresses</div>
       </div>
       <div class="progress-step">
         <div class="progress-step-row">
           <div class="step-circle" id="circle-2">ii</div>
           <div class="step-line" id="line-2"></div>
         </div>
-        <div class="step-label" id="label-2">Your Letter</div>
+        <div class="step-label" id="label-2" data-i18n="send.step2.label">Your Letter</div>
       </div>
       <div class="progress-step">
         <div class="progress-step-row">
           <div class="step-circle" id="circle-3">iii</div>
           <div class="step-line" style="opacity:0"></div>
         </div>
-        <div class="step-label" id="label-3">Review & Pay</div>
+        <div class="step-label" id="label-3" data-i18n="send.step3.label">Review & Pay</div>
       </div>
     </div>
   </div>
@@ -457,16 +461,16 @@ textarea.field-error { border-color: var(--red) !important; }
 
   <!-- STEP 1: ADDRESSES -->
   <div class="panel active" id="panel-1">
-    <div class="eyebrow">Step One</div>
-    <h2 class="panel-title serif">Who is this going to?</h2>
-    <p class="panel-sub">Enter the sender and recipient addresses. The sender address appears as the return address on the envelope.</p>
+    <div class="eyebrow" data-i18n="send.step1.eyebrow">Step One</div>
+    <h2 class="panel-title serif" data-i18n="send.step1.title">Who is this going to?</h2>
+    <p class="panel-sub" data-i18n="send.step1.sub">Enter the sender and recipient addresses. The sender address appears as the return address on the envelope.</p>
 
     <div id="account-banner" style="display:none"></div>
 
     <div class="destination-picker">
-      <div class="destination-picker-header">First — where is this going?</div>
+      <div class="destination-picker-header" data-i18n="send.dest.header">First — where is this going?</div>
       <div class="form-group" style="max-width:520px;margin-bottom:0">
-        <label for="r-country">Destination Country</label>
+        <label for="r-country" data-i18n="send.dest.label">Destination Country</label>
         <select id="r-country" onchange="updatePricing()">
             <option value="CA">Canada — $10 CAD</option>
             <option value="AL">Albania — $20 CAD</option>
@@ -645,37 +649,37 @@ textarea.field-error { border-color: var(--red) !important; }
             <option value="VN">Vietnam — $20 CAD</option>
             <option value="ZM">Zambia — $20 CAD</option>
         </select>
-        <span class="field-note">Domestic (Canada) $10 · International $20 — all prices CAD</span>
+        <span class="field-note" data-i18n="send.dest.note">Domestic (Canada) $10 · International $20 — all prices CAD</span>
       </div>
     </div>
 
     <div class="address-columns">
       <div class="address-col">
-        <h3>From — Sender</h3>
+        <h3 data-i18n="send.from.h3">From — Sender</h3>
         <div class="check-row" style="margin-bottom:20px;">
           <input type="checkbox" id="skip-return" onchange="toggleReturn(this)">
-          <label for="skip-return">Skip return address (anonymous send)</label>
+          <label for="skip-return" data-i18n="send.from.anon">Skip return address (anonymous send)</label>
         </div>
         <div id="sender-fields">
-          <div class="form-group"><label for="s-name">Full Name</label><input id="s-name" type="text" placeholder="Margaret Tremblay" autocomplete="name"></div>
-          <div class="form-group"><label for="s-street">Street Address</label><input id="s-street" type="text" placeholder="123 Main Street" autocomplete="off"></div>
+          <div class="form-group"><label for="s-name" data-i18n="send.from.name">Full Name</label><input id="s-name" type="text" placeholder="Margaret Tremblay" autocomplete="name"></div>
+          <div class="form-group"><label for="s-street" data-i18n="send.from.street">Street Address</label><input id="s-street" type="text" placeholder="123 Main Street" autocomplete="off"></div>
           <div class="form-grid-2">
-            <div class="form-group"><label for="s-city">City</label><input id="s-city" type="text" placeholder="Toronto" autocomplete="address-level2"></div>
-            <div class="form-group"><label for="s-province">Province / State</label><input id="s-province" type="text" placeholder="ON"></div>
+            <div class="form-group"><label for="s-city" data-i18n="send.from.city">City</label><input id="s-city" type="text" placeholder="Toronto" autocomplete="address-level2"></div>
+            <div class="form-group"><label for="s-province" data-i18n="send.from.province">Province / State</label><input id="s-province" type="text" placeholder="ON"></div>
           </div>
           <div class="form-grid-2">
-            <div class="form-group"><label for="s-postal">Postal Code</label><input id="s-postal" type="text" placeholder="V6B 1A1" maxlength="10"></div>
-            <div class="form-group"><label for="s-country">Country</label><input id="s-country" type="text" placeholder="Canada" autocomplete="country-name"></div>
+            <div class="form-group"><label for="s-postal" data-i18n="send.from.postal">Postal Code</label><input id="s-postal" type="text" placeholder="V6B 1A1" maxlength="10"></div>
+            <div class="form-group"><label for="s-country" data-i18n="send.from.country">Country</label><input id="s-country" type="text" placeholder="Canada" autocomplete="country-name"></div>
           </div>
         </div>
       </div>
 
       <div class="address-col">
-        <h3>To — Recipient</h3>
-        <div class="form-group"><label for="r-name">Full Name</label><input id="r-name" type="text" placeholder="James Okafor"></div>
-        <div class="form-group"><label for="r-street">Street Address</label><input id="r-street" type="text" placeholder="456 Oak Avenue, Apt 3" autocomplete="off"></div>
+        <h3 data-i18n="send.to.h3">To — Recipient</h3>
+        <div class="form-group"><label for="r-name" data-i18n="send.from.name">Full Name</label><input id="r-name" type="text" placeholder="James Okafor"></div>
+        <div class="form-group"><label for="r-street" data-i18n="send.from.street">Street Address</label><input id="r-street" type="text" placeholder="456 Oak Avenue, Apt 3" autocomplete="off"></div>
         <div class="form-grid-2">
-          <div class="form-group"><label for="r-city">City</label><input id="r-city" type="text" placeholder="Halifax"></div>
+          <div class="form-group"><label for="r-city" data-i18n="send.from.city">City</label><input id="r-city" type="text" placeholder="Halifax"></div>
           <div class="form-group" id="province-field">
             <label for="r-province" id="province-label">Province / State</label>
             <select id="r-province">
@@ -690,54 +694,54 @@ textarea.field-error { border-color: var(--red) !important; }
             <input id="r-province-text" type="text" placeholder="State / Region / Province" style="display:none">
           </div>
         </div>
-        <div class="form-group"><label for="r-postal">Postal / ZIP Code</label><input id="r-postal" type="text" placeholder="B3H 2L6"></div>
+        <div class="form-group"><label for="r-postal" data-i18n="send.to.postal">Postal / ZIP Code</label><input id="r-postal" type="text" placeholder="B3H 2L6"></div>
       </div>
     </div>
 
     <div class="form-group" style="margin-top:32px;padding-top:28px;border-top:1px dashed var(--line);max-width:520px">
-      <label for="r-email">Your Email (confirmation)</label>
+      <label for="r-email" data-i18n="send.email.label">Your Email (confirmation)</label>
       <input id="r-email" type="email" placeholder="you@example.com" autocomplete="email">
-      <span class="field-note">Your order confirmation goes here — used only for this order.</span>
+      <span class="field-note" data-i18n="send.email.note">Your order confirmation goes here — used only for this order.</span>
     </div>
 
     <div class="panel-nav">
       <span></span>
-      <button class="btn btn-ink btn-large" onclick="tryNext(2)">Continue to Letter →</button>
+      <button class="btn btn-ink btn-large" onclick="tryNext(2)" data-i18n="send.btn.next1">Continue to Letter →</button>
     </div>
   </div>
 
   <!-- STEP 2: LETTER -->
   <div class="panel" id="panel-2">
-    <div class="eyebrow">Step Two</div>
-    <h2 class="panel-title serif">Write your letter.</h2>
-    <p class="panel-sub">Type your message below. Attach any PDF or Word documents you'd like printed in full colour alongside the letter.</p>
+    <div class="eyebrow" data-i18n="send.step2.eyebrow">Step Two</div>
+    <h2 class="panel-title serif" data-i18n="send.step2.title">Write your letter.</h2>
+    <p class="panel-sub" data-i18n="send.step2.sub">Type your message below. Attach any PDF or Word documents you'd like printed in full colour alongside the letter.</p>
 
     <div class="form-group">
-      <label for="letter-body">Your Message</label>
-      <textarea id="letter-body" placeholder="Dear Margaret,&#10;&#10;I hope this letter finds you well. I'm writing from..." oninput="updatePreview()"></textarea>
-      <span class="field-note">Up to 5 pages (~2,500 words). Plain text — we lay it out in a clean serif typeface.</span>
+      <label for="letter-body" data-i18n="send.letter.label">Your Message</label>
+      <textarea id="letter-body" placeholder="Dear Margaret,&#10;&#10;I hope this letter finds you well. I'm writing from..." data-i18n-placeholder="send.letter.placeholder" oninput="updatePreview()"></textarea>
+      <span class="field-note" data-i18n="send.letter.note">Up to 5 pages (~2,500 words). Plain text — we lay it out in a clean serif typeface.</span>
       <span class="field-note" id="word-count" style="margin-top:2px;text-align:right">0 words</span>
     </div>
 
     <div class="attach-zone" onclick="document.getElementById('file-input').click()">
       <div class="attach-icon">📎</div>
-      <p><strong>Attach documents</strong> — click to upload PDF or Word files</p>
-      <p style="font-size:12px; margin-top:4px;">Up to 5 files · PDF or .docx · 10 MB per file · Printed in full colour</p>
-      <input type="file" id="file-input" accept=".pdf,.doc,.docx" multiple style="display:none" onchange="handleFiles(this)">
+      <p><strong data-i18n="send.attach.title">Attach documents</strong><span data-i18n="send.attach.sub"> — click to upload PDF, Word or TXT files</span></p>
+      <p style="font-size:12px; margin-top:4px;" data-i18n="send.attach.note">Up to 5 files · PDF, Word or TXT · 10 MB per file · Printed in full colour</p>
+      <input type="file" id="file-input" accept=".pdf,.doc,.docx,.txt" multiple style="display:none" onchange="handleFiles(this)">
     </div>
     <ul class="attach-list" id="attach-list"></ul>
 
     <div class="panel-nav">
-      <button class="btn btn-outline" onclick="goTo(1)">← Back</button>
-      <button class="btn btn-ink btn-large" onclick="tryNext(3)">Preview & Review →</button>
+      <button class="btn btn-outline" onclick="goTo(1)" data-i18n="send.btn.back">← Back</button>
+      <button class="btn btn-ink btn-large" onclick="tryNext(3)" data-i18n="send.btn.next2">Preview & Review →</button>
     </div>
   </div>
 
   <!-- STEP 3: PREVIEW & PAY -->
   <div class="panel" id="panel-3">
-    <div class="eyebrow">Step Three</div>
-    <h2 class="panel-title serif">Review your order.</h2>
-    <p class="panel-sub">Have one last look before paying. After checkout, your letter is printed in full colour and mailed from Canada within one business day.</p>
+    <div class="eyebrow" data-i18n="send.step3.eyebrow">Step Three</div>
+    <h2 class="panel-title serif" data-i18n="send.step3.title">Review your order.</h2>
+    <p class="panel-sub" data-i18n="send.step3.sub">Have one last look before paying. After checkout, your letter is printed in full colour and mailed from Canada within one business day.</p>
 
     <div class="preview-envelope">
       <div class="preview-stamp">
@@ -745,11 +749,11 @@ textarea.field-error { border-color: var(--red) !important; }
         CAD
       </div>
       <div class="preview-from">
-        <div class="preview-from-label">Return address</div>
+        <div class="preview-from-label" data-i18n="send.preview.from">Return address</div>
         <div id="preview-from-text">—</div>
       </div>
       <div class="preview-to">
-        <div class="preview-to-label">Deliver to</div>
+        <div class="preview-to-label" data-i18n="send.preview.to">Deliver to</div>
         <div id="preview-to-text">—</div>
       </div>
     </div>
@@ -759,25 +763,25 @@ textarea.field-error { border-color: var(--red) !important; }
     </div>
 
     <div class="order-summary">
-      <div class="order-summary-row"><span class="label">Destination</span><span class="val" id="summary-dest">Canada (Domestic)</span></div>
-      <div class="order-summary-row"><span class="label">Delivery estimate</span><span class="val" id="summary-delivery">Within 2 weeks</span></div>
-      <div class="order-summary-row"><span class="label">Includes</span><span class="val">Full-colour print · Envelope · Postage · Delivery</span></div>
-      <div class="order-summary-row total"><span class="label" style="color:rgba(255,255,255,0.7)">Total</span><span class="val" id="summary-total">$10 CAD</span></div>
+      <div class="order-summary-row"><span class="label" data-i18n="send.summary.dest.label">Destination</span><span class="val" id="summary-dest">Canada (Domestic)</span></div>
+      <div class="order-summary-row"><span class="label" data-i18n="send.summary.delivery.label">Delivery estimate</span><span class="val" id="summary-delivery">Within 2 weeks</span></div>
+      <div class="order-summary-row"><span class="label" data-i18n="send.summary.includes.label">Includes</span><span class="val" data-i18n="send.summary.includes.val">Full-colour print · Envelope · Postage · Delivery</span></div>
+      <div class="order-summary-row total"><span class="label" style="color:rgba(255,255,255,0.7)" data-i18n="send.summary.total.label">Total</span><span class="val" id="summary-total">$10 CAD</span></div>
     </div>
 
     <div class="privacy-note">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--red);flex-shrink:0;margin-top:3px"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-      <p>Orders are checked for delivery problems and obvious abuse or illegal content — not for what you wrote. Your letter and attachments are deleted within 7 days of mailing. We keep only a basic order record for tax purposes. Payments go through Stripe; we never see your card details.</p>
+      <p data-i18n="send.privacy">Orders are checked for delivery problems and obvious abuse or illegal content — not for what you wrote. Your letter and attachments are deleted within 7 days of mailing. We keep only a basic order record for tax purposes. Payments go through Stripe; we never see your card details.</p>
     </div>
 
     <div class="check-row">
       <input type="checkbox" id="agree-terms">
-      <label for="agree-terms">I agree to the <a href="/terms" style="color:var(--red)">Terms of Service</a> and <a href="/privacy" style="color:var(--red)">Privacy Policy</a>. I confirm the letter doesn't contain threats, scams or illegal content.</label>
+      <label for="agree-terms" data-i18n-html="send.agree">I agree to the <a href="/terms" style="color:var(--red)">Terms of Service</a> and <a href="/privacy" style="color:var(--red)">Privacy Policy</a>. I confirm the letter doesn't contain threats, scams or illegal content.</label>
     </div>
 
     <div class="panel-nav">
-      <button class="btn btn-outline" onclick="goTo(2)">← Edit Letter</button>
-      <button class="btn btn-red btn-large" onclick="submitOrder()">Pay & Send Letter →</button>
+      <button class="btn btn-outline" onclick="goTo(2)" data-i18n="send.btn.editletter">← Edit Letter</button>
+      <button class="btn btn-red btn-large" onclick="submitOrder()" data-i18n="send.btn.pay">Pay & Send Letter →</button>
     </div>
   </div>
 
@@ -788,9 +792,9 @@ textarea.field-error { border-color: var(--red) !important; }
     <div class="footer-bottom">
       <div>© 2026 Letterhome</div>
       <div class="footer-bottom-links">
-        <a href="/privacy">Privacy</a>
-        <a href="/terms">Terms</a>
-        <a href="/">Home</a>
+        <a href="/privacy" data-i18n="footer.privacy">Privacy</a>
+        <a href="/terms" data-i18n="footer.terms">Terms</a>
+        <a href="/" data-i18n="footer.home">Home</a>
       </div>
     </div>
   </div>
@@ -799,6 +803,9 @@ textarea.field-error { border-color: var(--red) !important; }
 <script>
 let currentStep = 1;
 let uploadedFiles = [];
+
+// Countries where state/province is a required part of a postal address
+const PROVINCE_REQUIRED = new Set(['US','AU','IN','BR','MX','MY','NG','PH','CN','ZA','AR','CO','ID']);
 
 function goTo(step) {
   document.getElementById('panel-' + currentStep).classList.remove('active');
@@ -843,8 +850,8 @@ function updatePricing() {
   const priceStr = '$' + (price / 100).toFixed(price % 100 === 0 ? 0 : 2);
   document.getElementById('preview-price').textContent   = priceStr;
   document.getElementById('summary-total').textContent   = priceStr + ' CAD';
-  document.getElementById('summary-dest').textContent    = isDomestic ? 'Canada (Domestic)' : 'International';
-  document.getElementById('summary-delivery').textContent = isDomestic ? 'Within 2 weeks' : 'Within 4 weeks';
+  document.getElementById('summary-dest').textContent    = isDomestic ? LH_T('send.dom.dest') : LH_T('send.intl.dest');
+  document.getElementById('summary-delivery').textContent = isDomestic ? LH_T('send.dom.delivery') : LH_T('send.intl.delivery');
 
   const sel = document.getElementById('r-province');
   const txt = document.getElementById('r-province-text');
@@ -853,22 +860,23 @@ function updatePricing() {
     sel.style.display = '';
     txt.style.display = 'none';
     txt.value = '';
-    lbl.textContent = 'Province';
+    lbl.textContent = LH_T('send.province.ca');
   } else {
     sel.style.display = 'none';
     sel.value = '';
     txt.style.display = '';
-    lbl.textContent = 'State / Region (optional)';
+    const cc = document.getElementById('r-country').value;
+    lbl.textContent = PROVINCE_REQUIRED.has(cc) ? LH_T('send.province.intl') : LH_T('send.province.intl.opt');
   }
 }
 
 function updatePreview() {
   const body = document.getElementById('letter-body').value;
   const el = document.getElementById('preview-body-text');
-  if (el) el.textContent = body || 'Your letter will appear here as you type it in Step 2.';
+  if (el) el.textContent = body || LH_T('send.preview.empty');
   const wordCount = body.trim() ? body.trim().split(/\s+/).length : 0;
   const wc = document.getElementById('word-count');
-  if (wc) wc.textContent = wordCount + ' word' + (wordCount !== 1 ? 's' : '');
+  if (wc) wc.textContent = wordCount + ' ' + LH_T(wordCount !== 1 ? 'send.word.plural' : 'send.word.singular');
 }
 
 function getRecipientProvince() {
@@ -888,23 +896,24 @@ function buildPreview() {
   const rCity     = document.getElementById('r-city').value;
   const rPostal   = document.getElementById('r-postal').value;
 
-  const fromLines = skipReturn ? 'No return address'
+  const fromLines = skipReturn ? LH_T('send.preview.noreturn')
     : [sName, sStreet, sCity + (sProvince ? ', ' + sProvince : ''), sCountry].filter(Boolean).join('\n');
   const toLines = [rName, rStreet, rCity + (rPostal ? '  ' + rPostal : '')].filter(Boolean).join('\n');
 
   document.getElementById('preview-from-text').textContent = fromLines || '—';
   document.getElementById('preview-to-text').textContent   = toLines   || '—';
   document.getElementById('preview-body-text').textContent =
-    document.getElementById('letter-body').value || 'No message entered.';
+    document.getElementById('letter-body').value || LH_T('send.preview.nomsg');
 
   updatePricing();
 }
 
-const ALLOWED_EXT  = ['.pdf', '.doc', '.docx'];
+const ALLOWED_EXT  = ['.pdf', '.doc', '.docx', '.txt'];
 const ALLOWED_MIME = [
   'application/pdf',
   'application/msword',
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'text/plain',
 ];
 const MAX_FILE_BYTES = 10 * 1024 * 1024;
 const MAX_FILES = 5;
@@ -919,15 +928,15 @@ function handleFiles(input) {
     const ext  = ('.' + (f.name.split('.').pop() || '')).toLowerCase();
     const mime = f.type || '';
     if (!ALLOWED_EXT.includes(ext) || (mime && !ALLOWED_MIME.includes(mime))) {
-      rejected.push(`${f.name} — only PDF or Word files allowed`);
+      rejected.push(`${f.name} ${LH_T('send.file.badtype')}`);
       return;
     }
     if (f.size > MAX_FILE_BYTES) {
-      rejected.push(`${f.name} — file is over 10 MB`);
+      rejected.push(`${f.name} ${LH_T('send.file.toobig')}`);
       return;
     }
     if (slotsLeft <= 0) {
-      rejected.push(`${f.name} — limit is 5 files`);
+      rejected.push(`${f.name} ${LH_T('send.file.limit')}`);
       return;
     }
     slotsLeft--;
@@ -947,7 +956,7 @@ function handleFiles(input) {
     list.appendChild(li);
   });
 
-  if (rejected.length) alert("Couldn't attach:\n\n" + rejected.join('\n'));
+  if (rejected.length) alert(LH_T('send.file.rejected') + '\n\n' + rejected.join('\n'));
   input.value = '';
 }
 
@@ -1069,45 +1078,46 @@ function validateStep(step) {
   if (step === 1) {
     // Sender — only required if return address is NOT being skipped
     if (!document.getElementById('skip-return').checked) {
-      requireField('s-name',    'Sender name',    missing);
-      requireField('s-street',  'Sender street',  missing);
-      requireField('s-city',    'Sender city',    missing);
-      requireField('s-province','Sender province',missing);
-      requireField('s-postal',  'Sender postal',  missing);
-      requireField('s-country', 'Sender country', missing);
+      requireField('s-name',    LH_T('send.val.sender.name'),    missing);
+      requireField('s-street',  LH_T('send.val.sender.street'),  missing);
+      requireField('s-city',    LH_T('send.val.sender.city'),    missing);
+      requireField('s-province',LH_T('send.val.sender.province'),missing);
+      requireField('s-postal',  LH_T('send.val.sender.postal'),  missing);
+      requireField('s-country', LH_T('send.val.sender.country'), missing);
     }
     // Recipient — always required
-    requireField('r-name',   'Recipient name',   missing);
-    requireField('r-street', 'Recipient street', missing);
-    requireField('r-city',   'Recipient city',   missing);
-    requireField('r-postal', 'Recipient postal', missing);
-    // Province depends on destination — CA uses select, others use text input
+    requireField('r-name',   LH_T('send.val.recip.name'),   missing);
+    requireField('r-street', LH_T('send.val.recip.street'), missing);
+    requireField('r-city',   LH_T('send.val.recip.city'),   missing);
+    requireField('r-postal', LH_T('send.val.recip.postal'), missing);
+    // Province depends on destination — CA uses select, others use text input (only required for certain countries)
     const isCA = document.getElementById('r-country').value === 'CA';
-    if (isCA) requireField('r-province',      'Recipient province',     missing);
-    else      requireField('r-province-text', 'Recipient state/region', missing);
+    const destCC = document.getElementById('r-country').value;
+    if (isCA) requireField('r-province', LH_T('send.val.recip.province'), missing);
+    else if (PROVINCE_REQUIRED.has(destCC)) requireField('r-province-text', LH_T('send.val.recip.state'), missing);
     // Email — required AND must look like an email
     const email = document.getElementById('r-email').value.trim();
     if (!email) {
-      missing.push('Your email');
+      missing.push(LH_T('send.val.email'));
       markError('r-email');
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      missing.push('A valid email address');
+      missing.push(LH_T('send.val.email.valid'));
       markError('r-email');
     }
   } else if (step === 2) {
     const body = document.getElementById('letter-body').value.trim();
     if (body.length < 5) {
-      missing.push('Letter message');
+      missing.push(LH_T('send.val.letter'));
       markError('letter-body');
     }
   } else if (step === 3) {
     if (!document.getElementById('agree-terms').checked) {
-      missing.push('Agreement to Terms & Privacy');
+      missing.push(LH_T('send.val.terms'));
     }
   }
 
   if (missing.length) {
-    showValidationBanner('Please complete: ' + missing.join(' · '));
+    showValidationBanner(LH_T('send.val.prefix') + missing.join(' · '));
     const first = document.querySelector('.field-error');
     if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
     return false;
@@ -1165,7 +1175,7 @@ async function submitOrder() {
 
   const btn = document.querySelector('[onclick="submitOrder()"]');
   btn.disabled = true;
-  btn.textContent = 'Processing…';
+  btn.textContent = LH_T('send.processing');
 
   const form = new FormData();
   const ids = ['skip-return','s-name','s-street','s-city','s-province','s-postal','s-country',
@@ -1187,7 +1197,7 @@ async function submitOrder() {
     }
   } catch (err) {
     btn.disabled = false;
-    btn.textContent = 'Pay & Send Letter →';
+    btn.textContent = LH_T('send.btn.pay');
     alert('Something went wrong: ' + err.message + '\nPlease try again or contact us.');
   }
 }
@@ -1229,8 +1239,8 @@ async function submitOrder() {
       const msg = document.createElement('div');
       msg.style.cssText = 'max-width:560px;margin:80px auto;padding:48px 40px;background:var(--paper,#faf6ec);border:1px solid rgba(42,42,42,0.14);border-radius:2px;text-align:center';
       msg.innerHTML = `<div style="font-size:40px;margin-bottom:20px">✉</div>
-        <h2 style="font-family:\'DM Serif Display\',serif;font-size:28px;font-weight:400;margin-bottom:12px">Not taking orders right now</h2>
-        <p style="color:#6b6258;font-size:16px;line-height:1.6">${cfg.announcement || 'We\'re temporarily closed. Please check back soon.'}</p>`;
+        <h2 style="font-family:\'DM Serif Display\',serif;font-size:28px;font-weight:400;margin-bottom:12px">${LH_T('send.closed.h2')}</h2>
+        <p style="color:#6b6258;font-size:16px;line-height:1.6">${cfg.announcement || LH_T('send.closed.p')}</p>`;
       if (main) main.replaceWith(msg); else document.body.appendChild(msg);
     }
   } catch(e) { /* fail silently — don't block the form */ }
@@ -1241,7 +1251,7 @@ async function submitOrder() {
     if (me?.ok && me.customer) {
       renderAccountBanner(true, me.customer.email);
       const link = document.getElementById('nav-account-link');
-      if (link) link.textContent = 'My Account';
+      if (link) link.textContent = LH_T('send.acct.myaccount');
 
       const c = me.customer;
       if (c.sender_name)     document.getElementById('s-name').value     = c.sender_name;
@@ -1258,9 +1268,9 @@ async function submitOrder() {
           const wrap = document.createElement('div');
           wrap.style.cssText = 'margin-bottom:18px';
           wrap.innerHTML = `
-            <div style="font-size:11px;font-family:\'DM Mono\',monospace;text-transform:uppercase;letter-spacing:0.12em;color:var(--ink-muted);margin-bottom:5px">Saved Recipients</div>
+            <div style="font-size:11px;font-family:\'DM Mono\',monospace;text-transform:uppercase;letter-spacing:0.12em;color:var(--ink-muted);margin-bottom:5px">${LH_T('send.acct.saved')}</div>
             <select id="saved-recipient-select" onchange="fillSavedRecipient(this)" style="width:100%;padding:10px 12px;border:1.5px solid var(--line,rgba(42,42,42,0.14));background:var(--paper,#faf6ec);color:var(--ink,#2a2a2a);border-radius:2px;font-family:inherit;font-size:15px">
-              <option value="">— Select a saved recipient —</option>
+              <option value="">${LH_T('send.acct.select')}</option>
               ${me.recipients.map(r => `<option value='${JSON.stringify(r).replace(/'/g, '&#39;')}'>${(r.label || r.recipient_name).replace(/</g,'&lt;')}</option>`).join('')}
             </select>`;
           if (heading) recipCol.insertBefore(wrap, heading.nextSibling);
@@ -1280,12 +1290,12 @@ function renderAccountBanner(loggedIn, email) {
     el.innerHTML = `
       <div style="background:var(--paper,#faf6ec);border:1px solid var(--line,rgba(42,42,42,0.14));border-left:3px solid #16a34a;border-radius:2px;padding:16px 22px;margin-bottom:32px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
         <div style="font-size:14px;color:var(--ink-soft,#3a3835)">
-          <span style="color:#16a34a;font-weight:600">✓ Signed in as ${email.replace(/</g,'&lt;')}</span>
-          <span style="color:var(--ink-muted,#6b6258)"> — your saved details have been filled in.</span>
+          <span style="color:#16a34a;font-weight:600">${LH_T('send.acct.signedin.prefix')}${email.replace(/</g,'&lt;')}</span>
+          <span style="color:var(--ink-muted,#6b6258)">${LH_T('send.acct.signedin.suffix')}</span>
         </div>
         <div style="display:flex;gap:14px;font-size:13px">
-          <a href="/account" style="color:var(--ink-soft,#3a3835);text-decoration:underline">My Account</a>
-          <button type="button" onclick="signOutFromSend()" style="background:none;border:none;color:var(--ink-muted,#6b6258);cursor:pointer;font:inherit;font-size:13px;padding:0;text-decoration:underline">Sign out</button>
+          <a href="/account" style="color:var(--ink-soft,#3a3835);text-decoration:underline">${LH_T('send.acct.myaccount')}</a>
+          <button type="button" onclick="signOutFromSend()" style="background:none;border:none;color:var(--ink-muted,#6b6258);cursor:pointer;font:inherit;font-size:13px;padding:0;text-decoration:underline">${LH_T('send.acct.signout')}</button>
         </div>
       </div>`;
   } else {
@@ -1293,12 +1303,12 @@ function renderAccountBanner(loggedIn, email) {
       <div style="background:var(--paper,#faf6ec);border:1px solid var(--line,rgba(42,42,42,0.14));border-left:3px solid var(--red,#a8472d);border-radius:2px;padding:22px 26px;margin-bottom:32px">
         <div id="account-banner-collapsed" style="display:flex;align-items:flex-start;justify-content:space-between;gap:20px;flex-wrap:wrap">
           <div style="flex:1;min-width:240px">
-            <div style="font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.14em;color:var(--red,#a8472d);margin-bottom:8px">Optional · Save time next order</div>
-            <p style="font-size:15px;line-height:1.5;color:var(--ink-soft,#3a3835);margin:0">Create a free account in a few seconds — we'll save your return address and recipients so you never have to type them again.</p>
+            <div style="font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.14em;color:var(--red,#a8472d);margin-bottom:8px">${LH_T('send.acct.eyebrow')}</div>
+            <p style="font-size:15px;line-height:1.5;color:var(--ink-soft,#3a3835);margin:0">${LH_T('send.acct.p')}</p>
           </div>
           <div style="display:flex;gap:8px;flex-shrink:0">
-            <button type="button" onclick="showAccountForm('register')" style="background:var(--red,#a8472d);color:#faf6ec;border:1.5px solid var(--red,#a8472d);padding:9px 18px;border-radius:2px;font:inherit;font-size:13px;font-weight:500;letter-spacing:0.02em;text-transform:uppercase;cursor:pointer">Create Account</button>
-            <button type="button" onclick="showAccountForm('login')" style="background:transparent;color:var(--ink,#2a2a2a);border:1.5px solid rgba(42,42,42,0.35);padding:9px 18px;border-radius:2px;font:inherit;font-size:13px;font-weight:500;letter-spacing:0.02em;text-transform:uppercase;cursor:pointer">Sign In</button>
+            <button type="button" onclick="showAccountForm('register')" style="background:var(--red,#a8472d);color:#faf6ec;border:1.5px solid var(--red,#a8472d);padding:9px 18px;border-radius:2px;font:inherit;font-size:13px;font-weight:500;letter-spacing:0.02em;text-transform:uppercase;cursor:pointer">${LH_T('send.acct.create')}</button>
+            <button type="button" onclick="showAccountForm('login')" style="background:transparent;color:var(--ink,#2a2a2a);border:1.5px solid rgba(42,42,42,0.35);padding:9px 18px;border-radius:2px;font:inherit;font-size:13px;font-weight:500;letter-spacing:0.02em;text-transform:uppercase;cursor:pointer">${LH_T('send.acct.signin')}</button>
           </div>
         </div>
         <div id="account-banner-form" style="display:none;margin-top:18px;padding-top:18px;border-top:1px solid var(--line,rgba(42,42,42,0.14))"></div>
@@ -1314,20 +1324,20 @@ function showAccountForm(mode) {
   wrap.innerHTML = `
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
       <div>
-        <label style="display:block;font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:var(--ink-muted,#6b6258);margin-bottom:4px">Email</label>
+        <label style="display:block;font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:var(--ink-muted,#6b6258);margin-bottom:4px">${LH_T('send.acct.form.email')}</label>
         <input id="acct-email" type="email" autocomplete="email" placeholder="you@example.com" style="width:100%;padding:10px 12px;border:1.5px solid var(--line,rgba(42,42,42,0.14));background:var(--paper,#faf6ec);color:var(--ink,#2a2a2a);border-radius:2px;font:inherit;font-size:15px">
       </div>
       <div>
-        <label style="display:block;font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:var(--ink-muted,#6b6258);margin-bottom:4px">Password${isReg ? ' <span style=\"text-transform:none;letter-spacing:0;color:var(--ink-faint,#968b7d);font-family:inherit\">— 8+ chars, letter + number/symbol</span>' : ''}</label>
+        <label style="display:block;font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:var(--ink-muted,#6b6258);margin-bottom:4px">${LH_T('send.acct.form.pwd')}${isReg ? ' <span style=\"text-transform:none;letter-spacing:0;color:var(--ink-faint,#968b7d);font-family:inherit\">— 8+ chars, letter + number/symbol</span>' : ''}</label>
         <input id="acct-pwd" type="password" autocomplete="${isReg ? 'new-password' : 'current-password'}" placeholder="••••••••" style="width:100%;padding:10px 12px;border:1.5px solid var(--line,rgba(42,42,42,0.14));background:var(--paper,#faf6ec);color:var(--ink,#2a2a2a);border-radius:2px;font:inherit;font-size:15px"${isReg ? ' oninput="updateAcctBannerStrength()"' : ''}>
         ${isReg ? '<div style="height:3px;background:rgba(42,42,42,0.1);border-radius:2px;margin-top:5px;overflow:hidden"><div id="acct-strength-fill" style="height:100%;width:0;background:#94a3b8;transition:width 0.3s,background 0.3s"></div></div>' : ''}
       </div>
     </div>
     <div id="acct-err" style="color:#b91c1c;font-size:13px;margin-bottom:10px;display:none"></div>
     <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
-      <button type="button" onclick="${isReg ? 'doInlineRegister()' : 'doInlineLogin()'}" id="acct-submit-btn" style="background:var(--red,#a8472d);color:#faf6ec;border:1.5px solid var(--red,#a8472d);padding:10px 22px;border-radius:2px;font:inherit;font-size:13px;font-weight:500;letter-spacing:0.02em;text-transform:uppercase;cursor:pointer">${isReg ? 'Create Account →' : 'Sign In →'}</button>
-      <button type="button" onclick="showAccountForm('${isReg ? 'login' : 'register'}')" style="background:none;border:none;color:var(--ink-muted,#6b6258);cursor:pointer;font:inherit;font-size:13px;padding:0;text-decoration:underline">${isReg ? 'Already have one? Sign in' : 'Need an account? Create one'}</button>
-      <button type="button" onclick="hideAccountForm()" style="background:none;border:none;color:var(--ink-faint,#968b7d);cursor:pointer;font:inherit;font-size:13px;padding:0;margin-left:auto">Continue as guest →</button>
+      <button type="button" onclick="${isReg ? 'doInlineRegister()' : 'doInlineLogin()'}" id="acct-submit-btn" style="background:var(--red,#a8472d);color:#faf6ec;border:1.5px solid var(--red,#a8472d);padding:10px 22px;border-radius:2px;font:inherit;font-size:13px;font-weight:500;letter-spacing:0.02em;text-transform:uppercase;cursor:pointer">${isReg ? LH_T('send.acct.create.arrow') : LH_T('send.acct.signin.arrow')}</button>
+      <button type="button" onclick="showAccountForm('${isReg ? 'login' : 'register'}')" style="background:none;border:none;color:var(--ink-muted,#6b6258);cursor:pointer;font:inherit;font-size:13px;padding:0;text-decoration:underline">${isReg ? LH_T('send.acct.already') : LH_T('send.acct.need')}</button>
+      <button type="button" onclick="hideAccountForm()" style="background:none;border:none;color:var(--ink-faint,#968b7d);cursor:pointer;font:inherit;font-size:13px;padding:0;margin-left:auto">${LH_T('send.acct.guest')}</button>
     </div>`;
   setTimeout(() => document.getElementById('acct-email')?.focus(), 50);
 }
@@ -1358,12 +1368,12 @@ async function doInlineRegister() {
   errEl.style.display = 'none';
   const email    = document.getElementById('acct-email').value.trim();
   const password = document.getElementById('acct-pwd').value;
-  if (!email || !password) { errEl.textContent = 'Please enter an email and password.'; errEl.style.display = 'block'; return; }
-  btn.disabled = true; btn.textContent = 'Creating…';
-  const r = await fetch('/api/account/register', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email, password }) }).then(r => r.json()).catch(() => ({ error:'Network error' }));
-  btn.disabled = false; btn.textContent = 'Create Account →';
+  if (!email || !password) { errEl.textContent = LH_T('send.acct.err.empty.reg'); errEl.style.display = 'block'; return; }
+  btn.disabled = true; btn.textContent = LH_T('send.acct.creating');
+  const r = await fetch('/api/account/register', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email, password }) }).then(r => r.json()).catch(() => ({ error: LH_T('send.acct.err.net') }));
+  btn.disabled = false; btn.textContent = LH_T('send.acct.create.arrow');
   if (r.ok) { window.location.reload(); return; }
-  errEl.textContent = r.error || 'Could not create account.';
+  errEl.textContent = r.error || LH_T('send.acct.err.create');
   errEl.style.display = 'block';
 }
 
@@ -1373,12 +1383,12 @@ async function doInlineLogin() {
   errEl.style.display = 'none';
   const email    = document.getElementById('acct-email').value.trim();
   const password = document.getElementById('acct-pwd').value;
-  if (!email || !password) { errEl.textContent = 'Please enter your email and password.'; errEl.style.display = 'block'; return; }
-  btn.disabled = true; btn.textContent = 'Signing in…';
-  const r = await fetch('/api/account/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email, password }) }).then(r => r.json()).catch(() => ({ error:'Network error' }));
-  btn.disabled = false; btn.textContent = 'Sign In →';
+  if (!email || !password) { errEl.textContent = LH_T('send.acct.err.empty.login'); errEl.style.display = 'block'; return; }
+  btn.disabled = true; btn.textContent = LH_T('send.acct.signingin');
+  const r = await fetch('/api/account/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email, password }) }).then(r => r.json()).catch(() => ({ error: LH_T('send.acct.err.net') }));
+  btn.disabled = false; btn.textContent = LH_T('send.acct.signin.arrow');
   if (r.ok) { window.location.reload(); return; }
-  errEl.textContent = r.error || 'Sign in failed.';
+  errEl.textContent = r.error || LH_T('send.acct.err.login');
   errEl.style.display = 'block';
 }
 
@@ -1412,5 +1422,6 @@ function fillSavedRecipient(sel) {
   } catch(e) {}
 }
 </script>
+<script src="/lang.js"></script>
 </body>
 </html>

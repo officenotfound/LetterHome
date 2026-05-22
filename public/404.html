@@ -49,6 +49,7 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:40px 36px;posi
 @media(max-width:480px){.actions{gap:12px}}
 </style>
 <script>(function(){try{var t=localStorage.getItem('lh-theme')||(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+<script>(function(){try{var l=localStorage.getItem('lh-lang')||'en';document.documentElement.setAttribute('data-lang',l);}catch(e){}})();</script>
 <link rel="stylesheet" href="/theme.css">
 </head>
 <body>
@@ -60,23 +61,26 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:40px 36px;posi
       <a href="/#pricing">Pricing</a>
       <a href="/about">About</a>
       <a href="/contact">Contact</a>
+    </div>
+    <div class="nav-right">
+      <button type="button" class="lang-toggle" onclick="toggleLang()" aria-label="Toggle language">FR</button>
       <button type="button" class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode" title="Toggle dark mode">
         <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41"/></svg>
         <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
       </button>
+      <a href="/send" class="btn btn-red nav-cta" data-i18n="nav.send">Send a letter</a>
     </div>
-    <a href="/send" class="btn btn-red nav-cta">Send a letter</a>
   </div>
 </nav>
 
 <div class="main">
   <div class="stamp"><span class="stamp-num">404</span></div>
-  <div class="eyebrow">Lost in the post</div>
-  <h1>This page <em>got lost</em> somewhere.</h1>
-  <p class="sub">The link may have moved or never existed. Either way, it didn't make it to its destination — much like a letter without a return address.</p>
+  <div class="eyebrow" data-i18n="404.eyebrow">Lost in the post</div>
+  <h1 data-i18n-html="404.h1">This page <em>got lost</em> somewhere.</h1>
+  <p class="sub" data-i18n="404.sub">The link may have moved or never existed. Either way, it didn't make it to its destination — much like a letter without a return address.</p>
   <div class="actions">
-    <a href="/send" class="btn btn-red">Send a letter</a>
-    <a href="/" class="btn btn-outline">Back to Letterhome</a>
+    <a href="/send" class="btn btn-red" data-i18n="404.send">Send a letter</a>
+    <a href="/" class="btn btn-outline" data-i18n="404.back">Back to Letterhome</a>
   </div>
 </div>
 
@@ -84,11 +88,12 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:40px 36px;posi
   <div class="footer-bottom">
     <div>© 2026 Letterhome</div>
     <div class="footer-bottom-links">
-      <a href="/privacy">Privacy</a>
-      <a href="/terms">Terms</a>
+      <a href="/privacy" data-i18n="footer.privacy">Privacy</a>
+      <a href="/terms" data-i18n="footer.terms">Terms</a>
     </div>
   </div>
 </footer>
 <script src="/theme.js"></script>
+<script src="/lang.js"></script>
 </body>
 </html>

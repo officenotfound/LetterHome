@@ -996,6 +996,7 @@ footer {
 }
 </style>
 <script>(function(){try{var t=localStorage.getItem('lh-theme')||(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+<script>(function(){try{var l=localStorage.getItem('lh-lang')||'en';document.documentElement.setAttribute('data-lang',l);}catch(e){}})();</script>
 <link rel="stylesheet" href="/theme.css">
 </head>
 <body>
@@ -1012,12 +1013,15 @@ footer {
       <a href="#pricing">Pricing</a>
       <a href="#usecases">Use cases</a>
       <a href="#faq">FAQ</a>
+    </div>
+    <div class="nav-right">
+      <button type="button" class="lang-toggle" onclick="toggleLang()" aria-label="Toggle language">FR</button>
       <button type="button" class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode" title="Toggle dark mode">
         <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41"/></svg>
         <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
       </button>
+      <a href="/send" class="btn btn-red nav-cta" data-i18n="nav.send">Send a letter</a>
     </div>
-    <a href="/send" class="btn btn-red nav-cta">Send a letter</a>
   </div>
 </nav>
 
@@ -1025,16 +1029,16 @@ footer {
 <section class="hero">
   <div class="hero-grid">
     <div>
-      <div class="eyebrow">Mail from Canada</div>
-      <h1>Letters from Canada — without the trip to <em>Canada Post</em>.</h1>
-      <p class="hero-lede">Type it, attach what you need, and we'll print, stamp, and post it from inside Canada. A real letter with a real Canadian postmark — without you ever having to find a parking spot at the post office.</p>
+      <div class="eyebrow" data-i18n="index.eyebrow">Mail from Canada</div>
+      <h1 data-i18n-html="index.h1">Letters from Canada — without the trip to <em>Canada Post</em>.</h1>
+      <p class="hero-lede" data-i18n="index.lede">Type it, attach what you need, and we'll print, stamp, and post it from inside Canada. A real letter with a real Canadian postmark — without you ever having to find a parking spot at the post office.</p>
       <div class="hero-cta">
-        <a href="/send" class="btn btn-red btn-large">Send a letter</a>
+        <a href="/send" class="btn btn-red btn-large" data-i18n="index.cta">Send a letter</a>
       </div>
       <div class="hero-meta">
-        <span>From $10 CAD</span>
-        <span>Mailed within one business day</span>
-        <span>Domestic &amp; international</span>
+        <span data-i18n="index.meta1">From $10 CAD</span>
+        <span data-i18n="index.meta2">Mailed within one business day</span>
+        <span data-i18n="index.meta3">Domestic &amp; international</span>
       </div>
     </div>
 
@@ -1059,35 +1063,35 @@ footer {
 <section id="how">
   <div class="section-inner">
     <div class="section-head">
-      <div class="eyebrow">How it works</div>
-      <h2>From your screen to the mailbox.</h2>
-      <p>Everything happens online. The letter gets mailed from Canada.</p>
+      <div class="eyebrow" data-i18n="how.eyebrow">How it works</div>
+      <h2 data-i18n="how.h2">From your screen to the mailbox.</h2>
+      <p data-i18n="how.sub">Everything happens online. The letter gets mailed from Canada.</p>
     </div>
 
     <div class="steps">
       <div class="step">
         <div class="step-num">
           <span class="step-num-mark">i</span>
-          Step One
+          <span data-i18n="how.step1.num">Step One</span>
         </div>
-        <h3>Write your letter</h3>
-        <p>Type your message, enter the recipient's address, and attach any documents (PDF or Word). A return address is optional — anonymous sends are supported.</p>
+        <h3 data-i18n="how.step1.h3">Write your letter</h3>
+        <p data-i18n="how.step1.p">Type your message, enter the recipient's address, and attach any documents (PDF or Word). A return address is optional — anonymous sends are supported.</p>
       </div>
       <div class="step">
         <div class="step-num">
           <span class="step-num-mark">ii</span>
-          Step Two
+          <span data-i18n="how.step2.num">Step Two</span>
         </div>
-        <h3>We print and prepare it</h3>
-        <p>Your letter and any attachments are printed in full colour on letter-size paper, folded, sealed, and stamped with Canadian postage.</p>
+        <h3 data-i18n="how.step2.h3">We print and prepare it</h3>
+        <p data-i18n="how.step2.p">Your letter and any attachments are printed in full colour on letter-size paper, folded, sealed, and stamped with Canadian postage.</p>
       </div>
       <div class="step">
         <div class="step-num">
           <span class="step-num-mark">iii</span>
-          Step Three
+          <span data-i18n="how.step3.num">Step Three</span>
         </div>
-        <h3>It goes in the mail</h3>
-        <p>We drop your letter at Canada Post within one business day. Delivery typically takes up to two weeks within Canada and up to four weeks internationally.</p>
+        <h3 data-i18n="how.step3.h3">It goes in the mail</h3>
+        <p data-i18n="how.step3.p">We drop your letter at Canada Post within one business day. Delivery typically takes up to two weeks within Canada and up to four weeks internationally.</p>
       </div>
     </div>
   </div>
@@ -1097,40 +1101,40 @@ footer {
 <div class="pricing-wrap" id="pricing">
   <div class="section-inner">
     <div class="section-head">
-      <div class="eyebrow">Pricing</div>
-      <h2>Flat pricing. Two options.</h2>
-      <p>Each letter is one fee that covers printing, the envelope, postage, and delivery. No subscriptions, no per-page charges.</p>
+      <div class="eyebrow" data-i18n="pricing.eyebrow">Pricing</div>
+      <h2 data-i18n="pricing.h2">Flat pricing. Two options.</h2>
+      <p data-i18n="pricing.sub">Each letter is one fee that covers printing, the envelope, postage, and delivery. No subscriptions, no per-page charges.</p>
     </div>
 
     <div class="pricing-grid">
       <div class="price-card featured">
-        <span class="price-tag">Within Canada</span>
-        <h3>Domestic</h3>
-        <p class="price-sub">To any Canadian address</p>
+        <span class="price-tag" data-i18n="pricing.dom.tag">Within Canada</span>
+        <h3 data-i18n="pricing.dom.h3">Domestic</h3>
+        <p class="price-sub" data-i18n="pricing.dom.sub">To any Canadian address</p>
         <div class="price">$10<small>CAD</small></div>
-        <div class="price-meta">Typically 1–2 weeks</div>
+        <div class="price-meta" data-i18n="pricing.dom.meta">Typically 1–2 weeks</div>
         <ul class="price-includes">
-          <li>Up to 5 documents, printed in full colour</li>
-          <li>Single-sided letter-size pages</li>
-          <li>Envelope and Canadian postage</li>
-          <li>PDF or Word attachments included</li>
+          <li data-i18n="pricing.dom.li1">Up to 5 documents, printed in full colour</li>
+          <li data-i18n="pricing.dom.li2">Single-sided letter-size pages</li>
+          <li data-i18n="pricing.dom.li3">Envelope and Canadian postage</li>
+          <li data-i18n="pricing.dom.li4">PDF or Word attachments included</li>
         </ul>
-        <a href="/send" class="btn btn-red btn-large" style="width:100%;text-align:center;">Send to Canada →</a>
+        <a href="/send" class="btn btn-red btn-large" style="width:100%;text-align:center;" data-i18n="pricing.dom.btn">Send to Canada →</a>
       </div>
 
       <div class="price-card">
-        <span class="price-tag">Anywhere else</span>
-        <h3>International</h3>
-        <p class="price-sub">160+ countries worldwide</p>
+        <span class="price-tag" data-i18n="pricing.intl.tag">Anywhere else</span>
+        <h3 data-i18n="pricing.intl.h3">International</h3>
+        <p class="price-sub" data-i18n="pricing.intl.sub">160+ countries worldwide</p>
         <div class="price">$20<small>CAD</small></div>
-        <div class="price-meta">Typically 2–4 weeks</div>
+        <div class="price-meta" data-i18n="pricing.intl.meta">Typically 2–4 weeks</div>
         <ul class="price-includes">
-          <li>Up to 5 documents, printed in full colour</li>
-          <li>Single-sided letter-size pages</li>
-          <li>Envelope and international postage</li>
-          <li>PDF or Word attachments included</li>
+          <li data-i18n="pricing.intl.li1">Up to 5 documents, printed in full colour</li>
+          <li data-i18n="pricing.intl.li2">Single-sided letter-size pages</li>
+          <li data-i18n="pricing.intl.li3">Envelope and international postage</li>
+          <li data-i18n="pricing.intl.li4">PDF or Word attachments included</li>
         </ul>
-        <a href="/send" class="btn btn-outline btn-large" style="width:100%;text-align:center;">Send internationally →</a>
+        <a href="/send" class="btn btn-outline btn-large" style="width:100%;text-align:center;" data-i18n="pricing.intl.btn">Send internationally →</a>
       </div>
     </div>
   </div>
@@ -1140,41 +1144,41 @@ footer {
 <section id="usecases">
   <div class="section-inner">
     <div class="section-head">
-      <div class="eyebrow">What people use it for</div>
-      <h2>Anything that has to arrive on paper.</h2>
-      <p>Most of what we mail falls into one of these categories. All of it is printed in full colour.</p>
+      <div class="eyebrow" data-i18n="usecases.eyebrow">What people use it for</div>
+      <h2 data-i18n="usecases.h2">Anything that has to arrive on paper.</h2>
+      <p data-i18n="usecases.sub">Most of what we mail falls into one of these categories. All of it is printed in full colour.</p>
     </div>
 
     <div class="usecases-grid">
       <div class="usecase">
         <div class="usecase-num">01</div>
         <div>
-          <h3>Tax &amp; government forms</h3>
-          <p>CRA paperwork, Service Canada forms, anything that needs to arrive as a physical piece of paper mailed from Canada — whether you're in the country or not.</p>
+          <h3 data-i18n="usecases.01.h3">Tax &amp; government forms</h3>
+          <p data-i18n="usecases.01.p">CRA paperwork, Service Canada forms, anything that needs to arrive as a physical piece of paper mailed from Canada — whether you're in the country or not.</p>
         </div>
       </div>
 
       <div class="usecase">
         <div class="usecase-num">02</div>
         <div>
-          <h3>Letters home</h3>
-          <p>Birthdays, anniversaries, sympathy notes, a printed photo with a long letter for the family back home. Useful when an email won't carry the same weight.</p>
+          <h3 data-i18n="usecases.02.h3">Letters home</h3>
+          <p data-i18n="usecases.02.p">Birthdays, anniversaries, sympathy notes, a printed photo with a long letter for the family back home. Useful when an email won't carry the same weight.</p>
         </div>
       </div>
 
       <div class="usecase">
         <div class="usecase-num">03</div>
         <div>
-          <h3>Legal correspondence</h3>
-          <p>Demand letters, formal notices, immigration paperwork, real-estate documents, estate matters. Mailed from a Canadian address, with an order record we can produce on request.</p>
+          <h3 data-i18n="usecases.03.h3">Legal correspondence</h3>
+          <p data-i18n="usecases.03.p">Demand letters, formal notices, immigration paperwork, real-estate documents, estate matters. Mailed from a Canadian address, with an order record we can produce on request.</p>
         </div>
       </div>
 
       <div class="usecase">
         <div class="usecase-num">04</div>
         <div>
-          <h3>Business mail</h3>
-          <p>Invoices, contracts, signed agreements, year-end statements that customers still expect by post. For Canadian businesses, and for businesses outside Canada that need to reach Canadian customers.</p>
+          <h3 data-i18n="usecases.04.h3">Business mail</h3>
+          <p data-i18n="usecases.04.p">Invoices, contracts, signed agreements, year-end statements that customers still expect by post. For Canadian businesses, and for businesses outside Canada that need to reach Canadian customers.</p>
         </div>
       </div>
 
@@ -1186,11 +1190,11 @@ footer {
 <section class="story">
   <div class="story-inner">
     <div class="story-text">
-      <div class="eyebrow">Why Letterhome</div>
-      <h2>Canadian post, <em>without the trip</em>.</h2>
-      <p class="founder-intro">Hi — I'm Jeffrey.</p>
-      <p>I started Letterhome from South America in 2024, after spending a frustrating week trying to send a single form back to the CRA. Getting a physical letter into the Canadian mail from abroad turned out to be way harder than it should be.</p>
-      <p>So I built the service I wanted. You write the letter, attach the documents, and we print it, stamp it, and drop it in the Canadian mail — usually within one business day.</p>
+      <div class="eyebrow" data-i18n="story.eyebrow">Why Letterhome</div>
+      <h2 data-i18n-html="story.h2">Canadian post, <em>without the trip</em>.</h2>
+      <p class="founder-intro" data-i18n="story.founder">Hi — I'm Jeffrey.</p>
+      <p data-i18n="story.p1">I started Letterhome from South America in 2024, after spending a frustrating week trying to send a single form back to the CRA. Getting a physical letter into the Canadian mail from abroad turned out to be way harder than it should be.</p>
+      <p data-i18n="story.p2">So I built the service I wanted. You write the letter, attach the documents, and we print it, stamp it, and drop it in the Canadian mail — usually within one business day.</p>
     </div>
     <div class="story-quote">
       I had a pertinent document I needed to send to the National Student Loans Service and I was not in Canada for the deadline. I was able to use this service and the letter arrived within a week. It bought me some time. Highly recommended service for Canadians abroad.
@@ -1203,39 +1207,39 @@ footer {
 <section id="faq">
   <div class="section-inner">
     <div class="section-head faq-head">
-      <div class="eyebrow">FAQ</div>
-      <h2>Common questions.</h2>
+      <div class="eyebrow" data-i18n="faq.eyebrow">FAQ</div>
+      <h2 data-i18n="faq.h2">Common questions.</h2>
     </div>
 
     <div class="faq-grid">
       <details class="faq-item">
-        <summary>Can I use Letterhome if I'm not in Canada?</summary>
-        <p>Yes. The whole process is online, so you can submit an order from anywhere with an internet connection. You don't need a Canadian address or a Canadian credit card. International cards are accepted through Stripe; you're charged in Canadian dollars and your bank converts at its exchange rate.</p>
+        <summary data-i18n="faq.q1">Can I use Letterhome if I'm not in Canada?</summary>
+        <p data-i18n="faq.a1">Yes. The whole process is online, so you can submit an order from anywhere with an internet connection. You don't need a Canadian address or a Canadian credit card. International cards are accepted through Stripe; you're charged in Canadian dollars and your bank converts at its exchange rate.</p>
       </details>
 
       <details class="faq-item">
-        <summary>Where does the letter actually get mailed from?</summary>
-        <p>Inside Canada. Letters carry Canadian postage and go out through Canada Post. To the recipient, the envelope is indistinguishable from one you would have mailed yourself at a Canada Post box.</p>
+        <summary data-i18n="faq.q2">Where does the letter actually get mailed from?</summary>
+        <p data-i18n="faq.a2">Inside Canada. Letters carry Canadian postage and go out through Canada Post. To the recipient, the envelope is indistinguishable from one you would have mailed yourself at a Canada Post box.</p>
       </details>
 
       <details class="faq-item">
-        <summary>What's the difference between domestic and international pricing?</summary>
-        <p>Two prices: $10 CAD for letters to a Canadian address, $20 CAD for letters to any of 160+ international destinations. Either price covers up to 5 documents of full-colour printing on letter-size paper, the envelope, postage, and the trip to the post office.</p>
+        <summary data-i18n="faq.q3">What's the difference between domestic and international pricing?</summary>
+        <p data-i18n="faq.a3">Two prices: $10 CAD for letters to a Canadian address, $20 CAD for letters to any of 160+ international destinations. Either price covers up to 5 documents of full-colour printing on letter-size paper, the envelope, postage, and the trip to the post office.</p>
       </details>
 
       <details class="faq-item">
-        <summary>How long does delivery take?</summary>
-        <p>We print and mail within one business day of payment. After that, Canada Post's standard lettermail typically takes up to 2 weeks within Canada and up to 4 weeks internationally, depending on the destination. Tracked or registered options are available on request — contact us before placing your order.</p>
+        <summary data-i18n="faq.q4">How long does delivery take?</summary>
+        <p data-i18n="faq.a4">We print and mail within one business day of payment. After that, Canada Post's standard lettermail typically takes up to 2 weeks within Canada and up to 4 weeks internationally, depending on the destination. Tracked or registered options are available on request — contact us before placing your order.</p>
       </details>
 
       <details class="faq-item">
-        <summary>Can I attach documents like PDFs or Word files?</summary>
-        <p>Yes. Attach up to 5 PDF or Word files (10 MB each). They're printed in full colour and included in the same envelope as your letter. This is how most people use the service for tax forms, contracts, and immigration paperwork.</p>
+        <summary data-i18n="faq.q5">Can I attach documents like PDFs or Word files?</summary>
+        <p data-i18n="faq.a5">Yes. Attach up to 5 PDF or Word files (10 MB each). They're printed in full colour and included in the same envelope as your letter. This is how most people use the service for tax forms, contracts, and immigration paperwork.</p>
       </details>
 
       <details class="faq-item">
-        <summary>Is the content of my letter kept private?</summary>
-        <p>Yes. Orders are checked for things that would stop the mail from going through — bad addresses, unreadable files, obvious abuse or illegal content — not for what you wrote. Your letter and any attachments are deleted from our systems within 7 days of mailing. We keep a basic order record (date, amount, your email) for Canadian tax purposes, but not the content of what you sent. Payments are handled by Stripe; we never see your card details.</p>
+        <summary data-i18n="faq.q6">Is the content of my letter kept private?</summary>
+        <p data-i18n="faq.a6">Yes. Orders are checked for things that would stop the mail from going through — bad addresses, unreadable files, obvious abuse or illegal content — not for what you wrote. Your letter and any attachments are deleted from our systems within 7 days of mailing. We keep a basic order record (date, amount, your email) for Canadian tax purposes, but not the content of what you sent. Payments are handled by Stripe; we never see your card details.</p>
       </details>
     </div>
   </div>
@@ -1244,9 +1248,9 @@ footer {
 <!-- CTA BAND -->
 <section class="cta-band">
   <div class="cta-band-inner">
-    <h2>Ready to send one?</h2>
-    <p>Write your letter online. We'll handle the rest from Canada.</p>
-    <a href="/send" class="btn btn-red btn-large">Send a letter — from $10 CAD</a>
+    <h2 data-i18n="cta.h2">Ready to send one?</h2>
+    <p data-i18n="cta.p">Write your letter online. We'll handle the rest from Canada.</p>
+    <a href="/send" class="btn btn-red btn-large" data-i18n="cta.btn">Send a letter — from $10 CAD</a>
   </div>
 </section>
 
@@ -1255,8 +1259,8 @@ footer {
   <div class="footer-bottom">
     <div>© 2026 Letterhome</div>
     <div class="footer-bottom-links">
-      <a href="/privacy">Privacy</a>
-      <a href="/terms">Terms</a>
+      <a href="/privacy" data-i18n="footer.privacy">Privacy</a>
+      <a href="/terms" data-i18n="footer.terms">Terms</a>
     </div>
   </div>
 </footer>
@@ -1505,6 +1509,7 @@ footer {
 </script>
 
 <script src="/theme.js"></script>
+<script src="/lang.js"></script>
 <script>
 (async () => {
   try {
