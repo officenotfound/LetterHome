@@ -412,10 +412,10 @@ textarea.field-error { border-color: var(--red) !important; }
       Letterhome
     </a>
     <div class="nav-links">
-      <a href="/#how">How it works</a>
-      <a href="/#pricing">Pricing</a>
-      <a href="/#faq">FAQ</a>
-      <a href="/account" id="nav-account-link">Sign In</a>
+      <a href="/#how" data-i18n="nav.how">How it works</a>
+      <a href="/#pricing" data-i18n="nav.pricing">Pricing</a>
+      <a href="/#faq" data-i18n="nav.faq">FAQ</a>
+      <a href="/account" id="nav-account-link" data-i18n="send.acct.signin">Sign In</a>
     </div>
     <div class="nav-right">
       <button type="button" class="lang-toggle" onclick="toggleLang()" aria-label="Toggle language">FR</button>
@@ -720,7 +720,7 @@ textarea.field-error { border-color: var(--red) !important; }
       <label for="letter-body" data-i18n="send.letter.label">Your Message</label>
       <textarea id="letter-body" placeholder="Dear Margaret,&#10;&#10;I hope this letter finds you well. I'm writing from..." data-i18n-placeholder="send.letter.placeholder" oninput="updatePreview()"></textarea>
       <span class="field-note" data-i18n="send.letter.note">Up to 5 pages (~2,500 words). Plain text — we lay it out in a clean serif typeface.</span>
-      <span class="field-note" id="word-count" style="margin-top:2px;text-align:right">0 words</span>
+      <span class="field-note" id="word-count" style="margin-top:2px;text-align:right" data-i18n="send.word.zero">0 words</span>
     </div>
 
     <div class="attach-zone" onclick="document.getElementById('file-input').click()">
@@ -759,7 +759,7 @@ textarea.field-error { border-color: var(--red) !important; }
     </div>
 
     <div class="preview-letter-box">
-      <p id="preview-body-text">Your letter will appear here as you type it in Step 2.</p>
+      <p id="preview-body-text" data-i18n="send.preview.empty">Your letter will appear here as you type it in Step 2.</p>
     </div>
 
     <div class="order-summary">
@@ -1198,7 +1198,7 @@ async function submitOrder() {
   } catch (err) {
     btn.disabled = false;
     btn.textContent = LH_T('send.btn.pay');
-    alert('Something went wrong: ' + err.message + '\nPlease try again or contact us.');
+    alert(LH_T('send.err.submit'));
   }
 }
 </script>
@@ -1328,7 +1328,7 @@ function showAccountForm(mode) {
         <input id="acct-email" type="email" autocomplete="email" placeholder="you@example.com" style="width:100%;padding:10px 12px;border:1.5px solid var(--line,rgba(42,42,42,0.14));background:var(--paper,#faf6ec);color:var(--ink,#2a2a2a);border-radius:2px;font:inherit;font-size:15px">
       </div>
       <div>
-        <label style="display:block;font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:var(--ink-muted,#6b6258);margin-bottom:4px">${LH_T('send.acct.form.pwd')}${isReg ? ' <span style=\"text-transform:none;letter-spacing:0;color:var(--ink-faint,#968b7d);font-family:inherit\">— 8+ chars, letter + number/symbol</span>' : ''}</label>
+        <label style="display:block;font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:var(--ink-muted,#6b6258);margin-bottom:4px">${LH_T('send.acct.form.pwd')}${isReg ? ' <span style=\"text-transform:none;letter-spacing:0;color:var(--ink-faint,#968b7d);font-family:inherit\">' + LH_T('send.pwd.hint') + '</span>' : ''}</label>
         <input id="acct-pwd" type="password" autocomplete="${isReg ? 'new-password' : 'current-password'}" placeholder="••••••••" style="width:100%;padding:10px 12px;border:1.5px solid var(--line,rgba(42,42,42,0.14));background:var(--paper,#faf6ec);color:var(--ink,#2a2a2a);border-radius:2px;font:inherit;font-size:15px"${isReg ? ' oninput="updateAcctBannerStrength()"' : ''}>
         ${isReg ? '<div style="height:3px;background:rgba(42,42,42,0.1);border-radius:2px;margin-top:5px;overflow:hidden"><div id="acct-strength-fill" style="height:100%;width:0;background:#94a3b8;transition:width 0.3s,background 0.3s"></div></div>' : ''}
       </div>

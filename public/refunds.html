@@ -71,10 +71,10 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:48px 36px 32px
   <div class="nav-inner">
     <a href="/" class="logo"><span class="logo-mark"><svg width="22" height="14" viewBox="0 0 22 14" fill="none" stroke="white" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2 2"><rect x="1" y="1" width="20" height="12" rx="1"/><path d="M1 1.5l10 8 10-8"/></svg></span>Letterhome</a>
     <div class="nav-links">
-      <a href="/#how">How it works</a>
-      <a href="/#pricing">Pricing</a>
-      <a href="/about">About</a>
-      <a href="/contact">Contact</a>
+      <a href="/#how" data-i18n="nav.how">How it works</a>
+      <a href="/#pricing" data-i18n="nav.pricing">Pricing</a>
+      <a href="/about" data-i18n="nav.about">About</a>
+      <a href="/contact" data-i18n="nav.contact">Contact</a>
     </div>
     <div class="nav-right">
       <button type="button" class="lang-toggle" onclick="toggleLang()" aria-label="Toggle language">FR</button>
@@ -88,36 +88,71 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:48px 36px 32px
 </nav>
 
 <div class="main">
-  <div class="eyebrow">Legal</div>
-  <h1>Refund Policy</h1>
-  <p class="updated">Last updated: May 2026</p>
+  <div data-lang-show="en">
+    <div class="eyebrow">Legal</div>
+    <h1>Refund Policy</h1>
+    <p class="updated">Last updated: May 2026</p>
 
-  <div class="highlight">
-    All sales are final. Once payment is received, the printing, postage, and trip to the post office have been committed. We can't refund the order — but if something goes wrong on our end, we'll reprint and resend at no charge.
+    <div class="highlight">
+      All sales are final. Once payment is received, the printing, postage, and trip to the post office have been committed. We can't refund the order — but if something goes wrong on our end, we'll reprint and resend at no charge.
+    </div>
+
+    <h2>Why there are no refunds</h2>
+    <p>After payment, your order enters the production queue. We commit to the printing, paper, envelope and postage immediately. Once a letter is in Canada Post's hands, it can't be traced or recalled — that's how standard lettermail works. This is disclosed before checkout, and by placing an order you accept it.</p>
+
+    <h2>What we'll do if your letter doesn't arrive</h2>
+    <p>Canada Post's standard lettermail is reliable but untracked. If yours doesn't arrive on time, here's what happens:</p>
+    <ul>
+      <li><strong>Within Canada:</strong> if your letter hasn't arrived 2 weeks after the order date, contact us. Where we can verify the details on our end were correct, we'll reprint and resend at no charge.</li>
+      <li><strong>International:</strong> if your letter hasn't arrived 4 weeks after the order date, contact us. We'll review the order and resend where appropriate.</li>
+      <li><strong>Our error:</strong> if we printed or addressed your letter incorrectly, we'll reprint and resend at no charge.</li>
+    </ul>
+    <p>This is a goodwill commitment, not a contractual guarantee. We extend it because the alternative — a customer paying for a letter that didn't arrive — isn't a position we want to leave anyone in.</p>
+
+    <h2>Expected delivery times</h2>
+    <p>Canada Post's published service standards for standard lettermail are typically:</p>
+    <ul>
+      <li><strong>Within Canada:</strong> up to 2 weeks (most letters arrive in 1 week)</li>
+      <li><strong>International:</strong> up to 4 weeks (most letters arrive in 2–3 weeks; some destinations take longer)</li>
+    </ul>
+    <p>We don't offer tracked or registered mail by default. If you're sending something time-sensitive or legally important, email us before placing your order and we'll quote a tracked option.</p>
+
+    <h2>Contact us</h2>
+    <p>Concerns about an order? Email <a href="mailto:hello@letterhome.ca">hello@letterhome.ca</a> with your order number. Replies usually come within one business day.</p>
   </div>
 
-  <h2>Why there are no refunds</h2>
-  <p>After payment, your order enters the production queue. We commit to the printing, paper, envelope and postage immediately. Once a letter is in Canada Post's hands, it can't be traced or recalled — that's how standard lettermail works. This is disclosed before checkout, and by placing an order you accept it.</p>
+  <div data-lang-show="fr">
+    <div class="eyebrow">Juridique</div>
+    <h1>Politique de remboursement</h1>
+    <p class="updated">Dernière mise à jour : mai 2026</p>
 
-  <h2>What we'll do if your letter doesn't arrive</h2>
-  <p>Canada Post's standard lettermail is reliable but untracked. If yours doesn't arrive on time, here's what happens:</p>
-  <ul>
-    <li><strong>Within Canada:</strong> if your letter hasn't arrived 2 weeks after the order date, contact us. Where we can verify the details on our end were correct, we'll reprint and resend at no charge.</li>
-    <li><strong>International:</strong> if your letter hasn't arrived 4 weeks after the order date, contact us. We'll review the order and resend where appropriate.</li>
-    <li><strong>Our error:</strong> if we printed or addressed your letter incorrectly, we'll reprint and resend at no charge.</li>
-  </ul>
-  <p>This is a goodwill commitment, not a contractual guarantee. We extend it because the alternative — a customer paying for a letter that didn't arrive — isn't a position we want to leave anyone in.</p>
+    <div class="highlight">
+      Toutes les ventes sont définitives. Une fois le paiement reçu, l'impression, l'affranchissement et le dépôt à la poste sont engagés. Nous ne pouvons pas rembourser la commande — mais si quelque chose se passe mal de notre côté, nous réimprimerons et renverrons sans frais.
+    </div>
 
-  <h2>Expected delivery times</h2>
-  <p>Canada Post's published service standards for standard lettermail are typically:</p>
-  <ul>
-    <li><strong>Within Canada:</strong> up to 2 weeks (most letters arrive in 1 week)</li>
-    <li><strong>International:</strong> up to 4 weeks (most letters arrive in 2–3 weeks; some destinations take longer)</li>
-  </ul>
-  <p>We don't offer tracked or registered mail by default. If you're sending something time-sensitive or legally important, email us before placing your order and we'll quote a tracked option.</p>
+    <h2>Pourquoi il n'y a pas de remboursements</h2>
+    <p>Après le paiement, votre commande entre dans la file de production. Nous engageons immédiatement les coûts d'impression, de papier, d'enveloppe et d'affranchissement. Une fois qu'une lettre est entre les mains de Postes Canada, elle ne peut pas être tracée ni rappelée — c'est ainsi que fonctionne le courrier ordinaire standard. Cela est divulgué avant le paiement, et en passant une commande, vous l'acceptez.</p>
 
-  <h2>Contact us</h2>
-  <p>Concerns about an order? Email <a href="mailto:hello@letterhome.ca">hello@letterhome.ca</a> with your order number. Replies usually come within one business day.</p>
+    <h2>Ce que nous ferons si votre lettre n'arrive pas</h2>
+    <p>Le courrier ordinaire de Postes Canada est fiable mais non suivi. Si le vôtre n'arrive pas à temps, voici ce qui se passe :</p>
+    <ul>
+      <li><strong>Au Canada :</strong> si votre lettre n'est pas arrivée 2 semaines après la date de commande, contactez-nous. Lorsque nous pouvons vérifier que les détails de notre côté étaient corrects, nous réimprimerons et renverrons sans frais.</li>
+      <li><strong>International :</strong> si votre lettre n'est pas arrivée 4 semaines après la date de commande, contactez-nous. Nous examinerons la commande et renverrons si approprié.</li>
+      <li><strong>Notre erreur :</strong> si nous avons imprimé ou adressé votre lettre incorrectement, nous réimprimerons et renverrons sans frais.</li>
+    </ul>
+    <p>Il s'agit d'un engagement de bonne foi, et non d'une garantie contractuelle. Nous le prenons parce que l'alternative — un client ayant payé pour une lettre qui n'est pas arrivée — n'est pas une situation dans laquelle nous voulons laisser qui que ce soit.</p>
+
+    <h2>Délais de livraison prévus</h2>
+    <p>Les normes de service publiées par Postes Canada pour le courrier ordinaire standard sont généralement :</p>
+    <ul>
+      <li><strong>Au Canada :</strong> jusqu'à 2 semaines (la plupart des lettres arrivent en 1 semaine)</li>
+      <li><strong>International :</strong> jusqu'à 4 semaines (la plupart des lettres arrivent en 2 à 3 semaines ; certaines destinations prennent plus de temps)</li>
+    </ul>
+    <p>Nous n'offrons pas le courrier suivi ou recommandé par défaut. Si vous envoyez quelque chose d'urgent ou d'important sur le plan juridique, écrivez-nous avant de passer votre commande et nous vous soumettrons un devis pour une option suivie.</p>
+
+    <h2>Nous joindre</h2>
+    <p>Des préoccupations concernant une commande ? Écrivez-nous à <a href="mailto:hello@letterhome.ca">hello@letterhome.ca</a> avec votre numéro de commande. Les réponses arrivent généralement dans un délai d'un jour ouvrable.</p>
+  </div>
 </div>
 
 <footer>
