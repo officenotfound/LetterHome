@@ -5,6 +5,7 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
   test:
@@ -25,6 +26,9 @@ jobs:
 
       - name: Install dependencies
         run: npm ci --omit=dev
+
+      - name: Syntax check
+        run: node --check server.js && node --check tests/server.test.js
 
       - name: Run tests
         run: node --test --test-force-exit

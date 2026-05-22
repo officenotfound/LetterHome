@@ -1098,34 +1098,40 @@ app.post('/api/create-order', orderLimiter, upload.array('attachments', 5), asyn
   db.prepare('UPDATE orders SET attachment_info = ? WHERE id = ?')
     .run(JSON.stringify(movedFiles), orderId);
 
-  const session = await stripe.checkout.sessions.create({
-    payment_method_types: ['card'],
-    customer_email: rEmail,
-    line_items: [{
-      price_data: {
-        currency: 'cad',
-        product_data: {
-          name: isDomestic ? 'Letterhome — Domestic Letter' : 'Letterhome — International Letter',
-          description: `To: ${rName}, ${[b['r-city'], b['r-country']].filter(Boolean).join(' ')}`,
+  let stripeSession;
+  try {
+    stripeSession = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      customer_email: rEmail,
+      line_items: [{
+        price_data: {
+          currency: 'cad',
+          product_data: {
+            name: isDomestic ? 'Letterhome — Domestic Letter' : 'Letterhome — International Letter',
+            description: `To: ${rName}, ${[b['r-city'], b['r-country']].filter(Boolean).join(' ')}`,
+          },
+          unit_amount: priceCents,
         },
-        unit_amount: priceCents,
-      },
-      quantity: 1,
-    }],
-    mode: 'payment',
-    success_url: `${process.env.BASE_URL}/order-success?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url:  `${process.env.BASE_URL}/send`,
-    metadata: { order_id: String(orderId) },
-  });
+        quantity: 1,
+      }],
+      mode: 'payment',
+      success_url: `${process.env.BASE_URL}/order-success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url:  `${process.env.BASE_URL}/send`,
+      metadata: { order_id: String(orderId) },
+    });
+  } catch (e) {
+    console.error('[create-order] Stripe error:', e.message);
+    return res.status(502).json({ error: 'Payment service is temporarily unavailable. Please try again in a moment.' });
+  }
 
   db.prepare('UPDATE orders SET stripe_session_id = ? WHERE id = ?')
-    .run(session.id, orderId);
+    .run(stripeSession.id, orderId);
 
-  res.json({ checkoutUrl: session.url });
+  res.json({ checkoutUrl: stripeSession.url });
 });
 
 // ── Order status (used by success page) ──────────────────────────────────────
-app.get('/api/order-status', (req, res) => {
+app.get('/api/order-status', trackLimiter, (req, res) => {
   const order = db.prepare('SELECT * FROM orders WHERE stripe_session_id = ?')
     .get(req.query.session_id || '');
   if (!order) return res.status(404).json({ error: 'Order not found.' });
@@ -1505,7 +1511,9 @@ app.post('/api/admin/customers/:email/restore', requireAdmin, (req, res) => {
 app.get('/api/admin/customers/export.csv', requireAdmin, (req, res) => {
   const csvEscape = s => {
     const str = String(s ?? '');
-    return /[,"\n]/.test(str) ? '"' + str.replace(/"/g, '""') + '"' : str;
+    // Prefix formula-triggering chars so Excel/LibreOffice don't execute them as formulas
+    const safe = /^[=+\-@]/.test(str) ? ' ' + str : str;
+    return /[,"\n]/.test(safe) ? '"' + safe.replace(/"/g, '""') + '"' : safe;
   };
   const fromOrders = db.prepare(`
     SELECT customer_email as email,
@@ -1748,10 +1756,34 @@ app.post('/api/admin/orders/bulk-status', requireAdmin, async (req, res) => {
   const { ids, status } = req.body;
   const valid = ['awaiting_payment', 'paid', 'submitted_to_printer', 'printing', 'mailed', 'delivered', 'refunded'];
   if (!valid.includes(status) || !Array.isArray(ids) || !ids.length) return res.status(400).json({ error: 'Invalid input' });
+
+  const cleanIds = ids.map(Number);
   const stmt = db.prepare('UPDATE orders SET status = ? WHERE id = ?');
-  ids.forEach(id => stmt.run(status, Number(id)));
-  logAudit(req, 'order.bulk_status', 'order', ids.join(','), { status, count: ids.length });
-  res.json({ ok: true, count: ids.length });
+  cleanIds.forEach(id => stmt.run(status, id));
+  logAudit(req, 'order.bulk_status', 'order', cleanIds.join(','), { status, count: cleanIds.length });
+
+  // Send "mailed" notification for each order that wasn't already mailed
+  if (status === 'mailed') {
+    for (const id of cleanIds) {
+      const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(id);
+      if (!order?.customer_email) continue;
+      const isDomestic = order.destination_country === 'CA';
+      const deliveryText = order.estimated_delivery || (isDomestic ? 'within 2 weeks' : 'within 4 weeks');
+      const toAddr = [
+        order.recipient_name, order.recipient_street,
+        `${order.recipient_city || ''} ${order.recipient_province || ''} ${order.recipient_postal || ''}`.trim(),
+        order.destination_country,
+      ].filter(Boolean).join('\n');
+      sendMail({
+        from:    process.env.EMAIL_FROM,
+        to:      order.customer_email,
+        subject: `Your letter to ${order.recipient_name} has been mailed — order #${order.id}`,
+        html:    buildMailedEmail(order, toAddr, deliveryText),
+      }, 'mailed_notification', id).catch(console.error);
+    }
+  }
+
+  res.json({ ok: true, count: cleanIds.length });
 });
 
 // Refund via Stripe — calls stripe.refunds.create with the order's payment_intent
@@ -2027,7 +2059,7 @@ app.post('/api/admin/settings', requireAdmin, (req, res) => {
 });
 
 app.post('/api/admin/settings/batch', requireAdmin, (req, res) => {
-  const allowed = ['service_paused','announcement','price_domestic_cents','price_international_cents','daily_order_cap','blocked_countries'];
+  const allowed = ['service_paused','announcement','price_domestic_cents','price_international_cents','daily_order_cap','blocked_countries','away_mode','away_message'];
   const updates = req.body || {};
   for (const key of allowed) {
     if (key in updates) setSetting(key, updates[key]);
@@ -2183,7 +2215,7 @@ ${attachments.length ? `<div class="attachments"><strong>${attachments.length} a
 });
 
 // ── Contact form ──────────────────────────────────────────────────────────────
-app.post('/api/contact', contactLimiter, async (req, res) => {
+app.post('/api/contact', contactLimiter, async (req, res, next) => {
   const { name, email, message } = req.body;
   if (!name || !email || !message) return res.status(400).json({ error: 'All fields are required.' });
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(email))) return res.status(400).json({ error: 'Invalid email address.' });
@@ -2193,23 +2225,27 @@ app.post('/api/contact', contactLimiter, async (req, res) => {
       .run(String(name).slice(0, 200), String(email).slice(0, 200), String(message).slice(0, 5000), getClientIp(req));
   } catch (e) { console.error('[contact] db log failed:', e.message); }
 
-  await sendMail({
-    from:    process.env.EMAIL_FROM,
-    to:      process.env.OPERATOR_EMAIL,
-    replyTo: email,
-    subject: `[Letterhome Contact] From ${name}`,
-    text:    `From: ${name} <${email}>\n\n${message}`,
-  }, 'contact_notification');
-
-  const awayOn  = getSetting('away_mode') === 'true';
-  const awayMsg = getSetting('away_message') || "Thanks for reaching out — I'm currently away and will get back to you as soon as possible.";
-  if (awayOn) {
+  try {
     await sendMail({
       from:    process.env.EMAIL_FROM,
-      to:      email,
-      subject: 'We received your message — Letterhome',
-      text:    `Hi ${String(name).split(' ')[0]},\n\n${awayMsg}\n\n— Letterhome`,
-    }, 'away_autoreply');
+      to:      process.env.OPERATOR_EMAIL,
+      replyTo: email,
+      subject: `[Letterhome Contact] From ${name}`,
+      text:    `From: ${name} <${email}>\n\n${message}`,
+    }, 'contact_notification');
+
+    const awayOn  = getSetting('away_mode') === 'true';
+    const awayMsg = getSetting('away_message') || "Thanks for reaching out — I'm currently away and will get back to you as soon as possible.";
+    if (awayOn) {
+      await sendMail({
+        from:    process.env.EMAIL_FROM,
+        to:      email,
+        subject: 'We received your message — Letterhome',
+        text:    `Hi ${String(name).split(' ')[0]},\n\n${awayMsg}\n\n— Letterhome`,
+      }, 'away_autoreply');
+    }
+  } catch (e) {
+    return next(e);
   }
 
   res.json({ ok: true });
@@ -2691,7 +2727,7 @@ function buildRecoveryEmail(order) {
 <body style="font-family:Georgia,serif;background:#ede5d3;padding:40px 20px;color:#2a2a2a;margin:0">
   <div style="max-width:520px;margin:0 auto;background:#faf6ec;border:1px solid rgba(42,42,42,0.12);padding:48px">
     <div style="width:38px;height:38px;background:#a8472d;display:inline-flex;align-items:center;justify-content:center;color:#faf6ec;font-size:20px;font-family:Georgia,serif;margin-bottom:28px">L</div>
-    <h1 style="font-size:28px;font-weight:400;margin:0 0 10px;letter-spacing:-0.02em">Someone back home is waiting.</h1>
+    <h1 style="font-size:28px;font-weight:400;margin:0 0 10px;letter-spacing:-0.02em">You left a letter unsent.</h1>
     <p style="color:#6b6258;margin:0 0 32px;font-size:16px;line-height:1.6">Someone back home is waiting to hear from you. Your letter${recipientHint} is still ready to go.</p>
     <a href="${process.env.BASE_URL || ''}/send" style="display:inline-block;background:#a8472d;color:#faf6ec;padding:14px 28px;font-family:Georgia,serif;font-size:15px;text-decoration:none;letter-spacing:0.02em;margin-bottom:32px">Send Your Letter →</a>
     <div style="border-top:1px solid rgba(42,42,42,0.1);padding-top:20px;font-size:12px;color:#968b7d">
