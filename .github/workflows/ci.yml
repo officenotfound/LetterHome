@@ -8,6 +8,7 @@ on:
   workflow_dispatch:
 
 jobs:
+  # ── 1. Tests ───────────────────────────────────────────────────────────────
   test:
     name: Test (Node ${{ matrix.node }})
     runs-on: ubuntu-latest
@@ -27,14 +28,65 @@ jobs:
       - name: Install dependencies
         run: npm ci --omit=dev
 
-      - name: Syntax check
+      - name: Syntax check — server + tests
         run: node --check server.js && node --check tests/server.test.js
 
       - name: Run tests
         run: node --test --test-force-exit
 
-  secrets:
-    name: Scan for secrets
+  # ── 2. Lint & validate ────────────────────────────────────────────────────
+  lint:
+    name: Lint & validate
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Syntax check — all public JS
+        run: node --check public/lang.js && node --check public/theme.js
+
+      - name: Check for smart/curly quotes in JS files
+        run: node scripts/check-smart-quotes.js
+
+      - name: Check EN/FR translation key parity
+        run: node scripts/check-lang-parity.js
+
+      - name: Check data-i18n references in HTML
+        run: node scripts/check-i18n-refs.js
+
+      - name: Check all env vars are documented in .env.example
+        run: node scripts/check-env-vars.js
+
+      - name: Check for debugger statements
+        run: |
+          if grep -rn "\bdebugger\b" --include="*.js" --exclude-dir=node_modules .; then
+            echo "ERROR: debugger statement found — remove before committing"
+            exit 1
+          fi
+
+      - name: Check for TODO / FIXME markers
+        run: |
+          if grep -rn "TODO\|FIXME\|HACK\|XXX" --include="*.js" --include="*.html" --include="*.css" \
+               --exclude-dir=node_modules .; then
+            echo "WARNING: TODO/FIXME markers found above — review before shipping"
+          fi
+
+      - name: Check for hardcoded localhost in public files
+        run: |
+          if grep -rn "localhost" --include="*.html" --include="*.js" \
+               --exclude-dir=node_modules public/; then
+            echo "ERROR: hardcoded localhost found in public files"
+            exit 1
+          fi
+
+  # ── 3. Security ───────────────────────────────────────────────────────────
+  security:
+    name: Security
     runs-on: ubuntu-latest
 
     steps:
@@ -46,8 +98,11 @@ jobs:
           node-version: 22
           cache: npm
 
-      - name: Install dev dependencies
+      - name: Install all dependencies
         run: npm ci
 
-      - name: Run secretlint
+      - name: Scan for secrets and credentials
         run: npm run secretlint
+
+      - name: Audit npm dependencies for vulnerabilities
+        run: npm audit --audit-level=high --omit=dev
