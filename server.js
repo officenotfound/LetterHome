@@ -70,8 +70,8 @@ app.use(helmet({
                     'https://maps.googleapis.com',
                     'https://www.googletagmanager.com',
                     'https://www.google-analytics.com'],
-      styleSrc:    ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
-      fontSrc:     ["'self'", 'https://fonts.gstatic.com'],
+      styleSrc:    ["'self'", "'unsafe-inline'"],
+      fontSrc:     ["'self'"],
       imgSrc:      ["'self'", 'data:',
                     'https://www.googletagmanager.com',
                     'https://www.google-analytics.com'],
@@ -766,7 +766,9 @@ app.get('/health', (req, res) => {
 });
 
 // Clean URLs for all pages
-['send', 'privacy', 'terms', 'refunds', 'about', 'contact', 'track', 'order-success'].forEach(p =>
+['send', 'privacy', 'terms', 'refunds', 'about', 'contact', 'track', 'order-success',
+ 'from-usa', 'from-uk', 'from-australia', 'from-uae', 'from-france', 'send-documents-to-canada',
+].forEach(p =>
   app.get(`/${p}`, (req, res) =>
     res.sendFile(path.join(__dirname, 'public', `${p}.html`))
   )
@@ -793,7 +795,7 @@ function unsubPage(state, email = '') {
   return `<!DOCTYPE html><html lang="en-CA"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>${headings.title} — Letterhome</title>
 <meta name="robots" content="noindex,nofollow">
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Source+Serif+4:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/fonts.css">
 <style>body{font-family:'Source Serif 4',Georgia,serif;background:#f1ebde;color:#2a2a2a;margin:0;padding:80px 24px;line-height:1.6}
 .box{max-width:520px;margin:0 auto;background:#faf6ec;border:1px solid rgba(42,42,42,0.14);padding:48px 40px;border-radius:2px;box-shadow:0 2px 6px rgba(42,42,42,0.06)}
 h1{font-family:'DM Serif Display',serif;font-size:32px;font-weight:400;margin:0 0 16px;letter-spacing:-0.02em}
@@ -2690,9 +2692,7 @@ function buildStatusPage(order) {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Letter Status — Letterhome</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/fonts.css">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Inter',system-ui,sans-serif;background:#ede5d3;color:#2a2a2a;min-height:100vh}
