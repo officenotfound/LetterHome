@@ -1,0 +1,443 @@
+// One-time script — generates country-specific SEO landing pages in public/
+const fs = require('fs');
+const path = require('path');
+
+const pages = [
+  {
+    slug: 'from-usa',
+    country: 'the United States',
+    countryShort: 'USA',
+    title: 'Send Mail to Canada from the United States | Letterhome',
+    description: 'Send a real letter or document to Canada from anywhere in the US. We print, stamp with Canadian postage, and mail it via Canada Post. From $10 CAD.',
+    canonical: 'https://letterhome.ca/from-usa',
+    eyebrow: 'Mailing from the US',
+    h1: 'Send mail to Canada from the United States',
+    lede: 'Living in the US and need to mail something back home to Canada? We handle the printing, the Canadian postage, and the trip to the post office — so you don\'t have to.',
+    who: [
+      'Canadians living in the US sending letters or cards home',
+      'Americans mailing documents to Canadian recipients',
+      'Expats sending immigration paperwork or legal documents to a Canadian address',
+      'Anyone who needs a letter to arrive with a Canadian postmark',
+    ],
+    faq: [
+      {
+        q: 'Do I need a Canadian address or Canadian credit card?',
+        a: 'No. You can order from anywhere — a US billing address and a US card work fine. Payment is processed through Stripe. You\'re charged in Canadian dollars and your bank converts at its rate.',
+      },
+      {
+        q: 'How long does delivery from the US take?',
+        a: 'We print and mail within one business day of payment. After that, Canada Post standard lettermail typically delivers within Canada in up to 2 weeks.',
+      },
+      {
+        q: 'Can I send a PDF or Word document?',
+        a: 'Yes. Attach up to 5 PDF or Word files (10 MB each). We print them in full colour and include them in the envelope with your letter.',
+      },
+      {
+        q: 'What if I need to mail something international from Canada to another country?',
+        a: 'We handle that too. International mail (160+ countries) is $20 CAD — same process, just a different destination.',
+      },
+    ],
+  },
+  {
+    slug: 'from-uk',
+    country: 'the United Kingdom',
+    countryShort: 'UK',
+    title: 'Send Mail to Canada from the UK | Letterhome',
+    description: 'Send a real letter or document to Canada from the UK. We print it and post it from inside Canada via Canada Post. From $10 CAD — no Canadian address needed.',
+    canonical: 'https://letterhome.ca/from-uk',
+    eyebrow: 'Mailing from the UK',
+    h1: 'Send mail to Canada from the UK',
+    lede: 'Based in the UK and need something mailed to a Canadian address? Write your letter online, attach any documents, and we\'ll take care of the rest — printed and posted from inside Canada.',
+    who: [
+      'Canadians living in the UK keeping in touch with family back home',
+      'UK residents mailing letters or documents to Canadian addresses',
+      'People sending immigration forms, legal correspondence, or official documents to Canada',
+      'Anyone who needs their letter to arrive with a real Canadian stamp',
+    ],
+    faq: [
+      {
+        q: 'Can I pay in GBP?',
+        a: 'Payment is in Canadian dollars through Stripe. Your UK card will work — your bank converts GBP to CAD at the current exchange rate. There\'s no need for a Canadian card or Canadian bank account.',
+      },
+      {
+        q: 'How long does delivery take to Canada from the UK?',
+        a: 'We print and post within one business day of payment. The letter goes out via Canada Post standard lettermail, which typically delivers within Canada in up to 2 weeks.',
+      },
+      {
+        q: 'Can I send documents like PDFs?',
+        a: 'Yes — attach up to 5 PDF or Word files (10 MB each). They\'re printed in full colour and included in the same envelope.',
+      },
+      {
+        q: 'Is this suitable for sending legal or government documents?',
+        a: 'Yes. Many customers use Letterhome to send immigration paperwork, government forms, and legal correspondence to Canadian addresses. Documents are printed in full colour on standard letter paper.',
+      },
+    ],
+  },
+  {
+    slug: 'from-australia',
+    country: 'Australia',
+    countryShort: 'Australia',
+    title: 'Send Mail to Canada from Australia | Letterhome',
+    description: 'Send a real letter or document to Canada from Australia. We print and post from inside Canada via Canada Post. From $10 CAD — no Canadian address or stamp required.',
+    canonical: 'https://letterhome.ca/from-australia',
+    eyebrow: 'Mailing from Australia',
+    h1: 'Send mail to Canada from Australia',
+    lede: 'In Australia and need to mail something to Canada? Skip the international postage search. Write your letter online, and we\'ll print it and post it from inside Canada — within one business day.',
+    who: [
+      'Canadians on working holiday visas or living permanently in Australia',
+      'Australian residents sending documents or letters to Canadian contacts',
+      'Expats managing paperwork across two countries',
+      'Anyone needing a letter delivered with Canadian postage',
+    ],
+    faq: [
+      {
+        q: 'Can I use an Australian credit card?',
+        a: 'Yes. Payment goes through Stripe in Canadian dollars — any major credit or debit card works, including Australian cards. Your bank handles the AUD to CAD conversion.',
+      },
+      {
+        q: 'How long does delivery take?',
+        a: 'We print and mail within one business day of payment. Canada Post standard lettermail then delivers within Canada in up to 2 weeks.',
+      },
+      {
+        q: 'Can I attach documents?',
+        a: 'Yes — up to 5 PDF or Word files, 10 MB each. All printed in full colour and included in the envelope.',
+      },
+      {
+        q: 'What types of documents do people typically send?',
+        a: 'Letters to family, cards, immigration paperwork, tax forms, legal correspondence, and signed contracts are all common. As long as it\'s printable and fits in an envelope, we can send it.',
+      },
+    ],
+  },
+  {
+    slug: 'from-uae',
+    country: 'the UAE',
+    countryShort: 'UAE',
+    title: 'Send Mail to Canada from Dubai & the UAE | Letterhome',
+    description: 'Send a real letter or document to Canada from Dubai or anywhere in the UAE. We print and mail from inside Canada via Canada Post. From $10 CAD.',
+    canonical: 'https://letterhome.ca/from-uae',
+    eyebrow: 'Mailing from the UAE',
+    h1: 'Send mail to Canada from Dubai and the UAE',
+    lede: 'In Dubai or elsewhere in the UAE and need to send something to a Canadian address? Letterhome prints your letter in Canada and mails it with Canadian postage — no flight home required.',
+    who: [
+      'Canadian expats living and working in Dubai or Abu Dhabi',
+      'UAE residents with family or business contacts in Canada',
+      'People sending immigration, legal, or government documents to Canada',
+      'Anyone who needs reliable Canadian postage without being in Canada',
+    ],
+    faq: [
+      {
+        q: 'Do I need a Canadian payment method?',
+        a: 'No. Any major credit or debit card works. You\'re charged in Canadian dollars through Stripe, and your bank handles the currency conversion.',
+      },
+      {
+        q: 'How reliable is delivery?',
+        a: 'Your letter goes out via Canada Post standard lettermail, the same service anyone in Canada would use. Typical delivery within Canada is up to 2 weeks from the mail date.',
+      },
+      {
+        q: 'Can I send official or legal documents?',
+        a: 'Yes. PDFs and Word files can be attached (up to 5 files, 10 MB each). They\'re printed in full colour on standard letter-size paper and included in the envelope.',
+      },
+      {
+        q: 'Can letters be sent to places other than Canada?',
+        a: 'Yes — international mail is available to 160+ countries for $20 CAD. The letter still goes out with Canadian postage via Canada Post.',
+      },
+    ],
+  },
+  {
+    slug: 'from-france',
+    country: 'France',
+    countryShort: 'France',
+    title: 'Envoyer du courrier au Canada depuis la France | Letterhome',
+    description: 'Envoyez une vraie lettre ou un document au Canada depuis la France. Impression et envoi depuis le Canada par Postes Canada. À partir de 10 $ CAD.',
+    canonical: 'https://letterhome.ca/from-france',
+    eyebrow: 'Courrier France → Canada',
+    h1: 'Send mail to Canada from France',
+    lede: 'En France et vous devez envoyer quelque chose à une adresse canadienne? Write online — we print it in Canada and mail it with Canadian postage. Rédigez en ligne — nous imprimons au Canada et l\'envoyons par la poste canadienne.',
+    who: [
+      'Canadians living or studying in France sending letters home',
+      'French residents with family, business, or legal contacts in Canada',
+      'Francophones sending documents to Quebec or other Canadian provinces',
+      'Anyone who needs a letter to arrive with a Canadian stamp',
+    ],
+    faq: [
+      {
+        q: 'Puis-je payer en euros? / Can I pay in euros?',
+        a: 'Payment is in Canadian dollars through Stripe — your French card works. Your bank converts EUR to CAD automatically. No Canadian account needed. / Le paiement se fait en dollars canadiens via Stripe — votre carte française fonctionne parfaitement.',
+      },
+      {
+        q: 'The letter is in French — is that fine?',
+        a: 'Absolutely. French is an official language of Canada. Write your letter in French, English, or both — we print exactly what you write.',
+      },
+      {
+        q: 'How long does delivery take?',
+        a: 'We mail within one business day of payment. Canada Post standard lettermail then delivers within Canada in up to 2 weeks.',
+      },
+      {
+        q: 'Can I send documents like PDFs?',
+        a: 'Yes — attach up to 5 PDF or Word files (10 MB each), printed in full colour and included in the envelope.',
+      },
+    ],
+  },
+  {
+    slug: 'send-documents-to-canada',
+    country: null,
+    countryShort: null,
+    title: 'Send Documents to Canada from Anywhere | Letterhome',
+    description: 'Send immigration forms, legal documents, contracts, or tax paperwork to any Canadian address — printed in full colour and mailed via Canada Post. From $10 CAD.',
+    canonical: 'https://letterhome.ca/send-documents-to-canada',
+    eyebrow: 'Document mailing to Canada',
+    h1: 'Send documents to Canada from anywhere in the world',
+    lede: 'Need to get a signed contract, immigration form, government letter, or tax document to a Canadian address? Attach your files and we\'ll print them in full colour and mail them via Canada Post within one business day.',
+    who: [
+      'People submitting immigration paperwork to IRCC or provincial offices',
+      'Individuals sending signed legal documents or contracts to Canadian addresses',
+      'Tax filers sending returns or correspondence to the CRA',
+      'Anyone who needs a physical document to arrive in Canada with Canadian postage',
+    ],
+    faq: [
+      {
+        q: 'What file types can I attach?',
+        a: 'PDF and Word (.docx) files. Up to 5 attachments, 10 MB each. Documents are printed in full colour on standard letter-size paper (8.5" × 11").',
+      },
+      {
+        q: 'Are documents kept confidential?',
+        a: 'Yes. Orders are reviewed only to verify the address is valid and the files are printable. Your documents and letter content are deleted from our systems within 7 days of mailing. We never store payment details — those go through Stripe.',
+      },
+      {
+        q: 'Can I include a cover letter with my documents?',
+        a: 'Yes. Write your cover letter in the order form text field and attach your documents separately. Everything goes in the same envelope.',
+      },
+      {
+        q: 'Is this suitable for sending documents to government offices like IRCC or CRA?',
+        a: 'Yes. Letters go out via Canada Post standard lettermail — the same service used for any business mail in Canada. Many customers use Letterhome specifically for immigration and government correspondence.',
+      },
+      {
+        q: 'What if my document needs to arrive at an international address, not in Canada?',
+        a: 'International mail is available to 160+ countries for $20 CAD. The letter goes out with Canadian postage via Canada Post regardless of the destination.',
+      },
+    ],
+  },
+];
+
+function buildPage(p) {
+  const whoItems = p.who.map(w => `        <li>${w}</li>`).join('\n');
+  const faqItems = p.faq.map((f, i) => `
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggle(${i})" aria-expanded="false" aria-controls="a${i}">
+            ${f.q}
+            <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="faq-a" id="a${i}" hidden>${f.a}</div>
+        </div>`).join('\n');
+
+  const schemaFaq = JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: p.faq.map(f => ({
+      '@type': 'Question',
+      name: f.q,
+      acceptedAnswer: { '@type': 'Answer', text: f.a },
+    })),
+  });
+
+  return `<!DOCTYPE html>
+<html lang="en-CA">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="/ga.js"></script>
+<title>${p.title}</title>
+<meta name="description" content="${p.description}">
+<link rel="canonical" href="${p.canonical}">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<meta name="theme-color" content="#f1ebde" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1a1410" media="(prefers-color-scheme: dark)">
+<meta property="og:title" content="${p.title}">
+<meta property="og:description" content="${p.description}">
+<meta property="og:type" content="website">
+<meta property="og:url" content="${p.canonical}">
+<meta property="og:image" content="https://letterhome.ca/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:site_name" content="Letterhome">
+<meta property="og:locale" content="en_CA">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="${p.title}">
+<meta name="twitter:description" content="${p.description}">
+<meta name="twitter:image" content="https://letterhome.ca/og-image.png">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Service",
+      "name": "Letterhome — Canadian Letter Mailing",
+      "description": "${p.description}",
+      "url": "${p.canonical}",
+      "provider": {
+        "@type": "Organization",
+        "name": "Letterhome",
+        "url": "https://letterhome.ca",
+        "email": "support@letterhome.ca",
+        "address": { "@type": "PostalAddress", "addressCountry": "CA" }
+      },
+      "areaServed": [
+        { "@type": "Country", "name": "Canada" },
+        { "@type": "Place", "name": "Worldwide" }
+      ],
+      "hasOfferCatalog": {
+        "@type": "OfferCatalog",
+        "name": "Letter mailing",
+        "itemListElement": [
+          { "@type": "Offer", "name": "Domestic — within Canada", "price": "10", "priceCurrency": "CAD" },
+          { "@type": "Offer", "name": "International — 160+ countries", "price": "20", "priceCurrency": "CAD" }
+        ]
+      }
+    },
+    ${schemaFaq}
+  ]
+}
+</script>
+<link rel="stylesheet" href="/fonts.css">
+<link rel="stylesheet" href="/theme.css">
+<style>
+:root {
+  --kraft: #f1ebde; --kraft-deep: #e1d6bd; --paper: #faf6ec;
+  --ink: #2a2a2a; --ink-soft: #3a3835; --ink-muted: #6b6258; --ink-faint: #968b7d;
+  --red: #a8472d; --red-deep: #7d3220; --line: rgba(42,42,42,0.14);
+  --shadow-card: 0 2px 6px rgba(42,42,42,0.06), 0 14px 40px rgba(42,42,42,0.1);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Source Serif 4',Georgia,serif;background:var(--kraft);color:var(--ink);line-height:1.6;font-size:16px}
+nav{position:sticky;top:0;z-index:100;background:rgba(241,235,222,0.94);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.nav-inner{max-width:1100px;margin:0 auto;padding:18px 32px;display:flex;align-items:center;justify-content:space-between;gap:24px}
+.logo{display:flex;align-items:center;gap:10px;font-family:'DM Serif Display',serif;font-size:24px;color:var(--ink);text-decoration:none}
+.logo-mark{width:34px;height:34px;background:var(--red);display:grid;place-items:center;border-radius:2px;color:var(--paper)}
+.logo-mark::before{content:'';position:absolute;inset:-3px;border:1px dashed var(--ink);border-radius:4px;opacity:0.5}
+.logo-mark{position:relative}
+.btn{display:inline-block;padding:11px 22px;border-radius:2px;font-weight:500;font-size:13px;text-decoration:none;transition:all 0.2s;border:none;cursor:pointer;font-family:inherit;letter-spacing:0.04em;text-transform:uppercase}
+.btn-red{background:var(--red);color:var(--paper);border:2px dashed white}
+.btn-red:hover{background:var(--red-deep);transform:translateY(-1px)}
+.page{max-width:780px;margin:0 auto;padding:56px 32px 80px}
+.eyebrow{display:inline-flex;align-items:center;gap:12px;font-family:'DM Mono',monospace;font-size:12px;text-transform:uppercase;letter-spacing:0.18em;color:var(--red);font-weight:500;margin-bottom:18px}
+.eyebrow::before,.eyebrow::after{content:'';width:32px;height:1px;background:var(--red)}
+h1{font-family:'DM Serif Display',serif;font-size:clamp(28px,5vw,44px);line-height:1.15;letter-spacing:-0.02em;margin-bottom:20px}
+.lede{font-size:18px;color:var(--ink-soft);line-height:1.6;margin-bottom:36px;max-width:640px}
+.cta-row{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:56px}
+.price-note{font-family:'DM Mono',monospace;font-size:13px;color:var(--ink-muted)}
+h2{font-family:'DM Serif Display',serif;font-size:24px;letter-spacing:-0.01em;margin-bottom:18px;margin-top:48px}
+.who-list{list-style:none;display:grid;gap:10px;margin-bottom:8px}
+.who-list li{padding:14px 18px;background:var(--paper);border:1px solid var(--line);border-radius:2px;font-size:15px;line-height:1.5}
+.who-list li::before{content:'→';margin-right:10px;color:var(--red);font-family:'DM Mono',monospace}
+.pricing-cards{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:0}
+@media(max-width:540px){.pricing-cards{grid-template-columns:1fr}}
+.price-card{background:var(--paper);border:1px solid var(--line);border-radius:2px;padding:24px;box-shadow:var(--shadow-card)}
+.price-amount{font-family:'DM Serif Display',serif;font-size:32px;color:var(--red);margin-bottom:4px}
+.price-label{font-family:'DM Mono',monospace;font-size:12px;text-transform:uppercase;letter-spacing:0.1em;color:var(--ink-muted);margin-bottom:12px}
+.price-desc{font-size:14px;color:var(--ink-soft);line-height:1.5}
+.faq-item{border-bottom:1px solid var(--line)}
+.faq-item:first-child{border-top:1px solid var(--line)}
+.faq-q{width:100%;text-align:left;background:none;border:none;padding:18px 0;font-family:inherit;font-size:15px;font-weight:600;color:var(--ink);cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.faq-chevron{width:18px;height:18px;flex-shrink:0;transition:transform 0.2s}
+.faq-q[aria-expanded=true] .faq-chevron{transform:rotate(180deg)}
+.faq-a{padding:0 0 18px;font-size:15px;color:var(--ink-soft);line-height:1.6}
+.cta-band{background:var(--ink);color:var(--paper);border-radius:2px;padding:40px;margin-top:56px;text-align:center}
+.cta-band h2{color:var(--paper);margin-top:0;font-size:26px}
+.cta-band p{color:rgba(250,246,236,0.75);margin-bottom:24px;font-size:15px}
+.btn-paper{background:var(--paper);color:var(--ink);border:2px dashed var(--ink)}
+.btn-paper:hover{background:var(--kraft);transform:translateY(-1px)}
+footer{border-top:1px solid var(--line);padding:24px 32px;text-align:center;font-size:13px;color:var(--ink-muted)}
+footer a{color:var(--ink-muted);margin:0 8px}
+[data-theme=dark]{background:#1a1410;color:#f0e6d3}
+[data-theme=dark] nav{background:rgba(26,20,16,0.94)}
+[data-theme=dark] .price-card,[data-theme=dark] .who-list li{background:#231d18;border-color:rgba(240,230,211,0.1)}
+[data-theme=dark] .faq-item{border-color:rgba(240,230,211,0.1)}
+[data-theme=dark] footer{border-color:rgba(240,230,211,0.1)}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a href="/" class="logo">
+      <span class="logo-mark"><svg width="20" height="13" viewBox="0 0 22 14" fill="none" stroke="white" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2 2"><rect x="1" y="1" width="20" height="12" rx="1"/><path d="M1 1.5l10 8 10-8"/></svg></span>
+      <span>Letter<span style="color:var(--red)">home</span></span>
+    </a>
+    <a href="/send" class="btn btn-red">Send a letter</a>
+  </div>
+</nav>
+
+<div class="page">
+
+  <div class="eyebrow">${p.eyebrow}</div>
+  <h1>${p.h1}</h1>
+  <p class="lede">${p.lede}</p>
+
+  <div class="cta-row">
+    <a href="/send" class="btn btn-red">Send a letter now</a>
+    <span class="price-note">From $10 CAD &nbsp;·&nbsp; No account required</span>
+  </div>
+
+  <h2>Who uses Letterhome${p.country ? ' from ' + p.country : ''}</h2>
+  <ul class="who-list">
+${whoItems}
+  </ul>
+
+  <h2>Pricing</h2>
+  <div class="pricing-cards">
+    <div class="price-card">
+      <div class="price-amount">$10 CAD</div>
+      <div class="price-label">Domestic</div>
+      <div class="price-desc">Letters to any Canadian address. Includes up to 5 documents, full-colour printing, envelope, and Canadian postage.</div>
+    </div>
+    <div class="price-card">
+      <div class="price-amount">$20 CAD</div>
+      <div class="price-label">International</div>
+      <div class="price-desc">Letters to any of 160+ countries. Same inclusions — full-colour printing, envelope, Canadian postage via Canada Post.</div>
+    </div>
+  </div>
+
+  <h2>Frequently asked questions</h2>
+  <div class="faq-list">
+${faqItems}
+  </div>
+
+  <div class="cta-band">
+    <h2>Ready to send?</h2>
+    <p>Fill out the form, attach your documents, and we handle everything else.</p>
+    <a href="/send" class="btn btn-paper">Send a letter from ${p.countryShort || 'anywhere'} →</a>
+  </div>
+
+</div>
+
+<footer>
+  <a href="/">Home</a>
+  <a href="/about">About</a>
+  <a href="/privacy">Privacy</a>
+  <a href="/terms">Terms</a>
+  <a href="/contact">Contact</a>
+</footer>
+
+<script src="/theme.js"></script>
+<script>
+  function toggle(i) {
+    const btn = document.querySelectorAll('.faq-q')[i];
+    const ans = document.getElementById('a' + i);
+    const open = btn.getAttribute('aria-expanded') === 'true';
+    btn.setAttribute('aria-expanded', !open);
+    ans.hidden = open;
+  }
+</script>
+</body>
+</html>`;
+}
+
+const outDir = path.join(__dirname, '../public');
+for (const p of pages) {
+  const file = path.join(outDir, p.slug + '.html');
+  fs.writeFileSync(file, buildPage(p));
+  console.log('Written:', p.slug + '.html');
+}
+console.log(`\n${pages.length} landing pages generated.`);
+console.log('\nAdd these routes to server.js:');
+console.log(pages.map(p => `  '${p.slug}'`).join(',\n'));
