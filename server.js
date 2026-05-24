@@ -27,10 +27,10 @@ const { DatabaseSync: Database } = require('node:sqlite');
 const path = require('path');
 const fs   = require('fs');
 const { randomUUID, createHmac, createHash, createCipheriv, scryptSync, randomBytes, timingSafeEqual } = require('node:crypto');
+const B2 = require('backblaze-b2');
 
 fs.mkdirSync('uploads', { recursive: true });
 fs.mkdirSync('orders',  { recursive: true });
-fs.mkdirSync('admin',   { recursive: true });
 fs.mkdirSync('backups', { recursive: true });
 
 // Fail loudly at startup if critical secrets are missing — prevents silent
@@ -209,6 +209,7 @@ try { db.exec(`CREATE INDEX IF NOT EXISTS idx_orders_email      ON orders(custom
 try { db.exec(`CREATE INDEX IF NOT EXISTS idx_orders_status     ON orders(status)`);         } catch {}
 try { db.exec(`CREATE INDEX IF NOT EXISTS idx_orders_deleted    ON orders(deleted_at)`);     } catch {}
 try { db.exec(`CREATE INDEX IF NOT EXISTS idx_customers_deleted ON customers(deleted_at)`);  } catch {}
+try { db.exec(`CREATE INDEX IF NOT EXISTS idx_orders_created    ON orders(created_at)`);      } catch {}
 try {
   db.exec(`CREATE TABLE IF NOT EXISTS saved_recipients (
     id                 INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -1374,7 +1375,7 @@ app.get('/api/admin/orders/csv', requireAdmin, (req, res) => {
 // orders must never remove the customer account that placed them.
 app.delete('/api/admin/orders/:id', requireAdmin, (req, res) => {
   db.prepare("UPDATE orders SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?").run(Number(req.params.id));
-  logAudit(req, 'order.delete', 'order', req.params.id);
+  logAudit(req, 'order.delete', 'order', Number(req.params.id));
   res.json({ ok: true });
 });
 
@@ -1393,7 +1394,7 @@ app.post('/api/admin/orders/bulk-delete', requireAdmin, (req, res) => {
 
 app.post('/api/admin/orders/:id/restore', requireAdmin, (req, res) => {
   db.prepare("UPDATE orders SET deleted_at = NULL WHERE id = ?").run(Number(req.params.id));
-  logAudit(req, 'order.restore', 'order', req.params.id);
+  logAudit(req, 'order.restore', 'order', Number(req.params.id));
   res.json({ ok: true });
 });
 
@@ -2096,9 +2097,8 @@ app.post('/api/admin/settings', requireAdmin, (req, res) => {
 });
 
 app.post('/api/admin/settings/batch', requireAdmin, (req, res) => {
-  const allowed = ['service_paused','announcement','price_domestic_cents','price_international_cents','daily_order_cap','blocked_countries','away_mode','away_message'];
   const updates = req.body || {};
-  for (const key of allowed) {
+  for (const key of ALLOWED_SETTING_KEYS) {
     if (key in updates) setSetting(key, updates[key]);
   }
   logAudit(req, 'settings.batch_update', 'settings', null, updates);
@@ -3117,7 +3117,6 @@ async function uploadToB2(filePath) {
   if (!process.env.B2_KEY_ID || !process.env.B2_APPLICATION_KEY || !process.env.B2_BUCKET_ID) {
     return;
   }
-  const B2 = require('backblaze-b2');
   const b2 = new B2({
     applicationKeyId: process.env.B2_KEY_ID,
     applicationKey:   process.env.B2_APPLICATION_KEY,
