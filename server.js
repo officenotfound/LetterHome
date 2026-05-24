@@ -1172,10 +1172,12 @@ app.post('/api/track', trackLimiter, (req, res) => {
   if (!order) return res.status(404).json({ error: 'No order found. Double-check your order ID and the email used at checkout.' });
 
   const messages = {
-    paid:      'Payment confirmed — your letter is being prepared for printing.',
-    printing:  'Printing in progress.',
-    mailed:    'Mailed — in transit with Canada Post.',
-    delivered: 'Delivered.',
+    paid:                  'Payment confirmed — your letter is being prepared for printing.',
+    submitted_to_printer:  'Submitted to printer — being prepared for mailing.',
+    printing:              'Printing in progress.',
+    mailed:                'Mailed — in transit with Canada Post.',
+    delivered:             'Delivered.',
+    refunded:              'Refunded.',
   };
 
   res.json({

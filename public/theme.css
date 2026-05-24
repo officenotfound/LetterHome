@@ -19,15 +19,6 @@ body::before {
   background-size: 180px 180px;
 }
 
-/* ── Warm ink palette override (site-wide) ───────────────────────────────────
-   Shift neutral gray-black to warm dark brown to harmonise with kraft paper. */
-:root {
-  --ink:      #261d14;
-  --ink-soft: #362a20;
-  --ink-muted:#6b5e50;
-  --line:     rgba(38,29,20,0.14);
-}
-
 /* ── Cross-browser & device baseline ─────────────────────────────────────────
    Prevents iOS auto-zoom on landscape, removes tap-highlight flash, kills the
    300ms tap delay on older Mobile Safari, gives the OS a colour-scheme hint
@@ -117,12 +108,7 @@ input[type="checkbox"]:focus-visible { outline: 2px solid var(--red); outline-of
   -webkit-overflow-scrolling: touch;
 }
 
-/* ── Color tokens (v0.2.2) ────────────────────────────────────────────────────
-   Swapped from kraft+postmark warm palette to editorial B&W + single red accent.
-   Inspiration: VICE design system — restrained, type-driven, one strategic
-   moment of color. theme.css loads after all inline :root blocks, so these
-   overrides win the cascade for every page that includes it.
-   ─────────────────────────────────────────────────────────────────────────── */
+/* ── Color tokens ─────────────────────────────────────────────────────────── */
 :root {
   --kraft:        #fafafa;   /* off-white background — faint warmth, not clinical */
   --kraft-light:  #f5f5f5;   /* subtle alt section background */
@@ -141,26 +127,7 @@ input[type="checkbox"]:focus-visible { outline: 2px solid var(--red); outline-of
   --shadow-card:  0 2px 6px rgba(0,0,0,0.06), 0 14px 40px rgba(0,0,0,0.10);
 }
 
-/* Override hardcoded nav rgba in every page's inline CSS so the sticky nav
-   matches the new off-white palette (was rgba(241,235,222,0.94) — old kraft). */
 nav { background: rgba(250,250,250,0.92) !important; }
-
-/* Global nav-links styles — baseline for all pages (pages with inline nav-links
-   CSS already match these values; this adds them to pages that didn't have them). */
-.nav-links {
-  display: flex;
-  gap: 36px;
-  align-items: center;
-}
-.nav-links a {
-  color: var(--ink-soft);
-  text-decoration: none;
-  font-size: 14px;
-  font-weight: 500;
-  transition: color 0.2s;
-}
-.nav-links a:hover { color: var(--red); }
-@media (max-width: 900px) { .nav-links { display: none; } }
 
 
 /* ── Dark mode ────────────────────────────────────────────────────────────── */
@@ -315,13 +282,7 @@ textarea:focus {
 .lang-toggle:hover { color: var(--red); border-color: var(--red); }
 .lang-toggle:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
 
-/* ── Design Pass v0.2.1 ──────────────────────────────────────────────────────
-   Editorial polish: bigger and tighter display type, subtle paper texture.
-   theme.css loads after inline <style>, so these rules win same-specificity.
-   ─────────────────────────────────────────────────────────────────────────── */
-
-/* A. Tightened display type (v0.2.4) — compact but still confident.
-   v0.2.1 went 112px / 88px which felt over-large after stripping decoration. */
+/* ── Display type ────────────────────────────────────────────────────────── */
 h1 {
   font-size: clamp(36px, 7vw, 88px);
   letter-spacing: -0.022em;
@@ -337,18 +298,12 @@ h1 {
 .section-head { margin-bottom: 36px !important; }
 .section-head p { margin-top: 12px; }
 
-/* Paper texture removed in v0.2.3 — pure minimalist B&W has no grain. */
-
 /* Strip box-shadows on cards/panels — minimalism uses borders and space, not depth. */
 .price-card, .panel, .form-card, .result, .card { box-shadow: none !important; }
 .price-card:hover { transform: none !important; box-shadow: none !important; }
 .btn:hover, .btn-red:hover, .btn-primary:hover, .btn-outline:hover, .btn-ink:hover { box-shadow: none !important; transform: none !important; }
 
-/* ── Cohesion pass v0.2.10 — enforce site-wide consistency ──────────────────
-   Every public page has its own inline <style> with patterns from the kraft
-   era. These overrides normalize the most visible inconsistencies so all
-   pages read as one site, not eleven slightly-different islands.
-   ─────────────────────────────────────────────────────────────────────────── */
+/* ── Site-wide consistency overrides ─────────────────────────────────────── */
 
 /* Form cards: strip the warm-era soft shadow + cream background */
 .form-card, .result {
@@ -376,9 +331,7 @@ section.story[style], section.story {
 .manifesto { background: var(--kraft-light) !important; border-left: 3px solid var(--red) !important; }
 .manifesto p { color: var(--ink) !important; }
 
-/* Nav: every page has its own inline nav with hardcoded warm kraft blur.
-   The base override "nav { background: rgba(250,250,250,0.92) }" from v0.2.2
-   handles light mode. Make sure the logo mark uses the new red. */
+/* Nav overrides */
 .logo-mark { background: var(--red) !important; box-shadow: none !important; border-radius: 2px !important; width: 44px !important; height: 28px !important; }
 .logo-mark::before { display: block !important; inset: -4px !important; border: 1px dashed rgba(42,42,42,0.35) !important; border-radius: 4px !important; opacity: 1 !important; }
 .logo { font-family: 'DM Serif Display', serif !important; font-style: italic !important; font-size: 38px !important; letter-spacing: -0.02em !important; gap: 12px !important; }
@@ -458,8 +411,6 @@ footer { background: #3d2c1a !important; border-top: 5px solid; border-image: re
   /* Hero CTAs: full-width stacked buttons on small phones */
   .hero-cta { flex-direction: column !important; align-items: stretch !important; gap: 10px !important; }
   .hero-cta .btn-large { width: 100% !important; text-align: center !important; box-sizing: border-box !important; }
-  /* About hero: stack CTA buttons */
-  .hero-cta { flex-direction: column !important; }
 }
 
 /* ── Link underline slide-in animation ───────────────────────────────────── */
