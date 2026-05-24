@@ -2079,6 +2079,17 @@ async function showSettings() {
             </table>`}
         <div id="backup-status" style="font-size:12px;margin-top:10px"></div>
       </div>
+    </div>
+
+    <div class="card" style="max-width:640px;margin-bottom:20px">
+      <div class="card-header"><div class="card-title">Cloudflare Cache</div></div>
+      <div style="padding:20px">
+        <p style="font-size:13px;color:#6b6b6b;margin:0 0 16px;line-height:1.6">Purge all cached assets from Cloudflare's edge. Use this after deploying site changes that aren't showing up due to stale cache. Requires the <code>CF_API_TOKEN</code> to have <strong>Cache Purge</strong> permission.</p>
+        <div style="display:flex;align-items:center;gap:12px">
+          <button class="btn btn-outline" id="cf-purge-btn" onclick="purgeCfCache()">Purge Everything</button>
+          <span id="cf-purge-msg" style="font-size:12px;display:none"></span>
+        </div>
+      </div>
     </div>`);
 
   window._blockedCountries = [...blocked];
@@ -2184,6 +2195,22 @@ async function deleteBackup(filename) {
   const r = await del(`/api/admin/backups/${encodeURIComponent(filename)}`);
   if (r?.ok) showSettings();
   else alert('Delete failed: ' + (r?.error || 'unknown'));
+}
+
+async function purgeCfCache() {
+  if (!confirm('Purge all Cloudflare cached assets? This will briefly increase origin traffic until the cache warms back up.')) return;
+  const btn = document.getElementById('cf-purge-btn');
+  const msg = document.getElementById('cf-purge-msg');
+  btn.disabled = true; btn.textContent = 'Purging…';
+  msg.style.display = 'none';
+  const r = await post('/api/admin/cloudflare/purge', {});
+  btn.disabled = false; btn.textContent = 'Purge Everything';
+  if (r?.ok) {
+    msg.style.color = '#16a34a'; msg.textContent = '✓ Cache purged'; msg.style.display = 'inline';
+    setTimeout(() => { msg.style.display = 'none'; }, 4000);
+  } else {
+    msg.style.color = '#e63946'; msg.textContent = 'Error: ' + (r?.error || 'unknown'); msg.style.display = 'inline';
+  }
 }
 
 function fmtBytes(bytes) {
