@@ -2967,6 +2967,31 @@ app.get('/api/admin/cloudflare/analytics', requireAdmin, async (req, res) => {
   }
 });
 
+// ── Admin: Cloudflare cache purge ─────────────────────────────────────────────
+app.post('/api/admin/cloudflare/purge', requireAdmin, async (req, res) => {
+  const token  = process.env.CF_API_TOKEN;
+  const zoneId = process.env.CF_ZONE_ID;
+  if (!token || !zoneId) return res.status(503).json({ error: 'Cloudflare not configured', configured: false });
+  try {
+    const r = await fetch(`https://api.cloudflare.com/client/v4/zones/${zoneId}/purge_cache`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ purge_everything: true }),
+      signal: AbortSignal.timeout(10000),
+    });
+    const data = await r.json();
+    if (!r.ok || !data.success) {
+      const msg = data.errors?.[0]?.message || `CF API ${r.status}`;
+      return res.status(502).json({ error: msg });
+    }
+    logAudit(req, 'cloudflare_purge', 'cache', null);
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('[CF purge]', e.message);
+    res.status(502).json({ error: e.message });
+  }
+});
+
 // ── Admin: server health ──────────────────────────────────────────────────────
 app.get('/api/admin/server-health', requireAdmin, (req, res) => {
   const mem = process.memoryUsage();
