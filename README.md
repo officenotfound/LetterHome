@@ -1,20 +1,51 @@
+<div align="center">
+
 # Letterhome
 
-> **Send real physical mail to Canada from anywhere in the world.**
-> Write online — we print, stamp, and mail it for you.
+**Postal service for Canadians abroad.**
+Write your letter online — we print, stamp, and drop it in the mail.
+
+[![Node.js](https://img.shields.io/badge/Node.js-22%2B-339933?style=flat-square&logo=node.js&logoColor=white)](https://nodejs.org)
+[![Express](https://img.shields.io/badge/Express-4.x-000000?style=flat-square&logo=express&logoColor=white)](https://expressjs.com)
+[![SQLite](https://img.shields.io/badge/SQLite-built--in-003B57?style=flat-square&logo=sqlite&logoColor=white)](https://nodejs.org/api/sqlite.html)
+[![Stripe](https://img.shields.io/badge/Stripe-Checkout-635BFF?style=flat-square&logo=stripe&logoColor=white)](https://stripe.com)
+[![License](https://img.shields.io/badge/license-private-dc2626?style=flat-square)](LICENSE)
 
 **[letterhome.ca](https://letterhome.ca)**
 
+</div>
+
 ---
 
-## What it is
+## Overview
 
-Letterhome is a postal service for Canadians living abroad. You write your letter online, we print it on quality letter paper, seal it in an envelope, apply Canadian postage, and drop it in the mail — all within one business day.
+Letterhome lets Canadians living abroad send real physical letters back home. Customers write their message online, we print it on quality letter paper, seal the envelope, apply Canadian postage, and mail it — all within one business day.
 
-- **$10 CAD** — anywhere within Canada
-- **$20 CAD** — anywhere in the world (160+ countries)
-- Every order reviewed by a human before printing
-- Delivery in 2 weeks domestic · 4 weeks international
+| | |
+|---|---|
+| **Domestic** | $10 CAD — anywhere within Canada |
+| **International** | $20 CAD — 160+ countries worldwide |
+| **Turnaround** | Within 1 business day of payment |
+| **Delivery** | ~2 weeks domestic · ~4 weeks international |
+
+---
+
+## How It Works
+
+```
+┌─────────────────────────────────────────────────────────┐
+│  Customer fills form  ──→  Stripe Checkout  ──→  Paid   │
+│                                    │                     │
+│              Stripe webhook fires  ↓                     │
+│                           fulfillOrder()                 │
+│                    ┌──────────┴──────────┐               │
+│            Operator email            Customer email      │
+│          (order + files)           (confirmation)        │
+│                    └──────────┬──────────┘               │
+│                               ↓                         │
+│              Operator prints & mails  ──→  Delivered     │
+└─────────────────────────────────────────────────────────┘
+```
 
 ---
 
@@ -22,111 +53,103 @@ Letterhome is a postal service for Canadians living abroad. You write your lette
 
 | Layer | Technology |
 |---|---|
-| Server | Node.js 22+ · Express |
-| Database | SQLite (`node:sqlite` — built-in, no compilation) |
-| Payments | Stripe Checkout |
-| Email | Nodemailer (SMTP) |
-| File uploads | Multer (PDF / DOCX, up to 5 files · 10 MB each) |
-| Frontend | Vanilla HTML/CSS/JS — no framework, no build step |
-| Admin panel | Single-page app (`admin/app.html`) — session auth, bcrypt, TOTP 2FA |
-| Security | Helmet · express-rate-limit · TOTP 2FA · bcrypt · HIBP breach check |
-| Monitoring | Sentry (error tracking) · UptimeRobot (uptime) |
-| Backups | Daily encrypted backup (AES-256-GCM) → Backblaze B2 + email |
-| Address autocomplete | Google Places API |
-| Process manager | PM2 |
-| Reverse proxy | Caddy |
+| **Runtime** | Node.js 22+ |
+| **Framework** | Express 4 |
+| **Database** | SQLite via `node:sqlite` — built-in, zero compilation |
+| **Payments** | Stripe Checkout + webhook verification |
+| **Email** | Nodemailer (SMTP — Gmail, Postmark, Resend, etc.) |
+| **File uploads** | Multer — PDF/DOCX, up to 5 files · 10 MB each |
+| **Admin panel** | Single-page app — session auth, bcrypt passwords, TOTP 2FA |
+| **Security** | Helmet · express-rate-limit · TOTP 2FA · bcrypt · HIBP breach check |
+| **Monitoring** | Sentry (errors) · UptimeRobot (uptime) |
+| **Backups** | Daily AES-256-GCM encrypted backup → Backblaze B2 + email |
+| **i18n** | EN/FR — 313 keys each, no build step |
+| **Frontend** | Vanilla HTML/CSS/JS — no framework, no bundler |
+| **Process manager** | PM2 |
+| **Reverse proxy** | Caddy |
 
 ---
 
-## How it works
-
-```
-Customer fills out form  →  Stripe Checkout  →  Payment confirmed
-        ↓
-  Stripe webhook fires  →  fulfillOrder()
-        ↓
-  Operator email sent (full order + attachments)
-  Customer confirmation email sent
-  Order status updated to "paid"
-        ↓
-  Operator prints & mails within 1 business day
-```
-
----
-
-## Project structure
+## Project Layout
 
 ```
 letterhome/
-├── server.js              # Express backend — all routes & logic
+│
+├── server.js                   # Entire backend — Express routes, DB, cron
 ├── package.json
-├── .env.example           # Environment variable template
-├── orders.db              # SQLite database (gitignored)
+├── .env.example                # All environment variables, documented
+│
 ├── admin/
-│   ├── app.html           # Admin panel SPA (orders, customers, settings, backups)
-│   └── login.html         # Admin login + 2FA
+│   ├── app.html                # Admin SPA — orders, customers, settings, backups
+│   └── login.html              # Login + TOTP 2FA
+│
 ├── public/
-│   ├── index.html         # Landing page
-│   ├── send.html          # Order form (3-step)
-│   ├── account.html       # Customer account (order history, saved recipients)
-│   ├── order-success.html # Post-payment confirmation
-│   ├── track.html         # Order tracking by email + ID
-│   ├── about.html
-│   ├── contact.html
-│   ├── privacy.html
-│   ├── terms.html
-│   ├── refunds.html
-│   ├── lang.js            # EN/FR i18n (313 keys each)
-│   ├── theme.css          # Global style overrides
-│   └── theme.js           # Dark mode toggle
+│   ├── index.html              # Landing page
+│   ├── send.html               # 3-step order form
+│   ├── account.html            # Customer portal — order history, saved recipients
+│   ├── order-success.html      # Post-payment confirmation
+│   ├── track.html              # Order tracking (email + order ID)
+│   ├── about.html / contact.html / privacy.html / terms.html / refunds.html
+│   ├── lang.js                 # EN/FR i18n strings
+│   ├── theme.css               # Global style overrides
+│   └── theme.js                # Dark mode toggle
+│
 ├── scripts/
-│   ├── create-admin.js    # Generate admin credentials + TOTP secret
-│   ├── setup-2fa.js       # Display TOTP QR code for authenticator app
-│   ├── decrypt-backup.js  # Restore an encrypted backup file
-│   └── restore-drill.js   # Full B2 download → decrypt → validate drill
+│   ├── create-admin.js         # Generate admin credentials + TOTP secret
+│   ├── setup-2fa.js            # Print TOTP QR code for authenticator app
+│   ├── decrypt-backup.js       # Restore an encrypted .db.enc backup
+│   └── restore-drill.js        # Full B2 download → decrypt → validate drill
+│
 ├── docs/
-│   └── RUNBOOK.md         # Deploy, restore, admin ops, launch checklist
-├── tests/
+│   └── RUNBOOK.md              # Deploy, restore, ops procedures, launch checklist
+│
 └── .github/workflows/
-    ├── ci.yml             # Lint, validate, security checks on push
-    └── deploy.yml         # Deploy to production VPS
+    ├── ci.yml                  # Lint, validate, security checks on push
+    └── deploy.yml              # Deploy to production VPS
 ```
 
 ---
 
-## API endpoints
+## API Reference
 
-| Method | Path | Description |
+| Method | Endpoint | Description |
 |---|---|---|
-| `GET` | `/health` | DB ping — 200 ok / 503 down |
-| `POST` | `/api/create-order` | Validate form, create DB record, open Stripe Checkout session |
+| `GET` | `/health` | DB ping — `200 ok` / `503 down` |
+| `POST` | `/api/create-order` | Validate form, create DB record, return Stripe Checkout URL |
 | `GET` | `/api/order-status` | Poll order status by Stripe session ID |
-| `POST` | `/api/track` | Track an order by email + order ID |
-| `GET` | `/status/:token` | Public order status page (tokenized) |
-| `POST` | `/api/contact` | Contact form → operator email |
-| `POST` | `/webhook` | Stripe webhook — fires `fulfillOrder()` on `checkout.session.completed` |
+| `POST` | `/api/track` | Look up an order by email + order ID |
+| `GET` | `/status/:token` | Public tokenized order status page |
+| `POST` | `/api/contact` | Contact form submission → operator email |
+| `POST` | `/webhook` | Stripe webhook — `checkout.session.completed` → `fulfillOrder()` |
 
 ---
 
-## Running locally
+## Setup
 
 ```bash
 git clone git@github.com:officenotfound/LetterHome.git
 cd LetterHome
 npm install
 cp .env.example .env
-# Fill in .env — at minimum: SESSION_SECRET, STRIPE_*, SMTP_*
-node scripts/create-admin.js  # creates admin credentials
+```
+
+Edit `.env`, then create your admin account:
+
+```bash
+node scripts/create-admin.js   # sets ADMIN_PASSWORD_HASH + TOTP_SECRET in .env
 node server.js
 ```
 
-Requires **Node.js 22+** (uses the built-in `node:sqlite` module).
+Requires **Node.js 22+** — uses the built-in `node:sqlite` module, no native deps.
 
 ---
 
-## Environment variables
+## Environment Variables
 
-See `.env.example` for the full list with inline documentation. Key groups:
+See `.env.example` for the full list with inline documentation.
+
+<details>
+<summary>Quick reference</summary>
 
 ```env
 # Server
@@ -146,20 +169,20 @@ SMTP_PASS=your-app-password
 EMAIL_FROM="Letterhome <support@letterhome.ca>"
 OPERATOR_EMAIL=support@letterhome.ca
 
-# Admin auth
+# Admin
 SESSION_SECRET=
 ADMIN_USERNAME=admin
-ADMIN_PASSWORD_HASH=      # generated by scripts/create-admin.js
-TOTP_SECRET=              # optional 2FA — generated by scripts/setup-2fa.js
+ADMIN_PASSWORD_HASH=        # → node scripts/create-admin.js
+TOTP_SECRET=                # → node scripts/setup-2fa.js
 
-# Backups (optional but recommended)
-BACKUP_PASSPHRASE=        # AES-256-GCM encryption key for backup files
+# Backups (recommended)
+BACKUP_PASSPHRASE=          # AES-256-GCM key — store outside this repo
 BACKUP_EMAIL_ENABLED=false
 B2_KEY_ID=
 B2_APPLICATION_KEY=
 B2_BUCKET_ID=
 
-# Cloudflare (optional — analytics + cache purge in admin panel)
+# Cloudflare (optional — analytics + cache purge in admin)
 CF_API_TOKEN=
 CF_ZONE_ID=
 
@@ -167,11 +190,13 @@ CF_ZONE_ID=
 SENTRY_DSN=
 ```
 
+</details>
+
 ---
 
 ## Deployment
 
-Production runs on a Linux VPS with **Caddy** as a reverse proxy.
+Production runs on a Linux VPS behind **Caddy**:
 
 ```
 letterhome.ca {
@@ -180,38 +205,36 @@ letterhome.ca {
 }
 ```
 
-Start with PM2:
+**First deploy:**
 ```bash
 npm install --omit=dev
 pm2 start server.js --name letterhome
 pm2 save && pm2 startup
 ```
 
-Deploy:
+**Subsequent deploys:**
 ```bash
-ssh letterhome@<server>
-cd /var/letterhome
 git pull origin main
-npm install --omit=dev
+npm install --omit=dev   # only if package.json changed
 pm2 reload letterhome
 ```
 
-See `docs/RUNBOOK.md` for the full runbook including restore procedures and the launch-day checklist.
+See [`docs/RUNBOOK.md`](docs/RUNBOOK.md) for the full runbook — restore procedures, admin ops, and the launch-day checklist.
 
 ---
 
-## Stripe webhook setup
+## Stripe Webhook
 
-1. Dashboard → Developers → Webhooks → **Add endpoint**
+1. Stripe Dashboard → Developers → Webhooks → **Add endpoint**
 2. URL: `https://letterhome.ca/webhook`
 3. Event: `checkout.session.completed`
-4. Copy the signing secret → `STRIPE_WEBHOOK_SECRET` in `.env`
+4. Paste the signing secret into `STRIPE_WEBHOOK_SECRET` in `.env`
 
 ---
 
-## Countries
+## Excluded Countries
 
-Letters can be sent to **160+ countries**. The following countries are excluded due to postal restrictions or international sanctions:
+Letters can be sent to **160+ countries**. The following are excluded due to postal restrictions or international sanctions:
 
 Afghanistan · Belarus · Burkina Faso · Central African Republic · Eritrea · Haiti · Iraq · Iran · Libya · Mali · Myanmar · North Korea · Russia · Somalia · South Sudan · Sudan · Syria · Yemen · Zimbabwe
 
