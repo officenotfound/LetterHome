@@ -2,8 +2,9 @@
 
 # Letterhome
 
-**Postal service for Canadians abroad.**
-Write your letter online — we print, stamp, and drop it in the mail.
+### Real mail. Sent from Canada. No matter where you are.
+
+You're abroad. Someone back home matters. Letterhome lets you write a real letter online — we print it, seal it, stamp it with Canadian postage, and put it in the mail. All within one business day.
 
 [![Node.js](https://img.shields.io/badge/Node.js-22%2B-339933?style=flat-square&logo=node.js&logoColor=white)](https://nodejs.org)
 [![Express](https://img.shields.io/badge/Express-4.x-000000?style=flat-square&logo=express&logoColor=white)](https://expressjs.com)
@@ -17,16 +18,19 @@ Write your letter online — we print, stamp, and drop it in the mail.
 
 ---
 
-## Overview
+## The Product
 
-Letterhome lets Canadians living abroad send real physical letters back home. Customers write their message online, we print it on quality letter paper, seal the envelope, apply Canadian postage, and mail it — all within one business day.
+Most Canadians living abroad can't easily send a letter home. International postage is a hassle, Canadian stamps aren't available, and printing services don't ship abroad.
+
+Letterhome solves all of that. You fill out a form, write your message (or attach a document), pay once — and a real envelope with a real Canadian stamp shows up in your recipient's mailbox.
 
 | | |
 |---|---|
-| **Domestic** | $10 CAD — anywhere within Canada |
-| **International** | $20 CAD — 160+ countries worldwide |
+| **Domestic** | $10 CAD — anywhere in Canada |
+| **International** | $20 CAD — 160+ countries |
 | **Turnaround** | Within 1 business day of payment |
 | **Delivery** | ~2 weeks domestic · ~4 weeks international |
+| **Human review** | Every order is reviewed before printing |
 
 ---
 
@@ -43,30 +47,33 @@ Letterhome lets Canadians living abroad send real physical letters back home. Cu
 │          (order + files)           (confirmation)        │
 │                    └──────────┬──────────┘               │
 │                               ↓                         │
-│              Operator prints & mails  ──→  Delivered     │
+│            Operator prints, seals, stamps, mails         │
+│                               ↓                         │
+│                    Letter arrives in Canada              │
 └─────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Stack
+## Tech Stack
+
+Built lean and maintainable — no unnecessary dependencies, no build toolchain, no framework overhead.
 
 | Layer | Technology |
 |---|---|
 | **Runtime** | Node.js 22+ |
 | **Framework** | Express 4 |
 | **Database** | SQLite via `node:sqlite` — built-in, zero compilation |
-| **Payments** | Stripe Checkout + webhook verification |
-| **Email** | Nodemailer (SMTP — Gmail, Postmark, Resend, etc.) |
-| **File uploads** | Multer — PDF/DOCX, up to 5 files · 10 MB each |
-| **Admin panel** | Single-page app — session auth, bcrypt passwords, TOTP 2FA |
-| **Security** | Helmet · express-rate-limit · TOTP 2FA · bcrypt · HIBP breach check |
+| **Payments** | Stripe Checkout + cryptographic webhook verification |
+| **Email** | Nodemailer — works with Gmail, Postmark, Resend, etc. |
+| **File uploads** | Multer — PDF/DOCX attachments, up to 5 files · 10 MB each |
+| **Admin panel** | Full SPA — session auth, bcrypt, TOTP 2FA, audit log |
+| **Security** | Helmet · rate limiting · TOTP 2FA · bcrypt · HIBP breach check |
 | **Monitoring** | Sentry (errors) · UptimeRobot (uptime) |
-| **Backups** | Daily AES-256-GCM encrypted backup → Backblaze B2 + email |
-| **i18n** | EN/FR — 313 keys each, no build step |
+| **Backups** | Daily AES-256-GCM encrypted → Backblaze B2 + email |
+| **i18n** | English / French — 313 keys each, runtime-switched |
 | **Frontend** | Vanilla HTML/CSS/JS — no framework, no bundler |
-| **Process manager** | PM2 |
-| **Reverse proxy** | Caddy |
+| **Infra** | PM2 · Caddy · Linux VPS |
 
 ---
 
@@ -75,9 +82,9 @@ Letterhome lets Canadians living abroad send real physical letters back home. Cu
 ```
 letterhome/
 │
-├── server.js                   # Entire backend — Express routes, DB, cron
+├── server.js                   # Entire backend — all routes, DB, cron, auth
 ├── package.json
-├── .env.example                # All environment variables, documented
+├── .env.example                # All environment variables, documented inline
 │
 ├── admin/
 │   ├── app.html                # Admin SPA — orders, customers, settings, backups
@@ -104,7 +111,7 @@ letterhome/
 │   └── RUNBOOK.md              # Deploy, restore, ops procedures, launch checklist
 │
 └── .github/workflows/
-    ├── ci.yml                  # Lint, validate, security checks on push
+    ├── ci.yml                  # Lint, validate, security checks on every push
     └── deploy.yml              # Deploy to production VPS
 ```
 
@@ -116,15 +123,15 @@ letterhome/
 |---|---|---|
 | `GET` | `/health` | DB ping — `200 ok` / `503 down` |
 | `POST` | `/api/create-order` | Validate form, create DB record, return Stripe Checkout URL |
-| `GET` | `/api/order-status` | Poll order status by Stripe session ID |
+| `GET` | `/api/order-status` | Poll status by Stripe session ID |
 | `POST` | `/api/track` | Look up an order by email + order ID |
-| `GET` | `/status/:token` | Public tokenized order status page |
-| `POST` | `/api/contact` | Contact form submission → operator email |
+| `GET` | `/status/:token` | Tokenized public order status page |
+| `POST` | `/api/contact` | Contact form → operator email |
 | `POST` | `/webhook` | Stripe webhook — `checkout.session.completed` → `fulfillOrder()` |
 
 ---
 
-## Setup
+## Running Locally
 
 ```bash
 git clone git@github.com:officenotfound/LetterHome.git
@@ -133,23 +140,23 @@ npm install
 cp .env.example .env
 ```
 
-Edit `.env`, then create your admin account:
+Edit `.env`, then set up your admin account:
 
 ```bash
-node scripts/create-admin.js   # sets ADMIN_PASSWORD_HASH + TOTP_SECRET in .env
+node scripts/create-admin.js   # writes ADMIN_PASSWORD_HASH + TOTP_SECRET to .env
 node server.js
 ```
 
-Requires **Node.js 22+** — uses the built-in `node:sqlite` module, no native deps.
+Requires **Node.js 22+** — uses the built-in `node:sqlite` module, no native compilation.
 
 ---
 
 ## Environment Variables
 
-See `.env.example` for the full list with inline documentation.
+Full documentation is in `.env.example`. Key groups:
 
 <details>
-<summary>Quick reference</summary>
+<summary>Show all variables</summary>
 
 ```env
 # Server
@@ -173,9 +180,9 @@ OPERATOR_EMAIL=support@letterhome.ca
 SESSION_SECRET=
 ADMIN_USERNAME=admin
 ADMIN_PASSWORD_HASH=        # → node scripts/create-admin.js
-TOTP_SECRET=                # → node scripts/setup-2fa.js
+TOTP_SECRET=                # → node scripts/setup-2fa.js (optional)
 
-# Backups (recommended)
+# Backups
 BACKUP_PASSPHRASE=          # AES-256-GCM key — store outside this repo
 BACKUP_EMAIL_ENABLED=false
 B2_KEY_ID=
@@ -212,14 +219,14 @@ pm2 start server.js --name letterhome
 pm2 save && pm2 startup
 ```
 
-**Subsequent deploys:**
+**Redeploy:**
 ```bash
 git pull origin main
-npm install --omit=dev   # only if package.json changed
+npm install --omit=dev   # only when package.json changed
 pm2 reload letterhome
 ```
 
-See [`docs/RUNBOOK.md`](docs/RUNBOOK.md) for the full runbook — restore procedures, admin ops, and the launch-day checklist.
+See [`docs/RUNBOOK.md`](docs/RUNBOOK.md) for the complete runbook — restore procedures, admin ops, and the launch-day checklist.
 
 ---
 
@@ -228,13 +235,13 @@ See [`docs/RUNBOOK.md`](docs/RUNBOOK.md) for the full runbook — restore proced
 1. Stripe Dashboard → Developers → Webhooks → **Add endpoint**
 2. URL: `https://letterhome.ca/webhook`
 3. Event: `checkout.session.completed`
-4. Paste the signing secret into `STRIPE_WEBHOOK_SECRET` in `.env`
+4. Copy the signing secret → `STRIPE_WEBHOOK_SECRET` in `.env`
 
 ---
 
 ## Excluded Countries
 
-Letters can be sent to **160+ countries**. The following are excluded due to postal restrictions or international sanctions:
+Available in **160+ countries**. The following are excluded due to postal restrictions or international sanctions:
 
 Afghanistan · Belarus · Burkina Faso · Central African Republic · Eritrea · Haiti · Iraq · Iran · Libya · Mali · Myanmar · North Korea · Russia · Somalia · South Sudan · Sudan · Syria · Yemen · Zimbabwe
 
@@ -242,4 +249,4 @@ Afghanistan · Belarus · Burkina Faso · Central African Republic · Eritrea ·
 
 ## License
 
-Private — all rights reserved.
+Private — all rights reserved. &copy; Letterhome
