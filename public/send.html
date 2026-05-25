@@ -4,10 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="/ga.js"></script>
+<script src="/cookie-consent.js" defer></script>
 <title>Send a Letter from Canada — Letterhome</title>
 <meta name="description" content="Send a real letter or document from Canada. We print it in full colour, seal it, and mail it via Canada Post. Domestic $10 CAD · International $20 CAD. No account needed.">
 <link rel="canonical" href="https://letterhome.ca/send">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/favicon.svg">
 <meta name="theme-color" content="#f1ebde" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#1a1410" media="(prefers-color-scheme: dark)">
 <meta property="og:image" content="https://letterhome.ca/og-image.png">
@@ -402,6 +405,7 @@ textarea.field-error { border-color: var(--red) !important; }
 <link rel="stylesheet" href="/theme.css">
 </head>
 <body>
+<a href="#main-content" class="skip-link" style="position:absolute;left:-9999px;top:4px;z-index:9999;background:#a8472d;color:#faf6ec;padding:8px 16px;font-size:14px;font-family:Georgia,serif;text-decoration:none;border-radius:2px" onfocus="this.style.left='4px'" onblur="this.style.left='-9999px'">Skip to main content</a>
 
 <nav>
   <div class="nav-inner">
@@ -425,7 +429,7 @@ textarea.field-error { border-color: var(--red) !important; }
 </nav>
 
 <!-- PROGRESS -->
-<div class="progress-wrap">
+<div class="progress-wrap" id="main-content">
   <div class="progress-inner">
     <div class="progress-steps">
       <div class="progress-step">
@@ -974,7 +978,14 @@ function setupAuto(inputId, prefix) {
 
   const drop   = document.createElement('ul');
   drop.className = 'ac-drop';
+  drop.setAttribute('role', 'listbox');
+  drop.id = inputId + '-ac-list';
   wrap.appendChild(drop);
+
+  input.setAttribute('role', 'combobox');
+  input.setAttribute('aria-autocomplete', 'list');
+  input.setAttribute('aria-expanded', 'false');
+  input.setAttribute('aria-owns', inputId + '-ac-list');
 
   const svc    = new google.maps.places.AutocompleteService();
   const detSvc = new google.maps.places.PlacesService(document.createElement('div'));
@@ -985,20 +996,26 @@ function setupAuto(inputId, prefix) {
   input.addEventListener('input', () => {
     clearTimeout(timer);
     const q = input.value.trim();
-    if (q.length < 3) { drop.innerHTML = ''; return; }
+    if (q.length < 3) { drop.innerHTML = ''; input.setAttribute('aria-expanded', 'false'); return; }
     timer = setTimeout(() => {
       const seq = ++reqSeq;
       svc.getPlacePredictions({ input: q, types: ['address'], sessionToken }, (preds, status) => {
         if (seq !== reqSeq) return;
         drop.innerHTML = '';
-        if (status !== google.maps.places.PlacesServiceStatus.OK || !preds) return;
+        if (status !== google.maps.places.PlacesServiceStatus.OK || !preds) {
+          input.setAttribute('aria-expanded', 'false');
+          return;
+        }
+        input.setAttribute('aria-expanded', 'true');
         preds.forEach(pred => {
           const li = document.createElement('li');
           li.className = 'ac-item';
+          li.setAttribute('role', 'option');
           li.textContent = pred.description;
           li.addEventListener('mousedown', e => {
             e.preventDefault();
             drop.innerHTML = '';
+            input.setAttribute('aria-expanded', 'false');
             input.value = pred.structured_formatting.main_text;
             detSvc.getDetails(
               { placeId: pred.place_id, fields: ['address_components'], sessionToken },
@@ -1016,7 +1033,10 @@ function setupAuto(inputId, prefix) {
   });
 
   document.addEventListener('click', e => {
-    if (!wrap.contains(e.target)) drop.innerHTML = '';
+    if (!wrap.contains(e.target)) {
+      drop.innerHTML = '';
+      input.setAttribute('aria-expanded', 'false');
+    }
   });
 }
 
@@ -1148,10 +1168,11 @@ function showValidationBanner(msg) {
     banner = document.createElement('div');
     banner.id = 'validation-banner';
     banner.className = 'validation-banner';
+    banner.setAttribute('role', 'alert');
+    banner.setAttribute('aria-live', 'assertive');
     document.body.appendChild(banner);
   }
   banner.textContent = msg;
-  // Auto-dismiss after 6 seconds
   clearTimeout(banner._dismissTimer);
   banner._dismissTimer = setTimeout(() => banner.remove(), 6000);
 }
@@ -1172,7 +1193,13 @@ async function submitOrder() {
 
   const btn = document.querySelector('[onclick="submitOrder()"]');
   btn.disabled = true;
-  btn.textContent = LH_T('send.processing');
+  btn.innerHTML = `<span style="display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,0.4);border-top-color:#fff;border-radius:50%;animation:lh-spin 0.7s linear infinite;vertical-align:middle;margin-right:8px"></span>${LH_T('send.processing')}`;
+  if (!document.getElementById('lh-spin-style')) {
+    const st = document.createElement('style');
+    st.id = 'lh-spin-style';
+    st.textContent = '@keyframes lh-spin{to{transform:rotate(360deg)}}';
+    document.head.appendChild(st);
+  }
 
   const form = new FormData();
   const ids = ['skip-return','s-name','s-street','s-city','s-province','s-postal','s-country',
@@ -1195,7 +1222,7 @@ async function submitOrder() {
   } catch (err) {
     btn.disabled = false;
     btn.textContent = LH_T('send.btn.pay');
-    alert(LH_T('send.err.submit'));
+    showValidationBanner(LH_T('send.err.submit'));
   }
 }
 </script>
