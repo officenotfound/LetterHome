@@ -170,54 +170,53 @@ textarea{resize:vertical;min-height:120px;border:1px solid #111111;padding:12px 
 .back-link{display:inline-flex;align-items:center;gap:6px;color:#6b6b6b;font-size:10px;cursor:pointer;background:none;border:none;margin-bottom:24px;padding:0;font-family:'DM Mono',ui-monospace,monospace;text-transform:uppercase;letter-spacing:0.15em}
 .back-link:hover{color:#e63946}
 /* ── Arcade cabinets ── */
-.arcade-hall{display:flex;gap:22px;flex-wrap:wrap;margin-bottom:36px}
-.arcade-cabinet{width:168px;cursor:pointer;user-select:none;position:relative;transition:transform 0.1s steps(3),filter 0.15s}
-.arcade-cabinet:hover{transform:translateY(-6px);filter:brightness(1.18) drop-shadow(0 0 20px var(--cc))}
-.arcade-cabinet.inserting .ac-screen{animation:ac-flash 0.1s steps(2) 4}
-@keyframes ac-flash{0%,100%{opacity:1}50%{opacity:0.07}}
+.arcade-hall{display:flex;gap:30px;flex-wrap:wrap;margin-bottom:36px}
+.arcade-cabinet{width:160px;cursor:pointer;user-select:none;position:relative;overflow:visible;transition:transform 0.1s steps(3),filter 0.15s}
+.arcade-cabinet:hover{transform:translateY(-6px);filter:drop-shadow(0 0 16px var(--cc)) drop-shadow(0 5px 14px rgba(0,0,0,0.8))}
+.arcade-cabinet.inserting .ac-screen{animation:ac-flash 0.08s steps(2) 5}
+@keyframes ac-flash{0%,100%{opacity:1}50%{opacity:0.05}}
 @keyframes ac-blink{0%,100%{opacity:1}50%{opacity:0}}
-/* Cabinet body — dark wood */
-.ac-body{background:#160e05;border:2px solid #080402;border-radius:10px 10px 3px 3px;overflow:hidden;box-shadow:inset 5px 0 0 #2a1408,inset -5px 0 0 #2a1408,inset 0 0 0 1px rgba(255,255,255,0.04),0 10px 40px rgba(0,0,0,0.7),0 2px 0 #000}
-/* Marquee */
-.ac-marquee{background:#06060a;padding:10px 10px 9px;text-align:center;position:relative;border-bottom:2px solid var(--cc)}
-.ac-marquee::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--cc);box-shadow:0 0 12px var(--cc),0 0 30px var(--cc)}
-.ac-name{font-family:'Press Start 2P',monospace;font-size:6px;color:var(--cc);text-shadow:0 0 6px var(--cc),0 0 20px var(--cc);text-transform:uppercase;line-height:1.7;word-break:break-all}
-.ac-sub{font-family:'Press Start 2P',monospace;font-size:4px;color:rgba(255,255,255,0.28);text-transform:uppercase;margin-top:5px;line-height:1.6}
-/* Monitor housing */
-.ac-monitor-wrap{background:#100c08;padding:8px 10px}
-/* Bezel */
-.ac-bezel{background:#080808;border:3px solid #1c1c1c;border-radius:4px;padding:6px;position:relative;box-shadow:inset 0 0 10px rgba(0,0,0,0.95),0 0 0 1px #000}
-/* Rivets */
-.ac-rivet{position:absolute;width:4px;height:4px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#404040,#181818);border:1px solid #080808}
-.ac-rivet:nth-child(1){top:3px;left:3px}
-.ac-rivet:nth-child(2){top:3px;right:3px}
-.ac-rivet:nth-child(3){bottom:3px;left:3px}
-.ac-rivet:nth-child(4){bottom:3px;right:3px}
-/* Screen */
-.ac-screen{background:#010203;aspect-ratio:3/4;position:relative;overflow:hidden;border-radius:2px;box-shadow:0 0 0 1px #000}
+/* ── Marquee (gold caps + dark center) ── */
+.ac-marquee{display:flex;align-items:stretch;border:2px solid #000}
+.ac-mcap{width:14px;flex-shrink:0;background:#c8922a;box-shadow:inset -2px 0 0 rgba(0,0,0,0.25),inset 2px 0 0 rgba(255,255,255,0.12)}
+.ac-marquee-mid{flex:1;background:#111;padding:9px 5px 8px;text-align:center;border-top:3px solid var(--cc);box-shadow:0 0 18px var(--cc) inset}
+.ac-name{font-family:'Press Start 2P',monospace;font-size:6px;color:var(--cc);text-shadow:0 0 8px var(--cc),0 0 22px var(--cc);text-transform:uppercase;line-height:1.7;word-break:break-all}
+.ac-sub{font-family:'Press Start 2P',monospace;font-size:4px;color:rgba(255,255,255,0.28);margin-top:5px;text-transform:uppercase;line-height:1.6}
+/* ── Body (gold pillars + colored inner) ── */
+.ac-body{display:flex;align-items:stretch;border:2px solid #000;margin-top:-2px;position:relative;z-index:1}
+.ac-pillar{width:14px;flex-shrink:0;background:#c8922a;box-shadow:inset -3px 0 0 rgba(0,0,0,0.22),inset 3px 0 0 rgba(255,255,255,0.1)}
+.ac-inner{flex:1;background:var(--cc);padding:7px 5px 5px;display:flex;flex-direction:column}
+/* ── Bezel: gold frame → black frame → screen ── */
+.ac-bezel{background:#c8922a;padding:5px;border:2px solid #000}
+.ac-bezel-dark{background:#111;padding:3px}
+.ac-screen{background:#010203;aspect-ratio:4/3;position:relative;overflow:hidden}
 .ac-crt,.ac-crt-ov{position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 1px,rgba(0,0,0,0.2) 1px,rgba(0,0,0,0.2) 2px);pointer-events:none;z-index:5}
-.ac-vignette{position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 48%,rgba(0,0,0,0.85) 100%);pointer-events:none;z-index:6}
-.ac-screen-inner{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:8px;position:relative;z-index:1}
-.ac-hs-lbl{font-family:'Press Start 2P',monospace;font-size:4px;color:rgba(255,255,255,0.28);text-transform:uppercase;letter-spacing:0.05em}
-.ac-hs-val{font-family:'Press Start 2P',monospace;font-size:9px;color:#fff;text-shadow:0 0 10px var(--cc);letter-spacing:0.02em;margin-bottom:3px}
-.ac-icon{font-size:22px;line-height:1;filter:drop-shadow(0 0 5px var(--cc));image-rendering:pixelated}
-.ac-coin-blink{font-family:'Press Start 2P',monospace;font-size:4px;color:#ffff00;text-shadow:0 0 6px #ffff00,0 0 14px #ffff00;animation:ac-blink 1.1s step-end infinite;margin-top:7px;text-transform:uppercase}
-/* Control panel */
-.ac-panel{background:#120e06;border-top:2px solid #2a1e0a}
-.ac-panel-inner{background:#161008;display:flex;align-items:center;justify-content:center;gap:14px;padding:8px 12px 10px}
-/* Joystick */
-.ac-joystick{position:relative;width:22px;height:22px;flex-shrink:0}
-.ac-js-base{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:18px;height:9px;background:#201c10;border:1px solid #382e18;border-radius:2px;box-shadow:0 2px 0 #080604}
-.ac-js-shaft{position:absolute;bottom:7px;left:50%;transform:translateX(-50%);width:4px;height:13px;background:linear-gradient(90deg,#484030,#888060,#484030);border-radius:2px 2px 0 0}
-.ac-js-ball{position:absolute;top:0;left:50%;transform:translateX(-50%);width:10px;height:10px;background:radial-gradient(circle at 35% 35%,#909070,#383820);border-radius:50%;border:1px solid #181808}
-/* Buttons */
+.ac-vignette{position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 45%,rgba(0,0,0,0.88) 100%);pointer-events:none;z-index:6}
+.ac-screen-inner{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:5px;position:relative;z-index:1}
+.ac-hs-lbl{font-family:'Press Start 2P',monospace;font-size:4px;color:rgba(255,255,255,0.3);text-transform:uppercase}
+.ac-hs-val{font-family:'Press Start 2P',monospace;font-size:8px;color:#fff;text-shadow:0 0 8px var(--cc);margin-bottom:2px}
+.ac-icon{font-size:18px;line-height:1;filter:drop-shadow(0 0 4px var(--cc))}
+.ac-coin-blink{font-family:'Press Start 2P',monospace;font-size:4px;color:#ffff00;text-shadow:0 0 6px #ffff00;animation:ac-blink 1.1s step-end infinite;margin-top:5px;text-transform:uppercase}
+/* Button row below screen (inside body, above control deck) */
+.ac-body-btns{display:flex;justify-content:center;gap:8px;padding:5px 2px 0}
+.ac-abtn{width:9px;height:9px;background:#cc2020;border:2px solid #000;border-bottom:3px solid #881010}
+/* ── Control deck: wider than body, juts out each side ── */
+.ac-deck{background:#6a7090;border:2px solid #000;margin:-2px -14px 0;padding:7px 14px 9px;display:flex;align-items:center;justify-content:space-around;position:relative;z-index:2}
+.ac-deck-top{position:absolute;top:0;left:0;right:0;height:3px;background:#8a90b0}
+/* ── Joystick (CSS pixel art) ── */
+.ac-joystick{position:relative;width:18px;height:20px;flex-shrink:0}
+.ac-js-base{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:14px;height:8px;background:#4a5070;border:2px solid #000}
+.ac-js-shaft{position:absolute;bottom:6px;left:50%;transform:translateX(-50%);width:3px;height:12px;background:#999;border-left:1px solid #666;border-right:1px solid #bbb}
+.ac-js-ball{position:absolute;top:0;left:50%;transform:translateX(-50%);width:8px;height:8px;background:radial-gradient(circle at 35% 30%,#ddd,#888);border:2px solid #000;border-radius:50%}
+/* Deck buttons (square, pixel art style) */
 .ac-btns{display:flex;gap:5px;align-items:center}
-.ac-btn{width:13px;height:13px;border-radius:50%;background:radial-gradient(circle at 38% 32%,rgba(255,255,255,0.25),var(--cc));box-shadow:0 3px 0 rgba(0,0,0,0.7),0 0 8px var(--cc),inset 0 -2px 0 rgba(0,0,0,0.35);border:1px solid rgba(0,0,0,0.6)}
-.ac-btn-sm{width:9px;height:9px;opacity:0.6}
-/* Kickplate */
-.ac-kickplate{background:#0e0904;border-top:2px solid #281a08;padding:6px 8px 9px;display:flex;flex-direction:column;align-items:center;gap:4px}
-.ac-slot{width:28px;height:4px;background:#040202;border:1px solid #1c1208;border-radius:1px;box-shadow:inset 0 2px 3px rgba(0,0,0,0.95)}
-.ac-plays{font-family:'Press Start 2P',monospace;font-size:4px;color:rgba(255,255,255,0.16);text-transform:uppercase;letter-spacing:0.05em}
+.ac-btn{width:10px;height:10px;background:var(--cc);border:2px solid #000;border-bottom:3px solid rgba(0,0,0,0.5)}
+.ac-btn-sm{width:8px;height:8px;opacity:0.65}
+/* ── Kickplate with coin door ── */
+.ac-kickplate{background:var(--cc);border:2px solid #000;border-top:none;padding:6px 8px 8px;display:flex;align-items:center;gap:8px}
+.ac-coin-door{background:#4a5060;border:2px solid #000;padding:3px 5px;display:flex;align-items:center;justify-content:center;min-width:34px}
+.ac-slot{width:14px;height:3px;background:#111;border:1px solid #333}
+.ac-plays{font-family:'Press Start 2P',monospace;font-size:4px;color:rgba(0,0,0,0.3);text-transform:uppercase;margin-left:auto}
 /* ── Arcade modal ── */
 #arcade-modal.am-open{opacity:1!important}
 #arcade-modal-inner{display:flex;flex-direction:column;border-radius:2px;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,0.5)}
@@ -2670,43 +2669,47 @@ async function loadHallOfFame() {
 // ── Cabinet HTML ──────────────────────────────────────────────────────────────
 function cabinetHTML(cab) {
   return `<div class="arcade-cabinet" data-game="${cab.key}" style="--cc:${cab.color}" onclick="insertCoin('${cab.key}')">
-  <div class="ac-body">
-    <div class="ac-marquee">
+  <div class="ac-marquee">
+    <div class="ac-mcap"></div>
+    <div class="ac-marquee-mid">
       <div class="ac-name">${cab.name}</div>
       <div class="ac-sub">${cab.sub}</div>
     </div>
-    <div class="ac-monitor-wrap">
+    <div class="ac-mcap"></div>
+  </div>
+  <div class="ac-body">
+    <div class="ac-pillar"></div>
+    <div class="ac-inner">
       <div class="ac-bezel">
-        <div class="ac-rivet"></div><div class="ac-rivet"></div><div class="ac-rivet"></div><div class="ac-rivet"></div>
-        <div class="ac-screen">
-          <div class="ac-screen-inner">
-            <div class="ac-hs-lbl">HI-SCORE</div>
-            <div class="ac-hs-val" id="cab-hs-${cab.key}">000000</div>
-            <div class="ac-icon">${cab.icon}</div>
-            <div class="ac-coin-blink">INSERT COIN</div>
+        <div class="ac-bezel-dark">
+          <div class="ac-screen">
+            <div class="ac-screen-inner">
+              <div class="ac-hs-lbl">HI-SCORE</div>
+              <div class="ac-hs-val" id="cab-hs-${cab.key}">000000</div>
+              <div class="ac-icon">${cab.icon}</div>
+              <div class="ac-coin-blink">INSERT COIN</div>
+            </div>
+            <div class="ac-crt"></div>
+            <div class="ac-vignette"></div>
           </div>
-          <div class="ac-crt"></div>
-          <div class="ac-vignette"></div>
         </div>
       </div>
-    </div>
-    <div class="ac-panel">
-      <div class="ac-panel-inner">
-        <div class="ac-joystick">
-          <div class="ac-js-ball"></div>
-          <div class="ac-js-shaft"></div>
-          <div class="ac-js-base"></div>
-        </div>
-        <div class="ac-btns">
-          <div class="ac-btn"></div>
-          <div class="ac-btn ac-btn-sm"></div>
-        </div>
+      <div class="ac-body-btns">
+        <div class="ac-abtn"></div>
+        <div class="ac-abtn"></div>
       </div>
     </div>
-    <div class="ac-kickplate">
-      <div class="ac-slot"></div>
-      <div class="ac-plays" id="cab-plays-${cab.key}">0 PLAYS</div>
-    </div>
+    <div class="ac-pillar"></div>
+  </div>
+  <div class="ac-deck">
+    <div class="ac-deck-top"></div>
+    <div class="ac-joystick"><div class="ac-js-ball"></div><div class="ac-js-shaft"></div><div class="ac-js-base"></div></div>
+    <div class="ac-btns"><div class="ac-btn"></div><div class="ac-btn ac-btn-sm"></div></div>
+    <div class="ac-joystick"><div class="ac-js-ball"></div><div class="ac-js-shaft"></div><div class="ac-js-base"></div></div>
+  </div>
+  <div class="ac-kickplate">
+    <div class="ac-coin-door"><div class="ac-slot"></div></div>
+    <div class="ac-plays" id="cab-plays-${cab.key}">0 PLAYS</div>
   </div>
 </div>`;
 }
