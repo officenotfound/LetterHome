@@ -1,28 +1,18 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en-CA">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Page Not Found — Letterhome</title>
+<title>Something went wrong — Letterhome</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="manifest" href="/manifest.json">
 <link rel="apple-touch-icon" href="/favicon.svg">
 <meta name="theme-color" content="#f1ebde" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#1a1410" media="(prefers-color-scheme: dark)">
-<meta property="og:title" content="Page Not Found — Letterhome">
-<meta property="og:description" content="The page you're looking for doesn't exist. Head back to Letterhome to send a letter home.">
-<meta property="og:type" content="website">
-<meta property="og:site_name" content="Letterhome">
-<meta property="og:image" content="https://letterhome.ca/og-image.png">
 <link rel="stylesheet" href="/fonts.css">
 <style>
-:root {
-  --kraft:#f1ebde;--kraft-light:#f7f2e6;--paper:#faf6ec;
-  --ink:#2a2a2a;--ink-soft:#3a3835;--ink-muted:#6b6258;--ink-faint:#968b7d;
-  --red:#a8472d;--red-deep:#7d3220;--red-stamp:#b85540;
-  --line:rgba(42,42,42,0.14);--shadow-card:0 2px 6px rgba(42,42,42,0.06),0 14px 40px rgba(42,42,42,0.1);
-}
+:root{--kraft:#f1ebde;--kraft-light:#f7f2e6;--paper:#faf6ec;--ink:#2a2a2a;--ink-soft:#3a3835;--ink-muted:#6b6258;--ink-faint:#968b7d;--red:#a8472d;--red-deep:#7d3220;--red-stamp:#b85540;--line:rgba(42,42,42,0.14);--shadow-card:0 2px 6px rgba(42,42,42,0.06),0 14px 40px rgba(42,42,42,0.1)}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Source Serif 4',Georgia,serif;background:var(--kraft);color:var(--ink);line-height:1.55;min-height:100vh;display:flex;flex-direction:column}
 nav{position:sticky;top:0;z-index:100;background:rgba(241,235,222,0.94);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
@@ -54,52 +44,36 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:40px 36px;posi
 @media(max-width:480px){.actions{gap:12px}}
 </style>
 <script>(function(){try{var t=localStorage.getItem('lh-theme')||'light';document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
-<script>(function(){try{var l=localStorage.getItem('lh-lang')||'en';document.documentElement.setAttribute('data-lang',l);}catch(e){}})();</script>
 <link rel="stylesheet" href="/theme.css">
 </head>
 <body>
-<a href="#main-content" class="skip-link" style="position:absolute;left:-9999px;top:4px;z-index:9999;background:#a8472d;color:#faf6ec;padding:8px 16px;font-size:14px;font-family:Georgia,serif;text-decoration:none;border-radius:2px" onfocus="this.style.left='4px'" onblur="this.style.left='-9999px'">Skip to main content</a>
+<a href="#main-content" class="skip-link" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;z-index:9999;background:var(--red);color:var(--paper);padding:8px 16px;border-radius:2px;font-size:14px;text-decoration:none">Skip to main content</a>
 <nav>
   <div class="nav-inner">
-    <a href="/" class="logo"><span class="logo-mark"><svg width="22" height="14" viewBox="0 0 22 14" fill="none" stroke="white" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2 2"><rect x="1" y="1" width="20" height="12" rx="1"/><path d="M1 1.5l10 8 10-8"/></svg></span><span class="logo-wordmark">Letter<span class="logo-accent">home</span></span></a>
-    <div class="nav-links">
-      <a href="/#how" data-i18n="nav.how">How it works</a>
-      <a href="/#pricing" data-i18n="nav.pricing">Pricing</a>
-      <a href="/about" data-i18n="nav.about">About</a>
-      <a href="/contact" data-i18n="nav.contact">Contact</a>
-    </div>
-    <div class="nav-right">
-      <button type="button" class="lang-toggle" onclick="toggleLang()" aria-label="Toggle language">FR</button>
-      <button type="button" class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode" title="Toggle dark mode">
-        <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41"/></svg>
-        <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-      </button>
-      <a href="/send" class="btn btn-red nav-cta" data-i18n="nav.send">Send a letter</a>
-    </div>
+    <a href="/" class="logo"><span class="logo-mark"><svg width="22" height="14" viewBox="0 0 22 14" fill="none" stroke="white" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2 2"><rect x="1" y="1" width="20" height="12" rx="1"/><path d="M1 1.5l10 8 10-8"/></svg></span><span>Letter<span style="font-style:italic">home</span></span></a>
   </div>
 </nav>
 
-<div class="main" id="main-content">
-  <div class="stamp"><span class="stamp-num">404</span></div>
-  <div class="eyebrow" data-i18n="404.eyebrow">Lost in the post</div>
-  <h1 data-i18n-html="404.h1">This page <em>got lost</em> somewhere.</h1>
-  <p class="sub" data-i18n="404.sub">The link may have moved or never existed. Either way, it didn't make it to its destination — much like a letter without a return address.</p>
+<main id="main-content" class="main">
+  <div class="stamp" aria-hidden="true"><span class="stamp-num">500</span></div>
+  <div class="eyebrow">Server error</div>
+  <h1>Something went <em>wrong.</em></h1>
+  <p class="sub">Our server ran into an unexpected problem. We've been notified and will look into it. Your order or account has not been affected.</p>
   <div class="actions">
-    <a href="/send" class="btn btn-red" data-i18n="404.send">Send a letter</a>
-    <a href="/" class="btn btn-outline" data-i18n="404.back">Back to Letterhome</a>
+    <a href="/" class="btn btn-red">Back to home</a>
+    <a href="/contact" class="btn btn-outline">Contact us</a>
   </div>
-</div>
+</main>
 
 <footer>
   <div class="footer-bottom">
     <div>© 2026 Letterhome</div>
     <div class="footer-bottom-links">
-      <a href="/privacy" data-i18n="footer.privacy">Privacy</a>
-      <a href="/terms" data-i18n="footer.terms">Terms</a>
+      <a href="/privacy">Privacy</a>
+      <a href="/terms">Terms</a>
     </div>
   </div>
 </footer>
 <script src="/theme.js"></script>
-<script src="/lang.js"></script>
 </body>
 </html>

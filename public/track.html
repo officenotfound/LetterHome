@@ -4,10 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="/ga.js"></script>
+<script src="/cookie-consent.js" defer></script>
 <title>Track Your Order — Letterhome</title>
 <meta name="description" content="Check the status of your Letterhome order. Enter your order number and email address to see where your letter is.">
 <link rel="canonical" href="https://letterhome.ca/track">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/favicon.svg">
 <meta name="theme-color" content="#f1ebde" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#1a1410" media="(prefers-color-scheme: dark)">
 <meta name="robots" content="noindex, follow">
@@ -78,6 +81,7 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:48px 36px 32px
 <link rel="stylesheet" href="/theme.css">
 </head>
 <body>
+<a href="#main-content" class="skip-link" style="position:absolute;left:-9999px;top:4px;z-index:9999;background:#a8472d;color:#faf6ec;padding:8px 16px;font-size:14px;font-family:Georgia,serif;text-decoration:none;border-radius:2px" onfocus="this.style.left='4px'" onblur="this.style.left='-9999px'">Skip to main content</a>
 <nav>
   <div class="nav-inner">
     <a href="/" class="logo"><span class="logo-mark"><svg width="22" height="14" viewBox="0 0 22 14" fill="none" stroke="white" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2 2"><rect x="1" y="1" width="20" height="12" rx="1"/><path d="M1 1.5l10 8 10-8"/></svg></span><span class="logo-wordmark">Letter<span class="logo-accent">home</span></span></a>
@@ -98,7 +102,7 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:48px 36px 32px
   </div>
 </nav>
 
-<div class="main">
+<div class="main" id="main-content">
   <div class="eyebrow" data-i18n="track.eyebrow">Order tracking</div>
   <h1 data-i18n="track.h1">Check on your letter.</h1>
   <p class="intro" data-i18n="track.intro">Enter the order number from your confirmation email and the email address you used at checkout.</p>

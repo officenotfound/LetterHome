@@ -417,6 +417,19 @@ try {
   db.exec(`CREATE INDEX IF NOT EXISTS idx_tetris_score ON tetris_scores(score DESC)`);
 } catch (e) { console.error('[init] tetris_scores table:', e.message); }
 
+try {
+  db.exec(`CREATE TABLE IF NOT EXISTS arcade_scores (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    game       TEXT NOT NULL,
+    username   TEXT NOT NULL,
+    score      INTEGER NOT NULL,
+    lines      INTEGER DEFAULT 0,
+    level      INTEGER DEFAULT 1,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  )`);
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_arcade_score ON arcade_scores(game, score DESC)`);
+} catch (e) { console.error('[init] arcade_scores table:', e.message); }
+
 // ── IP geolocation (server-side, in-memory cached) ───────────────────────────
 const ipCountryCache = new Map();
 const IP_CACHE_TTL_MS = 24 * 3600 * 1000;
@@ -836,9 +849,9 @@ app.get('/status/:token', (req, res) => {
 app.use(express.static('public', {
   setHeaders(res, filePath) {
     if (filePath.endsWith('.html')) {
-      res.setHeader('Cache-Control', 'public, max-age=0');
-    } else if (filePath.endsWith('.css') || filePath.endsWith('.js')) {
       res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
+    } else if (filePath.endsWith('.css') || filePath.endsWith('.js')) {
+      res.setHeader('Cache-Control', 'public, max-age=86400');
     } else {
       res.setHeader('Cache-Control', 'public, max-age=604800');
     }
@@ -851,13 +864,16 @@ app.get('/ga.js', (req, res) => {
   res.setHeader('Content-Type', 'application/javascript');
   res.setHeader('Cache-Control', 'public, max-age=3600');
   res.send(`
-window.dataLayer=window.dataLayer||[];
-function gtag(){dataLayer.push(arguments);}
-gtag('js',new Date());
-gtag('config','${id}');
-(function(){var s=document.createElement('script');s.async=true;
-s.src='https://www.googletagmanager.com/gtag/js?id=${id}';
-document.head.appendChild(s);})();
+(function(){
+  try{if(localStorage.getItem('lh-analytics-consent')!=='yes')return;}catch(e){return;}
+  window.dataLayer=window.dataLayer||[];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js',new Date());
+  gtag('config','${id}');
+  (function(){var s=document.createElement('script');s.async=true;
+  s.src='https://www.googletagmanager.com/gtag/js?id=${id}';
+  document.head.appendChild(s);})();
+})();
 `.trim());
 });
 
@@ -954,7 +970,10 @@ const orderLimiter = rateLimit({
   max: 8,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { error: 'Too many requests from this IP. Please try again in an hour.' },
+  handler: (req, res) => {
+    res.set('Retry-After', '3600');
+    res.status(429).json({ error: 'Too many requests from this IP. Please try again in an hour.' });
+  },
 });
 
 const contactLimiter = rateLimit({
@@ -962,7 +981,10 @@ const contactLimiter = rateLimit({
   max: 5,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { error: 'Too many messages sent. Please try again later.' },
+  handler: (req, res) => {
+    res.set('Retry-After', '3600');
+    res.status(429).json({ error: 'Too many messages sent. Please try again in an hour.' });
+  },
 });
 
 const loginLimiter = rateLimit({
@@ -1268,6 +1290,40 @@ app.post('/api/admin/tetris/scores', requireAdmin, (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// ── Arcade scores (all 5 games) ───────────────────────────────────────────────
+app.get('/api/admin/arcade/scores/:game', requireAdmin, (req, res) => {
+  try {
+    const rows = db.prepare(
+      'SELECT username, score, lines, level, created_at FROM arcade_scores WHERE game = ? ORDER BY score DESC LIMIT 10'
+    ).all(req.params.game);
+    res.json(rows);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/admin/arcade/scores/:game', requireAdmin, (req, res) => {
+  try {
+    const { score, lines, level } = req.body;
+    if (typeof score !== 'number' || score < 0) return res.status(400).json({ error: 'Invalid score' });
+    const info = db.prepare(
+      'INSERT INTO arcade_scores (game, username, score, lines, level) VALUES (?,?,?,?,?)'
+    ).run(req.params.game, req.session.admin.username, Math.round(score), Math.round(lines || 0), Math.round(level || 1));
+    res.json({ id: info.lastInsertRowid });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/admin/arcade/hall-of-fame', requireAdmin, (req, res) => {
+  try {
+    const games = ['tetris', 'snake', 'breakout', 'invaders', 'postbird'];
+    const result = {};
+    for (const game of games) {
+      result[game] = db.prepare(
+        'SELECT username, score FROM arcade_scores WHERE game = ? ORDER BY score DESC LIMIT 1'
+      ).get(game) || null;
+    }
+    res.json(result);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 // Cost & fee constants (in cents CAD)
 const COST_DOMESTIC      = 600;     // $6 per Canadian letter
 const COST_INTERNATIONAL = 1200;    // $12 per international letter
@@ -1433,6 +1489,7 @@ app.post('/api/admin/orders/:id/status', requireAdmin, async (req, res) => {
         to:      order.customer_email,
         subject: `Your letter to ${order.recipient_name} has been mailed — order #${order.id}`,
         html:    buildMailedEmail(order, toAddr, deliveryText),
+        text:    buildMailedEmailText(order, toAddr, deliveryText),
       }, 'mailed_notification', id).catch(console.error);
     }
   }
@@ -1475,6 +1532,7 @@ app.post('/api/admin/orders/:id/mark-mailed', requireAdmin, async (req, res) => 
     to:      order.customer_email,
     subject: `Your letter to ${order.recipient_name} has been mailed — order #${order.id}`,
     html:    buildMailedEmail(order, toAddr, estimated_delivery.trim()),
+    text:    buildMailedEmailText(order, toAddr, estimated_delivery.trim()),
   }, 'mailed_notification', id).catch(console.error);
 
   res.json({ ok: true });
@@ -1819,6 +1877,7 @@ app.post('/api/admin/orders/bulk-status', requireAdmin, async (req, res) => {
         to:      order.customer_email,
         subject: `Your letter to ${order.recipient_name} has been mailed — order #${order.id}`,
         html:    buildMailedEmail(order, toAddr, deliveryText),
+        text:    buildMailedEmailText(order, toAddr, deliveryText),
       }, 'mailed_notification', id).catch(console.error);
     }
   }
@@ -2549,6 +2608,7 @@ async function fulfillOrder(sessionId) {
     to:          process.env.OPERATOR_EMAIL,
     subject:     `[Letterhome] Order #${order.id} — ${order.recipient_name}`,
     html:        buildOperatorEmail(order, fromAddr, toAddr, amountCAD, emailAttachments.length),
+    text:        buildOperatorEmailText(order, fromAddr, toAddr, amountCAD, emailAttachments.length),
     attachments: emailAttachments,
   }, 'order_operator_notification', order.id);
 
@@ -2557,6 +2617,7 @@ async function fulfillOrder(sessionId) {
     to:      order.customer_email,
     subject: `Your Letterhome order is confirmed — letter to ${order.recipient_name}`,
     html:    buildCustomerEmail(order, toAddr, amountCAD, isDomestic),
+    text:    buildCustomerEmailText(order, toAddr, amountCAD, isDomestic),
   }, 'order_confirmation', order.id);
 
   // Upsert customer record — persists even if this order is later deleted
@@ -2613,6 +2674,42 @@ function buildOperatorEmail(o, fromAddr, toAddr, amountCAD, attachCount) {
 </div>`;
 }
 
+function buildOperatorEmailText(o, fromAddr, toAddr, amountCAD, attachCount) {
+  return [
+    `New Order #${o.id}`,
+    `$${amountCAD} CAD · ${o.destination_country === 'CA' ? 'Domestic' : 'International'} · ${o.letter_type || ''} · ${o.customer_email}`,
+    '',
+    'FROM',
+    fromAddr,
+    '',
+    'TO',
+    toAddr,
+    '',
+    'LETTER CONTENT',
+    o.letter_body || '(no message body — see attachments)',
+    attachCount > 0 ? `\n${attachCount} attachment${attachCount > 1 ? 's' : ''} included.` : '',
+  ].join('\n');
+}
+
+function buildCustomerEmailText(o, toAddr, amountCAD, isDomestic) {
+  const delivery = isDomestic ? 'within 2 weeks' : 'within 4 weeks';
+  return [
+    'Your letter is in.',
+    '',
+    `We've received your payment. Your letter will be printed and mailed within one business day.`,
+    '',
+    'Delivering to:',
+    toAddr,
+    `Estimated delivery: ${delivery}`,
+    '',
+    `Order #${o.id} · $${amountCAD} CAD`,
+    o.status_token ? `Track your letter: ${process.env.BASE_URL}/status/${o.status_token}` : '',
+    'Questions? Reply to this email.',
+    '',
+    '— Letterhome',
+  ].filter(s => s !== undefined).join('\n');
+}
+
 function buildCustomerEmail(o, toAddr, amountCAD, isDomestic) {
   const delivery = isDomestic ? 'within 2 weeks' : 'within 4 weeks';
   return `
@@ -2658,6 +2755,27 @@ function buildMailedEmail(o, toAddr, deliveryText) {
     </div>
   </div>
 </body></html>`;
+}
+
+function buildMailedEmailText(o, toAddr, deliveryText) {
+  const delivery = deliveryText || (o.destination_country === 'CA' ? 'within 2 weeks' : 'within 4 weeks');
+  return [
+    'Your letter is on its way.',
+    '',
+    `Order #${o.id} has been printed, sealed, stamped, and dropped in the post. From here, it's in Canada Post's hands.`,
+    '',
+    'Delivering to:',
+    toAddr,
+    `Estimated arrival: ${delivery}`,
+    '',
+    `Lettermail doesn't have tracking, so we can't tell you exactly when it'll land. If you don't see it after the estimated window, reply to this email and we'll work it out.`,
+    '',
+    `Order #${o.id}`,
+    o.status_token ? `Track your letter: ${process.env.BASE_URL}/status/${o.status_token}` : '',
+    'Thank you for trusting us with your letter.',
+    '',
+    '— Letterhome',
+  ].filter(s => s !== undefined).join('\n');
 }
 
 function buildStatusPage(order) {
@@ -2760,6 +2878,7 @@ function buildRecoveryEmail(order) {
     from:    process.env.EMAIL_FROM,
     to:      order.customer_email,
     subject: 'You left a letter unsent — Letterhome',
+    text:    `You left a letter unsent.\n\nSomeone back home is waiting to hear from you. Your letter${recipientHint} is still ready to go.\n\nSend your letter: ${process.env.BASE_URL || ''}/send\n\nWe only send this reminder once.\n\n— Letterhome`,
     html: `<!DOCTYPE html><html>
 <body style="font-family:Georgia,serif;background:#ede5d3;padding:40px 20px;color:#2a2a2a;margin:0">
   <div style="max-width:520px;margin:0 auto;background:#faf6ec;border:1px solid rgba(42,42,42,0.12);padding:48px">
@@ -2784,6 +2903,7 @@ function buildOccasionReminderEmail(occ, lastOrder) {
     from:    process.env.EMAIL_FROM,
     to:      occ.customer_email,
     subject: `${occ.occasion_name} is coming up — send a letter?`,
+    text:    `${occ.occasion_name} is coming up.\n\n${occ.occasion_name} is ${occ.remind_days_before} days away (${dateFormatted}).${lastOrderHint} Send a letter — it'll mean more than a text.\n\nSend a letter: ${process.env.BASE_URL || ''}/send\n\nYou set this reminder via Letterhome. Reply to stop.\n\n— Letterhome`,
     html: `<!DOCTYPE html><html>
 <body style="font-family:Georgia,serif;background:#ede5d3;padding:40px 20px;color:#2a2a2a;margin:0">
   <div style="max-width:520px;margin:0 auto;background:#faf6ec;border:1px solid rgba(42,42,42,0.12);padding:48px">
@@ -3191,6 +3311,19 @@ async function runBackup() {
 cron.schedule('0 2 * * *', async () => {
   console.log('[backup] running scheduled backup');
   await runBackup();
+});
+
+// ── Final error handler ───────────────────────────────────────────────────────
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
+  console.error('[server] unhandled error:', err);
+  if (res.headersSent) return;
+  res.status(500);
+  if (req.accepts('html')) {
+    res.sendFile(path.join(__dirname, 'public', '500.html'));
+  } else {
+    res.json({ error: 'Internal server error' });
+  }
 });
 
 const PORT = process.env.PORT || 3000;
