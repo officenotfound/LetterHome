@@ -3780,9 +3780,9 @@ function pmInitMap(){
   PM_MAP=PM_MAP_TPL.map(r=>[...r]);
   PM.dots=0;for(let y=0;y<PM.ROWS;y++)for(let x=0;x<PM.COLS;x++)if(PM_MAP[y][x]===1||PM_MAP[y][x]===2)PM.dots++;
 }
-function pmWalkable(x,y,ignoreDoor){
+function pmWalkable(x,y){
   if(x<0||x>=PM.COLS||y<0||y>=PM.ROWS)return false;
-  const c=PM_MAP[y][x];return c!==0;
+  const c=PM_MAP[y][x];return c!==0&&c!==4;
 }
 function pmGhostWalkable(x,y){
   if(x<0||x>=PM.COLS||y<0||y>=PM.ROWS)return false;
@@ -3791,11 +3791,12 @@ function pmGhostWalkable(x,y){
 function pmReset(){
   PM.px=9;PM.py=16;PM.pdir={x:0,y:0};PM.pnext={x:0,y:0};PM.pframe=0;PM.pelletTimer=0;
   PM.over=false;PM.won=false;PM.paused=false;PM.submitted=false;
+  PM.lives=3;PM.score=0;PM.level=1;
   pmInitMap();
   PM.ghosts=[
     {x:8,y:9,dx:1,dy:0,fright:0,eaten:false,home:{x:1,y:1},color:'#ef4444',frame:0},
     {x:9,y:9,dx:-1,dy:0,fright:0,eaten:false,home:{x:17,y:1},color:'#f97316',frame:0},
-    {x:10,y:9,dx:0,dy:1,fright:0,eaten:false,home:{x:1,y:19},color:'#22c55e',frame:0},
+    {x:8,y:8,dx:1,dy:0,fright:0,eaten:false,home:{x:1,y:19},color:'#22c55e',frame:0},
   ];
 }
 function pmStep(){
@@ -3822,7 +3823,7 @@ function pmStep(){
       g.frame++;if(g.fright>0)g.fright--;
       if(g.frame<(g.fright>0?10:8))return;g.frame=0;
       const dirs=[{x:1,y:0},{x:-1,y:0},{x:0,y:1},{x:0,y:-1}];
-      const valid=dirs.filter(d=>d.x!==-(g.dx)&&(d.y!==-(g.dy)||!d.y)&&(d.x!==-(g.dx)||!d.x));
+      const valid=(g.dx===0&&g.dy===0)?dirs:dirs.filter(d=>!(d.x===-g.dx&&d.y===-g.dy));
       const walkable=valid.filter(d=>{const nx=g.x+d.x,ny=g.y+d.y;return nx>=0&&nx<PM.COLS&&ny>=0&&ny<PM.ROWS&&PM_MAP[ny][nx]!==0;});
       if(!walkable.length)return;
       let chosen;
@@ -3972,7 +3973,7 @@ const DK={
 const DK_PW=14,DK_PH=18,DK_LADDW=12,DK_GRAVITY=0.4,DK_JUMP=-8.5;
 function dkReset(){
   DK.player={x:18,y:340,vy:0,onGround:false,onLadder:false,dir:1};
-  DK.barrels=[];DK.score=0;DK.level=1;DK.over=false;DK.won=false;DK.paused=false;DK.submitted=false;
+  DK.barrels=[];DK.score=0;DK.lives=3;DK.level=1;DK.over=false;DK.won=false;DK.paused=false;DK.submitted=false;
   DK.frame=0;DK.nextBarrel=140;DK.bossAnim=0;DK.keys={l:false,r:false,u:false,d:false,jump:false};
 }
 function dkOnPlatform(p){
@@ -3990,7 +3991,7 @@ function dkStep(){
     const{player,platforms,ladders,barrels,W}=DK;
     DK.bossAnim++;DK.frame++;
     // Barrel spawn
-    if(DK.frame>=DK.nextBarrel){DK.frame=0;DK.nextBarrel=Math.max(70,140-DK.level*10);barrels.push({x:50,y:88,vx:(2+DK.level*0.3)*(Math.random()>0.3?1:-1),vy:0,floor:4});}
+    if(DK.frame>=DK.nextBarrel){DK.frame=0;DK.nextBarrel=Math.max(70,140-DK.level*10);barrels.push({x:50,y:88,vx:(2+DK.level*0.3),vy:0,floor:4});}
     // Player movement
     const onLadder=ladders.some(l=>dkOnLadder(l));
     if(onLadder&&(DK.keys.u||DK.keys.d)){
@@ -4016,7 +4017,7 @@ function dkStep(){
         if(b.x+8>p.x&&b.x<p.x+p.w&&b.y+8>=p.y&&b.y<p.y+8&&b.vy>=0){
           b.y=p.y-8;b.vy=-Math.abs(b.vy)*0.35;
           // Roll direction based on platform slope
-          b.vx=Math.abs(b.vx)*(p.dir||1)*(Math.abs(b.vx)>0.5?1:-1);
+          b.vx=Math.abs(b.vx)*(p.dir||1);
           if(Math.abs(b.vy)<1)b.vy=0;
         }
       }
