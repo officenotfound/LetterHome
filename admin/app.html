@@ -3149,7 +3149,7 @@ function snakeStep(ts) {
             let p,tries=0;
             do { p={x:Math.floor(Math.random()*SNAKE.cols),y:Math.floor(Math.random()*SNAKE.rows)}; tries++; }
             while(tries<100&&snakeOccupied(p.x,p.y));
-            if(tries<100){SNAKE.bonus=p;SNAKE.bonusTimer=180;}
+            if(tries<100){SNAKE.bonus=p;SNAKE.bonusTimer=50;}
           }
         }
         if(SNAKE.bonus&&head.x===SNAKE.bonus.x&&head.y===SNAKE.bonus.y){
@@ -3182,7 +3182,7 @@ function snakeDraw() {
   }
   // Bonus food (red apple, blinks when low timer)
   if (bonus) {
-    const blink=bonusTimer<60&&(bonusTimer%10)<5;
+    const blink=bonusTimer<15&&(bonusTimer%3)<1;
     if(!blink){
       ctx.fillStyle='#e63946';ctx.fillRect(bonus.x*cell+2,bonus.y*cell+3,cell-4,cell-5);
       ctx.fillStyle='#22c55e';ctx.fillRect(bonus.x*cell+cell/2,bonus.y*cell+1,2,3);
@@ -4210,8 +4210,14 @@ function pmDraw(){
     } else if(cell===1){
       ctx.fillStyle='#facc15';ctx.fillRect(x*SZ+SZ/2-1,y*SZ+SZ/2-1,2,2);
     } else if(cell===2){
-      const blink=(PM.globalFrame%20)<10;
-      if(blink){ctx.fillStyle='#facc15';ctx.fillRect(x*SZ+SZ/2-3,y*SZ+SZ/2-3,6,6);ctx.fillRect(x*SZ+SZ/2-4,y*SZ+SZ/2-2,8,4);ctx.fillRect(x*SZ+SZ/2-2,y*SZ+SZ/2-4,4,8);}
+      const big=(PM.globalFrame%24)<12;
+      const cx=x*SZ+SZ/2,cy=y*SZ+SZ/2;
+      ctx.fillStyle='#facc15';
+      if(big){
+        ctx.fillRect(cx-3,cy-3,6,6);ctx.fillRect(cx-4,cy-2,8,4);ctx.fillRect(cx-2,cy-4,4,8);
+      } else {
+        ctx.fillRect(cx-2,cy-2,4,4);ctx.fillRect(cx-3,cy-1,6,2);ctx.fillRect(cx-1,cy-3,2,6);
+      }
     } else if(cell===4){
       ctx.fillStyle='#1d4ed8';ctx.fillRect(x*SZ,y*SZ+SZ/2-1,SZ,2);
     }
