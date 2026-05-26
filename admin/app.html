@@ -3317,14 +3317,16 @@ const BREAKOUT = {
   stickyTimer:0,
 };
 const BK_COLS=8,BK_ROWS=5,BK_W=28,BK_H=13,BK_PX=4,BK_PY=6;
+// Authentic Breakout tier ordering: top rows = highest value
 const BK_COLORS=['#e63946','#f59e0b','#22c55e','#6366f1','#06b6d4'];
+const BK_TIER_POINTS=[7,5,3,2,1]; // top row → bottom row (original arcade tiers)
 const BK_PWR=['wide','multi','sticky','life'];
 function breakoutMakeBricks() {
   BREAKOUT.bricks=[];
   for(let r=0;r<BK_ROWS;r++) for(let c=0;c<BK_COLS;c++){
-    // ~12% bricks contain a power-up
     const hasPwr=Math.random()<0.12;
-    BREAKOUT.bricks.push({x:8+c*(BK_W+BK_PX),y:48+r*(BK_H+BK_PY),alive:true,color:BK_COLORS[r%5],
+    BREAKOUT.bricks.push({x:8+c*(BK_W+BK_PX),y:48+r*(BK_H+BK_PY),alive:true,
+      color:BK_COLORS[r%5],pts:BK_TIER_POINTS[r],
       pwr:hasPwr?BK_PWR[Math.floor(Math.random()*BK_PWR.length)]:null});
   }
 }
@@ -3371,7 +3373,8 @@ function breakoutStep() {
         for (const b of bricks) {
           if (!b.alive) continue;
           if (ball.x+ball.r>b.x&&ball.x-ball.r<b.x+BK_W&&ball.y+ball.r>b.y&&ball.y-ball.r<b.y+BK_H) {
-            b.alive=false; const pts=10*BREAKOUT.level; BREAKOUT.score+=pts; sfxScore();
+            b.alive=false; const pts=b.pts*10*BREAKOUT.level; BREAKOUT.score+=pts; sfxScore();
+            spawnFloat(b.x+BK_W/2,b.y,'+'+pts,b.color);
             const ox=Math.abs(ball.x-(b.x+BK_W/2)), oy=Math.abs(ball.y-(b.y+BK_H/2));
             if (ox*BK_H>oy*BK_W) ball.vx=-ball.vx; else ball.vy=-ball.vy;
             // Bonus life at score milestones
@@ -4190,12 +4193,14 @@ function pmStep(){
     if(PM.fruit&&PM.fruitTimer>0){PM.fruitTimer--;if(PM.fruitTimer<=0)PM.fruit=null;}
     // Move ghosts
     const blinky=PM.ghosts.find(g=>g.name==='blinky');
-    const ghostSpeedBonus=PM.dots<60?-1:0;
     PM.ghosts.forEach(g=>{
       g.frame++;if(g.fright>0)g.fright--;
+      // Cruise Elroy: only Blinky speeds up when few dots remain (original behavior)
+      const elroy1=g.name==='blinky'&&PM.dots<60?-1:0;
+      const elroy2=g.name==='blinky'&&PM.dots<30?-1:0;
       // Eyes return: faster, no fright check; tunnel: slower
       const inTunnel=g.y===9&&(g.x<=3||g.x>=PM.COLS-4);
-      let baseInt=g.eaten?4:(g.fright>0?12:Math.max(6,8-Math.floor(PM.level/2))+ghostSpeedBonus);
+      let baseInt=g.eaten?4:(g.fright>0?12:Math.max(5,8-Math.floor(PM.level/2))+elroy1+elroy2);
       if(inTunnel&&!g.eaten)baseInt+=4;
       if(g.frame<baseInt)return;g.frame=0;
       // If eaten and reached house, revive
@@ -4424,7 +4429,7 @@ function dkRestart(){
   DK.level=nextLevel;DK.score=nextScore;DK.lives=nextLives;
 }
 function dkReset(){
-  DK.player={x:18,y:340,vy:0,onGround:false,onLadder:false,dir:1,hammer:0};
+  DK.player={x:18,y:340,vy:0,onGround:false,onLadder:false,dir:1,hammer:0,smashChain:0};
   DK.barrels=[];DK.score=0;DK.lives=3;DK.level=1;DK.over=false;DK.won=false;DK.paused=false;DK.submitted=false;
   DK.frame=0;DK.nextBarrel=140;DK.bossAnim=0;DK.keys={l:false,r:false,u:false,d:false,jump:false};
   // Hammer pickups: one on each of 2 levels
@@ -4433,6 +4438,7 @@ function dkReset(){
     {x:160,y:148,taken:false},  // floor 4
   ];
 }
+const DK_SMASH_PTS=[100,300,500,800];
 function dkOnPlatform(p){
   // returns true if player is standing on this platform
   const{player}=DK,py=player.y+DK_PH;
@@ -4482,21 +4488,24 @@ function dkStep(){
       // Hit player
       if(Math.abs(b.x-player.x)<DK_PW&&Math.abs(b.y-player.y)<DK_PH){
         if(player.hammer>0){
-          // Smash barrel for bonus
-          DK.score+=300;sfxLevelUp();barrels.splice(i,1);continue;
+          // Smash barrel — escalating chain bonus (original arcade scoring)
+          const pts=DK_SMASH_PTS[Math.min(3,player.smashChain)];
+          player.smashChain++;
+          DK.score+=pts;spawnFloat(b.x+7,b.y,'+'+pts,'#facc15');sfxLevelUp();barrels.splice(i,1);continue;
         }
         DK.lives--;sfxDie();barrels.splice(i,1);
-        if(DK.lives<=0){DK.over=true;dkSubmitScore();}else{player.x=18;player.y=340;player.vy=0;player.hammer=0;}break;
+        if(DK.lives<=0){DK.over=true;dkSubmitScore();}else{player.x=18;player.y=340;player.vy=0;player.hammer=0;player.smashChain=0;}break;
       }
     }
     // Hammer pickup
     for(const h of DK.hammers){
       if(h.taken)continue;
       if(Math.abs(h.x-player.x-DK_PW/2)<10&&Math.abs(h.y-player.y-DK_PH/2)<14){
-        h.taken=true;player.hammer=360;sfxLevelUp();DK.score+=100;
+        h.taken=true;player.hammer=360;player.smashChain=0;sfxLevelUp();DK.score+=100;spawnFloat(h.x,h.y-10,'HAMMER!','#facc15');
       }
     }
     if(player.hammer>0)player.hammer--;
+    else player.smashChain=0; // chain only persists during active hammer
     // Clear jump key (edge-triggered)
     if(!DK.keys.jump||player.onGround){}
     DK.keys.jump=false;
@@ -4573,6 +4582,7 @@ function dkDraw(){
     ctx.fillStyle='#ca8a04';ctx.fillRect(plx+hxoff-4,hy+1,10,1);
   }
   ctx.restore();
+  drawFloats(ctx);
   // HUD
   ctx.fillStyle='rgba(0,0,0,0.5)';ctx.fillRect(0,0,W,22);
   ctx.fillStyle='#fb923c';ctx.font="bold 10px 'DM Mono',monospace";ctx.textAlign='left';ctx.fillText(`LVL ${DK.level}`,6,15);
@@ -4958,7 +4968,10 @@ function frogReset(){
   FROG.player={row:12,col:4,x:frogColX(4),y:frogLaneY(12),floatX:frogColX(4),onObj:null,dead:false,deadTimer:0};
   FROG.goals=[false,false,false,false,false];
   FROG.score=0;FROG.lives=3;FROG.level=1;FROG.over=false;FROG.won=false;FROG.paused=false;FROG.submitted=false;
-  FROG.frame=0;FROG.timer=400;FROG.moveReady=true;frogInitLanes();
+  FROG.frame=0;FROG.timer=400;FROG.moveReady=true;
+  FROG.bonusFly=null;FROG.bonusFlyTimer=600+Math.random()*600;
+  FROG.croc=null;FROG.crocTimer=900+Math.random()*900;
+  frogInitLanes();
 }
 function frogKill(){
   const pl=FROG.player;pl.dead=true;pl.deadTimer=60;FROG.lives--;sfxDie();
@@ -4977,9 +4990,16 @@ function frogMove(dr,dc){
   // Check goal row
   if(pl.row===0){
     const gi=Math.floor(pl.col*5/Math.floor(FROG.W/FROG.CELL));
-    if(!FROG.goals[gi]){const bonus=200+FROG.timer;FROG.goals[gi]=true;FROG.score+=bonus;spawnFloat(pl.x,pl.y,'+'+bonus,'#22c55e');sfxLevelUp();pl.row=12;pl.col=4;FROG.timer=400;}
+    // Crocodile in slot = death
+    if(FROG.croc===gi){frogKill();return;}
+    if(!FROG.goals[gi]){
+      let bonus=200+FROG.timer;
+      // Bonus fly in slot = extra 200
+      if(FROG.bonusFly===gi){bonus+=200;FROG.bonusFly=null;spawnFloat(pl.x,pl.y-10,'FLY +200!','#facc15');}
+      FROG.goals[gi]=true;FROG.score+=bonus;spawnFloat(pl.x,pl.y,'+'+bonus,'#22c55e');sfxLevelUp();pl.row=12;pl.col=4;FROG.timer=400;
+    }
     else{frogKill();}
-    if(FROG.goals.every(Boolean)){FROG.level++;FROG.score+=1000;spawnFloat(FROG.W/2,FROG.H/2,'WAVE +1000!','#facc15');FROG.goals=[false,false,false,false,false];frogInitLanes();}
+    if(FROG.goals.every(Boolean)){FROG.level++;FROG.score+=1000;spawnFloat(FROG.W/2,FROG.H/2,'WAVE +1000!','#facc15');FROG.goals=[false,false,false,false,false];FROG.bonusFly=null;FROG.croc=null;frogInitLanes();}
     return;
   }
   const lane=FROG.lanes[pl.row];
@@ -4994,6 +5014,14 @@ function frogStep(){
     FROG.frame++;const{W,CELL}=FROG;
     // Decrement timer
     if(FROG.frame%3===0){FROG.timer=Math.max(0,FROG.timer-1);if(FROG.timer===0)frogKill();}
+    // Bonus fly spawn/despawn
+    if(FROG.bonusFly===null){FROG.bonusFlyTimer--;if(FROG.bonusFlyTimer<=0){const empty=FROG.goals.map((v,i)=>v?-1:i).filter(i=>i>=0);if(empty.length){FROG.bonusFly=empty[Math.floor(Math.random()*empty.length)];FROG.bonusFlyTimer=400;}else FROG.bonusFlyTimer=300;}}
+    else{FROG.bonusFlyTimer--;if(FROG.bonusFlyTimer<=0){FROG.bonusFly=null;FROG.bonusFlyTimer=500+Math.random()*500;}}
+    // Crocodile spawn/despawn (rare, higher levels)
+    if(FROG.level>=2){
+      if(FROG.croc===null){FROG.crocTimer--;if(FROG.crocTimer<=0){const empty=FROG.goals.map((v,i)=>v?-1:i).filter(i=>i>=0&&i!==FROG.bonusFly);if(empty.length){FROG.croc=empty[Math.floor(Math.random()*empty.length)];FROG.crocTimer=300;}else FROG.crocTimer=400;}}
+      else{FROG.crocTimer--;if(FROG.crocTimer<=0){FROG.croc=null;FROG.crocTimer=800+Math.random()*600;}}
+    }
     const pl=FROG.player;
     if(pl.dead){pl.deadTimer--;if(pl.deadTimer<=0){pl.dead=false;if(!FROG.over){pl.row=12;pl.col=4;pl.floatX=frogColX(4);pl.onObj=null;FROG.timer=400;}}frogDraw();FROG.loopId=requestAnimationFrame(frogStep);return;}
     // Move lane objects + turtle dive cycle
@@ -5097,7 +5125,11 @@ function frogDraw(){
       }
     }
     // Goal spots
-    if(row===0){const gw=Math.floor(W/CELL);for(let i=0;i<5;i++){const gx=Math.floor((i+0.5)*gw*CELL/5);ctx.fillStyle=FROG.goals[i]?'#22c55e':'#15803d';ctx.fillRect(gx-12,y+4,24,CELL-8);if(FROG.goals[i]){ctx.fillStyle='#4ade80';ctx.fillRect(gx-12,y+4,24,4);ctx.fillStyle='#fbbf24';ctx.fillRect(gx-2,y-2,4,6);}else{ctx.fillStyle='#166534';ctx.fillRect(gx-12,y+4,24,4);ctx.fillStyle='#9a9a9a';ctx.fillRect(gx-2,y,4,6);}}}
+    if(row===0){const gw=Math.floor(W/CELL);for(let i=0;i<5;i++){const gx=Math.floor((i+0.5)*gw*CELL/5);ctx.fillStyle=FROG.goals[i]?'#22c55e':'#15803d';ctx.fillRect(gx-12,y+4,24,CELL-8);if(FROG.goals[i]){ctx.fillStyle='#4ade80';ctx.fillRect(gx-12,y+4,24,4);ctx.fillStyle='#fbbf24';ctx.fillRect(gx-2,y-2,4,6);}else{ctx.fillStyle='#166534';ctx.fillRect(gx-12,y+4,24,4);ctx.fillStyle='#9a9a9a';ctx.fillRect(gx-2,y,4,6);
+      // Bonus fly in this slot
+      if(FROG.bonusFly===i){const f=(FROG.frame/3)%2;ctx.fillStyle='#000';ctx.fillRect(gx-2,y+CELL/2,4,3);ctx.fillStyle='#7dd3fc';if(f<1){ctx.fillRect(gx-5,y+CELL/2-1,3,2);ctx.fillRect(gx+2,y+CELL/2-1,3,2);}else{ctx.fillRect(gx-4,y+CELL/2-1,2,2);ctx.fillRect(gx+2,y+CELL/2-1,2,2);}}
+      // Crocodile in this slot — long green snout
+      if(FROG.croc===i){const cf=(FROG.frame/8)%2;ctx.fillStyle='#15803d';ctx.fillRect(gx-12,y+6,24,CELL-12);ctx.fillStyle='#22c55e';ctx.fillRect(gx-12,y+6,24,3);ctx.fillStyle='#fff';ctx.fillRect(gx+8,y+8,2,2);ctx.fillStyle='#000';ctx.fillRect(gx+8,y+8,1,1);ctx.fillStyle='#dc2626';if(cf<1){ctx.fillRect(gx-12,y+CELL/2-1,4,2);ctx.fillRect(gx-10,y+CELL/2,2,1);}}}}}
   }
   // Player
   const pl=FROG.player;
@@ -5251,9 +5283,12 @@ function pboyStep(){
       }
       // obstacle in road
       if(Math.random()<0.7){
-        const types=['car','dog','pothole'];const t=types[Math.floor(Math.random()*types.length)];
+        const types=['car','dog','pothole','breakdancer','mower'];const t=types[Math.floor(Math.random()*types.length)];
         const oy=120+Math.random()*160;
-        PBOY.obstacles.push({x:W+30,y:oy,w:t==='pothole'?18:t==='dog'?22:48,h:t==='pothole'?10:18,type:t,spd:t==='car'?2+Math.random()*2:0});
+        const w=t==='pothole'?18:t==='dog'?22:t==='breakdancer'?18:t==='mower'?28:48;
+        const h=t==='pothole'?10:t==='breakdancer'?22:18;
+        const spd=t==='car'?2+Math.random()*2:t==='mower'?1.2:t==='dog'?0:0;
+        PBOY.obstacles.push({x:W+30,y:oy,w,h,type:t,spd,phase:0});
       }
     }
     // Move/scroll obstacles + houses
@@ -5313,8 +5348,30 @@ function pboyDraw(){
   // Obstacles
   for(const o of obstacles){
     if(o.type==='car'){ctx.fillStyle='#e63946';ctx.fillRect(o.x,o.y,o.w,o.h);ctx.fillStyle='#fde68a';ctx.fillRect(o.x,o.y+3,8,o.h-6);ctx.fillStyle='#1d1d1d';ctx.fillRect(o.x+2,o.y+o.h-2,10,8);ctx.fillRect(o.x+o.w-12,o.y+o.h-2,10,8);}
-    else if(o.type==='dog'){ctx.fillStyle='#d97706';ctx.fillRect(o.x,o.y,o.w,o.h);ctx.fillStyle='#b45309';ctx.fillRect(o.x+o.w-8,o.y-5,8,7);}
-    else{ctx.fillStyle='#1c1917';ctx.fillRect(o.x,o.y,o.w,o.h);ctx.strokeStyle='#374151';ctx.lineWidth=1;ctx.strokeRect(o.x,o.y,o.w,o.h);}
+    else if(o.type==='dog'){ctx.fillStyle='#d97706';ctx.fillRect(o.x,o.y,o.w,o.h);ctx.fillStyle='#b45309';ctx.fillRect(o.x+o.w-8,o.y-5,8,7);ctx.fillStyle='#000';ctx.fillRect(o.x+o.w-5,o.y-3,2,2);}
+    else if(o.type==='breakdancer'){
+      // Spinning breakdancer
+      const ph=Math.floor(PBOY.frame/6)%4;
+      ctx.fillStyle='#7c3aed';ctx.fillRect(o.x+6,o.y,6,8);// head
+      ctx.fillStyle='#facc15';ctx.fillRect(o.x+5,o.y+8,8,10);// body
+      // arms spinning
+      ctx.fillStyle='#7c3aed';
+      if(ph===0){ctx.fillRect(o.x-2,o.y+10,6,3);ctx.fillRect(o.x+14,o.y+10,6,3);}
+      else if(ph===1){ctx.fillRect(o.x+2,o.y+14,4,4);ctx.fillRect(o.x+12,o.y+6,4,4);}
+      else if(ph===2){ctx.fillRect(o.x+4,o.y+18,4,4);ctx.fillRect(o.x+10,o.y+2,4,4);}
+      else{ctx.fillRect(o.x+2,o.y+6,4,4);ctx.fillRect(o.x+12,o.y+14,4,4);}
+    }
+    else if(o.type==='mower'){
+      // Lawnmower
+      ctx.fillStyle='#dc2626';ctx.fillRect(o.x,o.y+4,o.w,o.h-4);
+      ctx.fillStyle='#fbbf24';ctx.fillRect(o.x+2,o.y+2,o.w-4,4);
+      ctx.fillStyle='#1c1917';ctx.fillRect(o.x+2,o.y+o.h-3,6,4);ctx.fillRect(o.x+o.w-8,o.y+o.h-3,6,4);
+      // grass spray particles
+      const spr=PBOY.frame%4;
+      ctx.fillStyle='#22c55e';
+      for(let k=0;k<3;k++)ctx.fillRect(o.x+o.w+spr+k*3,o.y+5+k*3,2,2);
+    }
+    else{ctx.fillStyle='#1c1917';ctx.fillRect(o.x,o.y,o.w,o.h);ctx.fillStyle='#374151';ctx.fillRect(o.x,o.y,o.w,1);ctx.fillRect(o.x,o.y+o.h-1,o.w,1);ctx.fillRect(o.x,o.y,1,o.h);ctx.fillRect(o.x+o.w-1,o.y,1,o.h);}
   }
   // Papers
   ctx.fillStyle='#fff';ctx.shadowColor='#fff';ctx.shadowBlur=3;
