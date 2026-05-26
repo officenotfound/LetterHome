@@ -4172,7 +4172,7 @@ function launchDonkey(){
 // BUBBLE POST — Bust-a-Move clone
 // ═══════════════════════════════════════════════════════════════════════════════
 const BAM={
-  W:280,H:400,loopId:null,keyHandler:null,mouseHandler:null,
+  W:280,H:400,loopId:null,keyHandler:null,keyUpHandler:null,mouseHandler:null,
   R:14,GCOLS:9,DROW:10,// R=radius, GCOLS=cols on even rows, DROW=danger row
   grid:[],fly:null,nextColor:null,
   particles:[],
@@ -4320,6 +4320,7 @@ async function bamSubmitScore(){
 function bamStop(){
   if(BAM.loopId){cancelAnimationFrame(BAM.loopId);BAM.loopId=null;}
   if(BAM.keyHandler){window.removeEventListener('keydown',BAM.keyHandler);BAM.keyHandler=null;}
+  if(BAM.keyUpHandler){window.removeEventListener('keyup',BAM.keyUpHandler);BAM.keyUpHandler=null;}
   if(BAM.mouseHandler){window.removeEventListener('mousemove',BAM.mouseHandler);BAM.mouseHandler=null;}
   BAM.keys={l:false,r:false,fire:false};
 }
@@ -4360,7 +4361,10 @@ function launchBubblepost(){
     if(e.key==='ArrowLeft')BAM.keys.l=true;if(e.key==='ArrowRight')BAM.keys.r=true;
     if(e.key===' '){BAM.keys.fire=true;setTimeout(()=>BAM.keys.fire=false,50);}
   };
-  window.addEventListener('keydown',BAM.keyHandler);
+  BAM.keyUpHandler=(e)=>{
+    if(e.key==='ArrowLeft')BAM.keys.l=false;if(e.key==='ArrowRight')BAM.keys.r=false;
+  };
+  window.addEventListener('keydown',BAM.keyHandler);window.addEventListener('keyup',BAM.keyUpHandler);
   BAM.loopId=requestAnimationFrame(bamStep);
 }
 
@@ -4398,7 +4402,7 @@ const FROG_LANE_CFG=[
   // row 12: safe start
   {type:'safe'},
 ];
-function frogLaneY(row){return FROG.H-FROG.CELL/2-row*FROG.CELL;}
+function frogLaneY(row){return FROG.CELL/2+row*FROG.CELL;}
 function frogColX(col){return FROG.CELL/2+col*FROG.CELL;}
 function frogInitLanes(){
   const{W,CELL}=FROG;
@@ -4423,7 +4427,7 @@ function frogInitLanes(){
   });
 }
 function frogReset(){
-  FROG.player={row:12,col:4,x:frogColX(4),y:frogLaneY(12),onObj:null,dead:false,deadTimer:0};
+  FROG.player={row:12,col:4,x:frogColX(4),y:frogLaneY(12),floatX:frogColX(4),onObj:null,dead:false,deadTimer:0};
   FROG.goals=[false,false,false,false,false];
   FROG.score=0;FROG.lives=3;FROG.level=1;FROG.over=false;FROG.won=false;FROG.paused=false;FROG.submitted=false;
   FROG.frame=0;FROG.timer=400;FROG.moveReady=true;frogInitLanes();
@@ -4438,7 +4442,7 @@ function frogMove(dr,dc){
   const nr=pl.row+dr,nc=pl.col+dc;
   if(nr<0||nr>=ROWS||nc<0||nc>=Math.floor(FROG.W/CELL))return;
   pl.row=nr;pl.col=Math.max(0,Math.min(Math.floor(FROG.W/CELL)-1,nc));
-  pl.onObj=null;
+  pl.floatX=frogColX(pl.col);pl.onObj=null;
   FROG.moveReady=false;setTimeout(()=>FROG.moveReady=true,150);
   // Check goal row
   if(pl.row===0){
@@ -4461,7 +4465,7 @@ function frogStep(){
     // Decrement timer
     if(FROG.frame%3===0){FROG.timer=Math.max(0,FROG.timer-1);if(FROG.timer===0)frogKill();}
     const pl=FROG.player;
-    if(pl.dead){pl.deadTimer--;if(pl.deadTimer<=0){pl.dead=false;if(!FROG.over){pl.row=12;pl.col=4;pl.onObj=null;FROG.timer=400;}}return frogDraw()&&(FROG.loopId=requestAnimationFrame(frogStep));}
+    if(pl.dead){pl.deadTimer--;if(pl.deadTimer<=0){pl.dead=false;if(!FROG.over){pl.row=12;pl.col=4;pl.floatX=frogColX(4);pl.onObj=null;FROG.timer=400;}}frogDraw();FROG.loopId=requestAnimationFrame(frogStep);return;}
     // Move lane objects
     for(let row=2;row<=11;row++){
       const lane=FROG.lanes[row];if(!lane||!lane.objs)continue;
@@ -4478,10 +4482,9 @@ function frogStep(){
       if(!pl.onObj&&!pl.dead)frogKill();
       else if(pl.onObj){// ride with object
         const drift=lane.spd*lane.dir;
-        const newX=frogColX(pl.col)+drift;
-        const newCol=Math.round(newX/CELL-0.5);
-        pl.col=Math.max(0,Math.min(Math.floor(W/CELL)-1,newCol));
-        if(newX<0||newX>W)frogKill();
+        pl.floatX=(pl.floatX||frogColX(pl.col))+drift;
+        pl.col=Math.max(0,Math.min(Math.floor(W/CELL)-1,Math.round(pl.floatX/CELL-0.5)));
+        if(pl.floatX<0||pl.floatX>W)frogKill();
       }
     } else if(lane&&lane.type==='road'){
       for(const o of lane.objs){
@@ -4638,7 +4641,7 @@ function pboyStep(){
     }
     // Papers
     for(let i=PBOY.papers.length-1;i>=0;i--){
-      const p=PBOY.papers[i];p.x+=p.vx;p.y+=p.vy;p.vy+=0.25;// gravity arc
+      const p=PBOY.papers[i];p.x+=p.vx;p.y+=p.vy;p.vy+=0.06;// gravity arc
       if(p.x>W+20||p.y>H+20||p.y<-20){PBOY.papers.splice(i,1);continue;}
       // Hit houses
       let hit=false;
@@ -4657,8 +4660,8 @@ function pboyStep(){
     if(PBOY.spawnTimer>=50){PBOY.spawnTimer=0;
       // house on top or bottom
       if(Math.random()<0.6){
-        const onTop=Math.random()<0.5;const hy=onTop?20:310;
-        PBOY.houses.push({x:W+10,y:hy,w:44,h:onTop?76:70,sub:Math.random()<0.55,hit:false});
+        const onTop=Math.random()<0.5;const hy=onTop?60:270;
+        PBOY.houses.push({x:W+10,y:hy,w:44,h:50,sub:Math.random()<0.55,hit:false});
       }
       // obstacle in road
       if(Math.random()<0.7){
