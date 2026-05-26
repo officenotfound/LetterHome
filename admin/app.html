@@ -4189,6 +4189,18 @@ function pmStep(){
         PM.ghosts.forEach(g=>{if(!g.eaten){g.fright=frightDur;g.dx=-g.dx;g.dy=-g.dy;}});}
       // Fruit collection
       if(PM.fruit&&PM.px===PM.fruit.x&&PM.py===PM.fruit.y){const pts=100*PM.level;PM.score+=pts;spawnFloat(PM.px*PM.SZ+PM.SZ/2,PM.py*PM.SZ,'+'+pts,'#e63946');PM.fruit=null;PM.fruitTimer=0;sfxLevelUp();}
+      // Ghost collision when player walks into a ghost
+      PM.ghosts.forEach(g=>{
+        if(g.x===PM.px&&g.y===PM.py){
+          if(g.eaten){/* pass through */}
+          else if(g.fright>0){g.eaten=true;g.fright=0;g.dx=0;g.dy=0;PM.eatChain++;const pts=200*(1<<(PM.eatChain-1));PM.score+=pts;spawnFloat(g.x*PM.SZ+PM.SZ/2,g.y*PM.SZ,'+'+pts,'#06b6d4');sfxLevelUp();}
+          else if(!PM.over){PM.lives--;sfxDie();if(PM.lives<=0){PM.over=true;pmSubmitScore();}else{
+            PM.px=9;PM.py=16;PM.pdir={x:0,y:0};PM.pnext={x:0,y:0};
+            PM.mode='scatter';PM.modeFrame=0;PM.eatChain=0;
+            PM.ghosts.forEach((og,i)=>{og.x=8+(i%2);og.y=8+(i<2?1:0);og.dx=i%2?1:-1;og.dy=0;og.fright=0;og.eaten=false;});
+          }}
+        }
+      });
     }
     if(PM.fruit&&PM.fruitTimer>0){PM.fruitTimer--;if(PM.fruitTimer<=0)PM.fruit=null;}
     // Move ghosts
@@ -4918,11 +4930,11 @@ const FROG_LANE_CFG=[
   // row 6: safe median
   {type:'safe'},
   // rows 7-11: traffic
-  {type:'road',dir:-1,spd:2.2,objs:[]}, // dogs
-  {type:'road',dir:1, spd:2.8,objs:[]}, // motorcycles
-  {type:'road',dir:-1,spd:1.8,objs:[]}, // cars
-  {type:'road',dir:1, spd:3.2,objs:[]}, // motorcycles fast
-  {type:'road',dir:-1,spd:2.0,objs:[]}, // cars
+  {type:'road',dir:-1,spd:1.4,objs:[]}, // dogs
+  {type:'road',dir:1, spd:1.8,objs:[]}, // motorcycles
+  {type:'road',dir:-1,spd:1.1,objs:[]}, // cars
+  {type:'road',dir:1, spd:2.0,objs:[]}, // motorcycles fast
+  {type:'road',dir:-1,spd:1.3,objs:[]}, // cars
   // row 12: safe start
   {type:'safe'},
 ];
@@ -4930,7 +4942,7 @@ function frogLaneY(row){return FROG.CELL/2+row*FROG.CELL;}
 function frogColX(col){return FROG.CELL/2+col*FROG.CELL;}
 function frogInitLanes(){
   const{W,CELL}=FROG;
-  const spd=1+(FROG.level-1)*0.18;
+  const spd=1+(FROG.level-1)*0.25;
   FROG.lanes=FROG_LANE_CFG.map(cfg=>({...cfg,objs:[],spd:cfg.spd?cfg.spd*spd:cfg.spd}));
   // Puddle rows (rows 2-5): floating logs / diving turtles
   const pudSizes=[[70,80,90],[60,75,85],[80,70,100],[65,80]];
