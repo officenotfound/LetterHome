@@ -3241,7 +3241,7 @@ function launchSnake() {
     <div><div style="font-family:'DM Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:0.18em;color:#9a9a9a;margin-bottom:4px">Score</div>
     <div id="snake-score" style="font-family:Georgia,serif;font-size:26px;font-weight:600;letter-spacing:-0.02em;color:#111">0</div></div>
     <div style="margin-top:10px"><div style="font-family:'DM Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:0.15em;color:#9a9a9a;margin-bottom:2px">Level</div><div id="snake-level" style="font-family:Georgia,serif;font-size:18px;font-weight:600;color:#111">1</div></div>`;
-  document.getElementById('arcade-controls').innerHTML='← → ↑ ↓ &nbsp; Move<br>P &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Pause<br>Enter &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Restart';
+  document.getElementById('arcade-controls').innerHTML='← → ↑ ↓ &nbsp; Move<br>P &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Pause<br>Enter &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Restart<br><br>Lv 3+: walls appear<br>🟥 = bonus food<br>(+50× lvl, 3s only)';
   snakeReset(); arcadeLoadLeaderboard('snake');
   // Touch controls
   const tcSU=document.getElementById('tc-s-up'), tcSD=document.getElementById('tc-s-down'),
@@ -3697,8 +3697,8 @@ function launchInvaders() {
 // ═══════════════════════════════════════════════════════════════════════════════
 const POSTBIRD = {
   W:280,H:420,loopId:null,keyHandler:null,clickHandler:null,touchHandler:null,
-  bird:{x:60,y:210,vy:0,rot:0},pipes:[],
-  score:0,level:1,over:false,started:false,paused:false,submitted:false,
+  bird:{x:60,y:210,vy:0,rot:0},pipes:[],letters:[],
+  score:0,letterCount:0,level:1,over:false,started:false,paused:false,submitted:false,
   frame:0,lastPipe:0,pipeSpeed:2.2,pipeGap:108,gravity:0.38,jumpVy:-6.8,
 };
 function postbirdFlap() {
@@ -3708,7 +3708,7 @@ function postbirdFlap() {
 }
 function postbirdReset() {
   POSTBIRD.bird={x:60,y:POSTBIRD.H/2,vy:0,rot:0};
-  POSTBIRD.pipes=[];POSTBIRD.score=0;POSTBIRD.level=1;
+  POSTBIRD.pipes=[];POSTBIRD.letters=[];POSTBIRD.score=0;POSTBIRD.letterCount=0;POSTBIRD.level=1;
   POSTBIRD.over=false;POSTBIRD.started=false;POSTBIRD.paused=false;POSTBIRD.submitted=false;
   POSTBIRD.frame=0;POSTBIRD.lastPipe=0;POSTBIRD.pipeSpeed=2.2;POSTBIRD.pipeGap=108;
 }
@@ -3722,8 +3722,11 @@ function postbirdStep() {
     if(bird.y-12<0){bird.y=12;bird.vy=0;}
     if(bird.y+12>H-20){POSTBIRD.over=true;sfxDie();postbirdSubmitScore();}
     if(POSTBIRD.frame-POSTBIRD.lastPipe>92){
-      pipes.push({x:W+30,gapY:70+Math.random()*(H-200),passed:false});
+      const gapY=70+Math.random()*(H-200);
+      pipes.push({x:W+30,gapY,passed:false});
       POSTBIRD.lastPipe=POSTBIRD.frame;
+      // 40% chance: spawn a letter pickup between pipes at gap center
+      if(Math.random()<0.4)POSTBIRD.letters.push({x:W+30+46,y:gapY+POSTBIRD.pipeGap/2,collected:false});
     }
     for(let i=pipes.length-1;i>=0;i--){
       pipes[i].x-=POSTBIRD.pipeSpeed;
@@ -3736,6 +3739,15 @@ function postbirdStep() {
       const p=pipes[i],pw=36,{pipeGap}=POSTBIRD;
       if(bird.x+10>p.x&&bird.x-10<p.x+pw){
         if(bird.y-10<p.gapY||bird.y+10>p.gapY+pipeGap){POSTBIRD.over=true;sfxDie();postbirdSubmitScore();}
+      }
+    }
+    // Letters
+    for(let i=POSTBIRD.letters.length-1;i>=0;i--){const lt=POSTBIRD.letters[i];
+      lt.x-=POSTBIRD.pipeSpeed;
+      if(lt.x<-20){POSTBIRD.letters.splice(i,1);continue;}
+      if(!lt.collected&&Math.abs(lt.x-bird.x)<14&&Math.abs(lt.y-bird.y)<12){
+        lt.collected=true;POSTBIRD.letterCount++;POSTBIRD.score+=3;sfxLevelUp();
+        POSTBIRD.letters.splice(i,1);
       }
     }
   }
@@ -3754,6 +3766,15 @@ function postbirdDraw() {
     ctx.fillStyle='rgba(0,0,0,0.3)';ctx.fillRect(p.x+6,p.gapY-8,pw-12,3);ctx.fillRect(p.x+6,p.gapY+pipeGap+4,pw-12,3);
   }
   ctx.fillStyle='#142a14';ctx.fillRect(0,H-20,W,20);
+  // Letters
+  for(const lt of POSTBIRD.letters){
+    const bob=Math.sin((Date.now()+lt.x*5)/200)*3;
+    ctx.fillStyle='#facc15';ctx.fillRect(lt.x-7,lt.y-5+bob,14,10);
+    ctx.fillStyle='#fef08a';ctx.fillRect(lt.x-7,lt.y-5+bob,14,2);
+    ctx.fillStyle='#ca8a04';
+    // envelope V
+    for(let i=0;i<7;i++){const yo=Math.abs(i-3);ctx.fillRect(lt.x-6+i*2,lt.y-4+yo+bob,2,1);}
+  }
   ctx.save();ctx.translate(bird.x,bird.y);ctx.rotate(bird.rot);
   // Envelope-shaped bird (pixel art)
   ctx.fillStyle='#faf6ec';ctx.fillRect(-12,-8,24,16);
@@ -4268,7 +4289,7 @@ function launchPacman(){
     <div><div style="font-family:'DM Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:0.18em;color:#9a9a9a;margin-bottom:4px">Score</div>
     <div id="pm-score" style="font-family:Georgia,serif;font-size:26px;font-weight:600;letter-spacing:-0.02em;color:#111">0</div></div>
     <div style="margin-top:10px"><div style="font-family:'DM Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:0.15em;color:#9a9a9a;margin-bottom:2px">Lives</div><div id="pm-lives" style="font-family:Georgia,serif;font-size:18px;font-weight:600;color:#111">3</div></div>`;
-  document.getElementById('arcade-controls').innerHTML='← → ↑ ↓ &nbsp; Move<br>P &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Pause<br>Enter &nbsp;&nbsp;&nbsp;&nbsp; Restart';
+  document.getElementById('arcade-controls').innerHTML='← → ↑ ↓ &nbsp; Move<br>P &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Pause<br>Enter &nbsp;&nbsp;&nbsp;&nbsp; Restart<br><br>4 ghosts:<br>Red=chase<br>Pink=ambush<br>Cyan=pincer<br>Orange=shy<br><br>Energizer flips<br>fright mode!';
   pmReset();arcadeLoadLeaderboard('pacman');
   const tcPU=document.getElementById('tc-pm-up'),tcPD=document.getElementById('tc-pm-down'),
         tcPL=document.getElementById('tc-pm-left'),tcPR=document.getElementById('tc-pm-right');
@@ -4689,8 +4710,17 @@ function bamStep(){
 }
 function bamDraw(){
   const c=document.getElementById('bam-canvas');if(!c)return;
-  const ctx=c.getContext('2d'),{W,H,fly,particles,over,won,paused,score,angle}=BAM;
+  const ctx=c.getContext('2d'),{W,H,fly,particles,over,won,paused,score,angle,dropWarn,missCount}=BAM;
   ctx.fillStyle='#0a0a1a';ctx.fillRect(0,0,W,H);
+  // Drop warning border (red flash when near ceiling drop)
+  if(dropWarn>0){
+    BAM.dropWarn--;
+    const pulse=(Date.now()/80)%2<1;
+    if(pulse){
+      ctx.fillStyle='rgba(239,68,68,0.5)';
+      ctx.fillRect(0,17,W,3);ctx.fillRect(0,0,4,H);ctx.fillRect(W-4,0,4,H);
+    }
+  }
   // Grid bubbles
   for(let r=0;r<BAM.grid.length;r++)for(let cl=0;cl<bamCols(r);cl++){
     const col=BAM.grid[r][cl];if(!col)continue;
@@ -4718,6 +4748,12 @@ function bamDraw(){
   // HUD
   ctx.fillStyle='rgba(0,0,0,0.55)';ctx.fillRect(0,0,W,17);
   ctx.fillStyle='#fff';ctx.font="bold 9px 'DM Mono',monospace";ctx.textAlign='left';ctx.fillText(`SCR ${score.toLocaleString()}`,8,12);
+  ctx.textAlign='center';
+  const dropEvery=Math.max(4,7-Math.floor(BAM.level/2));
+  const missLeft=dropEvery-missCount;
+  ctx.fillStyle=missLeft<=2?'#ef4444':missLeft<=4?'#facc15':'rgba(255,255,255,0.5)';
+  ctx.font="7px 'Press Start 2P',monospace";ctx.fillText(`MISS ${missCount}/${dropEvery}`,W/2,12);
+  ctx.fillStyle='#fff';ctx.font="bold 9px 'DM Mono',monospace";
   ctx.textAlign='right';ctx.fillText(`LVL ${BAM.level}`,W-8,12);
   const se=document.getElementById('bam-score');if(se)se.textContent=score.toLocaleString();
   if(over){ctx.fillStyle='rgba(0,0,0,0.75)';ctx.fillRect(0,0,W,H);ctx.fillStyle='#e63946';ctx.font="bold 18px 'DM Mono',monospace";ctx.textAlign='center';ctx.fillText('OVERFLOW!',W/2,H/2-14);ctx.fillStyle='rgba(255,255,255,0.5)';ctx.font="10px 'DM Mono',monospace";ctx.fillText('ENTER OR TAP TO RETRY',W/2,H/2+8);}
@@ -5039,7 +5075,7 @@ function launchFrogpost(){
       <div><div style="font-family:'DM Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:0.15em;color:#9a9a9a;margin-bottom:2px">Lives</div><div id="frog-lives" style="font-family:Georgia,serif;font-size:18px;font-weight:600;color:#111">3</div></div>
       <div><div style="font-family:'DM Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:0.15em;color:#9a9a9a;margin-bottom:2px">Level</div><div id="frog-level" style="font-family:Georgia,serif;font-size:18px;font-weight:600;color:#111">1</div></div>
     </div>`;
-  document.getElementById('arcade-controls').innerHTML='↑ ↓ ← → &nbsp; Move<br>P &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Pause<br>Enter &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Restart<br><br>Ride logs across<br>the puddle!<br>Fill all 5 📭!';
+  document.getElementById('arcade-controls').innerHTML='↑ ↓ ← → &nbsp; Move<br>P &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Pause<br>Enter &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Restart<br><br>Ride logs across!<br>⚠ Turtles dive —<br>avoid sunken ones!<br>Fill all 5 📭';
   frogReset();arcadeLoadLeaderboard('frogpost');
   const tcU=document.getElementById('tc-fr-up'),tcD=document.getElementById('tc-fr-dn'),
         tcL=document.getElementById('tc-fr-lt'),tcR=document.getElementById('tc-fr-rt');
