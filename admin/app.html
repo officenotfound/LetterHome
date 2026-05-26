@@ -4145,7 +4145,7 @@ function pmStep(){
       const cell=PM_MAP[PM.py][PM.px];
       if(cell===1){PM_MAP[PM.py][PM.px]=3;PM.score+=10;PM.dots--;PM.dotsEaten++;sfxScore();
         // Spawn fruit at 70 and 170 dots eaten
-        if((PM.dotsEaten===70||PM.dotsEaten===170)&&!PM.fruit){PM.fruit={x:9,y:13};PM.fruitTimer=540;}
+        if((PM.dotsEaten===70||PM.dotsEaten===170)&&!PM.fruit){PM.fruit={x:9,y:15};PM.fruitTimer=540;}
         if(!PM.dots){PM.won=true;sfxLevelUp();pmSubmitScore();}}
       if(cell===2){PM_MAP[PM.py][PM.px]=3;PM.score+=50;PM.dots--;PM.eatChain=0;sfxLevelUp();
         // Fright duration shortens with level
