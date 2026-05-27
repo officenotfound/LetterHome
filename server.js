@@ -1,7 +1,5 @@
 require('dotenv').config();
 
-// Sentry must be required and initialized BEFORE express so its v8 SDK
-// can patch the HTTP and Express modules at import time.
 const Sentry = require('@sentry/node');
 if (process.env.SENTRY_DSN) {
   Sentry.init({
@@ -33,8 +31,6 @@ fs.mkdirSync('uploads', { recursive: true });
 fs.mkdirSync('orders',  { recursive: true });
 fs.mkdirSync('backups', { recursive: true });
 
-// Fail loudly at startup if critical secrets are missing — prevents silent
-// production misconfiguration where fallback values would be used instead.
 if (process.env.NODE_ENV === 'production') {
   const required = ['SESSION_SECRET', 'STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET', 'SMTP_HOST', 'SMTP_USER', 'SMTP_PASS'];
   const missing  = required.filter(k => !process.env[k]);
@@ -100,8 +96,6 @@ app.use((_req, res, next) => {
   next();
 });
 
-// Prevent caching of authenticated pages and admin/account APIs so they
-// can't be revealed via the back button or shared-browser scenarios.
 app.use((req, res, next) => {
   const p = req.path;
   if (
@@ -117,7 +111,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// ── Database ──────────────────────────────────────────────────────────────────
 const db = new Database(process.env.DB_PATH || 'orders.db', { allowBareNamedParameters: true });
 db.exec(`
   CREATE TABLE IF NOT EXISTS orders (
@@ -184,7 +177,6 @@ function logAudit(req, action, target_type, target_id, details) {
   } catch (e) { console.error('audit log failed:', e.message); }
 }
 
-// Add deleted_at to orders if it doesn't exist (idempotent migration)
 try { db.exec(`ALTER TABLE orders ADD COLUMN deleted_at DATETIME`);       } catch {}
 try { db.exec(`ALTER TABLE orders ADD COLUMN customer_ip TEXT`);          } catch {}
 try { db.exec(`ALTER TABLE orders ADD COLUMN printer_ref TEXT`);          } catch {}
@@ -226,7 +218,6 @@ try {
   db.exec(`CREATE INDEX IF NOT EXISTS idx_saved_recipients_email ON saved_recipients(customer_email)`);
 } catch (e) { console.error('[init] saved_recipients:', e.message); }
 
-// New tables (schema B)
 try {
   db.exec(`CREATE TABLE IF NOT EXISTS occasions (
     id                 INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -258,7 +249,6 @@ try {
   )`);
 } catch (e) { console.error('[init] email_templates table:', e.message); }
 
-// Seed default canned reply templates (INSERT OR IGNORE — never overwrites edits)
 const defaultTemplates = [
   {
     name:    'Where is my letter?',
@@ -430,7 +420,6 @@ try {
   db.exec(`CREATE INDEX IF NOT EXISTS idx_arcade_score ON arcade_scores(game, score DESC)`);
 } catch (e) { console.error('[init] arcade_scores table:', e.message); }
 
-// ── IP geolocation (server-side, in-memory cached) ───────────────────────────
 const ipCountryCache = new Map();
 const IP_CACHE_TTL_MS = 24 * 3600 * 1000;
 
@@ -466,7 +455,6 @@ async function lookupCountry(ip) {
       }
     }
   } catch {}
-  // Fallback: ip-api.com (HTTP-only on free tier — non-critical geolocation data)
   try {
     const r = await fetch(`http://ip-api.com/json/${encodeURIComponent(ip)}?fields=status,country,countryCode`, {
       signal: AbortSignal.timeout(3000),
@@ -529,7 +517,6 @@ function verifyPasswordResetToken(email, currentHash, token, maxAgeMs = 30 * 60 
   catch { return false; }
 }
 
-// Failed admin-login tracking (in-memory, resets on restart)
 const failedAdminLogins = new Map(); // ip -> [timestamps]
 let lastFailedLoginAlertAt = 0;
 function recordFailedAdminLogin(ip, username) {
@@ -585,7 +572,6 @@ function setSetting(key, value) {
     .run(key, String(value ?? ''));
 }
 
-// ── Email transport ───────────────────────────────────────────────────────────
 const transport = mailer.createTransport({
   host:   process.env.SMTP_HOST,
   port:   Number(process.env.SMTP_PORT) || 587,
@@ -603,7 +589,6 @@ async function sendMail(opts, type = 'general', orderId = null) {
   } catch (e) { console.error('[email_log]', e.message); }
 }
 
-// ── File uploads ──────────────────────────────────────────────────────────────
 const upload = multer({
   dest: 'uploads',
   limits: { fileSize: 10 * 1024 * 1024, files: 5 },
@@ -621,7 +606,6 @@ const upload = multer({
   },
 });
 
-// ── Order folder helpers ──────────────────────────────────────────────────────
 function orderDirPath(id, createdAt) {
   const date = new Date(createdAt).toISOString().slice(0, 10);
   return path.join(__dirname, 'orders', `${date}_${String(id).padStart(5, '0')}`);
@@ -636,7 +620,6 @@ function safeFilePath(dir, originalName) {
   return dest;
 }
 
-// Backfill status_token for any orders created before this column was added.
 ;(function backfillStatusTokens() {
   try {
     const rows = db.prepare('SELECT id FROM orders WHERE status_token IS NULL').all();
@@ -646,7 +629,6 @@ function safeFilePath(dir, originalName) {
   } catch (e) { console.error('[init] token backfill failed:', e.message); }
 })();
 
-// Abandoned order recovery — send a one-time recovery email.
 ;(async function abandonedOrderRecovery() {
   try {
     const cutoff2d  = new Date(Date.now() - 2  * 86400 * 1000).toISOString();
@@ -676,7 +658,6 @@ function safeFilePath(dir, originalName) {
   } catch (e) { console.error('[recovery] startup check failed:', e.message); }
 })();
 
-// Occasion reminders — send reminders for upcoming occasions.
 ;(async function occasionReminders() {
   try {
     const occasions = db.prepare('SELECT * FROM occasions').all();
@@ -703,7 +684,6 @@ function safeFilePath(dir, originalName) {
   } catch (e) { console.error('[occasions] startup check failed:', e.message); }
 })();
 
-// SLA alerts — email OPERATOR_EMAIL if any orders have been in paid/submitted_to_printer for 20h+.
 ;(async function slaAlerts() {
   if (!process.env.OPERATOR_EMAIL) return;
   try {
@@ -732,8 +712,6 @@ function safeFilePath(dir, originalName) {
   } catch (e) { console.error('[sla] startup check failed:', e.message); }
 })();
 
-// Privacy cleanup: delete order folders older than 7 days on every startup.
-// Replaces the unreliable setTimeout approach that was lost on process restart.
 ;(function cleanupOldOrderFolders() {
   const cutoff = new Date(Date.now() - 7 * 86400 * 1000).toISOString();
   try {
@@ -750,7 +728,6 @@ function safeFilePath(dir, originalName) {
   } catch (e) { console.error('[privacy] startup cleanup failed:', e.message); }
 })();
 
-// ── Stripe webhook (must come before express.json middleware) ─────────────────
 app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
   let event;
   try {
@@ -768,13 +745,9 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
   res.json({ received: true });
 });
 
-// ── Middleware ────────────────────────────────────────────────────────────────
 app.use(express.json({ limit: '64kb' }));
 app.use(express.urlencoded({ limit: '64kb', extended: true }));
 
-// ── Health check ──────────────────────────────────────────────────────────────
-// Used by uptime monitoring (UptimeRobot, etc.). Lightweight, no auth.
-// Returns 200 + DB ping if alive, 503 if the DB is unreachable.
 app.get('/health', (req, res) => {
   res.setHeader('Cache-Control', 'no-store');
   try {
@@ -785,7 +758,6 @@ app.get('/health', (req, res) => {
   }
 });
 
-// Clean URLs for all pages
 ['send', 'privacy', 'terms', 'refunds', 'about', 'contact', 'track', 'order-success',
  'from-usa', 'from-uk', 'from-australia', 'from-uae', 'from-france', 'send-documents-to-canada',
 ].forEach(p =>
@@ -865,7 +837,6 @@ app.use(express.static('public', {
   },
 }));
 
-// ── GA4 tracking snippet (served to all public pages) ─────────────────────────
 app.get('/ga.js', (req, res) => {
   const id = process.env.GA4_MEASUREMENT_ID || 'G-DF3XQ6ML41';
   res.setHeader('Content-Type', 'application/javascript');
@@ -884,8 +855,6 @@ app.get('/ga.js', (req, res) => {
 `.trim());
 });
 
-
-// ── Public site config ────────────────────────────────────────────────────────
 app.get('/api/site-config', (req, res) => {
   res.json({
     orders_open:               getSetting('service_paused', 'false') !== 'true',
@@ -896,7 +865,6 @@ app.get('/api/site-config', (req, res) => {
   });
 });
 
-// ── Visitor country (server-side IP detection for the ticker) ────────────────
 app.get('/api/visitor-country', async (req, res) => {
   try {
     const ip = getClientIp(req);
@@ -907,7 +875,6 @@ app.get('/api/visitor-country', async (req, res) => {
   }
 });
 
-// ── Page-view tracking middleware ────────────────────────────────────────────
 function parseUA(ua) {
   let device = 'desktop';
   if (/iPad|Android(?!.*Mobile)|Tablet/i.test(ua))    device = 'tablet';
@@ -971,7 +938,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// ── Rate limiting ─────────────────────────────────────────────────────────────
 const orderLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   max: 8,
@@ -1039,7 +1005,6 @@ function requireCustomer(req, res, next) {
   res.status(401).json({ error: 'Not logged in.' });
 }
 
-// ── Create order ──────────────────────────────────────────────────────────────
 app.post('/api/create-order', orderLimiter, upload.array('attachments', 5), async (req, res) => {
   if (getSetting('service_paused', 'false') === 'true')
     return res.status(503).json({ error: 'Orders are currently paused. Please check back soon.' });
@@ -1176,7 +1141,6 @@ app.post('/api/create-order', orderLimiter, upload.array('attachments', 5), asyn
   res.json({ checkoutUrl: stripeSession.url });
 });
 
-// ── Order status (used by success page) ──────────────────────────────────────
 app.get('/api/order-status', trackLimiter, (req, res) => {
   const order = db.prepare('SELECT * FROM orders WHERE stripe_session_id = ?')
     .get(req.query.session_id || '');
@@ -1192,7 +1156,6 @@ app.get('/api/order-status', trackLimiter, (req, res) => {
   });
 });
 
-// ── Order tracking ────────────────────────────────────────────────────────────
 app.post('/api/track', trackLimiter, (req, res) => {
   const { email, order_id } = req.body;
   if (!email || !order_id) return res.status(400).json({ error: 'Email and order ID are required.' });
@@ -1222,7 +1185,6 @@ app.post('/api/track', trackLimiter, (req, res) => {
   });
 });
 
-// ── Admin auth ───────────────────────────────────────────────────────────────
 app.get('/admin/login', (req, res) => {
   if (req.session?.admin) return res.redirect('/admin');
   res.sendFile(path.join(__dirname, 'admin', 'login.html'));
@@ -1272,7 +1234,6 @@ app.get('/admin', requireAdmin, (req, res) =>
 app.get('/admin/*', requireAdmin, (req, res) =>
   res.sendFile(path.join(__dirname, 'admin', 'app.html')));
 
-// ── Admin API ─────────────────────────────────────────────────────────────────
 app.get('/api/admin/me', requireAdmin, (req, res) =>
   res.json({ username: req.session.admin.username }));
 
@@ -1297,7 +1258,6 @@ app.post('/api/admin/tetris/scores', requireAdmin, (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// ── Arcade scores (all 5 games) ───────────────────────────────────────────────
 app.get('/api/admin/arcade/scores/:game', requireAdmin, (req, res) => {
   try {
     const rows = db.prepare(
@@ -1331,7 +1291,6 @@ app.get('/api/admin/arcade/hall-of-fame', requireAdmin, (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// Cost & fee constants (in cents CAD)
 const COST_DOMESTIC      = 600;     // $6 per Canadian letter
 const COST_INTERNATIONAL = 1200;    // $12 per international letter
 const STRIPE_PCT         = 0.029;   // 2.9% Canadian card rate
@@ -1444,7 +1403,6 @@ app.delete('/api/admin/orders/:id', requireAdmin, (req, res) => {
   res.json({ ok: true });
 });
 
-// Bulk soft-delete orders. Same invariant as single delete: customers untouched.
 app.post('/api/admin/orders/bulk-delete', requireAdmin, (req, res) => {
   const { ids } = req.body;
   if (!Array.isArray(ids) || !ids.length) return res.status(400).json({ error: 'No order IDs provided' });
@@ -1480,7 +1438,6 @@ app.post('/api/admin/orders/:id/status', requireAdmin, async (req, res) => {
   db.prepare('UPDATE orders SET status = ? WHERE id = ?').run(req.body.status, id);
   logAudit(req, 'order.status_change', 'order', id, { from: before?.status, to: req.body.status });
 
-  // Fire "Letter sent" email when status transitions to 'mailed' via the generic dropdown
   if (req.body.status === 'mailed' && before?.status !== 'mailed') {
     const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(id);
     if (order?.customer_email) {
@@ -1768,7 +1725,6 @@ app.delete('/api/admin/customers/:email/tags/:tag', requireAdmin, (req, res) => 
   res.json({ ok: true });
 });
 
-// Send a custom message to a specific order's customer
 app.post('/api/admin/orders/:id/message', requireAdmin, async (req, res) => {
   const { subject, body } = req.body;
   if (!subject?.trim() || !body?.trim()) return res.status(400).json({ error: 'Subject and body required' });
@@ -1789,7 +1745,6 @@ app.post('/api/admin/orders/:id/message', requireAdmin, async (req, res) => {
   }
 });
 
-// Broadcast email — to all customers, or filtered by tag
 app.post('/api/admin/broadcast', requireAdmin, async (req, res) => {
   const { subject, body, tag } = req.body;
   if (!subject?.trim() || !body?.trim()) return res.status(400).json({ error: 'Subject and body required' });
@@ -1811,7 +1766,6 @@ app.post('/api/admin/broadcast', requireAdmin, async (req, res) => {
   recipients = recipients.filter(e => !unsubed.has(e));
   if (!recipients.length) return res.status(400).json({ error: 'No recipients match (everyone has unsubscribed or no one matches).' });
 
-  // Send in background — don't block the response. Throttle ~1/sec to be nice to SMTP.
   logAudit(req, 'broadcast.send', 'broadcast', tag || 'all', { subject, recipients: recipients.length, skipped_unsubscribed: skipped - recipients.length });
   res.json({ ok: true, sentTo: recipients.length, skippedUnsubscribed: skipped - recipients.length });
   (async () => {
@@ -1834,7 +1788,6 @@ app.post('/api/admin/broadcast', requireAdmin, async (req, res) => {
   })();
 });
 
-// Preview broadcast recipient count
 app.get('/api/admin/broadcast/preview', requireAdmin, (req, res) => {
   const { tag } = req.query;
   const unsubed = new Set(db.prepare(`SELECT email FROM customers WHERE unsubscribed_at IS NOT NULL`).all().map(r => r.email));
@@ -1851,13 +1804,11 @@ app.get('/api/admin/broadcast/preview', requireAdmin, (req, res) => {
   res.json({ count: willSend, total, unsubscribed: total - willSend });
 });
 
-// List all unique tags (for broadcast UI)
 app.get('/api/admin/tags', requireAdmin, (req, res) => {
   const tags = db.prepare(`SELECT tag, COUNT(*) as n FROM customer_tags GROUP BY tag ORDER BY tag`).all();
   res.json(tags);
 });
 
-// Bulk status update — apply a status to a list of order IDs
 app.post('/api/admin/orders/bulk-status', requireAdmin, async (req, res) => {
   const { ids, status } = req.body;
   const valid = ['awaiting_payment', 'paid', 'submitted_to_printer', 'printing', 'mailed', 'delivered', 'refunded'];
@@ -1879,7 +1830,6 @@ app.post('/api/admin/orders/bulk-status', requireAdmin, async (req, res) => {
   cleanIds.forEach(id => stmt.run(status, id));
   logAudit(req, 'order.bulk_status', 'order', cleanIds.join(','), { status, count: cleanIds.length });
 
-  // Send "mailed" notification for each order that wasn't already mailed
   if (status === 'mailed') {
     for (const id of cleanIds) {
       if (alreadyMailed.has(id)) continue;
@@ -1905,7 +1855,6 @@ app.post('/api/admin/orders/bulk-status', requireAdmin, async (req, res) => {
   res.json({ ok: true, count: cleanIds.length });
 });
 
-// Refund via Stripe — calls stripe.refunds.create with the order's payment_intent
 app.post('/api/admin/orders/:id/refund', requireAdmin, async (req, res) => {
   const id = Number(req.params.id);
   const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(id);
@@ -1924,7 +1873,6 @@ app.post('/api/admin/orders/:id/refund', requireAdmin, async (req, res) => {
   }
 });
 
-// Generate a prefilled /send URL for reorder (admin shares with customer)
 app.get('/api/admin/orders/:id/reorder-url', requireAdmin, (req, res) => {
   const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(Number(req.params.id));
   if (!order) return res.status(404).json({ error: 'Not found' });
@@ -1940,7 +1888,6 @@ app.get('/api/admin/orders/:id/reorder-url', requireAdmin, (req, res) => {
   res.json({ url });
 });
 
-// Global search — order ID, customer email, recipient name, street
 app.get('/api/admin/search', requireAdmin, (req, res) => {
   const q = String(req.query.q || '').trim();
   if (q.length < 2) return res.json({ orders: [], customers: [] });
@@ -1965,13 +1912,11 @@ app.get('/api/admin/search', requireAdmin, (req, res) => {
   res.json({ orders, customers });
 });
 
-// Audit log listing
 app.get('/api/admin/audit', requireAdmin, (req, res) => {
   const rows = db.prepare(`SELECT * FROM audit_log ORDER BY created_at DESC LIMIT 200`).all();
   res.json(rows);
 });
 
-// D. Chart data
 app.get('/api/admin/stats/chart', requireAdmin, (req, res) => {
   const period = req.query.period === 'weekly' ? 'weekly' : 'monthly';
   let rows;
@@ -1999,7 +1944,6 @@ app.get('/api/admin/stats/chart', requireAdmin, (req, res) => {
   res.json(rows);
 });
 
-// Geographic breakdown
 app.get('/api/admin/stats/geo', requireAdmin, (req, res) => {
   const from = db.prepare(`
     SELECT sender_country as country, COUNT(*) as orders
@@ -2016,7 +1960,6 @@ app.get('/api/admin/stats/geo', requireAdmin, (req, res) => {
   res.json({ from, to });
 });
 
-// ── Visitor analytics ────────────────────────────────────────────────────────
 app.get('/api/admin/visitors/stats', requireAdmin, (req, res) => {
   try {
     const c = (sql, ...args) => db.prepare(sql).get(...args).c;
@@ -2098,7 +2041,6 @@ app.get('/api/admin/visitors/recent', requireAdmin, (req, res) => {
   }
 });
 
-// Order notes
 app.get('/api/admin/orders/:id/notes', requireAdmin, (req, res) => {
   const notes = db.prepare('SELECT * FROM order_notes WHERE order_id = ? ORDER BY created_at DESC')
     .all(Number(req.params.id));
@@ -2112,7 +2054,6 @@ app.post('/api/admin/orders/:id/notes', requireAdmin, (req, res) => {
   res.json({ ok: true });
 });
 
-// Occasions (per customer)
 app.get('/api/admin/customers/:email/occasions', requireAdmin, (req, res) => {
   const occasions = db.prepare('SELECT * FROM occasions WHERE customer_email = ? ORDER BY created_at DESC')
     .all(req.params.email);
@@ -2134,7 +2075,6 @@ app.delete('/api/admin/occasions/:id', requireAdmin, (req, res) => {
   res.json({ ok: true });
 });
 
-// Email templates
 app.get('/api/admin/templates', requireAdmin, (req, res) => {
   res.json(db.prepare('SELECT * FROM email_templates ORDER BY created_at DESC').all());
 });
@@ -2155,7 +2095,6 @@ app.delete('/api/admin/templates/:id', requireAdmin, (req, res) => {
   res.json({ ok: true });
 });
 
-// Settings
 app.get('/api/admin/settings', requireAdmin, (req, res) => {
   const rows = db.prepare('SELECT key, value FROM settings').all();
   const obj = {};
@@ -2186,7 +2125,6 @@ app.post('/api/admin/settings/batch', requireAdmin, (req, res) => {
   res.json({ ok: true });
 });
 
-// Actual cost per order
 app.post('/api/admin/orders/:id/actual-cost', requireAdmin, (req, res) => {
   const cost = req.body.actual_cost_cents;
   if (!Number.isInteger(cost) || cost < 0) return res.status(400).json({ error: 'actual_cost_cents must be a non-negative integer' });
@@ -2196,7 +2134,6 @@ app.post('/api/admin/orders/:id/actual-cost', requireAdmin, (req, res) => {
   res.json({ ok: true });
 });
 
-// P&L monthly digest
 app.post('/api/admin/pnl-digest', requireAdmin, async (req, res) => {
   if (!process.env.OPERATOR_EMAIL) return res.status(400).json({ error: 'OPERATOR_EMAIL not configured' });
   const month = (req.body.month || new Date().toISOString().slice(0, 7));
@@ -2247,7 +2184,6 @@ app.post('/api/admin/pnl-digest', requireAdmin, async (req, res) => {
   }
 });
 
-// Print-ready view for an order
 app.get('/admin/orders/:id/print', requireAdmin, (req, res) => {
   const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(Number(req.params.id));
   if (!order) return res.status(404).send('Not found');
@@ -2333,7 +2269,6 @@ ${attachments.length ? `<div class="attachments"><strong>${attachments.length} a
 </body></html>`);
 });
 
-// ── Contact form ──────────────────────────────────────────────────────────────
 app.post('/api/contact', contactLimiter, async (req, res, next) => {
   const { name, email, message } = req.body;
   if (!name || !email || !message) return res.status(400).json({ error: 'All fields are required.' });
@@ -2370,7 +2305,6 @@ app.post('/api/contact', contactLimiter, async (req, res, next) => {
   res.json({ ok: true });
 });
 
-// ── Customer accounts ─────────────────────────────────────────────────────────
 app.post('/api/account/register', accountLimiter, async (req, res) => {
   try {
     const email = (req.body.email || '').trim().toLowerCase();
@@ -2471,7 +2405,6 @@ app.post('/api/account/forgot', accountLimiter, async (req, res) => {
                  `If you didn't request this, you can safely ignore this email — your password won't change.\n\n— Letterhome`,
       }, 'password_reset_request').catch(() => {});
     }
-    // Always succeed regardless of whether the account exists.
     res.json({ ok: true });
   } catch (e) {
     console.error('[account/forgot]', e.message);
@@ -2591,7 +2524,6 @@ app.put('/api/account/password', requireCustomer, accountLimiter, async (req, re
   }
 });
 
-// ── Order fulfilment ──────────────────────────────────────────────────────────
 async function fulfillOrder(sessionId) {
   const order = db.prepare('SELECT * FROM orders WHERE stripe_session_id = ?').get(sessionId);
   if (!order || order.status !== 'awaiting_payment') return;
@@ -2640,7 +2572,6 @@ async function fulfillOrder(sessionId) {
     text:    buildCustomerEmailText(order, toAddr, amountCAD, isDomestic),
   }, 'order_confirmation', order.id);
 
-  // Upsert customer record — persists even if this order is later deleted
   try {
     const geo = await lookupCountry(order.customer_ip).catch(() => null);
     db.prepare(`
@@ -2890,8 +2821,6 @@ a{color:#a8472d}</style></head>
 <a href="/">← Back to Letterhome</a></div></body></html>`;
 }
 
-// F. New email builder functions
-
 function buildRecoveryEmail(order) {
   const recipientHint = order.recipient_name ? ` to ${order.recipient_name}` : '';
   return {
@@ -2939,7 +2868,6 @@ function buildOccasionReminderEmail(occ, lastOrder) {
   };
 }
 
-// ── Admin: contact submissions ────────────────────────────────────────────────
 app.get('/api/admin/contacts/unread', requireAdmin, (req, res) => {
   const n = db.prepare('SELECT COUNT(*) AS n FROM contact_submissions WHERE read_at IS NULL').get().n;
   res.json({ unread: n });
@@ -2983,7 +2911,6 @@ app.post('/api/admin/contacts/:id/reply', requireAdmin, async (req, res) => {
   }
 });
 
-// ── Admin: Stripe ─────────────────────────────────────────────────────────────
 app.get('/api/admin/stripe/overview', requireAdmin, async (req, res) => {
   try {
     const [balance, disputesList, payoutsList] = await Promise.all([
@@ -3056,7 +2983,6 @@ app.get('/api/admin/stripe/revenue', requireAdmin, async (req, res) => {
   } catch (e) { res.status(502).json({ error: e.message }); }
 });
 
-// ── Admin: Cloudflare analytics ───────────────────────────────────────────────
 app.get('/api/admin/cloudflare/analytics', requireAdmin, async (req, res) => {
   const token  = process.env.CF_API_TOKEN;
   const zoneId = process.env.CF_ZONE_ID;
@@ -3109,7 +3035,6 @@ app.get('/api/admin/cloudflare/analytics', requireAdmin, async (req, res) => {
   }
 });
 
-// ── Admin: Cloudflare cache purge ─────────────────────────────────────────────
 app.post('/api/admin/cloudflare/purge', requireAdmin, async (req, res) => {
   const token  = process.env.CF_API_TOKEN;
   const zoneId = process.env.CF_ZONE_ID;
@@ -3134,7 +3059,6 @@ app.post('/api/admin/cloudflare/purge', requireAdmin, async (req, res) => {
   }
 });
 
-// ── Admin: server health ──────────────────────────────────────────────────────
 app.get('/api/admin/server-health', requireAdmin, (req, res) => {
   const mem = process.memoryUsage();
   let dbSize = 0;
@@ -3149,7 +3073,6 @@ app.get('/api/admin/server-health', requireAdmin, (req, res) => {
   });
 });
 
-// API: list backups
 app.get('/api/admin/backups', requireAdmin, (req, res) => {
   try {
     const files = fs.readdirSync(BACKUP_DIR)
@@ -3171,14 +3094,12 @@ app.get('/api/admin/backups', requireAdmin, (req, res) => {
   }
 });
 
-// API: trigger manual backup
 app.post('/api/admin/backups/run', requireAdmin, async (req, res) => {
   const result = await runBackup();
   if (result.ok) logAudit(req, 'backup.manual', 'backup', result.filename);
   res.json(result);
 });
 
-// API: download a backup
 app.get('/api/admin/backups/:filename', requireAdmin, (req, res) => {
   const filename = path.basename(req.params.filename);
   if (!filename.startsWith('orders-') || !(filename.endsWith('.db') || filename.endsWith('.db.enc'))) {
@@ -3189,7 +3110,6 @@ app.get('/api/admin/backups/:filename', requireAdmin, (req, res) => {
   res.download(filepath, filename);
 });
 
-// API: delete a backup
 app.delete('/api/admin/backups/:filename', requireAdmin, (req, res) => {
   const filename = path.basename(req.params.filename);
   if (!filename.startsWith('orders-') || !(filename.endsWith('.db') || filename.endsWith('.db.enc'))) {
@@ -3206,11 +3126,8 @@ app.use((req, res) => {
   res.status(404).sendFile(path.join(__dirname, 'public', '404.html'));
 });
 
-// Sentry's Express error handler — captures any error thrown from a route
-// or middleware and forwards the stack + request context to Sentry.
 if (process.env.SENTRY_DSN) Sentry.setupExpressErrorHandler(app);
 
-// ── Error monitoring ──────────────────────────────────────────────────────────
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || process.env.OPERATOR_EMAIL || process.env.SMTP_USER;
 
 function sendErrorAlert(subject, body) {
@@ -3246,13 +3163,9 @@ process.on('uncaughtException', (err) => {
   sendErrorAlert('Uncaught Exception — process may be unstable', msg);
 });
 
-// ── Automated backups ─────────────────────────────────────────────────────────
 const BACKUP_DIR      = path.join(__dirname, 'backups');
 const BACKUP_KEEP     = 14;
 
-// Upload a backup file to Backblaze B2. No-op if env vars are missing.
-// Authorizes fresh on each call — auth tokens are short-lived but daily
-// uploads are infrequent enough that this is fine.
 async function uploadToB2(filePath) {
   if (!process.env.B2_KEY_ID || !process.env.B2_APPLICATION_KEY || !process.env.B2_BUCKET_ID) {
     return;
@@ -3287,7 +3200,6 @@ async function runBackup() {
       fs.copyFileSync(dbPath, dest);
     }
 
-    // Prune old backups — keep newest BACKUP_KEEP files (of either format)
     const files = fs.readdirSync(BACKUP_DIR)
       .filter(f => f.startsWith('orders-') && (f.endsWith('.db') || f.endsWith('.db.enc')))
       .map(f => ({ name: f, mtime: fs.statSync(path.join(BACKUP_DIR, f)).mtimeMs }))
@@ -3298,10 +3210,8 @@ async function runBackup() {
 
     console.log(`[backup] created ${path.basename(dest)}${passphrase ? ' (encrypted)' : ''}`);
 
-    // Optional: push to Backblaze B2 (off-server safety net).
     uploadToB2(dest).catch(err => console.error('[backup] B2 upload failed:', err.message));
 
-    // Optional: email a copy to the admin (off-site safety net).
     if (process.env.BACKUP_EMAIL_ENABLED === 'true') {
       const stat = fs.statSync(dest);
       const adminEmail = process.env.ADMIN_EMAIL || process.env.OPERATOR_EMAIL || process.env.SMTP_USER;
@@ -3328,7 +3238,6 @@ async function runBackup() {
   }
 }
 
-// Daily at 2:00 AM
 cron.schedule('0 2 * * *', async () => {
   console.log('[backup] running scheduled backup');
   await runBackup();

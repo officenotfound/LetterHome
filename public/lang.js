@@ -1,5 +1,3 @@
-// Letterhome language toggle — English / Canadian French with localStorage persistence
-
 (function () {
   var TRANSLATIONS = {
     en: {
@@ -671,42 +669,35 @@
     return dict[key] !== undefined ? dict[key] : (TRANSLATIONS.en[key] || key);
   }
 
-  // Expose for use in inline page scripts
   window.LH_T = t;
 
   function applyLang(lang) {
     var dict = TRANSLATIONS[lang] || TRANSLATIONS.en;
 
-    // textContent replacements
     document.querySelectorAll('[data-i18n]').forEach(function (el) {
       var key = el.getAttribute('data-i18n');
       if (dict[key] !== undefined) el.textContent = dict[key];
     });
 
-    // innerHTML replacements (for elements containing tags like <em>)
     document.querySelectorAll('[data-i18n-html]').forEach(function (el) {
       var key = el.getAttribute('data-i18n-html');
       if (dict[key] !== undefined) el.innerHTML = dict[key];
     });
 
-    // placeholder replacements
     document.querySelectorAll('[data-i18n-placeholder]').forEach(function (el) {
       var key = el.getAttribute('data-i18n-placeholder');
       if (dict[key] !== undefined) el.placeholder = dict[key];
     });
 
-    // aria-label replacements
     document.querySelectorAll('[data-i18n-aria]').forEach(function (el) {
       var key = el.getAttribute('data-i18n-aria');
       if (dict[key] !== undefined) el.setAttribute('aria-label', dict[key]);
     });
 
-    // Update lang toggle button labels (show the OTHER language)
     document.querySelectorAll('.lang-toggle').forEach(function (btn) {
       btn.textContent = lang === 'fr' ? 'EN' : 'FR';
     });
 
-    // Update html lang attribute
     document.documentElement.lang = lang === 'fr' ? 'fr-CA' : 'en-CA';
     document.documentElement.setAttribute('data-lang', lang);
   }
@@ -718,11 +709,9 @@
     applyLang(next);
   };
 
-  // Apply on DOM ready
   document.addEventListener('DOMContentLoaded', function () {
     var lang = document.documentElement.getAttribute('data-lang') || 'en';
     if (lang !== 'en') applyLang(lang);
-    // Always sync toggle button text
     document.querySelectorAll('.lang-toggle').forEach(function (btn) {
       btn.textContent = lang === 'fr' ? 'EN' : 'FR';
     });
