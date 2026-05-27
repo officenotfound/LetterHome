@@ -75,7 +75,7 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:48px 36px 32px
 @media(max-width:900px){.nav-links{display:none}.main{grid-template-columns:1fr;gap:48px;padding:48px 24px 80px}.form-card{padding:32px 28px}}
 @media(max-width:480px){.main{padding:32px 18px 60px}.intro{font-size:15px}.meta-item{gap:14px}}
 </style>
-<script>(function(){try{var t=localStorage.getItem('lh-theme')||'light';document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+<script>(function(){try{var t=localStorage.getItem('lh-theme')||(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 <script>(function(){try{var l=localStorage.getItem('lh-lang')||'en';document.documentElement.setAttribute('data-lang',l);}catch(e){}})();</script>
 <link rel="stylesheet" href="/theme.css">
 </head>
