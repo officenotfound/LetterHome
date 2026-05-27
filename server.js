@@ -651,6 +651,7 @@ function safeFilePath(dir, originalName) {
   try {
     const cutoff2d  = new Date(Date.now() - 2  * 86400 * 1000).toISOString();
     const cutoff7d  = new Date(Date.now() - 7  * 86400 * 1000).toISOString();
+    const cutoff30d = new Date(Date.now() - 30 * 86400 * 1000).toISOString();
     const abandoned = db.prepare(`
       SELECT * FROM orders
       WHERE status = 'awaiting_payment'
@@ -659,7 +660,12 @@ function safeFilePath(dir, originalName) {
         AND recovery_sent_at IS NULL
         AND customer_email IS NOT NULL
         AND customer_email LIKE '%_@_%.__%'
-    `).all(cutoff2d, cutoff7d);
+        AND NOT EXISTS (
+          SELECT 1 FROM orders o2
+          WHERE o2.customer_email = orders.customer_email
+            AND o2.recovery_sent_at > ?
+        )
+    `).all(cutoff2d, cutoff7d, cutoff30d);
     for (const order of abandoned) {
       try {
         await sendMail(buildRecoveryEmail(order), 'recovery', order.id);
@@ -793,7 +799,7 @@ app.get('/account/:page', (req, res) => res.sendFile(path.join(__dirname, 'publi
 app.get('/faq', (req, res) => res.redirect('/#faq'));
 
 function unsubPage(state, email = '') {
-  const safeEmail = String(email).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const safeEmail = String(email).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   const headings = {
     invalid:    { title: 'Invalid unsubscribe link', body: "We couldn't verify this unsubscribe link. It may be malformed, or copied incompletely from an email. If you want to opt out, reply to any email from us and we'll handle it manually." },
     confirm:    { title: 'Unsubscribe from Letterhome emails?', body: `We'll stop sending marketing or update emails to <strong>${safeEmail}</strong>. You'll still receive transactional messages tied to orders you place (payment confirmations, status updates).` },
@@ -1235,14 +1241,14 @@ app.post('/admin/login', loginLimiter, async (req, res) => {
   }
 
   if (process.env.TOTP_SECRET) {
-    if (!code) return res.redirect('/admin/login?error=2fa');
+    if (!code) return res.redirect('/admin/login?error=1');
     const totp = new TOTP({
       issuer: 'Letterhome Admin', label: 'admin',
       secret: Secret.fromBase32(process.env.TOTP_SECRET),
     });
     if (totp.validate({ token: code.replace(/\s/g,''), window: 1 }) === null) {
       recordFailedAdminLogin(ip, username);
-      return res.redirect('/admin/login?error=2fa');
+      return res.redirect('/admin/login?error=1');
     }
   }
 

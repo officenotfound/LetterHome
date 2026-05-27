@@ -29,8 +29,7 @@ button:hover{background:#e63946}
     <div class="logo-sub">Admin · Restricted</div>
   </div>
   <p class="subtitle">Sign in</p>
-  <div id="err"  class="error" style="display:none">Incorrect username or password</div>
-  <div id="err2" class="error" style="display:none">Invalid or missing 2FA code</div>
+  <div id="err" class="error" style="display:none">Incorrect username, password, or 2FA code</div>
   <form method="POST" action="/admin/login">
     <label for="username">Username</label>
     <input id="username" name="username" type="text" autocomplete="username" required>
@@ -44,8 +43,6 @@ button:hover{background:#e63946}
 <script>
   if (window.location.search.includes('error=1'))
     document.getElementById('err').style.display = 'block';
-  if (window.location.search.includes('error=2fa'))
-    document.getElementById('err2').style.display = 'block';
 </script>
 </body>
 </html>
