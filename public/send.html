@@ -1057,11 +1057,6 @@ function fillPlace(components, prefix) {
   }
 }
 
-/* ── Per-step validation ─────────────────────────────────────────────────────
-   Validate the current step's fields before advancing. Back navigation always
-   allowed (no validation guard on the Back buttons). Errors mark the invalid
-   fields with .field-error and show a top banner listing what's missing.   */
-
 function tryNext(targetStep) {
   if (validateStep(currentStep)) {
     clearValidation();
@@ -1158,7 +1153,6 @@ function showValidationBanner(msg) {
   banner._dismissTimer = setTimeout(() => banner.remove(), 6000);
 }
 
-// Clear a field's error state as soon as the user starts fixing it
 document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('input, textarea, select').forEach(el => {
     el.addEventListener('input', () => el.classList.remove('field-error'));

@@ -64,8 +64,11 @@ td{padding:12px 0;border-bottom:1px solid rgba(42,42,42,0.07);vertical-align:top
 tr:last-child td{border-bottom:none}
 .status-badge{display:inline-block;padding:2px 8px;border-radius:2px;font-size:11px;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:0.08em}
 .status-paid{background:#fef3c7;color:#92400e}
+.status-submitted{background:#ede9fe;color:#5b21b6}
 .status-printing{background:#dbeafe;color:#1e40af}
 .status-mailed{background:#dcfce7;color:#166534}
+.status-delivered{background:#d1fae5;color:#065f46}
+.status-refunded{background:#f3f4f6;color:#6b7280}
 .tag{display:inline-block;padding:2px 8px;background:#f1ebde;border:1px solid var(--line);border-radius:2px;font-size:12px;font-family:'DM Mono',monospace;margin:2px}
 .divider{border:none;border-top:1px solid var(--line);margin:20px 0}
 footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:40px 36px;margin-top:80px}
@@ -142,7 +145,6 @@ function showOk(id, msg) {
   setTimeout(() => { el.style.display = 'none'; }, 3000);
 }
 
-// ── Password strength ──────────────────────────────────────────────────────────
 function checkStrength(pwd) {
   let score = 0;
   if (pwd.length >= 8)  score++;
@@ -166,7 +168,6 @@ function updateStrength(inputId, barId, labelId) {
   lbl.style.color   = pwd.length === 0 ? 'var(--ink-faint)' : colors[Math.min(score, 3)];
 }
 
-// ── Router ─────────────────────────────────────────────────────────────────────
 (async () => {
   if (path === '/account/login')    { renderLogin();    return; }
   if (path === '/account/register') { renderRegister(); return; }
@@ -182,7 +183,6 @@ function updateStrength(inputId, barId, labelId) {
   renderPortal(me);
 })();
 
-// ── Login ──────────────────────────────────────────────────────────────────────
 function renderLogin() {
   document.title = 'Sign In — Letterhome';
   app.innerHTML = `
@@ -204,7 +204,6 @@ function renderLogin() {
   document.getElementById('login-pwd').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
 }
 
-// ── Forgot Password ────────────────────────────────────────────────────────────
 function renderForgot() {
   document.title = 'Forgot Password — Letterhome';
   app.innerHTML = `
@@ -239,7 +238,6 @@ async function doForgot() {
     <p style="margin-top:18px"><a href="/account/login" style="font-size:13px;color:var(--ink-muted)">← Back to sign in</a></p>`;
 }
 
-// ── Reset Password ─────────────────────────────────────────────────────────────
 function renderReset() {
   document.title = 'Set a New Password — Letterhome';
   const qs = new URLSearchParams(window.location.search);
@@ -310,7 +308,6 @@ async function doLogin() {
   showErr('login-err', r.error || 'Sign in failed.');
 }
 
-// ── Register ───────────────────────────────────────────────────────────────────
 function renderRegister() {
   document.title = 'Create Account — Letterhome';
   app.innerHTML = `
@@ -353,14 +350,13 @@ async function doRegister() {
   showErr('reg-err', r.error || 'Registration failed.');
 }
 
-// ── Portal ─────────────────────────────────────────────────────────────────────
 function renderPortal(me) {
   const c = me.customer;
   const orders = me.orders || [];
   const recipients = me.recipients || [];
 
-  const statusClass = { paid:'status-paid', printing:'status-printing', mailed:'status-mailed' };
-  const statusLabel = { paid:'Preparing', printing:'Printing', mailed:'Mailed', awaiting_payment:'Pending' };
+  const statusClass = { awaiting_payment:'', paid:'status-paid', submitted_to_printer:'status-submitted', printing:'status-printing', mailed:'status-mailed', delivered:'status-delivered', refunded:'status-refunded' };
+  const statusLabel = { awaiting_payment:'Pending', paid:'Preparing', submitted_to_printer:'At Printer', printing:'Printing', mailed:'Mailed', delivered:'Delivered', refunded:'Refunded' };
 
   const orderRows = orders.length === 0
     ? '<tr><td colspan="4" style="color:var(--ink-faint);font-style:italic;padding:20px 0">No orders yet.</td></tr>'
@@ -534,7 +530,7 @@ async function changePassword() {
   const btn = document.querySelector('[onclick="changePassword()"]');
   btn.disabled = true; btn.textContent = 'Updating…';
   const r = await put('/api/account/password', { current_password: current, new_password: newPwd });
-  btn.disabled = false; btn.textContent = 'Update Password';
+  btn.disabled = false; btn.textContent = 'Update Password →';
   if (r.ok) {
     document.getElementById('pwd-current').value = '';
     document.getElementById('pwd-new').value = '';

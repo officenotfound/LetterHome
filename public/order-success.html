@@ -142,7 +142,6 @@ function esc(s) {
     el.innerHTML = '<p style="color:var(--ink-muted);font-size:14px">' + LH_T('success.catch_p') + '</p>';
   }
 
-  // Show "create account" prompt only if not already logged in
   try {
     const me = await fetch('/api/account/me').then(r => r.ok ? r.json() : null).catch(() => null);
     if (!me?.ok) {
