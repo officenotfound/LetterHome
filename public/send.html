@@ -220,24 +220,6 @@ textarea { resize: vertical; min-height: 260px; line-height: 1.6; }
   margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px dashed var(--line);
 }
 
-/* LETTER TYPE SELECTOR */
-.letter-types { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 32px; }
-.letter-type {
-  border: 1.5px solid var(--line); background: var(--kraft-light);
-  padding: 20px 16px; border-radius: 2px; cursor: pointer;
-  transition: all 0.2s; text-align: center;
-}
-.letter-type:hover { border-color: var(--ink); background: var(--paper); }
-.letter-type.selected { border-color: var(--ink); background: var(--paper); box-shadow: var(--shadow-soft); }
-.letter-type-name {
-  font-family: 'DM Serif Display', serif; font-size: 18px; font-weight: 400;
-  margin-bottom: 4px; line-height: 1.2;
-}
-.letter-type-price {
-  font-family: 'DM Mono', monospace; font-size: 12px; color: var(--red);
-  font-weight: 500; margin-bottom: 6px;
-}
-.letter-type-desc { font-size: 12px; color: var(--ink-muted); line-height: 1.4; }
 
 /* ATTACHMENT AREA */
 .attach-zone {
@@ -375,7 +357,6 @@ footer { background: var(--ink); color: rgba(255,255,255,0.65); padding: 48px 36
   .panel { padding: 28px 24px; }
   .address-columns { grid-template-columns: 1fr; gap: 28px; }
   .form-grid-2 { grid-template-columns: 1fr; }
-  .letter-types { grid-template-columns: 1fr; }
   .progress-wrap { padding: 20px 20px; }
   .step-label { display: none; }
 }
@@ -400,7 +381,7 @@ textarea.field-error { border-color: var(--red) !important; }
 }
 .validation-banner::before { content: '!  '; color: var(--red); font-weight: 600; }
 </style>
-<script>(function(){try{var t=localStorage.getItem('lh-theme')||'light';document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+<script>(function(){try{var t=localStorage.getItem('lh-theme')||(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 <script>(function(){try{var l=localStorage.getItem('lh-lang')||'en';document.documentElement.setAttribute('data-lang',l);}catch(e){}})();</script>
 <link rel="stylesheet" href="/theme.css">
 </head>
@@ -782,7 +763,7 @@ textarea.field-error { border-color: var(--red) !important; }
 
     <div class="panel-nav">
       <button class="btn btn-outline" onclick="goTo(2)" data-i18n="send.btn.editletter">← Edit Letter</button>
-      <button class="btn btn-red btn-large" onclick="submitOrder()" data-i18n="send.btn.pay">Pay & Send Letter →</button>
+      <button id="pay-btn" class="btn btn-red btn-large" onclick="submitOrder()" data-i18n="send.btn.pay">Pay & Send Letter →</button>
     </div>
   </div>
 
@@ -1191,7 +1172,7 @@ async function submitOrder() {
   // re-triggering step transitions.
   if (!validateStep(3)) return;
 
-  const btn = document.querySelector('[onclick="submitOrder()"]');
+  const btn = document.getElementById('pay-btn');
   btn.disabled = true;
   btn.innerHTML = `<span style="display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,0.4);border-top-color:#fff;border-radius:50%;animation:lh-spin 0.7s linear infinite;vertical-align:middle;margin-right:8px"></span>${LH_T('send.processing')}`;
   if (!document.getElementById('lh-spin-style')) {
@@ -1259,7 +1240,7 @@ async function submitOrder() {
     if (!cfg.orders_open) {
       const panels = document.querySelectorAll('.panel');
       panels.forEach(p => p.style.display = 'none');
-      const main = document.querySelector('.form-section') || document.querySelector('main') || document.querySelector('.main');
+      const main = document.querySelector('.form-section') || document.querySelector('main') || document.querySelector('.main') || document.querySelector('.send-wrap');
       const msg = document.createElement('div');
       msg.style.cssText = 'max-width:560px;margin:80px auto;padding:48px 40px;background:var(--paper,#faf6ec);border:1px solid rgba(42,42,42,0.14);border-radius:2px;text-align:center';
       msg.innerHTML = `<div style="font-size:40px;margin-bottom:20px">✉</div>

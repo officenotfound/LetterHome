@@ -610,11 +610,12 @@ const upload = multer({
   fileFilter(req, file, cb) {
     const ext  = path.extname(file.originalname).toLowerCase();
     const mime = file.mimetype;
-    const extOk  = ['.pdf', '.doc', '.docx'].includes(ext);
+    const extOk  = ['.pdf', '.doc', '.docx', '.txt'].includes(ext);
     const mimeOk = [
       'application/pdf',
       'application/msword',
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'text/plain',
     ].includes(mime);
     cb(null, extOk && mimeOk);
   },
@@ -1087,7 +1088,7 @@ app.post('/api/create-order', orderLimiter, upload.array('attachments', 5), asyn
     b['s-province'] || null, b['s-postal']   || null, b['s-country'] || null,
     rName, rStreet,
     b['r-city']     || null, b['r-province'] || null, b['r-postal'] || null,
-    b['r-country']  || 'CA', ['standard'].includes(b['letter-type']) ? b['letter-type'] : 'standard',
+    b['r-country']  || 'CA', 'standard',
     b['letter-body'] || null,
     '[]',
     priceCents,
@@ -1129,7 +1130,7 @@ app.post('/api/create-order', orderLimiter, upload.array('attachments', 5), asyn
       postal:   b['s-postal']   || null,
       country:  b['s-country']  || null,
     },
-    letter_type:  b['letter-type'] || 'standard',
+    letter_type:  'standard',
     price_cents:  priceCents,
     attachments:  movedFiles.map(f => path.basename(f.path)),
   }, null, 2), 'utf8');
