@@ -466,7 +466,7 @@ async function lookupCountry(ip) {
       }
     }
   } catch {}
-  // Fallback: ip-api.com
+  // Fallback: ip-api.com (HTTP-only on free tier — non-critical geolocation data)
   try {
     const r = await fetch(`http://ip-api.com/json/${encodeURIComponent(ip)}?fields=status,country,countryCode`, {
       signal: AbortSignal.timeout(3000),
@@ -1602,6 +1602,7 @@ app.delete('/api/admin/customers/:email', requireAdmin, (req, res) => {
 app.post('/api/admin/customers/:email/restore', requireAdmin, (req, res) => {
   db.prepare('UPDATE customers SET deleted_at = NULL WHERE email = ?').run(req.params.email);
   db.prepare("UPDATE orders SET deleted_at = NULL WHERE customer_email = ?").run(req.params.email);
+  logAudit(req, 'customer.restore', 'customer', req.params.email);
   res.json({ ok: true });
 });
 
@@ -1855,7 +1856,18 @@ app.post('/api/admin/orders/bulk-status', requireAdmin, async (req, res) => {
   const valid = ['awaiting_payment', 'paid', 'submitted_to_printer', 'printing', 'mailed', 'delivered', 'refunded'];
   if (!valid.includes(status) || !Array.isArray(ids) || !ids.length) return res.status(400).json({ error: 'Invalid input' });
 
-  const cleanIds = ids.map(Number);
+  const cleanIds = ids.map(Number).filter(Number.isInteger);
+  if (!cleanIds.length) return res.status(400).json({ error: 'No valid order IDs' });
+
+  // Snapshot which orders were NOT already mailed before the bulk update,
+  // so we only send "mailed" notifications to customers who haven't received one.
+  const alreadyMailed = status === 'mailed'
+    ? new Set(
+        db.prepare(`SELECT id FROM orders WHERE id IN (${cleanIds.map(() => '?').join(',')}) AND status = 'mailed'`)
+          .all(...cleanIds).map(r => r.id)
+      )
+    : new Set();
+
   const stmt = db.prepare('UPDATE orders SET status = ? WHERE id = ?');
   cleanIds.forEach(id => stmt.run(status, id));
   logAudit(req, 'order.bulk_status', 'order', cleanIds.join(','), { status, count: cleanIds.length });
@@ -1863,6 +1875,7 @@ app.post('/api/admin/orders/bulk-status', requireAdmin, async (req, res) => {
   // Send "mailed" notification for each order that wasn't already mailed
   if (status === 'mailed') {
     for (const id of cleanIds) {
+      if (alreadyMailed.has(id)) continue;
       const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(id);
       if (!order?.customer_email) continue;
       const isDomestic = order.destination_country === 'CA';
@@ -2236,7 +2249,8 @@ app.get('/admin/orders/:id/print', requireAdmin, (req, res) => {
   if (!letterBody && fs.existsSync(path.join(dir, 'letter.txt'))) {
     letterBody = fs.readFileSync(path.join(dir, 'letter.txt'), 'utf8');
   }
-  const attachments = order.attachment_info ? JSON.parse(order.attachment_info).map(a => a.originalName) : [];
+  let attachments = [];
+  try { attachments = order.attachment_info ? JSON.parse(order.attachment_info).map(a => a.originalName) : []; } catch {}
   const fromAddr = order.skip_return
     ? 'No return address'
     : [order.sender_name, order.sender_street,
@@ -2428,8 +2442,7 @@ app.post('/api/account/login', accountLimiter, async (req, res) => {
 });
 
 app.post('/api/account/logout', (req, res) => {
-  delete req.session.customer;
-  req.session.save(() => res.json({ ok: true }));
+  req.session.destroy(() => res.json({ ok: true }));
 });
 
 app.post('/api/account/forgot', accountLimiter, async (req, res) => {
@@ -3260,10 +3273,11 @@ async function runBackup() {
     const ext  = passphrase ? '.db.enc' : '.db';
     const dest = path.join(BACKUP_DIR, `orders-${ts}${ext}`);
 
+    const dbPath = process.env.DB_PATH || 'orders.db';
     if (passphrase) {
-      encryptFile('orders.db', dest, passphrase);
+      encryptFile(dbPath, dest, passphrase);
     } else {
-      fs.copyFileSync('orders.db', dest);
+      fs.copyFileSync(dbPath, dest);
     }
 
     // Prune old backups — keep newest BACKUP_KEEP files (of either format)
@@ -3311,19 +3325,6 @@ async function runBackup() {
 cron.schedule('0 2 * * *', async () => {
   console.log('[backup] running scheduled backup');
   await runBackup();
-});
-
-// ── Final error handler ───────────────────────────────────────────────────────
-// eslint-disable-next-line no-unused-vars
-app.use((err, req, res, next) => {
-  console.error('[server] unhandled error:', err);
-  if (res.headersSent) return;
-  res.status(500);
-  if (req.accepts('html')) {
-    res.sendFile(path.join(__dirname, 'public', '500.html'));
-  } else {
-    res.json({ error: 'Internal server error' });
-  }
 });
 
 const PORT = process.env.PORT || 3000;
