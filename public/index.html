@@ -914,12 +914,10 @@ footer {
 .hero-grid > div:nth-child(2) { animation-delay: 0.15s; }
 
 /* ========== RESPONSIVE ========== */
-/* ── 1024px: Medium desktop — tighten 3-col step padding ── */
 @media (max-width: 1024px) {
   .steps .step { padding: 0 24px; }
 }
 
-/* ── 900px: Main layout break ── */
 @media (max-width: 900px) {
   .nav-links { display: none; }
   .nav-inner { padding: 16px 24px; }
@@ -942,7 +940,6 @@ footer {
   .envelope-stage { min-height: 380px; }
 }
 
-/* ── 768px: Collapse steps, shrink quote ── */
 @media (max-width: 768px) {
   .steps { grid-template-columns: 1fr; }
   .steps .step { padding: 20px 0 !important; border-right: none !important; border-bottom: 1px solid var(--line); text-align: center; }
@@ -953,7 +950,6 @@ footer {
   .usecases-grid { column-gap: 32px; }
 }
 
-/* ── 480px: Small phones ── */
 @media (max-width: 480px) {
   .nav-inner { padding: 14px 18px; }
   .logo { font-size: 22px; }
@@ -970,9 +966,6 @@ footer {
   .footer-bottom { flex-direction: column; text-align: center; gap: 12px; }
 }
 
-/* ── Ticker (re-introduced v0.2.9, minimalist treatment) ─────────────────────
-   Marquee band below the hero. JS at bottom of page personalizes the text
-   per visitor's country via /api/visitor-country. */
 .ticker {
   background: #3d2c1a;
   color: var(--paper);

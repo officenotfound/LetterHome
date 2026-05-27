@@ -12,7 +12,7 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Inter',system-ui,sans-serif;background:#fafafa;color:#111111;min-height:100vh;display:flex;font-size:14px;line-height:1.5}
-/* ── Dark mode overrides ── */
+
 html[data-theme="dark"] body{background:#0a0a0a;color:#f5f5f5}
 html[data-theme="dark"] .sidebar{background:#0a0a0a;border-right-color:rgba(255,255,255,0.08)}
 html[data-theme="dark"] .sidebar-logo{border-bottom-color:rgba(255,255,255,0.08)}
@@ -65,7 +65,7 @@ html[data-theme="dark"] .admin-theme-toggle:hover{color:#f5f5f5}
 html[data-theme="dark"] .admin-theme-toggle .label-light{display:none}
 html[data-theme="dark"] .admin-theme-toggle .label-dark{display:inline}
 
-/* ── Sidebar (light, editorial — matches login.html DNA) ── */
+
 .sidebar{width:240px;min-height:100vh;background:#ffffff;border-right:1px solid #ececec;display:flex;flex-direction:column;flex-shrink:0;position:fixed;top:0;left:0;bottom:0}
 .sidebar-logo{padding:32px 28px 24px;border-bottom:1px solid #ececec}
 .sidebar-logo-inner{display:flex;flex-direction:column;gap:8px}
@@ -84,14 +84,14 @@ html[data-theme="dark"] .admin-theme-toggle .label-dark{display:inline}
 .logout-btn{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:0;color:#6b6b6b;font-size:10px;font-family:'DM Mono',ui-monospace,monospace;text-transform:uppercase;letter-spacing:0.12em;cursor:pointer;transition:all 0.15s;border:none;background:none;width:100%}
 .logout-btn:hover{color:#e63946}
 
-/* ── Content ── */
+
 .content{margin-left:240px;flex:1;min-height:100vh;display:flex;flex-direction:column}
 .topbar{background:transparent;border-bottom:1px solid #ececec;padding:0 36px;height:72px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
 .topbar-title{font-size:20px;font-weight:600;color:#111111;letter-spacing:-0.02em;font-family:Georgia,serif}
 .topbar-user{font-size:10px;color:#6b6b6b;font-family:'DM Mono',ui-monospace,monospace;text-transform:uppercase;letter-spacing:0.12em}
 .main{padding:36px;flex:1;max-width:1400px}
 
-/* ── Cards & Stats ── */
+
 .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;margin-bottom:36px;background:#ececec;border:1px solid #ececec}
 .stat-card{background:#ffffff;border:none;border-radius:0;padding:24px 24px 20px}
 .stat-label{font-size:9px;color:#6b6b6b;font-weight:500;text-transform:uppercase;letter-spacing:0.15em;margin-bottom:10px;font-family:'DM Mono',ui-monospace,monospace}
@@ -100,7 +100,7 @@ html[data-theme="dark"] .admin-theme-toggle .label-dark{display:inline}
 .card{background:#ffffff;border:1px solid #ececec;border-radius:0;overflow:hidden;margin-bottom:28px}
 .card-header{padding:20px 24px;border-bottom:1px solid #ececec;display:flex;align-items:center;justify-content:space-between}
 .card-title{font-family:'DM Mono',ui-monospace,monospace;font-size:10px;font-weight:600;color:#111111;text-transform:uppercase;letter-spacing:0.18em}
-/* ── Tables ── */
+
 table{width:100%;border-collapse:collapse}
 th{padding:12px 16px;text-align:left;font-size:9px;font-weight:600;color:#6b6b6b;text-transform:uppercase;letter-spacing:0.18em;background:transparent;border-bottom:1.5px solid #111111;font-family:'DM Mono',ui-monospace,monospace}
 td{padding:14px 16px;font-size:13px;color:#2a2a2a;border-bottom:1px solid #ececec;vertical-align:top}
@@ -109,13 +109,13 @@ tr:hover td{background:#fafafa}
 .link{color:#e63946;text-decoration:none;font-weight:500;cursor:pointer;background:none;border:none;font-size:13px;padding:0;font-family:inherit}
 .link:hover{text-decoration:underline}
 
-/* ── Status badges (monochrome with bracket markers) ── */
+
 .badge{display:inline-flex;align-items:center;padding:3px 8px;border-radius:0;font-size:10px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;border:1px solid #111111;background:transparent;color:#111111;font-family:'DM Mono',ui-monospace,monospace}
 .badge-gray{color:#6b6b6b;border-color:#9a9a9a}
 .badge-blue,.badge-amber,.badge-violet{color:#111111;border-color:#111111}
 .badge-green{color:#e63946;border-color:#e63946}
 
-/* ── Forms & Inputs ── */
+
 .form-row{display:flex;gap:16px;align-items:flex-end;margin-bottom:20px}
 .field{display:flex;flex-direction:column;gap:8px;flex:1}
 .field label{font-family:'DM Mono',ui-monospace,monospace;font-size:10px;font-weight:500;color:#6b6b6b;text-transform:uppercase;letter-spacing:0.15em}
@@ -131,7 +131,7 @@ textarea{resize:vertical;min-height:120px;border:1px solid #111111;padding:12px 
 .btn-ghost{background:none;border:none;color:#6b6b6b;cursor:pointer;font-size:10px;padding:6px 10px;border-radius:0;font-family:'DM Mono',ui-monospace,monospace;text-transform:uppercase;letter-spacing:0.15em}
 .btn-ghost:hover{color:#e63946;background:transparent}
 
-/* ── Detail views ── */
+
 .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:28px}
 .detail-card{background:#ffffff;border:1px solid #ececec;border-radius:0;padding:24px 28px}
 .detail-card-title{font-family:'DM Mono',ui-monospace,monospace;font-size:10px;font-weight:600;color:#6b6b6b;text-transform:uppercase;letter-spacing:0.18em;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid #ececec}
@@ -142,25 +142,25 @@ textarea{resize:vertical;min-height:120px;border:1px solid #111111;padding:12px 
 .address-block{font-size:13px;color:#2a2a2a;line-height:1.75;white-space:pre-line;font-family:Georgia,serif}
 .letter-body{font-size:14px;color:#2a2a2a;line-height:1.7;white-space:pre-wrap;font-family:Georgia,serif;padding:24px;background:#fafafa;border-radius:0;border:1px solid #ececec;border-left:3px solid #111111}
 
-/* ── Tags ── */
+
 .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 .tag{display:inline-flex;align-items:center;gap:8px;background:transparent;color:#2a2a2a;padding:4px 10px;border-radius:0;font-size:10px;font-weight:500;border:1px solid #111111;font-family:'DM Mono',ui-monospace,monospace;text-transform:uppercase;letter-spacing:0.12em}
 .tag-remove{background:none;border:none;cursor:pointer;color:#9a9a9a;font-size:14px;line-height:1;padding:0}
 .tag-remove:hover{color:#e63946}
 
-/* ── Notes ── */
+
 .note-item{padding:14px 0;border-bottom:1px solid #ececec}
 .note-item:last-child{border-bottom:none}
 .note-meta{font-family:'DM Mono',ui-monospace,monospace;font-size:10px;color:#6b6b6b;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.12em}
 .note-text{font-size:14px;color:#2a2a2a;line-height:1.6;font-family:Georgia,serif}
 
-/* ── Filters ── */
+
 .filter-row{display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap}
 .filter-btn{padding:8px 14px;border-radius:0;border:1px solid #ececec;background:transparent;font-size:9px;font-weight:500;color:#6b6b6b;cursor:pointer;transition:all 0.15s;font-family:'DM Mono',ui-monospace,monospace;text-transform:uppercase;letter-spacing:0.15em}
 .filter-btn:hover{color:#111111;border-color:#111111}
 .filter-btn.active{background:#111111;color:#ffffff;border-color:#111111}
 
-/* ── Misc ── */
+
 .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:32px;padding-bottom:20px;border-bottom:1px solid #ececec}
 .page-title{font-size:28px;font-weight:600;color:#111111;letter-spacing:-0.025em;font-family:Georgia,serif;line-height:1.1}
 .empty{text-align:center;padding:60px 20px;color:#6b6b6b;font-size:13px;font-family:'DM Mono',ui-monospace,monospace;text-transform:uppercase;letter-spacing:0.15em}
@@ -169,7 +169,7 @@ textarea{resize:vertical;min-height:120px;border:1px solid #111111;padding:12px 
 .file-name{color:#2a2a2a;font-weight:500;font-family:'DM Mono',ui-monospace,monospace;font-size:11px;letter-spacing:0.05em}
 .back-link{display:inline-flex;align-items:center;gap:6px;color:#6b6b6b;font-size:10px;cursor:pointer;background:none;border:none;margin-bottom:24px;padding:0;font-family:'DM Mono',ui-monospace,monospace;text-transform:uppercase;letter-spacing:0.15em}
 .back-link:hover{color:#e63946}
-/* ── Arcade cabinets ── */
+
 .arcade-hall{display:flex;gap:28px;flex-wrap:wrap;margin-bottom:36px;background:linear-gradient(180deg,#07070e 0%,#040408 100%);padding:28px 22px 32px;border:1px solid #16162a;border-radius:4px;position:relative}
 .arcade-hall::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,0.018) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.018) 1px,transparent 1px);background-size:28px 28px;border-radius:4px;pointer-events:none}
 .arcade-cabinet{width:160px;cursor:pointer;user-select:none;position:relative;overflow:visible;transition:transform 0.12s steps(3),filter 0.18s;filter:drop-shadow(0 6px 14px rgba(0,0,0,0.8)) drop-shadow(0 0 3px rgba(0,0,0,0.9))}
@@ -178,17 +178,17 @@ textarea{resize:vertical;min-height:120px;border:1px solid #111111;padding:12px 
 @keyframes ac-flash{0%,100%{opacity:1}50%{opacity:0.05}}
 @keyframes ac-blink{0%,100%{opacity:1}50%{opacity:0}}
 @keyframes ac-attract{0%,100%{opacity:1}48%{opacity:0.88}50%{opacity:0.72}52%{opacity:0.88}}
-/* ── Marquee (gold caps + dark center) ── */
+
 .ac-marquee{display:flex;align-items:stretch;border:2px solid #000;border-bottom:none}
 .ac-mcap{width:14px;flex-shrink:0;background:linear-gradient(90deg,#a07018,#d4a030 40%,#a07018);box-shadow:inset -2px 0 0 rgba(0,0,0,0.3),inset 2px 0 0 rgba(255,255,255,0.15)}
 .ac-marquee-mid{flex:1;background:#080808;padding:10px 5px 9px;text-align:center;border-top:4px solid var(--cc);box-shadow:0 0 28px var(--cc) inset,0 0 10px var(--cc) inset}
 .ac-name{font-family:'Press Start 2P',monospace;font-size:7px;color:var(--cc);text-shadow:0 0 6px var(--cc),0 0 16px var(--cc),0 0 32px var(--cc);text-transform:uppercase;line-height:1.7;word-break:break-all}
 .ac-sub{font-family:'Press Start 2P',monospace;font-size:4px;color:rgba(255,255,255,0.32);margin-top:6px;text-transform:uppercase;line-height:1.6}
-/* ── Body (gold pillars + colored inner) ── */
+
 .ac-body{display:flex;align-items:stretch;border:2px solid #000;margin-top:0;position:relative;z-index:1}
 .ac-pillar{width:14px;flex-shrink:0;background:linear-gradient(90deg,#906010,#d4a030 45%,#c09028 60%,#906010);box-shadow:inset -2px 0 0 rgba(0,0,0,0.35),inset 2px 0 0 rgba(255,255,255,0.2)}
 .ac-inner{flex:1;background:var(--cc);padding:7px 5px 5px;display:flex;flex-direction:column;background:linear-gradient(180deg,var(--cc) 0%,color-mix(in srgb,var(--cc) 75%,#000) 100%)}
-/* ── Bezel: gold frame → black frame → screen ── */
+
 .ac-bezel{background:linear-gradient(135deg,#d4a030 0%,#a07018 45%,#c89025 75%,#e0b040 100%);padding:6px;border:2px solid #000;box-shadow:inset 0 1px 0 rgba(255,255,255,0.25),inset 0 -1px 0 rgba(0,0,0,0.4)}
 .ac-bezel-dark{background:#050505;padding:3px;border:1px solid #1a1a1a}
 .ac-screen{background:#000305;aspect-ratio:4/3;position:relative;overflow:hidden;border-radius:2px;box-shadow:inset 0 0 22px rgba(0,0,0,0.9)}
@@ -204,10 +204,10 @@ textarea{resize:vertical;min-height:120px;border:1px solid #111111;padding:12px 
 .ac-abtn{width:10px;height:10px;border:2px solid #000;box-shadow:inset 0 1px 0 rgba(255,255,255,0.28),inset 0 -1px 0 rgba(0,0,0,0.4)}
 .ac-abtn:first-child{background:#dd2222;border-bottom:3px solid #881010}
 .ac-abtn:last-child{background:#2255cc;border-bottom:3px solid #0a2a88}
-/* ── Control deck: wider than body, juts out each side ── */
+
 .ac-deck{background:linear-gradient(180deg,#7a8098 0%,#5a6080 45%,#484e68 100%);border:2px solid #000;margin:-2px -14px 0;padding:8px 14px 10px;display:flex;align-items:center;justify-content:space-around;position:relative;z-index:2;box-shadow:inset 0 1px 0 rgba(255,255,255,0.12)}
 .ac-deck-top{position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#3a3e58,#9aa0c0 50%,#3a3e58)}
-/* ── Joystick (CSS pixel art) ── */
+
 .ac-joystick{position:relative;width:18px;height:22px;flex-shrink:0}
 .ac-js-base{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:16px;height:9px;background:linear-gradient(180deg,#505878,#3a4060);border:2px solid #000;box-shadow:inset 0 1px 0 rgba(255,255,255,0.1)}
 .ac-js-shaft{position:absolute;bottom:7px;left:50%;transform:translateX(-50%);width:4px;height:13px;background:linear-gradient(90deg,#777,#ccc 50%,#888);border-left:1px solid #555;border-right:1px solid #ddd}
@@ -216,12 +216,12 @@ textarea{resize:vertical;min-height:120px;border:1px solid #111111;padding:12px 
 .ac-btns{display:flex;gap:5px;align-items:center}
 .ac-btn{width:12px;height:12px;background:var(--cc);border:2px solid #000;border-bottom:4px solid rgba(0,0,0,0.55);box-shadow:inset 0 1px 0 rgba(255,255,255,0.3)}
 .ac-btn-sm{width:9px;height:9px;opacity:0.6}
-/* ── Kickplate with coin door ── */
+
 .ac-kickplate{background:linear-gradient(180deg,color-mix(in srgb,var(--cc) 80%,#000),color-mix(in srgb,var(--cc) 60%,#000));border:2px solid #000;border-top:none;padding:7px 8px 9px;display:flex;align-items:center;gap:8px}
 .ac-coin-door{background:linear-gradient(180deg,#525868,#3a4050);border:2px solid #000;padding:3px 5px;display:flex;align-items:center;justify-content:center;min-width:34px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.1),inset 0 -1px 0 rgba(0,0,0,0.4)}
 .ac-slot{width:16px;height:3px;background:#000;border:1px solid #2a2a2a;box-shadow:inset 0 1px 0 rgba(0,0,0,0.8)}
 .ac-plays{font-family:'Press Start 2P',monospace;font-size:4px;color:rgba(0,0,0,0.5);text-transform:uppercase;margin-left:auto;text-shadow:0 1px 0 rgba(255,255,255,0.15)}
-/* ── Arcade modal ── */
+
 #arcade-modal.am-open{opacity:1!important}
 #arcade-modal-inner{display:flex;flex-direction:column;border-radius:2px;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,0.5)}
 html[data-theme="dark"] #arcade-modal-inner{background:#141414}
@@ -232,17 +232,17 @@ html[data-theme="dark"] #arcade-sidebar-score *[style*="color:#111"]{color:#f5f5
 html[data-theme="dark"] #hof-body div{border-bottom-color:rgba(255,255,255,0.08)!important}
 html[data-theme="dark"] #hof-body div *[style*="color:#111"]{color:#f5f5f5!important}
 
-/* ── Mobile sidebar ──────────────────────────────────────────────── */
+
 .mob-menu-btn{display:none;background:none;border:none;cursor:pointer;padding:6px 8px;color:#111;font-size:22px;line-height:1;flex-shrink:0}
 html[data-theme="dark"] .mob-menu-btn{color:#f5f5f5}
 .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.42);z-index:997;opacity:0;transition:opacity 0.22s;pointer-events:none}
 .sidebar-overlay.mob-open{opacity:1;pointer-events:all}
-/* ── Responsive dashboard grids ────────────────────────────────── */
+
 .dash-grid-5{display:grid;gap:1px;background:#ececec;border:1px solid #ececec;margin-bottom:36px;grid-template-columns:repeat(5,1fr)}
 .dash-grid-4{display:grid;gap:16px;margin-bottom:24px;grid-template-columns:repeat(4,1fr)}
 .dash-grid-2{display:grid;gap:20px;margin-bottom:24px;grid-template-columns:1fr 1fr}
 html[data-theme="dark"] .dash-grid-5{background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.08)}
-/* ── Touch game controls ──────────────────────────────────────── */
+
 .touch-ctrl{display:none;align-items:center;justify-content:center;gap:7px;padding:10px 8px;background:#05050d;flex-shrink:0;width:100%;box-sizing:border-box}
 .touch-dpad{display:flex;flex-direction:column;align-items:center;gap:5px}
 .touch-row{display:flex;gap:5px;justify-content:center}
@@ -335,7 +335,6 @@ html[data-theme="dark"] .dash-grid-5{background:rgba(255,255,255,0.08);border-co
 <script>
 let currentUser = '';
 
-// ── Router ────────────────────────────────────────────────────────────────────
 async function init() {
   const me = await api('/api/admin/me');
   if (!me) { window.location.href = '/admin/login'; return; }
@@ -397,7 +396,6 @@ function setActiveNav(p) {
 function setTitle(t) { document.getElementById('topbar-title').textContent = t; }
 function setMain(html) { document.getElementById('main').innerHTML = html; }
 
-// ── API helper ────────────────────────────────────────────────────────────────
 async function api(url, opts = {}) {
   try {
     const r = await fetch(url, { headers: { 'Content-Type': 'application/json' }, ...opts });
@@ -414,7 +412,6 @@ async function del(url) {
   return api(url, { method: 'DELETE' });
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
 function statusBadge(s) {
   const map = {
     awaiting_payment:     ['badge-gray',   'Awaiting Payment'],
@@ -446,7 +443,6 @@ function fmtCAD(cents) {
   return '$' + (cents / 100).toFixed(2) + ' CAD';
 }
 
-// ── 24h fulfillment countdown ─────────────────────────────────────────────────
 function timeLeftHTML(createdAt, status) {
   if (status === 'mailed' || status === 'delivered')
     return `<span data-countdown-created="${createdAt}" data-countdown-status="${status}" style="color:#6b6b6b;font-size:12px">Completed</span>`;
@@ -503,7 +499,6 @@ function startCountdownTicker() {
   }, 60000);
 }
 
-// ── Dashboard ─────────────────────────────────────────────────────────────────
 let dashChartPeriod = 'monthly';
 
 async function showDashboard() {
@@ -712,7 +707,6 @@ function renderDashboard(stats, paidOrders, submittedOrders, chartData, geoData,
     </div>`);
 }
 
-// ── Orders list ───────────────────────────────────────────────────────────────
 let orderFilter = '';
 let allOrders   = [];
 
@@ -864,7 +858,6 @@ async function runBulkDelete() {
   else alert('Error: ' + (r?.error || 'unknown'));
 }
 
-// ── Print Queue ───────────────────────────────────────────────────────────────
 async function showPrintQueue() {
   setTitle('Print Queue');
   const [paid, submitted] = await Promise.all([
@@ -913,7 +906,6 @@ async function showPrintQueue() {
     ${cards}`);
 }
 
-// ── Order detail ──────────────────────────────────────────────────────────────
 async function showOrder(id) {
   setTitle(`Order #${id}`);
   const [o, orderNotes] = await Promise.all([
@@ -1151,7 +1143,6 @@ async function updateStatus(id) {
   }
 }
 
-// ── Customers list ────────────────────────────────────────────────────────────
 async function showCustomers() {
   setTitle('Customers');
   const customers = await api('/api/admin/customers');
@@ -1222,7 +1213,6 @@ async function deleteCustomer(encodedEmail) {
   go('/admin/customers');
 }
 
-// ── Customer detail ───────────────────────────────────────────────────────────
 async function showCustomer(email) {
   setTitle('Customer');
   const [c, occasions, emailLog] = await Promise.all([
@@ -1429,7 +1419,6 @@ async function removeCustomerAccount(encodedEmail) {
   else alert(r?.error || 'Error removing account.');
 }
 
-// ── Accounts (dedicated tab) ──────────────────────────────────────────────────
 async function showAccounts() {
   setTitle('Accounts');
   const accounts = await api('/api/admin/accounts');
@@ -1555,7 +1544,6 @@ async function deleteOccasion(id, encodedEmail) {
   showCustomer(decodeURIComponent(encodedEmail));
 }
 
-// ── Broadcast ─────────────────────────────────────────────────────────────────
 async function showBroadcast() {
   setTitle('Broadcast');
   const [tags, templates] = await Promise.all([api('/api/admin/tags'), api('/api/admin/templates')]);
@@ -1656,7 +1644,6 @@ async function sendBroadcast() {
 }
 
 
-// ── Insights ─────────────────────────────────────────────────────────────────
 async function showInsights() {
   setTitle('Insights');
   const [stats, geoData, chartData, customers] = await Promise.all([
@@ -1739,7 +1726,6 @@ async function showInsights() {
     </div>`);
 }
 
-// ── Visitors / Analytics ──────────────────────────────────────────────────────
 const FLAG_EMOJI = cc => {
   if (!cc || cc.length !== 2) return '🌐';
   const A = 0x1F1E6, base = 'A'.charCodeAt(0);
@@ -1764,8 +1750,7 @@ async function showVisitors(cfDays) {
 function renderVisitors(cf, s, recent) {
   const fmtBytes = b => b > 1073741824 ? (b/1073741824).toFixed(1)+' GB' : b > 1048576 ? (b/1048576).toFixed(1)+' MB' : Math.round(b/1024)+' KB';
 
-  // ── Cloudflare section ────────────────────────────────────────────────────
-  let cfHtml = '';
+    let cfHtml = '';
   if (!cf || cf.configured === false) {
     cfHtml = `<div class="card" style="margin-bottom:24px;padding:20px 24px;color:#6b6b6b;font-size:13px">
       <strong>Cloudflare Analytics</strong> — not configured. Add <code>CF_API_TOKEN</code> and <code>CF_ZONE_ID</code> to your .env and restart.</div>`;
@@ -1830,8 +1815,7 @@ function renderVisitors(cf, s, recent) {
     </div>`;
   }
 
-  // ── App-level page detail (from our DB) ───────────────────────────────────
-  let dbHtml = '';
+    let dbHtml = '';
   if (s) {
     const topPagesRows = (s.topPages || []).map(p =>
       `<tr><td style="font-family:monospace;font-size:12px">${esc(p.path)}</td><td style="text-align:right">${p.count}</td></tr>`
@@ -1920,7 +1904,6 @@ function renderVisitors(cf, s, recent) {
   `);
 }
 
-// ── Templates ─────────────────────────────────────────────────────────────────
 async function showTemplates() {
   setTitle('Email Templates');
   const templates = await api('/api/admin/templates');
@@ -1975,10 +1958,8 @@ async function deleteTemplate(id) {
   showTemplates();
 }
 
-// ── Country lookup (for blocked countries UI) ─────────────────────────────────
 const COUNTRIES = {CA:'Canada',US:'United States',GB:'United Kingdom',AU:'Australia',NZ:'New Zealand',FR:'France',DE:'Germany',JP:'Japan',MX:'Mexico',IN:'India',BR:'Brazil',ZA:'South Africa',SG:'Singapore',HK:'Hong Kong',IE:'Ireland',NL:'Netherlands',BE:'Belgium',CH:'Switzerland',AT:'Austria',SE:'Sweden',NO:'Norway',DK:'Denmark',FI:'Finland',ES:'Spain',IT:'Italy',PT:'Portugal',PL:'Poland',CZ:'Czech Republic',HU:'Hungary',RO:'Romania',BG:'Bulgaria',HR:'Croatia',SK:'Slovakia',SI:'Slovenia',EE:'Estonia',LV:'Latvia',LT:'Lithuania',GR:'Greece',CY:'Cyprus',MT:'Malta',LU:'Luxembourg',IS:'Iceland',AL:'Albania',DZ:'Algeria',AD:'Andorra',AO:'Angola',AG:'Antigua and Barbuda',AR:'Argentina',AM:'Armenia',AZ:'Azerbaijan',BS:'Bahamas',BH:'Bahrain',BD:'Bangladesh',BB:'Barbados',BZ:'Belize',BJ:'Benin',BT:'Bhutan',BO:'Bolivia',BA:'Bosnia and Herzegovina',BW:'Botswana',BN:'Brunei',BI:'Burundi',KH:'Cambodia',CM:'Cameroon',CV:'Cape Verde',TD:'Chad',CL:'Chile',CN:'China',CO:'Colombia',KM:'Comoros',CG:'Congo',CR:'Costa Rica',CU:'Cuba',DJ:'Djibouti',DM:'Dominica',DO:'Dominican Republic',EC:'Ecuador',EG:'Egypt',SV:'El Salvador',GQ:'Equatorial Guinea',ER:'Eritrea',SZ:'Eswatini',ET:'Ethiopia',FJ:'Fiji',GA:'Gabon',GM:'Gambia',GE:'Georgia',GH:'Ghana',GD:'Grenada',GT:'Guatemala',GN:'Guinea',GW:'Guinea-Bissau',GY:'Guyana',HT:'Haiti',HN:'Honduras',ID:'Indonesia',IR:'Iran',IQ:'Iraq',IL:'Israel',JM:'Jamaica',JO:'Jordan',KZ:'Kazakhstan',KE:'Kenya',KI:'Kiribati',KW:'Kuwait',KG:'Kyrgyzstan',LA:'Laos',LB:'Lebanon',LS:'Lesotho',LR:'Liberia',LY:'Libya',LI:'Liechtenstein',MG:'Madagascar',MW:'Malawi',MY:'Malaysia',MV:'Maldives',ML:'Mali',MH:'Marshall Islands',MR:'Mauritania',MU:'Mauritius',FM:'Micronesia',MD:'Moldova',MC:'Monaco',MN:'Mongolia',ME:'Montenegro',MA:'Morocco',MZ:'Mozambique',MM:'Myanmar',NA:'Namibia',NR:'Nauru',NP:'Nepal',NI:'Nicaragua',NE:'Niger',NG:'Nigeria',OM:'Oman',PK:'Pakistan',PW:'Palau',PA:'Panama',PG:'Papua New Guinea',PY:'Paraguay',PE:'Peru',PH:'Philippines',QA:'Qatar',RU:'Russia',RW:'Rwanda',KN:'Saint Kitts and Nevis',LC:'Saint Lucia',VC:'Saint Vincent',WS:'Samoa',SM:'San Marino',ST:'São Tomé and Príncipe',SA:'Saudi Arabia',SN:'Senegal',RS:'Serbia',SC:'Seychelles',SL:'Sierra Leone',SB:'Solomon Islands',SD:'Sudan',SR:'Suriname',SY:'Syria',TW:'Taiwan',TJ:'Tajikistan',TZ:'Tanzania',TH:'Thailand',TL:'Timor-Leste',TG:'Togo',TO:'Tonga',TT:'Trinidad and Tobago',TN:'Tunisia',TR:'Turkey',TM:'Turkmenistan',TV:'Tuvalu',UG:'Uganda',UA:'Ukraine',AE:'United Arab Emirates',UY:'Uruguay',UZ:'Uzbekistan',VU:'Vanuatu',VE:'Venezuela',VN:'Vietnam',YE:'Yemen',ZM:'Zambia',ZW:'Zimbabwe'};
 
-// ── Settings ──────────────────────────────────────────────────────────────────
 async function showAuditLog() {
   setTitle('Audit Log');
   setMain('<div class="empty">Loading…</div>');
@@ -2333,7 +2314,6 @@ function fmtBytes(bytes) {
   return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
 }
 
-// ── Trash ─────────────────────────────────────────────────────────────────────
 async function showTrash() {
   setTitle('Trash');
   const t = await api('/api/admin/trash');
@@ -2400,7 +2380,6 @@ function toggleAdminTheme() {
   try { localStorage.setItem('lh-admin-theme', next); } catch {}
 }
 
-// ── Stripe ────────────────────────────────────────────────────────────────────
 async function showStripe() {
   setTitle('Stripe');
   setMain('<div class="empty">Loading…</div>');
@@ -2499,7 +2478,6 @@ async function showStripe() {
     </div>`);
 }
 
-// ── Contacts ──────────────────────────────────────────────────────────────────
 async function showContacts() {
   setTitle('Contacts');
   setMain('<div class="empty">Loading…</div>');
@@ -2624,9 +2602,7 @@ function esc(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// ── Arcade ────────────────────────────────────────────────────────────────────
 
-// ── Web Audio chiptune SFX ────────────────────────────────────────────────────
 let _audioCtx = null;
 function _getAC() {
   if (!_audioCtx || _audioCtx.state === 'closed') _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -2652,11 +2628,9 @@ function sfxHit()     { sfx(330, 440,  0.05, 0.05); }
 function sfxDie()     { sfx(440, 110,  0.45, 0.1);  setTimeout(() => sfx(220, 55, 0.55, 0.08), 230); }
 function sfxLevelUp() { [0, 120, 240].forEach(d => setTimeout(() => sfx(523, 1046, 0.1, 0.06), d)); }
 
-// ── 8-bit mode: disable canvas glow, pixel-crisp rendering ──────────────────
 Object.defineProperty(CanvasRenderingContext2D.prototype,'shadowBlur',{get(){return 0;},set(){}});
 Object.defineProperty(CanvasRenderingContext2D.prototype,'shadowColor',{get(){return 'transparent';},set(){}});
 
-// ── Shared floating score popups ─────────────────────────────────────────────
 const FLOATS=[];
 function spawnFloat(x,y,text,color){FLOATS.push({x,y,text,color:color||'#facc15',life:42,vy:-1});}
 function drawFloats(ctx){
@@ -2670,7 +2644,6 @@ function drawFloats(ctx){
   ctx.globalAlpha=1;ctx.textAlign='left';
 }
 
-// ── Cabinet definitions ───────────────────────────────────────────────────────
 const ARCADE_CABS = [
   { key:'tetris',   name:'STACKATRON',      sub:'Stack & Clear',       color:'#e63946', icon:'⬛', launch:launchTetris   },
   { key:'snake',    name:'PNEUMATIX',        sub:'Chase the Tube',      color:'#22c55e', icon:'🟢', launch:launchSnake    },
@@ -2686,7 +2659,6 @@ const ARCADE_CABS = [
   { key:'paperroute', name:'PAPER ROUTE',       sub:'Deliver the News',      color:'#f59e0b', icon:'📰', launch:launchPaperroute },
 ];
 
-// ── Arcade API helpers ────────────────────────────────────────────────────────
 async function arcadeGetScores(game) {
   try { const r = await fetch(`/api/admin/arcade/scores/${game}`); return r.ok ? r.json() : []; } catch { return []; }
 }
@@ -2702,7 +2674,6 @@ async function arcadeHallOfFame() {
   try { const r = await fetch('/api/admin/arcade/hall-of-fame'); return r.ok ? r.json() : {}; } catch { return {}; }
 }
 
-// ── Shared leaderboard renderer ───────────────────────────────────────────────
 async function arcadeLoadLeaderboard(game) {
   const scores = await arcadeGetScores(game);
   const lb = document.getElementById('arcade-sidebar-lb');
@@ -2718,7 +2689,6 @@ async function arcadeLoadLeaderboard(game) {
   </div>`).join('');
 }
 
-// ── Cabinet score / hall of fame loaders ──────────────────────────────────────
 async function loadCabinetScores() {
   for (const cab of ARCADE_CABS) {
     arcadeGetScores(cab.key).then(sc => {
@@ -2746,7 +2716,6 @@ async function loadHallOfFame() {
   }).join('');
 }
 
-// ── Cabinet HTML ──────────────────────────────────────────────────────────────
 function cabinetHTML(cab) {
   return `<div class="arcade-cabinet" data-game="${cab.key}" style="--cc:${cab.color}" onclick="insertCoin('${cab.key}')">
   <div class="ac-marquee">
@@ -2794,7 +2763,6 @@ function cabinetHTML(cab) {
 </div>`;
 }
 
-// ── INSERT COIN animation ─────────────────────────────────────────────────────
 let _coinBusy = false;
 function insertCoin(key) {
   if (_coinBusy) return;
@@ -2805,7 +2773,6 @@ function insertCoin(key) {
   setTimeout(() => { _coinBusy = false; openArcadeModal(key); }, 680);
 }
 
-// ── Modal open / close ────────────────────────────────────────────────────────
 function openArcadeModal(key) {
   stopAllGames();
   const modal = document.getElementById('arcade-modal');
@@ -2834,7 +2801,6 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') { const m = document.getElementById('arcade-modal'); if (m && m.style.display !== 'none') closeArcadeModal(); }
 });
 
-// ── showArcade ────────────────────────────────────────────────────────────────
 function showArcade() {
   stopAllGames();
   setTitle('Arcade');
@@ -3182,7 +3148,7 @@ function snakeStep(ts) {
         if(SNAKE.bonus){SNAKE.bonusTimer--;if(SNAKE.bonusTimer<=0)SNAKE.bonus=null;}
       }
     }
-  } else if (!SNAKE.lastStep) SNAKE.lastStep=ts;
+  } else { SNAKE.lastStep=ts; }
   snakeDraw(); SNAKE.loopId=requestAnimationFrame(snakeStep);
 }
 function snakeDraw() {
@@ -3314,7 +3280,7 @@ const BREAKOUT = {
   balls:[],powerups:[],
   bricks:[],score:0,level:1,lives:3,
   over:false,paused:false,submitted:false,launched:false,keys:{l:false,r:false},
-  stickyTimer:0,
+  stickyTimer:0,nextLifeAt:5000,
 };
 const BK_COLS=8,BK_ROWS=5,BK_W=28,BK_H=13,BK_PX=4,BK_PY=6;
 // Authentic Breakout tier ordering: top rows = highest value
@@ -3359,7 +3325,7 @@ function breakoutStep() {
         if (ball.y+ball.r>=paddle.y&&ball.y<=paddle.y+paddle.h+6&&ball.x>=paddle.x&&ball.x<=paddle.x+paddle.w&&ball.vy>0) {
           const rel=(ball.x-(paddle.x+paddle.w/2))/(paddle.w/2);
           ball.vy=-Math.abs(ball.vy); ball.vx=rel*5; if(Math.abs(ball.vx)<0.8)ball.vx=Math.sign(ball.vx||1)*0.8; sfxHit();
-          if(BREAKOUT.stickyTimer>0){ball.vx=0;ball.vy=0;ball.sticky=ball.x-paddle.x;BREAKOUT.launched=false;}
+          if(BREAKOUT.stickyTimer>0){ball.vx=0;ball.vy=0;BREAKOUT.launched=false;}
         }
         if (ball.y-ball.r>H) {
           balls.splice(bi,1);
@@ -3392,7 +3358,7 @@ function breakoutStep() {
         if(pu.y>=paddle.y&&pu.y<=paddle.y+paddle.h+4&&pu.x>=paddle.x&&pu.x<=paddle.x+paddle.w){
           // Apply
           if(pu.type==='wide'){paddle.w=Math.min(140,paddle.w+30);spawnFloat(pu.x,pu.y-10,'WIDE!','#22c55e');}
-          else if(pu.type==='multi'&&balls.length<6){
+          else if(pu.type==='multi'&&balls.length>=1&&balls.length<6){
             const b0=balls[0];
             balls.push({x:b0.x,y:b0.y,r:b0.r,vx:-b0.vx,vy:b0.vy,hitTop:b0.hitTop});
             balls.push({x:b0.x,y:b0.y,r:b0.r,vx:b0.vx*0.6,vy:-Math.abs(b0.vy),hitTop:b0.hitTop});
@@ -3731,7 +3697,7 @@ function launchInvaders() {
 const POSTBIRD = {
   W:280,H:420,loopId:null,keyHandler:null,clickHandler:null,touchHandler:null,
   bird:{x:60,y:210,vy:0,rot:0},pipes:[],letters:[],
-  score:0,letterCount:0,level:1,over:false,started:false,paused:false,submitted:false,
+  score:0,level:1,over:false,started:false,paused:false,submitted:false,
   frame:0,lastPipe:0,pipeSpeed:2.2,pipeGap:108,gravity:0.38,jumpVy:-6.8,
 };
 function postbirdFlap() {
@@ -3741,7 +3707,7 @@ function postbirdFlap() {
 }
 function postbirdReset() {
   POSTBIRD.bird={x:60,y:POSTBIRD.H/2,vy:0,rot:0};
-  POSTBIRD.pipes=[];POSTBIRD.letters=[];POSTBIRD.score=0;POSTBIRD.letterCount=0;POSTBIRD.level=1;
+  POSTBIRD.pipes=[];POSTBIRD.letters=[];POSTBIRD.score=0;POSTBIRD.level=1;
   POSTBIRD.over=false;POSTBIRD.started=false;POSTBIRD.paused=false;POSTBIRD.submitted=false;
   POSTBIRD.frame=0;POSTBIRD.lastPipe=0;POSTBIRD.pipeSpeed=2.2;POSTBIRD.pipeGap=108;
 }
@@ -3779,7 +3745,7 @@ function postbirdStep() {
       lt.x-=POSTBIRD.pipeSpeed;
       if(lt.x<-20){POSTBIRD.letters.splice(i,1);continue;}
       if(!lt.collected&&Math.abs(lt.x-bird.x)<14&&Math.abs(lt.y-bird.y)<12){
-        lt.collected=true;POSTBIRD.letterCount++;POSTBIRD.score+=3;sfxLevelUp();
+        lt.collected=true;POSTBIRD.score+=3;sfxLevelUp();
         POSTBIRD.letters.splice(i,1);
       }
     }
@@ -3848,7 +3814,7 @@ function launchPostbird() {
   const{W,H}=POSTBIRD;
   document.getElementById('arcade-game-area').innerHTML=`<div style="position:relative"><canvas id="postbird-canvas" width="${W}" height="${H}" style="display:block;cursor:pointer"></canvas><div class="ac-crt-ov"></div></div>`;
   document.getElementById('arcade-sidebar-score').innerHTML=`
-    <div><div style="font-family:'DM Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:0.18em;color:#9a9a9a;margin-bottom:4px">Letters Sent</div>
+    <div><div style="font-family:'DM Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:0.18em;color:#9a9a9a;margin-bottom:4px">Score</div>
     <div id="pb-score" style="font-family:Georgia,serif;font-size:26px;font-weight:600;letter-spacing:-0.02em;color:#111">0</div></div>
     <div style="margin-top:10px"><div style="font-family:'DM Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:0.15em;color:#9a9a9a;margin-bottom:2px">Level</div><div id="pb-level" style="font-family:Georgia,serif;font-size:18px;font-weight:600;color:#111">1</div></div>`;
   document.getElementById('arcade-controls').innerHTML='Space &nbsp; Flap<br>Click &nbsp;&nbsp; Flap<br>P &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Pause';
@@ -4080,8 +4046,8 @@ const PM={
   loopId:null,keyHandler:null,
   px:9,py:16, // player grid pos
   pdir:{x:0,y:0},pnext:{x:0,y:0},pframe:0,
-  ghosts:[],pelletTimer:0,eatChain:0,
-  mode:'scatter',modeFrame:0,modeIdx:0,globalFrame:0,fruit:null,fruitTimer:0,
+  ghosts:[],eatChain:0,
+  mode:'scatter',modeFrame:0,globalFrame:0,fruit:null,fruitTimer:0,
   score:0,level:1,lives:3,dots:0,dotsEaten:0,over:false,won:false,paused:false,submitted:false,
 };
 // 0=wall 1=dot 2=power_pellet 3=empty 4=ghost_start
@@ -4117,10 +4083,6 @@ function pmWalkable(x,y){
   if(x<0||x>=PM.COLS||y<0||y>=PM.ROWS)return false;
   const c=PM_MAP[y][x];return c!==0&&c!==4;
 }
-function pmGhostWalkable(x,y){
-  if(x<0||x>=PM.COLS||y<0||y>=PM.ROWS)return false;
-  const c=PM_MAP[y][x];return c!==0&&c!==4||(c===3||c===4);
-}
 function pmRestart(){
   const nextLevel=PM.won?PM.level+1:1;
   const nextScore=PM.won?PM.score:0;
@@ -4129,17 +4091,17 @@ function pmRestart(){
   PM.level=nextLevel;PM.score=nextScore;PM.lives=nextLives;
 }
 function pmReset(){
-  PM.px=9;PM.py=16;PM.pdir={x:0,y:0};PM.pnext={x:0,y:0};PM.pframe=0;PM.pelletTimer=0;
+  PM.px=9;PM.py=16;PM.pdir={x:0,y:0};PM.pnext={x:0,y:0};PM.pframe=0;
   PM.over=false;PM.won=false;PM.paused=false;PM.submitted=false;
   PM.eatChain=0;PM.lives=3;PM.score=0;PM.level=1;
-  PM.mode='scatter';PM.modeFrame=0;PM.modeIdx=0;PM.globalFrame=0;
+  PM.mode='scatter';PM.modeFrame=0;PM.globalFrame=0;
   PM.fruit=null;PM.fruitTimer=0;PM.dotsEaten=0;PM.nextLifeAt=10000;
   pmInitMap();
   PM.ghosts=[
-    {name:'blinky',x:8,y:9,dx:1,dy:0,fright:0,eaten:false,scatter:{x:17,y:1},color:'#ef4444',frame:0,exitFrame:0},
-    {name:'pinky', x:9,y:9,dx:-1,dy:0,fright:0,eaten:false,scatter:{x:1,y:1},color:'#f9a8d4',frame:0,exitFrame:60},
-    {name:'inky',  x:8,y:8,dx:1,dy:0,fright:0,eaten:false,scatter:{x:17,y:19},color:'#06b6d4',frame:0,exitFrame:180},
-    {name:'clyde', x:9,y:8,dx:-1,dy:0,fright:0,eaten:false,scatter:{x:1,y:19},color:'#f97316',frame:0,exitFrame:360},
+    {name:'blinky',x:8,y:9,dx:1,dy:0,fright:0,eaten:false,scatter:{x:17,y:1},color:'#ef4444',frame:0},
+    {name:'pinky', x:9,y:9,dx:-1,dy:0,fright:0,eaten:false,scatter:{x:1,y:1},color:'#f9a8d4',frame:0},
+    {name:'inky',  x:8,y:8,dx:1,dy:0,fright:0,eaten:false,scatter:{x:17,y:19},color:'#06b6d4',frame:0},
+    {name:'clyde', x:9,y:8,dx:-1,dy:0,fright:0,eaten:false,scatter:{x:1,y:19},color:'#f97316',frame:0},
   ];
 }
 function pmGhostTarget(g,blinky){
@@ -4216,7 +4178,7 @@ function pmStep(){
       if(inTunnel&&!g.eaten)baseInt+=4;
       if(g.frame<baseInt)return;g.frame=0;
       // If eaten and reached house, revive
-      if(g.eaten&&g.x===9&&g.y===9){g.eaten=false;g.fright=0;}
+      if(g.eaten&&g.x===9&&g.y===9){g.eaten=false;g.fright=0;g.dx=0;g.dy=0;}
       const dirs=[{x:0,y:-1},{x:-1,y:0},{x:0,y:1},{x:1,y:0}];
       const valid=(g.dx===0&&g.dy===0)?dirs:dirs.filter(d=>!(d.x===-g.dx&&d.y===-g.dy));
       const walkable=valid.filter(d=>{const nx=g.x+d.x,ny=g.y+d.y;return nx>=0&&nx<PM.COLS&&ny>=0&&ny<PM.ROWS&&PM_MAP[ny][nx]!==0;});
@@ -4429,7 +4391,7 @@ const DK={
   player:{x:18,y:340,vy:0,onGround:false,onLadder:false,dir:1,hammer:0},
   barrels:[],boss:{x:50,y:58},hammers:[],
   score:0,level:1,lives:3,over:false,won:false,paused:false,submitted:false,
-  keys:{l:false,r:false,u:false,d:false,jump:false},
+  keys:{l:false,r:false,u:false,d:false},
   frame:0,nextBarrel:140,bossAnim:0,_tL:null,_tR:null,
 };
 const DK_PW=14,DK_PH=18,DK_LADDW=12,DK_GRAVITY=0.4,DK_JUMP=-8.5;
@@ -4475,7 +4437,6 @@ function dkStep(){
     } else {
       player.onLadder=false;
       if(DK.keys.l){player.x-=2.8;player.dir=-1;}if(DK.keys.r){player.x+=2.8;player.dir=1;}
-      if(DK.keys.jump&&player.onGround){player.vy=DK_JUMP;player.onGround=false;sfxHit();}
       if(!player.onLadder)player.vy+=DK_GRAVITY;
     }
     player.y+=player.vy;player.x=Math.max(0,Math.min(W-DK_PW,player.x));
@@ -4518,9 +4479,6 @@ function dkStep(){
     }
     if(player.hammer>0)player.hammer--;
     else player.smashChain=0; // chain only persists during active hammer
-    // Clear jump key (edge-triggered)
-    if(!DK.keys.jump||player.onGround){}
-    DK.keys.jump=false;
   }
   dkDraw();DK.loopId=requestAnimationFrame(dkStep);
 }
@@ -4615,8 +4573,7 @@ function donkeyStop(){
   if(DK.loopId){cancelAnimationFrame(DK.loopId);DK.loopId=null;}
   if(DK.keyHandler){window.removeEventListener('keydown',DK.keyHandler);DK.keyHandler=null;}
   if(DK.keyUpHandler){window.removeEventListener('keyup',DK.keyUpHandler);DK.keyUpHandler=null;}
-  clearInterval(DK._tL);clearInterval(DK._tR);DK._tL=DK._tR=null;
-  DK.keys.l=DK.keys.r=DK.keys.u=DK.keys.d=DK.keys.jump=false;
+  DK.keys.l=DK.keys.r=DK.keys.u=DK.keys.d=false;
 }
 function launchDonkey(){
   const{W,H}=DK;
@@ -4845,6 +4802,7 @@ function bamDraw(){
   ctx.fillStyle='#fff';ctx.font="bold 9px 'DM Mono',monospace";
   ctx.textAlign='right';ctx.fillText(`LVL ${BAM.level}`,W-8,12);
   const se=document.getElementById('bam-score');if(se)se.textContent=score.toLocaleString();
+  const bl=document.getElementById('bam-level');if(bl)bl.textContent=BAM.level;
   if(over){ctx.fillStyle='rgba(0,0,0,0.75)';ctx.fillRect(0,0,W,H);ctx.fillStyle='#e63946';ctx.font="bold 18px 'DM Mono',monospace";ctx.textAlign='center';ctx.fillText('OVERFLOW!',W/2,H/2-14);ctx.fillStyle='rgba(255,255,255,0.5)';ctx.font="10px 'DM Mono',monospace";ctx.fillText('ENTER OR TAP TO RETRY',W/2,H/2+8);}
   else if(won){ctx.fillStyle='rgba(0,0,0,0.75)';ctx.fillRect(0,0,W,H);ctx.fillStyle='#22c55e';ctx.font="bold 18px 'DM Mono',monospace";ctx.textAlign='center';ctx.fillText('CLEARED!',W/2,H/2-14);ctx.fillStyle='rgba(255,255,255,0.5)';ctx.font="10px 'DM Mono',monospace";ctx.fillText('ENTER OR TAP TO RETRY',W/2,H/2+8);}
   else if(paused){ctx.fillStyle='rgba(0,0,0,0.6)';ctx.fillRect(0,0,W,H);ctx.fillStyle='#fff';ctx.font="bold 11px 'DM Mono',monospace";ctx.textAlign='center';ctx.fillText('PAUSED',W/2,H/2+6);}
@@ -4877,7 +4835,7 @@ function launchBubblepost(){
   // Mouse aim + click to fire
   const bamcv=document.getElementById('bam-canvas');
   BAM.mouseHandler=e=>{const r=bamcv.getBoundingClientRect();const mx=e.clientX-r.left,my=e.clientY-r.top;BAM.angle=Math.atan2(my-(BAM.H-30),mx-BAM.W/2);BAM.angle=Math.max(-Math.PI*0.92,Math.min(-Math.PI*0.08,BAM.angle));};
-  bamcv.addEventListener('mousemove',BAM.mouseHandler);
+  window.addEventListener('mousemove',BAM.mouseHandler);
   bamcv.addEventListener('click',()=>{if(BAM.over||BAM.won){const full=BAM.over;bamReset(full);arcadeLoadLeaderboard('bubblepost');return;}if(!BAM.fly&&BAM.frame-BAM.lastFire>12){BAM.lastFire=BAM.frame;const spd=6.5;BAM.fly={x:BAM.W/2,y:BAM.H-30,vx:Math.cos(BAM.angle)*spd,vy:Math.sin(BAM.angle)*spd,color:BAM.nextColor};BAM.nextColor=bamRandColor();}});
   // Touch: drag to aim, tap to fire
   bamcv.addEventListener('touchmove',e=>{e.preventDefault();const r=bamcv.getBoundingClientRect();const mx=(e.touches[0].clientX-r.left)/r.width*BAM.W,my=(e.touches[0].clientY-r.top)/r.height*BAM.H;BAM.angle=Math.atan2(my-(BAM.H-30),mx-BAM.W/2);BAM.angle=Math.max(-Math.PI*0.92,Math.min(-Math.PI*0.08,BAM.angle));},{passive:false});
@@ -5229,8 +5187,8 @@ const PBOY={
   obstacles:[], // {x,y,w,h,type,spd}
   houses:[],    // {x,y,w,h,sub,hit} — subscriber=target
   particles:[],
-  scroll:0,scrollSpd:2.2,dist:0,
-  score:0,level:1,lives:3,delivered:0,streak:0,bestStreak:0,
+  scrollSpd:2.2,dist:0,
+  score:0,level:1,lives:3,delivered:0,streak:0,
   over:false,won:false,paused:false,submitted:false,
   frame:0,spawnTimer:0,
   keys:{up:false,dn:false,throwU:false,throwD:false},
@@ -5239,8 +5197,8 @@ function pboyReset(){
   const H=PBOY.H;
   PBOY.player={x:60,y:H/2,vy:0,papersLeft:20,throwTimer:0};
   PBOY.papers=[];PBOY.obstacles=[];PBOY.houses=[];PBOY.particles=[];
-  PBOY.scroll=0;PBOY.dist=0;PBOY.scrollSpd=2.2+(PBOY.level-1)*0.2;
-  PBOY.score=0;PBOY.lives=3;PBOY.delivered=0;PBOY.streak=0;PBOY.bestStreak=0;PBOY.over=false;PBOY.won=false;PBOY.paused=false;PBOY.submitted=false;
+  PBOY.dist=0;PBOY.scrollSpd=2.2+(PBOY.level-1)*0.2;
+  PBOY.score=0;PBOY.lives=3;PBOY.delivered=0;PBOY.streak=0;PBOY.over=false;PBOY.won=false;PBOY.paused=false;PBOY.submitted=false;
   PBOY.frame=0;PBOY.spawnTimer=0;PBOY.keys={up:false,dn:false,throwU:false,throwD:false};
 }
 function pboyParticle(x,y,col,n){for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,s=1+Math.random()*2;PBOY.particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:1,col});}}
@@ -5270,7 +5228,7 @@ function pboyStep(){
         if(!h.hit&&p.x>=h.x&&p.x<=h.x+h.w&&p.y>=h.y&&p.y<=h.y+h.h){
           h.hit=true;PBOY.papers.splice(i,1);
           if(h.sub){
-            PBOY.streak++;PBOY.bestStreak=Math.max(PBOY.bestStreak,PBOY.streak);
+            PBOY.streak++;
             // Bonus: hitting near mailbox side of house
             const onTop=h.y<200;
             const mbZone=onTop?(p.y>h.y+h.h-15):(p.y<h.y+15);
@@ -5327,7 +5285,7 @@ function pboyStep(){
 }
 function pboyDraw(){
   const cv=document.getElementById('pboy-canvas');if(!cv)return;
-  const ctx=cv.getContext('2d'),{W,H,player,papers,obstacles,houses,particles,over,won,paused,lives,scroll}=PBOY;
+  const ctx=cv.getContext('2d'),{W,H,player,papers,obstacles,houses,particles,over,won,paused,lives}=PBOY;
   // Sky + ground
   ctx.fillStyle='#0a1628';ctx.fillRect(0,0,W,110); // sky top
   ctx.fillStyle='#1a3a2a';ctx.fillRect(0,110,W,20); // top sidewalk
@@ -5836,7 +5794,6 @@ function launchStarmail(){
   SHM.loopId=requestAnimationFrame(shmStep);
 }
 
-// ── Stop all games on navigate away ───────────────────────────────────────────
 const _origGo = go;
 go = function(path) {
   closeMobSidebar();
@@ -5848,7 +5805,6 @@ go = function(path) {
   return _origGo(path);
 };
 
-// ── Mobile sidebar ────────────────────────────────────────────────────────────
 function toggleMobSidebar() {
   const s = document.querySelector('.sidebar');
   const o = document.getElementById('sidebar-overlay');
