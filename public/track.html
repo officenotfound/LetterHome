@@ -107,7 +107,7 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:48px 36px 32px
   <h1 data-i18n="track.h1">Check on your letter.</h1>
   <p class="intro" data-i18n="track.intro">Enter the order number from your confirmation email and the email address you used at checkout.</p>
 
-  <div id="error-msg" class="error-msg"></div>
+  <div id="error-msg" class="error-msg" role="alert" aria-live="assertive"></div>
 
   <div class="form-card">
     <form id="track-form">
@@ -118,13 +118,13 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:48px 36px 32px
       </div>
       <div class="form-group" style="margin-bottom:28px">
         <label for="email" data-i18n="track.email.label">Email address</label>
-        <input id="email" name="email" type="email" placeholder="you@example.com" data-i18n-placeholder="track.email.placeholder" required>
+        <input id="email" name="email" type="email" autocomplete="email" placeholder="you@example.com" data-i18n-placeholder="track.email.placeholder" required>
       </div>
       <button type="submit" class="btn btn-ink" id="track-btn" data-i18n="track.btn" style="width:100%;text-align:center;padding:16px">Track Order</button>
     </form>
   </div>
 
-  <div class="result" id="result">
+  <div class="result" id="result" role="status" aria-live="polite">
     <div class="result-status" id="result-status"></div>
     <div id="result-details"></div>
     <p style="font-size:13px;color:var(--ink-muted);margin-top:20px" data-i18n-html="track.result.note">Questions? <a href="/contact" style="color:var(--red)">Contact us</a> with your order number.</p>

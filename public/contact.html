@@ -88,6 +88,7 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:48px 36px 32px
       <a href="/#how" data-i18n="nav.how">How it works</a>
       <a href="/#pricing" data-i18n="nav.pricing">Pricing</a>
       <a href="/about" data-i18n="nav.about">About</a>
+      <a href="/track" data-i18n="nav.track">Track an order</a>
     </div>
     <div class="nav-right">
       <button type="button" class="lang-toggle" onclick="toggleLang()" aria-label="Toggle language">FR</button>
@@ -132,17 +133,17 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:48px 36px 32px
   </div>
 
   <div class="form-card">
-    <div id="success-msg" class="success-msg" data-i18n="contact.success">
+    <div id="success-msg" class="success-msg" role="status" aria-live="polite" data-i18n="contact.success">
       Message sent. We'll get back to you within one business day.
     </div>
     <form id="contact-form">
       <div class="form-group">
         <label for="name" data-i18n="contact.name.label">Your name</label>
-        <input id="name" name="name" type="text" placeholder="Margaret Tremblay" data-i18n-placeholder="contact.name.placeholder" required>
+        <input id="name" name="name" type="text" autocomplete="name" placeholder="Margaret Tremblay" data-i18n-placeholder="contact.name.placeholder" required>
       </div>
       <div class="form-group">
         <label for="email" data-i18n="contact.email.label">Your email</label>
-        <input id="email" name="email" type="email" placeholder="you@example.com" data-i18n-placeholder="contact.email.placeholder" required>
+        <input id="email" name="email" type="email" autocomplete="email" placeholder="you@example.com" data-i18n-placeholder="contact.email.placeholder" required>
       </div>
       <div class="form-group">
         <label for="message" data-i18n="contact.msg.label">Message</label>
