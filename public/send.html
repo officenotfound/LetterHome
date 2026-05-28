@@ -967,17 +967,19 @@ function removeFile(idx, btn) {
   btn.parentElement.remove();
 }
 
-function initAutocomplete() {
-  setupAuto('s-street', 's');
-  setupAuto('r-street', 'r');
+async function initAutocomplete() {
+  const { AutocompleteSuggestion, AutocompleteSessionToken } =
+    await google.maps.importLibrary('places');
+  setupAuto('s-street', 's', AutocompleteSuggestion, AutocompleteSessionToken);
+  setupAuto('r-street', 'r', AutocompleteSuggestion, AutocompleteSessionToken);
 }
 
-function setupAuto(inputId, prefix) {
-  const input  = document.getElementById(inputId);
-  const wrap   = input.closest('.form-group');
+function setupAuto(inputId, prefix, AutocompleteSuggestion, AutocompleteSessionToken) {
+  const input = document.getElementById(inputId);
+  const wrap  = input.closest('.form-group');
   wrap.style.position = 'relative';
 
-  const drop   = document.createElement('ul');
+  const drop = document.createElement('ul');
   drop.className = 'ac-drop';
   drop.setAttribute('role', 'listbox');
   drop.id = inputId + '-ac-list';
@@ -988,48 +990,52 @@ function setupAuto(inputId, prefix) {
   input.setAttribute('aria-expanded', 'false');
   input.setAttribute('aria-owns', inputId + '-ac-list');
 
-  const svc    = new google.maps.places.AutocompleteService();
-  const detSvc = new google.maps.places.PlacesService(document.createElement('div'));
-  let   timer;
-  let   reqSeq = 0;
-  let   sessionToken = new google.maps.places.AutocompleteSessionToken();
+  let timer;
+  let reqSeq = 0;
+  let sessionToken = new AutocompleteSessionToken();
 
   input.addEventListener('input', () => {
     clearTimeout(timer);
     const q = input.value.trim();
     if (q.length < 3) { drop.innerHTML = ''; input.setAttribute('aria-expanded', 'false'); return; }
-    timer = setTimeout(() => {
+    timer = setTimeout(async () => {
       const seq = ++reqSeq;
-      svc.getPlacePredictions({ input: q, types: ['address'], sessionToken }, (preds, status) => {
+      try {
+        const { suggestions } = await AutocompleteSuggestion.fetchAutocompleteSuggestions({
+          input: q,
+          includedPrimaryTypes: ['address'],
+          sessionToken,
+        });
         if (seq !== reqSeq) return;
         drop.innerHTML = '';
-        if (status !== google.maps.places.PlacesServiceStatus.OK || !preds) {
+        if (!suggestions || !suggestions.length) {
           input.setAttribute('aria-expanded', 'false');
           return;
         }
         input.setAttribute('aria-expanded', 'true');
-        preds.forEach(pred => {
+        suggestions.forEach(s => {
+          const pred = s.placePrediction;
           const li = document.createElement('li');
           li.className = 'ac-item';
           li.setAttribute('role', 'option');
-          li.textContent = pred.description;
-          li.addEventListener('mousedown', e => {
+          li.textContent = pred.text.toString();
+          li.addEventListener('mousedown', async e => {
             e.preventDefault();
             drop.innerHTML = '';
             input.setAttribute('aria-expanded', 'false');
-            input.value = pred.structured_formatting.main_text;
-            detSvc.getDetails(
-              { placeId: pred.place_id, fields: ['address_components'], sessionToken },
-              (place, s) => {
-                sessionToken = new google.maps.places.AutocompleteSessionToken();
-                if (s === google.maps.places.PlacesServiceStatus.OK && place)
-                  fillPlace(place.address_components, prefix);
-              }
-            );
+            input.value = pred.mainText.toString();
+            try {
+              const place = pred.toPlace();
+              await place.fetchFields({ fields: ['addressComponents'] });
+              sessionToken = new AutocompleteSessionToken();
+              if (place.addressComponents) fillPlace(place.addressComponents, prefix);
+            } catch (_) {}
           });
           drop.appendChild(li);
         });
-      });
+      } catch (_) {
+        if (seq === reqSeq) { drop.innerHTML = ''; input.setAttribute('aria-expanded', 'false'); }
+      }
     }, 300);
   });
 
@@ -1045,13 +1051,13 @@ function fillPlace(components, prefix) {
   let num = '', route = '', city = '', province = '', postal = '', countryCode = '', countryName = '';
   components.forEach(c => {
     const t = c.types[0];
-    if (t === 'street_number')               num         = c.long_name;
-    if (t === 'route')                       route       = c.long_name;
-    if (t === 'locality')                    city        = c.long_name;
-    if (t === 'postal_town' && !city)        city        = c.long_name;
-    if (t === 'administrative_area_level_1') province    = c.short_name;
-    if (t === 'postal_code')                 postal      = c.long_name;
-    if (t === 'country') { countryCode = c.short_name; countryName = c.long_name; }
+    if (t === 'street_number')               num         = c.longText;
+    if (t === 'route')                       route       = c.longText;
+    if (t === 'locality')                    city        = c.longText;
+    if (t === 'postal_town' && !city)        city        = c.longText;
+    if (t === 'administrative_area_level_1') province    = c.shortText;
+    if (t === 'postal_code')                 postal      = c.longText;
+    if (t === 'country') { countryCode = c.shortText; countryName = c.longText; }
   });
 
   const streetEl = document.getElementById(`${prefix}-street`);
