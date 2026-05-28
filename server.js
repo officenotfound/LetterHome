@@ -3246,6 +3246,9 @@ cron.schedule('0 2 * * *', async () => {
   await runBackup();
 });
 
+// Sentry Express error handler — must be after all routes
+Sentry.setupExpressErrorHandler(app);
+
 const PORT = process.env.PORT || 3000;
 if (!process.env.TEST_MODE) {
   app.listen(PORT, () => console.log(`Letterhome running on port ${PORT}`));
