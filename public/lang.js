@@ -383,7 +383,7 @@
       'pricing.dom.h3': 'National',
       'pricing.dom.sub': 'À toute adresse canadienne',
       'pricing.dom.meta': 'Habituellement 1à 2 semaines',
-      ‘pricing.dom.li1’: ‘Jusqu’à 5 fichiers (PDF, Word, TXT) imprimés en couleurs’,
+      'pricing.dom.li1': 'Jusqu’à 5 fichiers (PDF, Word, TXT) imprimés en couleurs',
       'pricing.dom.li2': 'Pages format lettre recto seulement',
       'pricing.dom.li3': 'Enveloppe et affranchissement canadien',
       'pricing.dom.li4': 'Pièces jointes PDF ou Word incluses',
@@ -392,7 +392,7 @@
       'pricing.intl.h3': 'International',
       'pricing.intl.sub': 'Plus de 160 pays dans le monde',
       'pricing.intl.meta': 'Habituellement 2à 4 semaines',
-      ‘pricing.intl.li1’: ‘Jusqu’à 5 fichiers (PDF, Word, TXT) imprimés en couleurs’,
+      'pricing.intl.li1': 'Jusqu’à 5 fichiers (PDF, Word, TXT) imprimés en couleurs',
       'pricing.intl.li2': 'Pages format lettre recto seulement',
       'pricing.intl.li3': 'Enveloppe et affranchissement international',
       'pricing.intl.li4': 'Pièces jointes PDF ou Word incluses',
@@ -670,12 +670,12 @@
       'send.pwd.hint': '— 8+ car., lettre + chiffre/symbole',
       'send.err.submit': 'Une erreur est survenue. Veuillez réessayer ou nous contacter.',
       'send.anon.note': 'Aucune adresse de retour — le destinataire ne pourra pas répondre par courrier.',
-      'send.autocomplete.hint': 'Commencez à taper pour des suggestions d'adresse',
+      'send.autocomplete.hint': 'Commencez à taper pour des suggestions d’adresse',
       'send.stripe.secured': '🔒 Paiements traités par Stripe. Letterhome ne voit ni ne stocke jamais vos coordonnées bancaires.',
       'success.label.email': 'Confirmation envoyée à',
       'success.copy.btn': 'Copier',
       'success.copied': 'Copié !',
-      'success.track.note': 'Postes Canada ne fournit pas de numéro de suivi pour le courrier ordinaire. Utilisez le numéro de commande ci-dessus pour vérifier l'état sur notre <a href="/track" style="color:var(--red)">page de suivi</a>.',
+      'success.track.note': 'Postes Canada ne fournit pas de numéro de suivi pour le courrier ordinaire. Utilisez le numéro de commande ci-dessus pour vérifier l’état sur notre <a href="/track" style="color:var(--red)">page de suivi</a>.',
     }
   };
 
