@@ -90,6 +90,7 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:40px 36px;posi
     <div class="loading" data-i18n="success.loading">Loading order details…</div>
   </div>
 
+  <p id="track-note" style="font-size:13px;color:var(--ink-muted);margin-bottom:28px;line-height:1.6"></p>
   <div id="account-prompt"></div>
   <a href="/" class="btn btn-outline" data-i18n="success.back">Back to Letterhome</a>
 </div>
@@ -109,6 +110,17 @@ function esc(s) {
   return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+function copyOrderNum(id) {
+  navigator.clipboard.writeText(String(id)).then(() => {
+    const btn = document.getElementById('copy-order-btn');
+    if (btn) {
+      const orig = btn.textContent;
+      btn.textContent = LH_T('success.copied');
+      setTimeout(() => { btn.textContent = orig; }, 2000);
+    }
+  }).catch(() => {});
+}
+
 (async () => {
   const params = new URLSearchParams(window.location.search);
   const sessionId = params.get('session_id');
@@ -122,23 +134,35 @@ function esc(s) {
     return;
   }
 
+  const loadingTimeout = setTimeout(() => {
+    if (el.querySelector('.loading')) {
+      el.innerHTML = '<p style="color:var(--ink-muted);font-size:14px">' + LH_T('success.catch_p') + '</p>';
+    }
+  }, 5000);
+
   try {
     const res  = await fetch('/api/order-status?session_id=' + encodeURIComponent(sessionId));
     const data = await res.json();
+    clearTimeout(loadingTimeout);
     if (!res.ok) throw new Error(data.error);
 
     const destName = LH_T('country.' + data.destinationCountry) !== ('country.' + data.destinationCountry) ? LH_T('country.' + data.destinationCountry) : data.destinationCountry;
     const isDomestic = data.destinationCountry === 'CA';
 
     el.innerHTML = `
-      <div class="detail-row"><span class="label">${LH_T('success.label.order')}</span><span class="val">#${esc(data.id)}</span></div>
+      <div class="detail-row"><span class="label">${LH_T('success.label.order')}</span><span class="val" style="display:flex;align-items:center;gap:10px">#${esc(data.id)}<button id="copy-order-btn" onclick="copyOrderNum('${esc(data.id)}')" style="font-size:11px;font-family:'DM Mono',monospace;letter-spacing:0.08em;text-transform:uppercase;background:transparent;border:1px solid rgba(42,42,42,0.2);color:var(--ink-muted);padding:3px 8px;border-radius:2px;cursor:pointer">${LH_T('success.copy.btn')}</button></span></div>
+      ${data.customerEmail ? `<div class="detail-row"><span class="label">${LH_T('success.label.email')}</span><span class="val" style="font-size:13px">${esc(data.customerEmail)}</span></div>` : ''}
       <div class="detail-row"><span class="label">${LH_T('success.label.recipient')}</span><span class="val">${esc(data.recipientName)}${data.recipientCity ? ', ' + esc(data.recipientCity) : ''}</span></div>
       <div class="detail-row"><span class="label">${LH_T('success.label.destination')}</span><span class="val">${esc(destName)}</span></div>
       <div class="detail-row"><span class="label">${LH_T('success.label.price')}</span><span class="val">${data.priceCents ? '$' + (data.priceCents / 100).toFixed(0) : (isDomestic ? '$10' : '$20')} CAD</span></div>
       <div class="detail-row"><span class="label">${LH_T('success.label.delivery')}</span><span class="val">${isDomestic ? LH_T('success.dom.delivery') : LH_T('success.intl.delivery')}</span></div>
       <div class="detail-row"><span class="label">${LH_T('success.label.status')}</span><span class="val" style="color:var(--red)">${LH_T('success.status.val')}</span></div>
     `;
+
+    const trackNote = document.getElementById('track-note');
+    if (trackNote) trackNote.innerHTML = LH_T('success.track.note');
   } catch (err) {
+    clearTimeout(loadingTimeout);
     el.innerHTML = '<p style="color:var(--ink-muted);font-size:14px">' + LH_T('success.catch_p') + '</p>';
   }
 
