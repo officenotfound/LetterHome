@@ -49,6 +49,7 @@ jobs:
         run: npx playwright test
         env:
           SMOKE_BASE_URL: https://letterhome.ca
+          SMOKE_BYPASS_TOKEN: ${{ secrets.SMOKE_BYPASS_TOKEN }}
 
       - name: Upload report on failure
         uses: actions/upload-artifact@v4
