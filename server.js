@@ -1153,6 +1153,7 @@ app.get('/api/order-status', trackLimiter, (req, res) => {
     destinationCountry: order.destination_country,
     createdAt:          order.created_at,
     priceCents:         order.price_cents,
+    customerEmail:      order.customer_email,
   });
 });
 

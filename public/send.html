@@ -236,7 +236,7 @@ textarea { resize: vertical; min-height: 260px; line-height: 1.6; }
   background: var(--paper); border: 1px solid var(--line); margin-bottom: 8px;
   font-size: 13px; border-radius: 2px;
 }
-.attach-list li .remove { margin-left: auto; color: var(--red); cursor: pointer; font-size: 18px; line-height: 1; background: none; border: none; }
+.attach-list li .remove { margin-left: auto; color: var(--red); cursor: pointer; font-size: 16px; line-height: 1; background: none; border: none; min-width: 44px; min-height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 2px; }
 
 /* PREVIEW PANEL */
 .preview-envelope {
@@ -410,7 +410,7 @@ textarea.field-error { border-color: var(--red) !important; }
 </nav>
 
 <!-- PROGRESS -->
-<div class="progress-wrap" id="main-content">
+<div class="progress-wrap" id="main-content" role="group" aria-label="Order form step 1 of 3">
   <div class="progress-inner">
     <div class="progress-steps">
       <div class="progress-step">
@@ -638,13 +638,14 @@ textarea.field-error { border-color: var(--red) !important; }
     <div class="address-columns">
       <div class="address-col">
         <h3 data-i18n="send.from.h3">From — Sender</h3>
-        <div class="check-row" style="margin-bottom:20px;">
+        <div class="check-row" style="margin-bottom:6px;">
           <input type="checkbox" id="skip-return" onchange="toggleReturn(this)">
           <label for="skip-return" data-i18n="send.from.anon">Skip return address (anonymous send)</label>
         </div>
+        <p class="field-note" style="margin-bottom:20px;padding-left:30px" data-i18n="send.anon.note">No return address — the recipient won't be able to reply by mail. Perfectly legal.</p>
         <div id="sender-fields">
           <div class="form-group"><label for="s-name" data-i18n="send.from.name">Full Name</label><input id="s-name" type="text" placeholder="Margaret Tremblay" autocomplete="name"></div>
-          <div class="form-group"><label for="s-street" data-i18n="send.from.street">Street Address</label><input id="s-street" type="text" placeholder="123 Main Street" autocomplete="off"></div>
+          <div class="form-group"><label for="s-street" data-i18n="send.from.street">Street Address</label><input id="s-street" type="text" placeholder="123 Main Street" autocomplete="off"><span class="field-note" data-i18n="send.autocomplete.hint">Start typing for address suggestions</span></div>
           <div class="form-grid-2">
             <div class="form-group"><label for="s-city" data-i18n="send.from.city">City</label><input id="s-city" type="text" placeholder="Toronto" autocomplete="address-level2"></div>
             <div class="form-group"><label for="s-province" data-i18n="send.from.province">Province / State</label><input id="s-province" type="text" placeholder="ON"></div>
@@ -659,7 +660,7 @@ textarea.field-error { border-color: var(--red) !important; }
       <div class="address-col">
         <h3 data-i18n="send.to.h3">To — Recipient</h3>
         <div class="form-group"><label for="r-name" data-i18n="send.from.name">Full Name</label><input id="r-name" type="text" placeholder="James Okafor"></div>
-        <div class="form-group"><label for="r-street" data-i18n="send.from.street">Street Address</label><input id="r-street" type="text" placeholder="456 Oak Avenue, Apt 3" autocomplete="off"></div>
+        <div class="form-group"><label for="r-street" data-i18n="send.from.street">Street Address</label><input id="r-street" type="text" placeholder="456 Oak Avenue, Apt 3" autocomplete="off"><span class="field-note" data-i18n="send.autocomplete.hint">Start typing for address suggestions</span></div>
         <div class="form-grid-2">
           <div class="form-group"><label for="r-city" data-i18n="send.from.city">City</label><input id="r-city" type="text" placeholder="Halifax"></div>
           <div class="form-group" id="province-field">
@@ -763,7 +764,10 @@ textarea.field-error { border-color: var(--red) !important; }
 
     <div class="panel-nav">
       <button class="btn btn-outline" onclick="goTo(2)" data-i18n="send.btn.editletter">← Edit Letter</button>
-      <button id="pay-btn" class="btn btn-red btn-large" onclick="submitOrder()" data-i18n="send.btn.pay">Pay & Send Letter →</button>
+      <div style="text-align:right">
+        <button id="pay-btn" class="btn btn-red btn-large" onclick="submitOrder()" data-i18n="send.btn.pay">Pay via Stripe →</button>
+        <p style="font-size:11px;color:var(--ink-faint);margin-top:8px;font-family:'DM Mono',monospace;letter-spacing:0.04em" data-i18n="send.stripe.secured">🔒 Secured by Stripe — we never see your card details</p>
+      </div>
     </div>
   </div>
 
@@ -785,6 +789,16 @@ textarea.field-error { border-color: var(--red) !important; }
 <script>
 let currentStep = 1;
 let uploadedFiles = [];
+
+function estDeliveryDate(daysToAdd) {
+  const months = { en: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+                   fr: ['jan.','fév.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'] };
+  const d = new Date();
+  d.setDate(d.getDate() + 1 + daysToAdd);
+  const lang = document.documentElement.getAttribute('data-lang') || 'en';
+  const m = months[lang] || months.en;
+  return lang === 'fr' ? d.getDate() + ' ' + m[d.getMonth()] : m[d.getMonth()] + ' ' + d.getDate();
+}
 
 // Countries where state/province is a required part of a postal address
 const PROVINCE_REQUIRED = new Set(['US','AU','IN','BR','MX','MY','NG','PH','CN','ZA','AR','CO','ID']);
@@ -812,6 +826,8 @@ function updateStepUI() {
       if (line) line.classList.toggle('done', i < currentStep);
     }
   }
+  const pw = document.getElementById('main-content');
+  if (pw) pw.setAttribute('aria-label', 'Order form step ' + currentStep + ' of 3');
 }
 
 function setCircleLabel(el, i) {
@@ -833,7 +849,9 @@ function updatePricing() {
   document.getElementById('preview-price').textContent   = priceStr;
   document.getElementById('summary-total').textContent   = priceStr + ' CAD';
   document.getElementById('summary-dest').textContent    = isDomestic ? LH_T('send.dom.dest') : LH_T('send.intl.dest');
-  document.getElementById('summary-delivery').textContent = isDomestic ? LH_T('send.dom.delivery') : LH_T('send.intl.delivery');
+  const deliveryBase = isDomestic ? LH_T('send.dom.delivery') : LH_T('send.intl.delivery');
+  const estDate = isDomestic ? estDeliveryDate(14) : estDeliveryDate(28);
+  document.getElementById('summary-delivery').textContent = deliveryBase + ' — est. ' + estDate;
 
   const sel = document.getElementById('r-province');
   const txt = document.getElementById('r-province-text');
@@ -938,7 +956,7 @@ function handleFiles(input) {
     list.appendChild(li);
   });
 
-  if (rejected.length) alert(LH_T('send.file.rejected') + '\n\n' + rejected.join('\n'));
+  if (rejected.length) showValidationBanner(LH_T('send.file.rejected') + ' ' + rejected.join(' · '));
   input.value = '';
 }
 
@@ -1112,7 +1130,7 @@ function validateStep(step) {
   if (missing.length) {
     showValidationBanner(LH_T('send.val.prefix') + missing.join(' · '));
     const first = document.querySelector('.field-error');
-    if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (first) { first.scrollIntoView({ behavior: 'smooth', block: 'center' }); setTimeout(() => first.focus(), 400); }
     return false;
   }
   return true;
@@ -1160,6 +1178,12 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
+window.addEventListener('beforeunload', function(e) {
+  const ids = ['s-name', 's-street', 'r-name', 'r-street', 'r-email', 'letter-body'];
+  const hasData = ids.some(id => { const el = document.getElementById(id); return el && el.value.trim(); });
+  if (hasData) { e.preventDefault(); e.returnValue = ''; }
+});
+
 async function submitOrder() {
   // tryNext(...) already validates step 1 and step 2 before reaching this point,
   // but we re-check the agreement box here since users can pay directly without
@@ -1190,6 +1214,7 @@ async function submitOrder() {
     const res  = await fetch('/api/create-order', { method: 'POST', body: form });
     const data = await res.json();
     if (data.checkoutUrl) {
+      btn.innerHTML = `<span style="display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,0.4);border-top-color:#fff;border-radius:50%;animation:lh-spin 0.7s linear infinite;vertical-align:middle;margin-right:8px"></span>${LH_T('send.redirecting')}`;
       window.location.href = data.checkoutUrl;
     } else {
       throw new Error(data.error || 'Unknown error');
