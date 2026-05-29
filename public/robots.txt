@@ -1,8 +1,68 @@
-User-agent: *
-Allow: /
+# Letterhome — robots.txt
+# Last reviewed: 2026-05-29
+#
+# Policy in plain English:
+#   • Search engines (Google, Bing, etc.): full access — please index us.
+#   • AI SEARCH / assistant bots (ChatGPT Search, Perplexity, Claude): welcome.
+#     These fetch pages in real time to cite us in answers and send traffic back.
+#     They are allowed by the default (*) group below.
+#   • AI TRAINING crawlers: opted out (see Content-Signal + explicit blocks).
+#     They scrape content to train models and send no traffic back. Blocking
+#     them has no effect on Google rankings or AI-search citations.
 
+# ---------------------------------------------------------------------------
+# Default policy — applies to every crawler not named in its own group below.
+# Content-Signal (Cloudflare / content-signals convention) declares, in one
+# line, how our content may be used by ALL compliant bots:
+#   search=yes    → index us and link to us
+#   ai-input=yes  → use us in real-time AI answers (this is how we show up in
+#                   ChatGPT/Perplexity/Gemini answers)
+#   ai-train=no   → do not use our content to train or fine-tune models
+# ---------------------------------------------------------------------------
+User-agent: *
+Content-Signal: search=yes, ai-input=yes, ai-train=no
+Allow: /
 Disallow: /admin/
-Disallow: /order-success
 Disallow: /api/
+Disallow: /order-success
+
+# ---------------------------------------------------------------------------
+# AI TRAINING crawlers — explicitly opted out.
+# Mirrors the ai-train=no signal above and our Cloudflare "block AI training
+# bots" rule. Named groups do NOT inherit the * rules, but a blanket Disallow
+# is the intent here, so that is fine.
+# ---------------------------------------------------------------------------
+User-agent: GPTBot
+Disallow: /
+
+User-agent: ClaudeBot
+Disallow: /
+
+User-agent: Google-Extended
+Disallow: /
+
+User-agent: Applebot-Extended
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: Bytespider
+Disallow: /
+
+User-agent: Meta-ExternalAgent
+Disallow: /
+
+User-agent: meta-externalagent
+Disallow: /
+
+User-agent: Amazonbot
+Disallow: /
+
+User-agent: PanguBot
+Disallow: /
+
+User-agent: Timpibot
+Disallow: /
 
 Sitemap: https://letterhome.ca/sitemap.xml
