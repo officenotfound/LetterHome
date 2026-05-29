@@ -404,7 +404,8 @@ footer { background: #3d2c1a !important; border-top: 5px solid; border-image: re
 }
 @media (max-width: 480px) {
   .nav-inner { padding: 10px 18px !important; }
-  .logo { font-size: 32px !important; }
+  .logo { font-size: 36px !important; }
+  .logo-img { height: 28px !important; }
   h1 { font-size: clamp(30px, 8vw, 48px); }
   .section-head h2, .story-text h2, .cta-band h2 { font-size: clamp(24px, 6vw, 40px); }
   .main { padding: 40px 18px 80px; }
