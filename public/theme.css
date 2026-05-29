@@ -337,8 +337,8 @@ section.story[style], section.story {
 /* Nav overrides */
 .logo-mark { background: var(--red) !important; box-shadow: none !important; border-radius: 2px !important; width: 44px !important; height: 28px !important; }
 .logo-mark::before { display: block !important; inset: -4px !important; border: 1px dashed rgba(42,42,42,0.35) !important; border-radius: 4px !important; opacity: 1 !important; }
-.logo { font-family: 'DM Serif Display', serif !important; font-style: italic !important; font-size: 38px !important; letter-spacing: -0.02em !important; gap: 12px !important; }
-.logo-wordmark { font-style: italic; letter-spacing: -0.02em; }
+.logo { font-family: 'DM Serif Display', serif !important; font-style: italic !important; font-size: 44px !important; letter-spacing: -0.02em !important; gap: 12px !important; }
+.logo-wordmark { font-style: italic; letter-spacing: -0.02em; line-height: 1; }
 .logo-accent { color: var(--red) !important; }
 nav { border-bottom: 1.5px solid rgba(42,42,42,0.18) !important; }
 .nav-inner { height: 72px !important; padding: 0 40px !important; }
@@ -404,7 +404,7 @@ footer { background: #3d2c1a !important; border-top: 5px solid; border-image: re
 }
 @media (max-width: 480px) {
   .nav-inner { padding: 10px 18px !important; }
-  .logo { font-size: 28px !important; }
+  .logo { font-size: 32px !important; }
   h1 { font-size: clamp(30px, 8vw, 48px); }
   .section-head h2, .story-text h2, .cta-band h2 { font-size: clamp(24px, 6vw, 40px); }
   .main { padding: 40px 18px 80px; }
