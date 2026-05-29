@@ -32,7 +32,7 @@ fs.mkdirSync('orders',  { recursive: true });
 fs.mkdirSync('backups', { recursive: true });
 
 if (process.env.NODE_ENV === 'production') {
-  const required = ['SESSION_SECRET', 'STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET', 'SMTP_HOST', 'SMTP_USER', 'SMTP_PASS'];
+  const required = ['SESSION_SECRET', 'STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET', 'SMTP_HOST', 'SMTP_USER', 'SMTP_PASS', 'BASE_URL', 'EMAIL_FROM'];
   const missing  = required.filter(k => !process.env[k]);
   if (missing.length) {
     console.error('[startup] Missing required env vars:', missing.join(', '));
@@ -41,9 +41,12 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 const app    = express();
-app.set('trust proxy', 1);
+// Request chain is: visitor → Cloudflare → Caddy → Node, so two trusted proxies
+// sit in front of the app. With the wrong count, req.ip resolves to a proxy IP
+// instead of the real visitor, breaking rate-limiting and IP logging/alerts.
+app.set('trust proxy', 2);
 app.use(compression());
-const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
+const stripe = Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2024-06-20' });
 
 app.use(session({
   store:             new FileStore({ path: './sessions', ttl: 30 * 24 * 60 * 60, retries: 1, reapInterval: 3600, reapAsync: true }),
@@ -604,9 +607,28 @@ const upload = multer({
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
       'text/plain',
     ].includes(mime);
-    cb(null, extOk && mimeOk);
+    if (extOk && mimeOk) return cb(null, true);
+    // Reject loudly so the customer gets a clear error instead of having the
+    // file silently dropped and the order placed without their attachment.
+    const err = new Error('Unsupported file type. Please upload PDF, DOC, DOCX, or TXT files.');
+    err.code = 'UNSUPPORTED_FILE_TYPE';
+    cb(err);
   },
 });
+
+// Wraps upload.array so multer errors (size limit, file count, bad type) become
+// friendly 400s rather than a generic 500 from the global error handler.
+function uploadAttachments(req, res, next) {
+  upload.array('attachments', 5)(req, res, err => {
+    if (!err) return next();
+    const messages = {
+      LIMIT_FILE_SIZE:       'One of your files is too large. The limit is 10 MB per file.',
+      LIMIT_FILE_COUNT:      'Too many files. You can attach up to 5.',
+      UNSUPPORTED_FILE_TYPE: err.message,
+    };
+    return res.status(400).json({ error: messages[err.code] || 'Could not process your attachments. Please try again.' });
+  });
+}
 
 function orderDirPath(id, createdAt) {
   const date = new Date(createdAt).toISOString().slice(0, 10);
@@ -728,6 +750,26 @@ function safeFilePath(dir, originalName) {
       }
     }
   } catch (e) { console.error('[privacy] startup cleanup failed:', e.message); }
+
+  // Purge abandoned orders that were never paid. Stripe checkout sessions expire
+  // within 24h, so anything still 'awaiting_payment' after 30 days is dead — but
+  // it still holds the customer's address, letter text, and attachments on disk
+  // and in the DB. Delete the folder and soft-delete the row.
+  const abandonedCutoff = new Date(Date.now() - 30 * 86400 * 1000).toISOString();
+  try {
+    const abandoned = db.prepare(
+      "SELECT id, created_at FROM orders WHERE status = 'awaiting_payment' AND created_at < ? AND deleted_at IS NULL"
+    ).all(abandonedCutoff);
+    for (const o of abandoned) {
+      const dir = orderDirPath(o.id, o.created_at);
+      if (fs.existsSync(dir)) {
+        fs.rmSync(dir, { recursive: true, force: true });
+        console.log(`[privacy] deleted abandoned order folder: ${path.basename(dir)}`);
+      }
+      db.prepare("UPDATE orders SET deleted_at = CURRENT_TIMESTAMP, letter_body = NULL, attachment_info = '[]' WHERE id = ?").run(o.id);
+    }
+    if (abandoned.length) console.log(`[privacy] purged ${abandoned.length} abandoned unpaid orders`);
+  } catch (e) { console.error('[privacy] abandoned-order cleanup failed:', e.message); }
 })();
 
 app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
@@ -840,9 +882,11 @@ app.use(express.static('public', {
 }));
 
 app.get('/ga.js', (req, res) => {
-  const id = process.env.GA4_MEASUREMENT_ID || 'G-DF3XQ6ML41';
+  const id = process.env.GA4_MEASUREMENT_ID;
   res.setHeader('Content-Type', 'application/javascript');
   res.setHeader('Cache-Control', 'public, max-age=3600');
+  // No measurement ID configured — serve an inert script rather than a stray default property.
+  if (!id) return res.send('/* analytics disabled: GA4_MEASUREMENT_ID not set */');
   res.send(`
 (function(){
   try{if(localStorage.getItem('lh-analytics-consent')!=='yes')return;}catch(e){return;}
@@ -1007,7 +1051,7 @@ function requireCustomer(req, res, next) {
   res.status(401).json({ error: 'Not logged in.' });
 }
 
-app.post('/api/create-order', orderLimiter, upload.array('attachments', 5), async (req, res) => {
+app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) => {
   if (getSetting('service_paused', 'false') === 'true')
     return res.status(503).json({ error: 'Orders are currently paused. Please check back soon.' });
 
@@ -1195,7 +1239,9 @@ app.get('/admin/login', (req, res) => {
 
 app.post('/admin/login', loginLimiter, async (req, res) => {
   const { username, password, code } = req.body;
-  const ip = getClientIp(req);
+  // Use Express's req.ip (derived from the trusted-proxy chain) rather than the
+  // raw, client-spoofable X-Forwarded-For so the failed-login alert can't be evaded.
+  const ip = (req.ip || '').replace(/^::ffff:/, '');
   const validUser = username === process.env.ADMIN_USERNAME;
   const validPass = process.env.ADMIN_PASSWORD_HASH
     ? await bcrypt.compare(password || '', process.env.ADMIN_PASSWORD_HASH)
@@ -2666,6 +2712,8 @@ function buildCustomerEmailText(o, toAddr, amountCAD, isDomestic) {
 
 function buildCustomerEmail(o, toAddr, amountCAD, isDomestic) {
   const delivery = isDomestic ? 'within 2 weeks' : 'within 4 weeks';
+  const esc = s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  toAddr = esc(toAddr);
   return `
 <!DOCTYPE html><html>
 <body style="font-family:Georgia,serif;background:#ede5d3;padding:40px 20px;color:#2a2a2a;margin:0">
@@ -2689,6 +2737,8 @@ function buildCustomerEmail(o, toAddr, amountCAD, isDomestic) {
 
 function buildMailedEmail(o, toAddr, deliveryText) {
   const delivery = deliveryText || (o.destination_country === 'CA' ? 'within 2 weeks' : 'within 4 weeks');
+  const esc = s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  toAddr = esc(toAddr);
   return `
 <!DOCTYPE html><html>
 <body style="font-family:Georgia,serif;background:#ede5d3;padding:40px 20px;color:#2a2a2a;margin:0">
@@ -2825,7 +2875,9 @@ a{color:#a8472d}</style></head>
 }
 
 function buildRecoveryEmail(order) {
-  const recipientHint = order.recipient_name ? ` to ${order.recipient_name}` : '';
+  const esc = s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const recipientHint    = order.recipient_name ? ` to ${order.recipient_name}` : '';
+  const recipientHintEsc = order.recipient_name ? ` to ${esc(order.recipient_name)}` : '';
   return {
     from:    process.env.EMAIL_FROM,
     to:      order.customer_email,
@@ -2836,7 +2888,7 @@ function buildRecoveryEmail(order) {
   <div style="max-width:520px;margin:0 auto;background:#faf6ec;border:1px solid rgba(42,42,42,0.12);padding:48px">
     <div style="width:38px;height:38px;background:#a8472d;display:inline-flex;align-items:center;justify-content:center;color:#faf6ec;font-size:20px;font-family:Georgia,serif;margin-bottom:28px">L</div>
     <h1 style="font-size:28px;font-weight:400;margin:0 0 10px;letter-spacing:-0.02em">You left a letter unsent.</h1>
-    <p style="color:#6b6258;margin:0 0 32px;font-size:16px;line-height:1.6">Someone back home is waiting to hear from you. Your letter${recipientHint} is still ready to go.</p>
+    <p style="color:#6b6258;margin:0 0 32px;font-size:16px;line-height:1.6">Someone back home is waiting to hear from you. Your letter${recipientHintEsc} is still ready to go.</p>
     <a href="${process.env.BASE_URL || ''}/send" style="display:inline-block;background:#a8472d;color:#faf6ec;padding:14px 28px;font-family:Georgia,serif;font-size:15px;text-decoration:none;letter-spacing:0.02em;margin-bottom:32px">Send Your Letter →</a>
     <div style="border-top:1px solid rgba(42,42,42,0.1);padding-top:20px;font-size:12px;color:#968b7d">
       <p style="margin:0">We only send this reminder once.</p>
@@ -2850,7 +2902,10 @@ function buildOccasionReminderEmail(occ, lastOrder) {
   const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
   const [mm, dd] = occ.occasion_date.split('-').map(Number);
   const dateFormatted = `${monthNames[mm - 1]} ${dd}`;
-  const lastOrderHint = lastOrder ? ` Last year you sent a letter to ${lastOrder.recipient_name}.` : '';
+  const esc = s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const lastOrderHint    = lastOrder ? ` Last year you sent a letter to ${lastOrder.recipient_name}.` : '';
+  const lastOrderHintEsc = lastOrder ? ` Last year you sent a letter to ${esc(lastOrder.recipient_name)}.` : '';
+  const occasionNameEsc  = esc(occ.occasion_name);
   return {
     from:    process.env.EMAIL_FROM,
     to:      occ.customer_email,
@@ -2860,8 +2915,8 @@ function buildOccasionReminderEmail(occ, lastOrder) {
 <body style="font-family:Georgia,serif;background:#ede5d3;padding:40px 20px;color:#2a2a2a;margin:0">
   <div style="max-width:520px;margin:0 auto;background:#faf6ec;border:1px solid rgba(42,42,42,0.12);padding:48px">
     <div style="width:38px;height:38px;background:#a8472d;display:inline-flex;align-items:center;justify-content:center;color:#faf6ec;font-size:20px;font-family:Georgia,serif;margin-bottom:28px">L</div>
-    <h1 style="font-size:28px;font-weight:400;margin:0 0 10px;letter-spacing:-0.02em">${occ.occasion_name} is coming up.</h1>
-    <p style="color:#6b6258;margin:0 0 32px;font-size:16px;line-height:1.6">${occ.occasion_name} is ${occ.remind_days_before} days away (${dateFormatted}).${lastOrderHint} Send a letter — it'll mean more than a text.</p>
+    <h1 style="font-size:28px;font-weight:400;margin:0 0 10px;letter-spacing:-0.02em">${occasionNameEsc} is coming up.</h1>
+    <p style="color:#6b6258;margin:0 0 32px;font-size:16px;line-height:1.6">${occasionNameEsc} is ${occ.remind_days_before} days away (${dateFormatted}).${lastOrderHintEsc} Send a letter — it'll mean more than a text.</p>
     <a href="${process.env.BASE_URL || ''}/send" style="display:inline-block;background:#a8472d;color:#faf6ec;padding:14px 28px;font-family:Georgia,serif;font-size:15px;text-decoration:none;letter-spacing:0.02em;margin-bottom:32px">Send a Letter →</a>
     <div style="border-top:1px solid rgba(42,42,42,0.1);padding-top:20px;font-size:12px;color:#968b7d">
       <p style="margin:0">You set this reminder via Letterhome. Reply to stop.</p>
@@ -3136,7 +3191,7 @@ const ADMIN_EMAIL = process.env.ADMIN_EMAIL || process.env.OPERATOR_EMAIL || pro
 function sendErrorAlert(subject, body) {
   if (!ADMIN_EMAIL) return;
   transport.sendMail({
-    from:    process.env.SMTP_FROM || ADMIN_EMAIL,
+    from:    process.env.SMTP_FROM || process.env.EMAIL_FROM || ADMIN_EMAIL,
     to:      ADMIN_EMAIL,
     subject: `[Letterhome Error] ${subject}`,
     text:    body,
@@ -3218,7 +3273,12 @@ async function runBackup() {
     if (process.env.BACKUP_EMAIL_ENABLED === 'true') {
       const stat = fs.statSync(dest);
       const adminEmail = process.env.ADMIN_EMAIL || process.env.OPERATOR_EMAIL || process.env.SMTP_USER;
-      if (stat.size > 20 * 1024 * 1024) {
+      if (!passphrase) {
+        // Never email an unencrypted database — the attachment contains every
+        // customer's address, email, and letter contents. Require BACKUP_PASSPHRASE
+        // to enable emailed off-site backups.
+        console.warn('[backup] email skipped: BACKUP_PASSPHRASE not set — refusing to email an unencrypted database');
+      } else if (stat.size > 20 * 1024 * 1024) {
         console.warn(`[backup] email skipped: ${(stat.size/1024/1024).toFixed(1)}MB exceeds 20MB limit`);
       } else if (!adminEmail || !adminEmail.includes('@')) {
         console.warn('[backup] email skipped: no valid ADMIN_EMAIL, OPERATOR_EMAIL, or SMTP_USER set');
@@ -3245,9 +3305,6 @@ cron.schedule('0 2 * * *', async () => {
   console.log('[backup] running scheduled backup');
   await runBackup();
 });
-
-// Sentry Express error handler — must be after all routes
-Sentry.setupExpressErrorHandler(app);
 
 const PORT = process.env.PORT || 3000;
 if (!process.env.TEST_MODE) {

@@ -38,7 +38,7 @@ Currently on Stripe **test mode**. All orders in DB are test data. v0.2 ends by 
 ssh letterhome@racknerd-8dd23aa
 cd /var/letterhome
 git pull origin main
-npm install --omit=dev    # only when package.json changed
+npm ci --omit=dev         # only when package.json changed
 pm2 reload letterhome
 pm2 logs letterhome --lines 30 --nostream
 ```
