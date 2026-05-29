@@ -41,7 +41,10 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 const app    = express();
-app.set('trust proxy', 1);
+// Request chain is: visitor → Cloudflare → Caddy → Node, so two trusted proxies
+// sit in front of the app. With the wrong count, req.ip resolves to a proxy IP
+// instead of the real visitor, breaking rate-limiting and IP logging/alerts.
+app.set('trust proxy', 2);
 app.use(compression());
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2024-06-20' });
 
