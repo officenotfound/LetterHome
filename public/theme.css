@@ -430,6 +430,18 @@ footer { background: #3d2c1a !important; border-top: 5px solid; border-image: re
   background-size: 100% 1px;
 }
 
+/* ── Social icon links (footer + CTA) ──────────────────────────────────────── */
+.footer-social { display: inline-flex !important; align-items: center; gap: 15px; flex-shrink: 0; }
+.footer-social a { display: inline-flex !important; align-items: center; color: inherit !important; opacity: 0.72; background-image: none !important; transition: opacity .2s, color .2s, transform .2s; }
+.footer-social a:hover { opacity: 1; color: var(--red) !important; transform: translateY(-1px); background-size: 0 0 !important; }
+.footer-social svg { width: 16px; height: 16px; display: block; }
+
+.cta-social { display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: 30px; }
+.cta-social span { font-family: 'DM Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.16em; color: var(--ink-faint); }
+.cta-social a { display: inline-flex; align-items: center; color: var(--ink-muted); opacity: 0.9; transition: color .2s, opacity .2s, transform .2s; }
+.cta-social a:hover { color: var(--red); opacity: 1; transform: translateY(-1px); }
+.cta-social svg { width: 19px; height: 19px; display: block; }
+
 
 /* ── Language-section visibility (legal pages use full-block FR/EN divs) ─── */
 [data-lang="en"] [data-lang-show="fr"] { display: none !important; }
