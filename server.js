@@ -77,6 +77,7 @@ app.use(helmet({
                     'https://www.google-analytics.com'],
       connectSrc:  ["'self'",
                     'https://maps.googleapis.com',
+                    'https://places.googleapis.com',
                     'https://maps.gstatic.com',
                     'https://www.google-analytics.com',
                     'https://analytics.google.com',
