@@ -19,7 +19,7 @@ jobs:
           script: |
             cd /var/letterhome
             git pull
-            npm install --omit=dev
+            npm ci --omit=dev
             pm2 reload letterhome
             pm2 show letterhome
 
@@ -43,7 +43,16 @@ jobs:
         run: npx playwright install chromium --with-deps
 
       - name: Wait for server to be ready
-        run: sleep 15
+        run: |
+          for i in $(seq 1 30); do
+            if curl -fsS -H "x-smoke-bypass: $SMOKE_BYPASS_TOKEN" https://letterhome.ca/health | grep -q '"status":"ok"'; then
+              echo "Server is ready."; exit 0
+            fi
+            echo "Waiting for server… ($i/30)"; sleep 3
+          done
+          echo "Server did not become ready in time."; exit 1
+        env:
+          SMOKE_BYPASS_TOKEN: ${{ secrets.SMOKE_BYPASS_TOKEN }}
 
       - name: Run smoke tests
         run: npx playwright test
