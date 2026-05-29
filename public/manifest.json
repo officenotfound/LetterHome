@@ -2,16 +2,13 @@
   "name": "Letterhome",
   "short_name": "Letterhome",
   "description": "Send physical letters and documents from Canada to anyone in the world.",
-  "theme_color": "#a8472d",
-  "background_color": "#f1ebde",
+  "theme_color": "#e63946",
+  "background_color": "#fafafa",
   "display": "standalone",
   "scope": "/",
   "start_url": "/",
   "icons": [
-    {
-      "src": "/favicon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml"
-    }
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
   ]
 }

@@ -8,9 +8,9 @@
 <title>Send Mail to Canada from the United States | Letterhome</title>
 <meta name="description" content="Send a real letter or document to Canada from anywhere in the US. We print, stamp with Canadian postage, and mail it via Canada Post. From $10 CAD.">
 <link rel="canonical" href="https://letterhome.ca/from-usa">
-<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="icon" type="image/png" href="/favicon.png">
 <link rel="manifest" href="/manifest.json">
-<link rel="apple-touch-icon" href="/favicon.svg">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <meta name="theme-color" content="#f1ebde" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#1a1410" media="(prefers-color-scheme: dark)">
 <meta property="og:title" content="Send Mail to Canada from the United States | Letterhome">
@@ -32,7 +32,7 @@
   "@graph": [
     {
       "@type": "Service",
-      "name": "Letterhome â€” Canadian Letter Mailing",
+      "name": "Letterhome — Canadian Letter Mailing",
       "description": "Send a real letter or document to Canada from anywhere in the US. We print, stamp with Canadian postage, and mail it via Canada Post. From $10 CAD.",
       "url": "https://letterhome.ca/from-usa",
       "provider": {
@@ -50,12 +50,12 @@
         "@type": "OfferCatalog",
         "name": "Letter mailing",
         "itemListElement": [
-          { "@type": "Offer", "name": "Domestic â€” within Canada", "price": "10", "priceCurrency": "CAD" },
-          { "@type": "Offer", "name": "International â€” 160+ countries", "price": "20", "priceCurrency": "CAD" }
+          { "@type": "Offer", "name": "Domestic — within Canada", "price": "10", "priceCurrency": "CAD" },
+          { "@type": "Offer", "name": "International — 160+ countries", "price": "20", "priceCurrency": "CAD" }
         ]
       }
     },
-    {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Do I need a Canadian address or Canadian credit card?","acceptedAnswer":{"@type":"Answer","text":"No. You can order from anywhere â€” a US billing address and a US card work fine. Payment is processed through Stripe. You're charged in Canadian dollars and your bank converts at its rate."}},{"@type":"Question","name":"How long does delivery from the US take?","acceptedAnswer":{"@type":"Answer","text":"We print and mail within one business day of payment. After that, Canada Post standard lettermail typically delivers within Canada in up to 2 weeks."}},{"@type":"Question","name":"Can I send a PDF or Word document?","acceptedAnswer":{"@type":"Answer","text":"Yes. Attach up to 5 PDF or Word files (10 MB each). We print them in full colour and include them in the envelope with your letter."}},{"@type":"Question","name":"What if I need to mail something international from Canada to another country?","acceptedAnswer":{"@type":"Answer","text":"We handle that too. International mail (160+ countries) is $20 CAD â€” same process, just a different destination."}}]}
+    {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Do I need a Canadian address or Canadian credit card?","acceptedAnswer":{"@type":"Answer","text":"No. You can order from anywhere — a US billing address and a US card work fine. Payment is processed through Stripe. You're charged in Canadian dollars and your bank converts at its rate."}},{"@type":"Question","name":"How long does delivery from the US take?","acceptedAnswer":{"@type":"Answer","text":"We print and mail within one business day of payment. After that, Canada Post standard lettermail typically delivers within Canada in up to 2 weeks."}},{"@type":"Question","name":"Can I send a PDF or Word document?","acceptedAnswer":{"@type":"Answer","text":"Yes. Attach up to 5 PDF or Word files (10 MB each). We print them in full colour and include them in the envelope with your letter."}},{"@type":"Question","name":"What if I need to mail something international from Canada to another country?","acceptedAnswer":{"@type":"Answer","text":"We handle that too. International mail (160+ countries) is $20 CAD — same process, just a different destination."}}]}
   ]
 }
 </script>
@@ -89,7 +89,7 @@ h1{font-family:'DM Serif Display',serif;font-size:clamp(28px,5vw,44px);line-heig
 h2{font-family:'DM Serif Display',serif;font-size:24px;letter-spacing:-0.01em;margin-bottom:18px;margin-top:48px}
 .who-list{list-style:none;display:grid;gap:10px;margin-bottom:8px}
 .who-list li{padding:14px 18px;background:var(--paper);border:1px solid var(--line);border-radius:2px;font-size:15px;line-height:1.5}
-.who-list li::before{content:'â†’';margin-right:10px;color:var(--red);font-family:'DM Mono',monospace}
+.who-list li::before{content:'→';margin-right:10px;color:var(--red);font-family:'DM Mono',monospace}
 .pricing-cards{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:0}
 @media(max-width:540px){.pricing-cards{grid-template-columns:1fr}}
 .price-card{background:var(--paper);border:1px solid var(--line);border-radius:2px;padding:24px;box-shadow:var(--shadow-card)}
@@ -122,7 +122,7 @@ footer a{color:var(--ink-muted);margin:0 8px}
 <nav>
   <div class="nav-inner">
     <a href="/" class="logo">
-      <span class="logo-mark"><svg width="20" height="13" viewBox="0 0 22 14" fill="none" stroke="white" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2 2"><rect x="1" y="1" width="20" height="12" rx="1"/><path d="M1 1.5l10 8 10-8"/></svg></span>
+      <img src="/logo.png" alt="Letterhome" class="logo-img" width="32" height="34" style="height:34px;width:auto;display:block">
       <span>Letter<span style="color:var(--red)">home</span></span>
     </a>
     <a href="/send" class="btn btn-red">Send a letter</a>
@@ -133,11 +133,11 @@ footer a{color:var(--ink-muted);margin:0 8px}
 
   <div class="eyebrow">Mailing from the US</div>
   <h1>Send mail to Canada from the United States</h1>
-  <p class="lede">Living in the US and need to mail something back home to Canada? We handle the printing, the Canadian postage, and the trip to the post office â€” so you don't have to.</p>
+  <p class="lede">Living in the US and need to mail something back home to Canada? We handle the printing, the Canadian postage, and the trip to the post office — so you don't have to.</p>
 
   <div class="cta-row">
     <a href="/send" class="btn btn-red">Send a letter now</a>
-    <span class="price-note">From $10 CAD &nbsp;Â·&nbsp; No account required</span>
+    <span class="price-note">From $10 CAD &nbsp;·&nbsp; No account required</span>
   </div>
 
   <h2>Who uses Letterhome from the United States</h2>
@@ -158,7 +158,7 @@ footer a{color:var(--ink-muted);margin:0 8px}
     <div class="price-card">
       <div class="price-amount">$20 CAD</div>
       <div class="price-label">International</div>
-      <div class="price-desc">Letters to any of 160+ countries. Same inclusions â€” full-colour printing, envelope, Canadian postage via Canada Post.</div>
+      <div class="price-desc">Letters to any of 160+ countries. Same inclusions — full-colour printing, envelope, Canadian postage via Canada Post.</div>
     </div>
   </div>
 
@@ -170,7 +170,7 @@ footer a{color:var(--ink-muted);margin:0 8px}
             Do I need a Canadian address or Canadian credit card?
             <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
           </button>
-          <div class="faq-a" id="a0" hidden>No. You can order from anywhere â€” a US billing address and a US card work fine. Payment is processed through Stripe. You're charged in Canadian dollars and your bank converts at its rate.</div>
+          <div class="faq-a" id="a0" hidden>No. You can order from anywhere — a US billing address and a US card work fine. Payment is processed through Stripe. You're charged in Canadian dollars and your bank converts at its rate.</div>
         </div>
 
         <div class="faq-item">
@@ -194,14 +194,14 @@ footer a{color:var(--ink-muted);margin:0 8px}
             What if I need to mail something international from Canada to another country?
             <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
           </button>
-          <div class="faq-a" id="a3" hidden>We handle that too. International mail (160+ countries) is $20 CAD â€” same process, just a different destination.</div>
+          <div class="faq-a" id="a3" hidden>We handle that too. International mail (160+ countries) is $20 CAD — same process, just a different destination.</div>
         </div>
   </div>
 
   <div class="cta-band">
     <h2>Ready to send?</h2>
     <p>Fill out the form, attach your documents, and we handle everything else.</p>
-    <a href="/send" class="btn btn-paper">Send a letter from USA â†’</a>
+    <a href="/send" class="btn btn-paper">Send a letter from USA →</a>
   </div>
 
 </div>
