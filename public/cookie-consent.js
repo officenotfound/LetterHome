@@ -37,7 +37,7 @@
 
     var text = document.createElement('p');
     text.style.cssText = 'margin:0;flex:1;min-width:200px';
-    text.innerHTML = 'We use analytics to understand how people find Letterhome. <a href="/privacy" style="color:#b85540;text-decoration:underline">Privacy policy</a>.';
+    text.innerHTML = 'We use analytics to understand how people find Letterhome. <a href="/privacy" style="color:#e63946;text-decoration:underline">Privacy policy</a>.';
 
     var btns = document.createElement('div');
     btns.style.cssText = 'display:flex;gap:10px;flex-shrink:0';
@@ -48,7 +48,7 @@
 
     var accept = document.createElement('button');
     accept.textContent = 'Accept';
-    accept.style.cssText = 'background:#a8472d;color:#faf6ec;border:none;padding:9px 18px;cursor:pointer;font-family:inherit;font-size:13px;letter-spacing:0.04em;text-transform:uppercase';
+    accept.style.cssText = 'background:#e63946;color:#ffffff;border:none;padding:9px 18px;cursor:pointer;font-family:inherit;font-size:13px;letter-spacing:0.04em;text-transform:uppercase';
 
     decline.addEventListener('click', function () {
       try { localStorage.setItem(KEY, 'no'); } catch (e) {}

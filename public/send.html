@@ -11,8 +11,8 @@
 <link rel="icon" type="image/png" href="/favicon.png?v=4">
 <link rel="manifest" href="/manifest.json">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=4">
-<meta name="theme-color" content="#f1ebde" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#1a1410" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#fafafa" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0a0a0a" media="(prefers-color-scheme: dark)">
 <meta property="og:image" content="https://letterhome.ca/og-image.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -34,18 +34,18 @@
 <link rel="stylesheet" href="/fonts.css">
 <style>
 :root {
-  --kraft: #f1ebde;
-  --kraft-deep: #e1d6bd;
-  --kraft-light: #f7f2e6;
-  --paper: #faf6ec;
+  --kraft: #fafafa;
+  --kraft-deep: #ececec;
+  --kraft-light: #f5f5f5;
+  --paper: #ffffff;
   --ink: #2a2a2a;
-  --ink-soft: #3a3835;
-  --ink-muted: #6b6258;
-  --ink-faint: #968b7d;
-  --red: #a8472d;
-  --red-deep: #7d3220;
-  --red-stamp: #b85540;
-  --taupe: #8a7f70;
+  --ink-soft: #2a2a2a;
+  --ink-muted: #6b6b6b;
+  --ink-faint: #9a9a9a;
+  --red: #e63946;
+  --red-deep: #b82c39;
+  --red-stamp: #e63946;
+  --taupe: #a8a8a8;
   --line: rgba(42,42,42,0.14);
   --line-soft: rgba(42,42,42,0.08);
   --shadow-soft: 0 1px 2px rgba(42,42,42,0.04), 0 6px 20px rgba(42,42,42,0.06);
@@ -105,7 +105,7 @@ nav {
   font-family: inherit; letter-spacing: 0.02em; text-transform: uppercase;
 }
 .btn-red { background: var(--red); color: var(--paper); border: 2px dashed white; }
-.btn-red:hover { background: var(--red-deep); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(168,71,45,0.3); }
+.btn-red:hover { background: var(--red-deep); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(230,57,70,0.3); }
 .btn-outline { background: transparent; color: var(--ink); border: 1.5px solid var(--ink); }
 .btn-outline:hover { background: var(--ink); color: var(--paper); }
 .btn-ink { background: var(--ink); color: var(--paper); }
@@ -388,7 +388,7 @@ textarea.field-error { border-color: var(--red) !important; }
 <link rel="stylesheet" href="/theme.css">
 </head>
 <body>
-<a href="#main-content" class="skip-link" style="position:absolute;left:-9999px;top:4px;z-index:9999;background:#a8472d;color:#faf6ec;padding:8px 16px;font-size:14px;font-family:Georgia,serif;text-decoration:none;border-radius:2px" onfocus="this.style.left='4px'" onblur="this.style.left='-9999px'">Skip to main content</a>
+<a href="#main-content" class="skip-link" style="position:absolute;left:-9999px;top:4px;z-index:9999;background:#e63946;color:#ffffff;padding:8px 16px;font-size:14px;font-family:Georgia,serif;text-decoration:none;border-radius:2px" onfocus="this.style.left='4px'" onblur="this.style.left='-9999px'">Skip to main content</a>
 
 <nav>
   <div class="nav-inner">
@@ -1269,10 +1269,10 @@ async function submitOrder() {
       panels.forEach(p => p.style.display = 'none');
       const main = document.querySelector('.form-section') || document.querySelector('main') || document.querySelector('.main') || document.querySelector('.send-wrap');
       const msg = document.createElement('div');
-      msg.style.cssText = 'max-width:560px;margin:80px auto;padding:48px 40px;background:var(--paper,#faf6ec);border:1px solid rgba(42,42,42,0.14);border-radius:2px;text-align:center';
+      msg.style.cssText = 'max-width:560px;margin:80px auto;padding:48px 40px;background:var(--paper,#ffffff);border:1px solid rgba(42,42,42,0.14);border-radius:2px;text-align:center';
       msg.innerHTML = `<div style="font-size:40px;margin-bottom:20px">✉</div>
         <h2 style="font-family:\'DM Serif Display\',serif;font-size:28px;font-weight:400;margin-bottom:12px">${LH_T('send.closed.h2')}</h2>
-        <p style="color:#6b6258;font-size:16px;line-height:1.6">${cfg.announcement || LH_T('send.closed.p')}</p>`;
+        <p style="color:#6b6b6b;font-size:16px;line-height:1.6">${cfg.announcement || LH_T('send.closed.p')}</p>`;
       if (main) main.replaceWith(msg); else document.body.appendChild(msg);
     }
   } catch(e) { /* fail silently — don't block the form */ }
@@ -1301,7 +1301,7 @@ async function submitOrder() {
           wrap.style.cssText = 'margin-bottom:18px';
           wrap.innerHTML = `
             <div style="font-size:11px;font-family:\'DM Mono\',monospace;text-transform:uppercase;letter-spacing:0.12em;color:var(--ink-muted);margin-bottom:5px">${LH_T('send.acct.saved')}</div>
-            <select id="saved-recipient-select" onchange="fillSavedRecipient(this)" style="width:100%;padding:10px 12px;border:1.5px solid var(--line,rgba(42,42,42,0.14));background:var(--paper,#faf6ec);color:var(--ink,#2a2a2a);border-radius:2px;font-family:inherit;font-size:15px">
+            <select id="saved-recipient-select" onchange="fillSavedRecipient(this)" style="width:100%;padding:10px 12px;border:1.5px solid var(--line,rgba(42,42,42,0.14));background:var(--paper,#ffffff);color:var(--ink,#2a2a2a);border-radius:2px;font-family:inherit;font-size:15px">
               <option value="">${LH_T('send.acct.select')}</option>
               ${me.recipients.map(r => `<option value='${JSON.stringify(r).replace(/'/g, '&#39;')}'>${(r.label || r.recipient_name).replace(/</g,'&lt;')}</option>`).join('')}
             </select>`;
@@ -1320,26 +1320,26 @@ function renderAccountBanner(loggedIn, email) {
   el.style.display = 'block';
   if (loggedIn) {
     el.innerHTML = `
-      <div style="background:var(--paper,#faf6ec);border:1px solid var(--line,rgba(42,42,42,0.14));border-left:3px solid #16a34a;border-radius:2px;padding:16px 22px;margin-bottom:32px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
-        <div style="font-size:14px;color:var(--ink-soft,#3a3835)">
+      <div style="background:var(--paper,#ffffff);border:1px solid var(--line,rgba(42,42,42,0.14));border-left:3px solid #16a34a;border-radius:2px;padding:16px 22px;margin-bottom:32px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+        <div style="font-size:14px;color:var(--ink-soft,#2a2a2a)">
           <span style="color:#16a34a;font-weight:600">${LH_T('send.acct.signedin.prefix')}${email.replace(/</g,'&lt;')}</span>
-          <span style="color:var(--ink-muted,#6b6258)">${LH_T('send.acct.signedin.suffix')}</span>
+          <span style="color:var(--ink-muted,#6b6b6b)">${LH_T('send.acct.signedin.suffix')}</span>
         </div>
         <div style="display:flex;gap:14px;font-size:13px">
-          <a href="/account" style="color:var(--ink-soft,#3a3835);text-decoration:underline">${LH_T('send.acct.myaccount')}</a>
-          <button type="button" onclick="signOutFromSend()" style="background:none;border:none;color:var(--ink-muted,#6b6258);cursor:pointer;font:inherit;font-size:13px;padding:0;text-decoration:underline">${LH_T('send.acct.signout')}</button>
+          <a href="/account" style="color:var(--ink-soft,#2a2a2a);text-decoration:underline">${LH_T('send.acct.myaccount')}</a>
+          <button type="button" onclick="signOutFromSend()" style="background:none;border:none;color:var(--ink-muted,#6b6b6b);cursor:pointer;font:inherit;font-size:13px;padding:0;text-decoration:underline">${LH_T('send.acct.signout')}</button>
         </div>
       </div>`;
   } else {
     el.innerHTML = `
-      <div style="background:var(--paper,#faf6ec);border:1px solid var(--line,rgba(42,42,42,0.14));border-left:3px solid var(--red,#a8472d);border-radius:2px;padding:22px 26px;margin-bottom:32px">
+      <div style="background:var(--paper,#ffffff);border:1px solid var(--line,rgba(42,42,42,0.14));border-left:3px solid var(--red,#e63946);border-radius:2px;padding:22px 26px;margin-bottom:32px">
         <div id="account-banner-collapsed" style="display:flex;align-items:flex-start;justify-content:space-between;gap:20px;flex-wrap:wrap">
           <div style="flex:1;min-width:240px">
-            <div style="font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.14em;color:var(--red,#a8472d);margin-bottom:8px">${LH_T('send.acct.eyebrow')}</div>
-            <p style="font-size:15px;line-height:1.5;color:var(--ink-soft,#3a3835);margin:0">${LH_T('send.acct.p')}</p>
+            <div style="font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.14em;color:var(--red,#e63946);margin-bottom:8px">${LH_T('send.acct.eyebrow')}</div>
+            <p style="font-size:15px;line-height:1.5;color:var(--ink-soft,#2a2a2a);margin:0">${LH_T('send.acct.p')}</p>
           </div>
           <div style="display:flex;gap:8px;flex-shrink:0">
-            <button type="button" onclick="showAccountForm('register')" style="background:var(--red,#a8472d);color:#faf6ec;border:1.5px solid var(--red,#a8472d);padding:9px 18px;border-radius:2px;font:inherit;font-size:13px;font-weight:500;letter-spacing:0.02em;text-transform:uppercase;cursor:pointer">${LH_T('send.acct.create')}</button>
+            <button type="button" onclick="showAccountForm('register')" style="background:var(--red,#e63946);color:#ffffff;border:1.5px solid var(--red,#e63946);padding:9px 18px;border-radius:2px;font:inherit;font-size:13px;font-weight:500;letter-spacing:0.02em;text-transform:uppercase;cursor:pointer">${LH_T('send.acct.create')}</button>
             <button type="button" onclick="showAccountForm('login')" style="background:transparent;color:var(--ink,#2a2a2a);border:1.5px solid rgba(42,42,42,0.35);padding:9px 18px;border-radius:2px;font:inherit;font-size:13px;font-weight:500;letter-spacing:0.02em;text-transform:uppercase;cursor:pointer">${LH_T('send.acct.signin')}</button>
           </div>
         </div>
@@ -1356,20 +1356,20 @@ function showAccountForm(mode) {
   wrap.innerHTML = `
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
       <div>
-        <label style="display:block;font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:var(--ink-muted,#6b6258);margin-bottom:4px">${LH_T('send.acct.form.email')}</label>
-        <input id="acct-email" type="email" autocomplete="email" placeholder="you@example.com" style="width:100%;padding:10px 12px;border:1.5px solid var(--line,rgba(42,42,42,0.14));background:var(--paper,#faf6ec);color:var(--ink,#2a2a2a);border-radius:2px;font:inherit;font-size:15px">
+        <label style="display:block;font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:var(--ink-muted,#6b6b6b);margin-bottom:4px">${LH_T('send.acct.form.email')}</label>
+        <input id="acct-email" type="email" autocomplete="email" placeholder="you@example.com" style="width:100%;padding:10px 12px;border:1.5px solid var(--line,rgba(42,42,42,0.14));background:var(--paper,#ffffff);color:var(--ink,#2a2a2a);border-radius:2px;font:inherit;font-size:15px">
       </div>
       <div>
-        <label style="display:block;font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:var(--ink-muted,#6b6258);margin-bottom:4px">${LH_T('send.acct.form.pwd')}${isReg ? ' <span style=\"text-transform:none;letter-spacing:0;color:var(--ink-faint,#968b7d);font-family:inherit\">' + LH_T('send.pwd.hint') + '</span>' : ''}</label>
-        <input id="acct-pwd" type="password" autocomplete="${isReg ? 'new-password' : 'current-password'}" placeholder="••••••••" style="width:100%;padding:10px 12px;border:1.5px solid var(--line,rgba(42,42,42,0.14));background:var(--paper,#faf6ec);color:var(--ink,#2a2a2a);border-radius:2px;font:inherit;font-size:15px"${isReg ? ' oninput="updateAcctBannerStrength()"' : ''}>
+        <label style="display:block;font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:var(--ink-muted,#6b6b6b);margin-bottom:4px">${LH_T('send.acct.form.pwd')}${isReg ? ' <span style=\"text-transform:none;letter-spacing:0;color:var(--ink-faint,#9a9a9a);font-family:inherit\">' + LH_T('send.pwd.hint') + '</span>' : ''}</label>
+        <input id="acct-pwd" type="password" autocomplete="${isReg ? 'new-password' : 'current-password'}" placeholder="••••••••" style="width:100%;padding:10px 12px;border:1.5px solid var(--line,rgba(42,42,42,0.14));background:var(--paper,#ffffff);color:var(--ink,#2a2a2a);border-radius:2px;font:inherit;font-size:15px"${isReg ? ' oninput="updateAcctBannerStrength()"' : ''}>
         ${isReg ? '<div style="height:3px;background:rgba(42,42,42,0.1);border-radius:2px;margin-top:5px;overflow:hidden"><div id="acct-strength-fill" style="height:100%;width:0;background:#94a3b8;transition:width 0.3s,background 0.3s"></div></div>' : ''}
       </div>
     </div>
     <div id="acct-err" style="color:#b91c1c;font-size:13px;margin-bottom:10px;display:none"></div>
     <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
-      <button type="button" onclick="${isReg ? 'doInlineRegister()' : 'doInlineLogin()'}" id="acct-submit-btn" style="background:var(--red,#a8472d);color:#faf6ec;border:1.5px solid var(--red,#a8472d);padding:10px 22px;border-radius:2px;font:inherit;font-size:13px;font-weight:500;letter-spacing:0.02em;text-transform:uppercase;cursor:pointer">${isReg ? LH_T('send.acct.create.arrow') : LH_T('send.acct.signin.arrow')}</button>
-      <button type="button" onclick="showAccountForm('${isReg ? 'login' : 'register'}')" style="background:none;border:none;color:var(--ink-muted,#6b6258);cursor:pointer;font:inherit;font-size:13px;padding:0;text-decoration:underline">${isReg ? LH_T('send.acct.already') : LH_T('send.acct.need')}</button>
-      <button type="button" onclick="hideAccountForm()" style="background:none;border:none;color:var(--ink-faint,#968b7d);cursor:pointer;font:inherit;font-size:13px;padding:0;margin-left:auto">${LH_T('send.acct.guest')}</button>
+      <button type="button" onclick="${isReg ? 'doInlineRegister()' : 'doInlineLogin()'}" id="acct-submit-btn" style="background:var(--red,#e63946);color:#ffffff;border:1.5px solid var(--red,#e63946);padding:10px 22px;border-radius:2px;font:inherit;font-size:13px;font-weight:500;letter-spacing:0.02em;text-transform:uppercase;cursor:pointer">${isReg ? LH_T('send.acct.create.arrow') : LH_T('send.acct.signin.arrow')}</button>
+      <button type="button" onclick="showAccountForm('${isReg ? 'login' : 'register'}')" style="background:none;border:none;color:var(--ink-muted,#6b6b6b);cursor:pointer;font:inherit;font-size:13px;padding:0;text-decoration:underline">${isReg ? LH_T('send.acct.already') : LH_T('send.acct.need')}</button>
+      <button type="button" onclick="hideAccountForm()" style="background:none;border:none;color:var(--ink-faint,#9a9a9a);cursor:pointer;font:inherit;font-size:13px;padding:0;margin-left:auto">${LH_T('send.acct.guest')}</button>
     </div>`;
   setTimeout(() => document.getElementById('acct-email')?.focus(), 50);
 }

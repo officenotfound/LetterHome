@@ -167,7 +167,7 @@ input:focus,
 select:focus,
 textarea:focus {
   border-color: var(--red);
-  box-shadow: 0 0 0 3px rgba(168, 71, 45, 0.11);
+  box-shadow: 0 0 0 3px rgba(230, 57, 70, 0.11);
 }
 
 /* Cards and panels */
@@ -202,7 +202,7 @@ textarea:focus {
 .field-note { color: var(--ink-faint); font-size: 12.5px; }
 
 /* ── Dark mode: fix sections that use --ink as a dark background ────────────
-   In dark mode --ink flips to #ede1c5 (light cream). Every section that was
+   In dark mode --ink flips to #e0e0e0 (light cream). Every section that was
    intentionally dark must be pinned to a dark value, and any hardcoded
    rgba(250,246,236,...) text colours inside them must be corrected too.     */
 
@@ -385,7 +385,7 @@ nav { border-bottom: 1.5px solid rgba(42,42,42,0.18) !important; }
 }
 
 /* Footer text on dark bg — ensure readable on the now-pure-#111 footer */
-footer { background: #3d2c1a !important; border-top: 5px solid; border-image: repeating-linear-gradient(-45deg, rgba(168,71,45,0.75) 0px, rgba(168,71,45,0.75) 4px, rgba(255,255,255,0.12) 4px, rgba(255,255,255,0.12) 8px) 1 !important; height: 44px !important; padding: 0 36px !important; display: flex !important; align-items: center !important; color: rgba(255,255,255,0.72) !important; }
+footer { background: #141414 !important; border-top: 5px solid; border-image: repeating-linear-gradient(-45deg, rgba(230,57,70,0.75) 0px, rgba(230,57,70,0.75) 4px, rgba(255,255,255,0.12) 4px, rgba(255,255,255,0.12) 8px) 1 !important; height: 44px !important; padding: 0 36px !important; display: flex !important; align-items: center !important; color: rgba(255,255,255,0.72) !important; }
 .footer-bottom { width: 100% !important; max-width: 1280px !important; margin: 0 auto !important; display: flex !important; justify-content: space-between !important; align-items: center !important; flex-wrap: nowrap !important; color: rgba(255,255,255,0.55) !important; font-family: 'DM Mono', monospace !important; font-size: 11px !important; text-transform: uppercase !important; letter-spacing: 0.12em !important; gap: 16px !important; }
 .footer-bottom > div:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .footer-bottom a, .footer-col a, .footer-brand p { color: rgba(255,255,255,0.55) !important; text-decoration: none !important; }
