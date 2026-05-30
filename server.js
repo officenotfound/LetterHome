@@ -1594,8 +1594,8 @@ app.get('/api/admin/orders/:id/files/:filename', requireAdmin, (req, res) => {
   const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(Number(req.params.id));
   if (!order) return res.status(404).json({ error: 'Not found' });
   const dir  = orderDirPath(order.id, order.created_at);
-  const file = path.resolve(dir, req.params.filename);
-  if (!file.startsWith(path.resolve(dir))) return res.status(403).json({ error: 'Forbidden' });
+  const file = path.resolve(dir, path.basename(req.params.filename));
+  if (!file.startsWith(path.resolve(dir) + path.sep)) return res.status(403).json({ error: 'Forbidden' });
   if (!fs.existsSync(file)) return res.status(404).json({ error: 'File not found' });
   res.sendFile(file);
 });
