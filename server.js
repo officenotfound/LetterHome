@@ -918,6 +918,12 @@ app.get('/api/site-config', (req, res) => {
 
 app.get('/api/visitor-country', async (req, res) => {
   try {
+    // Cloudflare hands us the visitor's country for free on every request —
+    // instant and rate-limit-proof, unlike the external IP-geo fallback.
+    const cf = (req.headers['cf-ipcountry'] || '').toString().toUpperCase();
+    if (cf.length === 2 && cf !== 'XX' && cf !== 'T1') {
+      return res.json({ country_code: cf });
+    }
     const ip = getClientIp(req);
     const result = await lookupCountry(ip);
     res.json({ country_code: result?.country_code || null });
