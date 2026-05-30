@@ -1309,6 +1309,19 @@ app.get('/admin', requireAdmin, (req, res) =>
 app.get('/admin/*', requireAdmin, (req, res) =>
   res.sendFile(path.join(__dirname, 'admin', 'app.html')));
 
+// CSRF: reject admin API mutations where a browser Origin header is present
+// but doesn't match our own origin. Covers all POST/DELETE/PUT on /api/admin/*.
+// sameSite:lax already blocks cross-site form CSRF; this adds a second layer
+// for fetch()-based attacks. No-Origin requests (cURL, server tools) pass through.
+app.use('/api/admin', (req, res, next) => {
+  if (!['POST', 'PUT', 'DELETE', 'PATCH'].includes(req.method)) return next();
+  const origin = req.headers.origin;
+  if (!origin) return next();
+  const base = (process.env.BASE_URL || '').replace(/\/$/, '');
+  if (base && !origin.startsWith(base)) return res.status(403).json({ error: 'Forbidden' });
+  next();
+});
+
 app.get('/api/admin/me', requireAdmin, (req, res) =>
   res.json({ username: req.session.admin.username }));
 
