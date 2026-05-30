@@ -640,11 +640,16 @@ function orderDirPath(id, createdAt) {
 }
 
 function safeFilePath(dir, originalName) {
-  const ext  = path.extname(originalName);
-  const base = path.basename(originalName, ext);
-  let dest = path.join(dir, originalName);
+  // path.basename strips any directory components (e.g. ../../etc/passwd → passwd)
+  const safe = path.basename(originalName).replace(/[\x00-\x1f\x7f]/g, '');
+  const ext  = path.extname(safe);
+  const base = path.basename(safe, ext) || 'file';
+  let dest = path.join(dir, safe);
   let i = 1;
   while (fs.existsSync(dest)) dest = path.join(dir, `${base}_${i++}${ext}`);
+  if (!path.resolve(dest).startsWith(path.resolve(dir) + path.sep)) {
+    throw new Error('Invalid upload path');
+  }
   return dest;
 }
 
@@ -1193,6 +1198,13 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
     });
   } catch (e) {
     console.error('[create-order] Stripe error:', e.message);
+    // Clean up the order and files — payment won't proceed so there's nothing to print
+    try {
+      db.prepare('DELETE FROM orders WHERE id = ?').run(orderId);
+      if (fs.existsSync(orderDir)) fs.rmSync(orderDir, { recursive: true, force: true });
+    } catch (cleanupErr) {
+      console.error('[create-order] cleanup error after Stripe failure:', cleanupErr.message);
+    }
     return res.status(502).json({ error: 'Payment service is temporarily unavailable. Please try again in a moment.' });
   }
 
@@ -1214,7 +1226,6 @@ app.get('/api/order-status', trackLimiter, (req, res) => {
     destinationCountry: order.destination_country,
     createdAt:          order.created_at,
     priceCents:         order.price_cents,
-    customerEmail:      order.customer_email,
   });
 });
 

@@ -151,7 +151,7 @@ function copyOrderNum(id) {
 
     el.innerHTML = `
       <div class="detail-row"><span class="label">${LH_T('success.label.order')}</span><span class="val" style="display:flex;align-items:center;gap:10px">#${esc(data.id)}<button id="copy-order-btn" onclick="copyOrderNum('${esc(data.id)}')" style="font-size:11px;font-family:'DM Mono',monospace;letter-spacing:0.08em;text-transform:uppercase;background:transparent;border:1px solid rgba(42,42,42,0.2);color:var(--ink-muted);padding:3px 8px;border-radius:2px;cursor:pointer">${LH_T('success.copy.btn')}</button></span></div>
-      ${data.customerEmail ? `<div class="detail-row"><span class="label">${LH_T('success.label.email')}</span><span class="val" style="font-size:13px">${esc(data.customerEmail)}</span></div>` : ''}
+
       <div class="detail-row"><span class="label">${LH_T('success.label.recipient')}</span><span class="val">${esc(data.recipientName)}${data.recipientCity ? ', ' + esc(data.recipientCity) : ''}</span></div>
       <div class="detail-row"><span class="label">${LH_T('success.label.destination')}</span><span class="val">${esc(destName)}</span></div>
       <div class="detail-row"><span class="label">${LH_T('success.label.price')}</span><span class="val">${data.priceCents ? '$' + (data.priceCents / 100).toFixed(0) : (isDomestic ? '$10' : '$20')} CAD</span></div>

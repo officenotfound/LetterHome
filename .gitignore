@@ -13,3 +13,4 @@ Thumbs.db
 # Stray screenshots/artifacts captured at repo root (e.g. from Playwright sessions).
 # Scoped to root so tracked assets like public/og-image.png are unaffected.
 /*.png
+.codex/
