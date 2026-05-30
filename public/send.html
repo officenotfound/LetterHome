@@ -160,13 +160,30 @@ nav {
   position: relative; z-index: 2;
 }
 
-/* PANELS */
+/* PANELS — warm paper card with grain, red top accent, no harsh border */
 .panel {
-  background: transparent; border: none;
-  border-radius: 0; box-shadow: none;
-  padding: 32px 0; display: none;
+  background: #fdfbf6;
+  border-top: 3px solid var(--red);
+  border-left: none; border-right: none; border-bottom: none;
+  border-radius: 2px;
+  box-shadow: 0 2px 6px rgba(42,42,42,0.05), 0 12px 36px rgba(42,42,42,0.09);
+  padding: 36px 40px;
+  display: none;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
 }
 .panel.active { display: block; }
+/* Paper grain inside the card */
+.panel::before {
+  content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='c'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.6' numOctaves='5' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23c)'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+  opacity: 0.13; mix-blend-mode: multiply;
+}
+.panel > * { position: relative; z-index: 1; }
+[data-theme="dark"] .panel { background: #1c1714; }
+[data-theme="dark"] .panel::before { mix-blend-mode: screen; opacity: 0.07; }
 
 .panel-title {
   font-family: 'DM Serif Display', serif; font-size: 52px;
@@ -365,7 +382,7 @@ footer { background: var(--ink); color: rgba(255,255,255,0.65); padding: 48px 36
 @media (max-width: 768px) {
   .nav-links { display: none; }
   .send-wrap { padding: 20px 20px 60px; }
-  .panel { padding: 24px 0; }
+  .panel { padding: 28px 24px; }
   .panel-title { font-size: 36px; }
   .address-columns { grid-template-columns: 1fr; gap: 28px; }
   .form-grid-2 { grid-template-columns: 1fr; }
@@ -376,7 +393,7 @@ footer { background: var(--ink); color: rgba(255,255,255,0.65); padding: 48px 36
 
 @media (max-width: 480px) {
   .send-wrap { padding: 16px 18px 48px; }
-  .panel { padding: 16px 0; }
+  .panel { padding: 20px 18px; }
   .panel-title { font-size: 30px; }
   .progress-wrap { padding: 14px 18px 0; }
 }
