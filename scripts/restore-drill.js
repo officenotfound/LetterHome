@@ -78,7 +78,7 @@ async function main() {
   const iv     = encBuf.subarray(16, 28);
   const tag    = encBuf.subarray(28, 44);
   const cipher = encBuf.subarray(44);
-  const key    = scryptSync(process.env.BACKUP_PASSPHRASE, salt, 32);
+  const key    = scryptSync(process.env.BACKUP_PASSPHRASE, salt, 32, { N: 65536, r: 8, p: 1, maxmem: 128 * 1024 * 1024 });
   const decipher = createDecipheriv('aes-256-gcm', key, iv);
   decipher.setAuthTag(tag);
 

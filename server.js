@@ -552,7 +552,7 @@ function recordFailedAdminLogin(ip, username) {
 function encryptFile(srcPath, destPath, passphrase) {
   const salt = randomBytes(16);
   const iv   = randomBytes(12);
-  const key  = scryptSync(passphrase, salt, 32);
+  const key  = scryptSync(passphrase, salt, 32, { N: 65536, r: 8, p: 1, maxmem: 128 * 1024 * 1024 });
   const cipher = createCipheriv('aes-256-gcm', key, iv);
   const plain  = fs.readFileSync(srcPath);
   const cipherText = Buffer.concat([cipher.update(plain), cipher.final()]);
@@ -849,7 +849,9 @@ a{color:#a8472d}</style></head><body>
 app.get('/unsubscribe', (req, res) => {
   const email = (req.query.email || '').toString().trim().toLowerCase();
   const token = (req.query.token || '').toString();
-  if (!email || token !== unsubscribeToken(email)) return res.status(400).send(unsubPage('invalid'));
+  const expected = unsubscribeToken(email);
+  const safe = token.length === expected.length && timingSafeEqual(Buffer.from(token), Buffer.from(expected));
+  if (!email || !safe) return res.status(400).send(unsubPage('invalid'));
   const row = db.prepare('SELECT unsubscribed_at FROM customers WHERE email = ?').get(email);
   if (row?.unsubscribed_at) return res.send(unsubPage('already', email));
   res.send(unsubPage('confirm', email));
@@ -858,7 +860,9 @@ app.get('/unsubscribe', (req, res) => {
 app.post('/unsubscribe', (req, res) => {
   const email = (req.body.email || '').toString().trim().toLowerCase();
   const token = (req.body.token || '').toString();
-  if (!email || token !== unsubscribeToken(email)) return res.status(400).send(unsubPage('invalid'));
+  const expected2 = unsubscribeToken(email);
+  const safe2 = token.length === expected2.length && timingSafeEqual(Buffer.from(token), Buffer.from(expected2));
+  if (!email || !safe2) return res.status(400).send(unsubPage('invalid'));
   const existing = db.prepare('SELECT email FROM customers WHERE email = ?').get(email);
   if (existing) {
     db.prepare('UPDATE customers SET unsubscribed_at = CURRENT_TIMESTAMP WHERE email = ? AND unsubscribed_at IS NULL').run(email);
@@ -2622,7 +2626,9 @@ async function fulfillOrder(sessionId) {
     html:        buildOperatorEmail(order, fromAddr, toAddr, amountCAD, emailAttachments.length),
     text:        buildOperatorEmailText(order, fromAddr, toAddr, amountCAD, emailAttachments.length),
     attachments: emailAttachments,
-  }, 'order_operator_notification', order.id);
+  }, 'order_operator_notification', order.id).catch(err => {
+    console.error(`[email] operator notification failed for order #${order.id}:`, err.message);
+  });
 
   await sendMail({
     from:    process.env.EMAIL_FROM,
@@ -2630,7 +2636,10 @@ async function fulfillOrder(sessionId) {
     subject: `Your Letterhome order is confirmed — letter to ${order.recipient_name}`,
     html:    buildCustomerEmail(order, toAddr, amountCAD, isDomestic),
     text:    buildCustomerEmailText(order, toAddr, amountCAD, isDomestic),
-  }, 'order_confirmation', order.id);
+  }, 'order_confirmation', order.id).catch(err => {
+    console.error(`[email] order_confirmation failed for order #${order.id}:`, err.message);
+    sendErrorAlert(`Order #${order.id} confirmation email failed`, err.message);
+  });
 
   try {
     const geo = await lookupCountry(order.customer_ip).catch(() => null);

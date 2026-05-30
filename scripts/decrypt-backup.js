@@ -29,7 +29,7 @@ const iv     = buf.subarray(16, 28);
 const tag    = buf.subarray(28, 44);
 const cipher = buf.subarray(44);
 
-const key = scryptSync(passphrase, salt, 32);
+const key = scryptSync(passphrase, salt, 32, { N: 65536, r: 8, p: 1, maxmem: 128 * 1024 * 1024 });
 const decipher = createDecipheriv('aes-256-gcm', key, iv);
 decipher.setAuthTag(tag);
 
