@@ -585,6 +585,9 @@ const transport = mailer.createTransport({
   auth:   { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
 });
 
+// CASL: commercial electronic messages must carry a valid physical mailing address.
+const MAILING_ADDRESS = '90 King St E, Hamilton, ON L8G 1K7, Canada';
+
 async function sendMail(opts, type = 'general', orderId = null) {
   if (!process.env.SMTP_HOST) return;
   await transport.sendMail(opts);
@@ -2708,6 +2711,8 @@ function buildCustomerEmailText(o, toAddr, amountCAD, isDomestic) {
     o.status_token ? `Track your letter: ${process.env.BASE_URL}/status/${o.status_token}` : '',
     'Questions? Reply to this email.',
     '',
+    `Letterhome · ${MAILING_ADDRESS}`,
+    '',
     '— Letterhome',
   ].filter(s => s !== undefined).join('\n');
 }
@@ -2732,6 +2737,7 @@ function buildCustomerEmail(o, toAddr, amountCAD, isDomestic) {
       <p style="margin:0 0 8px">Order #${o.id} &nbsp;·&nbsp; $${amountCAD} CAD</p>
       ${o.status_token ? `<p style="margin:0 0 8px">Track your letter: <a href="${process.env.BASE_URL}/status/${o.status_token}" style="color:#a8472d">${process.env.BASE_URL}/status/${o.status_token}</a></p>` : ''}
       <p style="margin:0">Questions? Reply to this email.</p>
+      <p style="margin:12px 0 0;color:#968b7d;font-size:11px">Letterhome · ${MAILING_ADDRESS}</p>
     </div>
   </div>
 </body></html>`;
@@ -2758,6 +2764,7 @@ function buildMailedEmail(o, toAddr, deliveryText) {
       <p style="margin:0 0 8px">Order #${o.id}</p>
       ${o.status_token ? `<p style="margin:0 0 8px">Track your letter: <a href="${process.env.BASE_URL}/status/${o.status_token}" style="color:#a8472d">${process.env.BASE_URL}/status/${o.status_token}</a></p>` : ''}
       <p style="margin:0">Thank you for trusting us with your letter.</p>
+      <p style="margin:12px 0 0;color:#968b7d;font-size:11px">Letterhome · ${MAILING_ADDRESS}</p>
     </div>
   </div>
 </body></html>`;
@@ -2884,7 +2891,7 @@ function buildRecoveryEmail(order) {
     from:    process.env.EMAIL_FROM,
     to:      order.customer_email,
     subject: 'You left a letter unsent — Letterhome',
-    text:    `You left a letter unsent.\n\nSomeone back home is waiting to hear from you. Your letter${recipientHint} is still ready to go.\n\nSend your letter: ${process.env.BASE_URL || ''}/send\n\nWe only send this reminder once.\n\n— Letterhome`,
+    text:    `You left a letter unsent.\n\nSomeone back home is waiting to hear from you. Your letter${recipientHint} is still ready to go.\n\nSend your letter: ${process.env.BASE_URL || ''}/send\n\nWe only send this reminder once.\n\nLetterhome · ${MAILING_ADDRESS}\n\n— Letterhome`,
     html: `<!DOCTYPE html><html>
 <body style="font-family:Georgia,serif;background:#ede5d3;padding:40px 20px;color:#2a2a2a;margin:0">
   <div style="max-width:520px;margin:0 auto;background:#faf6ec;border:1px solid rgba(42,42,42,0.12);padding:48px">
@@ -2894,6 +2901,7 @@ function buildRecoveryEmail(order) {
     <a href="${process.env.BASE_URL || ''}/send" style="display:inline-block;background:#a8472d;color:#faf6ec;padding:14px 28px;font-family:Georgia,serif;font-size:15px;text-decoration:none;letter-spacing:0.02em;margin-bottom:32px">Send Your Letter →</a>
     <div style="border-top:1px solid rgba(42,42,42,0.1);padding-top:20px;font-size:12px;color:#968b7d">
       <p style="margin:0">We only send this reminder once.</p>
+      <p style="margin:12px 0 0;font-size:11px">Letterhome · ${MAILING_ADDRESS}</p>
     </div>
   </div>
 </body></html>`,
@@ -2912,7 +2920,7 @@ function buildOccasionReminderEmail(occ, lastOrder) {
     from:    process.env.EMAIL_FROM,
     to:      occ.customer_email,
     subject: `${occ.occasion_name} is coming up — send a letter?`,
-    text:    `${occ.occasion_name} is coming up.\n\n${occ.occasion_name} is ${occ.remind_days_before} days away (${dateFormatted}).${lastOrderHint} Send a letter — it'll mean more than a text.\n\nSend a letter: ${process.env.BASE_URL || ''}/send\n\nYou set this reminder via Letterhome. Reply to stop.\n\n— Letterhome`,
+    text:    `${occ.occasion_name} is coming up.\n\n${occ.occasion_name} is ${occ.remind_days_before} days away (${dateFormatted}).${lastOrderHint} Send a letter — it'll mean more than a text.\n\nSend a letter: ${process.env.BASE_URL || ''}/send\n\nYou set this reminder via Letterhome. Reply to stop.\n\nLetterhome · ${MAILING_ADDRESS}\n\n— Letterhome`,
     html: `<!DOCTYPE html><html>
 <body style="font-family:Georgia,serif;background:#ede5d3;padding:40px 20px;color:#2a2a2a;margin:0">
   <div style="max-width:520px;margin:0 auto;background:#faf6ec;border:1px solid rgba(42,42,42,0.12);padding:48px">
@@ -2922,6 +2930,7 @@ function buildOccasionReminderEmail(occ, lastOrder) {
     <a href="${process.env.BASE_URL || ''}/send" style="display:inline-block;background:#a8472d;color:#faf6ec;padding:14px 28px;font-family:Georgia,serif;font-size:15px;text-decoration:none;letter-spacing:0.02em;margin-bottom:32px">Send a Letter →</a>
     <div style="border-top:1px solid rgba(42,42,42,0.1);padding-top:20px;font-size:12px;color:#968b7d">
       <p style="margin:0">You set this reminder via Letterhome. Reply to stop.</p>
+      <p style="margin:12px 0 0;font-size:11px">Letterhome · ${MAILING_ADDRESS}</p>
     </div>
   </div>
 </body></html>`,
