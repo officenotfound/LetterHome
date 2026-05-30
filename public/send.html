@@ -1003,7 +1003,7 @@ function setupAuto(inputId, prefix, AutocompleteSuggestion, AutocompleteSessionT
       try {
         const { suggestions } = await AutocompleteSuggestion.fetchAutocompleteSuggestions({
           input: q,
-          includedPrimaryTypes: ['address'],
+          includedPrimaryTypes: ['street_address'],
           sessionToken,
         });
         if (seq !== reqSeq) return;
