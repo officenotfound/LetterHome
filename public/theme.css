@@ -349,7 +349,8 @@ nav { border-bottom: 1.5px solid rgba(42,42,42,0.18) !important; }
 .nav-right { display: flex !important; align-items: center !important; gap: 10px !important; margin-left: auto !important; flex-shrink: 0 !important; }
 .nav-cta { margin-left: 0 !important; padding: 10px 22px !important; font-size: 13px !important; }
 @media (max-width: 900px) { .nav-inner { padding: 0 28px !important; height: 66px !important; } }
-@media (max-width: 480px) { .nav-inner { padding: 0 20px !important; height: 60px !important; } .nav-cta { display: none !important; } }
+@media (max-width: 480px) { .nav-inner { padding: 0 20px !important; height: 60px !important; } }
+@media (max-width: 768px) { .nav-cta { display: none !important; } }
 
 /* Buttons: enforce sharp corners across .btn-red, .btn-ink (old kraft button classes) */
 .btn-red, .btn-ink, .btn-primary, .btn-outline { border-radius: 0 !important; }
