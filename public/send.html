@@ -127,11 +127,11 @@ nav {
   width: 44px; height: 44px; border-radius: 50%;
   display: grid; place-items: center;
   font-family: 'DM Serif Display', serif; font-style: italic; font-size: 20px;
-  border: 1.5px solid var(--ink); background: var(--paper);
-  color: var(--ink); transition: all 0.3s; flex-shrink: 0;
+  border: 1px dashed rgba(42,42,42,0.35); background: transparent;
+  color: var(--ink-muted); transition: all 0.3s; flex-shrink: 0;
 }
-.step-circle.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
-.step-circle.done { background: var(--red); color: var(--paper); border-color: var(--red); font-size: 16px; }
+.step-circle.active { background: var(--ink); color: var(--paper); border: 1.5px solid var(--ink); }
+.step-circle.done { background: var(--red); color: var(--paper); border: 1.5px solid var(--red); font-size: 16px; }
 .step-line { flex: 1; height: 1px; background: var(--line); margin: 0 8px; }
 .step-line.done { background: var(--red); }
 .step-label {
@@ -156,21 +156,21 @@ nav {
 .ac-item:hover { background: var(--kraft-light); color: var(--ink); }
 .ac-item:last-child { border-bottom: none; }
 .send-wrap {
-  max-width: 960px; margin: 0 auto; padding: 28px 36px 60px;
+  max-width: 960px; margin: 0 auto; padding: 20px 36px 60px;
   position: relative; z-index: 2;
 }
 
 /* PANELS */
 .panel {
-  background: var(--paper); border: 1px solid var(--line);
-  border-radius: 2px; box-shadow: var(--shadow-soft);
-  padding: 36px 40px; display: none;
+  background: transparent; border: none;
+  border-radius: 0; box-shadow: none;
+  padding: 32px 0; display: none;
 }
 .panel.active { display: block; }
 
 .panel-title {
-  font-family: 'DM Serif Display', serif; font-size: 36px;
-  font-weight: 400; letter-spacing: -0.02em; margin-bottom: 8px; line-height: 1.1;
+  font-family: 'DM Serif Display', serif; font-size: 52px;
+  font-weight: 400; letter-spacing: -0.02em; margin-bottom: 8px; line-height: 1.05;
 }
 .panel-sub {
   color: var(--ink-muted); font-size: 15px; margin-bottom: 28px;
@@ -189,7 +189,7 @@ input, select, textarea {
   width: 100%; padding: 9px 2px 8px 0; border: none;
   border-bottom: 1.5px solid var(--ink); background: transparent;
   color: var(--ink); font-family: 'Source Serif 4', Georgia, serif;
-  font-size: 17px; border-radius: 0; transition: border-color 0.2s;
+  font-size: 18px; border-radius: 0; transition: border-color 0.2s;
   outline: none; appearance: none;
 }
 input:focus, select:focus, textarea:focus {
@@ -204,8 +204,8 @@ textarea { resize: vertical; min-height: 260px; line-height: 1.6; }
 
 /* DESTINATION PICKER */
 .destination-picker {
-  background: var(--kraft); border: 1px solid var(--line);
-  border-left: 3px solid var(--red); padding: 16px 20px; margin-bottom: 24px; border-radius: 2px;
+  background: transparent; border: none;
+  padding: 0; margin-bottom: 20px; border-radius: 0;
 }
 .destination-picker-header {
   font-family: 'DM Mono', monospace; font-size: 11px; text-transform: uppercase;
@@ -341,12 +341,12 @@ textarea { resize: vertical; min-height: 260px; line-height: 1.6; }
 .check-row input[type="checkbox"]:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
 .check-row label { font-family: 'Source Serif 4', Georgia, serif; font-size: 13px; color: var(--ink-muted); text-transform: none; letter-spacing: 0; font-weight: 400; cursor: pointer; line-height: 1.55; }
 
-/* Account banner — override the inline red border with a softer dashed treatment */
+/* Account banner — override inline styles: softer border, paper background for contrast on open layout */
 #account-banner > div {
   border-left-width: 1px !important;
   border-left-style: dashed !important;
   border-left-color: var(--line) !important;
-  background: var(--kraft-light) !important;
+  background: var(--paper) !important;
 }
 
 /* FOOTER */
@@ -364,8 +364,9 @@ footer { background: var(--ink); color: rgba(255,255,255,0.65); padding: 48px 36
 /* RESPONSIVE */
 @media (max-width: 768px) {
   .nav-links { display: none; }
-  .send-wrap { padding: 28px 20px 60px; }
-  .panel { padding: 28px 24px; }
+  .send-wrap { padding: 20px 20px 60px; }
+  .panel { padding: 24px 0; }
+  .panel-title { font-size: 36px; }
   .address-columns { grid-template-columns: 1fr; gap: 28px; }
   .form-grid-2 { grid-template-columns: 1fr; }
   .progress-wrap { padding: 24px 20px 0; }
@@ -374,9 +375,10 @@ footer { background: var(--ink); color: rgba(255,255,255,0.65); padding: 48px 36
 }
 
 @media (max-width: 480px) {
-  .send-wrap { padding: 20px 18px 48px; }
-  .panel { padding: 20px 18px; }
-  .progress-wrap { padding: 14px 18px; }
+  .send-wrap { padding: 16px 18px 48px; }
+  .panel { padding: 16px 0; }
+  .panel-title { font-size: 30px; }
+  .progress-wrap { padding: 14px 18px 0; }
 }
 
 /* Per-step validation (v0.2.8) */
