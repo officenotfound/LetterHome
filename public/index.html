@@ -556,13 +556,13 @@ section { position: relative; z-index: 2; }
 /* Vintage postage stamp + postmark cancellation, embossed faintly into the card */
 .price-card::after {
   content: ''; position: absolute; top: -54px; right: -66px;
-  width: 224px; height: 204px; z-index: 1; pointer-events: none;
+  width: 250px; height: 228px; z-index: 1; pointer-events: none;
   background: url("/stamp.svg") no-repeat center / contain;
   opacity: 0.8;
   transform: rotate(8deg);
 }
 .price-card:not(.featured)::after { background-image: url("/stamp-intl.svg"); }
-.price-card.featured::after { top: auto; right: auto; left: -70px; bottom: -30px; transform: rotate(-9deg); }
+.price-card.featured::after { top: auto; right: auto; left: -72px; bottom: 2px; transform: rotate(-9deg); }
 .price-card:hover { transform: translateY(-3px); box-shadow: 0 6px 18px rgba(0,0,0,0.09), 0 26px 54px rgba(0,0,0,0.13); }
 [data-theme="dark"] .price-card { background: #1c1714 !important; }
 [data-theme="dark"] .price-card::before { mix-blend-mode: screen; opacity: 0.09; }
