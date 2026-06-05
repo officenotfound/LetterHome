@@ -1050,6 +1050,24 @@ const trackLimiter = rateLimit({
   message: { error: 'Too many tracking requests. Please try again in a few minutes.' },
 });
 
+// Per-email failed-attempt lockout for /api/track
+const trackFailures = new Map();
+const TRACK_MAX_FAILURES = 5;
+const TRACK_LOCKOUT_MS = 60 * 60 * 1000; // 1 hour
+function checkTrackLockout(email) {
+  const rec = trackFailures.get(email);
+  if (!rec) return false;
+  if (Date.now() > rec.until) { trackFailures.delete(email); return false; }
+  return rec.count >= TRACK_MAX_FAILURES;
+}
+function recordTrackFailure(email) {
+  const rec = trackFailures.get(email) || { count: 0, until: Date.now() + TRACK_LOCKOUT_MS };
+  rec.count += 1;
+  rec.until = Date.now() + TRACK_LOCKOUT_MS;
+  trackFailures.set(email, rec);
+}
+function clearTrackFailures(email) { trackFailures.delete(email); }
+
 const ADMIN_SESSION_MAX_AGE_MS = 12 * 60 * 60 * 1000;
 function requireAdmin(req, res, next) {
   if (req.session?.admin) {
@@ -1234,11 +1252,20 @@ app.post('/api/track', trackLimiter, (req, res) => {
   const { email, order_id } = req.body;
   if (!email || !order_id) return res.status(400).json({ error: 'Email and order ID are required.' });
 
+  const normalizedEmail = email.trim().toLowerCase();
+  if (checkTrackLockout(normalizedEmail)) {
+    return res.status(429).json({ error: 'Too many failed attempts. Please try again in an hour or contact support.' });
+  }
+
   const order = db.prepare(
     "SELECT * FROM orders WHERE id = ? AND customer_email = ? AND status != 'awaiting_payment'"
-  ).get(Number(order_id), email.trim().toLowerCase());
+  ).get(Number(order_id), normalizedEmail);
 
-  if (!order) return res.status(404).json({ error: 'No order found. Double-check your order ID and the email used at checkout.' });
+  if (!order) {
+    recordTrackFailure(normalizedEmail);
+    return res.status(404).json({ error: 'No order found. Double-check your order ID and the email used at checkout.' });
+  }
+  clearTrackFailures(normalizedEmail);
 
   const messages = {
     paid:                  'Payment confirmed — your letter is being prepared for printing.',
