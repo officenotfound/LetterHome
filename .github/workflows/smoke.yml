@@ -1,9 +1,9 @@
 name: Smoke test (synthetic monitor)
 
 on:
-  schedule:
-    # Every 6 hours — catches regressions between deploys
-    - cron: '0 */6 * * *'
+  # Scheduled runs disabled — uptime is monitored externally via UptimeRobot
+  # pinging /health (avoids fighting Cloudflare's bot challenge). Kept available
+  # to run on-demand from the Actions tab.
   workflow_dispatch:
 
 jobs:
