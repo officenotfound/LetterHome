@@ -90,7 +90,10 @@ app.use(helmet({
       upgradeInsecureRequests: [],
     },
   },
-  crossOriginEmbedderPolicy: { policy: 'require-corp' },
+  // COEP intentionally disabled: 'require-corp' blocks Google Maps Places
+  // assets (used for address autocomplete) since they don't send CORP opt-in
+  // headers. Cross-origin isolation provides no benefit here (no SharedArrayBuffer).
+  crossOriginEmbedderPolicy: false,
   frameguard: { action: 'sameorigin' },
   hsts: process.env.NODE_ENV === 'production'
     ? { maxAge: 31536000, includeSubDomains: true, preload: true }
