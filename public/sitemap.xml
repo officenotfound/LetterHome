@@ -73,6 +73,14 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://letterhome.ca/comment-envoyer-une-lettre-au-canada</loc>
+    <lastmod>2026-06-09</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link xmlns:xhtml="http://www.w3.org/1999/xhtml" rel="alternate" hreflang="fr-ca" href="https://letterhome.ca/comment-envoyer-une-lettre-au-canada"/>
+    <xhtml:link xmlns:xhtml="http://www.w3.org/1999/xhtml" rel="alternate" hreflang="en-ca" href="https://letterhome.ca/how-to-send-a-letter-to-canada-from-abroad"/>
+  </url>
+  <url>
     <loc>https://letterhome.ca/about</loc>
     <lastmod>2026-05-24</lastmod>
     <changefreq>monthly</changefreq>
