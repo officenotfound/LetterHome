@@ -831,7 +831,7 @@ const SECURITY_TXT = [
   })
 );
 
-['send', 'privacy', 'terms', 'refunds', 'about', 'contact', 'track', 'order-success',
+['send', 'guides', 'privacy', 'terms', 'refunds', 'about', 'contact', 'track', 'order-success',
  'from-usa', 'from-uk', 'from-australia', 'from-uae', 'from-france', 'send-documents-to-canada',
  'how-to-send-a-letter-to-canada-from-abroad', 'how-to-mail-cra-tax-forms-from-outside-canada',
  'how-to-address-a-letter-to-canada', 'how-much-does-it-cost-to-mail-a-letter-to-canada',
