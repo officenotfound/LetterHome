@@ -815,6 +815,22 @@ app.get('/health', (req, res) => {
   }
 });
 
+// RFC 9116 security.txt — vulnerability disclosure channel. Served at both the
+// canonical /.well-known/ path and the legacy root path.
+const SECURITY_TXT = [
+  'Contact: mailto:support@letterhome.ca',
+  'Expires: 2027-06-09T00:00:00.000Z',
+  'Preferred-Languages: en',
+  'Canonical: https://letterhome.ca/.well-known/security.txt',
+].join('\n') + '\n';
+['/.well-known/security.txt', '/security.txt'].forEach(p =>
+  app.get(p, (_req, res) => {
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    res.send(SECURITY_TXT);
+  })
+);
+
 ['send', 'privacy', 'terms', 'refunds', 'about', 'contact', 'track', 'order-success',
  'from-usa', 'from-uk', 'from-australia', 'from-uae', 'from-france', 'send-documents-to-canada',
  'how-to-send-a-letter-to-canada-from-abroad', 'how-to-mail-cra-tax-forms-from-outside-canada',
