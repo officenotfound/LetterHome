@@ -223,6 +223,23 @@ test('POST /api/create-order with missing required fields returns 400', async ()
   assert.ok(body.error, 'error field missing from 400 response');
 });
 
+test('POST /api/create-order with malformed email returns 400', async () => {
+  const form = new URLSearchParams({
+    'r-email':   'not-an-email',
+    'r-name':    'Jane Doe',
+    'r-street':  '123 Main St',
+    'r-country': 'CA',
+  });
+  const res  = await fetch(`${base}/api/create-order`, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body:    form.toString(),
+  });
+  assert.equal(res.status, 400, 'malformed email should be rejected before payment');
+  const body = await res.json();
+  assert.match(body.error, /valid email/i);
+});
+
 test('POST /api/track returns order data for valid email + order_id', async () => {
   const sessionId = seedOrder({ email: 'track@example.com', status: 'paid', recipientName: 'Bob Track' });
   const row = db.prepare('SELECT id FROM orders WHERE stripe_session_id = ?').get(sessionId);

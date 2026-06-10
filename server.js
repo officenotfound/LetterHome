@@ -532,6 +532,13 @@ let lastFailedLoginAlertAt = 0;
 function recordFailedAdminLogin(ip, username) {
   const now = Date.now();
   const winMs = 60 * 60 * 1000;
+  // Sweep expired/empty entries so credential-stuffing from many IPs can't
+  // grow this map without bound (the public /admin/login endpoint is a target).
+  for (const [k, ts] of failedAdminLogins) {
+    const live = ts.filter(t => now - t < winMs);
+    if (live.length) failedAdminLogins.set(k, live);
+    else failedAdminLogins.delete(k);
+  }
   const list = (failedAdminLogins.get(ip) || []).filter(t => now - t < winMs);
   list.push(now);
   failedAdminLogins.set(ip, list);
@@ -1082,9 +1089,12 @@ function checkTrackLockout(email) {
   return rec.count >= TRACK_MAX_FAILURES;
 }
 function recordTrackFailure(email) {
-  const rec = trackFailures.get(email) || { count: 0, until: Date.now() + TRACK_LOCKOUT_MS };
+  // Drop expired entries so this map can't grow without bound under enumeration.
+  const now = Date.now();
+  for (const [k, v] of trackFailures) if (now > v.until) trackFailures.delete(k);
+  const rec = trackFailures.get(email) || { count: 0, until: now + TRACK_LOCKOUT_MS };
   rec.count += 1;
-  rec.until = Date.now() + TRACK_LOCKOUT_MS;
+  rec.until = now + TRACK_LOCKOUT_MS;
   trackFailures.set(email, rec);
 }
 function clearTrackFailures(email) { trackFailures.delete(email); }
@@ -1122,6 +1132,9 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
 
   if (!rEmail || !rName || !rStreet)
     return res.status(400).json({ error: 'Missing required fields.' });
+
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(rEmail))
+    return res.status(400).json({ error: 'Please enter a valid email address.' });
 
   const blockedCountries = JSON.parse(getSetting('blocked_countries', '[]') || '[]');
   if (blockedCountries.includes(b['r-country']))
@@ -3317,7 +3330,11 @@ process.on('unhandledRejection', (reason) => {
 process.on('uncaughtException', (err) => {
   const msg = err.stack || err.message || String(err);
   console.error('[uncaughtException]', msg);
-  sendErrorAlert('Uncaught Exception — process may be unstable', msg);
+  // After an uncaught exception the process is in an undefined state, so we
+  // exit and let pm2 restart it cleanly rather than serving from a corrupted
+  // state. The brief delay gives the alert email a chance to flush first.
+  try { sendErrorAlert('Uncaught Exception — restarting process', msg); } catch {}
+  setTimeout(() => process.exit(1), 1000).unref();
 });
 
 const BACKUP_DIR      = path.join(__dirname, 'backups');
