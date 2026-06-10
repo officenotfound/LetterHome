@@ -430,6 +430,19 @@ try {
   db.exec(`CREATE INDEX IF NOT EXISTS idx_arcade_score ON arcade_scores(game, score DESC)`);
 } catch (e) { console.error('[init] arcade_scores table:', e.message); }
 
+// Schema version stamp. The CREATE/ALTER statements above are idempotent and
+// run on every boot, so this is a marker (not a migration runner) that records
+// which schema revision the code expects. Bump SCHEMA_VERSION whenever the DDL
+// above changes; query `PRAGMA user_version` to see what state a given .db is in.
+const SCHEMA_VERSION = 1;
+try {
+  const onDisk = db.prepare('PRAGMA user_version').get().user_version;
+  if (onDisk !== SCHEMA_VERSION) {
+    db.exec(`PRAGMA user_version = ${SCHEMA_VERSION}`);
+    if (onDisk) console.log(`[init] schema version ${onDisk} → ${SCHEMA_VERSION}`);
+  }
+} catch (e) { console.error('[init] schema version stamp:', e.message); }
+
 const ipCountryCache = new Map();
 const IP_CACHE_TTL_MS = 24 * 3600 * 1000;
 
