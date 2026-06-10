@@ -16,6 +16,12 @@ process.env.SESSION_SECRET   = 'test-session-secret';
 process.env.BASE_URL         = 'http://localhost';
 process.env.STRIPE_SECRET_KEY = 'sk_test_fake_not_real';
 
+// Admin credentials for exercising the protected admin surface in tests.
+const ADMIN_PW = 'test-admin-pw';
+process.env.ADMIN_USERNAME      = 'testadmin';
+process.env.ADMIN_PASSWORD_HASH = require('bcryptjs').hashSync(ADMIN_PW, 10);
+delete process.env.TOTP_SECRET; // keep admin login single-factor in tests
+
 const WEBHOOK_SECRET = 'whsec_testabcdef1234567890abcdef';
 process.env.STRIPE_WEBHOOK_SECRET = WEBHOOK_SECRET;
 
@@ -319,4 +325,81 @@ test('POST /api/contact returns 400 for invalid email', async () => {
   assert.equal(res.status, 400);
   const body = await res.json();
   assert.ok(body.error);
+});
+
+// ── Admin surface (auth enforcement + powerful mutating routes) ───────────────
+
+async function loginAdmin() {
+  const form = new URLSearchParams({ username: 'testadmin', password: ADMIN_PW });
+  const res = await fetch(`${base}/admin/login`, {
+    method:   'POST',
+    headers:  { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body:     form.toString(),
+    redirect: 'manual',
+  });
+  const cookies = res.headers.getSetCookie();
+  const sid = (cookies || []).map(c => c.split(';')[0]).find(c => c.startsWith('connect.sid='));
+  assert.ok(sid, 'login did not return a session cookie');
+  return sid;
+}
+
+test('GET /api/admin/me returns 401 without a session', async () => {
+  const res = await fetch(`${base}/api/admin/me`);
+  assert.equal(res.status, 401);
+});
+
+test('admin can log in and /api/admin/me returns the username', async () => {
+  const cookie = await loginAdmin();
+  const res = await fetch(`${base}/api/admin/me`, { headers: { Cookie: cookie } });
+  assert.equal(res.status, 200);
+  const body = await res.json();
+  assert.equal(body.username, 'testadmin');
+});
+
+test('DELETE /api/admin/orders/:id is rejected without auth', async () => {
+  const sessionId = seedOrder({ status: 'paid' });
+  const id = db.prepare('SELECT id FROM orders WHERE stripe_session_id = ?').get(sessionId).id;
+  const res = await fetch(`${base}/api/admin/orders/${id}`, { method: 'DELETE' });
+  assert.equal(res.status, 401, 'unauthenticated delete must not be allowed');
+  const stillThere = db.prepare('SELECT deleted_at FROM orders WHERE id = ?').get(id);
+  assert.equal(stillThere.deleted_at, null, 'order must not be deleted by an unauthenticated request');
+});
+
+test('authenticated admin can change an order status', async () => {
+  const cookie = await loginAdmin();
+  const sessionId = seedOrder({ status: 'paid' });
+  const id = db.prepare('SELECT id FROM orders WHERE stripe_session_id = ?').get(sessionId).id;
+  const res = await fetch(`${base}/api/admin/orders/${id}/status`, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: cookie },
+    body:    JSON.stringify({ status: 'printing' }),
+  });
+  assert.equal(res.status, 200);
+  const row = db.prepare('SELECT status FROM orders WHERE id = ?').get(id);
+  assert.equal(row.status, 'printing');
+});
+
+test('admin status change rejects an invalid status value', async () => {
+  const cookie = await loginAdmin();
+  const sessionId = seedOrder({ status: 'paid' });
+  const id = db.prepare('SELECT id FROM orders WHERE stripe_session_id = ?').get(sessionId).id;
+  const res = await fetch(`${base}/api/admin/orders/${id}/status`, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: cookie },
+    body:    JSON.stringify({ status: 'not-a-real-status' }),
+  });
+  assert.equal(res.status, 400);
+});
+
+test('authenticated admin can soft-delete an order', async () => {
+  const cookie = await loginAdmin();
+  const sessionId = seedOrder({ status: 'paid' });
+  const id = db.prepare('SELECT id FROM orders WHERE stripe_session_id = ?').get(sessionId).id;
+  const res = await fetch(`${base}/api/admin/orders/${id}`, {
+    method:  'DELETE',
+    headers: { Cookie: cookie },
+  });
+  assert.equal(res.status, 200);
+  const row = db.prepare('SELECT deleted_at FROM orders WHERE id = ?').get(id);
+  assert.ok(row.deleted_at, 'order should be soft-deleted (deleted_at set)');
 });
