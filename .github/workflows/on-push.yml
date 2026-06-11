@@ -29,6 +29,12 @@ jobs:
           echo "urls=$NEW" >> $GITHUB_OUTPUT
           if [ -n "$NEW" ]; then echo "New URLs: $NEW"; else echo "No new URLs"; fi
 
+      - name: Ping Google sitemap
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            "https://www.google.com/ping?sitemap=https://letterhome.ca/sitemap.xml")
+          echo "Google ping status: $STATUS"
+
       - name: Ping IndexNow (Bing/Yandex/DuckDuckGo)
         if: steps.new-urls.outputs.urls != ''
         env:
