@@ -539,7 +539,8 @@ const SECURITY_TXT = [
 
 ['send', 'guides', 'privacy', 'terms', 'refunds', 'about', 'contact', 'track', 'order-success',
  'from-usa', 'from-uk', 'from-australia', 'from-uae', 'from-france',
- 'from-hong-kong', 'from-india', 'from-philippines', 'send-documents-to-canada',
+ 'from-hong-kong', 'from-india', 'from-philippines',
+ 'from-china', 'from-italy', 'from-germany', 'from-pakistan', 'send-documents-to-canada',
  'how-to-send-a-letter-to-canada-from-abroad', 'how-to-mail-cra-tax-forms-from-outside-canada',
  'how-to-address-a-letter-to-canada', 'how-much-does-it-cost-to-mail-a-letter-to-canada',
  'comment-envoyer-une-lettre-au-canada',
