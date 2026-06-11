@@ -14,8 +14,9 @@ const THRESHOLD = { performance: 80, lcp: 2500, cls: 0.1, fid: 100 };
 
 function checkPage(url) {
   return new Promise(resolve => {
+    const apiKey = process.env.PAGESPEED_API_KEY ? `&key=${process.env.PAGESPEED_API_KEY}` : '';
     const api = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed` +
-      `?url=${encodeURIComponent(url)}&strategy=mobile&category=performance`;
+      `?url=${encodeURIComponent(url)}&strategy=mobile&category=performance${apiKey}`;
     const req = https.get(api, { headers: { 'User-Agent': 'Letterhome-CWVMonitor/1.0' } }, res => {
       let d = '';
       res.on('data', c => d += c);
