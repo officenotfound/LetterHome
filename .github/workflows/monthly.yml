@@ -23,6 +23,18 @@ jobs:
         id: freshness
         run: node .github/scripts/update-freshness.js
 
+      - name: Wikipedia citation gap finder
+        run: node .github/scripts/wikipedia-gaps.js
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+
+      - name: AI visibility monitor
+        run: node .github/scripts/ai-monitor.js
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+
       - name: Commit and push
         run: |
           git config user.name "Letterhome Bot"

@@ -549,6 +549,7 @@ const SECURITY_TXT = [
  'cheapest-way-to-send-a-letter-to-canada',
  'send-a-letter-to-canada-without-a-return-address',
  'mail-a-letter-online', 'send-a-letter-from-home', 'what-is-lettermail',
+ 'ircc-processing-times',
 ].forEach(p =>
   app.get(`/${p}`, (req, res) =>
     res.sendFile(path.join(__dirname, 'public', `${p}.html`))

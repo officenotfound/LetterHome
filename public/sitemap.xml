@@ -171,6 +171,12 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://letterhome.ca/ircc-processing-times</loc>
+    <lastmod>2026-06-11</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://letterhome.ca/about</loc>
     <lastmod>2026-05-24</lastmod>
     <changefreq>monthly</changefreq>
