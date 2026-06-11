@@ -1,0 +1,48 @@
+name: On Push — SEO Automation
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  seo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Find new sitemap URLs
+        id: new-urls
+        run: |
+          NEW=$(git diff HEAD~1 HEAD -- public/sitemap.xml 2>/dev/null \
+            | grep "^+" \
+            | grep -o 'https://letterhome\.ca[^<]*' \
+            | tr '\n' ' ' || echo "")
+          echo "urls=$NEW" >> $GITHUB_OUTPUT
+          if [ -n "$NEW" ]; then echo "New URLs: $NEW"; else echo "No new URLs"; fi
+
+      - name: Ping IndexNow (Bing/Yandex/DuckDuckGo)
+        if: steps.new-urls.outputs.urls != ''
+        env:
+          NEW_URLS: ${{ steps.new-urls.outputs.urls }}
+        run: node .github/scripts/indexnow.js
+
+      - name: Submit to Wayback Machine
+        if: steps.new-urls.outputs.urls != ''
+        env:
+          NEW_URLS: ${{ steps.new-urls.outputs.urls }}
+        run: node .github/scripts/wayback.js
+
+      - name: Validate hreflang tags
+        run: node .github/scripts/validate-hreflang.js
+
+      - name: Validate JSON-LD structured data
+        run: node .github/scripts/validate-schema.js

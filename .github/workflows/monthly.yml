@@ -1,0 +1,33 @@
+name: Monthly — Content Freshness Update
+on:
+  schedule:
+    - cron: '0 6 1 * *'  # 1st of every month at 6am UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  freshness:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Update freshness dates
+        id: freshness
+        run: node .github/scripts/update-freshness.js
+
+      - name: Commit and push
+        run: |
+          git config user.name "Letterhome Bot"
+          git config user.email "bot@letterhome.ca"
+          git add public/*.html
+          git diff --staged --quiet \
+            && echo "No freshness changes needed" \
+            || (git commit -m "Update content freshness dates to $(date +'%B %Y')" && git push origin main)

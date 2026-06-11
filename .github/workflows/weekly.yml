@@ -1,0 +1,43 @@
+name: Weekly SEO Jobs
+on:
+  schedule:
+    - cron: '0 8 * * 1'  # Every Monday 8am UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  weekly:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Broken link monitor
+        run: node .github/scripts/check-links.js
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+
+      - name: Reddit opportunity digest
+        run: node .github/scripts/reddit-digest.js
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+
+      - name: HARO / journalist monitor
+        run: node .github/scripts/haro-monitor.js
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+
+      - name: Internal link suggestions
+        run: node .github/scripts/suggest-links.js
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
