@@ -29,3 +29,15 @@
 [data-theme=dark] .cta-band      { background: #231d18 !important; border-color: var(--red) !important; }
 [data-theme=dark] .cta-band h2   { color: #f0e6d3 !important; }
 [data-theme=dark] .cta-band p    { color: rgba(240,230,211,0.7) !important; }
+
+.answer-capsule {
+  background: #f0f7f0;
+  border-left: 4px solid #2a7a2a;
+  padding: 0.85rem 1rem;
+  margin: 1rem 0 1.5rem;
+  border-radius: 0 4px 4px 0;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #1a1a1a;
+}
+[data-theme=dark] .answer-capsule { background: #1a2a1a; border-color: #4a9a4a; color: #e0f0e0; }

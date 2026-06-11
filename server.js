@@ -550,6 +550,9 @@ const SECURITY_TXT = [
  'send-a-letter-to-canada-without-a-return-address',
  'mail-a-letter-online', 'send-a-letter-from-home', 'what-is-lettermail',
  'ircc-processing-times',
+ 'from-nigeria', 'from-france', 'from-mexico', 'from-brazil',
+ 'from-south-korea', 'from-japan', 'from-vietnam', 'from-ukraine',
+ 'from-jamaica', 'from-sri-lanka', 'from-lebanon', 'from-bangladesh', 'from-nepal',
 ].forEach(p =>
   app.get(`/${p}`, (req, res) =>
     res.sendFile(path.join(__dirname, 'public', `${p}.html`))
