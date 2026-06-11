@@ -47,3 +47,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
+
+      - name: Bing Webmaster report
+        run: node .github/scripts/bing-webmaster.js
+        env:
+          BING_API_KEY: ${{ secrets.BING_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
