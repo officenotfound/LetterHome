@@ -1,0 +1,31 @@
+/* Shared guide-page styling. Loaded LAST (just before </head>) so it governs,
+   and the single source of truth for guide aesthetics — edit here once and every
+   current and future guide stays consistent. */
+
+/* Postage-stamp CTA card — warm and on-brand, replacing the old black box.
+   Paper background on the kraft page, a dashed red "stamp edge", serif heading,
+   and the same red stamp button as the homepage "Send a letter". */
+.cta-band {
+  background: var(--paper) !important;
+  color: var(--ink) !important;
+  border: 2px dashed var(--red) !important;
+  border-radius: 3px !important;
+  padding: 40px !important;
+  margin-top: 56px !important;
+  text-align: center !important;
+  box-shadow: var(--shadow-card);
+}
+.cta-band h2 { color: var(--ink) !important; margin-top: 0; }
+.cta-band p  { color: var(--ink-muted) !important; }
+
+/* CTA button → red stamp button (matches the homepage primary CTA) */
+.cta-band .btn-paper {
+  background: var(--red) !important;
+  color: var(--paper) !important;
+  border: 2px dashed #fff !important;
+}
+.cta-band .btn-paper:hover { background: var(--red-deep) !important; transform: translateY(-1px); }
+
+[data-theme=dark] .cta-band      { background: #231d18 !important; border-color: var(--red) !important; }
+[data-theme=dark] .cta-band h2   { color: #f0e6d3 !important; }
+[data-theme=dark] .cta-band p    { color: rgba(240,230,211,0.7) !important; }
