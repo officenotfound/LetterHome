@@ -544,6 +544,10 @@ const SECURITY_TXT = [
  'how-to-send-a-letter-to-canada-from-abroad', 'how-to-mail-cra-tax-forms-from-outside-canada',
  'how-to-address-a-letter-to-canada', 'how-much-does-it-cost-to-mail-a-letter-to-canada',
  'comment-envoyer-une-lettre-au-canada',
+ 'how-to-send-mail-to-canada-without-a-canadian-address',
+ 'how-to-mail-ircc-documents-from-outside-canada',
+ 'cheapest-way-to-send-a-letter-to-canada',
+ 'send-a-letter-to-canada-without-a-return-address',
 ].forEach(p =>
   app.get(`/${p}`, (req, res) =>
     res.sendFile(path.join(__dirname, 'public', `${p}.html`))
