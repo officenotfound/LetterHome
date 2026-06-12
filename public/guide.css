@@ -307,6 +307,5 @@ nav {
 
 /* ── Responsive nav mobile ───────────────────────────────────────────────── */
 @media (max-width: 400px) {
-  .logo span { display: none; }
   .btn { padding: 10px 16px; font-size: 12px; }
 }
