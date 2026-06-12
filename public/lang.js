@@ -296,7 +296,7 @@
       // TICKER
       'ticker.1': 'Letters from Berlin to Halifax',
       'ticker.2': 'Tax forms from Tokyo to the CRA',
-      'ticker.3': 'A signed contract from Auckland to Toronto',
+      'ticker.3': 'A signed contract from Auckland to Vancouver',
       'ticker.4': 'A Letter Home',
       'ticker.type.letters': 'Letters',
       'ticker.type.docs': 'Documents',
@@ -635,7 +635,7 @@
       // TICKER
       'ticker.1': 'Lettres de Berlin à Halifax',
       'ticker.2': 'Formulaires fiscaux de Tokyo vers l’ARC',
-      'ticker.3': 'Un contrat signé d’Auckland à Toronto',
+      ‘ticker.3’: ‘Un contrat signé d’Auckland à Vancouver’,
       'ticker.4': 'Une lettre vers chez soi',
       'ticker.type.letters': 'Lettres',
       'ticker.type.docs': 'Documents',
