@@ -77,7 +77,47 @@ const template = (c) => `<!DOCTYPE html>
 <\/script>
 <link rel="stylesheet" href="/fonts.css">
 <link rel="stylesheet" href="/theme.css?v=1">
-<link rel="stylesheet" href="/guide.css">
+<style>
+:root{--kraft:#f1ebde;--kraft-deep:#e1d6bd;--paper:#faf6ec;--ink:#2a2a2a;--ink-soft:#3a3835;--ink-muted:#6b6258;--ink-faint:#968b7d;--red:#a8472d;--red-deep:#7d3220;--line:rgba(42,42,42,0.14);--shadow-card:0 2px 6px rgba(42,42,42,0.06),0 14px 40px rgba(42,42,42,0.1)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Source Serif 4',Georgia,serif;background:var(--kraft);color:var(--ink);line-height:1.6;font-size:16px}
+nav{position:sticky;top:0;z-index:100;background:rgba(241,235,222,0.94);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.nav-inner{max-width:1100px;margin:0 auto;padding:18px 32px;display:flex;align-items:center;justify-content:space-between;gap:24px}
+.logo{display:flex;align-items:center;gap:10px;font-family:'DM Serif Display',serif;font-size:24px;color:var(--ink);text-decoration:none}
+.btn{display:inline-block;padding:11px 22px;border-radius:2px;font-weight:500;font-size:13px;text-decoration:none;transition:all .2s;border:none;cursor:pointer;font-family:inherit;letter-spacing:.04em;text-transform:uppercase}
+.btn-red{background:var(--red);color:var(--paper);border:2px dashed rgba(255,255,255,.7)}
+.btn-red:hover{background:var(--red-deep);transform:translateY(-1px)}
+h1{font-family:'DM Serif Display',serif;font-size:clamp(28px,5vw,44px);line-height:1.15;letter-spacing:-.02em;margin-bottom:14px}
+h2{font-family:'DM Serif Display',serif;font-size:clamp(20px,3vw,26px);letter-spacing:-.01em;margin:48px 0 18px}
+h3{font-family:'DM Serif Display',serif;font-size:19px;margin:28px 0 10px}
+p{font-size:16px;color:var(--ink-soft);margin-bottom:16px;line-height:1.72}
+p strong{color:var(--ink)}
+ul,ol{color:var(--ink-soft);font-size:15px;line-height:1.8}
+a{color:var(--red);text-underline-offset:2px}
+a:hover{color:var(--red-deep)}
+pre{font-family:'DM Mono','Courier New',monospace;font-size:14px;line-height:1.9;background:var(--paper);border:1px solid var(--line);border-left:3px solid var(--red);border-radius:2px;padding:18px 22px;overflow-x:auto;white-space:pre-line;margin:8px 0 20px}
+code{font-family:'DM Mono','Courier New',monospace;font-size:.875em;background:var(--paper);border:1px solid var(--line);border-radius:2px;padding:1px 5px}
+.guide-wrap{max-width:780px;margin:0 auto;padding:56px 32px 80px}
+.guide-wrap .breadcrumb{font-size:.78rem;font-family:'DM Mono',monospace;color:var(--ink-muted);margin-bottom:1.8em;letter-spacing:.01em}
+.guide-wrap .breadcrumb a{color:var(--ink-muted);text-decoration:none}
+.guide-wrap .breadcrumb a:hover{color:var(--red)}
+.answer-capsule{background:#f0f7f0;border-left:4px solid #2a7a2a;padding:.85rem 1.1rem;margin:.5rem 0 1.8rem;border-radius:0 4px 4px 0;font-size:1rem;line-height:1.65;color:var(--ink)}
+.comparison-table{width:100%;border-collapse:collapse;font-size:.88rem;margin:.5rem 0 1.5rem;font-family:'DM Mono',monospace}
+.comparison-table th{background:var(--paper);text-align:left;padding:9px 13px;font-weight:600;font-size:.78rem;text-transform:uppercase;letter-spacing:.07em;border-bottom:2px solid var(--line);white-space:nowrap}
+.comparison-table td{padding:9px 13px;border-bottom:1px solid var(--line);vertical-align:top;color:var(--ink-soft)}
+.comparison-table tbody tr:last-child td{border-bottom:none}
+.comparison-table tbody tr:hover td{background:rgba(168,71,45,.04)}
+@media(max-width:640px){.nav-inner{padding:14px 20px}.guide-wrap{padding:32px 20px 72px}}
+[data-theme=dark]{background:#1a1410;color:#f0e6d3}
+[data-theme=dark] body{background:#1a1410;color:#f0e6d3}
+[data-theme=dark] nav{background:rgba(26,20,16,.94) !important}
+[data-theme=dark] h1,[data-theme=dark] h2,[data-theme=dark] h3{color:#f0e6d3}
+[data-theme=dark] p,[data-theme=dark] ul,[data-theme=dark] ol{color:#ddd0be}
+[data-theme=dark] pre,[data-theme=dark] code{background:#231d18;border-color:rgba(240,230,211,.1)}
+[data-theme=dark] .answer-capsule{background:#1a2a1a;border-color:#4a9a4a;color:#e0f0e0}
+[data-theme=dark] .comparison-table th{background:#231d18;color:#f0e6d3;border-color:rgba(240,230,211,.15)}
+[data-theme=dark] .comparison-table td{color:#ddd0be;border-color:rgba(240,230,211,.07)}
+</style>
 </head>
 <body>
 <a href="#main-content" class="skip-link" style="position:absolute;left:-9999px;top:4px;z-index:9999;background:#a8472d;color:#faf6ec;padding:8px 16px;font-size:14px;text-decoration:none;border-radius:2px" onfocus="this.style.left='4px'" onblur="this.style.left='-9999px'">Skip to main content</a>
