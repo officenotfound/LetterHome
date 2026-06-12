@@ -22,12 +22,18 @@ jobs:
       - name: Find new sitemap URLs
         id: new-urls
         run: |
+          echo "--- git log (last 3) ---"
+          git log --oneline -3
+          echo "--- sitemap diff ---"
+          git diff HEAD~1 HEAD -- public/sitemap.xml | head -40 || echo "(no diff or no HEAD~1)"
           NEW=$(git diff HEAD~1 HEAD -- public/sitemap.xml 2>/dev/null \
             | grep "^+" \
             | grep -o 'https://letterhome\.ca[^<]*' \
             | tr '\n' ' ' || echo "")
+          echo "--- extracted URLs ---"
+          echo "urls=$NEW"
           echo "urls=$NEW" >> $GITHUB_OUTPUT
-          if [ -n "$NEW" ]; then echo "New URLs: $NEW"; else echo "No new URLs"; fi
+          if [ -n "$NEW" ]; then echo "New URLs found: $NEW"; else echo "No new URLs detected"; fi
 
       - name: Ping Google sitemap
         run: |

@@ -30,8 +30,17 @@ const req = https.request({
   }
 }, res => {
   console.log(`IndexNow response: ${res.statusCode}`);
-  // 200 = OK, 202 = accepted, both are success
-  if (res.statusCode !== 200 && res.statusCode !== 202) process.exit(1);
+  let body = '';
+  res.on('data', d => { body += d; });
+  res.on('end', () => {
+    if (body) console.log(`IndexNow response body: ${body}`);
+    // 200 = OK, 202 = accepted, both are success
+    if (res.statusCode !== 200 && res.statusCode !== 202) {
+      console.error(`IndexNow failed with status ${res.statusCode}`);
+      process.exit(1);
+    }
+    console.log('IndexNow ping successful');
+  });
 });
 
 req.on('error', e => { console.error('IndexNow error:', e.message); process.exit(1); });
