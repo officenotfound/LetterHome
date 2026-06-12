@@ -2652,21 +2652,15 @@ function buildStatusPage(order) {
 <link rel="stylesheet" href="/fonts.css">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Inter',system-ui,sans-serif;background:#ede5d3;color:#2a2a2a;min-height:100vh}
-nav{background:rgba(237,229,211,0.94);backdrop-filter:blur(14px);border-bottom:1px solid rgba(42,42,42,0.14);padding:16px 36px;display:flex;align-items:center;justify-content:space-between}
+body{font-family:'Source Serif 4',Georgia,serif;background:var(--kraft,#faf8f2);color:var(--ink,#111);min-height:100vh}
 @media(max-width:600px){nav,.main{padding-left:20px!important;padding-right:20px!important}.main{padding-top:40px!important;padding-bottom:80px!important}}
 </style>
 <script>(function(){try{var t=localStorage.getItem('lh-theme')||(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 <link rel="stylesheet" href="/theme.css">
 </head>
 <body>
-<nav>
-  <a href="/" style="display:flex;align-items:center;gap:10px;font-family:'DM Serif Display',serif;font-size:22px;color:#2a2a2a;text-decoration:none">
-    <span style="width:32px;height:32px;background:#a8472d;display:grid;place-items:center;border-radius:2px;color:#faf6ec;font-size:17px">L</span>
-    Letterhome
-  </a>
-  <a href="/send" style="background:#a8472d;color:#faf6ec;padding:10px 20px;font-size:13px;font-weight:500;text-decoration:none;border-radius:4px">Send a Letter</a>
-</nav>
+<div id="site-header"></div>
+<script src="/header.js"></script>
 <div class="main" style="max-width:580px;margin:0 auto;padding:64px 36px 100px">
   <div style="display:inline-flex;align-items:center;gap:10px;font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.18em;color:#a8472d;margin-bottom:20px">
     <span style="width:28px;height:1px;background:#a8472d;display:inline-block"></span>Order #${esc(String(order.id))}
@@ -2685,14 +2679,10 @@ nav{background:rgba(237,229,211,0.94);backdrop-filter:blur(14px);border-bottom:1
   </div>` : ''}
   <p style="font-size:13px;color:#6b6258;line-height:1.6">Questions about your letter? Email <a href="mailto:support@letterhome.ca" style="color:#a8472d">support@letterhome.ca</a> and include your order number.</p>
 </div>
-<footer style="background:#2a2a2a;color:rgba(250,246,236,0.6);padding:32px 36px;font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
-  <span>© 2026 Letterhome</span>
-  <div style="display:flex;gap:24px">
-    <a href="/privacy" style="color:rgba(250,246,236,0.5);text-decoration:none">Privacy</a>
-    <a href="/terms" style="color:rgba(250,246,236,0.5);text-decoration:none">Terms</a>
-  </div>
-</footer>
+<footer id="site-footer"></footer>
 <script src="/theme.js"></script>
+<script src="/lang.js" defer></script>
+<script src="/footer.js" defer></script>
 </body>
 </html>`;
 }

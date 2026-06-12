@@ -48,3 +48,31 @@ if (errors) {
 } else {
   console.log('✅ All guide pages use the canonical template.');
 }
+
+// ── Header/footer wiring guard ───────────────────────────────────────────────
+// The header and footer must come only from header.js / footer.js. No page may
+// hardcode its own <nav> header or reintroduce a divergent footer.
+let wireErrors = 0;
+for (const file of fs.readdirSync(pubDir).sort()) {
+  if (!file.endsWith('.html')) continue;
+  const html = fs.readFileSync(path.join(pubDir, file), 'utf8');
+  if (!/<body[ >]/.test(html)) continue;
+
+  const problems = [];
+  if (!html.includes('id="site-header"')) problems.push('missing <div id="site-header"> placeholder');
+  if (!html.includes('id="site-footer"')) problems.push('missing <footer id="site-footer"> placeholder');
+  if (/<nav[ >]/.test(html)) problems.push('hardcoded <nav> (header must come from header.js)');
+
+  if (problems.length) {
+    console.error(`❌ ${file} — ${problems.join('; ')}`);
+    wireErrors++;
+  }
+}
+
+if (wireErrors) {
+  console.error(`\n${wireErrors} page(s) not using the shared header/footer.`);
+  console.error('Use <div id="site-header"></div> + header.js and <footer id="site-footer"></footer> + footer.js.');
+  process.exit(1);
+} else {
+  console.log('✅ Every page uses the shared header.js + footer.js.');
+}
