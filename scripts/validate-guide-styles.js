@@ -1,7 +1,14 @@
 #!/usr/bin/env node
 /**
- * Validates that every HTML page using .guide-wrap has the required
- * inline style block. Run as a pre-push hook or in CI.
+ * Guards the guide-page template against the two regressions that have
+ * broken pages before. Runs as a pre-push hook and in CI.
+ *
+ * Any page built on the canonical `.page` content wrapper must:
+ *   1. ship the shared inline design system (Source Serif 4 + .page rule
+ *      + .eyebrow), so it renders correctly even if guide.css is stale;
+ *   2. NOT use the legacy `.guide-wrap` wrapper; and
+ *   3. NOT wrap its breadcrumb in a second <nav>, which inherits the
+ *      sticky site-header styling and collides with the real header.
  *
  * Usage: node scripts/validate-guide-styles.js
  */
@@ -9,10 +16,8 @@ const fs = require('fs');
 const path = require('path');
 
 const REQUIRED = [
-  "Source Serif 4",
-  ".guide-wrap{max-width",
-  ".answer-capsule{",
-  ".comparison-table{",
+  "Source Serif 4",   // body font, proves the inline block is present
+  ".eyebrow{",        // canonical eyebrow label
 ];
 
 const pubDir = path.join(__dirname, '../public');
@@ -20,21 +25,26 @@ let errors = 0;
 
 for (const file of fs.readdirSync(pubDir).sort()) {
   if (!file.endsWith('.html')) continue;
-  const fp = path.join(pubDir, file);
-  const html = fs.readFileSync(fp, 'utf8');
-  if (!html.includes('class="guide-wrap"')) continue;
+  const html = fs.readFileSync(path.join(pubDir, file), 'utf8');
+
+  // A canonical guide/country page is one that defines the .page content
+  // wrapper inline. The guides index and marketing pages don't, and are skipped.
+  if (!html.includes('.page{max-width:780px')) continue;
 
   const missing = REQUIRED.filter(s => !html.includes(s));
+  if (html.includes('class="guide-wrap"')) missing.push('LEGACY .guide-wrap wrapper (use .page)');
+  if (html.includes('<nav class="breadcrumb"')) missing.push('LEGACY <nav class="breadcrumb"> (collides with site header)');
+
   if (missing.length) {
-    console.error(`❌ ${file} — missing inline styles: ${missing.join(', ')}`);
+    console.error(`❌ ${file} — ${missing.join(', ')}`);
     errors++;
   }
 }
 
 if (errors) {
-  console.error(`\n${errors} page(s) missing required inline styles.`);
-  console.error('Run scripts/fix-guide-wrap.js or add the full inline <style> block.');
+  console.error(`\n${errors} guide page(s) off the canonical template.`);
+  console.error('Rebuild with scripts/unify-guides.js or the canonical inline block.');
   process.exit(1);
 } else {
-  console.log(`✅ All guide pages have required inline styles.`);
+  console.log('✅ All guide pages use the canonical template.');
 }
