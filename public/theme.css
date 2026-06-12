@@ -451,7 +451,8 @@ footer { background: #3d2c1a !important; border-top: 5px solid; border-image: re
 
 
 /* ── Language-section visibility (legal pages use full-block FR/EN divs) ─── */
-[data-lang="en"] [data-lang-show="fr"] { display: none !important; }
+[data-lang-show="fr"] { display: none !important; }
+[data-lang="fr"] [data-lang-show="fr"] { display: block !important; }
 [data-lang="fr"] [data-lang-show="en"] { display: none !important; }
 
 /* ── Account page — dark mode fixes ──────────────────────────────────────── */
