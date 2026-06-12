@@ -121,7 +121,7 @@ footer a{color:var(--ink-muted);margin:0 8px}
 [data-theme=dark] table.abbr th,[data-theme=dark] table.abbr td{border-color:rgba(240,230,211,0.1)}
 </style>
 <link rel="stylesheet" href="/guide.css?v=6">
-<script>(function(){try{var t=localStorage.getItem('lh-theme')||(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+<script>(function(){try{var t=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 </head>
 <body>
 
@@ -246,7 +246,7 @@ CANADA</div>
 <footer id="site-footer"></footer>
 <script src="/footer.js" defer></script>
 
-<script src="/theme.js?v=1" defer></script>
+<script src="/theme.js?v=2" defer></script>
 <script src="/lang.js" defer></script>
 <script>
   function toggle(i) {

@@ -1034,7 +1034,7 @@ footer {
   .ticker-track span { gap: 24px; }
 }
 </style>
-<script>(function(){try{var t=localStorage.getItem('lh-theme')||(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+<script>(function(){try{var t=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 
 <link rel="stylesheet" href="/theme.css?v=6">
 </head>
@@ -1527,7 +1527,7 @@ footer {
 })();
 </script>
 
-<script src="/theme.js?v=1" defer></script>
+<script src="/theme.js?v=2" defer></script>
 <script src="/lang.js" defer></script>
 <script>
 (async () => {

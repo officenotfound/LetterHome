@@ -64,7 +64,7 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:48px 36px 32px
 .footer-bottom a:hover{color:var(--red-stamp)}
 @media(max-width:768px){.nav-links{display:none}.main{padding:48px 24px 80px}}
 </style>
-<script>(function(){try{var t=localStorage.getItem('lh-theme')||(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+<script>(function(){try{var t=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 
 <link rel="stylesheet" href="/theme.css?v=6">
 </head>
@@ -187,7 +187,7 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:48px 36px 32px
 
 <footer id="site-footer"></footer>
 <script src="/footer.js" defer></script>
-<script src="/theme.js?v=1" defer></script>
+<script src="/theme.js?v=2" defer></script>
 <script src="/lang.js" defer></script>
 </body>
 </html>
