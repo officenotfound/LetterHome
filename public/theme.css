@@ -344,7 +344,7 @@ section.story[style], section.story {
 .logo-wordmark { font-style: italic; letter-spacing: -0.02em; line-height: 1; }
 .logo-accent { color: var(--red) !important; }
 nav { border-bottom: 1.5px solid rgba(42,42,42,0.18) !important; }
-.nav-inner { height: 72px !important; padding: 0 40px !important; }
+.nav-inner { height: 72px !important; padding: 0 40px !important; max-width: none !important; display: flex !important; align-items: center !important; justify-content: space-between !important; }
 .nav-links { display: none !important; }
 .nav-right { display: flex !important; align-items: center !important; gap: 10px !important; margin-left: auto !important; flex-shrink: 0 !important; }
 .nav-cta { margin-left: 0 !important; padding: 10px 22px !important; font-size: 13px !important; }
@@ -355,6 +355,9 @@ nav { border-bottom: 1.5px solid rgba(42,42,42,0.18) !important; }
 /* Buttons: enforce sharp corners across .btn-red, .btn-ink (old kraft button classes) */
 .btn-red, .btn-ink, .btn-primary, .btn-outline { border-radius: 0 !important; }
 .btn-red:hover, .btn-ink:hover { transform: none !important; }
+
+/* Nav CTA: lock text colour so page-level a:hover can't make it invisible */
+.nav-cta, .nav-cta:hover, .nav-cta:visited { color: var(--paper) !important; }
 
 /* Stitched border — direct border property, unaffected by transition:all or overflow */
 .btn-red { border: 2px dashed rgba(42,42,42,0.45) !important; }
