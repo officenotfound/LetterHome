@@ -553,6 +553,11 @@ const SECURITY_TXT = [
  'from-nigeria', 'from-france', 'from-mexico', 'from-brazil',
  'from-south-korea', 'from-japan', 'from-vietnam', 'from-ukraine',
  'from-jamaica', 'from-sri-lanka', 'from-lebanon', 'from-bangladesh', 'from-nepal',
+ 'from-egypt', 'from-colombia', 'from-kenya', 'from-ghana', 'from-south-africa',
+ 'from-singapore', 'from-ethiopia', 'from-trinidad', 'from-haiti', 'from-el-salvador',
+ 'how-long-does-it-take-to-mail-a-letter-to-canada',
+ 'can-you-mail-cash-to-canada',
+ 'how-to-track-a-letter-to-canada',
 ].forEach(p =>
   app.get(`/${p}`, (req, res) =>
     res.sendFile(path.join(__dirname, 'public', `${p}.html`))

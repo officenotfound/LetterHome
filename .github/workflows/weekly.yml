@@ -59,15 +59,16 @@ jobs:
           REPO: ${{ github.repository }}
 
       - name: Bing Webmaster report
-        run: node .github/scripts/bing-webmaster.js
+        run: node .github/scripts/bing-report.js
         env:
           BING_API_KEY: ${{ secrets.BING_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
 
       - name: Cloudflare analytics report
-        run: node .github/scripts/cloudflare-analytics.js
+        run: node .github/scripts/cloudflare-report.js
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ZONE_ID: ${{ secrets.CF_ZONE_ID }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
