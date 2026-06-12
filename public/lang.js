@@ -721,7 +721,6 @@
   window.toggleLang = function () {
     var current = document.documentElement.getAttribute('data-lang') || 'en';
     var next = current === 'en' ? 'fr' : 'en';
-    try { localStorage.setItem('lh-lang', next); } catch (e) {}
     applyLang(next);
   };
 
