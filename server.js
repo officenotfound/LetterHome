@@ -44,7 +44,7 @@ const app    = express();
 // sit in front of the app. With the wrong count, req.ip resolves to a proxy IP
 // instead of the real visitor, breaking rate-limiting and IP logging/alerts.
 app.set('trust proxy', 2);
-app.use(compression());
+app.use(compression({ threshold: 512, level: 6 }));
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2024-06-20' });
 
 app.use(session({
@@ -642,7 +642,7 @@ app.use(express.static('public', {
     if (filePath.endsWith('.html')) {
       res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
     } else if (filePath.endsWith('.css') || filePath.endsWith('.js')) {
-      res.setHeader('Cache-Control', 'public, max-age=86400');
+      res.setHeader('Cache-Control', 'public, max-age=604800, immutable');
     } else {
       res.setHeader('Cache-Control', 'public, max-age=604800');
     }
@@ -652,7 +652,7 @@ app.use(express.static('public', {
 app.get('/ga.js', (req, res) => {
   const id = process.env.GA4_MEASUREMENT_ID;
   res.setHeader('Content-Type', 'application/javascript');
-  res.setHeader('Cache-Control', 'public, max-age=3600');
+  res.setHeader('Cache-Control', 'public, max-age=604800');
   // No measurement ID configured — serve an inert script rather than a stray default property.
   if (!id) return res.send('/* analytics disabled: GA4_MEASUREMENT_ID not set */');
   res.send(`

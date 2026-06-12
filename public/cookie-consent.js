@@ -6,7 +6,7 @@
 
   function loadGA() {
     var s = document.createElement('script');
-    s.src = '/ga.js?' + Date.now();
+    s.src = '/ga.js';
     document.head.appendChild(s);
   }
 
