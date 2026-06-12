@@ -1517,9 +1517,11 @@ footer {
   const cities = (COUNTRY_CITIES[cc] || []).slice(0, 5);
   if (!cities.length) return;
 
-  const types = [LH_T('ticker.type.letters'),LH_T('ticker.type.docs'),LH_T('ticker.type.tax'),LH_T('ticker.type.bday'),LH_T('ticker.type.legal')];
+  const t = (k, en) => (typeof LH_T === 'function' ? LH_T(k) : null) || en;
+  const types = [t('ticker.type.letters','Letters'),t('ticker.type.docs','Documents'),t('ticker.type.tax','Tax forms'),t('ticker.type.bday','A letter home'),t('ticker.type.legal','Legal papers')];
+  const from = t('ticker.from','from'), to = t('ticker.to','to');
   const caShuffled = CA_CITIES.slice().sort(() => Math.random() - 0.5);
-  const items = cities.map((from, i) => `${types[i]} ${LH_T('ticker.from')} ${from} ${LH_T('ticker.to')} ${caShuffled[i]}`);
+  const items = cities.map((city, i) => `${types[i]} ${from} ${city} ${to} ${caShuffled[i]}`);
 
   const track = document.querySelector('.ticker-track');
   if (!track) return;
