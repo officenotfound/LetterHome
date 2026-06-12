@@ -558,6 +558,16 @@ const SECURITY_TXT = [
  'how-long-does-it-take-to-mail-a-letter-to-canada',
  'can-you-mail-cash-to-canada',
  'how-to-track-a-letter-to-canada',
+ 'how-to-write-a-letter-to-canada',
+ 'how-to-send-a-registered-letter-to-canada',
+ 'can-i-mail-a-package-to-canada',
+ 'from-iran', 'from-morocco', 'from-turkey', 'from-poland', 'from-romania',
+ 'from-portugal', 'from-sweden', 'from-netherlands', 'from-argentina', 'from-peru',
+ 'from-chile', 'from-venezuela', 'from-dominican-republic', 'from-tanzania',
+ 'from-uganda', 'from-cameroon', 'from-senegal', 'from-israel',
+ 'format-adresse-canadienne',
+ 'combien-coute-envoyer-une-lettre-au-canada',
+ 'envoyer-documents-ircc-depuis-etranger',
 ].forEach(p =>
   app.get(`/${p}`, (req, res) =>
     res.sendFile(path.join(__dirname, 'public', `${p}.html`))
