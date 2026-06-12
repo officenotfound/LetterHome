@@ -23,10 +23,8 @@ nav {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(241,235,222,0.94) !important;
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
-  border-bottom: 1px solid var(--line);
 }
 
 .nav-inner {
@@ -61,7 +59,6 @@ nav {
   font-family: inherit;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  line-height: 1.2;
 }
 
 .btn-red {
