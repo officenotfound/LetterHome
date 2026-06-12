@@ -1304,7 +1304,7 @@ footer {
 
 <script>
 // Personalize ticker: detect visitor's country, show top 5 cities mailing to Canada
-(async function personalizeTicker(){
+window.addEventListener('load', async function personalizeTicker(){
   const CA_CITIES = [
     'Toronto','Vancouver','Montreal','Calgary','Ottawa','Edmonton',
     'Winnipeg','Halifax','Saskatoon','Regina','Québec City','Victoria',
@@ -1526,7 +1526,7 @@ footer {
   const track = document.querySelector('.ticker-track');
   if (!track) return;
   track.innerHTML = [...items, ...items].map(t => `<span>${t}</span>`).join('');
-})();
+});
 </script>
 
 <script src="/theme.js?v=2" defer></script>
