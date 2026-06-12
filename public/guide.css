@@ -67,7 +67,6 @@ nav {
 .btn-red {
   background: var(--red);
   color: var(--paper);
-  border: 2px dashed rgba(255,255,255,0.7) !important;
 }
 
 .btn-red:hover {
