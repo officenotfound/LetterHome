@@ -347,7 +347,7 @@ nav { border-bottom: 1.5px solid rgba(42,42,42,0.18) !important; }
 .nav-inner { height: 72px !important; padding: 0 40px !important; max-width: none !important; display: flex !important; align-items: center !important; justify-content: space-between !important; }
 .nav-links { display: none !important; }
 .nav-right { display: flex !important; align-items: center !important; gap: 10px !important; margin-left: auto !important; flex-shrink: 0 !important; }
-.nav-cta { margin-left: 0 !important; padding: 10px 22px !important; font-size: 13px !important; }
+.nav-cta { margin-left: 0 !important; padding: 10px 22px !important; font-size: 13px !important; letter-spacing: 0.02em !important; line-height: 1.55 !important; }
 @media (max-width: 900px) { .nav-inner { padding: 0 28px !important; height: 66px !important; } }
 @media (max-width: 480px) { .nav-inner { padding: 0 20px !important; height: 60px !important; } }
 @media (max-width: 768px) { .nav-cta { display: none !important; } }
