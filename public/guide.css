@@ -3,33 +3,8 @@
    Loaded after fonts.css and theme.css so same-specificity !important wins.
    ═════════════════════════════════════════════════════════════════════════ */
 
-/* ── Warm kraft palette (overrides theme.css cool palette) ──────────────── */
-:root {
-  --kraft:        #f1ebde !important;
-  --kraft-deep:   #e1d6bd !important;
-  --paper:        #faf6ec !important;
-  --ink:          #2a2a2a !important;
-  --ink-soft:     #3a3835 !important;
-  --ink-muted:    #6b6258 !important;
-  --ink-faint:    #968b7d !important;
-  --red:          #a8472d !important;
-  --red-deep:     #7d3220 !important;
-  --line:         rgba(42,42,42,0.14) !important;
-  --shadow-card:  0 2px 6px rgba(42,42,42,0.06), 0 14px 40px rgba(42,42,42,0.1) !important;
-}
-
-[data-theme="dark"] {
-  --kraft:      #1a1410 !important;
-  --kraft-deep: #120e0b !important;
-  --paper:      #231d18 !important;
-  --ink:        #f0e6d3 !important;
-  --ink-soft:   #ddd0be !important;
-  --ink-muted:  #a8998a !important;
-  --ink-faint:  #7a6e62 !important;
-  --red:        #c4603e !important;
-  --red-deep:   #a84e31 !important;
-  --line:       rgba(240,230,211,0.12) !important;
-}
+/* Palette intentionally NOT redefined here — the whole site uses the single
+   palette from theme.css so headers, footers, and pages stay consistent. */
 
 /* ── Base page ───────────────────────────────────────────────────────────── */
 body {
