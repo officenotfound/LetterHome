@@ -680,6 +680,7 @@ app.get('/api/site-config', (req, res) => {
 });
 
 app.get('/api/visitor-country', async (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, private');
   try {
     // Cloudflare hands us the visitor's country for free on every request —
     // instant and rate-limit-proof, unlike the external IP-geo fallback.
