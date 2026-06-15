@@ -109,24 +109,24 @@ table.data td:first-child{font-weight:600;color:var(--ink)}
 <body>
 
 <div id="site-header"></div>
-<script src="/header.js?v=5"></script>
+<script src="/header.js?v=6"></script>
 
 <div class="page">
 
-  <div class="eyebrow">Guide</div>
-  <h1>What is lettermail?</h1>
-    <p class="answer-capsule"><strong>Lettermail is Canada Post's standard service for sending letters and documents</strong> within Canada. In 2026, a domestic stamp costs $1.24 (with booklet) or $1.44 individually. Items must weigh under 500g and fit within standard envelope dimensions.</p>
+  <div class="eyebrow" data-i18n="lettermail.eyebrow">Guide</div>
+  <h1 data-i18n="lettermail.h1">What is lettermail?</h1>
+    <p class="answer-capsule" data-i18n-html="lettermail.lede"><strong>Lettermail is Canada Post's standard service for sending letters and documents</strong> within Canada. In 2026, a domestic stamp costs $1.24 (with booklet) or $1.44 individually. Items must weigh under 500g and fit within standard envelope dimensions.</p>
   <p class="updated">Updated June 2026</p>
 
-  <p class="answer"><strong>Lettermail is Canada Post's standard service for mailing letters and documents.</strong> It's the everyday option — buy a stamp, seal an envelope, drop it in a red mailbox. No tracking, no frills, and for most purposes, no need for anything more. It covers personal letters, bills, government forms, and the vast majority of routine correspondence mailed in Canada.</p>
-  <p class="answer">In 2026, a single domestic lettermail stamp costs <strong>$1.44</strong>, or <strong>$1.24</strong> each when bought in a booklet or coil.</p>
+  <p class="answer" data-i18n-html="lettermail.answer1"><strong>Lettermail is Canada Post's standard service for mailing letters and documents.</strong> It's the everyday option — buy a stamp, seal an envelope, drop it in a red mailbox. No tracking, no frills, and for most purposes, no need for anything more. It covers personal letters, bills, government forms, and the vast majority of routine correspondence mailed in Canada.</p>
+  <p class="answer" data-i18n-html="lettermail.answer2">In 2026, a single domestic lettermail stamp costs <strong>$1.44</strong>, or <strong>$1.24</strong> each when bought in a booklet or coil.</p>
 
   <div class="cta-row">
     <a href="/send" class="btn btn-red">Send a letter now</a>
-    <span class="price-note">From $10 CAD &nbsp;·&nbsp; Mailed from Canada</span>
+    <span class="price-note" data-i18n="lettermail.price.note">From $10 CAD &nbsp;·&nbsp; Mailed from Canada</span>
   </div>
 
-  <h2>Lettermail rates in 2026</h2>
+  <h2 data-i18n="lettermail.s1.h2">Lettermail rates in 2026</h2>
   <table class="data">
     <thead><tr><th>Destination</th><th>Weight</th><th>Price (single stamp)</th><th>Price (booklet)</th></tr></thead>
     <tbody>
@@ -138,8 +138,8 @@ table.data td:first-child{font-weight:600;color:var(--ink)}
   </table>
   <p class="caption">Canada Post rates as of 2026. Rates may change — check canadapost.ca for current pricing.</p>
 
-  <h2>Size and weight limits</h2>
-  <p class="body">To qualify for the standard lettermail stamp rate, an envelope must meet these dimensions:</p>
+  <h2 data-i18n="lettermail.s2.h2">Size and weight limits</h2>
+  <p class="body" data-i18n="lettermail.s2.p1">To qualify for the standard lettermail stamp rate, an envelope must meet these dimensions:</p>
   <table class="data">
     <thead><tr><th>Dimension</th><th>Minimum</th><th>Maximum</th></tr></thead>
     <tbody>
@@ -149,45 +149,45 @@ table.data td:first-child{font-weight:600;color:var(--ink)}
       <tr><td>Weight</td><td>—</td><td>500g (lettermail class max)</td></tr>
     </tbody>
   </table>
-  <p class="caption">Standard envelopes (business size, #10) fall comfortably within these limits. A standard letter-size sheet folded in thirds fits fine.</p>
-  <p class="body">Items that are too thick, too heavy, or oddly shaped may be classified as a large envelope or parcel and cost more to mail.</p>
+  <p class="caption" data-i18n="lettermail.s2.caption1">Standard envelopes (business size, #10) fall comfortably within these limits. A standard letter-size sheet folded in thirds fits fine.</p>
+  <p class="body" data-i18n="lettermail.s2.p2">Items that are too thick, too heavy, or oddly shaped may be classified as a large envelope or parcel and cost more to mail.</p>
 
-  <h2>How long does lettermail take?</h2>
-  <p class="body">Canada Post does not guarantee delivery times for standard lettermail. In practice, delivery within Canada typically takes 2 to 9 business days. The main variables are distance and whether the destination is urban or rural. Major cities tend to be on the faster end; remote or northern addresses can take longer.</p>
-  <p class="body">A safe planning estimate is <strong>up to 2 weeks</strong> for anything in Canada. If your letter needs to arrive by a specific date, send it early or consider Xpresspost or Registered Mail for a faster, tracked option.</p>
+  <h2 data-i18n="lettermail.s3.h2">How long does lettermail take?</h2>
+  <p class="body" data-i18n="lettermail.s3.p1">Canada Post does not guarantee delivery times for standard lettermail. In practice, delivery within Canada typically takes 2 to 9 business days. The main variables are distance and whether the destination is urban or rural. Major cities tend to be on the faster end; remote or northern addresses can take longer.</p>
+  <p class="body" data-i18n-html="lettermail.s3.p2">A safe planning estimate is <strong>up to 2 weeks</strong> for anything in Canada. If your letter needs to arrive by a specific date, send it early or consider Xpresspost or Registered Mail for a faster, tracked option.</p>
 
-  <h2>Is lettermail tracked?</h2>
-  <p class="body">No. Standard lettermail is not tracked. There are no scans at pickup or delivery, and no way to confirm receipt online. Once it's in the system, you wait.</p>
-  <p class="body">If tracking or proof of delivery matters — for legal documents, government submissions with deadlines, or anything where you need confirmation — Canada Post offers Registered Mail (with a delivery record) or Xpresspost (faster, with tracking).</p>
+  <h2 data-i18n="lettermail.s4.h2">Is lettermail tracked?</h2>
+  <p class="body" data-i18n="lettermail.s4.p1">No. Standard lettermail is not tracked. There are no scans at pickup or delivery, and no way to confirm receipt online. Once it's in the system, you wait.</p>
+  <p class="body" data-i18n="lettermail.s4.p2">If tracking or proof of delivery matters — for legal documents, government submissions with deadlines, or anything where you need confirmation — Canada Post offers Registered Mail (with a delivery record) or Xpresspost (faster, with tracking).</p>
 
-  <h2>What lettermail is used for</h2>
-  <p class="body">Lettermail handles the majority of paper correspondence in Canada: personal letters, greeting cards, bills and invoices, cheques, government notices, tax documents, application forms, and any other flat document that fits in a standard envelope. If it's paper and it fits, lettermail is usually the right service.</p>
+  <h2 data-i18n="lettermail.s5.h2">What lettermail is used for</h2>
+  <p class="body" data-i18n="lettermail.s5.p1">Lettermail handles the majority of paper correspondence in Canada: personal letters, greeting cards, bills and invoices, cheques, government notices, tax documents, application forms, and any other flat document that fits in a standard envelope. If it's paper and it fits, lettermail is usually the right service.</p>
 
-  <h2>Sending lettermail from outside Canada</h2>
-  <p class="body">You can't drop a letter into a Canadian mailbox if you're in another country — but you can use a print-and-mail service to do the equivalent. With Letterhome, you submit your letter or documents online from anywhere, and we print them in full colour and deposit them as lettermail with Canada Post from inside Canada. The letter travels as domestic mail and arrives with a Canadian postmark.</p>
-  <p class="body">This is how many Canadians abroad handle time-sensitive paper mail — CRA forms, IRCC correspondence, legal documents — without getting on a plane or asking someone else to do it.</p>
+  <h2 data-i18n="lettermail.s6.h2">Sending lettermail from outside Canada</h2>
+  <p class="body" data-i18n="lettermail.s6.p1">You can't drop a letter into a Canadian mailbox if you're in another country — but you can use a print-and-mail service to do the equivalent. With Letterhome, you submit your letter or documents online from anywhere, and we print them in full colour and deposit them as lettermail with Canada Post from inside Canada. The letter travels as domestic mail and arrives with a Canadian postmark.</p>
+  <p class="body" data-i18n="lettermail.s6.p2">This is how many Canadians abroad handle time-sensitive paper mail — CRA forms, IRCC correspondence, legal documents — without getting on a plane or asking someone else to do it.</p>
 
-  <h2>Frequently asked questions</h2>
+  <h2 data-i18n="lettermail.s7.h2">Frequently asked questions</h2>
   <div class="faq-list">
     <div class="faq-item">
-      <button class="faq-q" onclick="toggle(0)" aria-expanded="false" aria-controls="a0">What is lettermail?<svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
-      <div class="faq-a" id="a0" hidden>Lettermail is Canada Post's standard service for mailing letters and documents in envelopes. It's untracked, affordable, and used for personal correspondence, bills, government forms, and most routine paper mail. A domestic stamp costs $1.44 in 2026, or $1.24 in a booklet.</div>
+      <button class="faq-q" onclick="toggle(0)" aria-expanded="false" aria-controls="a0"><span data-i18n="lettermail.faq.q1">What is lettermail?</span><svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+      <div class="faq-a" id="a0" hidden data-i18n="lettermail.faq.a1">Lettermail is Canada Post's standard service for mailing letters and documents in envelopes. It's untracked, affordable, and used for personal correspondence, bills, government forms, and most routine paper mail. A domestic stamp costs $1.44 in 2026, or $1.24 in a booklet.</div>
     </div>
     <div class="faq-item">
-      <button class="faq-q" onclick="toggle(1)" aria-expanded="false" aria-controls="a1">How much does a lettermail stamp cost in 2026?<svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
-      <div class="faq-a" id="a1" hidden>$1.44 CAD for a single stamp, or $1.24 each in a booklet or coil. These rates cover a standard letter up to 30g to any address within Canada.</div>
+      <button class="faq-q" onclick="toggle(1)" aria-expanded="false" aria-controls="a1"><span data-i18n="lettermail.faq.q2">How much does a lettermail stamp cost in 2026?</span><svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+      <div class="faq-a" id="a1" hidden data-i18n="lettermail.faq.a2">$1.44 CAD for a single stamp, or $1.24 each in a booklet or coil. These rates cover a standard letter up to 30g to any address within Canada.</div>
     </div>
     <div class="faq-item">
-      <button class="faq-q" onclick="toggle(2)" aria-expanded="false" aria-controls="a2">How long does Canada Post lettermail take?<svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
-      <div class="faq-a" id="a2" hidden>Typically 2 to 9 business days within Canada, depending on distance. Canada Post does not guarantee delivery times for standard lettermail. Plan for up to 2 weeks to be safe.</div>
+      <button class="faq-q" onclick="toggle(2)" aria-expanded="false" aria-controls="a2"><span data-i18n="lettermail.faq.q3">How long does Canada Post lettermail take?</span><svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+      <div class="faq-a" id="a2" hidden data-i18n="lettermail.faq.a3">Typically 2 to 9 business days within Canada, depending on distance. Canada Post does not guarantee delivery times for standard lettermail. Plan for up to 2 weeks to be safe.</div>
     </div>
     <div class="faq-item">
-      <button class="faq-q" onclick="toggle(3)" aria-expanded="false" aria-controls="a3">Is lettermail tracked?<svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
-      <div class="faq-a" id="a3" hidden>No. Standard lettermail has no tracking or delivery confirmation. If you need proof of delivery, use Registered Mail or Xpresspost instead.</div>
+      <button class="faq-q" onclick="toggle(3)" aria-expanded="false" aria-controls="a3"><span data-i18n="lettermail.faq.q4">Is lettermail tracked?</span><svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+      <div class="faq-a" id="a3" hidden data-i18n="lettermail.faq.a4">No. Standard lettermail has no tracking or delivery confirmation. If you need proof of delivery, use Registered Mail or Xpresspost instead.</div>
     </div>
     <div class="faq-item">
-      <button class="faq-q" onclick="toggle(4)" aria-expanded="false" aria-controls="a4">Can I send lettermail from outside Canada?<svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
-      <div class="faq-a" id="a4" hidden>Not directly — you can't access a Canadian mailbox from abroad. But a print-and-mail service like Letterhome lets you submit your letter online and have it deposited as lettermail inside Canada on your behalf. The letter goes out as domestic mail with a Canadian postmark.</div>
+      <button class="faq-q" onclick="toggle(4)" aria-expanded="false" aria-controls="a4"><span data-i18n="lettermail.faq.q5">Can I send lettermail from outside Canada?</span><svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+      <div class="faq-a" id="a4" hidden data-i18n="lettermail.faq.a5">Not directly — you can't access a Canadian mailbox from abroad. But a print-and-mail service like Letterhome lets you submit your letter online and have it deposited as lettermail inside Canada on your behalf. The letter goes out as domestic mail with a Canadian postmark.</div>
     </div>
   </div>
 
@@ -212,7 +212,7 @@ table.data td:first-child{font-weight:600;color:var(--ink)}
 <script src="/footer.js" defer></script>
 
 <script src="/theme.js?v=2" defer></script>
-<script src="/lang.js?v=9" defer></script>
+<script src="/lang.js?v=10" defer></script>
 <script>
   function toggle(i) {
     const btn = document.querySelectorAll('.faq-q')[i];

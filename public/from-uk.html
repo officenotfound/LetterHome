@@ -123,82 +123,86 @@ footer a{color:var(--ink-muted);margin:0 8px}
 <a href="#main-content" class="skip-link" style="position:absolute;left:-9999px;top:4px;z-index:9999;background:#a8472d;color:#faf6ec;padding:8px 16px;font-size:14px;font-family:Georgia,serif;text-decoration:none;border-radius:2px" onfocus="this.style.left='4px'" onblur="this.style.left='-9999px'">Skip to main content</a>
 
 <div id="site-header"></div>
-<script src="/header.js?v=5"></script>
+<script src="/header.js?v=6"></script>
 
 <div class="page" id="main-content">
 
-  <div class="eyebrow">Mailing from the UK</div>
-  <h1>Send mail to Canada from the UK</h1>
-  <p class="lede">Based in the UK and need something mailed to a Canadian address? Write your letter online, attach any documents, and we'll take care of the rest — printed and posted from inside Canada.</p>
+  <div class="eyebrow" data-i18n="from.uk.eyebrow">Mailing from the UK</div>
+  <h1 data-i18n="from.uk.h1">Send mail to Canada from the UK</h1>
+  <p class="lede" data-i18n="from.uk.lede">Based in the UK and need something mailed to a Canadian address? Write your letter online, attach any documents, and we'll take care of the rest — printed and posted from inside Canada.</p>
 
   <div class="cta-row">
     <a href="/send" class="btn btn-red">Send a letter now</a>
-    <span class="price-note">From $10 CAD &nbsp;·&nbsp; No account required</span>
+    <span class="price-note" data-i18n="from.shared.price.note">From $10 CAD &nbsp;·&nbsp; No account required</span>
   </div>
 
-  <h2>Who uses Letterhome from the United Kingdom</h2>
+  <h2 data-i18n="from.uk.who.h2">Who uses Letterhome from the United Kingdom</h2>
   <ul class="who-list">
-        <li>Canadians living in the UK keeping in touch with family back home</li>
-        <li>UK residents mailing letters or documents to Canadian addresses</li>
-        <li>People sending immigration forms, legal correspondence, or official documents to Canada</li>
-        <li>Anyone who needs their letter to arrive with a real Canadian stamp</li>
+        <li data-i18n="from.uk.who.li1">Canadians living in the UK keeping in touch with family back home</li>
+        <li data-i18n="from.uk.who.li2">UK residents mailing letters or documents to Canadian addresses</li>
+        <li data-i18n="from.uk.who.li3">People sending immigration forms, legal correspondence, or official documents to Canada</li>
+        <li data-i18n="from.uk.who.li4">Anyone who needs their letter to arrive with a real Canadian stamp</li>
   </ul>
 
-  <h2>Pricing</h2>
+  <h2 data-i18n="from.shared.pricing.h2">Pricing</h2>
   <div class="pricing-cards">
     <div class="price-card">
       <div class="price-amount">$10 CAD</div>
-      <div class="price-label">Domestic</div>
-      <div class="price-desc">Letters to any Canadian address. Includes up to 5 documents, full-colour printing, envelope, and Canadian postage.</div>
+      <div class="price-label" data-i18n="from.shared.pricing.domestic.label">Domestic</div>
+      <div class="price-desc" data-i18n="from.shared.pricing.domestic.desc">Letters to any Canadian address. Includes up to 5 documents, full-colour printing, envelope, and Canadian postage.</div>
     </div>
     <div class="price-card">
       <div class="price-amount">$20 CAD</div>
-      <div class="price-label">International</div>
-      <div class="price-desc">Letters to any of 160+ countries. Same inclusions — full-colour printing, envelope, Canadian postage via Canada Post.</div>
+      <div class="price-label" data-i18n="from.shared.pricing.intl.label">International</div>
+      <div class="price-desc" data-i18n="from.shared.pricing.intl.desc">Letters to any of 160+ countries. Same inclusions — full-colour printing, envelope, Canadian postage via Canada Post.</div>
     </div>
   </div>
 
-  <h2>Frequently asked questions</h2>
+  <h2 data-i18n="from.shared.faq.h2">Frequently asked questions</h2>
   <div class="faq-list">
 
         <div class="faq-item">
           <button class="faq-q" onclick="toggle(0)" aria-expanded="false" aria-controls="a0">
-            Can I pay in GBP?
+            <span data-i18n="from.uk.faq.q0">Can I pay in GBP?</span>
             <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          
           </button>
-          <div class="faq-a" id="a0" hidden>Payment is in Canadian dollars through Stripe. Your UK card will work — your bank converts GBP to CAD at the current exchange rate. There's no need for a Canadian card or Canadian bank account.</div>
+          <div class="faq-a" id="a0" hidden data-i18n="from.uk.faq.a0">Payment is in Canadian dollars through Stripe. Your UK card will work — your bank converts GBP to CAD at the current exchange rate. There's no need for a Canadian card or Canadian bank account.</div>
         </div>
 
         <div class="faq-item">
           <button class="faq-q" onclick="toggle(1)" aria-expanded="false" aria-controls="a1">
-            How long does delivery take to Canada from the UK?
+            <span data-i18n="from.uk.faq.q1">How long does delivery take to Canada from the UK?</span>
             <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          
           </button>
-          <div class="faq-a" id="a1" hidden>We print and post within one business day of payment. The letter goes out via Canada Post standard lettermail, which typically delivers within Canada in up to 2 weeks.</div>
+          <div class="faq-a" id="a1" hidden data-i18n="from.uk.faq.a1">We print and post within one business day of payment. The letter goes out via Canada Post standard lettermail, which typically delivers within Canada in up to 2 weeks.</div>
         </div>
 
         <div class="faq-item">
           <button class="faq-q" onclick="toggle(2)" aria-expanded="false" aria-controls="a2">
-            Can I send documents like PDFs?
+            <span data-i18n="from.uk.faq.q2">Can I send documents like PDFs?</span>
             <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          
           </button>
-          <div class="faq-a" id="a2" hidden>Yes — attach up to 5 PDF or Word files (10 MB each). They're printed in full colour and included in the same envelope.</div>
+          <div class="faq-a" id="a2" hidden data-i18n="from.uk.faq.a2">Yes — attach up to 5 PDF or Word files (10 MB each). They're printed in full colour and included in the same envelope.</div>
         </div>
 
         <div class="faq-item">
           <button class="faq-q" onclick="toggle(3)" aria-expanded="false" aria-controls="a3">
-            Is this suitable for sending legal or government documents?
+            <span data-i18n="from.uk.faq.q3">Is this suitable for sending legal or government documents?</span>
             <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          
           </button>
-          <div class="faq-a" id="a3" hidden>Yes. Many customers use Letterhome to send immigration paperwork, government forms, and legal correspondence to Canadian addresses. Documents are printed in full colour on standard letter paper.</div>
+          <div class="faq-a" id="a3" hidden data-i18n="from.uk.faq.a3">Yes. Many customers use Letterhome to send immigration paperwork, government forms, and legal correspondence to Canadian addresses. Documents are printed in full colour on standard letter paper.</div>
         </div>
   </div>
 
-  <h2>Postage from the UK to Canada</h2>
-  <p style="font-size:16px;color:var(--ink-soft);margin-bottom:16px">Sending a letter from the UK to Canada via Royal Mail costs around <strong>£2.20</strong> for a standard international letter (up to 10g) in 2026, with heavier letters costing more. Delivery is typically 7–14 working days via Royal Mail's international tracked or standard service, though standard post has no tracking.</p>
-  <p style="font-size:16px;color:var(--ink-soft);margin-bottom:16px">With Letterhome, your letter is printed and mailed from <em>inside</em> Canada for <strong>$10 CAD</strong> — no international postage, no customs handling. It goes out as domestic Canadian lettermail and typically delivers within Canada in up to 2 weeks.</p>
+  <h2 data-i18n="from.uk.postage.h2">Postage from the UK to Canada</h2>
+  <p style="font-size:16px;color:var(--ink-soft);margin-bottom:16px" data-i18n-html="from.uk.postage.p1">Sending a letter from the UK to Canada via Royal Mail costs around <strong>£2.20</strong> for a standard international letter (up to 10g) in 2026, with heavier letters costing more. Delivery is typically 7–14 working days via Royal Mail's international tracked or standard service, though standard post has no tracking.</p>
+  <p style="font-size:16px;color:var(--ink-soft);margin-bottom:16px" data-i18n-html="from.uk.postage.p2">With Letterhome, your letter is printed and mailed from <em>inside</em> Canada for <strong>$10 CAD</strong> — no international postage, no customs handling. It goes out as domestic Canadian lettermail and typically delivers within Canada in up to 2 weeks.</p>
 
-  <h2>Related guides</h2>
+  <h2 data-i18n="from.shared.guides.h2">Related guides</h2>
   <div style="display:grid;gap:8px;margin-top:8px;margin-bottom:8px">
     <a href="/how-to-send-a-letter-to-canada-from-abroad" style="font-size:15px;color:var(--red);text-decoration:none">&rarr; How to send a letter to Canada from abroad</a>
     <a href="/how-to-address-a-letter-to-canada" style="font-size:15px;color:var(--red);text-decoration:none">&rarr; How to address a letter to Canada</a>
@@ -207,9 +211,9 @@ footer a{color:var(--ink-muted);margin:0 8px}
   </div>
 
   <div class="cta-band">
-    <h2>Ready to send?</h2>
-    <p>Fill out the form, attach your documents, and we handle everything else.</p>
-    <a href="/send" class="btn btn-paper">Send a letter from UK →</a>
+    <h2 data-i18n="from.shared.cta.heading">Ready to send?</h2>
+    <p data-i18n="from.shared.cta.body">Fill out the form, attach your documents, and we handle everything else.</p>
+    <a href="/send" class="btn btn-paper"> data-i18n="from.uk.cta.btn">Send a letter from UK →</a>
   </div>
 
 </div>
@@ -218,7 +222,7 @@ footer a{color:var(--ink-muted);margin:0 8px}
 <script src="/footer.js" defer></script>
 
 <script src="/theme.js?v=2" defer></script>
-<script src="/lang.js?v=9" defer></script>
+<script src="/lang.js?v=10" defer></script>
 <script>
   function toggle(i) {
     const btn = document.querySelectorAll('.faq-q')[i];

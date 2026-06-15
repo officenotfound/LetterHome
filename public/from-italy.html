@@ -123,74 +123,78 @@ footer a{color:var(--ink-muted);margin:0 8px}
 <a href="#main-content" class="skip-link" style="position:absolute;left:-9999px;top:4px;z-index:9999;background:#a8472d;color:#faf6ec;padding:8px 16px;font-size:14px;font-family:Georgia,serif;text-decoration:none;border-radius:2px" onfocus="this.style.left='4px'" onblur="this.style.left='-9999px'">Skip to main content</a>
 
 <div id="site-header"></div>
-<script src="/header.js?v=5"></script>
+<script src="/header.js?v=6"></script>
 
 <div class="page" id="main-content">
 
-  <div class="eyebrow">Mailing from Italy</div>
-  <h1>Send mail to Canada from Italy</h1>
-  <p class="lede">The ties between Italy and Canada run deep, and a lot of those ties still travel by post — a letter to a cousin in Toronto, a signed document for family, a card that means more on paper. Rather than wait on international mail, we print your letter in Canada, add Canadian postage, and send it through Canada Post so it arrives the way local mail does.</p>
+  <div class="eyebrow" data-i18n="from.italy.eyebrow">Mailing from Italy</div>
+  <h1 data-i18n="from.italy.h1">Send mail to Canada from Italy</h1>
+  <p class="lede" data-i18n="from.italy.lede">The ties between Italy and Canada run deep, and a lot of those ties still travel by post — a letter to a cousin in Toronto, a signed document for family, a card that means more on paper. Rather than wait on international mail, we print your letter in Canada, add Canadian postage, and send it through Canada Post so it arrives the way local mail does.</p>
 
   <div class="cta-row">
     <a href="/send" class="btn btn-red">Send a letter now</a>
-    <span class="price-note">From $10 CAD &nbsp;·&nbsp; No account required</span>
+    <span class="price-note" data-i18n="from.shared.price.note">From $10 CAD &nbsp;·&nbsp; No account required</span>
   </div>
 
-  <h2>Who uses Letterhome from Italy</h2>
+  <h2 data-i18n="from.italy.who.h2">Who uses Letterhome from Italy</h2>
   <ul class="who-list">
-        <li>People in Italy writing to family and relatives across Canada</li>
-        <li>Anyone sending signed documents or paperwork to a Canadian address</li>
-        <li>Senders mailing cards for birthdays, anniversaries, and condolences</li>
-        <li>Canadians living in Italy who need a letter posted from home</li>
+        <li data-i18n="from.italy.who.li1">People in Italy writing to family and relatives across Canada</li>
+        <li data-i18n="from.italy.who.li2">Anyone sending signed documents or paperwork to a Canadian address</li>
+        <li data-i18n="from.italy.who.li3">Senders mailing cards for birthdays, anniversaries, and condolences</li>
+        <li data-i18n="from.italy.who.li4">Canadians living in Italy who need a letter posted from home</li>
   </ul>
 
-  <h2>Pricing</h2>
+  <h2 data-i18n="from.shared.pricing.h2">Pricing</h2>
   <div class="pricing-cards">
     <div class="price-card">
       <div class="price-amount">$10 CAD</div>
-      <div class="price-label">Domestic</div>
-      <div class="price-desc">Letters to any Canadian address. Includes up to 5 documents, full-colour printing, envelope, and Canadian postage.</div>
+      <div class="price-label" data-i18n="from.shared.pricing.domestic.label">Domestic</div>
+      <div class="price-desc" data-i18n="from.shared.pricing.domestic.desc">Letters to any Canadian address. Includes up to 5 documents, full-colour printing, envelope, and Canadian postage.</div>
     </div>
     <div class="price-card">
       <div class="price-amount">$20 CAD</div>
-      <div class="price-label">International</div>
-      <div class="price-desc">Letters to any of 160+ countries. Same inclusions — full-colour printing, envelope, postage via Canada Post.</div>
+      <div class="price-label" data-i18n="from.shared.pricing.intl.label">International</div>
+      <div class="price-desc" data-i18n="from.shared.pricing.intl.desc">Letters to any of 160+ countries. Same inclusions — full-colour printing, envelope, postage via Canada Post.</div>
     </div>
   </div>
 
-  <h2>Frequently asked questions</h2>
+  <h2 data-i18n="from.shared.faq.h2">Frequently asked questions</h2>
   <div class="faq-list">
         <div class="faq-item">
           <button class="faq-q" onclick="toggle(0)" aria-expanded="false" aria-controls="a0">
-            Can I send a letter to Canada from Italy without a Canadian address?
+            <span data-i18n="from.italy.faq.q0">Can I send a letter to Canada from Italy without a Canadian address?</span>
             <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          
           </button>
-          <div class="faq-a" id="a0" hidden>Yes. You write or upload your letter online from Italy, and it's printed and mailed from inside Canada for you. No Canadian address or card is needed — an Italian card works through Stripe, charged in Canadian dollars.</div>
+          <div class="faq-a" id="a0" hidden data-i18n="from.italy.faq.a0">Yes. You write or upload your letter online from Italy, and it's printed and mailed from inside Canada for you. No Canadian address or card is needed — an Italian card works through Stripe, charged in Canadian dollars.</div>
         </div>
         <div class="faq-item">
           <button class="faq-q" onclick="toggle(1)" aria-expanded="false" aria-controls="a1">
-            How long does mail from Italy to Canada take?
+            <span data-i18n="from.italy.faq.q1">How long does mail from Italy to Canada take?</span>
             <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          
           </button>
-          <div class="faq-a" id="a1" hidden>Posting from Italy to Canada internationally can take several weeks. Letterhome mails from inside Canada as domestic lettermail, so it typically reaches a Canadian address in up to 2 weeks, and we print and mail within one business day of payment.</div>
+          <div class="faq-a" id="a1" hidden data-i18n="from.italy.faq.a1">Posting from Italy to Canada internationally can take several weeks. Letterhome mails from inside Canada as domestic lettermail, so it typically reaches a Canadian address in up to 2 weeks, and we print and mail within one business day of payment.</div>
         </div>
         <div class="faq-item">
           <button class="faq-q" onclick="toggle(2)" aria-expanded="false" aria-controls="a2">
-            Can I send official or family documents to Canada?
+            <span data-i18n="from.italy.faq.q2">Can I send official or family documents to Canada?</span>
             <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          
           </button>
-          <div class="faq-a" id="a2" hidden>Yes. Attach up to 5 PDF or Word files (10 MB each). They're printed in full colour and placed in the envelope — used for letters to family, signed paperwork, and documents that need to arrive physically at a Canadian address.</div>
+          <div class="faq-a" id="a2" hidden data-i18n="from.italy.faq.a2">Yes. Attach up to 5 PDF or Word files (10 MB each). They're printed in full colour and placed in the envelope — used for letters to family, signed paperwork, and documents that need to arrive physically at a Canadian address.</div>
         </div>
         <div class="faq-item">
           <button class="faq-q" onclick="toggle(3)" aria-expanded="false" aria-controls="a3">
-            How much does it cost to send a letter to Canada from Italy?
+            <span data-i18n="from.italy.faq.q3">How much does it cost to send a letter to Canada from Italy?</span>
             <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          
           </button>
-          <div class="faq-a" id="a3" hidden>$10 CAD to any Canadian address, or $20 CAD to any of 160+ international destinations. Each price includes full-colour printing, the envelope, and postage.</div>
+          <div class="faq-a" id="a3" hidden data-i18n="from.italy.faq.a3">$10 CAD to any Canadian address, or $20 CAD to any of 160+ international destinations. Each price includes full-colour printing, the envelope, and postage.</div>
         </div>
   </div>
 
-  <h2>Related guides</h2>
+  <h2 data-i18n="from.shared.guides.h2">Related guides</h2>
   <div class="related">
     <a href="/how-to-send-a-letter-to-canada-from-abroad">→ How to send a letter to Canada from abroad</a>
     <a href="/how-to-address-a-letter-to-canada">→ How to address a letter to Canada</a>
@@ -199,9 +203,9 @@ footer a{color:var(--ink-muted);margin:0 8px}
   </div>
 
   <div class="cta-band">
-    <h2>Ready to send?</h2>
-    <p>Fill out the form, attach your documents, and we handle everything else from Canada.</p>
-    <a href="/send" class="btn btn-paper">Send a letter from Italy →</a>
+    <h2 data-i18n="from.shared.cta.heading">Ready to send?</h2>
+    <p data-i18n="from.shared.cta.body">Fill out the form, attach your documents, and we handle everything else from Canada.</p>
+    <a href="/send" class="btn btn-paper"> data-i18n="from.italy.cta.btn">Send a letter from Italy →</a>
   </div>
 
 </div>
@@ -210,7 +214,7 @@ footer a{color:var(--ink-muted);margin:0 8px}
 <script src="/footer.js" defer></script>
 
 <script src="/theme.js?v=2" defer></script>
-<script src="/lang.js?v=9" defer></script>
+<script src="/lang.js?v=10" defer></script>
 <script>
   function toggle(i) {
     const btn = document.querySelectorAll('.faq-q')[i];

@@ -13,11 +13,10 @@
   if (!mount) return;
 
   var isFrench = (document.documentElement.lang || '').toLowerCase().indexOf('fr') === 0;
-  // Individual guide pages load guide.css and are not the /guides index —
-  // they're static English SEO pages that don't have French translations.
-  var isGuidePage = !!document.querySelector('link[href*="guide.css"]');
+  // Hide toggle only on the /guides index page (not on individual blog/guide pages).
+  var isGuidesIndex = window.location.pathname === '/guides' || window.location.pathname === '/guides/';
 
-  var langToggle = (!isFrench && !isGuidePage) ?
+  var langToggle = (!isFrench && !isGuidesIndex) ?
     '<button type="button" class="lang-toggle" onclick="toggleLang()" aria-label="Toggle language">FR</button>' : '';
 
   var sendLabel = isFrench ? 'Envoyer une lettre' : 'Send a letter';

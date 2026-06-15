@@ -123,82 +123,86 @@ footer a{color:var(--ink-muted);margin:0 8px}
 <a href="#main-content" class="skip-link" style="position:absolute;left:-9999px;top:4px;z-index:9999;background:#a8472d;color:#faf6ec;padding:8px 16px;font-size:14px;font-family:Georgia,serif;text-decoration:none;border-radius:2px" onfocus="this.style.left='4px'" onblur="this.style.left='-9999px'">Skip to main content</a>
 
 <div id="site-header"></div>
-<script src="/header.js?v=5"></script>
+<script src="/header.js?v=6"></script>
 
 <div class="page" id="main-content">
 
-  <div class="eyebrow">Mailing from Australia</div>
-  <h1>Send mail to Canada from Australia</h1>
-  <p class="lede">In Australia and need to mail something to Canada? Skip the international postage search. Write your letter online, and we'll print it and post it from inside Canada — within one business day.</p>
+  <div class="eyebrow" data-i18n="from.australia.eyebrow">Mailing from Australia</div>
+  <h1 data-i18n="from.australia.h1">Send mail to Canada from Australia</h1>
+  <p class="lede" data-i18n="from.australia.lede">In Australia and need to mail something to Canada? Skip the international postage search. Write your letter online, and we'll print it and post it from inside Canada — within one business day.</p>
 
   <div class="cta-row">
     <a href="/send" class="btn btn-red">Send a letter now</a>
-    <span class="price-note">From $10 CAD &nbsp;·&nbsp; No account required</span>
+    <span class="price-note" data-i18n="from.shared.price.note">From $10 CAD &nbsp;·&nbsp; No account required</span>
   </div>
 
-  <h2>Who uses Letterhome from Australia</h2>
+  <h2 data-i18n="from.australia.who.h2">Who uses Letterhome from Australia</h2>
   <ul class="who-list">
-        <li>Canadians on working holiday visas or living permanently in Australia</li>
-        <li>Australian residents sending documents or letters to Canadian contacts</li>
-        <li>Expats managing paperwork across two countries</li>
-        <li>Anyone needing a letter delivered with Canadian postage</li>
+        <li data-i18n="from.australia.who.li1">Canadians on working holiday visas or living permanently in Australia</li>
+        <li data-i18n="from.australia.who.li2">Australian residents sending documents or letters to Canadian contacts</li>
+        <li data-i18n="from.australia.who.li3">Expats managing paperwork across two countries</li>
+        <li data-i18n="from.australia.who.li4">Anyone needing a letter delivered with Canadian postage</li>
   </ul>
 
-  <h2>Pricing</h2>
+  <h2 data-i18n="from.shared.pricing.h2">Pricing</h2>
   <div class="pricing-cards">
     <div class="price-card">
       <div class="price-amount">$10 CAD</div>
-      <div class="price-label">Domestic</div>
-      <div class="price-desc">Letters to any Canadian address. Includes up to 5 documents, full-colour printing, envelope, and Canadian postage.</div>
+      <div class="price-label" data-i18n="from.shared.pricing.domestic.label">Domestic</div>
+      <div class="price-desc" data-i18n="from.shared.pricing.domestic.desc">Letters to any Canadian address. Includes up to 5 documents, full-colour printing, envelope, and Canadian postage.</div>
     </div>
     <div class="price-card">
       <div class="price-amount">$20 CAD</div>
-      <div class="price-label">International</div>
-      <div class="price-desc">Letters to any of 160+ countries. Same inclusions — full-colour printing, envelope, Canadian postage via Canada Post.</div>
+      <div class="price-label" data-i18n="from.shared.pricing.intl.label">International</div>
+      <div class="price-desc" data-i18n="from.shared.pricing.intl.desc">Letters to any of 160+ countries. Same inclusions — full-colour printing, envelope, Canadian postage via Canada Post.</div>
     </div>
   </div>
 
-  <h2>Frequently asked questions</h2>
+  <h2 data-i18n="from.shared.faq.h2">Frequently asked questions</h2>
   <div class="faq-list">
 
         <div class="faq-item">
           <button class="faq-q" onclick="toggle(0)" aria-expanded="false" aria-controls="a0">
-            Can I use an Australian credit card?
+            <span data-i18n="from.australia.faq.q0">Can I use an Australian credit card?</span>
             <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          
           </button>
-          <div class="faq-a" id="a0" hidden>Yes. Payment goes through Stripe in Canadian dollars — any major credit or debit card works, including Australian cards. Your bank handles the AUD to CAD conversion.</div>
+          <div class="faq-a" id="a0" hidden data-i18n="from.australia.faq.a0">Yes. Payment goes through Stripe in Canadian dollars — any major credit or debit card works, including Australian cards. Your bank handles the AUD to CAD conversion.</div>
         </div>
 
         <div class="faq-item">
           <button class="faq-q" onclick="toggle(1)" aria-expanded="false" aria-controls="a1">
-            How long does delivery take?
+            <span data-i18n="from.australia.faq.q1">How long does delivery take?</span>
             <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          
           </button>
-          <div class="faq-a" id="a1" hidden>We print and mail within one business day of payment. Canada Post standard lettermail then delivers within Canada in up to 2 weeks.</div>
+          <div class="faq-a" id="a1" hidden data-i18n="from.australia.faq.a1">We print and mail within one business day of payment. Canada Post standard lettermail then delivers within Canada in up to 2 weeks.</div>
         </div>
 
         <div class="faq-item">
           <button class="faq-q" onclick="toggle(2)" aria-expanded="false" aria-controls="a2">
-            Can I attach documents?
+            <span data-i18n="from.australia.faq.q2">Can I attach documents?</span>
             <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          
           </button>
-          <div class="faq-a" id="a2" hidden>Yes — up to 5 PDF or Word files, 10 MB each. All printed in full colour and included in the envelope.</div>
+          <div class="faq-a" id="a2" hidden data-i18n="from.australia.faq.a2">Yes — up to 5 PDF or Word files, 10 MB each. All printed in full colour and included in the envelope.</div>
         </div>
 
         <div class="faq-item">
           <button class="faq-q" onclick="toggle(3)" aria-expanded="false" aria-controls="a3">
-            What types of documents do people typically send?
+            <span data-i18n="from.australia.faq.q3">What types of documents do people typically send?</span>
             <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          
           </button>
-          <div class="faq-a" id="a3" hidden>Letters to family, cards, immigration paperwork, tax forms, legal correspondence, and signed contracts are all common. As long as it's printable and fits in an envelope, we can send it.</div>
+          <div class="faq-a" id="a3" hidden data-i18n="from.australia.faq.a3">Letters to family, cards, immigration paperwork, tax forms, legal correspondence, and signed contracts are all common. As long as it's printable and fits in an envelope, we can send it.</div>
         </div>
   </div>
 
-  <h2>Postage from Australia to Canada</h2>
-  <p style="font-size:16px;color:var(--ink-soft);margin-bottom:16px">Sending a letter directly from Australia to Canada via Australia Post costs around <strong>AUD $3.50</strong> for a standard international letter (up to 50g) in 2026. Delivery is generally 10–25 business days through the international mail network, with no tracking on standard letters.</p>
-  <p style="font-size:16px;color:var(--ink-soft);margin-bottom:16px">By comparison, Letterhome mails your letter from <em>inside</em> Canada for <strong>$10 CAD</strong> — it skips the international leg entirely and travels as domestic Canadian lettermail. Delivery within Canada is typically up to 2 weeks from the date it's posted, and your letter arrives with a Canadian postmark.</p>
+  <h2 data-i18n="from.australia.postage.h2">Postage from Australia to Canada</h2>
+  <p style="font-size:16px;color:var(--ink-soft);margin-bottom:16px" data-i18n-html="from.australia.postage.p1">Sending a letter directly from Australia to Canada via Australia Post costs around <strong>AUD $3.50</strong> for a standard international letter (up to 50g) in 2026. Delivery is generally 10–25 business days through the international mail network, with no tracking on standard letters.</p>
+  <p style="font-size:16px;color:var(--ink-soft);margin-bottom:16px" data-i18n-html="from.australia.postage.p2">By comparison, Letterhome mails your letter from <em>inside</em> Canada for <strong>$10 CAD</strong> — it skips the international leg entirely and travels as domestic Canadian lettermail. Delivery within Canada is typically up to 2 weeks from the date it's posted, and your letter arrives with a Canadian postmark.</p>
 
-  <h2>Related guides</h2>
+  <h2 data-i18n="from.shared.guides.h2">Related guides</h2>
   <div style="display:grid;gap:8px;margin-top:8px;margin-bottom:8px">
     <a href="/how-to-send-a-letter-to-canada-from-abroad" style="font-size:15px;color:var(--red);text-decoration:none">&rarr; How to send a letter to Canada from abroad</a>
     <a href="/how-to-address-a-letter-to-canada" style="font-size:15px;color:var(--red);text-decoration:none">&rarr; How to address a letter to Canada</a>
@@ -208,9 +212,9 @@ footer a{color:var(--ink-muted);margin:0 8px}
   </div>
 
   <div class="cta-band">
-    <h2>Ready to send?</h2>
-    <p>Fill out the form, attach your documents, and we handle everything else.</p>
-    <a href="/send" class="btn btn-paper">Send a letter from Australia →</a>
+    <h2 data-i18n="from.shared.cta.heading">Ready to send?</h2>
+    <p data-i18n="from.shared.cta.body">Fill out the form, attach your documents, and we handle everything else.</p>
+    <a href="/send" class="btn btn-paper"> data-i18n="from.australia.cta.btn">Send a letter from Australia →</a>
   </div>
 
 </div>
@@ -219,7 +223,7 @@ footer a{color:var(--ink-muted);margin:0 8px}
 <script src="/footer.js" defer></script>
 
 <script src="/theme.js?v=2" defer></script>
-<script src="/lang.js?v=9" defer></script>
+<script src="/lang.js?v=10" defer></script>
 <script>
   function toggle(i) {
     const btn = document.querySelectorAll('.faq-q')[i];

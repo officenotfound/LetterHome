@@ -123,82 +123,86 @@ footer a{color:var(--ink-muted);margin:0 8px}
 <a href="#main-content" class="skip-link" style="position:absolute;left:-9999px;top:4px;z-index:9999;background:#a8472d;color:#faf6ec;padding:8px 16px;font-size:14px;font-family:Georgia,serif;text-decoration:none;border-radius:2px" onfocus="this.style.left='4px'" onblur="this.style.left='-9999px'">Skip to main content</a>
 
 <div id="site-header"></div>
-<script src="/header.js?v=5"></script>
+<script src="/header.js?v=6"></script>
 
 <div class="page" id="main-content">
 
-  <div class="eyebrow">Mailing from the US</div>
-  <h1>Send mail to Canada from the United States</h1>
-  <p class="lede">Living in the US and need to mail something back home to Canada? We handle the printing, the Canadian postage, and the trip to the post office — so you don't have to.</p>
+  <div class="eyebrow" data-i18n="from.usa.eyebrow">Mailing from the US</div>
+  <h1 data-i18n="from.usa.h1">Send mail to Canada from the United States</h1>
+  <p class="lede" data-i18n="from.usa.lede">Living in the US and need to mail something back home to Canada? We handle the printing, the Canadian postage, and the trip to the post office — so you don't have to.</p>
 
   <div class="cta-row">
     <a href="/send" class="btn btn-red">Send a letter now</a>
-    <span class="price-note">From $10 CAD &nbsp;·&nbsp; No account required</span>
+    <span class="price-note" data-i18n="from.shared.price.note">From $10 CAD &nbsp;·&nbsp; No account required</span>
   </div>
 
-  <h2>Who uses Letterhome from the United States</h2>
+  <h2 data-i18n="from.usa.who.h2">Who uses Letterhome from the United States</h2>
   <ul class="who-list">
-        <li>Canadians living in the US sending letters or cards home</li>
-        <li>Americans mailing documents to Canadian recipients</li>
-        <li>Expats sending immigration paperwork or legal documents to a Canadian address</li>
-        <li>Anyone who needs a letter to arrive with a Canadian postmark</li>
+        <li data-i18n="from.usa.who.li1">Canadians living in the US sending letters or cards home</li>
+        <li data-i18n="from.usa.who.li2">Americans mailing documents to Canadian recipients</li>
+        <li data-i18n="from.usa.who.li3">Expats sending immigration paperwork or legal documents to a Canadian address</li>
+        <li data-i18n="from.usa.who.li4">Anyone who needs a letter to arrive with a Canadian postmark</li>
   </ul>
 
-  <h2>Pricing</h2>
+  <h2 data-i18n="from.shared.pricing.h2">Pricing</h2>
   <div class="pricing-cards">
     <div class="price-card">
       <div class="price-amount">$10 CAD</div>
-      <div class="price-label">Domestic</div>
-      <div class="price-desc">Letters to any Canadian address. Includes up to 5 documents, full-colour printing, envelope, and Canadian postage.</div>
+      <div class="price-label" data-i18n="from.shared.pricing.domestic.label">Domestic</div>
+      <div class="price-desc" data-i18n="from.shared.pricing.domestic.desc">Letters to any Canadian address. Includes up to 5 documents, full-colour printing, envelope, and Canadian postage.</div>
     </div>
     <div class="price-card">
       <div class="price-amount">$20 CAD</div>
-      <div class="price-label">International</div>
-      <div class="price-desc">Letters to any of 160+ countries. Same inclusions — full-colour printing, envelope, Canadian postage via Canada Post.</div>
+      <div class="price-label" data-i18n="from.shared.pricing.intl.label">International</div>
+      <div class="price-desc" data-i18n="from.shared.pricing.intl.desc">Letters to any of 160+ countries. Same inclusions — full-colour printing, envelope, Canadian postage via Canada Post.</div>
     </div>
   </div>
 
-  <h2>Frequently asked questions</h2>
+  <h2 data-i18n="from.shared.faq.h2">Frequently asked questions</h2>
   <div class="faq-list">
 
         <div class="faq-item">
           <button class="faq-q" onclick="toggle(0)" aria-expanded="false" aria-controls="a0">
-            Do I need a Canadian address or Canadian credit card?
+            <span data-i18n="from.usa.faq.q0">Do I need a Canadian address or Canadian credit card?</span>
             <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          
           </button>
-          <div class="faq-a" id="a0" hidden>No. You can order from anywhere — a US billing address and a US card work fine. Payment is processed through Stripe. You're charged in Canadian dollars and your bank converts at its rate.</div>
+          <div class="faq-a" id="a0" hidden data-i18n="from.usa.faq.a0">No. You can order from anywhere — a US billing address and a US card work fine. Payment is processed through Stripe. You're charged in Canadian dollars and your bank converts at its rate.</div>
         </div>
 
         <div class="faq-item">
           <button class="faq-q" onclick="toggle(1)" aria-expanded="false" aria-controls="a1">
-            How long does delivery from the US take?
+            <span data-i18n="from.usa.faq.q1">How long does delivery from the US take?</span>
             <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          
           </button>
-          <div class="faq-a" id="a1" hidden>We print and mail within one business day of payment. After that, Canada Post standard lettermail typically delivers within Canada in up to 2 weeks.</div>
+          <div class="faq-a" id="a1" hidden data-i18n="from.usa.faq.a1">We print and mail within one business day of payment. After that, Canada Post standard lettermail typically delivers within Canada in up to 2 weeks.</div>
         </div>
 
         <div class="faq-item">
           <button class="faq-q" onclick="toggle(2)" aria-expanded="false" aria-controls="a2">
-            Can I send a PDF or Word document?
+            <span data-i18n="from.usa.faq.q2">Can I send a PDF or Word document?</span>
             <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          
           </button>
-          <div class="faq-a" id="a2" hidden>Yes. Attach up to 5 PDF or Word files (10 MB each). We print them in full colour and include them in the envelope with your letter.</div>
+          <div class="faq-a" id="a2" hidden data-i18n="from.usa.faq.a2">Yes. Attach up to 5 PDF or Word files (10 MB each). We print them in full colour and include them in the envelope with your letter.</div>
         </div>
 
         <div class="faq-item">
           <button class="faq-q" onclick="toggle(3)" aria-expanded="false" aria-controls="a3">
-            What if I need to mail something international from Canada to another country?
+            <span data-i18n="from.usa.faq.q3">What if I need to mail something international from Canada to another country?</span>
             <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          
           </button>
-          <div class="faq-a" id="a3" hidden>We handle that too. International mail (160+ countries) is $20 CAD — same process, just a different destination.</div>
+          <div class="faq-a" id="a3" hidden data-i18n="from.usa.faq.a3">We handle that too. International mail (160+ countries) is $20 CAD — same process, just a different destination.</div>
         </div>
   </div>
 
-  <h2>US postage to Canada in 2026</h2>
-  <p style="font-size:16px;color:var(--ink-soft);margin-bottom:16px">Mailing a letter from the US to Canada via USPS costs about <strong>US$1.70</strong> — one Global Forever stamp — for a standard envelope up to 1 oz in 2026. Delivery is typically 7–21 days through USPS First-Class Mail International, with no tracking on standard letters. Heavier or non-machinable envelopes cost more.</p>
-  <p style="font-size:16px;color:var(--ink-soft);margin-bottom:16px">With Letterhome, your letter is printed and mailed from <em>inside</em> Canada for <strong>$10 CAD</strong> (roughly US$7). It travels as domestic Canadian lettermail — no international routing, no customs — and typically arrives within Canada in up to 2 weeks.</p>
+  <h2 data-i18n="from.usa.postage.h2">US postage to Canada in 2026</h2>
+  <p style="font-size:16px;color:var(--ink-soft);margin-bottom:16px" data-i18n-html="from.usa.postage.p1">Mailing a letter from the US to Canada via USPS costs about <strong>US$1.70</strong> — one Global Forever stamp — for a standard envelope up to 1 oz in 2026. Delivery is typically 7–21 days through USPS First-Class Mail International, with no tracking on standard letters. Heavier or non-machinable envelopes cost more.</p>
+  <p style="font-size:16px;color:var(--ink-soft);margin-bottom:16px" data-i18n-html="from.usa.postage.p2">With Letterhome, your letter is printed and mailed from <em>inside</em> Canada for <strong>$10 CAD</strong> (roughly US$7). It travels as domestic Canadian lettermail — no international routing, no customs — and typically arrives within Canada in up to 2 weeks.</p>
 
-  <h2>Related guides</h2>
+  <h2 data-i18n="from.shared.guides.h2">Related guides</h2>
   <div style="display:grid;gap:8px;margin-top:8px;margin-bottom:8px">
     <a href="/how-to-send-a-letter-to-canada-from-abroad" style="font-size:15px;color:var(--red);text-decoration:none">&rarr; How to send a letter to Canada from abroad</a>
     <a href="/how-to-address-a-letter-to-canada" style="font-size:15px;color:var(--red);text-decoration:none">&rarr; How to address a letter to Canada</a>
@@ -207,9 +211,9 @@ footer a{color:var(--ink-muted);margin:0 8px}
   </div>
 
   <div class="cta-band">
-    <h2>Ready to send?</h2>
-    <p>Fill out the form, attach your documents, and we handle everything else.</p>
-    <a href="/send" class="btn btn-paper">Send a letter from USA →</a>
+    <h2 data-i18n="from.shared.cta.heading">Ready to send?</h2>
+    <p data-i18n="from.shared.cta.body">Fill out the form, attach your documents, and we handle everything else.</p>
+    <a href="/send" class="btn btn-paper"> data-i18n="from.usa.cta.btn">Send a letter from USA →</a>
   </div>
 
 </div>
@@ -218,7 +222,7 @@ footer a{color:var(--ink-muted);margin:0 8px}
 <script src="/footer.js" defer></script>
 
 <script src="/theme.js?v=2" defer></script>
-<script src="/lang.js?v=9" defer></script>
+<script src="/lang.js?v=10" defer></script>
 <script>
   function toggle(i) {
     const btn = document.querySelectorAll('.faq-q')[i];

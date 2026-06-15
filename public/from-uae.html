@@ -123,78 +123,82 @@ footer a{color:var(--ink-muted);margin:0 8px}
 <a href="#main-content" class="skip-link" style="position:absolute;left:-9999px;top:4px;z-index:9999;background:#a8472d;color:#faf6ec;padding:8px 16px;font-size:14px;font-family:Georgia,serif;text-decoration:none;border-radius:2px" onfocus="this.style.left='4px'" onblur="this.style.left='-9999px'">Skip to main content</a>
 
 <div id="site-header"></div>
-<script src="/header.js?v=5"></script>
+<script src="/header.js?v=6"></script>
 
 <div class="page" id="main-content">
 
-  <div class="eyebrow">Mailing from the UAE</div>
-  <h1>Send mail to Canada from Dubai and the UAE</h1>
-  <p class="lede">In Dubai or elsewhere in the UAE and need to send something to a Canadian address? Letterhome prints your letter in Canada and mails it with Canadian postage — no flight home required.</p>
+  <div class="eyebrow" data-i18n="from.uae.eyebrow">Mailing from the UAE</div>
+  <h1 data-i18n="from.uae.h1">Send mail to Canada from Dubai and the UAE</h1>
+  <p class="lede" data-i18n="from.uae.lede">In Dubai or elsewhere in the UAE and need to send something to a Canadian address? Letterhome prints your letter in Canada and mails it with Canadian postage — no flight home required.</p>
 
   <div class="cta-row">
     <a href="/send" class="btn btn-red">Send a letter now</a>
-    <span class="price-note">From $10 CAD &nbsp;·&nbsp; No account required</span>
+    <span class="price-note" data-i18n="from.shared.price.note">From $10 CAD &nbsp;·&nbsp; No account required</span>
   </div>
 
-  <h2>Who uses Letterhome from the UAE</h2>
+  <h2 data-i18n="from.uae.who.h2">Who uses Letterhome from the UAE</h2>
   <ul class="who-list">
-        <li>Canadian expats living and working in Dubai or Abu Dhabi</li>
-        <li>UAE residents with family or business contacts in Canada</li>
-        <li>People sending immigration, legal, or government documents to Canada</li>
-        <li>Anyone who needs reliable Canadian postage without being in Canada</li>
+        <li data-i18n="from.uae.who.li1">Canadian expats living and working in Dubai or Abu Dhabi</li>
+        <li data-i18n="from.uae.who.li2">UAE residents with family or business contacts in Canada</li>
+        <li data-i18n="from.uae.who.li3">People sending immigration, legal, or government documents to Canada</li>
+        <li data-i18n="from.uae.who.li4">Anyone who needs reliable Canadian postage without being in Canada</li>
   </ul>
 
-  <h2>Pricing</h2>
+  <h2 data-i18n="from.shared.pricing.h2">Pricing</h2>
   <div class="pricing-cards">
     <div class="price-card">
       <div class="price-amount">$10 CAD</div>
-      <div class="price-label">Domestic</div>
-      <div class="price-desc">Letters to any Canadian address. Includes up to 5 documents, full-colour printing, envelope, and Canadian postage.</div>
+      <div class="price-label" data-i18n="from.shared.pricing.domestic.label">Domestic</div>
+      <div class="price-desc" data-i18n="from.shared.pricing.domestic.desc">Letters to any Canadian address. Includes up to 5 documents, full-colour printing, envelope, and Canadian postage.</div>
     </div>
     <div class="price-card">
       <div class="price-amount">$20 CAD</div>
-      <div class="price-label">International</div>
-      <div class="price-desc">Letters to any of 160+ countries. Same inclusions — full-colour printing, envelope, Canadian postage via Canada Post.</div>
+      <div class="price-label" data-i18n="from.shared.pricing.intl.label">International</div>
+      <div class="price-desc" data-i18n="from.shared.pricing.intl.desc">Letters to any of 160+ countries. Same inclusions — full-colour printing, envelope, Canadian postage via Canada Post.</div>
     </div>
   </div>
 
-  <h2>Frequently asked questions</h2>
+  <h2 data-i18n="from.shared.faq.h2">Frequently asked questions</h2>
   <div class="faq-list">
 
         <div class="faq-item">
           <button class="faq-q" onclick="toggle(0)" aria-expanded="false" aria-controls="a0">
-            Do I need a Canadian payment method?
+            <span data-i18n="from.uae.faq.q0">Do I need a Canadian payment method?</span>
             <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          
           </button>
-          <div class="faq-a" id="a0" hidden>No. Any major credit or debit card works. You're charged in Canadian dollars through Stripe, and your bank handles the currency conversion.</div>
+          <div class="faq-a" id="a0" hidden data-i18n="from.uae.faq.a0">No. Any major credit or debit card works. You're charged in Canadian dollars through Stripe, and your bank handles the currency conversion.</div>
         </div>
 
         <div class="faq-item">
           <button class="faq-q" onclick="toggle(1)" aria-expanded="false" aria-controls="a1">
-            How reliable is delivery?
+            <span data-i18n="from.uae.faq.q1">How reliable is delivery?</span>
             <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          
           </button>
-          <div class="faq-a" id="a1" hidden>Your letter goes out via Canada Post standard lettermail, the same service anyone in Canada would use. Typical delivery within Canada is up to 2 weeks from the mail date.</div>
+          <div class="faq-a" id="a1" hidden data-i18n="from.uae.faq.a1">Your letter goes out via Canada Post standard lettermail, the same service anyone in Canada would use. Typical delivery within Canada is up to 2 weeks from the mail date.</div>
         </div>
 
         <div class="faq-item">
           <button class="faq-q" onclick="toggle(2)" aria-expanded="false" aria-controls="a2">
-            Can I send official or legal documents?
+            <span data-i18n="from.uae.faq.q2">Can I send official or legal documents?</span>
             <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          
           </button>
-          <div class="faq-a" id="a2" hidden>Yes. PDFs and Word files can be attached (up to 5 files, 10 MB each). They're printed in full colour on standard letter-size paper and included in the envelope.</div>
+          <div class="faq-a" id="a2" hidden data-i18n="from.uae.faq.a2">Yes. PDFs and Word files can be attached (up to 5 files, 10 MB each). They're printed in full colour on standard letter-size paper and included in the envelope.</div>
         </div>
 
         <div class="faq-item">
           <button class="faq-q" onclick="toggle(3)" aria-expanded="false" aria-controls="a3">
-            Can letters be sent to places other than Canada?
+            <span data-i18n="from.uae.faq.q3">Can letters be sent to places other than Canada?</span>
             <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          
           </button>
-          <div class="faq-a" id="a3" hidden>Yes — international mail is available to 160+ countries for $20 CAD. The letter still goes out with Canadian postage via Canada Post.</div>
+          <div class="faq-a" id="a3" hidden data-i18n="from.uae.faq.a3">Yes — international mail is available to 160+ countries for $20 CAD. The letter still goes out with Canadian postage via Canada Post.</div>
         </div>
   </div>
 
-  <h2>Related guides</h2>
+  <h2 data-i18n="from.shared.guides.h2">Related guides</h2>
   <div style="display:grid;gap:8px;margin-top:8px;margin-bottom:8px">
     <a href="/how-to-send-a-letter-to-canada-from-abroad" style="font-size:15px;color:var(--red);text-decoration:none">&rarr; How to send a letter to Canada from abroad</a>
     <a href="/how-to-address-a-letter-to-canada" style="font-size:15px;color:var(--red);text-decoration:none">&rarr; How to address a letter to Canada</a>
@@ -203,9 +207,9 @@ footer a{color:var(--ink-muted);margin:0 8px}
   </div>
 
   <div class="cta-band">
-    <h2>Ready to send?</h2>
-    <p>Fill out the form, attach your documents, and we handle everything else.</p>
-    <a href="/send" class="btn btn-paper">Send a letter from UAE →</a>
+    <h2 data-i18n="from.shared.cta.heading">Ready to send?</h2>
+    <p data-i18n="from.shared.cta.body">Fill out the form, attach your documents, and we handle everything else.</p>
+    <a href="/send" class="btn btn-paper"> data-i18n="from.uae.cta.btn">Send a letter from UAE →</a>
   </div>
 
 </div>
@@ -214,7 +218,7 @@ footer a{color:var(--ink-muted);margin:0 8px}
 <script src="/footer.js" defer></script>
 
 <script src="/theme.js?v=2" defer></script>
-<script src="/lang.js?v=9" defer></script>
+<script src="/lang.js?v=10" defer></script>
 <script>
   function toggle(i) {
     const btn = document.querySelectorAll('.faq-q')[i];

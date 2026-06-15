@@ -123,74 +123,78 @@ footer a{color:var(--ink-muted);margin:0 8px}
 <a href="#main-content" class="skip-link" style="position:absolute;left:-9999px;top:4px;z-index:9999;background:#a8472d;color:#faf6ec;padding:8px 16px;font-size:14px;font-family:Georgia,serif;text-decoration:none;border-radius:2px" onfocus="this.style.left='4px'" onblur="this.style.left='-9999px'">Skip to main content</a>
 
 <div id="site-header"></div>
-<script src="/header.js?v=5"></script>
+<script src="/header.js?v=6"></script>
 
 <div class="page" id="main-content">
 
-  <div class="eyebrow">Mailing from India</div>
-  <h1>Send mail to Canada from India</h1>
-  <p class="lede">India sends more new permanent residents to Canada than any other country, which means a constant stream of documents and letters heading to Canadian addresses. Instead of slow, hard-to-track international post, Letterhome prints your letter in Canada, applies Canadian postage, and mails it through Canada Post — so it arrives at local speed.</p>
+  <div class="eyebrow" data-i18n="from.india.eyebrow">Mailing from India</div>
+  <h1 data-i18n="from.india.h1">Send mail to Canada from India</h1>
+  <p class="lede" data-i18n="from.india.lede">India sends more new permanent residents to Canada than any other country, which means a constant stream of documents and letters heading to Canadian addresses. Instead of slow, hard-to-track international post, Letterhome prints your letter in Canada, applies Canadian postage, and mails it through Canada Post — so it arrives at local speed.</p>
 
   <div class="cta-row">
     <a href="/send" class="btn btn-red">Send a letter now</a>
-    <span class="price-note">From $10 CAD &nbsp;·&nbsp; No account required</span>
+    <span class="price-note" data-i18n="from.shared.price.note">From $10 CAD &nbsp;·&nbsp; No account required</span>
   </div>
 
-  <h2>Who uses Letterhome from India</h2>
+  <h2 data-i18n="from.india.who.h2">Who uses Letterhome from India</h2>
   <ul class="who-list">
-        <li>Families in India mailing documents and letters to relatives and students in Canada</li>
-        <li>Applicants sending IRCC immigration paperwork to a Canadian address</li>
-        <li>Anyone sending bank, legal, or educational documents that must arrive on paper</li>
-        <li>Senders who want a letter to carry a Canadian postmark and arrive at domestic speed</li>
+        <li data-i18n="from.india.who.li1">Families in India mailing documents and letters to relatives and students in Canada</li>
+        <li data-i18n="from.india.who.li2">Applicants sending IRCC immigration paperwork to a Canadian address</li>
+        <li data-i18n="from.india.who.li3">Anyone sending bank, legal, or educational documents that must arrive on paper</li>
+        <li data-i18n="from.india.who.li4">Senders who want a letter to carry a Canadian postmark and arrive at domestic speed</li>
   </ul>
 
-  <h2>Pricing</h2>
+  <h2 data-i18n="from.shared.pricing.h2">Pricing</h2>
   <div class="pricing-cards">
     <div class="price-card">
       <div class="price-amount">$10 CAD</div>
-      <div class="price-label">Domestic</div>
-      <div class="price-desc">Letters to any Canadian address. Includes up to 5 documents, full-colour printing, envelope, and Canadian postage.</div>
+      <div class="price-label" data-i18n="from.shared.pricing.domestic.label">Domestic</div>
+      <div class="price-desc" data-i18n="from.shared.pricing.domestic.desc">Letters to any Canadian address. Includes up to 5 documents, full-colour printing, envelope, and Canadian postage.</div>
     </div>
     <div class="price-card">
       <div class="price-amount">$20 CAD</div>
-      <div class="price-label">International</div>
-      <div class="price-desc">Letters to any of 160+ countries. Same inclusions — full-colour printing, envelope, postage via Canada Post.</div>
+      <div class="price-label" data-i18n="from.shared.pricing.intl.label">International</div>
+      <div class="price-desc" data-i18n="from.shared.pricing.intl.desc">Letters to any of 160+ countries. Same inclusions — full-colour printing, envelope, postage via Canada Post.</div>
     </div>
   </div>
 
-  <h2>Frequently asked questions</h2>
+  <h2 data-i18n="from.shared.faq.h2">Frequently asked questions</h2>
   <div class="faq-list">
         <div class="faq-item">
           <button class="faq-q" onclick="toggle(0)" aria-expanded="false" aria-controls="a0">
-            Can I send a letter to Canada from India without a Canadian address?
+            <span data-i18n="from.india.faq.q0">Can I send a letter to Canada from India without a Canadian address?</span>
             <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          
           </button>
-          <div class="faq-a" id="a0" hidden>Yes. You submit your letter online from India, and it's printed and mailed from inside Canada for you. No Canadian address or card is needed — an Indian card works through Stripe, charged in Canadian dollars and converted by your bank.</div>
+          <div class="faq-a" id="a0" hidden data-i18n="from.india.faq.a0">Yes. You submit your letter online from India, and it's printed and mailed from inside Canada for you. No Canadian address or card is needed — an Indian card works through Stripe, charged in Canadian dollars and converted by your bank.</div>
         </div>
         <div class="faq-item">
           <button class="faq-q" onclick="toggle(1)" aria-expanded="false" aria-controls="a1">
-            How long does mail from India to Canada take?
+            <span data-i18n="from.india.faq.q1">How long does mail from India to Canada take?</span>
             <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          
           </button>
-          <div class="faq-a" id="a1" hidden>International post from India to Canada can take several weeks and is hard to track. Letterhome mails from inside Canada as domestic lettermail, so delivery to a Canadian address is typically up to 2 weeks, and we print and mail within one business day of payment.</div>
+          <div class="faq-a" id="a1" hidden data-i18n="from.india.faq.a1">International post from India to Canada can take several weeks and is hard to track. Letterhome mails from inside Canada as domestic lettermail, so delivery to a Canadian address is typically up to 2 weeks, and we print and mail within one business day of payment.</div>
         </div>
         <div class="faq-item">
           <button class="faq-q" onclick="toggle(2)" aria-expanded="false" aria-controls="a2">
-            Can I mail documents to a student or relative in Canada?
+            <span data-i18n="from.india.faq.q2">Can I mail documents to a student or relative in Canada?</span>
             <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          
           </button>
-          <div class="faq-a" id="a2" hidden>Yes. Attach up to 5 PDF or Word files (10 MB each). They're printed in full colour and sealed in the envelope — commonly used to send documents to students, family, and for IRCC immigration paperwork going to a Canadian address.</div>
+          <div class="faq-a" id="a2" hidden data-i18n="from.india.faq.a2">Yes. Attach up to 5 PDF or Word files (10 MB each). They're printed in full colour and sealed in the envelope — commonly used to send documents to students, family, and for IRCC immigration paperwork going to a Canadian address.</div>
         </div>
         <div class="faq-item">
           <button class="faq-q" onclick="toggle(3)" aria-expanded="false" aria-controls="a3">
-            How much does it cost to send a letter to Canada from India?
+            <span data-i18n="from.india.faq.q3">How much does it cost to send a letter to Canada from India?</span>
             <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          
           </button>
-          <div class="faq-a" id="a3" hidden>$10 CAD to any Canadian address, or $20 CAD to any of 160+ international destinations. Each price includes full-colour printing, the envelope, and postage.</div>
+          <div class="faq-a" id="a3" hidden data-i18n="from.india.faq.a3">$10 CAD to any Canadian address, or $20 CAD to any of 160+ international destinations. Each price includes full-colour printing, the envelope, and postage.</div>
         </div>
   </div>
 
-  <h2>Related guides</h2>
+  <h2 data-i18n="from.shared.guides.h2">Related guides</h2>
   <div class="related">
     <a href="/how-to-send-a-letter-to-canada-from-abroad">→ How to send a letter to Canada from abroad</a>
     <a href="/how-to-address-a-letter-to-canada">→ How to address a letter to Canada</a>
@@ -199,9 +203,9 @@ footer a{color:var(--ink-muted);margin:0 8px}
   </div>
 
   <div class="cta-band">
-    <h2>Ready to send?</h2>
-    <p>Fill out the form, attach your documents, and we handle everything else from Canada.</p>
-    <a href="/send" class="btn btn-paper">Send a letter from India →</a>
+    <h2 data-i18n="from.shared.cta.heading">Ready to send?</h2>
+    <p data-i18n="from.shared.cta.body">Fill out the form, attach your documents, and we handle everything else from Canada.</p>
+    <a href="/send" class="btn btn-paper"> data-i18n="from.india.cta.btn">Send a letter from India →</a>
   </div>
 
 </div>
@@ -210,7 +214,7 @@ footer a{color:var(--ink-muted);margin:0 8px}
 <script src="/footer.js" defer></script>
 
 <script src="/theme.js?v=2" defer></script>
-<script src="/lang.js?v=9" defer></script>
+<script src="/lang.js?v=10" defer></script>
 <script>
   function toggle(i) {
     const btn = document.querySelectorAll('.faq-q')[i];
