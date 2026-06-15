@@ -31,7 +31,7 @@ fs.mkdirSync('orders',  { recursive: true });
 fs.mkdirSync('backups', { recursive: true });
 
 if (process.env.NODE_ENV === 'production') {
-  const required = ['SESSION_SECRET', 'STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET', 'SMTP_HOST', 'SMTP_USER', 'SMTP_PASS', 'BASE_URL', 'EMAIL_FROM'];
+  const required = ['SESSION_SECRET', 'STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET', 'SMTP_HOST', 'SMTP_USER', 'SMTP_PASS', 'BASE_URL', 'EMAIL_FROM', 'ADMIN_USERNAME', 'ADMIN_PASSWORD_HASH'];
   const missing  = required.filter(k => !process.env[k]);
   if (missing.length) {
     console.error('[startup] Missing required env vars:', missing.join(', '));
@@ -1091,8 +1091,7 @@ app.post('/admin/login', loginLimiter, async (req, res) => {
 });
 
 app.post('/admin/logout', (req, res) => {
-  req.session.destroy();
-  res.redirect('/admin/login');
+  req.session.destroy(() => res.redirect('/admin/login'));
 });
 
 app.get('/admin', requireAdmin, (req, res) =>
@@ -3076,7 +3075,7 @@ async function uploadToB2(filePath) {
   });
   await b2.authorize();
   const { data: up } = await b2.getUploadUrl({ bucketId: process.env.B2_BUCKET_ID });
-  const data = fs.readFileSync(filePath);
+  const data = await fs.promises.readFile(filePath);
   await b2.uploadFile({
     uploadUrl:       up.uploadUrl,
     uploadAuthToken: up.authorizationToken,
