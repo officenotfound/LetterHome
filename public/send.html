@@ -1260,9 +1260,12 @@ async function submitOrder() {
       const main = document.querySelector('.form-section') || document.querySelector('main') || document.querySelector('.main') || document.querySelector('.send-wrap');
       const msg = document.createElement('div');
       msg.style.cssText = 'max-width:560px;margin:80px auto;padding:48px 40px;background:var(--paper,#faf6ec);border:1px solid rgba(42,42,42,0.14);border-radius:2px;text-align:center';
+      const closedP = document.createElement('p');
+      closedP.style.cssText = 'color:#6b6258;font-size:16px;line-height:1.6';
+      closedP.textContent = cfg.announcement || LH_T('send.closed.p');
       msg.innerHTML = `<div style="font-size:40px;margin-bottom:20px">✉</div>
-        <h2 style="font-family:\'DM Serif Display\',serif;font-size:28px;font-weight:400;margin-bottom:12px">${LH_T('send.closed.h2')}</h2>
-        <p style="color:#6b6258;font-size:16px;line-height:1.6">${cfg.announcement || LH_T('send.closed.p')}</p>`;
+        <h2 style="font-family:\'DM Serif Display\',serif;font-size:28px;font-weight:400;margin-bottom:12px">${LH_T('send.closed.h2')}</h2>`;
+      msg.appendChild(closedP);
       if (main) main.replaceWith(msg); else document.body.appendChild(msg);
     }
   } catch(e) { /* fail silently — don't block the form */ }
@@ -1293,7 +1296,7 @@ async function submitOrder() {
             <div style="font-size:11px;font-family:\'DM Mono\',monospace;text-transform:uppercase;letter-spacing:0.12em;color:var(--ink-muted);margin-bottom:5px">${LH_T('send.acct.saved')}</div>
             <select id="saved-recipient-select" onchange="fillSavedRecipient(this)" style="width:100%;padding:10px 12px;border:1.5px solid var(--line,rgba(42,42,42,0.14));background:var(--paper,#faf6ec);color:var(--ink,#2a2a2a);border-radius:2px;font-family:inherit;font-size:15px">
               <option value="">${LH_T('send.acct.select')}</option>
-              ${me.recipients.map(r => `<option value='${JSON.stringify(r).replace(/'/g, '&#39;')}'>${(r.label || r.recipient_name).replace(/</g,'&lt;')}</option>`).join('')}
+              ${me.recipients.map(r => { const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); return `<option value="${esc(JSON.stringify(r))}">${esc(r.label || r.recipient_name)}</option>`; }).join('')}
             </select>`;
           if (heading) recipCol.insertBefore(wrap, heading.nextSibling);
         }
@@ -1312,7 +1315,7 @@ function renderAccountBanner(loggedIn, email) {
     el.innerHTML = `
       <div style="background:var(--paper,#faf6ec);border:1px solid var(--line,rgba(42,42,42,0.14));border-left:3px solid #16a34a;border-radius:2px;padding:16px 22px;margin-bottom:32px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
         <div style="font-size:14px;color:var(--ink-soft,#3a3835)">
-          <span style="color:#16a34a;font-weight:600">${LH_T('send.acct.signedin.prefix')}${email.replace(/</g,'&lt;')}</span>
+          <span style="color:#16a34a;font-weight:600">${LH_T('send.acct.signedin.prefix')}${email.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}</span>
           <span style="color:var(--ink-muted,#6b6258)">${LH_T('send.acct.signedin.suffix')}</span>
         </div>
         <div style="display:flex;gap:14px;font-size:13px">

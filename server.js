@@ -503,7 +503,12 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
     return res.status(400).send(`Webhook error: ${err.message}`);
   }
   if (event.type === 'checkout.session.completed') {
-    await fulfillOrder(event.data.object.id).catch(console.error);
+    try {
+      await fulfillOrder(event.data.object.id);
+    } catch (err) {
+      console.error('[webhook] fulfillOrder failed:', err.message);
+      return res.status(500).json({ error: 'Fulfillment failed' });
+    }
   }
   res.json({ received: true });
 });
@@ -655,6 +660,8 @@ app.get('/ga.js', (req, res) => {
   res.setHeader('Cache-Control', 'public, max-age=604800');
   // No measurement ID configured — serve an inert script rather than a stray default property.
   if (!id) return res.send('/* analytics disabled: GA4_MEASUREMENT_ID not set */');
+  // GA4 IDs are strictly G-XXXXXXXXXX — reject anything else before injecting into JS.
+  if (!/^G-[A-Z0-9]+$/.test(id)) return res.send('/* analytics disabled: invalid GA4_MEASUREMENT_ID */');
   res.send(`
 (function(){
   try{if(localStorage.getItem('lh-analytics-consent')!=='yes')return;}catch(e){return;}
@@ -998,13 +1005,9 @@ app.get('/api/order-status', trackLimiter, (req, res) => {
     .get(req.query.session_id || '');
   if (!order) return res.status(404).json({ error: 'Order not found.' });
   res.json({
-    id:                 order.id,
-    status:             order.status,
-    recipientName:      order.recipient_name,
-    recipientCity:      order.recipient_city,
-    destinationCountry: order.destination_country,
-    createdAt:          order.created_at,
-    priceCents:         order.price_cents,
+    id:        order.id,
+    status:    order.status,
+    createdAt: order.created_at,
   });
 });
 
@@ -1396,10 +1399,10 @@ app.get('/api/admin/customers', requireAdmin, (req, res) => {
       MAX(created_at) as last_order
     FROM orders WHERE deleted_at IS NULL GROUP BY customer_email
   `).all();
-  const manual = db.prepare(`SELECT email, display_name, created_at, password_hash FROM customers WHERE deleted_at IS NULL`).all();
+  const manual = db.prepare(`SELECT email, display_name, created_at, (password_hash IS NOT NULL AND password_hash != '') as has_account FROM customers WHERE deleted_at IS NULL`).all();
 
   const map = {};
-  manual.forEach(m => { map[m.email] = { email: m.email, display_name: m.display_name, order_count: 0, total_spent: 0, last_order: m.created_at, has_account: !!m.password_hash }; });
+  manual.forEach(m => { map[m.email] = { email: m.email, display_name: m.display_name, order_count: 0, total_spent: 0, last_order: m.created_at, has_account: !!m.has_account }; });
   fromOrders.forEach(o => {
     if (!map[o.email]) map[o.email] = { email: o.email, display_name: null, has_account: false };
     Object.assign(map[o.email], { order_count: o.order_count, total_spent: o.total_spent, last_order: o.last_order });
@@ -1516,8 +1519,9 @@ app.get('/api/admin/audit-log', requireAdmin, (req, res) => {
   const action = (req.query.action || '').toString().trim();
   let where = [], params = [];
   if (search) {
-    where.push('(actor LIKE ? OR action LIKE ? OR target_id LIKE ? OR ip LIKE ?)');
-    params.push(`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`);
+    const escapedSearch = search.replace(/[%_\\]/g, '\\$&');
+    where.push('(actor LIKE ? ESCAPE \'\\\' OR action LIKE ? ESCAPE \'\\\' OR target_id LIKE ? ESCAPE \'\\\' OR ip LIKE ? ESCAPE \'\\\')');
+    params.push(`%${escapedSearch}%`, `%${escapedSearch}%`, `%${escapedSearch}%`, `%${escapedSearch}%`);
   }
   if (action) { where.push('action LIKE ?'); params.push(`${action}%`); }
   const sql = `SELECT * FROM audit_log ${where.length ? 'WHERE ' + where.join(' AND ') : ''} ORDER BY id DESC LIMIT ?`;
@@ -1707,9 +1711,12 @@ app.post('/api/admin/orders/bulk-status', requireAdmin, async (req, res) => {
   logAudit(req, 'order.bulk_status', 'order', cleanIds.join(','), { status, count: cleanIds.length });
 
   if (status === 'mailed') {
-    for (const id of cleanIds) {
-      if (alreadyMailed.has(id)) continue;
-      const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(id);
+    const ordersToNotify = db.prepare(
+      `SELECT * FROM orders WHERE id IN (${cleanIds.map(() => '?').join(',')})`
+    ).all(...cleanIds);
+    for (const order of ordersToNotify) {
+      if (alreadyMailed.has(order.id)) continue;
+      const id = order.id;
       if (!order?.customer_email) continue;
       const isDomestic = order.destination_country === 'CA';
       const deliveryText = order.estimated_delivery || (isDomestic ? 'within 2 weeks' : 'within 4 weeks');
@@ -2404,7 +2411,10 @@ async function fulfillOrder(sessionId) {
   const order = db.prepare('SELECT * FROM orders WHERE stripe_session_id = ?').get(sessionId);
   if (!order || order.status !== 'awaiting_payment') return;
 
-  db.prepare("UPDATE orders SET status = 'paid' WHERE id = ?").run(order.id);
+  // Atomic status transition — if another concurrent webhook call already changed
+  // the status, changes will be 0 and we bail out to prevent double-fulfillment.
+  const result = db.prepare("UPDATE orders SET status = 'paid' WHERE id = ? AND status = 'awaiting_payment'").run(order.id);
+  if (result.changes === 0) return;
 
   const session    = await stripe.checkout.sessions.retrieve(sessionId);
   const amountCAD  = (session.amount_total / 100).toFixed(2);

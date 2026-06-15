@@ -114,6 +114,7 @@ try {
     last_reminded_year INTEGER,
     created_at         DATETIME DEFAULT CURRENT_TIMESTAMP
   )`);
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_occasions_email ON occasions(customer_email)`);
 } catch (e) { console.error('[init] occasions table:', e.message); }
 
 try {
@@ -123,6 +124,7 @@ try {
     note       TEXT NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   )`);
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_order_notes_order_id ON order_notes(order_id)`);
 } catch (e) { console.error('[init] order_notes table:', e.message); }
 
 try {
