@@ -727,11 +727,15 @@
   window.toggleLang = function () {
     var current = document.documentElement.getAttribute('data-lang') || 'en';
     var next = current === 'en' ? 'fr' : 'en';
+    try { sessionStorage.setItem('lh-lang', next); } catch(e) {}
     applyLang(next);
   };
 
   document.addEventListener('DOMContentLoaded', function () {
-    var lang = document.documentElement.getAttribute('data-lang') || 'en';
+    // Respect French dedicated-URL pages (html lang="fr-...") regardless of session
+    var isFrenchPage = (document.documentElement.lang || '').toLowerCase().indexOf('fr') === 0;
+    var saved = !isFrenchPage && (function(){ try { return sessionStorage.getItem('lh-lang'); } catch(e) { return null; } })();
+    var lang = saved || document.documentElement.getAttribute('data-lang') || 'en';
     if (lang !== 'en') applyLang(lang);
     document.querySelectorAll('.lang-toggle').forEach(function (btn) {
       btn.textContent = lang === 'fr' ? 'EN' : 'FR';
