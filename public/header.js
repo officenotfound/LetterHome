@@ -15,8 +15,7 @@
   var isFrench = (document.documentElement.lang || '').toLowerCase().indexOf('fr') === 0;
   // Individual guide pages load guide.css and are not the /guides index —
   // they're static English SEO pages that don't have French translations.
-  var isGuidePage = !!document.querySelector('link[href*="guide.css"]') &&
-    window.location.pathname !== '/guides' && window.location.pathname !== '/guides.html';
+  var isGuidePage = !!document.querySelector('link[href*="guide.css"]');
 
   var langToggle = (!isFrench && !isGuidePage) ?
     '<button type="button" class="lang-toggle" onclick="toggleLang()" aria-label="Toggle language">FR</button>' : '';
