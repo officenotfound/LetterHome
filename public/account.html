@@ -88,13 +88,13 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:40px 36px;marg
 <div id="site-header"></div>
 <script src="/header.js?v=5"></script>
 
-<div class="main" id="app"><div style="color:var(--ink-muted);padding:40px 0;font-style:italic">Loading…</div></div>
+<div class="main" id="app"><div style="color:var(--ink-muted);padding:40px 0;font-style:italic" data-i18n="account.loading">Loading…</div></div>
 
 <footer id="site-footer"></footer>
 <script src="/footer.js" defer></script>
 
 <script src="/theme.js?v=2" defer></script>
-<script src="/lang.js?v=7" defer></script>
+<script src="/lang.js?v=9" defer></script>
 <script>
 const app = document.getElementById('app');
 const path = window.location.pathname;
@@ -150,7 +150,14 @@ function updateStrength(inputId, barId, labelId) {
   if (!fill || !lbl) return;
   const pct  = pwd.length === 0 ? 0 : Math.max(20, score * 25);
   const colors = ['#ef4444','#f97316','#eab308','#22c55e'];
-  const labels = ['Too weak','Weak','Fair','Strong','Very strong'];
+  // JS-generated: strength labels use LH_T keys account.pwd.strength.*
+  const labels = [
+    LH_T('account.pwd.strength.tooweak'),
+    LH_T('account.pwd.strength.weak'),
+    LH_T('account.pwd.strength.fair'),
+    LH_T('account.pwd.strength.strong'),
+    LH_T('account.pwd.strength.verystrong')
+  ];
   fill.style.width  = pct + '%';
   fill.style.background = pwd.length === 0 ? 'var(--line)' : colors[Math.min(score, 3)];
   lbl.textContent   = pwd.length === 0 ? '' : labels[Math.min(score, 4)];
@@ -175,18 +182,18 @@ function updateStrength(inputId, barId, labelId) {
 function renderLogin() {
   document.title = 'Sign In — Letterhome';
   app.innerHTML = `
-    <div class="eyebrow">Customer Account</div>
-    <h1>Welcome <em>back.</em></h1>
-    <p class="sub">Sign in to manage your saved addresses and order history.</p>
+    <div class="eyebrow">${LH_T('account.eyebrow')}</div>
+    <h1>${LH_T('account.login.h1')}</h1>
+    <p class="sub">${LH_T('account.login.sub')}</p>
     <div class="card" style="max-width:460px">
       <div class="card-body">
-        <div class="field"><label>Email</label><input id="login-email" type="email" autocomplete="email" placeholder="you@example.com"></div>
-        <div class="field"><label>Password</label><input id="login-pwd" type="password" autocomplete="current-password" placeholder="••••••••"></div>
+        <div class="field"><label>${LH_T('send.acct.form.email')}</label><input id="login-email" type="email" autocomplete="email" placeholder="you@example.com"></div>
+        <div class="field"><label>${LH_T('send.acct.form.pwd')}</label><input id="login-pwd" type="password" autocomplete="current-password" placeholder="••••••••"></div>
         <div class="err" id="login-err"></div>
         <div style="display:flex;align-items:center;gap:16px;margin-top:8px;flex-wrap:wrap">
-          <button class="btn btn-primary" onclick="doLogin()">Sign In →</button>
-          <a href="/account/forgot" style="font-size:13px;color:var(--ink-muted)">Forgot password?</a>
-          <a href="/account/register" style="font-size:13px;color:var(--ink-muted);margin-left:auto">Create account</a>
+          <button class="btn btn-primary" onclick="doLogin()">${LH_T('account.login.btn')}</button>
+          <a href="/account/forgot" style="font-size:13px;color:var(--ink-muted)">${LH_T('account.login.forgot')}</a>
+          <a href="/account/register" style="font-size:13px;color:var(--ink-muted);margin-left:auto">${LH_T('account.login.create')}</a>
         </div>
       </div>
     </div>`;
@@ -196,16 +203,16 @@ function renderLogin() {
 function renderForgot() {
   document.title = 'Forgot Password — Letterhome';
   app.innerHTML = `
-    <div class="eyebrow">Customer Account</div>
-    <h1>Forgot your <em>password?</em></h1>
-    <p class="sub">Enter your email and we'll send you a reset link. The link is valid for 30 minutes.</p>
+    <div class="eyebrow">${LH_T('account.eyebrow')}</div>
+    <h1>${LH_T('account.forgot.h1')}</h1>
+    <p class="sub">${LH_T('account.forgot.sub')}</p>
     <div class="card" style="max-width:460px">
       <div class="card-body" id="forgot-body">
-        <div class="field"><label>Email</label><input id="forgot-email" type="email" autocomplete="email" placeholder="you@example.com"></div>
+        <div class="field"><label>${LH_T('send.acct.form.email')}</label><input id="forgot-email" type="email" autocomplete="email" placeholder="you@example.com"></div>
         <div class="err" id="forgot-err"></div>
         <div style="display:flex;align-items:center;gap:16px;margin-top:8px">
-          <button class="btn btn-primary" onclick="doForgot()">Send Reset Link →</button>
-          <a href="/account/login" style="font-size:13px;color:var(--ink-muted)">Back to sign in</a>
+          <button class="btn btn-primary" onclick="doForgot()">${LH_T('account.forgot.btn')}</button>
+          <a href="/account/login" style="font-size:13px;color:var(--ink-muted)">${LH_T('account.back.signin')}</a>
         </div>
       </div>
     </div>`;
@@ -215,16 +222,15 @@ function renderForgot() {
 async function doForgot() {
   clearErr('forgot-err');
   const email = document.getElementById('forgot-email').value.trim();
-  if (!email) { showErr('forgot-err', 'Please enter your email.'); return; }
+  if (!email) { showErr('forgot-err', LH_T('account.err.email.empty')); return; }
   const btn = document.querySelector('[onclick="doForgot()"]');
-  btn.disabled = true; btn.textContent = 'Sending…';
+  btn.disabled = true; btn.textContent = LH_T('account.sending');
   await post('/api/account/forgot', { email });
   document.getElementById('forgot-body').innerHTML = `
     <p style="color:var(--ink-soft);font-size:15px;line-height:1.6">
-      If an account exists for <strong>${esc(email)}</strong>, we've sent a password reset link to that address.
-      Check your inbox — the link is valid for 30 minutes.
+      ${LH_T('account.forgot.sent.pre')}<strong>${esc(email)}</strong>${LH_T('account.forgot.sent.post')}
     </p>
-    <p style="margin-top:18px"><a href="/account/login" style="font-size:13px;color:var(--ink-muted)">← Back to sign in</a></p>`;
+    <p style="margin-top:18px"><a href="/account/login" style="font-size:13px;color:var(--ink-muted)">← ${LH_T('account.back.signin')}</a></p>`;
 }
 
 function renderReset() {
@@ -234,29 +240,29 @@ function renderReset() {
   const token = qs.get('token') || '';
   if (!email || !token) {
     app.innerHTML = `
-      <div class="eyebrow">Customer Account</div>
-      <h1>This link is <em>invalid.</em></h1>
-      <p class="sub">The reset link is missing required pieces. Request a new one from the <a href="/account/forgot" style="color:var(--red)">forgot password page</a>.</p>`;
+      <div class="eyebrow">${LH_T('account.eyebrow')}</div>
+      <h1>${LH_T('account.reset.invalid.h1')}</h1>
+      <p class="sub">${LH_T('account.reset.invalid.sub.pre')}<a href="/account/forgot" style="color:var(--red)">${LH_T('account.reset.invalid.sub.link')}</a>${LH_T('account.reset.invalid.sub.post')}</p>`;
     return;
   }
   app.innerHTML = `
-    <div class="eyebrow">Customer Account</div>
-    <h1>Set a new <em>password.</em></h1>
-    <p class="sub">For <strong>${esc(email)}</strong>. This link expires 30 minutes after it was sent.</p>
+    <div class="eyebrow">${LH_T('account.eyebrow')}</div>
+    <h1>${LH_T('account.reset.h1')}</h1>
+    <p class="sub">${LH_T('account.reset.sub.pre')}<strong>${esc(email)}</strong>${LH_T('account.reset.sub.post')}</p>
     <div class="card" style="max-width:460px">
       <div class="card-body">
         <div class="field">
-          <label>New Password</label>
-          <input id="reset-pwd" type="password" autocomplete="new-password" placeholder="At least 8 characters" oninput="updateStrength('reset-pwd','reset-strength-fill','reset-strength-lbl')">
+          <label>${LH_T('account.pwd.new')}</label>
+          <input id="reset-pwd" type="password" autocomplete="new-password" placeholder="${LH_T('account.pwd.placeholder')}" oninput="updateStrength('reset-pwd','reset-strength-fill','reset-strength-lbl')">
           <div class="strength-bar"><div class="strength-fill" id="reset-strength-fill"></div></div>
           <div class="strength-label" id="reset-strength-lbl"></div>
         </div>
-        <div class="field"><label>Confirm New Password</label><input id="reset-pwd2" type="password" autocomplete="new-password" placeholder="••••••••"></div>
+        <div class="field"><label>${LH_T('account.pwd.confirm')}</label><input id="reset-pwd2" type="password" autocomplete="new-password" placeholder="••••••••"></div>
         <div class="err" id="reset-err"></div>
-        <p style="font-size:12px;color:var(--ink-faint);margin-bottom:16px;line-height:1.5">Must be at least 8 characters and include a letter and a number or symbol. We also check it against the Have-I-Been-Pwned breach database.</p>
+        <p style="font-size:12px;color:var(--ink-faint);margin-bottom:16px;line-height:1.5">${LH_T('account.pwd.hint')}</p>
         <div style="display:flex;align-items:center;gap:16px">
-          <button class="btn btn-primary" onclick="doReset('${esc(email)}','${esc(token)}')">Update Password →</button>
-          <a href="/account/login" style="font-size:13px;color:var(--ink-muted)">Cancel</a>
+          <button class="btn btn-primary" onclick="doReset('${esc(email)}','${esc(token)}')">${LH_T('account.pwd.update.btn')}</button>
+          <a href="/account/login" style="font-size:13px;color:var(--ink-muted)">${LH_T('account.cancel')}</a>
         </div>
       </div>
     </div>`;
@@ -267,57 +273,57 @@ async function doReset(email, token) {
   clearErr('reset-err');
   const password = document.getElementById('reset-pwd').value;
   const confirm  = document.getElementById('reset-pwd2').value;
-  if (!password) { showErr('reset-err', 'Please enter a new password.'); return; }
-  if (password !== confirm) { showErr('reset-err', 'Passwords do not match.'); return; }
+  if (!password) { showErr('reset-err', LH_T('account.err.pwd.empty')); return; }
+  if (password !== confirm) { showErr('reset-err', LH_T('account.err.pwd.mismatch')); return; }
   const btn = document.querySelector('[onclick^="doReset"]');
-  btn.disabled = true; btn.textContent = 'Updating…';
+  btn.disabled = true; btn.textContent = LH_T('account.updating');
   const r = await post('/api/account/reset-password', { email, token, new_password: password });
-  btn.disabled = false; btn.textContent = 'Update Password →';
+  btn.disabled = false; btn.textContent = LH_T('account.pwd.update.btn');
   if (r.ok) {
     app.innerHTML = `
-      <div class="eyebrow">Customer Account</div>
-      <h1>Password <em>updated.</em></h1>
-      <p class="sub">You can now sign in with your new password.</p>
-      <div style="margin-top:24px"><a href="/account/login" class="btn btn-primary">Sign In →</a></div>`;
+      <div class="eyebrow">${LH_T('account.eyebrow')}</div>
+      <h1>${LH_T('account.reset.done.h1')}</h1>
+      <p class="sub">${LH_T('account.reset.done.sub')}</p>
+      <div style="margin-top:24px"><a href="/account/login" class="btn btn-primary">${LH_T('account.login.btn')}</a></div>`;
     return;
   }
-  showErr('reset-err', r.error || 'Could not reset password.');
+  showErr('reset-err', r.error || LH_T('account.err.reset'));
 }
 
 async function doLogin() {
   clearErr('login-err');
   const email = document.getElementById('login-email').value.trim();
   const password = document.getElementById('login-pwd').value;
-  if (!email || !password) { showErr('login-err', 'Please enter your email and password.'); return; }
+  if (!email || !password) { showErr('login-err', LH_T('send.acct.err.empty.login')); return; }
   const btn = document.querySelector('[onclick="doLogin()"]');
-  btn.disabled = true; btn.textContent = 'Signing in…';
+  btn.disabled = true; btn.textContent = LH_T('send.acct.signingin');
   const r = await post('/api/account/login', { email, password });
-  btn.disabled = false; btn.textContent = 'Sign In →';
+  btn.disabled = false; btn.textContent = LH_T('account.login.btn');
   if (r.ok) { window.location.replace('/account'); return; }
-  showErr('login-err', r.error || 'Sign in failed.');
+  showErr('login-err', r.error || LH_T('send.acct.err.login'));
 }
 
 function renderRegister() {
   document.title = 'Create Account — Letterhome';
   app.innerHTML = `
-    <div class="eyebrow">Customer Account</div>
-    <h1>Save your <em>details.</em></h1>
-    <p class="sub">Create a free account to save your return address and your frequent recipients — so you never have to type them again.</p>
+    <div class="eyebrow">${LH_T('account.eyebrow')}</div>
+    <h1>${LH_T('account.register.h1')}</h1>
+    <p class="sub">${LH_T('account.register.sub')}</p>
     <div class="card" style="max-width:460px">
       <div class="card-body">
-        <div class="field"><label>Email</label><input id="reg-email" type="email" autocomplete="email" placeholder="you@example.com"></div>
+        <div class="field"><label>${LH_T('send.acct.form.email')}</label><input id="reg-email" type="email" autocomplete="email" placeholder="you@example.com"></div>
         <div class="field">
-          <label>Password</label>
-          <input id="reg-pwd" type="password" autocomplete="new-password" placeholder="At least 8 characters" oninput="updateStrength('reg-pwd','reg-strength-fill','reg-strength-lbl')">
+          <label>${LH_T('send.acct.form.pwd')}</label>
+          <input id="reg-pwd" type="password" autocomplete="new-password" placeholder="${LH_T('account.pwd.placeholder')}" oninput="updateStrength('reg-pwd','reg-strength-fill','reg-strength-lbl')">
           <div class="strength-bar"><div class="strength-fill" id="reg-strength-fill"></div></div>
           <div class="strength-label" id="reg-strength-lbl"></div>
         </div>
-        <div class="field"><label>Confirm Password</label><input id="reg-pwd2" type="password" autocomplete="new-password" placeholder="••••••••"></div>
+        <div class="field"><label>${LH_T('account.pwd.confirm')}</label><input id="reg-pwd2" type="password" autocomplete="new-password" placeholder="••••••••"></div>
         <div class="err" id="reg-err"></div>
-        <p style="font-size:12px;color:var(--ink-faint);margin-bottom:16px;line-height:1.5">An account is never required to place an order. Your password must be at least 8 characters and include a letter and a number or symbol.</p>
+        <p style="font-size:12px;color:var(--ink-faint);margin-bottom:16px;line-height:1.5">${LH_T('account.register.note')}</p>
         <div style="display:flex;align-items:center;gap:16px">
-          <button class="btn btn-primary" onclick="doRegister()">Create Account →</button>
-          <a href="/account/login" style="font-size:13px;color:var(--ink-muted)">Already have one? Sign in</a>
+          <button class="btn btn-primary" onclick="doRegister()">${LH_T('send.acct.create.arrow')}</button>
+          <a href="/account/login" style="font-size:13px;color:var(--ink-muted)">${LH_T('send.acct.already')}</a>
         </div>
       </div>
     </div>`;
@@ -329,14 +335,14 @@ async function doRegister() {
   const email    = document.getElementById('reg-email').value.trim();
   const password = document.getElementById('reg-pwd').value;
   const confirm  = document.getElementById('reg-pwd2').value;
-  if (!email || !password) { showErr('reg-err', 'Please fill in all fields.'); return; }
-  if (password !== confirm) { showErr('reg-err', 'Passwords do not match.'); return; }
+  if (!email || !password) { showErr('reg-err', LH_T('account.err.fields.empty')); return; }
+  if (password !== confirm) { showErr('reg-err', LH_T('account.err.pwd.mismatch')); return; }
   const btn = document.querySelector('[onclick="doRegister()"]');
-  btn.disabled = true; btn.textContent = 'Creating…';
+  btn.disabled = true; btn.textContent = LH_T('send.acct.creating');
   const r = await post('/api/account/register', { email, password });
-  btn.disabled = false; btn.textContent = 'Create Account →';
+  btn.disabled = false; btn.textContent = LH_T('send.acct.create.arrow');
   if (r.ok) { window.location.replace('/account'); return; }
-  showErr('reg-err', r.error || 'Registration failed.');
+  showErr('reg-err', r.error || LH_T('send.acct.err.create'));
 }
 
 function renderPortal(me) {
@@ -345,10 +351,18 @@ function renderPortal(me) {
   const recipients = me.recipients || [];
 
   const statusClass = { awaiting_payment:'', paid:'status-paid', submitted_to_printer:'status-submitted', printing:'status-printing', mailed:'status-mailed', delivered:'status-delivered', refunded:'status-refunded' };
-  const statusLabel = { awaiting_payment:'Pending', paid:'Preparing', submitted_to_printer:'At Printer', printing:'Printing', mailed:'Mailed', delivered:'Delivered', refunded:'Refunded' };
+  const statusLabel = {
+    awaiting_payment: LH_T('account.status.pending'),
+    paid:             LH_T('account.status.preparing'),
+    submitted_to_printer: LH_T('account.status.atprinter'),
+    printing:         LH_T('account.status.printing'),
+    mailed:           LH_T('account.status.mailed'),
+    delivered:        LH_T('account.status.delivered'),
+    refunded:         LH_T('account.status.refunded')
+  };
 
   const orderRows = orders.length === 0
-    ? '<tr><td colspan="4" style="color:var(--ink-faint);font-style:italic;padding:20px 0">No orders yet.</td></tr>'
+    ? `<tr><td colspan="4" style="color:var(--ink-faint);font-style:italic;padding:20px 0">${LH_T('account.orders.empty')}</td></tr>`
     : orders.map(o => `
         <tr>
           <td style="font-family:'DM Mono',monospace;font-size:12px">#${o.id}</td>
@@ -358,105 +372,105 @@ function renderPortal(me) {
         </tr>`).join('');
 
   const recipientCards = recipients.length === 0
-    ? '<p style="color:var(--ink-faint);font-style:italic;font-size:14px">No saved recipients yet. Add one below.</p>'
+    ? `<p style="color:var(--ink-faint);font-style:italic;font-size:14px">${LH_T('account.recipients.empty')}</p>`
     : recipients.map(r => `
         <div style="display:flex;align-items:flex-start;justify-content:space-between;padding:12px 0;border-bottom:1px solid rgba(42,42,42,0.07)" id="recip-${r.id}">
           <div>
             <div style="font-weight:500;font-size:14px">${esc(r.label || r.recipient_name)}</div>
             <div style="font-size:12px;color:var(--ink-muted)">${esc(r.recipient_name)}${r.recipient_city ? ', ' + esc(r.recipient_city) : ''} · ${esc(r.destination_country)}</div>
           </div>
-          <button class="btn-ghost" onclick="deleteRecipient(${r.id})" style="font-size:12px;flex-shrink:0;margin-left:16px">Remove</button>
+          <button class="btn-ghost" onclick="deleteRecipient(${r.id})" style="font-size:12px;flex-shrink:0;margin-left:16px">${LH_T('account.recipients.remove')}</button>
         </div>`).join('');
 
   document.title = 'My Account — Letterhome';
   app.innerHTML = `
     <div style="display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:40px">
       <div>
-        <div class="eyebrow">My Account</div>
+        <div class="eyebrow">${LH_T('account.portal.eyebrow')}</div>
         <h1>${esc(c.display_name || c.email.split('@')[0])}</h1>
         <p style="color:var(--ink-muted);font-size:14px">${esc(c.email)}</p>
       </div>
-      <button class="btn btn-outline btn-sm" onclick="doLogout()">Sign Out</button>
+      <button class="btn btn-outline btn-sm" onclick="doLogout()">${LH_T('account.signout')}</button>
     </div>
 
     <div class="card">
-      <div class="card-header"><div class="card-title">Order History</div></div>
+      <div class="card-header"><div class="card-title">${LH_T('account.orders.title')}</div></div>
       <div class="card-body">
         <table>
-          <thead><tr><th>#</th><th>Recipient</th><th>Status</th><th>Date</th></tr></thead>
+          <thead><tr><th>#</th><th>${LH_T('account.orders.col.recipient')}</th><th>${LH_T('account.orders.col.status')}</th><th>${LH_T('account.orders.col.date')}</th></tr></thead>
           <tbody>${orderRows}</tbody>
         </table>
       </div>
     </div>
 
     <div class="card">
-      <div class="card-header"><div class="card-title">Return Address</div><span style="font-size:12px;color:var(--ink-faint)">Pre-fills your sender fields at checkout</span></div>
+      <div class="card-header"><div class="card-title">${LH_T('account.returnaddr.title')}</div><span style="font-size:12px;color:var(--ink-faint)">${LH_T('account.returnaddr.hint')}</span></div>
       <div class="card-body">
         <div class="grid2">
-          <div class="field"><label>Full Name</label><input id="s-name" value="${esc(c.sender_name||'')}"></div>
-          <div class="field"><label>Country</label><input id="s-country" value="${esc(c.sender_country||'')}"></div>
+          <div class="field"><label>${LH_T('send.from.name')}</label><input id="s-name" value="${esc(c.sender_name||'')}"></div>
+          <div class="field"><label>${LH_T('send.from.country')}</label><input id="s-country" value="${esc(c.sender_country||'')}"></div>
         </div>
-        <div class="field"><label>Street Address</label><input id="s-street" value="${esc(c.sender_street||'')}"></div>
+        <div class="field"><label>${LH_T('send.from.street')}</label><input id="s-street" value="${esc(c.sender_street||'')}"></div>
         <div class="grid2">
-          <div class="field"><label>City</label><input id="s-city" value="${esc(c.sender_city||'')}"></div>
-          <div class="field"><label>Province / State</label><input id="s-province" value="${esc(c.sender_province||'')}"></div>
+          <div class="field"><label>${LH_T('send.from.city')}</label><input id="s-city" value="${esc(c.sender_city||'')}"></div>
+          <div class="field"><label>${LH_T('send.from.province')}</label><input id="s-province" value="${esc(c.sender_province||'')}"></div>
         </div>
-        <div class="field" style="max-width:200px"><label>Postal Code</label><input id="s-postal" value="${esc(c.sender_postal||'')}"></div>
+        <div class="field" style="max-width:200px"><label>${LH_T('send.from.postal')}</label><input id="s-postal" value="${esc(c.sender_postal||'')}"></div>
         <div class="ok-msg" id="addr-ok"></div>
         <div class="err" id="addr-err"></div>
-        <button class="btn btn-primary" onclick="saveReturnAddress()">Save Address</button>
+        <button class="btn btn-primary" onclick="saveReturnAddress()">${LH_T('account.returnaddr.save')}</button>
       </div>
     </div>
 
     <div class="card">
-      <div class="card-header"><div class="card-title">Saved Recipients</div><span style="font-size:12px;color:var(--ink-faint)">Pick from a dropdown at checkout</span></div>
+      <div class="card-header"><div class="card-title">${LH_T('account.recipients.title')}</div><span style="font-size:12px;color:var(--ink-faint)">${LH_T('account.recipients.hint')}</span></div>
       <div class="card-body">
         <div id="recipients-list">${recipientCards}</div>
         <hr class="divider">
-        <div style="font-weight:600;font-size:14px;margin-bottom:16px">Add a Recipient</div>
-        <div class="field"><label>Nickname / Label (optional)</label><input id="new-label" placeholder="e.g. Mum's house"></div>
+        <div style="font-weight:600;font-size:14px;margin-bottom:16px">${LH_T('account.recipients.add.heading')}</div>
+        <div class="field"><label>${LH_T('account.recipients.label')}</label><input id="new-label" placeholder="${LH_T('account.recipients.label.placeholder')}"></div>
         <div class="grid2">
-          <div class="field"><label>Full Name</label><input id="new-name" placeholder="Jane Smith"></div>
-          <div class="field"><label>Destination Country</label>
+          <div class="field"><label>${LH_T('send.to.name')}</label><input id="new-name" placeholder="Jane Smith"></div>
+          <div class="field"><label>${LH_T('send.dest.label')}</label>
             <select id="new-country">
-              <option value="CA">Canada</option>
-              <option value="US">United States</option>
-              <option value="GB">United Kingdom</option>
-              <option value="AU">Australia</option>
-              <option value="FR">France</option>
-              <option value="DE">Germany</option>
-              <option value="JP">Japan</option>
-              <option value="NZ">New Zealand</option>
-              <option value="MX">Mexico</option>
-              <option value="Other">Other</option>
+              <option value="CA">${LH_T('country.CA')}</option>
+              <option value="US">${LH_T('country.US')}</option>
+              <option value="GB">${LH_T('country.GB')}</option>
+              <option value="AU">${LH_T('country.AU')}</option>
+              <option value="FR">${LH_T('country.FR')}</option>
+              <option value="DE">${LH_T('country.DE')}</option>
+              <option value="JP">${LH_T('country.JP')}</option>
+              <option value="NZ">${LH_T('country.NZ')}</option>
+              <option value="MX">${LH_T('country.MX')}</option>
+              <option value="Other">${LH_T('account.recipients.country.other')}</option>
             </select>
           </div>
         </div>
-        <div class="field"><label>Street Address</label><input id="new-street" placeholder="123 Main St"></div>
+        <div class="field"><label>${LH_T('send.to.street')}</label><input id="new-street" placeholder="123 Main St"></div>
         <div class="grid2">
-          <div class="field"><label>City</label><input id="new-city"></div>
-          <div class="field"><label>Province / State</label><input id="new-province"></div>
+          <div class="field"><label>${LH_T('send.to.city')}</label><input id="new-city"></div>
+          <div class="field"><label>${LH_T('send.from.province')}</label><input id="new-province"></div>
         </div>
-        <div class="field" style="max-width:200px"><label>Postal Code</label><input id="new-postal"></div>
+        <div class="field" style="max-width:200px"><label>${LH_T('send.to.postal')}</label><input id="new-postal"></div>
         <div class="err" id="recip-err"></div>
-        <button class="btn btn-primary" onclick="addRecipient()">Save Recipient</button>
+        <button class="btn btn-primary" onclick="addRecipient()">${LH_T('account.recipients.save')}</button>
       </div>
     </div>
 
     <div class="card">
-      <div class="card-header"><div class="card-title">Change Password</div></div>
+      <div class="card-header"><div class="card-title">${LH_T('account.changepwd.title')}</div></div>
       <div class="card-body" style="max-width:400px">
-        <div class="field"><label>Current Password</label><input id="pwd-current" type="password" autocomplete="current-password"></div>
+        <div class="field"><label>${LH_T('account.pwd.current')}</label><input id="pwd-current" type="password" autocomplete="current-password"></div>
         <div class="field">
-          <label>New Password</label>
+          <label>${LH_T('account.pwd.new')}</label>
           <input id="pwd-new" type="password" autocomplete="new-password" oninput="updateStrength('pwd-new','pwd-strength-fill','pwd-strength-lbl')">
           <div class="strength-bar"><div class="strength-fill" id="pwd-strength-fill"></div></div>
           <div class="strength-label" id="pwd-strength-lbl"></div>
         </div>
-        <div class="field"><label>Confirm New Password</label><input id="pwd-confirm" type="password" autocomplete="new-password"></div>
+        <div class="field"><label>${LH_T('account.pwd.confirm')}</label><input id="pwd-confirm" type="password" autocomplete="new-password"></div>
         <div class="err" id="pwd-err"></div>
         <div class="ok-msg" id="pwd-ok"></div>
-        <button class="btn btn-primary" onclick="changePassword()">Update Password</button>
+        <button class="btn btn-primary" onclick="changePassword()">${LH_T('account.pwd.update.btn')}</button>
       </div>
     </div>`;
 }
@@ -476,8 +490,8 @@ async function saveReturnAddress() {
     sender_postal:   document.getElementById('s-postal').value.trim(),
     sender_country:  document.getElementById('s-country').value.trim(),
   });
-  if (r.ok) showOk('addr-ok', '✓ Address saved');
-  else showErr('addr-err', r.error || 'Error saving address.');
+  if (r.ok) showOk('addr-ok', LH_T('account.returnaddr.saved'));
+  else showErr('addr-err', r.error || LH_T('account.err.addr.save'));
 }
 
 async function addRecipient() {
@@ -494,18 +508,18 @@ async function addRecipient() {
   if (r.ok) {
     window.location.reload();
   } else {
-    showErr('recip-err', r.error || 'Error saving recipient.');
+    showErr('recip-err', r.error || LH_T('account.err.recip.save'));
   }
 }
 
 async function deleteRecipient(id) {
-  if (!confirm('Remove this saved recipient?')) return;
+  if (!confirm(LH_T('account.recipients.remove.confirm'))) return;
   const r = await del('/api/account/recipients/' + id);
   if (r.ok) {
     const el = document.getElementById('recip-' + id);
     if (el) el.remove();
   } else {
-    alert(r.error || 'Error removing recipient.');
+    alert(r.error || LH_T('account.err.recip.remove'));
   }
 }
 
@@ -514,19 +528,19 @@ async function changePassword() {
   const current = document.getElementById('pwd-current').value;
   const newPwd  = document.getElementById('pwd-new').value;
   const confirm = document.getElementById('pwd-confirm').value;
-  if (!current || !newPwd) { showErr('pwd-err', 'Please fill in all fields.'); return; }
-  if (newPwd !== confirm)  { showErr('pwd-err', 'New passwords do not match.'); return; }
+  if (!current || !newPwd) { showErr('pwd-err', LH_T('account.err.fields.empty')); return; }
+  if (newPwd !== confirm)  { showErr('pwd-err', LH_T('account.err.pwd.mismatch')); return; }
   const btn = document.querySelector('[onclick="changePassword()"]');
-  btn.disabled = true; btn.textContent = 'Updating…';
+  btn.disabled = true; btn.textContent = LH_T('account.updating');
   const r = await put('/api/account/password', { current_password: current, new_password: newPwd });
-  btn.disabled = false; btn.textContent = 'Update Password →';
+  btn.disabled = false; btn.textContent = LH_T('account.pwd.update.btn');
   if (r.ok) {
     document.getElementById('pwd-current').value = '';
     document.getElementById('pwd-new').value = '';
     document.getElementById('pwd-confirm').value = '';
-    showOk('pwd-ok', '✓ Password updated');
+    showOk('pwd-ok', LH_T('account.pwd.updated'));
   } else {
-    showErr('pwd-err', r.error || 'Error updating password.');
+    showErr('pwd-err', r.error || LH_T('account.err.pwd.update'));
   }
 }
 </script>
