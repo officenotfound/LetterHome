@@ -13,12 +13,12 @@
   if (!mount) return;
 
   var isFrench = (document.documentElement.lang || '').toLowerCase().indexOf('fr') === 0;
-  var isHomepage = window.location.pathname === '/' || window.location.pathname === '/index.html';
+  // Individual guide pages load guide.css and are not the /guides index —
+  // they're static English SEO pages that don't have French translations.
+  var isGuidePage = !!document.querySelector('link[href*="guide.css"]') &&
+    window.location.pathname !== '/guides' && window.location.pathname !== '/guides.html';
 
-  // Lang toggle only on the English homepage — that's the only page where
-  // EN↔FR actually translates content. Guide/blog pages are static English;
-  // French pages have dedicated URLs and don't need the toggle.
-  var langToggle = (isHomepage && !isFrench) ?
+  var langToggle = (!isFrench && !isGuidePage) ?
     '<button type="button" class="lang-toggle" onclick="toggleLang()" aria-label="Toggle language">FR</button>' : '';
 
   var sendLabel = isFrench ? 'Envoyer une lettre' : 'Send a letter';
