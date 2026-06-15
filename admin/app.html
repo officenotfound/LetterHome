@@ -338,6 +338,7 @@ let currentUser = '';
 async function init() {
   const me = await api('/api/admin/me');
   if (!me) { window.location.href = '/admin/login'; return; }
+  _csrfToken = me.csrfToken || null;
   currentUser = me.username;
   document.getElementById('topbar-user').textContent = me.username;
   window.addEventListener('popstate', () => route());
@@ -396,9 +397,12 @@ function setActiveNav(p) {
 function setTitle(t) { document.getElementById('topbar-title').textContent = t; }
 function setMain(html) { document.getElementById('main').innerHTML = html; }
 
+let _csrfToken = null;
 async function api(url, opts = {}) {
   try {
-    const r = await fetch(url, { headers: { 'Content-Type': 'application/json' }, ...opts });
+    const headers = { 'Content-Type': 'application/json', ...(opts.headers || {}) };
+    if (_csrfToken && opts.method && opts.method !== 'GET') headers['X-CSRF-Token'] = _csrfToken;
+    const r = await fetch(url, { ...opts, headers });
     if (r.status === 401) { window.location.href = '/admin/login'; return null; }
     return r.ok ? r.json() : null;
   } catch { return null; }

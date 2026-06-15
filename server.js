@@ -48,7 +48,7 @@ app.use(compression({ threshold: 512, level: 6 }));
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2024-06-20' });
 
 app.use(session({
-  store:             new FileStore({ path: './sessions', ttl: 30 * 24 * 60 * 60, retries: 1, reapInterval: 3600, reapAsync: true }),
+  store:             new FileStore({ path: './sessions', ttl: 30 * 24 * 60 * 60, retries: 1, reapInterval: 3600, reapAsync: true, fileMode: 0o600 }),
   secret:            process.env.SESSION_SECRET || 'dev-secret-change-me',
   resave:            false,
   saveUninitialized: false,
@@ -181,7 +181,7 @@ async function lookupCountry(ip) {
 }
 
 function unsubscribeToken(email) {
-  const key = process.env.SESSION_SECRET || 'unsubscribe-fallback-key';
+  const key = process.env.SESSION_SECRET || randomBytes(32).toString('hex');
   return createHmac('sha256', key).update(String(email).toLowerCase()).digest('hex').slice(0, 24);
 }
 function unsubscribeLink(email) {
@@ -209,7 +209,7 @@ async function isPasswordBreached(password) {
 // the moment the password changes.
 function passwordResetToken(email, currentHash) {
   const ts = Date.now();
-  const key = process.env.SESSION_SECRET || 'reset-fallback-key';
+  const key = process.env.SESSION_SECRET || randomBytes(32).toString('hex');
   const data = `${String(email).toLowerCase()}.${ts}.${currentHash || ''}.reset`;
   const hmac = createHmac('sha256', key).update(data).digest('hex');
   return `${ts}.${hmac}`;
@@ -219,7 +219,7 @@ function verifyPasswordResetToken(email, currentHash, token, maxAgeMs = 30 * 60 
   const ts = Number(tsStr);
   if (!ts || !hmac) return false;
   if (Date.now() - ts > maxAgeMs) return false;
-  const key = process.env.SESSION_SECRET || 'reset-fallback-key';
+  const key = process.env.SESSION_SECRET || randomBytes(32).toString('hex');
   const data = `${String(email).toLowerCase()}.${ts}.${currentHash || ''}.reset`;
   const expected = createHmac('sha256', key).update(data).digest('hex');
   try { return timingSafeEqual(Buffer.from(hmac, 'hex'), Buffer.from(expected, 'hex')); }
@@ -330,11 +330,49 @@ const upload = multer({
   },
 });
 
+// Magic-byte signatures for allowed file types. Client-controlled Content-Type
+// can lie; these are read from the actual file bytes after upload.
+const MAGIC_BYTES = {
+  pdf:  { offset: 0, bytes: Buffer.from([0x25, 0x50, 0x44, 0x46]) },           // %PDF
+  docx: { offset: 0, bytes: Buffer.from([0x50, 0x4B, 0x03, 0x04]) },           // PK\x03\x04 (ZIP)
+  doc:  { offset: 0, bytes: Buffer.from([0xD0, 0xCF, 0x11, 0xE0]) },           // OLE2
+};
+
+function checkMagicBytes(filePath, mimetype) {
+  const fd = fs.openSync(filePath, 'r');
+  const buf = Buffer.alloc(8);
+  fs.readSync(fd, buf, 0, 8, 0);
+  fs.closeSync(fd);
+  if (mimetype === 'application/pdf') {
+    return buf.slice(0, 4).equals(MAGIC_BYTES.pdf.bytes);
+  }
+  if (mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+    return buf.slice(0, 4).equals(MAGIC_BYTES.docx.bytes);
+  }
+  if (mimetype === 'application/msword') {
+    return buf.slice(0, 4).equals(MAGIC_BYTES.doc.bytes);
+  }
+  if (mimetype === 'text/plain') {
+    // Reject if file contains null bytes (binary content disguised as text).
+    return !buf.includes(0x00);
+  }
+  return false;
+}
+
 // Wraps upload.array so multer errors (size limit, file count, bad type) become
 // friendly 400s rather than a generic 500 from the global error handler.
 function uploadAttachments(req, res, next) {
   upload.array('attachments', 5)(req, res, err => {
-    if (!err) return next();
+    if (!err) {
+      // Verify actual file content matches declared MIME type.
+      const bad = (req.files || []).find(f => !checkMagicBytes(f.path, f.mimetype));
+      if (bad) {
+        // Clean up all uploaded temp files before rejecting.
+        for (const f of req.files) { try { fs.unlinkSync(f.path); } catch {} }
+        return res.status(400).json({ error: 'One or more files failed content validation. Please ensure your files are valid PDF, DOC, DOCX, or TXT.' });
+      }
+      return next();
+    }
     const messages = {
       LIMIT_FILE_SIZE:       'One of your files is too large. The limit is 10 MB per file.',
       LIMIT_FILE_COUNT:      'Too many files. You can attach up to 5.',
@@ -390,7 +428,12 @@ function safeFilePath(dir, originalName) {
           WHERE o2.customer_email = orders.customer_email
             AND o2.recovery_sent_at > ?
         )
-    `).all(cutoff2d, cutoff7d, cutoff30d);
+        AND (
+          SELECT COUNT(*) FROM orders o3
+          WHERE o3.customer_email = orders.customer_email
+            AND o3.created_at > ?
+        ) <= 3
+    `).all(cutoff2d, cutoff7d, cutoff30d, cutoff7d);
     for (const order of abandoned) {
       try {
         await sendMail(buildRecoveryEmail(order), 'recovery', order.id);
@@ -520,9 +563,9 @@ app.get('/health', (req, res) => {
   res.setHeader('Cache-Control', 'no-store');
   try {
     db.prepare('SELECT 1').get();
-    res.json({ status: 'ok', db: 'ok', uptime: Math.floor(process.uptime()) });
-  } catch (e) {
-    res.status(503).json({ status: 'error', db: 'error', message: e.message });
+    res.json({ status: 'ok' });
+  } catch {
+    res.status(503).json({ status: 'error' });
   }
 });
 
@@ -1083,6 +1126,7 @@ app.post('/admin/login', loginLimiter, async (req, res) => {
   req.session.regenerate(err => {
     if (err) return res.status(500).send('Session error');
     req.session.admin = { username, loginAt: Date.now() };
+    req.session.csrfToken = randomBytes(32).toString('hex');
     req.session.save(err2 => {
       if (err2) return res.status(500).send('Session error');
       res.redirect('/admin');
@@ -1099,21 +1143,27 @@ app.get('/admin', requireAdmin, (req, res) =>
 app.get('/admin/*', requireAdmin, (req, res) =>
   res.sendFile(path.join(__dirname, 'admin', 'app.html')));
 
-// CSRF: reject admin API mutations where a browser Origin header is present
-// but doesn't match our own origin. Covers all POST/DELETE/PUT on /api/admin/*.
-// sameSite:lax already blocks cross-site form CSRF; this adds a second layer
-// for fetch()-based attacks. No-Origin requests (cURL, server tools) pass through.
+// CSRF: double-submit synchronizer token for all admin API mutations.
+// The token is generated at login, stored in the session, returned via /api/admin/me,
+// and must be sent back in the X-CSRF-Token header on every state-changing request.
+// Origin check is kept as a second layer against no-token older clients.
 app.use('/api/admin', (req, res, next) => {
   if (!['POST', 'PUT', 'DELETE', 'PATCH'].includes(req.method)) return next();
+  // Origin layer: block cross-origin browser requests outright.
   const origin = req.headers.origin;
-  if (!origin) return next();
   const base = (process.env.BASE_URL || '').replace(/\/$/, '');
-  if (base && !origin.startsWith(base)) return res.status(403).json({ error: 'Forbidden' });
+  if (origin && base && !origin.startsWith(base)) return res.status(403).json({ error: 'Forbidden' });
+  // CSRF token layer: require X-CSRF-Token matching the session token.
+  const sessionToken = req.session?.csrfToken;
+  const requestToken = req.headers['x-csrf-token'];
+  if (!sessionToken || !requestToken || !timingSafeEqual(Buffer.from(sessionToken), Buffer.from(requestToken))) {
+    return res.status(403).json({ error: 'CSRF token invalid' });
+  }
   next();
 });
 
 app.get('/api/admin/me', requireAdmin, (req, res) =>
-  res.json({ username: req.session.admin.username }));
+  res.json({ username: req.session.admin.username, csrfToken: req.session.csrfToken }));
 
 app.get('/api/admin/tetris/scores', requireAdmin, (req, res) => {
   try {
@@ -1252,8 +1302,8 @@ app.get('/api/admin/stats', requireAdmin, (req, res) => {
 app.get('/api/admin/orders', requireAdmin, (req, res) => {
   const { status } = req.query;
   const rows = status
-    ? db.prepare("SELECT * FROM orders WHERE status = ? AND deleted_at IS NULL ORDER BY created_at DESC").all(status)
-    : db.prepare("SELECT * FROM orders WHERE deleted_at IS NULL ORDER BY created_at DESC").all();
+    ? db.prepare("SELECT id, stripe_session_id, customer_email, recipient_name, recipient_street, recipient_city, recipient_province, recipient_postal, destination_country, letter_type, attachment_info, price_cents, status, status_token, created_at, updated_at, recovery_sent_at FROM orders WHERE status = ? AND deleted_at IS NULL ORDER BY created_at DESC").all(status)
+    : db.prepare("SELECT id, stripe_session_id, customer_email, recipient_name, recipient_street, recipient_city, recipient_province, recipient_postal, destination_country, letter_type, attachment_info, price_cents, status, status_token, created_at, updated_at, recovery_sent_at FROM orders WHERE deleted_at IS NULL ORDER BY created_at DESC").all();
   res.json(rows);
 });
 
@@ -1522,7 +1572,7 @@ app.get('/api/admin/audit-log', requireAdmin, (req, res) => {
     where.push('(actor LIKE ? ESCAPE \'\\\' OR action LIKE ? ESCAPE \'\\\' OR target_id LIKE ? ESCAPE \'\\\' OR ip LIKE ? ESCAPE \'\\\')');
     params.push(`%${escapedSearch}%`, `%${escapedSearch}%`, `%${escapedSearch}%`, `%${escapedSearch}%`);
   }
-  if (action) { where.push('action LIKE ?'); params.push(`${action}%`); }
+  if (action) { where.push('action LIKE ? ESCAPE \'\\\''); params.push(action.replace(/[%_\\]/g, '\\$&') + '%'); }
   const sql = `SELECT * FROM audit_log ${where.length ? 'WHERE ' + where.join(' AND ') : ''} ORDER BY id DESC LIMIT ?`;
   params.push(limit);
   res.json(db.prepare(sql).all(...params));
@@ -2156,18 +2206,22 @@ app.post('/api/contact', contactLimiter, async (req, res, next) => {
   if (!name || !email || !message) return res.status(400).json({ error: 'All fields are required.' });
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(email))) return res.status(400).json({ error: 'Invalid email address.' });
 
+  // Strip CR/LF to prevent email header injection via name or email fields.
+  const safeName  = String(name).slice(0, 200).replace(/[\r\n]/g, ' ');
+  const safeEmail = String(email).slice(0, 200).replace(/[\r\n]/g, '');
+
   try {
     db.prepare('INSERT INTO contact_submissions (name, email, message, ip) VALUES (?,?,?,?)')
-      .run(String(name).slice(0, 200), String(email).slice(0, 200), String(message).slice(0, 5000), getClientIp(req));
+      .run(safeName, safeEmail, String(message).slice(0, 5000), getClientIp(req));
   } catch (e) { console.error('[contact] db log failed:', e.message); }
 
   try {
     await sendMail({
       from:    process.env.EMAIL_FROM,
       to:      process.env.OPERATOR_EMAIL,
-      replyTo: email,
-      subject: `[Letterhome Contact] From ${name}`,
-      text:    `From: ${name} <${email}>\n\n${message}`,
+      replyTo: safeEmail,
+      subject: `[Letterhome Contact] From ${safeName}`,
+      text:    `From: ${safeName} <${safeEmail}>\n\n${String(message).slice(0, 5000)}`,
     }, 'contact_notification');
 
     const awayOn  = getSetting('away_mode') === 'true';
@@ -2245,10 +2299,10 @@ app.post('/api/account/login', accountLimiter, async (req, res) => {
     if (!email || !password) return res.status(400).json({ error: 'Email and password are required.' });
 
     const customer = db.prepare('SELECT * FROM customers WHERE email = ? AND deleted_at IS NULL').get(email);
-    if (!customer?.password_hash) return res.status(401).json({ error: 'Invalid email or password.' });
-
-    const match = await bcrypt.compare(password, customer.password_hash);
-    if (!match) return res.status(401).json({ error: 'Invalid email or password.' });
+    // Always run bcrypt even when no account exists to prevent timing-based email enumeration.
+    const hash = customer?.password_hash || '$2a$12$invalidhashpaddingtopreventiumenumeration000000000000000';
+    const match = await bcrypt.compare(password, hash);
+    if (!customer?.password_hash || !match) return res.status(401).json({ error: 'Invalid email or password.' });
 
     req.session.regenerate(err => {
       if (err) return res.status(500).json({ error: 'Session error.' });
