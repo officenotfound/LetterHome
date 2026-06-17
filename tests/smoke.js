@@ -22,6 +22,10 @@ async function get(path) {
   return { res, text };
 }
 
+// Warm up the connection — Cloudflare challenges cold IPs on the first request.
+// /health is excluded from bot protection so it always returns 200 immediately.
+await fetch(BASE + '/health', { headers: HEADERS }).catch(() => {});
+
 // ── Page availability ──────────────────────────────────────────────────────
 
 test('GET / → 200, contains brand name', async () => {
