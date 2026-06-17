@@ -28,7 +28,6 @@
     "stripe": "^15.12.0"
   },
   "devDependencies": {
-    "@playwright/test": "^1.49.0",
     "@secretlint/secretlint-rule-preset-recommend": "^13.0.2",
     "secretlint": "^13.0.2"
   }
