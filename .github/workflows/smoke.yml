@@ -1,9 +1,8 @@
 name: Smoke test (synthetic monitor)
 
 on:
-  # Scheduled runs disabled — uptime is monitored externally via UptimeRobot
-  # pinging /health. Run on-demand from the Actions tab when you want to verify
-  # key pages and endpoints are responding correctly after a deploy.
+  push:
+    branches: [main]
   workflow_dispatch:
 
 jobs:
