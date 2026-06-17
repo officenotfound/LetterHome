@@ -4,7 +4,7 @@
 // Checks that key pages return 200, contain expected content, and that
 // critical endpoints behave correctly. Does not fill forms or create orders.
 
-const { test } = require('node:test');
+const { test, before } = require('node:test');
 const assert = require('node:assert/strict');
 
 const BASE = (process.env.SMOKE_BASE_URL || 'https://letterhome.ca').replace(/\/$/, '');
@@ -22,9 +22,12 @@ async function get(path) {
   return { res, text };
 }
 
-// Warm up the connection — Cloudflare challenges cold IPs on the first request.
-// /health is excluded from bot protection so it always returns 200 immediately.
-await fetch(BASE + '/health', { headers: HEADERS }).catch(() => {});
+// Warm up the connection before tests run. Cloudflare challenges cold IPs on
+// the first request; /health is excluded from bot protection so it always
+// returns 200 and primes the IP for subsequent page checks.
+before(async () => {
+  await fetch(BASE + '/health', { headers: HEADERS }).catch(() => {});
+});
 
 // ── Page availability ──────────────────────────────────────────────────────
 
