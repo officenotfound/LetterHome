@@ -613,6 +613,7 @@ const SECURITY_TXT = [
  'from-portugal', 'from-sweden', 'from-netherlands', 'from-argentina', 'from-peru',
  'from-chile', 'from-venezuela', 'from-dominican-republic', 'from-tanzania',
  'from-uganda', 'from-cameroon', 'from-senegal', 'from-israel',
+ 'from-belgium',
  'format-adresse-canadienne',
  'combien-coute-envoyer-une-lettre-au-canada',
  'envoyer-documents-ircc-depuis-etranger',
