@@ -1,26 +1,15 @@
 # Letterhome
 
-> A Canadian letter mailing service. We print and mail physical letters and documents from Canada.
+> Letterhome is a Canadian letter and document mailing service. Customers anywhere in the world upload a PDF or Word document online, and Letterhome prints it in full colour, seals it in an envelope, and mails it from inside Canada via Canada Post Lettermail — with a real Canadian postmark. No Canadian address, printer, stamps, or post office visit required. From $10 CAD per letter.
 
-## What Letterhome does
-
-Letterhome is an online service that accepts a letter or document from anyone — anywhere in the world — prints it in full colour on standard letter-size paper, seals it in an envelope, applies Canadian postage, and deposits it with Canada Post for delivery.
-
-The service operates from Canada. Every letter carries a Canadian postmark.
-
-## Who uses it
-
-- Canadians living abroad who need to mail something to a Canadian address (government forms, legal documents, letters to family)
-- Immigrants and newcomers to Canada sending documents back home
-- People in Canada who want to mail a letter without buying stamps, envelopes, or making a trip to the post office
-- Anyone outside Canada who needs to send a letter that arrives with Canadian postage
+Letterhome is used by Canadians living abroad, immigrants sending documents to Canadian government offices (IRCC, CRA), expats sending letters to family, and anyone who needs a letter to arrive with a Canadian postmark.
 
 ## Pricing
 
 - $10 CAD — letters to any Canadian address (domestic)
 - $20 CAD — letters to any of 160+ international destinations
 
-Both prices include up to 5 documents of full-colour printing, the envelope, postage, and delivery. No account required. Pay once per order.
+Both prices include up to 5 pages of full-colour printing, the envelope, postage, and delivery. No account required. Pay once per order.
 
 ## How it works
 
@@ -35,24 +24,24 @@ Letters are mailed via Canada Post standard lettermail:
 - Within Canada: typically up to 2 weeks
 - International: typically up to 4 weeks
 
-Tracked and registered options are available on request.
+## Key pages
 
-## Guides
-
-- [How to send a letter to Canada from abroad](https://letterhome.ca/how-to-send-a-letter-to-canada-from-abroad) — step-by-step guide to mailing a letter to a Canadian address from any country.
-- [How to address a letter to Canada](https://letterhome.ca/how-to-address-a-letter-to-canada) — the correct Canadian address format, postal codes, and province abbreviations.
-- [How much does it cost to mail a letter to Canada](https://letterhome.ca/how-much-does-it-cost-to-mail-a-letter-to-canada) — current postage rates and the real all-in cost of mailing a letter.
-- [Comment envoyer une lettre au Canada (français)](https://letterhome.ca/comment-envoyer-une-lettre-au-canada) — guide en français canadien pour poster une lettre au Canada depuis l'étranger.
-- [Send documents to Canada](https://letterhome.ca/send-documents-to-canada) — mailing official and personal documents to Canada.
-- [How to mail CRA tax forms from outside Canada](https://letterhome.ca/how-to-mail-cra-tax-forms-from-outside-canada) — mailing Canada Revenue Agency tax documents from abroad.
-- [Send mail to Canada without a Canadian address](https://letterhome.ca/how-to-send-mail-to-canada-without-a-canadian-address) — you only need the recipient's address, not your own.
-- [How to mail IRCC immigration documents from outside Canada](https://letterhome.ca/how-to-mail-ircc-documents-from-outside-canada) — mailing immigration paperwork to IRCC from anywhere in the world.
-- [Cheapest way to send a letter to Canada](https://letterhome.ca/cheapest-way-to-send-a-letter-to-canada) — honest comparison of postage rates and when a print-and-mail service is the better deal.
-- [Send a letter to Canada without a return address](https://letterhome.ca/send-a-letter-to-canada-without-a-return-address) — return addresses are optional on Canadian mail; here's when and how to leave one off.
-- [Mail a letter online](https://letterhome.ca/mail-a-letter-online) — how to send a physical letter without a printer, stamps, or a post office trip.
-- [Send a letter from home](https://letterhome.ca/send-a-letter-from-home) — send a real letter from home without owning a printer or buying stamps.
-- [What is lettermail?](https://letterhome.ca/what-is-lettermail)
-- [IRCC Processing Times 2026](https://letterhome.ca/ircc-processing-times) — Current processing times for Canadian immigration applications, sourced from IRCC. — Canada Post lettermail explained: rates, size limits, delivery times, and when to use it.
+- [Home](https://letterhome.ca/): Service overview and order form
+- [Send a letter](https://letterhome.ca/send): Order form — upload documents and mail a letter to Canada
+- [How much does it cost to mail a letter to Canada? (2026)](https://letterhome.ca/how-much-does-it-cost-to-mail-a-letter-to-canada): Canada Post stamp prices in 2026 and comparison with Letterhome
+- [How to mail IRCC documents from outside Canada](https://letterhome.ca/how-to-mail-ircc-documents-from-outside-canada): Guide for mailing immigration documents to IRCC from abroad
+- [How to mail CRA tax forms from outside Canada](https://letterhome.ca/how-to-mail-cra-tax-forms-from-outside-canada): Guide for mailing tax forms to the Canada Revenue Agency from abroad
+- [Send a letter to Canada without a return address](https://letterhome.ca/send-a-letter-to-canada-without-a-return-address): When a return address is optional and how Letterhome handles it
+- [How to address a letter to Canada](https://letterhome.ca/how-to-address-a-letter-to-canada): Canadian address format, province abbreviations, postal codes
+- [How long does it take to mail a letter to Canada?](https://letterhome.ca/how-long-does-it-take-to-mail-a-letter-to-canada): Canada Post delivery timelines and IRCC document timing
+- [IRCC Processing Times 2026](https://letterhome.ca/ircc-processing-times): Current processing times for Canadian immigration applications
+- [Cheapest way to send a letter to Canada](https://letterhome.ca/cheapest-way-to-send-a-letter-to-canada): Honest comparison of postage rates
+- [Mail a letter online](https://letterhome.ca/mail-a-letter-online): How to send a physical letter without a printer, stamps, or post office
+- [What is lettermail?](https://letterhome.ca/what-is-lettermail): Canada Post lettermail explained — rates, size limits, delivery times
+- [Can you mail cash to Canada](https://letterhome.ca/can-you-mail-cash-to-canada): What you can and cannot mail to Canada
+- [How to track a letter to Canada](https://letterhome.ca/how-to-track-a-letter-to-canada): Tracking options and what to do if a letter goes missing
+- [How to send a registered letter to Canada](https://letterhome.ca/how-to-send-a-registered-letter-to-canada): Options, costs, and delivery times for registered mail
+- [Guides](https://letterhome.ca/guides): All mailing guides
 
 ## Send from a specific country
 
@@ -69,7 +58,6 @@ Tracked and registered options are available on request.
 - [From Germany](https://letterhome.ca/from-germany)
 - [From Pakistan](https://letterhome.ca/from-pakistan)
 - [From Nigeria](https://letterhome.ca/from-nigeria)
-- [From France](https://letterhome.ca/from-france)
 - [From Mexico](https://letterhome.ca/from-mexico)
 - [From Brazil](https://letterhome.ca/from-brazil)
 - [From South Korea](https://letterhome.ca/from-south-korea)
@@ -81,46 +69,45 @@ Tracked and registered options are available on request.
 - [From Lebanon](https://letterhome.ca/from-lebanon)
 - [From Bangladesh](https://letterhome.ca/from-bangladesh)
 - [From Nepal](https://letterhome.ca/from-nepal)
+- [From Belgium](https://letterhome.ca/from-belgium)
+- [From Netherlands](https://letterhome.ca/from-netherlands)
+- [From Egypt](https://letterhome.ca/from-egypt)
+- [From Colombia](https://letterhome.ca/from-colombia)
+- [From Kenya](https://letterhome.ca/from-kenya)
+- [From Ghana](https://letterhome.ca/from-ghana)
+- [From South Africa](https://letterhome.ca/from-south-africa)
+- [From Singapore](https://letterhome.ca/from-singapore)
+- [From Ethiopia](https://letterhome.ca/from-ethiopia)
+- [From Trinidad](https://letterhome.ca/from-trinidad)
+- [From Haiti](https://letterhome.ca/from-haiti)
+- [From El Salvador](https://letterhome.ca/from-el-salvador)
+- [From Iran](https://letterhome.ca/from-iran)
+- [From Morocco](https://letterhome.ca/from-morocco)
+- [From Turkey](https://letterhome.ca/from-turkey)
+- [From Poland](https://letterhome.ca/from-poland)
+- [From Romania](https://letterhome.ca/from-romania)
+- [From Portugal](https://letterhome.ca/from-portugal)
+- [From Sweden](https://letterhome.ca/from-sweden)
+- [From Argentina](https://letterhome.ca/from-argentina)
+- [From Peru](https://letterhome.ca/from-peru)
+- [From Chile](https://letterhome.ca/from-chile)
+- [From Venezuela](https://letterhome.ca/from-venezuela)
+- [From Dominican Republic](https://letterhome.ca/from-dominican-republic)
+- [From Tanzania](https://letterhome.ca/from-tanzania)
+- [From Uganda](https://letterhome.ca/from-uganda)
+- [From Cameroon](https://letterhome.ca/from-cameroon)
+- [From Senegal](https://letterhome.ca/from-senegal)
+- [From Israel](https://letterhome.ca/from-israel)
 
-- [From Egypt](https://letterhome.ca/from-egypt) — Send mail to Canada from Egypt.
-- [From Colombia](https://letterhome.ca/from-colombia) — Send mail to Canada from Colombia.
-- [From Kenya](https://letterhome.ca/from-kenya) — Send mail to Canada from Kenya.
-- [From Ghana](https://letterhome.ca/from-ghana) — Send mail to Canada from Ghana.
-- [From South Africa](https://letterhome.ca/from-south-africa) — Send mail to Canada from South Africa.
-- [From Singapore](https://letterhome.ca/from-singapore) — Send mail to Canada from Singapore.
-- [From Ethiopia](https://letterhome.ca/from-ethiopia) — Send mail to Canada from Ethiopia.
-- [From Trinidad](https://letterhome.ca/from-trinidad) — Send mail to Canada from Trinidad and Tobago.
-- [From Haiti](https://letterhome.ca/from-haiti) — Send mail to Canada from Haiti.
-- [From El Salvador](https://letterhome.ca/from-el-salvador) — Send mail to Canada from El Salvador.
-- [How Long Does It Take To Mail A Letter To Canada](https://letterhome.ca/how-long-does-it-take-to-mail-a-letter-to-canada) — Delivery times for mailing a letter to Canada from 20+ countries.
-- [Can You Mail Cash To Canada](https://letterhome.ca/can-you-mail-cash-to-canada) — What you can and cannot mail to Canada — cash, cheques, documents explained.
-- [How To Track A Letter To Canada](https://letterhome.ca/how-to-track-a-letter-to-canada) — How to track a letter sent to Canada and what to do if it goes missing.
-- [How To Write A Letter To Canada](https://letterhome.ca/how-to-write-a-letter-to-canada) — Format, template, and salutations for writing a letter to a Canadian recipient.
-- [How To Send A Registered Letter To Canada](https://letterhome.ca/how-to-send-a-registered-letter-to-canada) — Options, costs, and delivery times for registered mail to Canada.
-- [Can I Mail A Package To Canada](https://letterhome.ca/can-i-mail-a-package-to-canada) — Difference between letters and packages, customs rules, and what Letterhome handles.
-- [From Iran](https://letterhome.ca/from-iran) — Send mail to Canada from Iran.
-- [From Morocco](https://letterhome.ca/from-morocco) — Send mail to Canada from Morocco.
-- [From Turkey](https://letterhome.ca/from-turkey) — Send mail to Canada from Turkey.
-- [From Poland](https://letterhome.ca/from-poland) — Send mail to Canada from Poland.
-- [From Romania](https://letterhome.ca/from-romania) — Send mail to Canada from Romania.
-- [From Portugal](https://letterhome.ca/from-portugal) — Send mail to Canada from Portugal.
-- [From Sweden](https://letterhome.ca/from-sweden) — Send mail to Canada from Sweden.
-- [From Netherlands](https://letterhome.ca/from-netherlands) — Send mail to Canada from the Netherlands.
-- [From Argentina](https://letterhome.ca/from-argentina) — Send mail to Canada from Argentina.
-- [From Peru](https://letterhome.ca/from-peru) — Send mail to Canada from Peru.
-- [From Chile](https://letterhome.ca/from-chile) — Send mail to Canada from Chile.
-- [From Venezuela](https://letterhome.ca/from-venezuela) — Send mail to Canada from Venezuela.
-- [From Dominican Republic](https://letterhome.ca/from-dominican-republic) — Send mail to Canada from the Dominican Republic.
-- [From Tanzania](https://letterhome.ca/from-tanzania) — Send mail to Canada from Tanzania.
-- [From Uganda](https://letterhome.ca/from-uganda) — Send mail to Canada from Uganda.
-- [From Cameroon](https://letterhome.ca/from-cameroon) — Send mail to Canada from Cameroon.
-- [From Senegal](https://letterhome.ca/from-senegal) — Send mail to Canada from Senegal.
-- [From Israel](https://letterhome.ca/from-israel) — Send mail to Canada from Israel.
-- [Format Adresse Canadienne](https://letterhome.ca/format-adresse-canadienne) — Format d'adresse canadienne : provinces, code postal, exemples (French).
-- [Combien Coûte Envoyer Une Lettre Au Canada](https://letterhome.ca/combien-coute-envoyer-une-lettre-au-canada) — Tarifs pour envoyer une lettre au Canada depuis l'étranger (French).
-- [Envoyer Documents IRCC Depuis L'Étranger](https://letterhome.ca/envoyer-documents-ircc-depuis-etranger) — Comment envoyer des documents à l'IRCC depuis l'étranger (French).
+## French-language pages
+
+- [Comment envoyer une lettre au Canada](https://letterhome.ca/comment-envoyer-une-lettre-au-canada)
+- [Format adresse canadienne](https://letterhome.ca/format-adresse-canadienne)
+- [Combien coûte envoyer une lettre au Canada](https://letterhome.ca/combien-coute-envoyer-une-lettre-au-canada)
+- [Envoyer documents IRCC depuis l'étranger](https://letterhome.ca/envoyer-documents-ircc-depuis-etranger)
 
 ## Contact
 
-Email: support@letterhome.ca
-Website: https://letterhome.ca
+- Email: support@letterhome.ca
+- Website: https://letterhome.ca
+- Based in: Canada

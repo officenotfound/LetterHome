@@ -27,6 +27,24 @@ Disallow: /api/
 Disallow: /order-success
 
 # ---------------------------------------------------------------------------
+# AI SEARCH / real-time answer bots — explicitly welcomed.
+# These crawl pages to cite them in live AI answers (ChatGPT Search,
+# Perplexity, Copilot). Distinct from training crawlers — they send
+# referral traffic back.
+# ---------------------------------------------------------------------------
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: YouBot
+Allow: /
+
+User-agent: DuckAssistBot
+Allow: /
+
+# ---------------------------------------------------------------------------
 # AI TRAINING crawlers — explicitly opted out.
 # Mirrors the ai-train=no signal above and our Cloudflare "block AI training
 # bots" rule. Named groups do NOT inherit the * rules, but a blanket Disallow
