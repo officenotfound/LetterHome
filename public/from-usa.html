@@ -42,23 +42,97 @@
         "name": "Letterhome",
         "url": "https://letterhome.ca",
         "email": "support@letterhome.ca",
-        "logo": "https://letterhome.ca/icon-512.png", "sameAs": ["https://www.facebook.com/letterhomeca", "https://www.instagram.com/letterhomeca",
-          "https://x.com/letterhomeca"], "address": { "@type": "PostalAddress", "addressCountry": "CA" }
+        "logo": "https://letterhome.ca/icon-512.png",
+        "sameAs": [
+          "https://www.facebook.com/letterhomeca",
+          "https://www.instagram.com/letterhomeca",
+          "https://x.com/letterhomeca"
+        ],
+        "address": {
+          "@type": "PostalAddress",
+          "addressCountry": "CA"
+        }
       },
       "areaServed": [
-        { "@type": "Country", "name": "Canada" },
-        { "@type": "Place", "name": "Worldwide" }
+        {
+          "@type": "Country",
+          "name": "Canada"
+        },
+        {
+          "@type": "Place",
+          "name": "Worldwide"
+        }
       ],
       "hasOfferCatalog": {
         "@type": "OfferCatalog",
         "name": "Letter mailing",
         "itemListElement": [
-          { "@type": "Offer", "name": "Domestic — within Canada", "price": "10", "priceCurrency": "CAD" },
-          { "@type": "Offer", "name": "International — 160+ countries", "price": "20", "priceCurrency": "CAD" }
+          {
+            "@type": "Offer",
+            "name": "Domestic — within Canada",
+            "price": "10",
+            "priceCurrency": "CAD"
+          },
+          {
+            "@type": "Offer",
+            "name": "International — 160+ countries",
+            "price": "20",
+            "priceCurrency": "CAD"
+          }
         ]
       }
     },
-    {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Do I need a Canadian address or Canadian credit card?","acceptedAnswer":{"@type":"Answer","text":"No. You can order from anywhere — a US billing address and a US card work fine. Payment is processed through Stripe. You're charged in Canadian dollars and your bank converts at its rate."}},{"@type":"Question","name":"How long does delivery from the US take?","acceptedAnswer":{"@type":"Answer","text":"We print and mail within one business day of payment. After that, Canada Post standard lettermail typically delivers within Canada in up to 2 weeks."}},{"@type":"Question","name":"Can I send a PDF or Word document?","acceptedAnswer":{"@type":"Answer","text":"Yes. Attach up to 5 PDF or Word files (10 MB each). We print them in full colour and include them in the envelope with your letter."}},{"@type":"Question","name":"What if I need to mail something international from Canada to another country?","acceptedAnswer":{"@type":"Answer","text":"We handle that too. International mail (160+ countries) is $20 CAD — same process, just a different destination."}}]}
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Do I need a Canadian address or Canadian credit card?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. You can order from anywhere — a US billing address and a US card work fine. Payment is processed through Stripe. You're charged in Canadian dollars and your bank converts at its rate."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How long does delivery from the US take?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "We print and mail within one business day of payment. After that, Canada Post standard lettermail typically delivers within Canada in up to 2 weeks."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I send a PDF or Word document?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Attach up to 5 PDF or Word files (10 MB each). We print them in full colour and include them in the envelope with your letter."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What if I need to mail something international from Canada to another country?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "We handle that too. International mail (160+ countries) is $20 CAD — same process, just a different destination."
+          }
+        }
+      ]
+    },
+    {
+      "@type": "WebPage",
+      "@id": "https://letterhome.ca/from-usa#webpage",
+      "url": "https://letterhome.ca/from-usa",
+      "name": "Send a Letter to Canada from the USA",
+      "description": "Living in the US and need to send a letter to Canada? Upload your document, we print it in full colour and mail it from inside Canada via Canada Post. No Canadian address needed. From $10 CAD.",
+      "datePublished": "2025-11-01",
+      "dateModified": "2026-06-28",
+      "inLanguage": "en-CA",
+      "isPartOf": {
+        "@id": "https://letterhome.ca/#website"
+      }
+    }
   ]
 }
 </script>
@@ -129,7 +203,12 @@ footer a{color:var(--ink-muted);margin:0 8px}
 
   <div class="eyebrow" data-i18n="from.usa.eyebrow">Mailing from the US</div>
   <h1 data-i18n="from.usa.h1">Send mail to Canada from the United States</h1>
+  <p class="updated" style="font-family:'DM Mono',monospace;font-size:12px;letter-spacing:0.06em;color:var(--ink-faint,#968b7d);margin-bottom:20px">Updated June 2026</p>
   <p class="lede" data-i18n="from.usa.lede">Living in the US and need to mail something back home to Canada? We handle the printing, the Canadian postage, and the trip to the post office — so you don't have to.</p>
+
+  <div style="background:var(--paper);border:1px solid var(--line);border-left:3px solid var(--red);border-radius:2px;padding:18px 22px;margin:20px 0 24px;font-size:15px;color:var(--ink-soft)">
+    <strong style="color:var(--ink)">Yes — no Canadian address, printer, or stamps needed.</strong> Upload your letter or document, and Letterhome prints it in full colour and mails it from inside Canada via Canada Post. It arrives with a real Canadian postmark at domestic speed. From $10 CAD to any Canadian address.
+  </div>
 
   <div class="cta-row">
     <a href="/send" class="btn btn-red">Send a letter now</a>

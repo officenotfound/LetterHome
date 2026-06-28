@@ -39,7 +39,15 @@
       "@id": "https://letterhome.ca/#website",
       "url": "https://letterhome.ca",
       "name": "Letterhome",
-      "description": "We print and mail letters and documents from Canada via Canada Post."
+      "description": "We print and mail letters and documents from Canada via Canada Post.",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": "https://letterhome.ca/guides?q={search_term_string}"
+        },
+        "query-input": "required name=search_term_string"
+      }
     },
     {
       "@type": "Service",
@@ -55,17 +63,29 @@
         "logo": "https://letterhome.ca/icon-512.png",
         "email": "support@letterhome.ca",
         "foundingDate": "2026",
-        "founder": { "@type": "Person", "name": "Jeffrey" },
+        "founder": {
+          "@type": "Person",
+          "name": "Jeffrey"
+        },
         "sameAs": [
           "https://www.facebook.com/letterhomeca",
           "https://www.instagram.com/letterhomeca",
           "https://x.com/letterhomeca"
         ],
-        "address": { "@type": "PostalAddress", "addressCountry": "CA" }
+        "address": {
+          "@type": "PostalAddress",
+          "addressCountry": "CA"
+        }
       },
       "areaServed": [
-        { "@type": "Country", "name": "Canada" },
-        { "@type": "Place", "name": "Worldwide" }
+        {
+          "@type": "Country",
+          "name": "Canada"
+        },
+        {
+          "@type": "Place",
+          "name": "Worldwide"
+        }
       ],
       "hasOfferCatalog": {
         "@type": "OfferCatalog",
@@ -95,32 +115,50 @@
         {
           "@type": "Question",
           "name": "Can I use Letterhome if I'm not in Canada?",
-          "acceptedAnswer": { "@type": "Answer", "text": "Yes. The whole process is online, so you can submit an order from anywhere with an internet connection. You don't need a Canadian address or a Canadian credit card. International cards are accepted through Stripe; you're charged in Canadian dollars and your bank converts at its exchange rate." }
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. The whole process is online, so you can submit an order from anywhere with an internet connection. You don't need a Canadian address or a Canadian credit card. International cards are accepted through Stripe; you're charged in Canadian dollars and your bank converts at its exchange rate."
+          }
         },
         {
           "@type": "Question",
           "name": "Where does the letter actually get mailed from?",
-          "acceptedAnswer": { "@type": "Answer", "text": "Inside Canada. Letters carry Canadian postage and go out through Canada Post. To the recipient, the envelope is indistinguishable from one you would have mailed yourself at a Canada Post box." }
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Inside Canada. Letters carry Canadian postage and go out through Canada Post. To the recipient, the envelope is indistinguishable from one you would have mailed yourself at a Canada Post box."
+          }
         },
         {
           "@type": "Question",
           "name": "What's the difference between domestic and international pricing?",
-          "acceptedAnswer": { "@type": "Answer", "text": "Two prices: $10 CAD for letters to a Canadian address, $20 CAD for letters to any of 160+ international destinations. Either price covers up to 5 documents of full-colour printing on letter-size paper, the envelope, postage, and the trip to the post office." }
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Two prices: $10 CAD for letters to a Canadian address, $20 CAD for letters to any of 160+ international destinations. Either price covers up to 5 documents of full-colour printing on letter-size paper, the envelope, postage, and the trip to the post office."
+          }
         },
         {
           "@type": "Question",
           "name": "How long does delivery take?",
-          "acceptedAnswer": { "@type": "Answer", "text": "We print and mail within one business day of payment. After that, Canada Post's standard lettermail typically takes up to 2 weeks within Canada and up to 4 weeks internationally, depending on the destination. Tracked or registered options are available for an additional fee — email sales@letterhome.ca before placing your order for a quote." }
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "We print and mail within one business day of payment. After that, Canada Post's standard lettermail typically takes up to 2 weeks within Canada and up to 4 weeks internationally, depending on the destination. Tracked or registered options are available for an additional fee — email sales@letterhome.ca before placing your order for a quote."
+          }
         },
         {
           "@type": "Question",
           "name": "Can I attach documents like PDFs or Word files?",
-          "acceptedAnswer": { "@type": "Answer", "text": "Yes. Attach up to 5 PDF or Word files (10 MB each). They're printed in full colour and included in the same envelope as your letter. This is how most people use the service for tax forms, contracts, and immigration paperwork." }
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Attach up to 5 PDF or Word files (10 MB each). They're printed in full colour and included in the same envelope as your letter. This is how most people use the service for tax forms, contracts, and immigration paperwork."
+          }
         },
         {
           "@type": "Question",
           "name": "Is the content of my letter kept private?",
-          "acceptedAnswer": { "@type": "Answer", "text": "Yes. Orders are checked for things that would stop the mail from going through — bad addresses, unreadable files, obvious abuse or illegal content — not for what you wrote. Your letter and any attachments are deleted from our systems within 7 days of mailing. We keep a basic order record (date, amount, your email) for Canadian tax purposes, but not the content of what you sent. Payments are handled by Stripe; we never see your card details." }
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Orders are checked for things that would stop the mail from going through — bad addresses, unreadable files, obvious abuse or illegal content — not for what you wrote. Your letter and any attachments are deleted from our systems within 7 days of mailing. We keep a basic order record (date, amount, your email) for Canadian tax purposes, but not the content of what you sent. Payments are handled by Stripe; we never see your card details."
+          }
         }
       ]
     },
@@ -141,7 +179,23 @@
         "https://www.instagram.com/letterhomeca",
         "https://x.com/letterhomeca"
       ],
-      "address": { "@type": "PostalAddress", "addressCountry": "CA" }
+      "address": {
+        "@type": "PostalAddress",
+        "addressCountry": "CA"
+      }
+    },
+    {
+      "@type": "WebPage",
+      "@id": "https://letterhome.ca/#webpage",
+      "url": "https://letterhome.ca/",
+      "name": "Letterhome — Letters and documents mailed from Canada",
+      "description": "We print your letters and documents in full colour and mail them from Canada. Built for Canadians abroad sending mail home, and anyone who'd rather skip the trip to the post office. From $10 CAD per letter.",
+      "datePublished": "2025-11-01",
+      "dateModified": "2026-06-28",
+      "inLanguage": "en-CA",
+      "isPartOf": {
+        "@id": "https://letterhome.ca/#website"
+      }
     }
   ]
 }

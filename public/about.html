@@ -29,7 +29,67 @@
 <meta name="twitter:description" content="Letterhome is a small mail service that prints and posts letters and documents from Canada. Built for Canadians abroad, and for anyone who needs Canadian post without the trip.">
 <meta name="twitter:image" content="https://letterhome.ca/og-image.jpg?v=2">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://letterhome.ca/"},{"@type":"ListItem","position":2,"name":"About","item":"https://letterhome.ca/about"}]}
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://letterhome.ca/#organization",
+      "name": "Letterhome",
+      "url": "https://letterhome.ca",
+      "email": "support@letterhome.ca",
+      "foundingDate": "2025",
+      "description": "Letterhome is a Canadian letter and document mailing service. Customers upload a PDF or Word file online; Letterhome prints it in full colour and mails it from inside Canada via Canada Post with a real Canadian postmark. From $10 CAD.",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://letterhome.ca/icon-512.png",
+        "width": 512,
+        "height": 512
+      },
+      "address": {
+        "@type": "PostalAddress",
+        "addressCountry": "CA"
+      },
+      "sameAs": [
+        "https://www.facebook.com/letterhomeca",
+        "https://www.instagram.com/letterhomeca",
+        "https://x.com/letterhomeca"
+      ],
+      "founder": {
+        "@type": "Person",
+        "name": "Jeffrey",
+        "jobTitle": "Founder"
+      },
+      "areaServed": "Worldwide",
+      "knowsAbout": [
+        "Canadian lettermail",
+        "Canada Post mailing",
+        "IRCC document mailing",
+        "CRA tax form mailing",
+        "International mail from Canada"
+      ]
+    },
+    {
+      "@type": "WebPage",
+      "@id": "https://letterhome.ca/about#webpage",
+      "url": "https://letterhome.ca/about",
+      "name": "About Letterhome",
+      "description": "Letterhome is a small mail service that prints and posts letters and documents from Canada. Built for Canadians abroad, and for anyone who needs Canadian post without the trip.",
+      "datePublished": "2025-11-01",
+      "dateModified": "2026-06-28",
+      "inLanguage": "en-CA",
+      "isPartOf": { "@id": "https://letterhome.ca/#website" },
+      "about": { "@id": "https://letterhome.ca/#organization" }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://letterhome.ca/" },
+        { "@type": "ListItem", "position": 2, "name": "About", "item": "https://letterhome.ca/about" }
+      ]
+    }
+  ]
+}
 </script>
 <link rel="stylesheet" href="/fonts.css?v=1">
 <style>

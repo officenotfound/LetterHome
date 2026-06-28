@@ -33,11 +33,25 @@
       "@type": "Service",
       "name": "Letterhome — Online Letter Mailing Service",
       "description": "Write or upload a letter online and have it printed in full colour and mailed via Canada Post. Available to anyone, anywhere in the world.",
-      "provider": { "@type": "Organization", "name": "Letterhome", "url": "https://letterhome.ca" },
+      "provider": {
+        "@type": "Organization",
+        "name": "Letterhome",
+        "url": "https://letterhome.ca"
+      },
       "areaServed": "Worldwide",
       "offers": [
-        { "@type": "Offer", "name": "Mail a letter to Canada", "price": "10", "priceCurrency": "CAD" },
-        { "@type": "Offer", "name": "Mail a letter internationally", "price": "20", "priceCurrency": "CAD" }
+        {
+          "@type": "Offer",
+          "name": "Mail a letter to Canada",
+          "price": "10",
+          "priceCurrency": "CAD"
+        },
+        {
+          "@type": "Offer",
+          "name": "Mail a letter internationally",
+          "price": "20",
+          "priceCurrency": "CAD"
+        }
       ]
     },
     {
@@ -45,30 +59,112 @@
       "name": "How to mail a letter online",
       "description": "Mail a physical letter without stamps, a printer, or a trip to the post office — using an online print-and-mail service.",
       "totalTime": "PT5M",
-      "estimatedCost": { "@type": "MonetaryAmount", "currency": "CAD", "value": "10" },
+      "estimatedCost": {
+        "@type": "MonetaryAmount",
+        "currency": "CAD",
+        "value": "10"
+      },
       "step": [
-        { "@type": "HowToStep", "position": 1, "name": "Write or upload your letter", "text": "Type your message directly in the order form, or attach up to 5 PDF or Word documents. Everything is printed in full colour on standard letter-size paper." },
-        { "@type": "HowToStep", "position": 2, "name": "Enter the recipient's address", "text": "Add the name and full mailing address of the person or organization you're sending to. A return address is optional." },
-        { "@type": "HowToStep", "position": 3, "name": "Pay by card", "text": "Pay with any major credit or debit card from any country. You're charged in Canadian dollars through Stripe." },
-        { "@type": "HowToStep", "position": 4, "name": "We print and mail it", "text": "Letterhome prints your letter in Canada, seals it in an envelope, applies postage, and deposits it with Canada Post — usually within one business day." }
+        {
+          "@type": "HowToStep",
+          "position": 1,
+          "name": "Write or upload your letter",
+          "text": "Type your message directly in the order form, or attach up to 5 PDF or Word documents. Everything is printed in full colour on standard letter-size paper."
+        },
+        {
+          "@type": "HowToStep",
+          "position": 2,
+          "name": "Enter the recipient's address",
+          "text": "Add the name and full mailing address of the person or organization you're sending to. A return address is optional."
+        },
+        {
+          "@type": "HowToStep",
+          "position": 3,
+          "name": "Pay by card",
+          "text": "Pay with any major credit or debit card from any country. You're charged in Canadian dollars through Stripe."
+        },
+        {
+          "@type": "HowToStep",
+          "position": 4,
+          "name": "We print and mail it",
+          "text": "Letterhome prints your letter in Canada, seals it in an envelope, applies postage, and deposits it with Canada Post — usually within one business day."
+        }
       ]
     },
     {
       "@type": "FAQPage",
       "mainEntity": [
-        { "@type": "Question", "name": "Can I mail a letter online without a printer?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. That's exactly what Letterhome is for. You type or upload your letter online and we handle the printing, the envelope, the stamp, and the trip to the post office. You don't need a printer, paper, or stamps." } },
-        { "@type": "Question", "name": "How do I send a letter online?", "acceptedAnswer": { "@type": "Answer", "text": "Go to letterhome.ca/send, write your message or attach your documents, enter the recipient's address, and pay by card. We print the letter in full colour and mail it from Canada — usually within one business day." } },
-        { "@type": "Question", "name": "How much does it cost to mail a letter online?", "acceptedAnswer": { "@type": "Answer", "text": "It is $10 CAD to any Canadian address and $20 CAD to any of 160+ international destinations. Each price includes up to 5 documents printed in full colour, the envelope, and postage. No account required." } },
-        { "@type": "Question", "name": "Can I send documents as well as letters?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Attach up to 5 PDF or Word files per order (10 MB each). They are printed in full colour and included in the same envelope. Common uses include tax forms, immigration documents, legal correspondence, and signed contracts." } },
-        { "@type": "Question", "name": "Can I mail a letter online from outside Canada?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Letterhome accepts orders from anywhere in the world. You place the order online wherever you are and the letter is printed and mailed from inside Canada. No Canadian address or credit card needed." } }
+        {
+          "@type": "Question",
+          "name": "Can I mail a letter online without a printer?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. That's exactly what Letterhome is for. You type or upload your letter online and we handle the printing, the envelope, the stamp, and the trip to the post office. You don't need a printer, paper, or stamps."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do I send a letter online?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Go to letterhome.ca/send, write your message or attach your documents, enter the recipient's address, and pay by card. We print the letter in full colour and mail it from Canada — usually within one business day."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How much does it cost to mail a letter online?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "It is $10 CAD to any Canadian address and $20 CAD to any of 160+ international destinations. Each price includes up to 5 documents printed in full colour, the envelope, and postage. No account required."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I send documents as well as letters?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Attach up to 5 PDF or Word files per order (10 MB each). They are printed in full colour and included in the same envelope. Common uses include tax forms, immigration documents, legal correspondence, and signed contracts."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I mail a letter online from outside Canada?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Letterhome accepts orders from anywhere in the world. You place the order online wherever you are and the letter is printed and mailed from inside Canada. No Canadian address or credit card needed."
+          }
+        }
       ]
     },
     {
       "@type": "BreadcrumbList",
       "itemListElement": [
-        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://letterhome.ca/" },
-        { "@type": "ListItem", "position": 2, "name": "Mail a letter online", "item": "https://letterhome.ca/mail-a-letter-online" }
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://letterhome.ca/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Mail a letter online",
+          "item": "https://letterhome.ca/mail-a-letter-online"
+        }
       ]
+    },
+    {
+      "@type": "WebPage",
+      "@id": "https://letterhome.ca/mail-a-letter-online#webpage",
+      "url": "https://letterhome.ca/mail-a-letter-online",
+      "name": "Mail a Letter Online — Printed &amp; Posted for You",
+      "description": "Write or upload your letter online and we print it in full colour and mail it for you — no stamps, no printer, no post office trip. From $10 CAD to any Canadian address or $20 CAD worldwide.",
+      "datePublished": "2025-11-01",
+      "dateModified": "2026-06-28",
+      "inLanguage": "en-CA",
+      "isPartOf": {
+        "@id": "https://letterhome.ca/#website"
+      }
     }
   ]
 }

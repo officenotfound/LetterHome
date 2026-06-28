@@ -42,23 +42,97 @@
         "name": "Letterhome",
         "url": "https://letterhome.ca",
         "email": "support@letterhome.ca",
-        "logo": "https://letterhome.ca/icon-512.png", "sameAs": ["https://www.facebook.com/letterhomeca", "https://www.instagram.com/letterhomeca",
-          "https://x.com/letterhomeca"], "address": { "@type": "PostalAddress", "addressCountry": "CA" }
+        "logo": "https://letterhome.ca/icon-512.png",
+        "sameAs": [
+          "https://www.facebook.com/letterhomeca",
+          "https://www.instagram.com/letterhomeca",
+          "https://x.com/letterhomeca"
+        ],
+        "address": {
+          "@type": "PostalAddress",
+          "addressCountry": "CA"
+        }
       },
       "areaServed": [
-        { "@type": "Country", "name": "Canada" },
-        { "@type": "Place", "name": "Italy" }
+        {
+          "@type": "Country",
+          "name": "Canada"
+        },
+        {
+          "@type": "Place",
+          "name": "Italy"
+        }
       ],
       "hasOfferCatalog": {
         "@type": "OfferCatalog",
         "name": "Letter mailing",
         "itemListElement": [
-          { "@type": "Offer", "name": "Domestic — within Canada", "price": "10", "priceCurrency": "CAD" },
-          { "@type": "Offer", "name": "International — 160+ countries", "price": "20", "priceCurrency": "CAD" }
+          {
+            "@type": "Offer",
+            "name": "Domestic — within Canada",
+            "price": "10",
+            "priceCurrency": "CAD"
+          },
+          {
+            "@type": "Offer",
+            "name": "International — 160+ countries",
+            "price": "20",
+            "priceCurrency": "CAD"
+          }
         ]
       }
     },
-    {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Can I send a letter to Canada from Italy without a Canadian address?","acceptedAnswer":{"@type":"Answer","text":"Yes. You write or upload your letter online from Italy, and it's printed and mailed from inside Canada for you. No Canadian address or card is needed — an Italian card works through Stripe, charged in Canadian dollars."}},{"@type":"Question","name":"How long does mail from Italy to Canada take?","acceptedAnswer":{"@type":"Answer","text":"Posting from Italy to Canada internationally can take several weeks. Letterhome mails from inside Canada as domestic lettermail, so it typically reaches a Canadian address in up to 2 weeks, and we print and mail within one business day of payment."}},{"@type":"Question","name":"Can I send official or family documents to Canada?","acceptedAnswer":{"@type":"Answer","text":"Yes. Attach up to 5 PDF or Word files (10 MB each). They're printed in full colour and placed in the envelope — used for letters to family, signed paperwork, and documents that need to arrive physically at a Canadian address."}},{"@type":"Question","name":"How much does it cost to send a letter to Canada from Italy?","acceptedAnswer":{"@type":"Answer","text":"$10 CAD to any Canadian address, or $20 CAD to any of 160+ international destinations. Each price includes full-colour printing, the envelope, and postage."}}]}
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Can I send a letter to Canada from Italy without a Canadian address?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. You write or upload your letter online from Italy, and it's printed and mailed from inside Canada for you. No Canadian address or card is needed — an Italian card works through Stripe, charged in Canadian dollars."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How long does mail from Italy to Canada take?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Posting from Italy to Canada internationally can take several weeks. Letterhome mails from inside Canada as domestic lettermail, so it typically reaches a Canadian address in up to 2 weeks, and we print and mail within one business day of payment."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I send official or family documents to Canada?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Attach up to 5 PDF or Word files (10 MB each). They're printed in full colour and placed in the envelope — used for letters to family, signed paperwork, and documents that need to arrive physically at a Canadian address."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How much does it cost to send a letter to Canada from Italy?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "$10 CAD to any Canadian address, or $20 CAD to any of 160+ international destinations. Each price includes full-colour printing, the envelope, and postage."
+          }
+        }
+      ]
+    },
+    {
+      "@type": "WebPage",
+      "@id": "https://letterhome.ca/from-italy#webpage",
+      "url": "https://letterhome.ca/from-italy",
+      "name": "Send a Letter to Canada from Italy",
+      "description": "Living in Italy and need to send a letter to Canada? Upload your document, we print it in full colour and mail it from inside Canada via Canada Post. No Canadian address needed. From $10 CAD.",
+      "datePublished": "2025-11-01",
+      "dateModified": "2026-06-28",
+      "inLanguage": "en-CA",
+      "isPartOf": {
+        "@id": "https://letterhome.ca/#website"
+      }
+    }
   ]
 }
 </script>
@@ -129,7 +203,12 @@ footer a{color:var(--ink-muted);margin:0 8px}
 
   <div class="eyebrow" data-i18n="from.italy.eyebrow">Mailing from Italy</div>
   <h1 data-i18n="from.italy.h1">Send mail to Canada from Italy</h1>
+  <p class="updated" style="font-family:'DM Mono',monospace;font-size:12px;letter-spacing:0.06em;color:var(--ink-faint,#968b7d);margin-bottom:20px">Updated June 2026</p>
   <p class="lede" data-i18n="from.italy.lede">The ties between Italy and Canada run deep, and a lot of those ties still travel by post — a letter to a cousin in Toronto, a signed document for family, a card that means more on paper. Rather than wait on international mail, we print your letter in Canada, add Canadian postage, and send it through Canada Post so it arrives the way local mail does.</p>
+
+  <div style="background:var(--paper);border:1px solid var(--line);border-left:3px solid var(--red);border-radius:2px;padding:18px 22px;margin:20px 0 24px;font-size:15px;color:var(--ink-soft)">
+    <strong style="color:var(--ink)">Yes — you can send a letter to Canada from Italy without international postage or a Canadian address.</strong> Upload your letter or document online, and Letterhome prints it in full colour and mails it from inside Canada via Canada Post. Arrives with a real Canadian postmark, at domestic speed — not the 4+ weeks of international post. From $10 CAD.
+  </div>
 
   <div class="cta-row">
     <a href="/send" class="btn btn-red">Send a letter now</a>

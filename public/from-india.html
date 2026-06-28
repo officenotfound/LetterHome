@@ -42,23 +42,97 @@
         "name": "Letterhome",
         "url": "https://letterhome.ca",
         "email": "support@letterhome.ca",
-        "logo": "https://letterhome.ca/icon-512.png", "sameAs": ["https://www.facebook.com/letterhomeca", "https://www.instagram.com/letterhomeca",
-          "https://x.com/letterhomeca"], "address": { "@type": "PostalAddress", "addressCountry": "CA" }
+        "logo": "https://letterhome.ca/icon-512.png",
+        "sameAs": [
+          "https://www.facebook.com/letterhomeca",
+          "https://www.instagram.com/letterhomeca",
+          "https://x.com/letterhomeca"
+        ],
+        "address": {
+          "@type": "PostalAddress",
+          "addressCountry": "CA"
+        }
       },
       "areaServed": [
-        { "@type": "Country", "name": "Canada" },
-        { "@type": "Place", "name": "India" }
+        {
+          "@type": "Country",
+          "name": "Canada"
+        },
+        {
+          "@type": "Place",
+          "name": "India"
+        }
       ],
       "hasOfferCatalog": {
         "@type": "OfferCatalog",
         "name": "Letter mailing",
         "itemListElement": [
-          { "@type": "Offer", "name": "Domestic — within Canada", "price": "10", "priceCurrency": "CAD" },
-          { "@type": "Offer", "name": "International — 160+ countries", "price": "20", "priceCurrency": "CAD" }
+          {
+            "@type": "Offer",
+            "name": "Domestic — within Canada",
+            "price": "10",
+            "priceCurrency": "CAD"
+          },
+          {
+            "@type": "Offer",
+            "name": "International — 160+ countries",
+            "price": "20",
+            "priceCurrency": "CAD"
+          }
         ]
       }
     },
-    {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Can I send a letter to Canada from India without a Canadian address?","acceptedAnswer":{"@type":"Answer","text":"Yes. You submit your letter online from India, and it's printed and mailed from inside Canada for you. No Canadian address or card is needed — an Indian card works through Stripe, charged in Canadian dollars and converted by your bank."}},{"@type":"Question","name":"How long does mail from India to Canada take?","acceptedAnswer":{"@type":"Answer","text":"International post from India to Canada can take several weeks and is hard to track. Letterhome mails from inside Canada as domestic lettermail, so delivery to a Canadian address is typically up to 2 weeks, and we print and mail within one business day of payment."}},{"@type":"Question","name":"Can I mail documents to a student or relative in Canada?","acceptedAnswer":{"@type":"Answer","text":"Yes. Attach up to 5 PDF or Word files (10 MB each). They're printed in full colour and sealed in the envelope — commonly used to send documents to students, family, and for IRCC immigration paperwork going to a Canadian address."}},{"@type":"Question","name":"How much does it cost to send a letter to Canada from India?","acceptedAnswer":{"@type":"Answer","text":"$10 CAD to any Canadian address, or $20 CAD to any of 160+ international destinations. Each price includes full-colour printing, the envelope, and postage."}}]}
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Can I send a letter to Canada from India without a Canadian address?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. You submit your letter online from India, and it's printed and mailed from inside Canada for you. No Canadian address or card is needed — an Indian card works through Stripe, charged in Canadian dollars and converted by your bank."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How long does mail from India to Canada take?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "International post from India to Canada can take several weeks and is hard to track. Letterhome mails from inside Canada as domestic lettermail, so delivery to a Canadian address is typically up to 2 weeks, and we print and mail within one business day of payment."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I mail documents to a student or relative in Canada?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Attach up to 5 PDF or Word files (10 MB each). They're printed in full colour and sealed in the envelope — commonly used to send documents to students, family, and for IRCC immigration paperwork going to a Canadian address."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How much does it cost to send a letter to Canada from India?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "$10 CAD to any Canadian address, or $20 CAD to any of 160+ international destinations. Each price includes full-colour printing, the envelope, and postage."
+          }
+        }
+      ]
+    },
+    {
+      "@type": "WebPage",
+      "@id": "https://letterhome.ca/from-india#webpage",
+      "url": "https://letterhome.ca/from-india",
+      "name": "Send a Letter to Canada from India",
+      "description": "Living in India and need to send a letter to Canada? Upload your document, we print it in full colour and mail it from inside Canada via Canada Post. No Canadian address needed. From $10 CAD.",
+      "datePublished": "2025-11-01",
+      "dateModified": "2026-06-28",
+      "inLanguage": "en-CA",
+      "isPartOf": {
+        "@id": "https://letterhome.ca/#website"
+      }
+    }
   ]
 }
 </script>
@@ -129,7 +203,12 @@ footer a{color:var(--ink-muted);margin:0 8px}
 
   <div class="eyebrow" data-i18n="from.india.eyebrow">Mailing from India</div>
   <h1 data-i18n="from.india.h1">Send mail to Canada from India</h1>
+  <p class="updated" style="font-family:'DM Mono',monospace;font-size:12px;letter-spacing:0.06em;color:var(--ink-faint,#968b7d);margin-bottom:20px">Updated June 2026</p>
   <p class="lede" data-i18n="from.india.lede">India sends more new permanent residents to Canada than any other country, which means a constant stream of documents and letters heading to Canadian addresses. Instead of slow, hard-to-track international post, Letterhome prints your letter in Canada, applies Canadian postage, and mails it through Canada Post — so it arrives at local speed.</p>
+
+  <div style="background:var(--paper);border:1px solid var(--line);border-left:3px solid var(--red);border-radius:2px;padding:18px 22px;margin:20px 0 24px;font-size:15px;color:var(--ink-soft)">
+    <strong style="color:var(--ink)">Yes — you can send a letter or document to Canada from India without international postage or a Canadian address.</strong> Upload your files to Letterhome and we print and mail them from inside Canada via Canada Post — arriving with a Canadian postmark at domestic speed, not the 4+ weeks of international post. From $10 CAD.
+  </div>
 
   <div class="cta-row">
     <a href="/send" class="btn btn-red">Send a letter now</a>

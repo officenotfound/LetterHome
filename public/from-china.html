@@ -42,23 +42,97 @@
         "name": "Letterhome",
         "url": "https://letterhome.ca",
         "email": "support@letterhome.ca",
-        "logo": "https://letterhome.ca/icon-512.png", "sameAs": ["https://www.facebook.com/letterhomeca", "https://www.instagram.com/letterhomeca",
-          "https://x.com/letterhomeca"], "address": { "@type": "PostalAddress", "addressCountry": "CA" }
+        "logo": "https://letterhome.ca/icon-512.png",
+        "sameAs": [
+          "https://www.facebook.com/letterhomeca",
+          "https://www.instagram.com/letterhomeca",
+          "https://x.com/letterhomeca"
+        ],
+        "address": {
+          "@type": "PostalAddress",
+          "addressCountry": "CA"
+        }
       },
       "areaServed": [
-        { "@type": "Country", "name": "Canada" },
-        { "@type": "Place", "name": "China" }
+        {
+          "@type": "Country",
+          "name": "Canada"
+        },
+        {
+          "@type": "Place",
+          "name": "China"
+        }
       ],
       "hasOfferCatalog": {
         "@type": "OfferCatalog",
         "name": "Letter mailing",
         "itemListElement": [
-          { "@type": "Offer", "name": "Domestic — within Canada", "price": "10", "priceCurrency": "CAD" },
-          { "@type": "Offer", "name": "International — 160+ countries", "price": "20", "priceCurrency": "CAD" }
+          {
+            "@type": "Offer",
+            "name": "Domestic — within Canada",
+            "price": "10",
+            "priceCurrency": "CAD"
+          },
+          {
+            "@type": "Offer",
+            "name": "International — 160+ countries",
+            "price": "20",
+            "priceCurrency": "CAD"
+          }
         ]
       }
     },
-    {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Can I mail a letter to Canada from China without a Canadian address?","acceptedAnswer":{"@type":"Answer","text":"Yes. You place the order online from China, and the letter is printed and mailed from inside Canada for you. No Canadian address or card is needed — your card is processed through Stripe and charged in Canadian dollars."}},{"@type":"Question","name":"Why mail from inside Canada instead of posting from China?","acceptedAnswer":{"@type":"Answer","text":"International post from China to Canada can be slow and hard to track, and items pass through customs handling. Because Letterhome prints and mails inside Canada, your letter travels as domestic lettermail — typically up to 2 weeks — and we send it within one business day of payment."}},{"@type":"Question","name":"Can I send documents to a student or family member in Canada?","acceptedAnswer":{"@type":"Answer","text":"Yes. Attach up to 5 PDF or Word files (10 MB each). They're printed in full colour and sealed in the envelope — often used to send documents to students, family, and for immigration paperwork going to a Canadian address."}},{"@type":"Question","name":"How much does it cost to send a letter to Canada from China?","acceptedAnswer":{"@type":"Answer","text":"$10 CAD to any Canadian address, or $20 CAD to any of 160+ international destinations. Each price includes full-colour printing, the envelope, and postage."}}]}
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Can I mail a letter to Canada from China without a Canadian address?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. You place the order online from China, and the letter is printed and mailed from inside Canada for you. No Canadian address or card is needed — your card is processed through Stripe and charged in Canadian dollars."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Why mail from inside Canada instead of posting from China?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "International post from China to Canada can be slow and hard to track, and items pass through customs handling. Because Letterhome prints and mails inside Canada, your letter travels as domestic lettermail — typically up to 2 weeks — and we send it within one business day of payment."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I send documents to a student or family member in Canada?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Attach up to 5 PDF or Word files (10 MB each). They're printed in full colour and sealed in the envelope — often used to send documents to students, family, and for immigration paperwork going to a Canadian address."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How much does it cost to send a letter to Canada from China?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "$10 CAD to any Canadian address, or $20 CAD to any of 160+ international destinations. Each price includes full-colour printing, the envelope, and postage."
+          }
+        }
+      ]
+    },
+    {
+      "@type": "WebPage",
+      "@id": "https://letterhome.ca/from-china#webpage",
+      "url": "https://letterhome.ca/from-china",
+      "name": "Send Mail to Canada from China",
+      "description": "Send a letter or document to Canada from China. We print it in full colour, apply Canadian postage, and mail it from inside Canada via Canada Post — no Canadian address needed. From $10 CAD.",
+      "datePublished": "2025-11-01",
+      "dateModified": "2026-06-28",
+      "inLanguage": "en-CA",
+      "isPartOf": {
+        "@id": "https://letterhome.ca/#website"
+      }
+    }
   ]
 }
 </script>
@@ -129,6 +203,7 @@ footer a{color:var(--ink-muted);margin:0 8px}
 
   <div class="eyebrow" data-i18n="from.china.eyebrow">Mailing from China</div>
   <h1 data-i18n="from.china.h1">Send mail to Canada from China</h1>
+  <p class="updated" style="font-family:'DM Mono',monospace;font-size:12px;letter-spacing:0.06em;color:var(--ink-faint,#968b7d);margin-bottom:20px">Updated June 2026</p>
   <p class="lede" data-i18n="from.china.lede">Posting a letter to Canada from China usually means handing it to international mail and hoping it turns up. With so many students and families connecting China and Canada, there's a steadier way: we print your letter in Canada, stamp it with Canadian postage, and mail it through Canada Post, so it moves as local mail instead of crossing an ocean.</p>
 
   <div class="cta-row">

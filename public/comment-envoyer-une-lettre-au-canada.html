@@ -39,31 +39,113 @@
       "name": "Comment envoyer une lettre au Canada depuis l'étranger",
       "description": "Postez une lettre ou un document à une adresse canadienne depuis n'importe quel pays, sans être au Canada, grâce à un service d'impression et de mise à la poste en ligne.",
       "totalTime": "PT5M",
-      "estimatedCost": { "@type": "MonetaryAmount", "currency": "CAD", "value": "10" },
+      "estimatedCost": {
+        "@type": "MonetaryAmount",
+        "currency": "CAD",
+        "value": "10"
+      },
       "step": [
-        { "@type": "HowToStep", "position": 1, "name": "Rédigez ou téléversez votre lettre", "text": "Écrivez votre message en ligne, ou joignez jusqu'à 5 documents PDF ou Word (10 Mo chacun). Tout est imprimé en couleur." },
-        { "@type": "HowToStep", "position": 2, "name": "Entrez l'adresse du destinataire au Canada", "text": "Ajoutez le nom et l'adresse canadienne complète du destinataire. L'adresse de retour est facultative — les envois anonymes sont acceptés." },
-        { "@type": "HowToStep", "position": 3, "name": "Payez par carte en toute sécurité", "text": "Payez avec n'importe quelle carte de crédit ou de débit, de n'importe quel pays. Le montant est facturé en dollars canadiens par Stripe; votre banque s'occupe de la conversion." },
-        { "@type": "HowToStep", "position": 4, "name": "On l'imprime et on la poste depuis le Canada", "text": "Letterhome imprime votre lettre au Canada, y appose un timbre canadien et la dépose à Postes Canada — habituellement en un jour ouvrable." }
+        {
+          "@type": "HowToStep",
+          "position": 1,
+          "name": "Rédigez ou téléversez votre lettre",
+          "text": "Écrivez votre message en ligne, ou joignez jusqu'à 5 documents PDF ou Word (10 Mo chacun). Tout est imprimé en couleur."
+        },
+        {
+          "@type": "HowToStep",
+          "position": 2,
+          "name": "Entrez l'adresse du destinataire au Canada",
+          "text": "Ajoutez le nom et l'adresse canadienne complète du destinataire. L'adresse de retour est facultative — les envois anonymes sont acceptés."
+        },
+        {
+          "@type": "HowToStep",
+          "position": 3,
+          "name": "Payez par carte en toute sécurité",
+          "text": "Payez avec n'importe quelle carte de crédit ou de débit, de n'importe quel pays. Le montant est facturé en dollars canadiens par Stripe; votre banque s'occupe de la conversion."
+        },
+        {
+          "@type": "HowToStep",
+          "position": 4,
+          "name": "On l'imprime et on la poste depuis le Canada",
+          "text": "Letterhome imprime votre lettre au Canada, y appose un timbre canadien et la dépose à Postes Canada — habituellement en un jour ouvrable."
+        }
       ]
     },
     {
       "@type": "FAQPage",
       "inLanguage": "fr-CA",
       "mainEntity": [
-        { "@type": "Question", "name": "Dois-je être au Canada pour poster une lettre à une adresse canadienne?", "acceptedAnswer": { "@type": "Answer", "text": "Non. Tout se fait en ligne. Vous soumettez votre lettre de n'importe où avec une connexion Internet, et elle est imprimée et postée depuis le Canada en votre nom." } },
-        { "@type": "Question", "name": "Ai-je besoin d'une adresse canadienne ou d'une carte de crédit canadienne?", "acceptedAnswer": { "@type": "Answer", "text": "Non. Vous pouvez commander depuis n'importe quel pays avec n'importe quelle carte. Le paiement est traité en dollars canadiens par Stripe et votre banque applique son taux de change." } },
-        { "@type": "Question", "name": "Combien de temps prend la livraison?", "acceptedAnswer": { "@type": "Answer", "text": "Les lettres sont imprimées et postées en un jour ouvrable après le paiement. Le courrier ordinaire de Postes Canada est ensuite livré au Canada en général jusqu'à 2 semaines, ou jusqu'à 4 semaines à l'international." } },
-        { "@type": "Question", "name": "Combien ça coûte d'envoyer une lettre au Canada?", "acceptedAnswer": { "@type": "Answer", "text": "C'est 10 $ CAN pour n'importe quelle adresse canadienne et 20 $ CAN pour plus de 160 destinations internationales. Chaque prix comprend jusqu'à 5 documents imprimés en couleur, l'enveloppe et l'affranchissement." } },
-        { "@type": "Question", "name": "Puis-je envoyer des documents officiels ou gouvernementaux?", "acceptedAnswer": { "@type": "Answer", "text": "Oui. Beaucoup de clients envoient des documents d'immigration, des formulaires d'impôt de l'ARC, de la correspondance juridique et des contrats signés. Joignez vos fichiers PDF ou Word et ils sont imprimés en couleur et glissés dans l'enveloppe." } }
+        {
+          "@type": "Question",
+          "name": "Dois-je être au Canada pour poster une lettre à une adresse canadienne?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Non. Tout se fait en ligne. Vous soumettez votre lettre de n'importe où avec une connexion Internet, et elle est imprimée et postée depuis le Canada en votre nom."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Ai-je besoin d'une adresse canadienne ou d'une carte de crédit canadienne?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Non. Vous pouvez commander depuis n'importe quel pays avec n'importe quelle carte. Le paiement est traité en dollars canadiens par Stripe et votre banque applique son taux de change."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Combien de temps prend la livraison?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Les lettres sont imprimées et postées en un jour ouvrable après le paiement. Le courrier ordinaire de Postes Canada est ensuite livré au Canada en général jusqu'à 2 semaines, ou jusqu'à 4 semaines à l'international."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Combien ça coûte d'envoyer une lettre au Canada?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "C'est 10 $ CAN pour n'importe quelle adresse canadienne et 20 $ CAN pour plus de 160 destinations internationales. Chaque prix comprend jusqu'à 5 documents imprimés en couleur, l'enveloppe et l'affranchissement."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Puis-je envoyer des documents officiels ou gouvernementaux?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Oui. Beaucoup de clients envoient des documents d'immigration, des formulaires d'impôt de l'ARC, de la correspondance juridique et des contrats signés. Joignez vos fichiers PDF ou Word et ils sont imprimés en couleur et glissés dans l'enveloppe."
+          }
+        }
       ]
     },
     {
       "@type": "BreadcrumbList",
       "itemListElement": [
-        { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "https://letterhome.ca/" },
-        { "@type": "ListItem", "position": 2, "name": "Comment envoyer une lettre au Canada", "item": "https://letterhome.ca/comment-envoyer-une-lettre-au-canada" }
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Accueil",
+          "item": "https://letterhome.ca/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Comment envoyer une lettre au Canada",
+          "item": "https://letterhome.ca/comment-envoyer-une-lettre-au-canada"
+        }
       ]
+    },
+    {
+      "@type": "WebPage",
+      "@id": "https://letterhome.ca/comment-envoyer-une-lettre-au-canada#webpage",
+      "url": "https://letterhome.ca/comment-envoyer-une-lettre-au-canada",
+      "name": "Comment envoyer une lettre au Canada depuis l'étranger (Guide 2026)",
+      "description": "Pas besoin d'être au Canada ni d'avoir une adresse canadienne pour poster une lettre à une adresse canadienne. Voici comment envoyer une lettre au Canada depuis n'importe quel pays, en ligne — imprimée et postée depuis le Canada par Postes Canada. À partir de 10 $ CAN.",
+      "datePublished": "2025-11-01",
+      "dateModified": "2026-06-28",
+      "inLanguage": "en-CA",
+      "isPartOf": {
+        "@id": "https://letterhome.ca/#website"
+      }
     }
   ]
 }
