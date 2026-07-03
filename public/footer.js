@@ -25,6 +25,7 @@
           '<a href="/guides">Guides</a>' +
           '<a href="/privacy" data-i18n="footer.privacy">Privacy</a>' +
           '<a href="/terms" data-i18n="footer.terms">Terms</a>' +
+          '<a href="https://jeffbuilds.ca" target="_blank" rel="noopener" style="opacity:0.6">Jeffbuilds</a>' +
         '</div>' +
       '</div>' +
     '</footer>';
