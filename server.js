@@ -545,13 +545,17 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
   } catch (err) {
     return res.status(400).send(`Webhook error: ${err.message}`);
   }
-  if (event.type === 'checkout.session.completed') {
+  if (event.type === 'checkout.session.completed' ||
+      event.type === 'checkout.session.async_payment_succeeded') {
     try {
       await fulfillOrder(event.data.object.id);
     } catch (err) {
       console.error('[webhook] fulfillOrder failed:', err.message);
       return res.status(500).json({ error: 'Fulfillment failed' });
     }
+  }
+  if (event.type === 'checkout.session.async_payment_failed') {
+    console.error(`[webhook] async payment failed for session ${event.data.object.id} — order stays awaiting_payment`);
   }
   res.json({ received: true });
 });
@@ -1008,7 +1012,8 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
   let stripeSession;
   try {
     stripeSession = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
+      // No payment_method_types: Checkout offers every method enabled in the
+      // Stripe Dashboard that supports CAD (card, Alipay, WeChat Pay, Link, wallets).
       customer_email: rEmail,
       line_items: [{
         price_data: {
@@ -2465,12 +2470,18 @@ async function fulfillOrder(sessionId) {
   const order = db.prepare('SELECT * FROM orders WHERE stripe_session_id = ?').get(sessionId);
   if (!order || order.status !== 'awaiting_payment') return;
 
+  // Some payment methods settle after checkout.session.completed fires (bank
+  // debits and similar). Never fulfill until Stripe confirms the money arrived;
+  // for async methods the checkout.session.async_payment_succeeded event
+  // re-invokes this function once payment_status flips to 'paid'.
+  const session = await stripe.checkout.sessions.retrieve(sessionId);
+  if (session.payment_status !== 'paid') return;
+
   // Atomic status transition — if another concurrent webhook call already changed
   // the status, changes will be 0 and we bail out to prevent double-fulfillment.
   const result = db.prepare("UPDATE orders SET status = 'paid' WHERE id = ? AND status = 'awaiting_payment'").run(order.id);
   if (result.changes === 0) return;
 
-  const session    = await stripe.checkout.sessions.retrieve(sessionId);
   const amountCAD  = (session.amount_total / 100).toFixed(2);
   const isDomestic = order.destination_country === 'CA';
 
