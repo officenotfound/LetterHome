@@ -1108,11 +1108,16 @@ app.post('/admin/login', loginLimiter, async (req, res) => {
   // Use Express's req.ip (derived from the trusted-proxy chain) rather than the
   // raw, client-spoofable X-Forwarded-For so the failed-login alert can't be evaded.
   const ip = (req.ip || '').replace(/^::ffff:/, '');
-  const validUser = username === process.env.ADMIN_USERNAME;
-  const validPass = process.env.ADMIN_PASSWORD_HASH
-    ? await bcrypt.compare(password || '', process.env.ADMIN_PASSWORD_HASH)
-    : false;
-  if (!validUser || !validPass) {
+  const accounts = [
+    { user: process.env.ADMIN_USERNAME,  hash: process.env.ADMIN_PASSWORD_HASH },
+    { user: process.env.ADMIN2_USERNAME, hash: process.env.ADMIN2_PASSWORD_HASH },
+  ].filter(a => a.user && a.hash);
+  const account = accounts.find(a => a.user === username);
+  // Always run a bcrypt compare even for unknown usernames so response timing
+  // doesn't reveal which account names exist.
+  const compareHash = account ? account.hash : (accounts[0] ? accounts[0].hash : '');
+  const validPass = compareHash ? await bcrypt.compare(password || '', compareHash) : false;
+  if (!account || !validPass) {
     recordFailedAdminLogin(ip, username);
     return res.redirect('/admin/login?error=1');
   }
