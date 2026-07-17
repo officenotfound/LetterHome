@@ -327,6 +327,9 @@ html[data-theme="dark"] .dash-grid-5{background:rgba(255,255,255,0.08);border-co
     <div class="topbar-title" id="topbar-title">Dashboard</div>
     <div class="topbar-user" id="topbar-user"></div>
   </div>
+  <div id="twofa-banner" style="display:none;background:#7d3220;color:#faf6ec;padding:10px 20px;font-size:13px;font-family:'DM Mono',ui-monospace,monospace;text-align:center">
+    ⚠ Your account has no 2FA code set up. Ask whoever manages the server to add one for you — until then your login only needs a password.
+  </div>
   <div class="main" id="main">
     <div class="empty">Loading…</div>
   </div>
@@ -341,6 +344,7 @@ async function init() {
   _csrfToken = me.csrfToken || null;
   currentUser = me.username;
   document.getElementById('topbar-user').textContent = me.username;
+  if (!me.has2FA) document.getElementById('twofa-banner').style.display = 'block';
   window.addEventListener('popstate', () => route());
   startCountdownTicker();
   api('/api/admin/contacts/unread').then(d => { if (d) updateContactsBadge(d.unread); });

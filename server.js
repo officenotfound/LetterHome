@@ -1109,8 +1109,8 @@ app.post('/admin/login', loginLimiter, async (req, res) => {
   // raw, client-spoofable X-Forwarded-For so the failed-login alert can't be evaded.
   const ip = (req.ip || '').replace(/^::ffff:/, '');
   const accounts = [
-    { user: process.env.ADMIN_USERNAME,  hash: process.env.ADMIN_PASSWORD_HASH },
-    { user: process.env.ADMIN2_USERNAME, hash: process.env.ADMIN2_PASSWORD_HASH },
+    { user: process.env.ADMIN_USERNAME,  hash: process.env.ADMIN_PASSWORD_HASH,  totpSecret: process.env.TOTP_SECRET },
+    { user: process.env.ADMIN2_USERNAME, hash: process.env.ADMIN2_PASSWORD_HASH, totpSecret: process.env.ADMIN2_TOTP_SECRET },
   ].filter(a => a.user && a.hash);
   const account = accounts.find(a => a.user === username);
   // Always run a bcrypt compare even for unknown usernames so response timing
@@ -1122,11 +1122,14 @@ app.post('/admin/login', loginLimiter, async (req, res) => {
     return res.redirect('/admin/login?error=1');
   }
 
-  if (process.env.TOTP_SECRET) {
+  // 2FA is configured per-account (own TOTP secret) so one admin's code can't
+  // be used to satisfy another's login, and an account with no secret set yet
+  // isn't blocked from logging in — it's nagged to add one instead.
+  if (account.totpSecret) {
     if (!code) return res.redirect('/admin/login?error=1');
     const totp = new TOTP({
-      issuer: 'Letterhome Admin', label: 'admin',
-      secret: Secret.fromBase32(process.env.TOTP_SECRET),
+      issuer: 'Letterhome Admin', label: username,
+      secret: Secret.fromBase32(account.totpSecret),
     });
     if (totp.validate({ token: code.replace(/\s/g,''), window: 1 }) === null) {
       recordFailedAdminLogin(ip, username);
@@ -1136,7 +1139,7 @@ app.post('/admin/login', loginLimiter, async (req, res) => {
 
   req.session.regenerate(err => {
     if (err) return res.status(500).send('Session error');
-    req.session.admin = { username, loginAt: Date.now() };
+    req.session.admin = { username, loginAt: Date.now(), has2FA: !!account.totpSecret };
     req.session.csrfToken = randomBytes(32).toString('hex');
     req.session.save(err2 => {
       if (err2) return res.status(500).send('Session error');
@@ -1174,7 +1177,11 @@ app.use('/api/admin', (req, res, next) => {
 });
 
 app.get('/api/admin/me', requireAdmin, (req, res) =>
-  res.json({ username: req.session.admin.username, csrfToken: req.session.csrfToken }));
+  res.json({
+    username: req.session.admin.username,
+    csrfToken: req.session.csrfToken,
+    has2FA: !!req.session.admin.has2FA,
+  }));
 
 app.get('/api/admin/tetris/scores', requireAdmin, (req, res) => {
   try {
