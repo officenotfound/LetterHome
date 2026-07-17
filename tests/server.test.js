@@ -35,8 +35,9 @@ const mockStripe = function StripeClient(_key) {
           url: 'https://checkout.stripe.com/c/pay/test',
         }),
         retrieve: async (sessionId) => ({
-          id:           sessionId,
-          amount_total: 1000,
+          id:             sessionId,
+          amount_total:   1000,
+          payment_status: 'paid',
         }),
       },
     },
@@ -340,7 +341,12 @@ async function loginAdmin() {
   const cookies = res.headers.getSetCookie();
   const sid = (cookies || []).map(c => c.split(';')[0]).find(c => c.startsWith('connect.sid='));
   assert.ok(sid, 'login did not return a session cookie');
-  return sid;
+  // The real admin dashboard reads its CSRF token from /api/admin/me and
+  // sends it back on every mutating request — mirror that here so tests
+  // exercise the same path production traffic does.
+  const meRes = await fetch(`${base}/api/admin/me`, { headers: { Cookie: sid } });
+  const me = await meRes.json();
+  return { cookie: sid, csrfToken: me.csrfToken };
 }
 
 test('GET /api/admin/me returns 401 without a session', async () => {
@@ -349,7 +355,7 @@ test('GET /api/admin/me returns 401 without a session', async () => {
 });
 
 test('admin can log in and /api/admin/me returns the username', async () => {
-  const cookie = await loginAdmin();
+  const { cookie } = await loginAdmin();
   const res = await fetch(`${base}/api/admin/me`, { headers: { Cookie: cookie } });
   assert.equal(res.status, 200);
   const body = await res.json();
@@ -366,12 +372,12 @@ test('DELETE /api/admin/orders/:id is rejected without auth', async () => {
 });
 
 test('authenticated admin can change an order status', async () => {
-  const cookie = await loginAdmin();
+  const { cookie, csrfToken } = await loginAdmin();
   const sessionId = seedOrder({ status: 'paid' });
   const id = db.prepare('SELECT id FROM orders WHERE stripe_session_id = ?').get(sessionId).id;
   const res = await fetch(`${base}/api/admin/orders/${id}/status`, {
     method:  'POST',
-    headers: { 'Content-Type': 'application/json', Cookie: cookie },
+    headers: { 'Content-Type': 'application/json', Cookie: cookie, 'X-CSRF-Token': csrfToken },
     body:    JSON.stringify({ status: 'printing' }),
   });
   assert.equal(res.status, 200);
@@ -380,24 +386,24 @@ test('authenticated admin can change an order status', async () => {
 });
 
 test('admin status change rejects an invalid status value', async () => {
-  const cookie = await loginAdmin();
+  const { cookie, csrfToken } = await loginAdmin();
   const sessionId = seedOrder({ status: 'paid' });
   const id = db.prepare('SELECT id FROM orders WHERE stripe_session_id = ?').get(sessionId).id;
   const res = await fetch(`${base}/api/admin/orders/${id}/status`, {
     method:  'POST',
-    headers: { 'Content-Type': 'application/json', Cookie: cookie },
+    headers: { 'Content-Type': 'application/json', Cookie: cookie, 'X-CSRF-Token': csrfToken },
     body:    JSON.stringify({ status: 'not-a-real-status' }),
   });
   assert.equal(res.status, 400);
 });
 
 test('authenticated admin can soft-delete an order', async () => {
-  const cookie = await loginAdmin();
+  const { cookie, csrfToken } = await loginAdmin();
   const sessionId = seedOrder({ status: 'paid' });
   const id = db.prepare('SELECT id FROM orders WHERE stripe_session_id = ?').get(sessionId).id;
   const res = await fetch(`${base}/api/admin/orders/${id}`, {
     method:  'DELETE',
-    headers: { Cookie: cookie },
+    headers: { Cookie: cookie, 'X-CSRF-Token': csrfToken },
   });
   assert.equal(res.status, 200);
   const row = db.prepare('SELECT deleted_at FROM orders WHERE id = ?').get(id);

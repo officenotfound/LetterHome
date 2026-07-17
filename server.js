@@ -567,9 +567,9 @@ app.get('/health', (req, res) => {
   res.setHeader('Cache-Control', 'no-store');
   try {
     db.prepare('SELECT 1').get();
-    res.json({ status: 'ok' });
+    res.json({ status: 'ok', db: 'ok' });
   } catch {
-    res.status(503).json({ status: 'error' });
+    res.status(503).json({ status: 'error', db: 'error' });
   }
 });
 
@@ -1054,9 +1054,13 @@ app.get('/api/order-status', trackLimiter, (req, res) => {
     .get(req.query.session_id || '');
   if (!order) return res.status(404).json({ error: 'Order not found.' });
   res.json({
-    id:        order.id,
-    status:    order.status,
-    createdAt: order.created_at,
+    id:                 order.id,
+    status:             order.status,
+    createdAt:          order.created_at,
+    recipientName:      order.recipient_name,
+    recipientCity:      order.recipient_city,
+    destinationCountry: order.destination_country,
+    priceCents:         order.price_cents,
   });
 });
 
@@ -1163,6 +1167,9 @@ app.get('/admin/*', requireAdmin, (req, res) =>
 // Origin check is kept as a second layer against no-token older clients.
 app.use('/api/admin', (req, res, next) => {
   if (!['POST', 'PUT', 'DELETE', 'PATCH'].includes(req.method)) return next();
+  // No session at all — let the route's own requireAdmin reject this with a
+  // plain 401, rather than a CSRF 403 that implies a session/token exists.
+  if (!req.session?.admin) return next();
   // Origin layer: block cross-origin browser requests outright.
   const origin = req.headers.origin;
   const base = (process.env.BASE_URL || '').replace(/\/$/, '');
