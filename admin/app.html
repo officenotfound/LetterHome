@@ -2668,18 +2668,18 @@ const ARCADE_CABS = [
 ];
 
 async function arcadeGetScores(game) {
-  try { const r = await fetch(`/api/admin/arcade/scores/${game}`); return r.ok ? r.json() : []; } catch { return []; }
+  const r = await api(`/api/admin/arcade/scores/${game}`);
+  return r || [];
 }
 async function arcadePostScore(game, score, lines, level) {
-  try {
-    await fetch(`/api/admin/arcade/scores/${game}`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ score, lines: lines || 0, level: level || 1 }),
-    });
-  } catch {}
+  await api(`/api/admin/arcade/scores/${game}`, {
+    method: 'POST',
+    body: JSON.stringify({ score, lines: lines || 0, level: level || 1 }),
+  });
 }
 async function arcadeHallOfFame() {
-  try { const r = await fetch('/api/admin/arcade/hall-of-fame'); return r.ok ? r.json() : {}; } catch { return {}; }
+  const r = await api('/api/admin/arcade/hall-of-fame');
+  return r || {};
 }
 
 async function arcadeLoadLeaderboard(game) {

@@ -1183,28 +1183,14 @@ app.get('/api/admin/me', requireAdmin, (req, res) =>
     has2FA: !!req.session.admin.has2FA,
   }));
 
-app.get('/api/admin/tetris/scores', requireAdmin, (req, res) => {
-  try {
-    const rows = db.prepare(
-      'SELECT username, score, lines, level, created_at FROM tetris_scores ORDER BY score DESC LIMIT 10'
-    ).all();
-    res.json(rows);
-  } catch (e) { res.status(500).json({ error: e.message }); }
-});
-
-app.post('/api/admin/tetris/scores', requireAdmin, (req, res) => {
-  try {
-    const { score, lines, level } = req.body;
-    if (typeof score !== 'number' || score < 0) return res.status(400).json({ error: 'Invalid score' });
-    const username = req.session.admin.username;
-    const info = db.prepare(
-      'INSERT INTO tetris_scores (username, score, lines, level) VALUES (?, ?, ?, ?)'
-    ).run(username, Math.round(score), Math.round(lines || 0), Math.round(level || 1));
-    res.json({ id: info.lastInsertRowid });
-  } catch (e) { res.status(500).json({ error: e.message }); }
-});
+// Keep in sync with the GAMES list in admin/app.html.
+const ARCADE_GAMES = new Set([
+  'tetris', 'snake', 'breakout', 'invaders', 'postbird', 'skifree',
+  'pacman', 'donkey', 'starmail', 'bubblepost', 'frogpost', 'paperroute',
+]);
 
 app.get('/api/admin/arcade/scores/:game', requireAdmin, (req, res) => {
+  if (!ARCADE_GAMES.has(req.params.game)) return res.status(404).json({ error: 'Unknown game' });
   try {
     const rows = db.prepare(
       'SELECT username, score, lines, level, created_at FROM arcade_scores WHERE game = ? ORDER BY score DESC LIMIT 10'
@@ -1214,6 +1200,7 @@ app.get('/api/admin/arcade/scores/:game', requireAdmin, (req, res) => {
 });
 
 app.post('/api/admin/arcade/scores/:game', requireAdmin, (req, res) => {
+  if (!ARCADE_GAMES.has(req.params.game)) return res.status(404).json({ error: 'Unknown game' });
   try {
     const { score, lines, level } = req.body;
     if (typeof score !== 'number' || score < 0) return res.status(400).json({ error: 'Invalid score' });
@@ -1226,9 +1213,8 @@ app.post('/api/admin/arcade/scores/:game', requireAdmin, (req, res) => {
 
 app.get('/api/admin/arcade/hall-of-fame', requireAdmin, (req, res) => {
   try {
-    const games = ['tetris', 'snake', 'breakout', 'invaders', 'postbird'];
     const result = {};
-    for (const game of games) {
+    for (const game of ARCADE_GAMES) {
       result[game] = db.prepare(
         'SELECT username, score FROM arcade_scores WHERE game = ? ORDER BY score DESC LIMIT 1'
       ).get(game) || null;
