@@ -410,16 +410,17 @@ function safeFilePath(dir, originalName) {
   } catch (e) { console.error('[init] token backfill failed:', e.message); }
 })();
 
-;(async function abandonedOrderRecovery() {
+async function abandonedOrderRecovery() {
   try {
-    const cutoff2d  = new Date(Date.now() - 2  * 86400 * 1000).toISOString();
-    const cutoff7d  = new Date(Date.now() - 7  * 86400 * 1000).toISOString();
+    const cutoff2h  = new Date(Date.now() -  2 * 3600 * 1000).toISOString();
+    const cutoff14d = new Date(Date.now() - 14 * 86400 * 1000).toISOString();
     const cutoff30d = new Date(Date.now() - 30 * 86400 * 1000).toISOString();
     const abandoned = db.prepare(`
       SELECT * FROM orders
       WHERE status = 'awaiting_payment'
         AND created_at < ?
         AND created_at > ?
+        AND deleted_at IS NULL
         AND recovery_sent_at IS NULL
         AND customer_email IS NOT NULL
         AND customer_email LIKE '%_@_%.__%'
@@ -433,7 +434,7 @@ function safeFilePath(dir, originalName) {
           WHERE o3.customer_email = orders.customer_email
             AND o3.created_at > ?
         ) <= 3
-    `).all(cutoff2d, cutoff7d, cutoff30d, cutoff7d);
+    `).all(cutoff2h, cutoff14d, cutoff30d, cutoff14d);
     for (const order of abandoned) {
       try {
         await sendMail(buildRecoveryEmail(order), 'recovery', order.id);
@@ -441,8 +442,9 @@ function safeFilePath(dir, originalName) {
         console.log(`[recovery] sent recovery email for order #${order.id} to ${order.customer_email}`);
       } catch (e) { console.error(`[recovery] failed for order #${order.id}:`, e.message); }
     }
-  } catch (e) { console.error('[recovery] startup check failed:', e.message); }
-})();
+  } catch (e) { console.error('[recovery] check failed:', e.message); }
+}
+abandonedOrderRecovery();
 
 ;(async function occasionReminders() {
   try {
@@ -601,7 +603,7 @@ const SECURITY_TXT = [
  'cheapest-way-to-send-a-letter-to-canada',
  'send-a-letter-to-canada-without-a-return-address',
  'mail-a-letter-online', 'send-a-letter-from-home', 'what-is-lettermail',
- 'ircc-processing-times',
+ 'ircc-processing-times', 'n4-notice',
  'from-nigeria', 'from-france', 'from-mexico', 'from-brazil',
  'from-south-korea', 'from-japan', 'from-vietnam', 'from-ukraine',
  'from-jamaica', 'from-sri-lanka', 'from-lebanon', 'from-bangladesh', 'from-nepal',
@@ -731,6 +733,7 @@ app.get('/api/site-config', (req, res) => {
     price_domestic_cents:      parseInt(getSetting('price_domestic_cents',      '1000')) || 1000,
     price_international_cents: parseInt(getSetting('price_international_cents', '2000')) || 2000,
     blocked_countries:         JSON.parse(getSetting('blocked_countries', '[]') || '[]'),
+    letters_mailed_count:      parseInt(getSetting('letters_mailed_count', '163')) || 163,
   });
 });
 
@@ -2047,7 +2050,7 @@ app.get('/api/admin/settings', requireAdmin, (req, res) => {
 
 const ALLOWED_SETTING_KEYS = new Set([
   'service_paused', 'announcement', 'price_domestic_cents', 'price_international_cents',
-  'daily_order_cap', 'blocked_countries', 'away_mode', 'away_message',
+  'daily_order_cap', 'blocked_countries', 'away_mode', 'away_message', 'letters_mailed_count',
 ]);
 
 app.post('/api/admin/settings', requireAdmin, (req, res) => {
@@ -3216,6 +3219,10 @@ async function runBackup() {
 cron.schedule('0 2 * * *', async () => {
   console.log('[backup] running scheduled backup');
   await runBackup();
+});
+
+cron.schedule('0 * * * *', () => {
+  abandonedOrderRecovery();
 });
 
 const PORT = process.env.PORT || 3000;
