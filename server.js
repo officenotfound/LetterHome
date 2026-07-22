@@ -47,38 +47,6 @@ app.set('trust proxy', 2);
 app.use(compression({ threshold: 512, level: 6 }));
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2024-06-20' });
 
-const PAYPAL_BASE = process.env.PAYPAL_MODE === 'sandbox'
-  ? 'https://api-m.sandbox.paypal.com'
-  : 'https://api-m.paypal.com';
-
-async function getPayPalToken() {
-  const creds = Buffer.from(`${process.env.PAYPAL_CLIENT_ID}:${process.env.PAYPAL_CLIENT_SECRET}`).toString('base64');
-  const res = await fetch(`${PAYPAL_BASE}/v1/oauth2/token`, {
-    method:  'POST',
-    headers: { Authorization: `Basic ${creds}`, 'Content-Type': 'application/x-www-form-urlencoded' },
-    body:    'grant_type=client_credentials',
-  });
-  if (!res.ok) throw new Error(`PayPal token error ${res.status}`);
-  const data = await res.json();
-  return data.access_token;
-}
-
-async function paypalRequest(method, path, body, token) {
-  const res = await fetch(`${PAYPAL_BASE}${path}`, {
-    method,
-    headers: {
-      Authorization:  `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-    body: body ? JSON.stringify(body) : undefined,
-  });
-  const text = await res.text();
-  let data;
-  try { data = JSON.parse(text); } catch { data = { raw: text }; }
-  if (!res.ok) throw Object.assign(new Error(`PayPal ${method} ${path} → ${res.status}`), { paypal: data });
-  return data;
-}
-
 app.use(session({
   store:             new FileStore({ path: './sessions', ttl: 30 * 24 * 60 * 60, retries: 1, reapInterval: 3600, reapAsync: true, fileMode: 0o600 }),
   secret:            process.env.SESSION_SECRET || 'dev-secret-change-me',
@@ -100,10 +68,7 @@ app.use(helmet({
                     'https://maps.googleapis.com',
                     'https://www.googletagmanager.com',
                     'https://www.google-analytics.com',
-                    'https://static.cloudflareinsights.com',
-                    'https://www.paypal.com',
-                    'https://www.paypalobjects.com',
-                    'https://www.sandbox.paypal.com'],
+                    'https://static.cloudflareinsights.com'],
       styleSrc:    ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
       fontSrc:     ["'self'", 'https://fonts.gstatic.com'],
       imgSrc:      ["'self'", 'data:',
@@ -115,10 +80,8 @@ app.use(helmet({
                     'https://maps.gstatic.com',
                     'https://www.google-analytics.com',
                     'https://analytics.google.com',
-                    'https://cloudflareinsights.com',
-                    'https://api-m.paypal.com',
-                    'https://api.paypal.com'],
-      frameSrc:    ["'self'", 'https://www.paypal.com', 'https://www.sandbox.paypal.com'],
+                    'https://cloudflareinsights.com'],
+      frameSrc:    ["'none'"],
       objectSrc:   ["'none'"],
       baseUri:     ["'self'"],
       formAction:    ["'self'"],
@@ -768,7 +731,6 @@ app.get('/api/site-config', (req, res) => {
     price_domestic_cents:      parseInt(getSetting('price_domestic_cents',      '1000')) || 1000,
     price_international_cents: parseInt(getSetting('price_international_cents', '2000')) || 2000,
     blocked_countries:         JSON.parse(getSetting('blocked_countries', '[]') || '[]'),
-    paypal_client_id:          process.env.PAYPAL_CLIENT_ID || null,
   });
 });
 
@@ -1087,184 +1049,9 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
   res.json({ checkoutUrl: stripeSession.url });
 });
 
-// PayPal: create a PayPal order for an already-validated order in the DB.
-// Called by the PayPal JS SDK's createOrder callback on the frontend.
-app.post('/api/paypal/create-order', orderLimiter, uploadAttachments, async (req, res) => {
-  if (!process.env.PAYPAL_CLIENT_ID || !process.env.PAYPAL_CLIENT_SECRET)
-    return res.status(503).json({ error: 'PayPal is not configured.' });
-
-  // Re-use the same validation and order creation logic as /api/create-order.
-  // We create the DB order first, then the PayPal order so we have an order ID for metadata.
-  const b = req.body;
-  const rEmail = (b['r-email'] || '').trim().toLowerCase();
-  if (!rEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(rEmail))
-    return res.status(400).json({ error: 'Valid recipient email is required.' });
-
-  const rName   = (b['r-name']   || '').trim();
-  const rStreet = (b['r-street'] || '').trim();
-  if (!rName || !rStreet)
-    return res.status(400).json({ error: 'Recipient name and street are required.' });
-
-  const blockedCountries = JSON.parse(getSetting('blocked_countries', '[]') || '[]');
-  if (blockedCountries.includes(b['r-country']))
-    return res.status(400).json({ error: 'We are not currently shipping to that destination.' });
-
-  const isDomestic = b['r-country'] === 'CA';
-  const priceCents = isDomestic
-    ? (parseInt(getSetting('price_domestic_cents',      '1000')) || 1000)
-    : (parseInt(getSetting('price_international_cents', '2000')) || 2000);
-
-  const tempFiles = (req.files || []).map(f => ({
-    tempPath:     f.path,
-    originalName: f.originalname,
-    mimeType:     f.mimetype,
-  }));
-
-  const customerIp = (req.ip || '').replace(/^::ffff:/, '');
-
-  const row = db.prepare(`
-    INSERT INTO orders (
-      customer_email, skip_return,
-      sender_name, sender_street, sender_city, sender_province, sender_postal, sender_country,
-      recipient_name, recipient_street, recipient_city, recipient_province, recipient_postal,
-      destination_country, letter_type, letter_body, attachment_info, price_cents, customer_ip,
-      status_token
-    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-  `).run(
-    rEmail, b['skip-return'] ? 1 : 0,
-    b['s-name']     || null, b['s-street']   || null, b['s-city']  || null,
-    b['s-province'] || null, b['s-postal']   || null, b['s-country'] || null,
-    rName, rStreet,
-    b['r-city']     || null, b['r-province'] || null, b['r-postal'] || null,
-    b['r-country']  || 'CA', 'standard',
-    b['letter-body'] || null,
-    '[]',
-    priceCents,
-    customerIp || null,
-    randomUUID()
-  );
-
-  const orderId  = row.lastInsertRowid;
-  const now      = new Date();
-  const orderDir = orderDirPath(orderId, now);
-  fs.mkdirSync(orderDir, { recursive: true });
-
-  const movedFiles = tempFiles.map(f => {
-    const dest = safeFilePath(orderDir, f.originalName);
-    fs.renameSync(f.tempPath, dest);
-    return { path: dest, originalName: f.originalName, mimeType: f.mimeType };
-  });
-
-  if (b['letter-body']) {
-    fs.writeFileSync(path.join(orderDir, 'letter.txt'), b['letter-body'], 'utf8');
-  }
-  db.prepare('UPDATE orders SET attachment_info = ? WHERE id = ?')
-    .run(JSON.stringify(movedFiles), orderId);
-
-  try {
-    const token = await getPayPalToken();
-    const ppOrder = await paypalRequest('POST', '/v2/checkout/orders', {
-      intent: 'CAPTURE',
-      purchase_units: [{
-        reference_id:  String(orderId),
-        description:   isDomestic ? 'Letterhome — Domestic Letter' : 'Letterhome — International Letter',
-        custom_id:     String(orderId),
-        amount: {
-          currency_code: 'CAD',
-          value:         (priceCents / 100).toFixed(2),
-        },
-      }],
-      application_context: {
-        brand_name:          'Letterhome',
-        shipping_preference: 'NO_SHIPPING',
-        user_action:         'PAY_NOW',
-        return_url:          `${process.env.BASE_URL}/order-success`,
-        cancel_url:          `${process.env.BASE_URL}/send`,
-      },
-    }, token);
-
-    db.prepare('UPDATE orders SET paypal_order_id = ? WHERE id = ?').run(ppOrder.id, orderId);
-    res.json({ paypalOrderId: ppOrder.id });
-  } catch (e) {
-    console.error('[paypal] create-order error:', e.message, e.paypal);
-    try {
-      db.prepare('DELETE FROM orders WHERE id = ?').run(orderId);
-      if (fs.existsSync(orderDir)) fs.rmSync(orderDir, { recursive: true, force: true });
-    } catch {}
-    res.status(502).json({ error: 'PayPal is temporarily unavailable. Please try card payment instead.' });
-  }
-});
-
-// PayPal: capture an approved order and fulfill it.
-app.post('/api/paypal/capture-order', express.json(), async (req, res) => {
-  if (!process.env.PAYPAL_CLIENT_ID || !process.env.PAYPAL_CLIENT_SECRET)
-    return res.status(503).json({ error: 'PayPal is not configured.' });
-
-  const { paypalOrderId } = req.body || {};
-  if (!paypalOrderId) return res.status(400).json({ error: 'Missing paypalOrderId.' });
-
-  const order = db.prepare('SELECT * FROM orders WHERE paypal_order_id = ?').get(paypalOrderId);
-  if (!order) return res.status(404).json({ error: 'Order not found.' });
-  if (order.status !== 'awaiting_payment') return res.json({ token: order.status_token });
-
-  try {
-    const token   = await getPayPalToken();
-    const capture = await paypalRequest('POST', `/v2/checkout/orders/${paypalOrderId}/capture`, {}, token);
-
-    const captureStatus = capture.status;
-    if (captureStatus !== 'COMPLETED') {
-      console.error('[paypal] capture not completed:', captureStatus, capture);
-      return res.status(402).json({ error: 'Payment was not completed.' });
-    }
-
-    const result = db.prepare("UPDATE orders SET status = 'paid' WHERE id = ? AND status = 'awaiting_payment'").run(order.id);
-    if (result.changes === 0) return res.json({ token: order.status_token });
-
-    const amountCAD  = (order.price_cents / 100).toFixed(2);
-    const isDomestic = order.destination_country === 'CA';
-    const fromAddr   = order.skip_return
-      ? 'No return address'
-      : [order.sender_name, order.sender_street,
-         `${order.sender_city || ''} ${order.sender_province || ''} ${order.sender_postal || ''}`.trim(),
-         order.sender_country].filter(Boolean).join('\n');
-    const toAddr = [order.recipient_name, order.recipient_street,
-      `${order.recipient_city || ''} ${order.recipient_province || ''} ${order.recipient_postal || ''}`.trim(),
-      order.destination_country].filter(Boolean).join('\n');
-
-    const attachInfos = order.attachment_info ? JSON.parse(order.attachment_info) : [];
-    const emailAttachments = attachInfos.filter(a => fs.existsSync(a.path))
-      .map(a => ({ filename: a.originalName, path: a.path }));
-
-    await sendMail({
-      from: process.env.EMAIL_FROM, to: process.env.OPERATOR_EMAIL,
-      subject: `[Letterhome] Order #${order.id} — ${order.recipient_name} (PayPal)`,
-      html: buildOperatorEmail(order, fromAddr, toAddr, amountCAD, emailAttachments.length),
-      text: buildOperatorEmailText(order, fromAddr, toAddr, amountCAD, emailAttachments.length),
-      attachments: emailAttachments,
-    }, 'order_operator_notification', order.id).catch(err =>
-      console.error(`[paypal] operator email failed for order #${order.id}:`, err.message));
-
-    await sendMail({
-      from: process.env.EMAIL_FROM, to: order.customer_email,
-      subject: `Your Letterhome order is confirmed — letter to ${order.recipient_name}`,
-      html: buildCustomerEmail(order, toAddr, amountCAD, isDomestic),
-      text: buildCustomerEmailText(order, toAddr, amountCAD, isDomestic),
-    }, 'order_confirmation', order.id).catch(err => {
-      console.error(`[paypal] confirmation email failed for order #${order.id}:`, err.message);
-      sendErrorAlert(`Order #${order.id} PayPal confirmation email failed`, err.message);
-    });
-
-    res.json({ token: order.status_token });
-  } catch (e) {
-    console.error('[paypal] capture error:', e.message, e.paypal);
-    res.status(502).json({ error: 'PayPal capture failed. Contact support@letterhome.ca if you were charged.' });
-  }
-});
-
 app.get('/api/order-status', trackLimiter, (req, res) => {
-  const order = req.query.token
-    ? db.prepare('SELECT * FROM orders WHERE status_token = ?').get(req.query.token)
-    : db.prepare('SELECT * FROM orders WHERE stripe_session_id = ?').get(req.query.session_id || '');
+  const order = db.prepare('SELECT * FROM orders WHERE stripe_session_id = ?')
+    .get(req.query.session_id || '');
   if (!order) return res.status(404).json({ error: 'Order not found.' });
   res.json({
     id:                 order.id,

@@ -131,9 +131,8 @@ function copyOrderNum(id) {
 (async () => {
   const params = new URLSearchParams(window.location.search);
   const sessionId = params.get('session_id');
-  const token     = params.get('token');
   const el = document.getElementById('order-details');
-  if (!sessionId && !token) {
+  if (!sessionId) {
     document.querySelector('.eyebrow').textContent = LH_T('success.lookup.eyebrow');
     document.querySelector('.success-icon').style.display = 'none';
     document.querySelector('h1').textContent = LH_T('success.no_order');
@@ -149,10 +148,7 @@ function copyOrderNum(id) {
   }, 5000);
 
   try {
-    const statusUrl = token
-      ? '/api/order-status?token=' + encodeURIComponent(token)
-      : '/api/order-status?session_id=' + encodeURIComponent(sessionId);
-    const res  = await fetch(statusUrl);
+    const res  = await fetch('/api/order-status?session_id=' + encodeURIComponent(sessionId));
     const data = await res.json();
     clearTimeout(loadingTimeout);
     if (!res.ok) throw new Error(data.error);

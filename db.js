@@ -71,7 +71,6 @@ try { db.exec(`ALTER TABLE orders ADD COLUMN status_token TEXT`);         } catc
 try { db.exec(`ALTER TABLE orders ADD COLUMN recovery_sent_at DATETIME`); } catch {}
 try { db.exec(`ALTER TABLE orders ADD COLUMN actual_cost_cents INTEGER`); } catch {}
 try { db.exec(`ALTER TABLE orders ADD COLUMN sla_alert_sent_at DATETIME`);} catch {}
-try { db.exec(`ALTER TABLE orders ADD COLUMN paypal_order_id TEXT`);      } catch {}
 try { db.exec(`ALTER TABLE customers ADD COLUMN ip TEXT`);             } catch {}
 try { db.exec(`ALTER TABLE customers ADD COLUMN country_code TEXT`);   } catch {}
 try { db.exec(`ALTER TABLE customers ADD COLUMN country_name TEXT`);   } catch {}
