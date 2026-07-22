@@ -1113,6 +1113,7 @@ footer {
         <span data-i18n="index.meta1">From $10 CAD</span>
         <span data-i18n="index.meta2">Mailed within one business day</span>
         <span data-i18n="index.meta3">Domestic &amp; international</span>
+        <span><span id="home-trust-count">163</span> letters mailed</span>
       </div>
     </div>
 
@@ -1600,6 +1601,10 @@ window.addEventListener('load', async function personalizeTicker(){
       bar.style.cssText = 'background:#1e293b;color:#f1f5f9;text-align:center;padding:10px 20px;font-size:14px;position:relative;z-index:200';
       bar.textContent = cfg.announcement;
       document.body.insertBefore(bar, document.body.firstChild);
+    }
+    if (cfg.letters_mailed_count) {
+      const el = document.getElementById('home-trust-count');
+      if (el) el.textContent = cfg.letters_mailed_count.toLocaleString();
     }
   } catch(e) {}
 })();

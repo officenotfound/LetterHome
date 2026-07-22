@@ -603,7 +603,7 @@ const SECURITY_TXT = [
  'cheapest-way-to-send-a-letter-to-canada',
  'send-a-letter-to-canada-without-a-return-address',
  'mail-a-letter-online', 'send-a-letter-from-home', 'what-is-lettermail',
- 'ircc-processing-times', 'n4-notice',
+ 'ircc-processing-times', 'n4-notice', 'ircc-documents', 'for-professionals',
  'from-nigeria', 'from-france', 'from-mexico', 'from-brazil',
  'from-south-korea', 'from-japan', 'from-vietnam', 'from-ukraine',
  'from-jamaica', 'from-sri-lanka', 'from-lebanon', 'from-bangladesh', 'from-nepal',
@@ -936,9 +936,29 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
   }
 
   const isDomestic = b['r-country'] === 'CA';
-  const priceCents = isDomestic
+  const basePriceCents = isDomestic
     ? (parseInt(getSetting('price_domestic_cents',      '1000')) || 1000)
     : (parseInt(getSetting('price_international_cents', '2000')) || 2000);
+
+  // Validate discount code if provided
+  let discountCents = 0;
+  let appliedCode = null;
+  const rawCode = (b['discount_code'] || '').trim().toUpperCase();
+  if (rawCode) {
+    const dc = db.prepare(`
+      SELECT * FROM discount_codes
+      WHERE code = ? AND active = 1
+        AND (expires_at IS NULL OR expires_at > CURRENT_TIMESTAMP)
+        AND (max_uses IS NULL OR uses_count < max_uses)
+    `).get(rawCode);
+    if (dc) {
+      discountCents = dc.discount_pct
+        ? Math.round(basePriceCents * dc.discount_pct / 100)
+        : (dc.discount_cents || 0);
+      appliedCode = dc.code;
+    }
+  }
+  const priceCents = Math.max(50, basePriceCents - discountCents);
 
   const tempFiles = (req.files || []).map(f => ({
     tempPath:     f.path,
@@ -954,8 +974,8 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
       sender_name, sender_street, sender_city, sender_province, sender_postal, sender_country,
       recipient_name, recipient_street, recipient_city, recipient_province, recipient_postal,
       destination_country, letter_type, letter_body, attachment_info, price_cents, customer_ip,
-      status_token
-    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+      status_token, discount_code, discount_cents
+    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
   `).run(
     rEmail, b['skip-return'] ? 1 : 0,
     b['s-name']     || null, b['s-street']   || null, b['s-city']  || null,
@@ -967,8 +987,13 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
     '[]',
     priceCents,
     customerIp || null,
-    randomUUID()
+    randomUUID(),
+    appliedCode || null,
+    discountCents || null
   );
+  if (appliedCode) {
+    db.prepare('UPDATE discount_codes SET uses_count = uses_count + 1 WHERE code = ?').run(appliedCode);
+  }
 
   const orderId  = row.lastInsertRowid;
   const now      = new Date();
@@ -1064,6 +1089,40 @@ app.get('/api/order-status', trackLimiter, (req, res) => {
     recipientCity:      order.recipient_city,
     destinationCountry: order.destination_country,
     priceCents:         order.price_cents,
+  });
+});
+
+app.post('/api/validate-code', trackLimiter, (req, res) => {
+  const code = (req.body?.code || '').trim().toUpperCase();
+  const country = (req.body?.country || 'CA');
+  if (!code) return res.status(400).json({ error: 'No code provided.' });
+
+  const isDomestic = country === 'CA';
+  const baseCents = isDomestic
+    ? (parseInt(getSetting('price_domestic_cents',  '1000')) || 1000)
+    : (parseInt(getSetting('price_international_cents', '2000')) || 2000);
+
+  const dc = db.prepare(`
+    SELECT * FROM discount_codes
+    WHERE code = ? AND active = 1
+      AND (expires_at IS NULL OR expires_at > CURRENT_TIMESTAMP)
+      AND (max_uses IS NULL OR uses_count < max_uses)
+  `).get(code);
+
+  if (!dc) return res.status(404).json({ valid: false, error: 'Code not found or expired.' });
+
+  const discountCents = dc.discount_pct
+    ? Math.round(baseCents * dc.discount_pct / 100)
+    : (dc.discount_cents || 0);
+  const finalCents = Math.max(50, baseCents - discountCents);
+
+  res.json({
+    valid:         true,
+    code:          dc.code,
+    description:   dc.description || null,
+    discount_pct:  dc.discount_pct || null,
+    discount_cents: discountCents,
+    final_cents:   finalCents,
   });
 });
 
@@ -2038,6 +2097,42 @@ app.post('/api/admin/templates', requireAdmin, (req, res) => {
 
 app.delete('/api/admin/templates/:id', requireAdmin, (req, res) => {
   db.prepare('DELETE FROM email_templates WHERE id = ?').run(Number(req.params.id));
+  res.json({ ok: true });
+});
+
+// Discount codes admin routes
+app.get('/api/admin/discount-codes', requireAdmin, (req, res) => {
+  const codes = db.prepare('SELECT * FROM discount_codes ORDER BY created_at DESC').all();
+  res.json(codes);
+});
+
+app.post('/api/admin/discount-codes', requireAdmin, (req, res) => {
+  const { code, description, discount_pct, discount_cents, max_uses, expires_at } = req.body || {};
+  const clean = (code || '').trim().toUpperCase();
+  if (!clean) return res.status(400).json({ error: 'Code is required.' });
+  if (!discount_pct && !discount_cents) return res.status(400).json({ error: 'Provide discount_pct or discount_cents.' });
+  try {
+    const r = db.prepare(`
+      INSERT INTO discount_codes (code, description, discount_pct, discount_cents, max_uses, expires_at)
+      VALUES (?,?,?,?,?,?)
+    `).run(clean, description || null, discount_pct ? parseInt(discount_pct) : null, discount_cents ? parseInt(discount_cents) : null, max_uses ? parseInt(max_uses) : null, expires_at || null);
+    logAudit(req, 'discount_code.create', 'discount_code', r.lastInsertRowid, { code: clean, discount_pct, discount_cents });
+    res.json({ ok: true, id: r.lastInsertRowid });
+  } catch (e) {
+    res.status(400).json({ error: 'Code already exists.' });
+  }
+});
+
+app.patch('/api/admin/discount-codes/:id', requireAdmin, (req, res) => {
+  const { active } = req.body || {};
+  db.prepare('UPDATE discount_codes SET active = ? WHERE id = ?').run(active ? 1 : 0, Number(req.params.id));
+  logAudit(req, active ? 'discount_code.activate' : 'discount_code.deactivate', 'discount_code', req.params.id, {});
+  res.json({ ok: true });
+});
+
+app.delete('/api/admin/discount-codes/:id', requireAdmin, (req, res) => {
+  db.prepare('DELETE FROM discount_codes WHERE id = ?').run(Number(req.params.id));
+  logAudit(req, 'discount_code.delete', 'discount_code', req.params.id, {});
   res.json({ ok: true });
 });
 

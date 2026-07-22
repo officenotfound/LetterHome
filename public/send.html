@@ -764,6 +764,14 @@ textarea.field-error { border-color: var(--red) !important; }
       <p>Every order is prepared and mailed by a person, and if a verified letter hasn't arrived after 2 weeks, we reprint and resend it free. Questions before you pay, or card not going through? <a href="mailto:support@letterhome.ca" style="color:var(--red)">support@letterhome.ca</a> — replies within one business day.</p>
     </div>
 
+    <div id="discount-section" style="margin-bottom:20px">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <input id="discount-code-input" type="text" placeholder="Discount code" autocomplete="off" style="font-family:'DM Mono',monospace;font-size:12px;letter-spacing:0.06em;padding:9px 12px;border:1.5px solid rgba(42,42,42,0.25);background:var(--paper);color:var(--ink);border-radius:2px;width:160px;text-transform:uppercase">
+        <button type="button" onclick="applyDiscountCode()" style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;padding:9px 16px;border:1.5px solid rgba(42,42,42,0.35);background:transparent;color:var(--ink);border-radius:2px;cursor:pointer">Apply</button>
+        <span id="discount-msg" style="font-size:12px;font-family:'DM Mono',monospace"></span>
+      </div>
+    </div>
+
     <div style="display:flex;gap:20px;margin-bottom:20px;flex-wrap:wrap">
       <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-muted);font-family:'DM Mono',monospace">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--red);flex-shrink:0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
@@ -1226,6 +1234,8 @@ async function submitOrder() {
     if (el) form.append(id, el.type === 'checkbox' ? (el.checked ? '1' : '') : el.value);
   });
   form.append('r-province', getRecipientProvince());
+  const appliedCode = document.getElementById('discount-code-input')?.value?.trim().toUpperCase();
+  if (appliedCode) form.append('discount_code', appliedCode);
   uploadedFiles.filter(Boolean).forEach(f => form.append('attachments', f));
 
   try {
@@ -1241,6 +1251,38 @@ async function submitOrder() {
     btn.disabled = false;
     btn.textContent = LH_T('send.btn.pay');
     showValidationBanner(LH_T('send.err.submit'));
+  }
+}
+
+let _appliedDiscount = null;
+async function applyDiscountCode() {
+  const input = document.getElementById('discount-code-input');
+  const msg   = document.getElementById('discount-msg');
+  const code  = (input?.value || '').trim().toUpperCase();
+  if (!code) return;
+  const country = document.getElementById('r-country')?.value || 'CA';
+  msg.style.color = 'var(--ink-muted)';
+  msg.textContent = 'Checking…';
+  try {
+    const res  = await fetch('/api/validate-code', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code, country }),
+    });
+    const data = await res.json();
+    if (data.valid) {
+      _appliedDiscount = data;
+      msg.style.color = '#2a7a2a';
+      const off = data.discount_pct ? `${data.discount_pct}% off` : `$${(data.discount_cents/100).toFixed(2)} off`;
+      msg.textContent = `✓ ${off} applied`;
+      if (input) input.disabled = true;
+    } else {
+      _appliedDiscount = null;
+      msg.style.color = 'var(--red)';
+      msg.textContent = data.error || 'Invalid code.';
+    }
+  } catch {
+    msg.style.color = 'var(--red)';
+    msg.textContent = 'Could not check code.';
   }
 }
 </script>
