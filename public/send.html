@@ -769,11 +769,12 @@ textarea.field-error { border-color: var(--red) !important; }
       <label for="agree-terms" data-i18n-html="send.agree">I agree to the <a href="/terms" style="color:var(--red)">Terms of Service</a> and <a href="/privacy" style="color:var(--red)">Privacy Policy</a>. I confirm the letter doesn't contain threats, scams or illegal content.</label>
     </div>
 
-    <div class="panel-nav">
+    <div class="panel-nav" style="flex-wrap:wrap;gap:12px">
       <button class="btn btn-outline" onclick="goTo(2)" data-i18n="send.btn.editletter">← Edit Letter</button>
-      <div style="text-align:right">
-        <button id="pay-btn" class="btn btn-red btn-large" onclick="submitOrder()" data-i18n="send.btn.pay">Pay via Stripe →</button>
-        <p style="font-size:11px;color:var(--ink-faint);margin-top:8px;font-family:'DM Mono',monospace;letter-spacing:0.04em" data-i18n="send.stripe.secured">🔒 Secured by Stripe — we never see your card details</p>
+      <div style="text-align:right;flex:1;min-width:220px">
+        <button id="pay-btn" class="btn btn-red btn-large" onclick="submitOrder()" data-i18n="send.btn.pay" style="width:100%;margin-bottom:10px">Pay by Card →</button>
+        <div id="paypal-button-container" style="min-height:45px"></div>
+        <p style="font-size:11px;color:var(--ink-faint);margin-top:8px;font-family:'DM Mono',monospace;letter-spacing:0.04em">🔒 Secured by Stripe or PayPal — we never see your card details</p>
       </div>
     </div>
   </div>
@@ -1453,5 +1454,72 @@ function fillSavedRecipient(sel) {
 }
 </script>
 <script src="/lang.js?v=11" defer></script>
+<script>
+// PayPal button — loads SDK dynamically only if PAYPAL_CLIENT_ID is available
+(async () => {
+  try {
+    const cfg = await fetch('/api/site-config').then(r => r.json());
+    if (!cfg.paypal_client_id) return; // PayPal not configured yet
+    await new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(cfg.paypal_client_id)}&currency=CAD&intent=capture`;
+      s.onload = resolve; s.onerror = reject;
+      document.head.appendChild(s);
+    });
+    if (!window.paypal) return;
+
+    function collectForm() {
+      const form = new FormData();
+      const ids = ['skip-return','s-name','s-street','s-city','s-province','s-postal','s-country',
+                   'r-name','r-street','r-city','r-postal','r-country','r-email','letter-body'];
+      ids.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) form.append(id, el.type === 'checkbox' ? (el.checked ? '1' : '') : el.value);
+      });
+      form.append('r-province', getRecipientProvince());
+      uploadedFiles.filter(Boolean).forEach(f => form.append('attachments', f));
+      return form;
+    }
+
+    paypal.Buttons({
+      style: { layout: 'horizontal', color: 'gold', shape: 'rect', label: 'paypal', height: 44, tagline: false },
+      createOrder: async () => {
+        if (!validateStep(3)) throw new Error('validation');
+        const res  = await fetch('/api/paypal/create-order', { method: 'POST', body: collectForm() });
+        const data = await res.json();
+        if (!data.paypalOrderId) throw new Error(data.error || 'PayPal unavailable');
+        return data.paypalOrderId;
+      },
+      onApprove: async (data) => {
+        const btn = document.getElementById('pay-btn');
+        btn.disabled = true;
+        try {
+          const res  = await fetch('/api/paypal/capture-order', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ paypalOrderId: data.orderID }),
+          });
+          const result = await res.json();
+          if (result.token) {
+            window.location.href = '/order-success?token=' + encodeURIComponent(result.token);
+          } else {
+            throw new Error(result.error || 'Capture failed');
+          }
+        } catch (err) {
+          btn.disabled = false;
+          showValidationBanner('PayPal payment failed. Please try again or use card.');
+        }
+      },
+      onError: (err) => {
+        if (err.message !== 'validation')
+          showValidationBanner('PayPal encountered an error. Please try again or use card payment.');
+      },
+    }).render('#paypal-button-container');
+  } catch (e) {
+    // PayPal SDK failed to load — silently hide the container
+    const c = document.getElementById('paypal-button-container');
+    if (c) c.style.display = 'none';
+  }
+})();
+</script>
 </body>
 </html>
