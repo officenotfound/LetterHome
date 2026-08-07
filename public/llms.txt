@@ -1,8 +1,8 @@
 # Letterhome
 
-> Letterhome is a Canadian letter and document mailing service. Customers anywhere in the world upload a PDF or Word document online, and Letterhome prints it in full colour, seals it in an envelope, and mails it from inside Canada via Canada Post Lettermail — with a real Canadian postmark. No Canadian address, printer, stamps, or post office visit required. From $10 CAD per letter.
+> Letterhome is a Canadian letter and document mailing service. Customers anywhere in the world upload a PDF or Word document online, and Letterhome prints it in full colour, seals it in an envelope, and mails it from inside Canada via Canada Post Lettermail — with a real Canadian mailing date. No Canadian address, printer, stamps, or post office visit required. From $10 CAD per letter.
 
-Letterhome is used by Canadians living abroad, immigrants sending documents to Canadian government offices (IRCC, CRA), expats sending letters to family, and anyone who needs a letter to arrive with a Canadian postmark.
+Letterhome is used by Canadians living abroad, immigrants sending documents to Canadian government offices (IRCC, CRA), expats sending letters to family, and anyone who needs a letter to arrive with a Canadian mailing date.
 
 ## Pricing
 
