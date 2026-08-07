@@ -607,7 +607,7 @@ const SECURITY_TXT = [
  'cra-mail', 'ltb-forms',
  'mailed-from-canada', 'non-resident-landlord', 'n12-notice',
  'serve-eviction-notice-from-abroad', 'bc-rtb-forms',
- 'from-nigeria', 'from-france', 'from-mexico', 'from-brazil',
+ 'from-nigeria', 'from-mexico', 'from-brazil',
  'from-south-korea', 'from-japan', 'from-vietnam', 'from-ukraine',
  'from-jamaica', 'from-sri-lanka', 'from-lebanon', 'from-bangladesh', 'from-nepal',
  'from-egypt', 'from-colombia', 'from-kenya', 'from-ghana', 'from-south-africa',
