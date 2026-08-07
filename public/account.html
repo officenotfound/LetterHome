@@ -5,14 +5,14 @@
 <link rel="preload" as="font" type="font/woff2" href="/fonts/vEFI2_tTDB4M7-auWDN0ahZJW1gb8tc.woff2" crossorigin>
 <link rel="dns-prefetch" href="https://www.googletagmanager.com">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>My Account — Letterhome</title>
+<title>My Account | Letterhome</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="icon" type="image/png" href="/favicon.png">
 <link rel="manifest" href="/manifest.json">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <meta name="theme-color" content="#f1ebde" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#1a1410" media="(prefers-color-scheme: dark)">
-<meta property="og:title" content="My Account — Letterhome">
+<meta property="og:title" content="My Account | Letterhome">
 <meta property="og:description" content="Manage your Letterhome account, view past orders, and save recipients.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Letterhome">
@@ -170,7 +170,7 @@ function updateStrength(inputId, barId, labelId) {
   if (path === '/account/forgot')   { renderForgot();   return; }
   if (path === '/account/reset')    { renderReset();    return; }
 
-  // /account — check if logged in
+  // /account, check if logged in
   const me = await fetch('/api/account/me').then(r => r.ok ? r.json() : null).catch(() => null);
   if (!me?.ok) {
     window.location.replace('/account/login');
@@ -180,7 +180,7 @@ function updateStrength(inputId, barId, labelId) {
 })();
 
 function renderLogin() {
-  document.title = 'Sign In — Letterhome';
+  document.title = 'Sign In. Letterhome';
   app.innerHTML = `
     <div class="eyebrow">${LH_T('account.eyebrow')}</div>
     <h1>${LH_T('account.login.h1')}</h1>
@@ -201,7 +201,7 @@ function renderLogin() {
 }
 
 function renderForgot() {
-  document.title = 'Forgot Password — Letterhome';
+  document.title = 'Forgot Password. Letterhome';
   app.innerHTML = `
     <div class="eyebrow">${LH_T('account.eyebrow')}</div>
     <h1>${LH_T('account.forgot.h1')}</h1>
@@ -234,7 +234,7 @@ async function doForgot() {
 }
 
 function renderReset() {
-  document.title = 'Set a New Password — Letterhome';
+  document.title = 'Set a New Password. Letterhome';
   const qs = new URLSearchParams(window.location.search);
   const email = (qs.get('email') || '').trim();
   const token = qs.get('token') || '';
@@ -304,7 +304,7 @@ async function doLogin() {
 }
 
 function renderRegister() {
-  document.title = 'Create Account — Letterhome';
+  document.title = 'Create Account. Letterhome';
   app.innerHTML = `
     <div class="eyebrow">${LH_T('account.eyebrow')}</div>
     <h1>${LH_T('account.register.h1')}</h1>
@@ -382,7 +382,7 @@ function renderPortal(me) {
           <button class="btn-ghost" onclick="deleteRecipient(${r.id})" style="font-size:12px;flex-shrink:0;margin-left:16px">${LH_T('account.recipients.remove')}</button>
         </div>`).join('');
 
-  document.title = 'My Account — Letterhome';
+  document.title = 'My Account. Letterhome';
   app.innerHTML = `
     <div style="display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:40px">
       <div>

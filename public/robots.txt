@@ -1,8 +1,8 @@
-# Letterhome — robots.txt
+# Letterhome robots.txt
 # Last reviewed: 2026-05-29
 #
 # Policy in plain English:
-#   • Search engines (Google, Bing, etc.): full access — please index us.
+#   • Search engines (Google, Bing, etc.): full access, please index us.
 #   • AI SEARCH / assistant bots (ChatGPT Search, Perplexity, Claude): welcome.
 #     These fetch pages in real time to cite us in answers and send traffic back.
 #     They are allowed by the default (*) group below.
@@ -11,7 +11,7 @@
 #     them has no effect on Google rankings or AI-search citations.
 
 # ---------------------------------------------------------------------------
-# Default policy — applies to every crawler not named in its own group below.
+# Default policy. Applies to every crawler not named in its own group below.
 # Content-Signal (Cloudflare / content-signals convention) declares, in one
 # line, how our content may be used by ALL compliant bots:
 #   search=yes    → index us and link to us
@@ -27,9 +27,9 @@ Disallow: /api/
 Disallow: /order-success
 
 # ---------------------------------------------------------------------------
-# AI SEARCH / real-time answer bots — explicitly welcomed.
+# AI SEARCH / real-time answer bots, explicitly welcomed.
 # These crawl pages to cite them in live AI answers (ChatGPT Search,
-# Perplexity, Copilot). Distinct from training crawlers — they send
+# Perplexity, Copilot). Distinct from training crawlers, they send
 # referral traffic back.
 # ---------------------------------------------------------------------------
 User-agent: OAI-SearchBot
@@ -45,7 +45,7 @@ User-agent: DuckAssistBot
 Allow: /
 
 # ---------------------------------------------------------------------------
-# AI TRAINING crawlers — explicitly opted out.
+# AI TRAINING crawlers, explicitly opted out.
 # Mirrors the ai-train=no signal above and our Cloudflare "block AI training
 # bots" rule. Named groups do NOT inherit the * rules, but a blanket Disallow
 # is the intent here, so that is fine.

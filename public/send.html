@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="/ga.js" defer></script>
 <script src="/cookie-consent.js" defer></script>
-<title>Send a Letter from Canada — Letterhome</title>
+<title>Send a Letter from Canada | Letterhome</title>
 <meta name="description" content="Send a real letter or document from Canada. We print it in full colour, seal it, and mail it via Canada Post. Domestic $10 CAD · International $20 CAD. No account needed.">
 <link rel="canonical" href="https://letterhome.ca/send">
 <link rel="icon" type="image/png" href="/favicon.png">
@@ -18,14 +18,14 @@
 <meta property="og:image" content="https://letterhome.ca/og-image.jpg?v=2">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:title" content="Send a Letter from Canada — Letterhome">
+<meta property="og:title" content="Send a Letter from Canada | Letterhome">
 <meta property="og:description" content="Send a real letter or document from Canada. We print it in full colour, seal it, and mail it via Canada Post. Domestic $10 CAD · International $20 CAD.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://letterhome.ca/send">
 <meta property="og:site_name" content="Letterhome">
 <meta property="og:locale" content="en_CA">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Send a Letter from Canada — Letterhome">
+<meta name="twitter:title" content="Send a Letter from Canada | Letterhome">
 <meta name="twitter:description" content="Send a real letter or document from Canada. We print it in full colour, seal it, and mail it via Canada Post. Domestic $10 CAD · International $20 CAD.">
 <meta name="twitter:image" content="https://letterhome.ca/og-image.jpg?v=2">
 <script type="application/ld+json">
@@ -201,7 +201,7 @@ input, select, textarea {
 input:focus, select:focus, textarea:focus {
   border-bottom-color: var(--red); box-shadow: none;
 }
-/* Textareas need a frame since they have multiple lines — keep underline but add a top rule */
+/* Textareas need a frame since they have multiple lines, keep underline but add a top rule */
 textarea {
   border-top: 1px dashed var(--line); padding-top: 10px;
 }
@@ -347,7 +347,7 @@ textarea { resize: vertical; min-height: 260px; line-height: 1.6; }
 .check-row input[type="checkbox"]:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
 .check-row label { font-family: 'Source Serif 4', Georgia, serif; font-size: 13px; color: var(--ink-muted); text-transform: none; letter-spacing: 0; font-weight: 400; cursor: pointer; line-height: 1.55; }
 
-/* Account banner — override inline styles: softer border, paper background for contrast on open layout */
+/* Account banner, override inline styles: softer border, paper background for contrast on open layout */
 #account-banner > div {
   border-left-width: 1px !important;
   border-left-style: dashed !important;
@@ -452,199 +452,199 @@ textarea.field-error { border-color: var(--red) !important; }
     <div id="account-banner" style="display:none"></div>
 
     <div class="destination-picker">
-      <div class="destination-picker-header" data-i18n="send.dest.header">First — where is this going?</div>
+      <div class="destination-picker-header" data-i18n="send.dest.header">First, where is this going?</div>
       <div class="form-group" style="max-width:520px;margin-bottom:0">
         <label for="r-country" data-i18n="send.dest.label">Destination Country</label>
         <select id="r-country" onchange="updatePricing()">
-            <option value="CA">Canada — $10 CAD</option>
-            <option value="AL">Albania — $20 CAD</option>
-            <option value="DZ">Algeria — $20 CAD</option>
-            <option value="AD">Andorra — $20 CAD</option>
-            <option value="AO">Angola — $20 CAD</option>
-            <option value="AG">Antigua and Barbuda — $20 CAD</option>
-            <option value="AR">Argentina — $20 CAD</option>
-            <option value="AM">Armenia — $20 CAD</option>
-            <option value="AU">Australia — $20 CAD</option>
-            <option value="AT">Austria — $20 CAD</option>
-            <option value="AZ">Azerbaijan — $20 CAD</option>
-            <option value="BS">Bahamas — $20 CAD</option>
-            <option value="BH">Bahrain — $20 CAD</option>
-            <option value="BD">Bangladesh — $20 CAD</option>
-            <option value="BB">Barbados — $20 CAD</option>
-            <option value="BE">Belgium — $20 CAD</option>
-            <option value="BZ">Belize — $20 CAD</option>
-            <option value="BJ">Benin — $20 CAD</option>
-            <option value="BT">Bhutan — $20 CAD</option>
-            <option value="BO">Bolivia — $20 CAD</option>
-            <option value="BA">Bosnia and Herzegovina — $20 CAD</option>
-            <option value="BW">Botswana — $20 CAD</option>
-            <option value="BR">Brazil — $20 CAD</option>
-            <option value="BN">Brunei — $20 CAD</option>
-            <option value="BG">Bulgaria — $20 CAD</option>
-            <option value="BI">Burundi — $20 CAD</option>
-            <option value="KH">Cambodia — $20 CAD</option>
-            <option value="CM">Cameroon — $20 CAD</option>
-            <option value="CV">Cape Verde — $20 CAD</option>
-            <option value="TD">Chad — $20 CAD</option>
-            <option value="CL">Chile — $20 CAD</option>
-            <option value="CN">China — $20 CAD</option>
-            <option value="CO">Colombia — $20 CAD</option>
-            <option value="KM">Comoros — $20 CAD</option>
-            <option value="CG">Congo — $20 CAD</option>
-            <option value="CD">Congo, Democratic Republic — $20 CAD</option>
-            <option value="CR">Costa Rica — $20 CAD</option>
-            <option value="HR">Croatia — $20 CAD</option>
-            <option value="CU">Cuba — $20 CAD</option>
-            <option value="CY">Cyprus — $20 CAD</option>
-            <option value="CZ">Czech Republic — $20 CAD</option>
-            <option value="DK">Denmark — $20 CAD</option>
-            <option value="DJ">Djibouti — $20 CAD</option>
-            <option value="DM">Dominica — $20 CAD</option>
-            <option value="DO">Dominican Republic — $20 CAD</option>
-            <option value="EC">Ecuador — $20 CAD</option>
-            <option value="EG">Egypt — $20 CAD</option>
-            <option value="SV">El Salvador — $20 CAD</option>
-            <option value="GQ">Equatorial Guinea — $20 CAD</option>
-            <option value="EE">Estonia — $20 CAD</option>
-            <option value="SZ">Eswatini — $20 CAD</option>
-            <option value="ET">Ethiopia — $20 CAD</option>
-            <option value="FJ">Fiji — $20 CAD</option>
-            <option value="FI">Finland — $20 CAD</option>
-            <option value="FR">France — $20 CAD</option>
-            <option value="GA">Gabon — $20 CAD</option>
-            <option value="GM">Gambia — $20 CAD</option>
-            <option value="GE">Georgia — $20 CAD</option>
-            <option value="DE">Germany — $20 CAD</option>
-            <option value="GH">Ghana — $20 CAD</option>
-            <option value="GR">Greece — $20 CAD</option>
-            <option value="GD">Grenada — $20 CAD</option>
-            <option value="GT">Guatemala — $20 CAD</option>
-            <option value="GN">Guinea — $20 CAD</option>
-            <option value="GW">Guinea-Bissau — $20 CAD</option>
-            <option value="GY">Guyana — $20 CAD</option>
-            <option value="HN">Honduras — $20 CAD</option>
-            <option value="HU">Hungary — $20 CAD</option>
-            <option value="IS">Iceland — $20 CAD</option>
-            <option value="IN">India — $20 CAD</option>
-            <option value="ID">Indonesia — $20 CAD</option>
-            <option value="IE">Ireland — $20 CAD</option>
-            <option value="IL">Israel — $20 CAD</option>
-            <option value="IT">Italy — $20 CAD</option>
-            <option value="JM">Jamaica — $20 CAD</option>
-            <option value="JP">Japan — $20 CAD</option>
-            <option value="JO">Jordan — $20 CAD</option>
-            <option value="KZ">Kazakhstan — $20 CAD</option>
-            <option value="KE">Kenya — $20 CAD</option>
-            <option value="KI">Kiribati — $20 CAD</option>
-            <option value="KW">Kuwait — $20 CAD</option>
-            <option value="KG">Kyrgyzstan — $20 CAD</option>
-            <option value="LA">Laos — $20 CAD</option>
-            <option value="LV">Latvia — $20 CAD</option>
-            <option value="LB">Lebanon — $20 CAD</option>
-            <option value="LS">Lesotho — $20 CAD</option>
-            <option value="LR">Liberia — $20 CAD</option>
-            <option value="LI">Liechtenstein — $20 CAD</option>
-            <option value="LT">Lithuania — $20 CAD</option>
-            <option value="LU">Luxembourg — $20 CAD</option>
-            <option value="MG">Madagascar — $20 CAD</option>
-            <option value="MW">Malawi — $20 CAD</option>
-            <option value="MY">Malaysia — $20 CAD</option>
-            <option value="MV">Maldives — $20 CAD</option>
-            <option value="MT">Malta — $20 CAD</option>
-            <option value="MH">Marshall Islands — $20 CAD</option>
-            <option value="MR">Mauritania — $20 CAD</option>
-            <option value="MU">Mauritius — $20 CAD</option>
-            <option value="MX">Mexico — $20 CAD</option>
-            <option value="FM">Micronesia — $20 CAD</option>
-            <option value="MD">Moldova — $20 CAD</option>
-            <option value="MC">Monaco — $20 CAD</option>
-            <option value="MN">Mongolia — $20 CAD</option>
-            <option value="ME">Montenegro — $20 CAD</option>
-            <option value="MA">Morocco — $20 CAD</option>
-            <option value="MZ">Mozambique — $20 CAD</option>
-            <option value="NA">Namibia — $20 CAD</option>
-            <option value="NR">Nauru — $20 CAD</option>
-            <option value="NP">Nepal — $20 CAD</option>
-            <option value="NL">Netherlands — $20 CAD</option>
-            <option value="NZ">New Zealand — $20 CAD</option>
-            <option value="NI">Nicaragua — $20 CAD</option>
-            <option value="NE">Niger — $20 CAD</option>
-            <option value="NG">Nigeria — $20 CAD</option>
-            <option value="MK">North Macedonia — $20 CAD</option>
-            <option value="NO">Norway — $20 CAD</option>
-            <option value="OM">Oman — $20 CAD</option>
-            <option value="PK">Pakistan — $20 CAD</option>
-            <option value="PW">Palau — $20 CAD</option>
-            <option value="PS">Palestine — $20 CAD</option>
-            <option value="PA">Panama — $20 CAD</option>
-            <option value="PG">Papua New Guinea — $20 CAD</option>
-            <option value="PY">Paraguay — $20 CAD</option>
-            <option value="PE">Peru — $20 CAD</option>
-            <option value="PH">Philippines — $20 CAD</option>
-            <option value="PL">Poland — $20 CAD</option>
-            <option value="PT">Portugal — $20 CAD</option>
-            <option value="QA">Qatar — $20 CAD</option>
-            <option value="RO">Romania — $20 CAD</option>
-            <option value="RW">Rwanda — $20 CAD</option>
-            <option value="KN">Saint Kitts and Nevis — $20 CAD</option>
-            <option value="LC">Saint Lucia — $20 CAD</option>
-            <option value="VC">Saint Vincent and the Grenadines — $20 CAD</option>
-            <option value="WS">Samoa — $20 CAD</option>
-            <option value="SM">San Marino — $20 CAD</option>
-            <option value="ST">São Tomé and Príncipe — $20 CAD</option>
-            <option value="SA">Saudi Arabia — $20 CAD</option>
-            <option value="SN">Senegal — $20 CAD</option>
-            <option value="RS">Serbia — $20 CAD</option>
-            <option value="SC">Seychelles — $20 CAD</option>
-            <option value="SL">Sierra Leone — $20 CAD</option>
-            <option value="SG">Singapore — $20 CAD</option>
-            <option value="SK">Slovakia — $20 CAD</option>
-            <option value="SI">Slovenia — $20 CAD</option>
-            <option value="SB">Solomon Islands — $20 CAD</option>
-            <option value="ZA">South Africa — $20 CAD</option>
-            <option value="KR">South Korea — $20 CAD</option>
-            <option value="ES">Spain — $20 CAD</option>
-            <option value="LK">Sri Lanka — $20 CAD</option>
-            <option value="SR">Suriname — $20 CAD</option>
-            <option value="SE">Sweden — $20 CAD</option>
-            <option value="CH">Switzerland — $20 CAD</option>
-            <option value="TW">Taiwan — $20 CAD</option>
-            <option value="TJ">Tajikistan — $20 CAD</option>
-            <option value="TZ">Tanzania — $20 CAD</option>
-            <option value="TH">Thailand — $20 CAD</option>
-            <option value="TL">Timor-Leste — $20 CAD</option>
-            <option value="TG">Togo — $20 CAD</option>
-            <option value="TO">Tonga — $20 CAD</option>
-            <option value="TT">Trinidad and Tobago — $20 CAD</option>
-            <option value="TN">Tunisia — $20 CAD</option>
-            <option value="TR">Turkey — $20 CAD</option>
-            <option value="TM">Turkmenistan — $20 CAD</option>
-            <option value="TV">Tuvalu — $20 CAD</option>
-            <option value="UG">Uganda — $20 CAD</option>
-            <option value="UA">Ukraine — $20 CAD</option>
-            <option value="AE">United Arab Emirates — $20 CAD</option>
-            <option value="GB">United Kingdom — $20 CAD</option>
-            <option value="US">United States — $20 CAD</option>
-            <option value="UY">Uruguay — $20 CAD</option>
-            <option value="UZ">Uzbekistan — $20 CAD</option>
-            <option value="VU">Vanuatu — $20 CAD</option>
-            <option value="VA">Vatican City — $20 CAD</option>
-            <option value="VE">Venezuela — $20 CAD</option>
-            <option value="VN">Vietnam — $20 CAD</option>
-            <option value="ZM">Zambia — $20 CAD</option>
+            <option value="CA">Canada, $10 CAD</option>
+            <option value="AL">Albania, $20 CAD</option>
+            <option value="DZ">Algeria, $20 CAD</option>
+            <option value="AD">Andorra, $20 CAD</option>
+            <option value="AO">Angola, $20 CAD</option>
+            <option value="AG">Antigua and Barbuda, $20 CAD</option>
+            <option value="AR">Argentina, $20 CAD</option>
+            <option value="AM">Armenia, $20 CAD</option>
+            <option value="AU">Australia, $20 CAD</option>
+            <option value="AT">Austria, $20 CAD</option>
+            <option value="AZ">Azerbaijan, $20 CAD</option>
+            <option value="BS">Bahamas, $20 CAD</option>
+            <option value="BH">Bahrain, $20 CAD</option>
+            <option value="BD">Bangladesh, $20 CAD</option>
+            <option value="BB">Barbados, $20 CAD</option>
+            <option value="BE">Belgium, $20 CAD</option>
+            <option value="BZ">Belize, $20 CAD</option>
+            <option value="BJ">Benin, $20 CAD</option>
+            <option value="BT">Bhutan, $20 CAD</option>
+            <option value="BO">Bolivia, $20 CAD</option>
+            <option value="BA">Bosnia and Herzegovina, $20 CAD</option>
+            <option value="BW">Botswana, $20 CAD</option>
+            <option value="BR">Brazil, $20 CAD</option>
+            <option value="BN">Brunei, $20 CAD</option>
+            <option value="BG">Bulgaria, $20 CAD</option>
+            <option value="BI">Burundi, $20 CAD</option>
+            <option value="KH">Cambodia, $20 CAD</option>
+            <option value="CM">Cameroon, $20 CAD</option>
+            <option value="CV">Cape Verde, $20 CAD</option>
+            <option value="TD">Chad, $20 CAD</option>
+            <option value="CL">Chile, $20 CAD</option>
+            <option value="CN">China, $20 CAD</option>
+            <option value="CO">Colombia, $20 CAD</option>
+            <option value="KM">Comoros, $20 CAD</option>
+            <option value="CG">Congo, $20 CAD</option>
+            <option value="CD">Congo, Democratic Republic, $20 CAD</option>
+            <option value="CR">Costa Rica, $20 CAD</option>
+            <option value="HR">Croatia, $20 CAD</option>
+            <option value="CU">Cuba, $20 CAD</option>
+            <option value="CY">Cyprus, $20 CAD</option>
+            <option value="CZ">Czech Republic, $20 CAD</option>
+            <option value="DK">Denmark, $20 CAD</option>
+            <option value="DJ">Djibouti, $20 CAD</option>
+            <option value="DM">Dominica, $20 CAD</option>
+            <option value="DO">Dominican Republic, $20 CAD</option>
+            <option value="EC">Ecuador, $20 CAD</option>
+            <option value="EG">Egypt, $20 CAD</option>
+            <option value="SV">El Salvador, $20 CAD</option>
+            <option value="GQ">Equatorial Guinea, $20 CAD</option>
+            <option value="EE">Estonia, $20 CAD</option>
+            <option value="SZ">Eswatini, $20 CAD</option>
+            <option value="ET">Ethiopia, $20 CAD</option>
+            <option value="FJ">Fiji, $20 CAD</option>
+            <option value="FI">Finland, $20 CAD</option>
+            <option value="FR">France, $20 CAD</option>
+            <option value="GA">Gabon, $20 CAD</option>
+            <option value="GM">Gambia, $20 CAD</option>
+            <option value="GE">Georgia, $20 CAD</option>
+            <option value="DE">Germany, $20 CAD</option>
+            <option value="GH">Ghana, $20 CAD</option>
+            <option value="GR">Greece, $20 CAD</option>
+            <option value="GD">Grenada, $20 CAD</option>
+            <option value="GT">Guatemala, $20 CAD</option>
+            <option value="GN">Guinea, $20 CAD</option>
+            <option value="GW">Guinea-Bissau, $20 CAD</option>
+            <option value="GY">Guyana, $20 CAD</option>
+            <option value="HN">Honduras, $20 CAD</option>
+            <option value="HU">Hungary, $20 CAD</option>
+            <option value="IS">Iceland, $20 CAD</option>
+            <option value="IN">India, $20 CAD</option>
+            <option value="ID">Indonesia, $20 CAD</option>
+            <option value="IE">Ireland, $20 CAD</option>
+            <option value="IL">Israel, $20 CAD</option>
+            <option value="IT">Italy, $20 CAD</option>
+            <option value="JM">Jamaica, $20 CAD</option>
+            <option value="JP">Japan, $20 CAD</option>
+            <option value="JO">Jordan, $20 CAD</option>
+            <option value="KZ">Kazakhstan, $20 CAD</option>
+            <option value="KE">Kenya, $20 CAD</option>
+            <option value="KI">Kiribati, $20 CAD</option>
+            <option value="KW">Kuwait, $20 CAD</option>
+            <option value="KG">Kyrgyzstan, $20 CAD</option>
+            <option value="LA">Laos, $20 CAD</option>
+            <option value="LV">Latvia, $20 CAD</option>
+            <option value="LB">Lebanon, $20 CAD</option>
+            <option value="LS">Lesotho, $20 CAD</option>
+            <option value="LR">Liberia, $20 CAD</option>
+            <option value="LI">Liechtenstein, $20 CAD</option>
+            <option value="LT">Lithuania, $20 CAD</option>
+            <option value="LU">Luxembourg, $20 CAD</option>
+            <option value="MG">Madagascar, $20 CAD</option>
+            <option value="MW">Malawi, $20 CAD</option>
+            <option value="MY">Malaysia, $20 CAD</option>
+            <option value="MV">Maldives, $20 CAD</option>
+            <option value="MT">Malta, $20 CAD</option>
+            <option value="MH">Marshall Islands, $20 CAD</option>
+            <option value="MR">Mauritania, $20 CAD</option>
+            <option value="MU">Mauritius, $20 CAD</option>
+            <option value="MX">Mexico, $20 CAD</option>
+            <option value="FM">Micronesia, $20 CAD</option>
+            <option value="MD">Moldova, $20 CAD</option>
+            <option value="MC">Monaco, $20 CAD</option>
+            <option value="MN">Mongolia, $20 CAD</option>
+            <option value="ME">Montenegro, $20 CAD</option>
+            <option value="MA">Morocco, $20 CAD</option>
+            <option value="MZ">Mozambique, $20 CAD</option>
+            <option value="NA">Namibia, $20 CAD</option>
+            <option value="NR">Nauru, $20 CAD</option>
+            <option value="NP">Nepal, $20 CAD</option>
+            <option value="NL">Netherlands, $20 CAD</option>
+            <option value="NZ">New Zealand, $20 CAD</option>
+            <option value="NI">Nicaragua, $20 CAD</option>
+            <option value="NE">Niger, $20 CAD</option>
+            <option value="NG">Nigeria, $20 CAD</option>
+            <option value="MK">North Macedonia, $20 CAD</option>
+            <option value="NO">Norway, $20 CAD</option>
+            <option value="OM">Oman, $20 CAD</option>
+            <option value="PK">Pakistan, $20 CAD</option>
+            <option value="PW">Palau, $20 CAD</option>
+            <option value="PS">Palestine, $20 CAD</option>
+            <option value="PA">Panama, $20 CAD</option>
+            <option value="PG">Papua New Guinea, $20 CAD</option>
+            <option value="PY">Paraguay, $20 CAD</option>
+            <option value="PE">Peru, $20 CAD</option>
+            <option value="PH">Philippines, $20 CAD</option>
+            <option value="PL">Poland, $20 CAD</option>
+            <option value="PT">Portugal, $20 CAD</option>
+            <option value="QA">Qatar, $20 CAD</option>
+            <option value="RO">Romania, $20 CAD</option>
+            <option value="RW">Rwanda, $20 CAD</option>
+            <option value="KN">Saint Kitts and Nevis, $20 CAD</option>
+            <option value="LC">Saint Lucia, $20 CAD</option>
+            <option value="VC">Saint Vincent and the Grenadines, $20 CAD</option>
+            <option value="WS">Samoa, $20 CAD</option>
+            <option value="SM">San Marino, $20 CAD</option>
+            <option value="ST">São Tomé and Príncipe, $20 CAD</option>
+            <option value="SA">Saudi Arabia, $20 CAD</option>
+            <option value="SN">Senegal, $20 CAD</option>
+            <option value="RS">Serbia, $20 CAD</option>
+            <option value="SC">Seychelles, $20 CAD</option>
+            <option value="SL">Sierra Leone, $20 CAD</option>
+            <option value="SG">Singapore, $20 CAD</option>
+            <option value="SK">Slovakia, $20 CAD</option>
+            <option value="SI">Slovenia, $20 CAD</option>
+            <option value="SB">Solomon Islands, $20 CAD</option>
+            <option value="ZA">South Africa, $20 CAD</option>
+            <option value="KR">South Korea, $20 CAD</option>
+            <option value="ES">Spain, $20 CAD</option>
+            <option value="LK">Sri Lanka, $20 CAD</option>
+            <option value="SR">Suriname, $20 CAD</option>
+            <option value="SE">Sweden, $20 CAD</option>
+            <option value="CH">Switzerland, $20 CAD</option>
+            <option value="TW">Taiwan, $20 CAD</option>
+            <option value="TJ">Tajikistan, $20 CAD</option>
+            <option value="TZ">Tanzania, $20 CAD</option>
+            <option value="TH">Thailand, $20 CAD</option>
+            <option value="TL">Timor-Leste, $20 CAD</option>
+            <option value="TG">Togo, $20 CAD</option>
+            <option value="TO">Tonga, $20 CAD</option>
+            <option value="TT">Trinidad and Tobago, $20 CAD</option>
+            <option value="TN">Tunisia, $20 CAD</option>
+            <option value="TR">Turkey, $20 CAD</option>
+            <option value="TM">Turkmenistan, $20 CAD</option>
+            <option value="TV">Tuvalu, $20 CAD</option>
+            <option value="UG">Uganda, $20 CAD</option>
+            <option value="UA">Ukraine, $20 CAD</option>
+            <option value="AE">United Arab Emirates, $20 CAD</option>
+            <option value="GB">United Kingdom, $20 CAD</option>
+            <option value="US">United States, $20 CAD</option>
+            <option value="UY">Uruguay, $20 CAD</option>
+            <option value="UZ">Uzbekistan, $20 CAD</option>
+            <option value="VU">Vanuatu, $20 CAD</option>
+            <option value="VA">Vatican City, $20 CAD</option>
+            <option value="VE">Venezuela, $20 CAD</option>
+            <option value="VN">Vietnam, $20 CAD</option>
+            <option value="ZM">Zambia, $20 CAD</option>
         </select>
-        <span class="field-note" data-i18n="send.dest.note">Domestic (Canada) $10 · International $20 — all prices CAD</span>
+        <span class="field-note" data-i18n="send.dest.note">Domestic (Canada) $10 · International $20, all prices CAD</span>
       </div>
     </div>
 
     <div class="address-columns">
       <div class="address-col">
-        <h3 data-i18n="send.from.h3">From — Sender</h3>
+        <h3 data-i18n="send.from.h3">From. Sender</h3>
         <div class="check-row" style="margin-bottom:6px;">
           <input type="checkbox" id="skip-return" onchange="toggleReturn(this)">
           <label for="skip-return" data-i18n="send.from.anon">Skip return address (anonymous send)</label>
         </div>
-        <p class="field-note" style="margin-bottom:20px;padding-left:30px" data-i18n="send.anon.note">No return address — the recipient won't be able to reply by mail. Perfectly legal.</p>
+        <p class="field-note" style="margin-bottom:20px;padding-left:30px" data-i18n="send.anon.note">No return address, the recipient won't be able to reply by mail. Perfectly legal.</p>
         <div id="sender-fields">
           <div class="form-group"><label for="s-name" data-i18n="send.from.name">Full Name</label><input id="s-name" type="text" placeholder="Margaret Tremblay" autocomplete="name"></div>
           <div class="form-group"><label for="s-street" data-i18n="send.from.street">Street Address</label><input id="s-street" type="text" placeholder="123 Main Street" autocomplete="off"><span class="field-note" data-i18n="send.autocomplete.hint">Start typing for address suggestions</span></div>
@@ -660,7 +660,7 @@ textarea.field-error { border-color: var(--red) !important; }
       </div>
 
       <div class="address-col">
-        <h3 data-i18n="send.to.h3">To — Recipient</h3>
+        <h3 data-i18n="send.to.h3">To. Recipient</h3>
         <div class="form-group"><label for="r-name" data-i18n="send.from.name">Full Name</label><input id="r-name" type="text" placeholder="James Okafor"></div>
         <div class="form-group"><label for="r-street" data-i18n="send.from.street">Street Address</label><input id="r-street" type="text" placeholder="456 Oak Avenue, Apt 3" autocomplete="off"><span class="field-note" data-i18n="send.autocomplete.hint">Start typing for address suggestions</span></div>
         <div class="form-grid-2">
@@ -669,12 +669,12 @@ textarea.field-error { border-color: var(--red) !important; }
             <label for="r-province" id="province-label">Province / State</label>
             <select id="r-province">
               <option value="">Select...</option>
-              <option>AB — Alberta</option><option>BC — British Columbia</option>
-              <option>MB — Manitoba</option><option>NB — New Brunswick</option>
-              <option>NL — Newfoundland and Labrador</option><option>NS — Nova Scotia</option>
-              <option>NT — Northwest Territories</option><option>NU — Nunavut</option>
-              <option>ON — Ontario</option><option>PE — Prince Edward Island</option>
-              <option>QC — Quebec</option><option>SK — Saskatchewan</option><option>YT — Yukon</option>
+              <option>AB: Alberta</option><option>BC: British Columbia</option>
+              <option>MB: Manitoba</option><option>NB: New Brunswick</option>
+              <option>NL: Newfoundland and Labrador</option><option>NS: Nova Scotia</option>
+              <option>NT: Northwest Territories</option><option>NU: Nunavut</option>
+              <option>ON: Ontario</option><option>PE: Prince Edward Island</option>
+              <option>QC: Quebec</option><option>SK: Saskatchewan</option><option>YT: Yukon</option>
             </select>
             <input id="r-province-text" type="text" placeholder="State / Region / Province" style="display:none">
           </div>
@@ -686,7 +686,7 @@ textarea.field-error { border-color: var(--red) !important; }
     <div class="form-group" style="margin-top:32px;padding-top:28px;border-top:1px dashed var(--line);max-width:520px">
       <label for="r-email" data-i18n="send.email.label">Your Email (confirmation)</label>
       <input id="r-email" type="email" placeholder="you@example.com" autocomplete="email">
-      <span class="field-note" data-i18n="send.email.note">Your order confirmation goes here — used only for this order.</span>
+      <span class="field-note" data-i18n="send.email.note">Your order confirmation goes here, used only for this order.</span>
     </div>
 
     <div class="panel-nav">
@@ -704,13 +704,13 @@ textarea.field-error { border-color: var(--red) !important; }
     <div class="form-group">
       <label for="letter-body" data-i18n="send.letter.label">Your Message</label>
       <textarea id="letter-body" placeholder="Dear Margaret,&#10;&#10;I hope this letter finds you well. I'm writing from..." data-i18n-placeholder="send.letter.placeholder" oninput="updatePreview()"></textarea>
-      <span class="field-note" data-i18n="send.letter.note">Up to 5 pages (~2,500 words). Plain text — we lay it out in a clean serif typeface.</span>
+      <span class="field-note" data-i18n="send.letter.note">Up to 5 pages (~2,500 words). Plain text, we lay it out in a clean serif typeface.</span>
       <span class="field-note" id="word-count" style="margin-top:2px;text-align:right" data-i18n="send.word.zero">0 words</span>
     </div>
 
     <div class="attach-zone" onclick="document.getElementById('file-input').click()">
       <div class="attach-icon">📎</div>
-      <p><strong data-i18n="send.attach.title">Attach documents</strong><span data-i18n="send.attach.sub"> — click to upload PDF, Word or TXT files</span></p>
+      <p><strong data-i18n="send.attach.title">Attach documents</strong><span data-i18n="send.attach.sub">, click to upload PDF, Word or TXT files</span></p>
       <p style="font-size:12px; margin-top:4px;" data-i18n="send.attach.note">Up to 5 files · PDF, Word or TXT · 10 MB per file · Printed in full colour</p>
       <input type="file" id="file-input" accept=".pdf,.doc,.docx,.txt" multiple style="display:none" onchange="handleFiles(this)">
     </div>
@@ -735,11 +735,11 @@ textarea.field-error { border-color: var(--red) !important; }
       </div>
       <div class="preview-from">
         <div class="preview-from-label" data-i18n="send.preview.from">Return address</div>
-        <div id="preview-from-text">—</div>
+        <div id="preview-from-text">...</div>
       </div>
       <div class="preview-to">
         <div class="preview-to-label" data-i18n="send.preview.to">Deliver to</div>
-        <div id="preview-to-text">—</div>
+        <div id="preview-to-text">...</div>
       </div>
     </div>
 
@@ -756,12 +756,12 @@ textarea.field-error { border-color: var(--red) !important; }
 
     <div class="privacy-note">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--red);flex-shrink:0;margin-top:3px"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-      <p data-i18n="send.privacy">Orders are checked for delivery problems and obvious abuse or illegal content — not for what you wrote. Your letter and attachments are deleted within 7 days of mailing. We keep only a basic order record for tax purposes. Payments go through Stripe; we never see your card details.</p>
+      <p data-i18n="send.privacy">Orders are checked for delivery problems and obvious abuse or illegal content, not for what you wrote. Your letter and attachments are deleted within 7 days of mailing. We keep only a basic order record for tax purposes. Payments go through Stripe; we never see your card details.</p>
     </div>
 
     <div class="privacy-note">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--red);flex-shrink:0;margin-top:3px"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-      <p>Every order is prepared and mailed by a person, and if a verified letter hasn't arrived after 2 weeks, we reprint and resend it free. Questions before you pay, or card not going through? <a href="mailto:support@letterhome.ca" style="color:var(--red)">support@letterhome.ca</a> — replies within one business day.</p>
+      <p>Every order is prepared and mailed by a person, and if a verified letter hasn't arrived after 2 weeks, we reprint and resend it free. Questions before you pay, or card not going through? <a href="mailto:support@letterhome.ca" style="color:var(--red)">support@letterhome.ca</a>, replies within one business day.</p>
     </div>
 
     <div id="discount-section" style="margin-bottom:20px">
@@ -796,7 +796,7 @@ textarea.field-error { border-color: var(--red) !important; }
       <button class="btn btn-outline" onclick="goTo(2)" data-i18n="send.btn.editletter">← Edit Letter</button>
       <div style="text-align:right">
         <button id="pay-btn" class="btn btn-red btn-large" onclick="submitOrder()" data-i18n="send.btn.pay">Pay via Stripe →</button>
-        <p style="font-size:11px;color:var(--ink-faint);margin-top:8px;font-family:'DM Mono',monospace;letter-spacing:0.04em" data-i18n="send.stripe.secured">🔒 Secured by Stripe — we never see your card details</p>
+        <p style="font-size:11px;color:var(--ink-faint);margin-top:8px;font-family:'DM Mono',monospace;letter-spacing:0.04em" data-i18n="send.stripe.secured">🔒 Secured by Stripe, we never see your card details</p>
       </div>
     </div>
   </div>
@@ -871,7 +871,7 @@ function updatePricing() {
   document.getElementById('summary-dest').textContent    = isDomestic ? LH_T('send.dom.dest') : LH_T('send.intl.dest');
   const deliveryBase = isDomestic ? LH_T('send.dom.delivery') : LH_T('send.intl.delivery');
   const estDate = isDomestic ? estDeliveryDate(14) : estDeliveryDate(28);
-  document.getElementById('summary-delivery').textContent = deliveryBase + ' — est. ' + estDate;
+  document.getElementById('summary-delivery').textContent = deliveryBase + ', est. ' + estDate;
 
   const sel = document.getElementById('r-province');
   const txt = document.getElementById('r-province-text');
@@ -920,8 +920,8 @@ function buildPreview() {
     : [sName, sStreet, sCity + (sProvince ? ', ' + sProvince : ''), sCountry].filter(Boolean).join('\n');
   const toLines = [rName, rStreet, rCity + (rPostal ? '  ' + rPostal : '')].filter(Boolean).join('\n');
 
-  document.getElementById('preview-from-text').textContent = fromLines || '—';
-  document.getElementById('preview-to-text').textContent   = toLines   || '—';
+  document.getElementById('preview-from-text').textContent = fromLines || '...';
+  document.getElementById('preview-to-text').textContent   = toLines   || '...';
   document.getElementById('preview-body-text').textContent =
     document.getElementById('letter-body').value || LH_T('send.preview.nomsg');
 
@@ -948,15 +948,15 @@ function handleFiles(input) {
     const ext  = ('.' + (f.name.split('.').pop() || '')).toLowerCase();
     const mime = f.type || '';
     if (!ALLOWED_EXT.includes(ext) || (mime && !ALLOWED_MIME.includes(mime))) {
-      rejected.push(`${f.name} ${LH_T('send.file.badtype')}`);
+      rejected.push(`${f.name}: ${LH_T('send.file.badtype')}`);
       return;
     }
     if (f.size > MAX_FILE_BYTES) {
-      rejected.push(`${f.name} ${LH_T('send.file.toobig')}`);
+      rejected.push(`${f.name}: ${LH_T('send.file.toobig')}`);
       return;
     }
     if (slotsLeft <= 0) {
-      rejected.push(`${f.name} ${LH_T('send.file.limit')}`);
+      rejected.push(`${f.name}: ${LH_T('send.file.limit')}`);
       return;
     }
     slotsLeft--;
@@ -1093,7 +1093,7 @@ function fillPlace(components, prefix) {
     if (opt) { sel.value = countryCode; updatePricing(); }
     if (countryCode === 'CA') {
       const ps = document.getElementById('r-province');
-      const pm = Array.from(ps.options).find(o => o.text.startsWith(province + ' —'));
+      const pm = Array.from(ps.options).find(o => o.text.startsWith(province + ':'));
       if (pm) ps.value = pm.value;
     } else {
       document.getElementById('r-province-text').value = province;
@@ -1113,7 +1113,7 @@ function validateStep(step) {
   const missing = [];
 
   if (step === 1) {
-    // Sender — only required if return address is NOT being skipped
+    // Sender, only required if return address is NOT being skipped
     if (!document.getElementById('skip-return').checked) {
       requireField('s-name',    LH_T('send.val.sender.name'),    missing);
       requireField('s-street',  LH_T('send.val.sender.street'),  missing);
@@ -1122,17 +1122,17 @@ function validateStep(step) {
       requireField('s-postal',  LH_T('send.val.sender.postal'),  missing);
       requireField('s-country', LH_T('send.val.sender.country'), missing);
     }
-    // Recipient — always required
+    // Recipient, always required
     requireField('r-name',   LH_T('send.val.recip.name'),   missing);
     requireField('r-street', LH_T('send.val.recip.street'), missing);
     requireField('r-city',   LH_T('send.val.recip.city'),   missing);
     requireField('r-postal', LH_T('send.val.recip.postal'), missing);
-    // Province depends on destination — CA uses select, others use text input (only required for certain countries)
+    // Province depends on destination, CA uses select, others use text input (only required for certain countries)
     const isCA = document.getElementById('r-country').value === 'CA';
     const destCC = document.getElementById('r-country').value;
     if (isCA) requireField('r-province', LH_T('send.val.recip.province'), missing);
     else if (PROVINCE_REQUIRED.has(destCC)) requireField('r-province-text', LH_T('send.val.recip.state'), missing);
-    // Email — required AND must look like an email
+    // Email, required AND must look like an email
     const email = document.getElementById('r-email').value.trim();
     if (!email) {
       missing.push(LH_T('send.val.email'));
@@ -1336,7 +1336,7 @@ async function applyDiscountCode() {
       msg.appendChild(closedP);
       if (main) main.replaceWith(msg); else document.body.appendChild(msg);
     }
-  } catch(e) { /* fail silently — don't block the form */ }
+  } catch(e) { /* fail silently, don't block the form */ }
 
   // Account banner + pre-fill
   try {

@@ -3,7 +3,7 @@
 // below is injected into it, so the footer can only ever be edited in one place.
 //
 // The script is loaded with `defer`, so it runs after the document is parsed
-// but BEFORE DOMContentLoaded — which means lang.js's DOMContentLoaded pass (and
+// but BEFORE DOMContentLoaded, which means lang.js's DOMContentLoaded pass (and
 // its live EN/FR toggle) still translate the data-i18n labels here. Pages that
 // don't load lang.js simply show the English default text.
 (function () {

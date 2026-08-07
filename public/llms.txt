@@ -1,13 +1,13 @@
 # Letterhome
 
-> Letterhome is a Canadian letter and document mailing service. Customers anywhere in the world upload a PDF or Word document online, and Letterhome prints it in full colour, seals it in an envelope, and mails it from inside Canada via Canada Post Lettermail — with a real Canadian mailing date. No Canadian address, printer, stamps, or post office visit required. From $10 CAD per letter.
+> Letterhome is a Canadian letter and document mailing service. Customers anywhere in the world upload a PDF or Word document online, and Letterhome prints it in full colour, seals it in an envelope, and mails it from inside Canada via Canada Post Lettermail, with a real Canadian mailing date. No Canadian address, printer, stamps, or post office visit required. From $10 CAD per letter.
 
 Letterhome is used by Canadians living abroad, immigrants sending documents to Canadian government offices (IRCC, CRA), expats sending letters to family, and anyone who needs a letter to arrive with a Canadian mailing date.
 
 ## Pricing
 
-- $10 CAD — letters to any Canadian address (domestic)
-- $20 CAD — letters to any of 160+ international destinations
+- $10 CAD: letters to any Canadian address (domestic)
+- $20 CAD: letters to any of 160+ international destinations
 
 Both prices include up to 5 pages of full-colour printing, the envelope, postage, and delivery. No account required. Pay once per order.
 
@@ -27,7 +27,7 @@ Letters are mailed via Canada Post standard lettermail:
 ## Key pages
 
 - [Home](https://letterhome.ca/): Service overview and order form
-- [Send a letter](https://letterhome.ca/send): Order form — upload documents and mail a letter to Canada
+- [Send a letter](https://letterhome.ca/send): Order form, upload documents and mail a letter to Canada
 - [How much does it cost to mail a letter to Canada? (2026)](https://letterhome.ca/how-much-does-it-cost-to-mail-a-letter-to-canada): Canada Post stamp prices in 2026 and comparison with Letterhome
 - [How to mail IRCC documents from outside Canada](https://letterhome.ca/how-to-mail-ircc-documents-from-outside-canada): Guide for mailing immigration documents to IRCC from abroad
 - [How to mail CRA tax forms from outside Canada](https://letterhome.ca/how-to-mail-cra-tax-forms-from-outside-canada): Guide for mailing tax forms to the Canada Revenue Agency from abroad
@@ -37,7 +37,7 @@ Letters are mailed via Canada Post standard lettermail:
 - [IRCC Processing Times 2026](https://letterhome.ca/ircc-processing-times): Current processing times for Canadian immigration applications
 - [Cheapest way to send a letter to Canada](https://letterhome.ca/cheapest-way-to-send-a-letter-to-canada): Honest comparison of postage rates
 - [Mail a letter online](https://letterhome.ca/mail-a-letter-online): How to send a physical letter without a printer, stamps, or post office
-- [What is lettermail?](https://letterhome.ca/what-is-lettermail): Canada Post lettermail explained — rates, size limits, delivery times
+- [What is lettermail?](https://letterhome.ca/what-is-lettermail): Canada Post lettermail explained, rates, size limits, delivery times
 - [Can you mail cash to Canada](https://letterhome.ca/can-you-mail-cash-to-canada): What you can and cannot mail to Canada
 - [How to track a letter to Canada](https://letterhome.ca/how-to-track-a-letter-to-canada): Tracking options and what to do if a letter goes missing
 - [How to send a registered letter to Canada](https://letterhome.ca/how-to-send-a-registered-letter-to-canada): Options, costs, and delivery times for registered mail

@@ -94,7 +94,7 @@ footer{background:var(--ink);color:rgba(255,255,255,0.5);padding:40px 36px;margi
 
 <div class="hero" id="main-content">
   <p class="hero-eyebrow">For Professionals</p>
-  <h1>Mail Canadian documents<br>on behalf of your clients —<br><em>from anywhere.</em></h1>
+  <h1>Mail Canadian documents<br>on behalf of your clients,<br><em>from anywhere.</em></h1>
   <p class="hero-sub">Immigration consultants, paralegals, and property managers use Letterhome to get physical mail into the Canadian postal system on behalf of clients who can't do it themselves.</p>
 </div>
 
@@ -107,7 +107,7 @@ footer{background:var(--ink);color:rgba(255,255,255,0.5);padding:40px 36px;margi
     </div>
     <div class="audience-card">
       <strong>Immigration Lawyers</strong>
-      <p>When a client's physical document needs a Canadian mailing date — a support letter, a reference, a printed form — Letterhome gets it into Canada Post the next business day.</p>
+      <p>When a client's physical document needs a Canadian mailing date, a support letter, a reference, a printed form. Letterhome gets it into Canada Post the next business day.</p>
     </div>
     <div class="audience-card">
       <strong>Paralegals &amp; LTB Practitioners</strong>
@@ -121,16 +121,16 @@ footer{background:var(--ink);color:rgba(255,255,255,0.5);padding:40px 36px;margi
 
   <h2>What you get</h2>
   <ul class="feature-list">
-    <li>Documents mailed from Canada via Canada Post — valid Canadian mailing date every time</li>
+    <li>Documents mailed from Canada via Canada Post, valid Canadian mailing date every time</li>
     <li>Full-colour printing on standard letter-size paper, up to 5 documents per order</li>
-    <li>Order confirmation email with mailing date — serves as proof of service record</li>
-    <li>No account required — order by order, or contact us for a discount code</li>
-    <li>$10 CAD domestic, $20 CAD international — same price whether you're ordering once or regularly</li>
+    <li>Order confirmation email with mailing date, is your proof of service</li>
+    <li>No account required, order by order, or contact us for a discount code</li>
+    <li>$10 CAD domestic, $20 CAD international, same price for one order or a hundred</li>
     <li>Replies to support queries within one business day</li>
   </ul>
 
   <h2>Discount codes for regular use</h2>
-  <p>If you're regularly mailing documents on behalf of clients, get in touch and we'll set you up with a discount code to pass along or use yourself. No minimums, no contracts — just a code that gives your clients a discount at checkout.</p>
+  <p>If you're regularly mailing documents on behalf of clients, get in touch and we'll set you up with a discount code to pass along or use yourself. No minimums, no contracts. A code that gives your clients a discount at checkout.</p>
   <p>Fill out the form below and we'll follow up within one business day.</p>
 
   <div class="contact-form">
@@ -160,7 +160,7 @@ footer{background:var(--ink);color:rgba(255,255,255,0.5);padding:40px 36px;margi
       <textarea id="pro-message" placeholder="e.g. I have clients outside Canada who need to mail IRCC documents roughly 2-3 times a month…"></textarea>
     </div>
     <button class="submit-btn" id="pro-submit" onclick="submitProForm()">Send Request →</button>
-    <div id="form-success">Thanks — we'll follow up within one business day with a discount code and any details.</div>
+    <div id="form-success">Thanks, we'll follow up within one business day with a discount code and any details.</div>
   </div>
 </div>
 
@@ -210,7 +210,7 @@ async function submitProForm() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         name, email,
-        subject: `Professional inquiry — ${role}`,
+        subject: `Professional inquiry, ${role}`,
         message: `Role: ${role}\n\n${message}`,
       }),
     });
