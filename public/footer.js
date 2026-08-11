@@ -20,7 +20,7 @@
   mount.outerHTML =
     '<footer>' +
       '<div class="footer-bottom">' +
-        '<div>© 2026 Letterhome</div>' +
+        '<div>© 2026 Letterhome. Registered Canadian business, BN 787294073.</div>' +
         '<div class="footer-bottom-links">' + social +
           '<a href="/guides">Guides</a>' +
           '<a href="/privacy" data-i18n="footer.privacy">Privacy</a>' +
