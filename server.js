@@ -5,7 +5,7 @@ if (process.env.SENTRY_DSN) {
   Sentry.init({
     dsn:              process.env.SENTRY_DSN,
     environment:      process.env.NODE_ENV || 'production',
-    tracesSampleRate: 0,  // performance monitoring off — errors only
+    tracesSampleRate: 0,  // performance monitoring off, errors only
   });
 }
 
@@ -485,12 +485,12 @@ abandonedOrderRecovery();
     `).all(cutoff20h);
     if (overdue.length) {
       const lines = overdue.map(o =>
-        `  Order #${o.id} — ${o.recipient_name} — ${o.status} — created ${o.created_at}`
+        `  Order #${o.id}: ${o.recipient_name}, ${o.status}, created ${o.created_at}`
       ).join('\n');
       await sendMail({
         from:    process.env.EMAIL_FROM,
         to:      process.env.OPERATOR_EMAIL,
-        subject: `[Letterhome] SLA Alert — ${overdue.length} order${overdue.length > 1 ? 's' : ''} overdue`,
+        subject: `[Letterhome] SLA Alert: ${overdue.length} order${overdue.length > 1 ? 's' : ''} overdue`,
         text:    `The following orders have been in paid/submitted_to_printer status for over 20 hours:\n\n${lines}\n\nPlease take action.`,
       }, 'sla_alert');
       const stmt = db.prepare('UPDATE orders SET sla_alert_sent_at = CURRENT_TIMESTAMP WHERE id = ?');
@@ -516,7 +516,7 @@ abandonedOrderRecovery();
   } catch (e) { console.error('[privacy] startup cleanup failed:', e.message); }
 
   // Purge abandoned orders that were never paid. Stripe checkout sessions expire
-  // within 24h, so anything still 'awaiting_payment' after 30 days is dead — but
+  // within 24h, so anything still 'awaiting_payment' after 30 days is dead, but
   // it still holds the customer's address, letter text, and attachments on disk
   // and in the DB. Delete the folder and soft-delete the row.
   const abandonedCutoff = new Date(Date.now() - 30 * 86400 * 1000).toISOString();
@@ -557,7 +557,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
     }
   }
   if (event.type === 'checkout.session.async_payment_failed') {
-    console.error(`[webhook] async payment failed for session ${event.data.object.id} — order stays awaiting_payment`);
+    console.error(`[webhook] async payment failed for session ${event.data.object.id}, order stays awaiting_payment`);
   }
   res.json({ received: true });
 });
@@ -575,7 +575,7 @@ app.get('/health', (req, res) => {
   }
 });
 
-// RFC 9116 security.txt — vulnerability disclosure channel. Served at both the
+// RFC 9116 security.txt, vulnerability disclosure channel. Served at both the
 // canonical /.well-known/ path and the legacy root path.
 const SECURITY_TXT = [
   'Contact: mailto:support@letterhome.ca',
@@ -651,7 +651,7 @@ function unsubPage(state, email = '') {
       <button type="submit" style="background:#a8472d;color:#faf6ec;border:none;padding:14px 28px;font-size:14px;font-weight:500;letter-spacing:0.02em;text-transform:uppercase;border-radius:2px;cursor:pointer;font-family:inherit">Confirm Unsubscribe</button>
     </form>` : '';
   return `<!DOCTYPE html><html lang="en-CA"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>${headings.title} — Letterhome</title>
+<title>${headings.title} | Letterhome</title>
 <meta name="robots" content="noindex,nofollow">
 <link rel="stylesheet" href="/fonts.css">
 <style>body{font-family:'Source Serif 4',Georgia,serif;background:#f1ebde;color:#2a2a2a;margin:0;padding:80px 24px;line-height:1.6}
@@ -711,9 +711,9 @@ app.get('/ga.js', (req, res) => {
   const id = process.env.GA4_MEASUREMENT_ID;
   res.setHeader('Content-Type', 'application/javascript');
   res.setHeader('Cache-Control', 'public, max-age=604800');
-  // No measurement ID configured — serve an inert script rather than a stray default property.
+  // No measurement ID configured, serve an inert script rather than a stray default property.
   if (!id) return res.send('/* analytics disabled: GA4_MEASUREMENT_ID not set */');
-  // GA4 IDs are strictly G-XXXXXXXXXX — reject anything else before injecting into JS.
+  // GA4 IDs are strictly G-XXXXXXXXXX, reject anything else before injecting into JS.
   if (!/^G-[A-Z0-9]+$/.test(id)) return res.send('/* analytics disabled: invalid GA4_MEASUREMENT_ID */');
   res.send(`
 (function(){
@@ -743,7 +743,7 @@ app.get('/api/site-config', (req, res) => {
 app.get('/api/visitor-country', async (req, res) => {
   res.setHeader('Cache-Control', 'no-store, private');
   try {
-    // Cloudflare hands us the visitor's country for free on every request —
+    // Cloudflare hands us the visitor's country for free on every request,
     // instant and rate-limit-proof, unlike the external IP-geo fallback.
     const cf = (req.headers['cf-ipcountry'] || '').toString().toUpperCase();
     if (cf.length === 2 && cf !== 'XX' && cf !== 'T1') {
@@ -1050,7 +1050,7 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
         price_data: {
           currency: 'cad',
           product_data: {
-            name: isDomestic ? 'Letterhome — Domestic Letter' : 'Letterhome — International Letter',
+            name: isDomestic ? 'Letterhome Domestic Letter' : 'Letterhome International Letter',
             description: `To: ${rName}, ${[b['r-city'], b['r-country']].filter(Boolean).join(' ')}`,
           },
           unit_amount: priceCents,
@@ -1064,7 +1064,7 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
     });
   } catch (e) {
     console.error('[create-order] Stripe error:', e.message);
-    // Clean up the order and files — payment won't proceed so there's nothing to print
+    // Clean up the order and files, payment won't proceed so there's nothing to print
     try {
       db.prepare('DELETE FROM orders WHERE id = ?').run(orderId);
       if (fs.existsSync(orderDir)) fs.rmSync(orderDir, { recursive: true, force: true });
@@ -1149,10 +1149,10 @@ app.post('/api/track', trackLimiter, (req, res) => {
   clearTrackFailures(normalizedEmail);
 
   const messages = {
-    paid:                  'Payment confirmed — your letter is being prepared for printing.',
-    submitted_to_printer:  'Submitted to printer — being prepared for mailing.',
+    paid:                  'Payment confirmed. Your letter is being prepared for printing.',
+    submitted_to_printer:  'Submitted to printer, being prepared for mailing.',
     printing:              'Printing in progress.',
-    mailed:                'Mailed — in transit with Canada Post.',
+    mailed:                'Mailed, in transit with Canada Post.',
     delivered:             'Delivered.',
     refunded:              'Refunded.',
   };
@@ -1193,7 +1193,7 @@ app.post('/admin/login', loginLimiter, async (req, res) => {
 
   // 2FA is configured per-account (own TOTP secret) so one admin's code can't
   // be used to satisfy another's login, and an account with no secret set yet
-  // isn't blocked from logging in — it's nagged to add one instead.
+  // isn't blocked from logging in, it's nagged to add one instead.
   if (account.totpSecret) {
     if (!code) return res.redirect('/admin/login?error=1');
     const totp = new TOTP({
@@ -1232,7 +1232,7 @@ app.get('/admin/*', requireAdmin, (req, res) =>
 // Origin check is kept as a second layer against no-token older clients.
 app.use('/api/admin', (req, res, next) => {
   if (!['POST', 'PUT', 'DELETE', 'PATCH'].includes(req.method)) return next();
-  // No session at all — let the route's own requireAdmin reject this with a
+  // No session at all, let the route's own requireAdmin reject this with a
   // plain 401, rather than a CSRF 403 that implies a session/token exists.
   if (!req.session?.admin) return next();
   // Origin layer: block cross-origin browser requests outright.
@@ -1399,7 +1399,7 @@ app.get('/api/admin/orders/csv', requireAdmin, (req, res) => {
   res.send([cols.join(','), ...rows].join('\r\n'));
 });
 
-// Soft-delete an order. INVARIANT: never touches the customers table — deleting
+// Soft-delete an order. INVARIANT: never touches the customers table, deleting
 // orders must never remove the customer account that placed them.
 app.delete('/api/admin/orders/:id', requireAdmin, (req, res) => {
   db.prepare("UPDATE orders SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?").run(Number(req.params.id));
@@ -1455,7 +1455,8 @@ app.post('/api/admin/orders/:id/status', requireAdmin, async (req, res) => {
       sendMail({
         from:    process.env.EMAIL_FROM,
         to:      order.customer_email,
-        subject: `Your letter to ${order.recipient_name} has been mailed — order #${order.id}`,
+        bcc:     'letterhome.ca+d4739788a2@invite.trustpilot.com',
+        subject: `Your letter to ${order.recipient_name} has been mailed: order #${order.id}`,
         html:    buildMailedEmail(order, toAddr, deliveryText),
         text:    buildMailedEmailText(order, toAddr, deliveryText),
       }, 'mailed_notification', id).catch(console.error);
@@ -1498,7 +1499,8 @@ app.post('/api/admin/orders/:id/mark-mailed', requireAdmin, async (req, res) => 
   sendMail({
     from:    process.env.EMAIL_FROM,
     to:      order.customer_email,
-    subject: `Your letter to ${order.recipient_name} has been mailed — order #${order.id}`,
+    bcc:     'letterhome.ca+d4739788a2@invite.trustpilot.com',
+    subject: `Your letter to ${order.recipient_name} has been mailed: order #${order.id}`,
     html:    buildMailedEmail(order, toAddr, estimated_delivery.trim()),
     text:    buildMailedEmailText(order, toAddr, estimated_delivery.trim()),
   }, 'mailed_notification', id).catch(console.error);
@@ -1574,7 +1576,7 @@ app.post('/api/admin/customers/:email/restore', requireAdmin, (req, res) => {
   res.json({ ok: true });
 });
 
-// CSV export — must be registered before /api/admin/customers/:email to avoid being shadowed by the param route
+// CSV export, must be registered before /api/admin/customers/:email to avoid being shadowed by the param route
 app.get('/api/admin/customers/export.csv', requireAdmin, (req, res) => {
   const csvEscape = s => {
     const str = String(s ?? '');
@@ -1684,7 +1686,7 @@ app.post('/api/admin/customers/:email/reset-password', requireAdmin, async (req,
     subject: 'Your Letterhome password was reset by support',
     text:    `Hi,\n\nA Letterhome administrator has reset the password on your account at your request.\n\n` +
              `Your new password has been shared with you separately. After signing in, you can change it from your account page: ${process.env.BASE_URL}/account\n\n` +
-             `If you did NOT request this, contact us immediately at ${process.env.OPERATOR_EMAIL || 'support@letterhome.ca'}.\n\n— Letterhome`,
+             `If you did NOT request this, contact us immediately at ${process.env.OPERATOR_EMAIL || 'support@letterhome.ca'}.\n\nLetterhome`,
   }, 'password_reset_admin').catch(() => {});
   res.json({ ok: true });
 });
@@ -1783,7 +1785,7 @@ app.post('/api/admin/broadcast', requireAdmin, async (req, res) => {
           replyTo: process.env.OPERATOR_EMAIL,
           subject: subject.trim(),
           text:    body.trim() +
-            '\n\n— Letterhome' +
+            '\n\nLetterhome' +
             `\nYou're receiving this because you've placed an order with us. To stop receiving update emails, visit:\n${link}`,
           headers: { 'List-Unsubscribe': `<${link}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' },
         }, 'broadcast');
@@ -1853,7 +1855,8 @@ app.post('/api/admin/orders/bulk-status', requireAdmin, async (req, res) => {
       sendMail({
         from:    process.env.EMAIL_FROM,
         to:      order.customer_email,
-        subject: `Your letter to ${order.recipient_name} has been mailed — order #${order.id}`,
+        bcc:     'letterhome.ca+d4739788a2@invite.trustpilot.com',
+        subject: `Your letter to ${order.recipient_name} has been mailed: order #${order.id}`,
         html:    buildMailedEmail(order, toAddr, deliveryText),
         text:    buildMailedEmailText(order, toAddr, deliveryText),
       }, 'mailed_notification', id).catch(console.error);
@@ -2202,7 +2205,7 @@ app.post('/api/admin/pnl-digest', requireAdmin, async (req, res) => {
   const fmtCAD = c => '$' + (c / 100).toFixed(2) + ' CAD';
 
   const lines = [
-    `Letterhome P&L Digest — ${month}`,
+    `Letterhome P&L Digest: ${month}`,
     '='.repeat(40),
     `Orders:           ${orders.length}`,
     `Unique customers: ${custSet.size}`,
@@ -2219,7 +2222,7 @@ app.post('/api/admin/pnl-digest', requireAdmin, async (req, res) => {
     await sendMail({
       from:    process.env.EMAIL_FROM,
       to:      process.env.OPERATOR_EMAIL,
-      subject: `[Letterhome] P&L Digest — ${month}`,
+      subject: `[Letterhome] P&L Digest: ${month}`,
       text:    lines.join('\n'),
     }, 'pl_digest');
     res.json({ ok: true });
@@ -2248,7 +2251,7 @@ app.get('/admin/orders/:id/print', requireAdmin, (req, res) => {
        order.destination_country].filter(Boolean).join('\n');
 
   const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  res.send(`<!DOCTYPE html><html><head><title>Order #${order.id} — Print</title><style>
+  res.send(`<!DOCTYPE html><html><head><title>Order #${order.id}: Print</title><style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:Georgia,serif;color:#111;padding:40px;max-width:800px;margin:0 auto;line-height:1.5}
 .head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:30px;padding-bottom:20px;border-bottom:2px solid #111}
@@ -2295,7 +2298,7 @@ body{font-family:Georgia,serif;color:#111;padding:40px;max-width:800px;margin:0 
 </div>
 <div class="letter-section">
   <div class="letter-label">Letter content</div>
-  <div class="letter-body">${esc(letterBody) || '<em>(no letter body — see attachments)</em>'}</div>
+  <div class="letter-body">${esc(letterBody) || '<em>(no letter body, see attachments)</em>'}</div>
 </div>
 ${attachments.length ? `<div class="attachments"><strong>${attachments.length} attached file${attachments.length > 1 ? 's' : ''}:</strong> ${attachments.map(esc).join(' · ')}</div>` : ''}
 <div class="checklist">
@@ -2337,13 +2340,13 @@ app.post('/api/contact', contactLimiter, async (req, res, next) => {
     }, 'contact_notification');
 
     const awayOn  = getSetting('away_mode') === 'true';
-    const awayMsg = getSetting('away_message') || "Thanks for reaching out — I'm currently away and will get back to you as soon as possible.";
+    const awayMsg = getSetting("away_message") || "Thanks for reaching out. I'm currently away and will get back to you as soon as possible.";
     if (awayOn) {
       await sendMail({
         from:    process.env.EMAIL_FROM,
         to:      email,
-        subject: 'We received your message — Letterhome',
-        text:    `Hi ${String(name).split(' ')[0]},\n\n${awayMsg}\n\n— Letterhome`,
+        subject: 'We received your message | Letterhome',
+        text:    `Hi ${String(name).split(' ')[0]},\n\n${awayMsg}\n\nLetterhome`,
       }, 'away_autoreply');
     }
   } catch (e) {
@@ -2364,7 +2367,7 @@ app.post('/api/account/register', accountLimiter, async (req, res) => {
     if (pwErr) return res.status(400).json({ error: pwErr });
 
     if (await isPasswordBreached(password)) {
-      return res.status(400).json({ error: "This password has appeared in known data breaches. Please choose a different one — your security matters." });
+      return res.status(400).json({ error: "This password has appeared in known data breaches. Please choose a different one. Your security matters." });
     }
 
     const existing = db.prepare('SELECT email, password_hash FROM customers WHERE email = ?').get(email);
@@ -2374,11 +2377,11 @@ app.post('/api/account/register', accountLimiter, async (req, res) => {
       sendMail({
         from:    process.env.EMAIL_FROM,
         to:      email,
-        subject: 'Account already exists — Letterhome',
+        subject: 'Account already exists | Letterhome',
         text:    `Hi,\n\nSomeone (possibly you) just tried to register a Letterhome account using this email address. ` +
                  `An account already exists, so we didn't create a duplicate.\n\n` +
                  `If this was you:\n  • Sign in: ${process.env.BASE_URL}/account/login\n  • Forgot your password? ${process.env.BASE_URL}/account/forgot\n\n` +
-                 `If this wasn't you, no action is needed — your account is safe.\n\n— Letterhome`,
+                 `If this wasn't you, no action is needed. Your account is safe.\n\nLetterhome`,
       }, 'register_collision').catch(() => {});
       return res.json({ ok: true });
     }
@@ -2450,7 +2453,7 @@ app.post('/api/account/forgot', accountLimiter, async (req, res) => {
         to:      email,
         subject: 'Reset your Letterhome password',
         text:    `Hi,\n\nWe received a request to reset your Letterhome password. Click the link below within the next 30 minutes to set a new one:\n\n${link}\n\n` +
-                 `If you didn't request this, you can safely ignore this email — your password won't change.\n\n— Letterhome`,
+                 `If you didn't request this, you can safely ignore this email. Your password won't change.\n\nLetterhome`,
       }, 'password_reset_request').catch(() => {});
     }
     res.json({ ok: true });
@@ -2486,7 +2489,7 @@ app.post('/api/account/reset-password', accountLimiter, async (req, res) => {
       to:      email,
       subject: 'Your Letterhome password was reset',
       text:    `Hi,\n\nYour Letterhome account password was just reset using the forgot-password link.\n\n` +
-               `If this wasn't you, contact us immediately at ${process.env.OPERATOR_EMAIL || 'support@letterhome.ca'}.\n\n— Letterhome`,
+               `If this wasn't you, contact us immediately at ${process.env.OPERATOR_EMAIL || 'support@letterhome.ca'}.\n\nLetterhome`,
     }, 'password_reset_completed').catch(() => {});
     res.json({ ok: true });
   } catch (e) {
@@ -2563,7 +2566,7 @@ app.put('/api/account/password', requireCustomer, accountLimiter, async (req, re
       text:    `Hi,\n\nYour Letterhome account password was just changed.\n\n` +
                `If this was you, no action is needed.\n\n` +
                `If you did NOT change your password, contact us immediately at ${process.env.OPERATOR_EMAIL || 'support@letterhome.ca'} ` +
-               `and reset your password at ${process.env.BASE_URL}/account/forgot\n\n— Letterhome`,
+               `and reset your password at ${process.env.BASE_URL}/account/forgot\n\nLetterhome`,
     }, 'password_changed').catch(() => {});
     res.json({ ok: true });
   } catch (e) {
@@ -2583,7 +2586,7 @@ async function fulfillOrder(sessionId) {
   const session = await stripe.checkout.sessions.retrieve(sessionId);
   if (session.payment_status !== 'paid') return;
 
-  // Atomic status transition — if another concurrent webhook call already changed
+  // Atomic status transition, if another concurrent webhook call already changed
   // the status, changes will be 0 and we bail out to prevent double-fulfillment.
   const result = db.prepare("UPDATE orders SET status = 'paid' WHERE id = ? AND status = 'awaiting_payment'").run(order.id);
   if (result.changes === 0) return;
@@ -2615,7 +2618,7 @@ async function fulfillOrder(sessionId) {
   await sendMail({
     from:        process.env.EMAIL_FROM,
     to:          process.env.OPERATOR_EMAIL,
-    subject:     `[Letterhome] Order #${order.id} — ${order.recipient_name}`,
+    subject:     `[Letterhome] Order #${order.id}: ${order.recipient_name}`,
     html:        buildOperatorEmail(order, fromAddr, toAddr, amountCAD, emailAttachments.length),
     text:        buildOperatorEmailText(order, fromAddr, toAddr, amountCAD, emailAttachments.length),
     attachments: emailAttachments,
@@ -2626,7 +2629,7 @@ async function fulfillOrder(sessionId) {
   await sendMail({
     from:    process.env.EMAIL_FROM,
     to:      order.customer_email,
-    subject: `Your Letterhome order is confirmed — letter to ${order.recipient_name}`,
+    subject: `Your Letterhome order is confirmed: letter to ${order.recipient_name}`,
     html:    buildCustomerEmail(order, toAddr, amountCAD, isDomestic),
     text:    buildCustomerEmailText(order, toAddr, amountCAD, isDomestic),
   }, 'order_confirmation', order.id).catch(err => {
@@ -2681,7 +2684,7 @@ function buildOperatorEmail(o, fromAddr, toAddr, amountCAD, attachCount) {
   </table>
   <div style="background:#f7f2e6;padding:20px;border-left:4px solid #a8472d;margin-bottom:16px">
     <p style="font-size:12px;text-transform:uppercase;letter-spacing:0.12em;color:#6b6258;margin:0 0 12px">Letter content</p>
-    <p style="white-space:pre-wrap;font-size:15px;line-height:1.7;margin:0">${esc(o.letter_body) || '<em>(no message body — see attachments)</em>'}</p>
+    <p style="white-space:pre-wrap;font-size:15px;line-height:1.7;margin:0">${esc(o.letter_body) || '<em>(no message body, see attachments)</em>'}</p>
   </div>
   ${attachCount > 0 ? `<p style="font-size:13px;color:#6b6258">${attachCount} attachment${attachCount > 1 ? 's' : ''} included in this email.</p>` : ''}
 </div>`;
@@ -2699,7 +2702,7 @@ function buildOperatorEmailText(o, fromAddr, toAddr, amountCAD, attachCount) {
     toAddr,
     '',
     'LETTER CONTENT',
-    o.letter_body || '(no message body — see attachments)',
+    o.letter_body || '(no message body, see attachments)',
     attachCount > 0 ? `\n${attachCount} attachment${attachCount > 1 ? 's' : ''} included.` : '',
   ].join('\n');
 }
@@ -2721,7 +2724,7 @@ function buildCustomerEmailText(o, toAddr, amountCAD, isDomestic) {
     '',
     `Letterhome · ${MAILING_ADDRESS}`,
     '',
-    '— Letterhome',
+    'Letterhome',
   ].filter(s => s !== undefined).join('\n');
 }
 
@@ -2795,7 +2798,7 @@ function buildMailedEmailText(o, toAddr, deliveryText) {
     o.status_token ? `Track your letter: ${process.env.BASE_URL}/status/${o.status_token}` : '',
     'Thank you for trusting us with your letter.',
     '',
-    '— Letterhome',
+    'Letterhome',
   ].filter(s => s !== undefined).join('\n');
 }
 
@@ -2830,7 +2833,7 @@ function buildStatusPage(order) {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Letter Status — Letterhome</title>
+<title>Letter Status | Letterhome</title>
 <link rel="stylesheet" href="/fonts.css">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -2872,7 +2875,7 @@ body{font-family:'Source Serif 4',Georgia,serif;background:var(--kraft,#faf8f2);
 function buildStatusNotFound() {
   return `<!DOCTYPE html>
 <html lang="en-CA"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Not Found — Letterhome</title>
+<title>Not Found | Letterhome</title>
 <style>body{font-family:Georgia,serif;background:#ede5d3;color:#2a2a2a;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}
 .box{text-align:center;padding:40px}h1{font-size:32px;font-weight:400;margin-bottom:12px}p{color:#6b6258;margin-bottom:24px}
 a{color:#a8472d}</style></head>
@@ -2888,8 +2891,8 @@ function buildRecoveryEmail(order) {
   return {
     from:    process.env.EMAIL_FROM,
     to:      order.customer_email,
-    subject: 'You left a letter unsent — Letterhome',
-    text:    `You left a letter unsent.\n\nSomeone back home is waiting to hear from you. Your letter${recipientHint} is still ready to go.\n\nSend your letter: ${process.env.BASE_URL || ''}/send\n\nWe only send this reminder once.\n\nLetterhome · ${MAILING_ADDRESS}\n\n— Letterhome`,
+    subject: 'You left a letter unsent | Letterhome',
+    text:    `You left a letter unsent.\n\nSomeone back home is waiting to hear from you. Your letter${recipientHint} is still ready to go.\n\nSend your letter: ${process.env.BASE_URL || ''}/send\n\nWe only send this reminder once.\n\nLetterhome · ${MAILING_ADDRESS}\n\nLetterhome`,
     html: `<!DOCTYPE html><html>
 <body style="font-family:Georgia,serif;background:#ede5d3;padding:40px 20px;color:#2a2a2a;margin:0">
   <div style="max-width:520px;margin:0 auto;background:#faf6ec;border:1px solid rgba(42,42,42,0.12);padding:48px">
@@ -2917,14 +2920,14 @@ function buildOccasionReminderEmail(occ, lastOrder) {
   return {
     from:    process.env.EMAIL_FROM,
     to:      occ.customer_email,
-    subject: `${occ.occasion_name} is coming up — send a letter?`,
-    text:    `${occ.occasion_name} is coming up.\n\n${occ.occasion_name} is ${occ.remind_days_before} days away (${dateFormatted}).${lastOrderHint} Send a letter — it'll mean more than a text.\n\nSend a letter: ${process.env.BASE_URL || ''}/send\n\nYou set this reminder via Letterhome. Reply to stop.\n\nLetterhome · ${MAILING_ADDRESS}\n\n— Letterhome`,
+    subject: `${occ.occasion_name} is coming up: send a letter?`,
+    text:    `${occ.occasion_name} is coming up.\n\n${occ.occasion_name} is ${occ.remind_days_before} days away (${dateFormatted}).${lastOrderHint} Send a letter. It'll mean more than a text.\n\nSend a letter: ${process.env.BASE_URL || ''}/send\n\nYou set this reminder via Letterhome. Reply to stop.\n\nLetterhome · ${MAILING_ADDRESS}\n\nLetterhome`,
     html: `<!DOCTYPE html><html>
 <body style="font-family:Georgia,serif;background:#ede5d3;padding:40px 20px;color:#2a2a2a;margin:0">
   <div style="max-width:520px;margin:0 auto;background:#faf6ec;border:1px solid rgba(42,42,42,0.12);padding:48px">
     <div style="width:38px;height:38px;background:#a8472d;display:inline-flex;align-items:center;justify-content:center;color:#faf6ec;font-size:20px;font-family:Georgia,serif;margin-bottom:28px">L</div>
     <h1 style="font-size:28px;font-weight:400;margin:0 0 10px;letter-spacing:-0.02em">${occasionNameEsc} is coming up.</h1>
-    <p style="color:#6b6258;margin:0 0 32px;font-size:16px;line-height:1.6">${occasionNameEsc} is ${occ.remind_days_before} days away (${dateFormatted}).${lastOrderHintEsc} Send a letter — it'll mean more than a text.</p>
+    <p style="color:#6b6258;margin:0 0 32px;font-size:16px;line-height:1.6">${occasionNameEsc} is ${occ.remind_days_before} days away (${dateFormatted}).${lastOrderHintEsc} Send a letter. It'll mean more than a text.</p>
     <a href="${process.env.BASE_URL || ''}/send" style="display:inline-block;background:#a8472d;color:#faf6ec;padding:14px 28px;font-family:Georgia,serif;font-size:15px;text-decoration:none;letter-spacing:0.02em;margin-bottom:32px">Send a Letter →</a>
     <div style="border-top:1px solid rgba(42,42,42,0.1);padding-top:20px;font-size:12px;color:#968b7d">
       <p style="margin:0">You set this reminder via Letterhome. Reply to stop.</p>
@@ -3230,7 +3233,7 @@ process.on('uncaughtException', (err) => {
   // After an uncaught exception the process is in an undefined state, so we
   // exit and let pm2 restart it cleanly rather than serving from a corrupted
   // state. The brief delay gives the alert email a chance to flush first.
-  try { sendErrorAlert('Uncaught Exception — restarting process', msg); } catch {}
+  try { sendErrorAlert('Uncaught Exception, restarting process', msg); } catch {}
   setTimeout(() => process.exit(1), 1000).unref();
 });
 
@@ -3287,10 +3290,10 @@ async function runBackup() {
       const stat = fs.statSync(dest);
       const adminEmail = process.env.ADMIN_EMAIL || process.env.OPERATOR_EMAIL || process.env.SMTP_USER;
       if (!passphrase) {
-        // Never email an unencrypted database — the attachment contains every
+        // Never email an unencrypted database, the attachment contains every
         // customer's address, email, and letter contents. Require BACKUP_PASSPHRASE
         // to enable emailed off-site backups.
-        console.warn('[backup] email skipped: BACKUP_PASSPHRASE not set — refusing to email an unencrypted database');
+        console.warn('[backup] email skipped: BACKUP_PASSPHRASE not set, refusing to email an unencrypted database');
       } else if (stat.size > 20 * 1024 * 1024) {
         console.warn(`[backup] email skipped: ${(stat.size/1024/1024).toFixed(1)}MB exceeds 20MB limit`);
       } else if (!adminEmail || !adminEmail.includes('@')) {
