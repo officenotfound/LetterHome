@@ -23,6 +23,7 @@
         '<div>© 2026 Letterhome. Registered Canadian business, BN 787294073.</div>' +
         '<div class="footer-bottom-links">' + social +
           '<a href="/guides">Guides</a>' +
+          '<a href="https://ca.trustpilot.com/review/letterhome.ca" target="_blank" rel="noopener">Reviews</a>' +
           '<a href="/privacy" data-i18n="footer.privacy">Privacy</a>' +
           '<a href="/terms" data-i18n="footer.terms">Terms</a>' +
           '<a href="https://jeffbuilds.ca" target="_blank" rel="noopener" style="opacity:0.6">Jeffbuilds</a>' +
