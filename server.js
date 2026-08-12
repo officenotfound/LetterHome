@@ -1983,7 +1983,6 @@ app.post('/api/admin/outreach/send', requireAdmin, async (req, res) => {
             `<div><a href="https://letterhome.ca">letterhome.ca</a></div><div><br></div>` +
             `<div>(647) 313-1086<br><a href="mailto:jeff@letterhome.ca">jeff@letterhome.ca</a></div><div><br></div>` +
             `<div><img src="https://letterhome.ca/logo.png" width="38" height="40" alt="Letterhome" style="display:block;border:0;"></div>` +
-            `<div style="margin-top:16px;color:#968b7d;font-size:11px">Letterhome · ${MAILING_ADDRESS}</div>` +
             pixel;
 
           await sendMail({
