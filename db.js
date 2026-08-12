@@ -312,6 +312,22 @@ try {
 } catch (e) { console.error('[init] tetris_scores table:', e.message); }
 
 try {
+  db.exec(`CREATE TABLE IF NOT EXISTS email_opens (
+    id               INTEGER PRIMARY KEY AUTOINCREMENT,
+    token            TEXT NOT NULL UNIQUE,
+    campaign         TEXT,
+    recipient_email  TEXT,
+    open_count       INTEGER DEFAULT 0,
+    first_opened_at  DATETIME,
+    last_opened_at   DATETIME,
+    last_ip          TEXT,
+    last_user_agent  TEXT,
+    created_at       DATETIME DEFAULT CURRENT_TIMESTAMP
+  )`);
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_email_opens_campaign ON email_opens(campaign)`);
+} catch (e) { console.error('[init] email_opens table:', e.message); }
+
+try {
   db.exec(`CREATE TABLE IF NOT EXISTS arcade_scores (
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
     game       TEXT NOT NULL,

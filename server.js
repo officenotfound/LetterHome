@@ -704,6 +704,11 @@ app.use(express.static('public', {
     } else {
       res.setHeader('Cache-Control', 'public, max-age=604800');
     }
+    // Images need to embed cross-origin (email clients, social previews),
+    // so opt them out of Helmet's default same-origin CORP.
+    if (/\.(png|jpe?g|gif|svg|webp|ico)$/i.test(filePath)) {
+      res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    }
   },
 }));
 
@@ -1292,6 +1297,53 @@ app.get('/api/admin/arcade/hall-of-fame', requireAdmin, (req, res) => {
       ).get(game) || null;
     }
     res.json(result);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// 1x1 transparent PNG served by the email open-tracking pixel below.
+const TRACKING_PIXEL = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
+  'base64'
+);
+
+app.get('/t/:token.png', (req, res) => {
+  res.setHeader('Content-Type', 'image/png');
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  try {
+    const ip = (req.ip || '').replace(/^::ffff:/, '');
+    const ua = (req.headers['user-agent'] || '').slice(0, 500);
+    db.prepare(`
+      UPDATE email_opens
+      SET open_count = open_count + 1,
+          first_opened_at = COALESCE(first_opened_at, CURRENT_TIMESTAMP),
+          last_opened_at = CURRENT_TIMESTAMP,
+          last_ip = ?,
+          last_user_agent = ?
+      WHERE token = ?
+    `).run(ip, ua, req.params.token);
+  } catch (e) { console.error('[email-open] track:', e.message); }
+  res.end(TRACKING_PIXEL);
+});
+
+app.get('/api/admin/email-opens', requireAdmin, (req, res) => {
+  try {
+    const campaign = req.query.campaign;
+    const rows = campaign
+      ? db.prepare('SELECT * FROM email_opens WHERE campaign = ? ORDER BY created_at DESC').all(campaign)
+      : db.prepare('SELECT * FROM email_opens ORDER BY created_at DESC').all();
+    res.json(rows);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/admin/email-opens', requireAdmin, (req, res) => {
+  try {
+    const { token, campaign, recipient_email } = req.body;
+    if (!token) return res.status(400).json({ error: 'token required' });
+    db.prepare('INSERT INTO email_opens (token, campaign, recipient_email) VALUES (?,?,?)')
+      .run(token, campaign || null, recipient_email || null);
+    res.json({ ok: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
