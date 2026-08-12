@@ -298,6 +298,7 @@ html[data-theme="dark"] .dash-grid-5{background:rgba(255,255,255,0.08);border-co
     <button class="nav-link" id="nav-customers" onclick="go('/admin/customers')"><span class="nav-icon">◎</span> Customers</button>
     <button class="nav-link" id="nav-accounts"  onclick="go('/admin/accounts')"><span class="nav-icon">◐</span> Accounts</button>
     <button class="nav-link" id="nav-broadcast" onclick="go('/admin/broadcast')"><span class="nav-icon">≋</span> Broadcast</button>
+    <button class="nav-link" id="nav-outreach"  onclick="go('/admin/outreach')"><span class="nav-icon">↗</span> Outreach</button>
     <button class="nav-link" id="nav-insights"  onclick="go('/admin/insights')"><span class="nav-icon">◑</span> Insights</button>
     <button class="nav-link" id="nav-visitors"  onclick="go('/admin/visitors')"><span class="nav-icon">◉</span> Visitors</button>
     <button class="nav-link" id="nav-stripe"    onclick="go('/admin/stripe')"><span class="nav-icon">$</span> Stripe</button>
@@ -369,6 +370,7 @@ function route() {
   if (p.match(/^\/admin\/accounts\/.+$/))           return showAccount(decodeURIComponent(p.replace('/admin/accounts/', '')));
   if (p === '/admin/trash')                         return showTrash();
   if (p === '/admin/broadcast')                     return showBroadcast();
+  if (p === '/admin/outreach')                       return showOutreach();
   if (p === '/admin/print-queue')                   return showPrintQueue();
   if (p === '/admin/insights')                      return showInsights();
   if (p === '/admin/visitors')                      return showVisitors();
@@ -388,6 +390,7 @@ function setActiveNav(p) {
   else if (p.startsWith('/admin/accounts'))   document.getElementById('nav-accounts')?.classList.add('active');
   else if (p.startsWith('/admin/customers'))  document.getElementById('nav-customers')?.classList.add('active');
   else if (p.startsWith('/admin/broadcast'))  document.getElementById('nav-broadcast')?.classList.add('active');
+  else if (p.startsWith('/admin/outreach'))   document.getElementById('nav-outreach')?.classList.add('active');
   else if (p.startsWith('/admin/insights'))   document.getElementById('nav-insights')?.classList.add('active');
   else if (p.startsWith('/admin/visitors'))   document.getElementById('nav-visitors')?.classList.add('active');
   else if (p.startsWith('/admin/stripe'))     document.getElementById('nav-stripe')?.classList.add('active');
@@ -1654,6 +1657,157 @@ async function sendBroadcast() {
   s.style.display = 'inline';
 }
 
+
+let outreachCampaign = null;
+
+async function showOutreach() {
+  setTitle('Outreach');
+  const campaigns = await api('/api/admin/outreach/campaigns');
+  if (!campaigns) return;
+  if (!outreachCampaign && campaigns.length) outreachCampaign = campaigns[0].campaign;
+
+  const campOpts = campaigns.map(c =>
+    `<option value="${esc(c.campaign)}" ${c.campaign === outreachCampaign ? 'selected' : ''}>${esc(c.campaign)} (${c.total})</option>`
+  ).join('');
+  const cur = campaigns.find(c => c.campaign === outreachCampaign);
+
+  setMain(`
+    <div class="page-header"><div class="page-title">Outreach</div></div>
+    <p style="color:#6b6b6b;font-size:13px;margin-bottom:20px;max-width:680px">Cold outreach campaigns to businesses (e.g. immigration consultants) offering discount codes to their clients. Includes CASL mailing address and open tracking. Sends are throttled.</p>
+
+    <div class="card" style="max-width:900px;margin-bottom:20px">
+      <div style="padding:24px">
+        <div class="form-row" style="align-items:flex-end;margin-bottom:16px">
+          <div class="field">
+            <label>Campaign</label>
+            <select id="or-campaign" onchange="outreachCampaign=this.value;showOutreach()">
+              ${campOpts || '<option value="">— no campaigns yet —</option>'}
+            </select>
+          </div>
+          <div class="field">
+            <label>New campaign name</label>
+            <input id="or-new-campaign" type="text" placeholder="e.g. rcic-outreach-2">
+          </div>
+          <button class="btn btn-outline btn-sm" onclick="createOutreachCampaign()">Create</button>
+        </div>
+        ${cur ? `
+        <div style="display:flex;gap:20px;font-size:13px;color:#6b6b6b;margin-bottom:8px">
+          <span><b style="color:#111">${cur.total}</b> total</span>
+          <span><b style="color:#111">${cur.pending}</b> pending</span>
+          <span><b style="color:#16a34a">${cur.sent}</b> sent</span>
+          <span><b style="color:#e63946">${cur.failed}</b> failed</span>
+          <span><b style="color:#111">${cur.opened}</b> opened</span>
+        </div>` : ''}
+      </div>
+    </div>
+
+    ${outreachCampaign ? `
+    <div class="card" style="max-width:900px;margin-bottom:20px">
+      <div style="padding:24px">
+        <div class="field" style="margin-bottom:16px">
+          <label>Add contacts (one per line: business name, contact name, email, source url — contact name and source optional)</label>
+          <textarea id="or-bulk" rows="6" placeholder="Acme Immigration, Jane Doe, jane@acme.com, https://acme.com/contact"></textarea>
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="addOutreachContacts()">Add contacts</button>
+        <span id="or-add-status" style="font-size:13px;margin-left:10px"></span>
+      </div>
+    </div>
+
+    <div class="card" style="max-width:900px;margin-bottom:20px">
+      <div style="padding:24px">
+        <div class="field" style="margin-bottom:16px">
+          <label>Subject</label>
+          <input id="or-subject" type="text" placeholder="A faster way for your clients to mail IRCC documents from abroad">
+        </div>
+        <div class="field" style="margin-bottom:16px">
+          <label>Body (plain text, blank line = paragraph break, use {{business_name}} if useful)</label>
+          <textarea id="or-body" rows="8" placeholder="I run Letterhome, a Canadian print and mail service..."></textarea>
+        </div>
+        <button class="btn btn-primary" onclick="sendOutreach()">Send to pending contacts</button>
+        <span id="or-send-status" style="font-size:13px;margin-left:10px"></span>
+      </div>
+    </div>
+
+    <div id="or-contacts"></div>
+    ` : ''}
+  `);
+
+  if (outreachCampaign) loadOutreachContacts();
+}
+
+async function createOutreachCampaign() {
+  const name = document.getElementById('or-new-campaign').value.trim();
+  if (!name) return;
+  outreachCampaign = name;
+  document.getElementById('or-new-campaign').value = '';
+  showOutreach();
+}
+
+async function addOutreachContacts() {
+  const raw = document.getElementById('or-bulk').value.trim();
+  if (!raw) return;
+  const contacts = raw.split('\n').map(line => {
+    const [business_name, contact_name, email, source_url] = line.split(',').map(s => (s || '').trim());
+    return { business_name, contact_name, email, source_url };
+  }).filter(c => c.email);
+  if (!contacts.length) return alert('No valid rows (need at least an email in each line).');
+  const r = await post('/api/admin/outreach/contacts', { campaign: outreachCampaign, contacts });
+  const s = document.getElementById('or-add-status');
+  if (r?.ok) {
+    s.style.color = '#16a34a';
+    s.textContent = `Added ${r.added}, skipped ${r.skipped} (duplicates).`;
+    document.getElementById('or-bulk').value = '';
+    showOutreach();
+  } else {
+    s.style.color = '#e63946';
+    s.textContent = 'Failed: ' + (r?.error || 'unknown error');
+  }
+}
+
+async function sendOutreach() {
+  const subject = document.getElementById('or-subject').value.trim();
+  const body    = document.getElementById('or-body').value.trim();
+  if (!subject || !body) return alert('Subject and body are required.');
+  if (!confirm('Send this to all pending contacts in this campaign? This cannot be undone.')) return;
+  const r = await post('/api/admin/outreach/send', { campaign: outreachCampaign, subject, body });
+  const s = document.getElementById('or-send-status');
+  if (r?.ok) {
+    s.style.color = '#16a34a';
+    s.textContent = `Sending ${r.sending} emails in background.`;
+  } else {
+    s.style.color = '#e63946';
+    s.textContent = 'Failed: ' + (r?.error || 'unknown error');
+  }
+  s.style.display = 'inline';
+}
+
+async function loadOutreachContacts() {
+  const rows = await api('/api/admin/outreach/contacts?campaign=' + encodeURIComponent(outreachCampaign));
+  if (!rows) return;
+  const html = rows.map(c => `
+    <tr>
+      <td>${esc(c.business_name || '—')}</td>
+      <td>${esc(c.contact_name || '—')}</td>
+      <td>${esc(c.email)}</td>
+      <td>${c.status === 'sent' ? '<span style="color:#16a34a">sent</span>' : c.status === 'failed' ? '<span style="color:#e63946">failed</span>' : 'pending'}</td>
+      <td>${c.open_count > 0 ? `<span style="color:#16a34a">${c.open_count}</span>` : '0'}</td>
+      <td><button class="link" onclick="deleteOutreachContact(${c.id})">remove</button></td>
+    </tr>
+  `).join('');
+  document.getElementById('or-contacts').innerHTML = `
+    <div class="card" style="max-width:900px">
+      <table class="table">
+        <thead><tr><th>Business</th><th>Contact</th><th>Email</th><th>Status</th><th>Opens</th><th></th></tr></thead>
+        <tbody>${html || '<tr><td colspan="6" style="color:#6b6b6b">No contacts yet.</td></tr>'}</tbody>
+      </table>
+    </div>`;
+}
+
+async function deleteOutreachContact(id) {
+  if (!confirm('Remove this contact?')) return;
+  await fetch('/api/admin/outreach/contacts/' + id, { method: 'DELETE', credentials: 'include' });
+  loadOutreachContacts();
+}
 
 async function showInsights() {
   setTitle('Insights');

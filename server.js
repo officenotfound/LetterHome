@@ -1863,6 +1863,125 @@ app.get('/api/admin/broadcast/preview', requireAdmin, (req, res) => {
   res.json({ count: willSend, total, unsubscribed: total - willSend });
 });
 
+app.get('/api/admin/outreach/campaigns', requireAdmin, (req, res) => {
+  try {
+    const rows = db.prepare(`
+      SELECT campaign,
+             COUNT(*) as total,
+             SUM(CASE WHEN status = 'sent' THEN 1 ELSE 0 END) as sent,
+             SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending,
+             SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) as failed
+      FROM outreach_contacts GROUP BY campaign ORDER BY campaign
+    `).all();
+    const opens = db.prepare(`
+      SELECT oc.campaign, COUNT(*) as opened
+      FROM outreach_contacts oc JOIN email_opens eo ON eo.token = oc.token
+      WHERE eo.open_count > 0 GROUP BY oc.campaign
+    `).all();
+    const openMap = Object.fromEntries(opens.map(o => [o.campaign, o.opened]));
+    res.json(rows.map(r => ({ ...r, opened: openMap[r.campaign] || 0 })));
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/admin/outreach/contacts', requireAdmin, (req, res) => {
+  try {
+    const { campaign } = req.query;
+    const rows = campaign
+      ? db.prepare(`
+          SELECT oc.*, COALESCE(eo.open_count, 0) as open_count, eo.last_opened_at
+          FROM outreach_contacts oc LEFT JOIN email_opens eo ON eo.token = oc.token
+          WHERE oc.campaign = ? ORDER BY oc.created_at DESC
+        `).all(campaign)
+      : db.prepare(`
+          SELECT oc.*, COALESCE(eo.open_count, 0) as open_count, eo.last_opened_at
+          FROM outreach_contacts oc LEFT JOIN email_opens eo ON eo.token = oc.token
+          ORDER BY oc.created_at DESC
+        `).all();
+    res.json(rows);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/admin/outreach/contacts', requireAdmin, (req, res) => {
+  try {
+    const { campaign, contacts } = req.body;
+    if (!campaign?.trim() || !Array.isArray(contacts) || !contacts.length) {
+      return res.status(400).json({ error: 'campaign and contacts[] required' });
+    }
+    const insert = db.prepare(`
+      INSERT OR IGNORE INTO outreach_contacts (campaign, business_name, contact_name, email, source_url)
+      VALUES (?,?,?,?,?)
+    `);
+    let added = 0;
+    for (const c of contacts) {
+      if (!c.email?.trim()) continue;
+      const info = insert.run(campaign.trim(), c.business_name || null, c.contact_name || null, c.email.trim().toLowerCase(), c.source_url || null);
+      if (info.changes) added++;
+    }
+    logAudit(req, 'outreach.contacts.add', 'outreach', campaign, { added, submitted: contacts.length });
+    res.json({ ok: true, added, skipped: contacts.length - added });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.delete('/api/admin/outreach/contacts/:id', requireAdmin, (req, res) => {
+  try {
+    db.prepare('DELETE FROM outreach_contacts WHERE id = ?').run(Number(req.params.id));
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/admin/outreach/send', requireAdmin, async (req, res) => {
+  try {
+    const { campaign, subject, body } = req.body;
+    if (!campaign?.trim() || !subject?.trim() || !body?.trim()) {
+      return res.status(400).json({ error: 'campaign, subject, and body required' });
+    }
+    const pending = db.prepare(`SELECT * FROM outreach_contacts WHERE campaign = ? AND status = 'pending'`).all(campaign.trim());
+    if (!pending.length) return res.status(400).json({ error: 'No pending contacts in this campaign' });
+
+    logAudit(req, 'outreach.send', 'outreach', campaign, { recipients: pending.length });
+    res.json({ ok: true, sending: pending.length });
+
+    (async () => {
+      for (const contact of pending) {
+        const token = randomUUID();
+        try {
+          db.prepare('UPDATE outreach_contacts SET token = ? WHERE id = ?').run(token, contact.id);
+          db.prepare('INSERT INTO email_opens (token, campaign, recipient_email) VALUES (?,?,?)')
+            .run(token, campaign.trim(), contact.email);
+
+          const greeting = contact.contact_name ? `Hi ${contact.contact_name.split(' ')[0]},` : 'Hi there,';
+          const personalized = body.replace(/\{\{business_name\}\}/g, contact.business_name || 'there');
+          const pixel = `<img src="${process.env.BASE_URL || 'https://letterhome.ca'}/t/${token}.png" width="1" height="1" style="display:none" alt="">`;
+          const html = `<div>${greeting}</div><div><br></div>` +
+            personalized.split('\n\n').map(p => `<div>${p}</div><div><br></div>`).join('') +
+            `<div><b>Jeffrey</b><br>Founder, Letterhome</div><div><br></div>` +
+            `<div>Print and mail service for Canadians abroad</div><div><br></div>` +
+            `<div><a href="https://letterhome.ca">letterhome.ca</a></div><div><br></div>` +
+            `<div>(647) 313-1086<br><a href="mailto:jeff@letterhome.ca">jeff@letterhome.ca</a></div><div><br></div>` +
+            `<div><img src="https://letterhome.ca/logo.png" width="38" height="40" alt="Letterhome" style="display:block;border:0;"></div>` +
+            `<div style="margin-top:16px;color:#968b7d;font-size:11px">Letterhome · ${MAILING_ADDRESS}</div>` +
+            pixel;
+
+          await sendMail({
+            from:    process.env.EMAIL_FROM,
+            to:      contact.email,
+            replyTo: process.env.OPERATOR_EMAIL,
+            subject: subject.trim(),
+            html,
+            text:    `${greeting}\n\n${personalized}\n\nJeffrey\nFounder, Letterhome\nletterhome.ca\n(647) 313-1086\njeff@letterhome.ca\n\nLetterhome · ${MAILING_ADDRESS}`,
+          }, 'outreach');
+
+          db.prepare(`UPDATE outreach_contacts SET status = 'sent', sent_at = CURRENT_TIMESTAMP WHERE id = ?`).run(contact.id);
+        } catch (err) {
+          console.error('Outreach send to', contact.email, 'failed:', err.message);
+          db.prepare(`UPDATE outreach_contacts SET status = 'failed', error = ? WHERE id = ?`).run(err.message, contact.id);
+        }
+        await new Promise(r => setTimeout(r, 1500));
+      }
+    })();
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 app.get('/api/admin/tags', requireAdmin, (req, res) => {
   const tags = db.prepare(`SELECT tag, COUNT(*) as n FROM customer_tags GROUP BY tag ORDER BY tag`).all();
   res.json(tags);

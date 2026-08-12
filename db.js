@@ -328,6 +328,25 @@ try {
 } catch (e) { console.error('[init] email_opens table:', e.message); }
 
 try {
+  db.exec(`CREATE TABLE IF NOT EXISTS outreach_contacts (
+    id             INTEGER PRIMARY KEY AUTOINCREMENT,
+    campaign       TEXT NOT NULL,
+    business_name  TEXT,
+    contact_name   TEXT,
+    email          TEXT NOT NULL,
+    source_url     TEXT,
+    status         TEXT DEFAULT 'pending',
+    token          TEXT UNIQUE,
+    sent_at        DATETIME,
+    error          TEXT,
+    created_at     DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(campaign, email)
+  )`);
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_outreach_campaign ON outreach_contacts(campaign)`);
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_outreach_status ON outreach_contacts(status)`);
+} catch (e) { console.error('[init] outreach_contacts table:', e.message); }
+
+try {
   db.exec(`CREATE TABLE IF NOT EXISTS arcade_scores (
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
     game       TEXT NOT NULL,
