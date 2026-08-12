@@ -1662,7 +1662,10 @@ let outreachCampaign = null;
 
 async function showOutreach() {
   setTitle('Outreach');
-  const campaigns = await api('/api/admin/outreach/campaigns');
+  const [campaigns, summary] = await Promise.all([
+    api('/api/admin/outreach/campaigns'),
+    api('/api/admin/outreach/summary'),
+  ]);
   if (!campaigns) return;
   if (!outreachCampaign && campaigns.length) outreachCampaign = campaigns[0].campaign;
 
@@ -1674,6 +1677,19 @@ async function showOutreach() {
   setMain(`
     <div class="page-header"><div class="page-title">Outreach</div></div>
     <p style="color:#6b6b6b;font-size:13px;margin-bottom:20px;max-width:680px">Cold outreach campaigns to businesses (e.g. immigration consultants) offering discount codes to their clients. Includes CASL mailing address and open tracking. Sends are throttled.</p>
+
+    ${summary ? `
+    <div class="card" style="max-width:900px;margin-bottom:20px">
+      <div style="padding:20px 24px;display:flex;gap:28px;flex-wrap:wrap">
+        <div><div style="font-size:22px;font-weight:700">${summary.campaigns}</div><div style="font-size:12px;color:#6b6b6b">campaigns</div></div>
+        <div><div style="font-size:22px;font-weight:700">${summary.total}</div><div style="font-size:12px;color:#6b6b6b">contacts loaded</div></div>
+        <div><div style="font-size:22px;font-weight:700;color:#16a34a">${summary.sent}</div><div style="font-size:12px;color:#6b6b6b">emails sent</div></div>
+        <div><div style="font-size:22px;font-weight:700">${summary.pending}</div><div style="font-size:12px;color:#6b6b6b">pending</div></div>
+        <div><div style="font-size:22px;font-weight:700;color:#e63946">${summary.failed}</div><div style="font-size:12px;color:#6b6b6b">failed</div></div>
+        <div><div style="font-size:22px;font-weight:700">${summary.opened}</div><div style="font-size:12px;color:#6b6b6b">unique opens (${summary.totalOpens} total)</div></div>
+        <div><div style="font-size:22px;font-weight:700">${summary.openRate}%</div><div style="font-size:12px;color:#6b6b6b">open rate</div></div>
+      </div>
+    </div>` : ''}
 
     <div class="card" style="max-width:900px;margin-bottom:20px">
       <div style="padding:24px">

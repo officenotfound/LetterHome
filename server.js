@@ -1863,6 +1863,30 @@ app.get('/api/admin/broadcast/preview', requireAdmin, (req, res) => {
   res.json({ count: willSend, total, unsubscribed: total - willSend });
 });
 
+app.get('/api/admin/outreach/summary', requireAdmin, (req, res) => {
+  try {
+    const totals = db.prepare(`
+      SELECT COUNT(*) as total,
+             SUM(CASE WHEN status = 'sent' THEN 1 ELSE 0 END) as sent,
+             SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending,
+             SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) as failed,
+             COUNT(DISTINCT campaign) as campaigns
+      FROM outreach_contacts
+    `).get();
+    const opened = db.prepare(`
+      SELECT COUNT(*) as opened, SUM(eo.open_count) as total_opens
+      FROM outreach_contacts oc JOIN email_opens eo ON eo.token = oc.token
+      WHERE eo.open_count > 0
+    `).get();
+    res.json({
+      ...totals,
+      opened: opened.opened || 0,
+      totalOpens: opened.total_opens || 0,
+      openRate: totals.sent ? Math.round(((opened.opened || 0) / totals.sent) * 100) : 0,
+    });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 app.get('/api/admin/outreach/campaigns', requireAdmin, (req, res) => {
   try {
     const rows = db.prepare(`
