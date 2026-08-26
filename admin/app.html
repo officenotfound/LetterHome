@@ -319,6 +319,7 @@ html[data-theme="dark"] .dash-grid-5{background:rgba(255,255,255,0.08);border-co
     <form method="POST" action="/admin/logout" style="margin:0">
       <button class="logout-btn" type="submit">⎋ &nbsp;Sign out</button>
     </form>
+    <div id="deploy-info" style="font-size:10px;color:#9a9a9a;font-family:'DM Mono',ui-monospace,monospace;padding:8px 4px 0;line-height:1.5"></div>
   </div>
 </aside>
 <div id="sidebar-overlay" class="sidebar-overlay" onclick="closeMobSidebar()"></div>
@@ -347,6 +348,12 @@ async function init() {
   currentUser = me.username;
   document.getElementById('topbar-user').textContent = me.username;
   if (!me.has2FA) document.getElementById('twofa-banner').style.display = 'block';
+  if (me.deploy) {
+    const bootAgo = Math.round((Date.now() - new Date(me.deploy.bootAt).getTime()) / 60000);
+    const bootStr = bootAgo < 60 ? bootAgo + 'm ago' : Math.round(bootAgo / 60) + 'h ago';
+    document.getElementById('deploy-info').innerHTML =
+      `running <span title="${esc(me.deploy.commitMsg)}">${esc(me.deploy.commit)}</span><br>booted ${bootStr}`;
+  }
   window.addEventListener('popstate', () => route());
   startCountdownTicker();
   api('/api/admin/contacts/unread').then(d => { if (d) updateContactsBadge(d.unread); });

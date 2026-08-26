@@ -23,6 +23,23 @@ const bcrypt    = require('bcryptjs');
 const { Secret, TOTP } = require('otpauth');
 const cron      = require('node-cron');
 const path = require('path');
+const { execSync } = require('child_process');
+
+// Read once at boot: which commit is actually running, and when the process
+// started, so the admin panel can show it. This is what would have caught
+// the multi-day gap where fixes were pushed to GitHub but never deployed.
+const DEPLOY_INFO = (() => {
+  try {
+    return {
+      commit:    execSync('git rev-parse --short HEAD', { cwd: __dirname }).toString().trim(),
+      commitMsg: execSync('git log -1 --format=%s', { cwd: __dirname }).toString().trim(),
+      commitAt:  execSync('git log -1 --format=%cI', { cwd: __dirname }).toString().trim(),
+      bootAt:    new Date().toISOString(),
+    };
+  } catch (e) {
+    return { commit: 'unknown', commitMsg: '', commitAt: null, bootAt: new Date().toISOString() };
+  }
+})();
 const fs   = require('fs');
 const { randomUUID, createHmac, createHash, createCipheriv, scryptSync, randomBytes, timingSafeEqual } = require('node:crypto');
 const B2 = require('backblaze-b2');
@@ -1313,6 +1330,7 @@ app.get('/api/admin/me', requireAdmin, (req, res) =>
     username: req.session.admin.username,
     csrfToken: req.session.csrfToken,
     has2FA: !!req.session.admin.has2FA,
+    deploy: DEPLOY_INFO,
   }));
 
 // Keep in sync with the GAMES list in admin/app.html.
@@ -3468,6 +3486,29 @@ function sendErrorAlert(subject, body) {
   }).catch(() => {});
 }
 
+// Throttles repeat alert emails for the same recurring error so a bug that
+// fires on every request sends one email per window instead of flooding the
+// inbox. Keyed on method+path+error message, not the full stack, so the same
+// underlying bug groups together even if the trace varies slightly.
+const ERROR_ALERT_WINDOW_MS = 30 * 60 * 1000; // 30 min
+const errorAlertLastSent = new Map();
+let errorAlertSuppressedCount = 0;
+
+function sendThrottledErrorAlert(key, subject, body) {
+  const now = Date.now();
+  const last = errorAlertLastSent.get(key);
+  if (last && now - last < ERROR_ALERT_WINDOW_MS) {
+    errorAlertSuppressedCount++;
+    return;
+  }
+  errorAlertLastSent.set(key, now);
+  const suppressedNote = errorAlertSuppressedCount
+    ? `\n\n(${errorAlertSuppressedCount} more occurrence(s) of a recurring error were suppressed in the last ${ERROR_ALERT_WINDOW_MS / 60000} min. This alert will fire again only if the error keeps happening after this window.)`
+    : '';
+  errorAlertSuppressedCount = 0;
+  sendErrorAlert(subject, body + suppressedNote);
+}
+
 app.use((err, req, res, next) => {
   const detail = [
     `Method: ${req.method} ${req.originalUrl}`,
@@ -3475,7 +3516,8 @@ app.use((err, req, res, next) => {
     `Error: ${err.stack || err.message || err}`,
   ].join('\n');
   console.error('[express error]', detail);
-  sendErrorAlert(`Unhandled Express error on ${req.method} ${req.originalUrl}`, detail);
+  const alertKey = `${req.method} ${req.route?.path || req.path}: ${err.message || err}`;
+  sendThrottledErrorAlert(alertKey, `Unhandled Express error on ${req.method} ${req.originalUrl}`, detail);
   res.status(500).json({ error: 'Something went wrong. Please try again.' });
 });
 
