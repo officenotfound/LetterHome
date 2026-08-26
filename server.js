@@ -1430,8 +1430,8 @@ app.get('/api/admin/stats', requireAdmin, (req, res) => {
 app.get('/api/admin/orders', requireAdmin, (req, res) => {
   const { status } = req.query;
   const rows = status
-    ? db.prepare("SELECT id, stripe_session_id, customer_email, recipient_name, recipient_street, recipient_city, recipient_province, recipient_postal, destination_country, letter_type, attachment_info, price_cents, status, status_token, created_at, updated_at, recovery_sent_at FROM orders WHERE status = ? AND deleted_at IS NULL ORDER BY created_at DESC").all(status)
-    : db.prepare("SELECT id, stripe_session_id, customer_email, recipient_name, recipient_street, recipient_city, recipient_province, recipient_postal, destination_country, letter_type, attachment_info, price_cents, status, status_token, created_at, updated_at, recovery_sent_at FROM orders WHERE deleted_at IS NULL ORDER BY created_at DESC").all();
+    ? db.prepare("SELECT id, stripe_session_id, customer_email, recipient_name, recipient_street, recipient_city, recipient_province, recipient_postal, destination_country, letter_type, attachment_info, price_cents, status, status_token, created_at, recovery_sent_at FROM orders WHERE status = ? AND deleted_at IS NULL ORDER BY created_at DESC").all(status)
+    : db.prepare("SELECT id, stripe_session_id, customer_email, recipient_name, recipient_street, recipient_city, recipient_province, recipient_postal, destination_country, letter_type, attachment_info, price_cents, status, status_token, created_at, recovery_sent_at FROM orders WHERE deleted_at IS NULL ORDER BY created_at DESC").all();
   res.json(rows);
 });
 
