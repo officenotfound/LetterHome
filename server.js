@@ -13,6 +13,7 @@ const express      = require('express');
 const compression  = require('compression');
 const helmet       = require('helmet');
 const multer    = require('multer');
+const { PDFDocument } = require('pdf-lib');
 const Stripe    = require('stripe');
 const mailer    = require('nodemailer');
 const rateLimit = require('express-rate-limit');
@@ -306,6 +307,35 @@ async function sendMail(opts, type = 'general', orderId = null) {
     db.prepare('INSERT INTO email_log (to_email, subject, type, order_id) VALUES (?,?,?,?)')
       .run(toAddr, opts.subject || '', type, orderId || null);
   } catch (e) { console.error('[email_log]', e.message); }
+}
+
+// Provider costs marked up 25%. Base send price ($10 domestic / $20 intl) is
+// unchanged and configurable via settings; these are the newer per-order extras.
+const FREE_PAGES              = 2;
+const EXTRA_PAGE_CENTS        = 44;   // $0.35 provider cost * 1.25
+const COLOUR_PRINTING_CENTS   = 125;  // $1.00 * 1.25
+const REGISTERED_MAIL_CENTS   = 2750; // $22.00 * 1.25
+const SCHEDULE_LATER_CENTS    = 63;   // $0.50 * 1.25, rounded
+
+// Counts pages across uploaded attachments for the per-page overage charge.
+// PDFs are counted exactly; other allowed file types (doc/docx/txt) don't have
+// a well-defined "page" without rendering, so each counts as 1 page.
+async function countAttachmentPages(files) {
+  let total = 0;
+  for (const f of files) {
+    if (f.mimetype === 'application/pdf') {
+      try {
+        const bytes = fs.readFileSync(f.path);
+        const doc = await PDFDocument.load(bytes, { ignoreEncryption: true });
+        total += doc.getPageCount();
+        continue;
+      } catch (e) {
+        console.error('[countAttachmentPages] failed to parse PDF, counting as 1 page:', e.message);
+      }
+    }
+    total += 1;
+  }
+  return total;
 }
 
 const upload = multer({
@@ -948,6 +978,17 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
     ? (parseInt(getSetting('price_domestic_cents',      '1000')) || 1000)
     : (parseInt(getSetting('price_international_cents', '2000')) || 2000);
 
+  const pageCount = await countAttachmentPages(req.files || []);
+  const extraPageCents = Math.max(0, pageCount - FREE_PAGES) * EXTRA_PAGE_CENTS;
+  const colourPrinting    = b['colour_printing']    === '1' || b['colour_printing']    === 'true';
+  const registeredMail    = b['registered_mail']    === '1' || b['registered_mail']    === 'true';
+  const scheduleForLater  = b['schedule_for_later'] === '1' || b['schedule_for_later'] === 'true';
+  const scheduledDate     = scheduleForLater ? (b['scheduled_date'] || null) : null;
+  const addonCents = extraPageCents
+    + (colourPrinting   ? COLOUR_PRINTING_CENTS : 0)
+    + (registeredMail   ? REGISTERED_MAIL_CENTS : 0)
+    + (scheduleForLater ? SCHEDULE_LATER_CENTS  : 0);
+
   // Validate discount code if provided
   let discountCents = 0;
   let appliedCode = null;
@@ -961,12 +1002,12 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
     `).get(rawCode);
     if (dc) {
       discountCents = dc.discount_pct
-        ? Math.round(basePriceCents * dc.discount_pct / 100)
+        ? Math.round((basePriceCents + addonCents) * dc.discount_pct / 100)
         : (dc.discount_cents || 0);
       appliedCode = dc.code;
     }
   }
-  const priceCents = Math.max(50, basePriceCents - discountCents);
+  const priceCents = Math.max(50, basePriceCents + addonCents - discountCents);
 
   const tempFiles = (req.files || []).map(f => ({
     tempPath:     f.path,
@@ -982,8 +1023,9 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
       sender_name, sender_street, sender_city, sender_province, sender_postal, sender_country,
       recipient_name, recipient_street, recipient_city, recipient_province, recipient_postal,
       destination_country, letter_type, letter_body, attachment_info, price_cents, customer_ip,
-      status_token, discount_code, discount_cents
-    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+      status_token, discount_code, discount_cents,
+      page_count, extra_page_cents, colour_printing, registered_mail, schedule_for_later, scheduled_date
+    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
   `).run(
     rEmail, b['skip-return'] ? 1 : 0,
     b['s-name']     || null, b['s-street']   || null, b['s-city']  || null,
@@ -997,7 +1039,13 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
     customerIp || null,
     randomUUID(),
     appliedCode || null,
-    discountCents || null
+    discountCents || null,
+    pageCount,
+    extraPageCents,
+    colourPrinting   ? 1 : 0,
+    registeredMail   ? 1 : 0,
+    scheduleForLater ? 1 : 0,
+    scheduledDate
   );
   if (appliedCode) {
     db.prepare('UPDATE discount_codes SET uses_count = uses_count + 1 WHERE code = ?').run(appliedCode);
@@ -1045,6 +1093,13 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
   db.prepare('UPDATE orders SET attachment_info = ? WHERE id = ?')
     .run(JSON.stringify(movedFiles), orderId);
 
+  const extras = [];
+  if (extraPageCents)  extras.push(`${pageCount - FREE_PAGES} extra page(s)`);
+  if (colourPrinting)  extras.push('colour printing');
+  if (registeredMail)  extras.push('registered mail');
+  if (scheduleForLater) extras.push('scheduled delivery');
+  const extrasNote = extras.length ? ` + ${extras.join(', ')}` : '';
+
   let stripeSession;
   try {
     stripeSession = await stripe.checkout.sessions.create({
@@ -1056,7 +1111,7 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
           currency: 'cad',
           product_data: {
             name: isDomestic ? 'Letterhome Domestic Letter' : 'Letterhome International Letter',
-            description: `To: ${rName}, ${[b['r-city'], b['r-country']].filter(Boolean).join(' ')}`,
+            description: `To: ${rName}, ${[b['r-city'], b['r-country']].filter(Boolean).join(' ')}${extrasNote}`,
           },
           unit_amount: priceCents,
         },
@@ -1439,12 +1494,14 @@ app.get('/api/admin/orders/csv', requireAdmin, (req, res) => {
   const orders = db.prepare(`
     SELECT id, created_at, status, customer_email,
            recipient_name, recipient_street, recipient_city, recipient_province, recipient_postal, destination_country,
-           sender_name, sender_country, price_cents, printer_ref
+           sender_name, sender_country, price_cents, printer_ref,
+           page_count, colour_printing, registered_mail, schedule_for_later, scheduled_date
     FROM orders WHERE deleted_at IS NULL ORDER BY created_at DESC
   `).all();
   const cols = ['id','created_at','status','customer_email','recipient_name','recipient_street',
                 'recipient_city','recipient_province','recipient_postal','destination_country',
-                'sender_name','sender_country','price_cents','printer_ref'];
+                'sender_name','sender_country','price_cents','printer_ref',
+                'page_count','colour_printing','registered_mail','schedule_for_later','scheduled_date'];
   const rows = orders.map(o => cols.map(c => `"${String(o[c]??'').replace(/"/g,'""')}"`).join(','));
   res.setHeader('Content-Type', 'text/csv; charset=utf-8');
   res.setHeader('Content-Disposition', `attachment; filename="orders-${new Date().toISOString().slice(0,10)}.csv"`);
@@ -2495,6 +2552,12 @@ body{font-family:Georgia,serif;color:#111;padding:40px;max-width:800px;margin:0 
   <div class="letter-body">${esc(letterBody) || '<em>(no letter body, see attachments)</em>'}</div>
 </div>
 ${attachments.length ? `<div class="attachments"><strong>${attachments.length} attached file${attachments.length > 1 ? 's' : ''}:</strong> ${attachments.map(esc).join(' · ')}</div>` : ''}
+${(order.page_count != null || order.colour_printing || order.registered_mail || order.schedule_for_later) ? `<div class="attachments" style="background:#fff8e1;border-color:#e6b800"><strong>Paid extras, select these at the provider:</strong> ${[
+  order.page_count != null ? `${order.page_count} page(s) total` : null,
+  order.colour_printing   ? 'Colour printing' : null,
+  order.registered_mail   ? 'Registered mail' : null,
+  order.schedule_for_later ? `Scheduled for ${esc(order.scheduled_date || 'later')}` : null,
+].filter(Boolean).join(' · ')}</div>` : ''}
 <div class="checklist">
   <h3>Fulfillment checklist</h3>
   <label><input type="checkbox"> Letter printed on quality paper</label>
@@ -2504,6 +2567,7 @@ ${attachments.length ? `<div class="attachments"><strong>${attachments.length} a
   <label><input type="checkbox"> Recipient address written on envelope</label>
   <label><input type="checkbox"> Return address written (or omitted per customer)</label>
   <label><input type="checkbox"> Canadian postage applied</label>
+  <label><input type="checkbox"> Paid extras selected at provider (see above, if any)</label>
   <label><input type="checkbox"> Dropped at Canada Post</label>
   <label><input type="checkbox"> Status updated to 'mailed' in admin panel</label>
 </div>

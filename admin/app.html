@@ -994,6 +994,8 @@ async function showOrder(id) {
         <div class="detail-row"><span class="detail-label">IP address</span><span class="detail-value">${o.customer_ip ? esc(o.customer_ip) : '<span style="color:#9a9a9a">—</span>'}</span></div>
         <div class="detail-row"><span class="detail-label">Type</span><span class="detail-value">${esc(o.letter_type||'standard')}</span></div>
         <div class="detail-row"><span class="detail-label">Price</span><span class="detail-value">${fmtCAD(o.price_cents)}</span></div>
+        ${o.page_count != null ? `<div class="detail-row"><span class="detail-label">Pages</span><span class="detail-value">${o.page_count}${o.extra_page_cents ? ' (' + fmtCAD(o.extra_page_cents) + ' overage)' : ''}</span></div>` : ''}
+        ${(o.colour_printing || o.registered_mail || o.schedule_for_later) ? `<div class="detail-row"><span class="detail-label">Extras</span><span class="detail-value">${[o.colour_printing && 'Colour printing', o.registered_mail && 'Registered mail', o.schedule_for_later && ('Scheduled' + (o.scheduled_date ? ' for ' + esc(o.scheduled_date) : ''))].filter(Boolean).join(', ')}</span></div>` : ''}
         ${o.actual_cost_cents != null ? `<div class="detail-row"><span class="detail-label">Actual Cost</span><span class="detail-value">${fmtCAD(o.actual_cost_cents)}</span></div>` : ''}
         ${o.printer_ref ? `<div class="detail-row"><span class="detail-label">Printer Ref</span><span class="detail-value" style="font-family:monospace;font-size:13px">${esc(o.printer_ref)}</span></div>` : ''}
         ${o.estimated_delivery ? `<div class="detail-row"><span class="detail-label">Est. Delivery</span><span class="detail-value">${esc(o.estimated_delivery)}</span></div>` : ''}

@@ -73,6 +73,12 @@ try { db.exec(`ALTER TABLE orders ADD COLUMN actual_cost_cents INTEGER`); } catc
 try { db.exec(`ALTER TABLE orders ADD COLUMN sla_alert_sent_at DATETIME`);} catch {}
 try { db.exec(`ALTER TABLE orders ADD COLUMN discount_code TEXT`);     } catch {}
 try { db.exec(`ALTER TABLE orders ADD COLUMN discount_cents INTEGER`); } catch {}
+try { db.exec(`ALTER TABLE orders ADD COLUMN page_count INTEGER`);            } catch {}
+try { db.exec(`ALTER TABLE orders ADD COLUMN extra_page_cents INTEGER DEFAULT 0`); } catch {}
+try { db.exec(`ALTER TABLE orders ADD COLUMN colour_printing INTEGER DEFAULT 0`);  } catch {}
+try { db.exec(`ALTER TABLE orders ADD COLUMN registered_mail INTEGER DEFAULT 0`);  } catch {}
+try { db.exec(`ALTER TABLE orders ADD COLUMN schedule_for_later INTEGER DEFAULT 0`); } catch {}
+try { db.exec(`ALTER TABLE orders ADD COLUMN scheduled_date TEXT`);           } catch {}
 try {
   db.exec(`CREATE TABLE IF NOT EXISTS discount_codes (
     id            INTEGER PRIMARY KEY AUTOINCREMENT,

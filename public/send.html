@@ -699,7 +699,7 @@ textarea.field-error { border-color: var(--red) !important; }
   <div class="panel" id="panel-2">
     <div class="eyebrow" data-i18n="send.step2.eyebrow">Step Two</div>
     <h2 class="panel-title serif" data-i18n="send.step2.title">Write your letter.</h2>
-    <p class="panel-sub" data-i18n="send.step2.sub">Type your message below. Attach any PDF or Word documents you'd like printed in full colour alongside the letter.</p>
+    <p class="panel-sub" data-i18n="send.step2.sub">Type your message below. Attach any PDF or Word documents you'd like printed alongside the letter.</p>
 
     <div class="form-group">
       <label for="letter-body" data-i18n="send.letter.label">Your Message</label>
@@ -711,10 +711,43 @@ textarea.field-error { border-color: var(--red) !important; }
     <div class="attach-zone" onclick="document.getElementById('file-input').click()">
       <div class="attach-icon">📎</div>
       <p><strong data-i18n="send.attach.title">Attach documents</strong><span data-i18n="send.attach.sub">, click to upload PDF, Word or TXT files</span></p>
-      <p style="font-size:12px; margin-top:4px;" data-i18n="send.attach.note">Up to 5 files · PDF, Word or TXT · 10 MB per file · Printed in full colour</p>
+      <p style="font-size:12px; margin-top:4px;" data-i18n="send.attach.note">Up to 5 files · PDF, Word or TXT · 10 MB per file</p>
       <input type="file" id="file-input" accept=".pdf,.doc,.docx,.txt" multiple style="display:none" onchange="handleFiles(this)">
     </div>
     <ul class="attach-list" id="attach-list"></ul>
+    <p id="page-estimate-note" style="font-size:12px;color:var(--ink-muted);font-family:'DM Mono',monospace;margin-top:-6px;margin-bottom:16px"></p>
+
+    <div class="form-group" style="margin-top:8px">
+      <label data-i18n="send.options.label">Options</label>
+      <span class="field-note" style="margin-bottom:10px" data-i18n="send.options.sub">Optional extras, everything below is off by default.</span>
+
+      <label style="display:flex;align-items:flex-start;gap:10px;padding:12px;border:1.5px solid rgba(42,42,42,0.15);border-radius:2px;margin-bottom:10px;cursor:pointer">
+        <input type="checkbox" id="opt-colour" style="margin-top:3px" onchange="updatePricing()">
+        <span>
+          <span style="display:block;font-weight:600" data-i18n="send.options.colour.title">Colour printing <span style="color:var(--red);font-weight:500" id="opt-colour-price">+$1.25</span></span>
+          <span style="display:block;font-size:12px;color:var(--ink-muted)" data-i18n="send.options.colour.sub">Print your letter and attachments in full colour instead of black &amp; white. Flat fee, any number of pages.</span>
+        </span>
+      </label>
+
+      <label style="display:flex;align-items:flex-start;gap:10px;padding:12px;border:1.5px solid rgba(42,42,42,0.15);border-radius:2px;margin-bottom:10px;cursor:pointer">
+        <input type="checkbox" id="opt-registered" style="margin-top:3px" onchange="updatePricing()">
+        <span>
+          <span style="display:block;font-weight:600" data-i18n="send.options.registered.title">Registered mail <span style="color:var(--red);font-weight:500" id="opt-registered-price">+$27.50</span></span>
+          <span style="display:block;font-size:12px;color:var(--ink-muted)" data-i18n="send.options.registered.sub">Fulfilled by Canada Post. Tracked, with proof of delivery, tracking number emailed within 2-3 business days.</span>
+        </span>
+      </label>
+
+      <label style="display:flex;align-items:flex-start;gap:10px;padding:12px;border:1.5px solid rgba(42,42,42,0.15);border-radius:2px;margin-bottom:6px;cursor:pointer">
+        <input type="checkbox" id="opt-schedule" style="margin-top:3px" onchange="toggleSchedule(this)">
+        <span>
+          <span style="display:block;font-weight:600" data-i18n="send.options.schedule.title">Schedule for later <span style="color:var(--red);font-weight:500" id="opt-schedule-price">+$0.63</span></span>
+          <span style="display:block;font-size:12px;color:var(--ink-muted)" data-i18n="send.options.schedule.sub">Choose a future date and we'll mail your letter to arrive as close to that date as possible.</span>
+        </span>
+      </label>
+      <div id="schedule-date-wrap" style="display:none;margin:0 0 10px 0">
+        <input type="date" id="opt-schedule-date">
+      </div>
+    </div>
 
     <div class="panel-nav">
       <button class="btn btn-outline" onclick="goTo(1)" data-i18n="send.btn.back">← Back</button>
@@ -765,7 +798,7 @@ textarea.field-error { border-color: var(--red) !important; }
     <div class="order-summary">
       <div class="order-summary-row"><span class="label" data-i18n="send.summary.dest.label">Destination</span><span class="val" id="summary-dest">Canada (Domestic)</span></div>
       <div class="order-summary-row"><span class="label" data-i18n="send.summary.delivery.label">Delivery estimate</span><span class="val" id="summary-delivery">Within 2 weeks</span></div>
-      <div class="order-summary-row"><span class="label" data-i18n="send.summary.includes.label">Includes</span><span class="val" data-i18n="send.summary.includes.val">Full-colour print · Envelope · Postage · Delivery</span></div>
+      <div class="order-summary-row"><span class="label" data-i18n="send.summary.includes.label">Includes</span><span class="val" id="summary-includes" data-no-i18n="1">Black &amp; white print · Envelope · Postage · Delivery</span></div>
       <div class="order-summary-row total"><span class="label" style="color:rgba(255,255,255,0.7)" data-i18n="send.summary.total.label">Total</span><span class="val" id="summary-total">$10 CAD</span></div>
     </div>
 
@@ -880,10 +913,34 @@ function toggleReturn(cb) {
 
 let _priceDomCents  = 1000;
 let _priceIntlCents = 2000;
+var estimatedPageCount = 0;
+
+// Mirrors the server-side constants in server.js (countAttachmentPages / addon pricing).
+const FREE_PAGES            = 2;
+const EXTRA_PAGE_CENTS      = 44;
+const COLOUR_PRINTING_CENTS = 125;
+const REGISTERED_MAIL_CENTS = 2750;
+const SCHEDULE_LATER_CENTS  = 63;
+
+function toggleSchedule(cb) {
+  document.getElementById('schedule-date-wrap').style.display = cb.checked ? 'block' : 'none';
+  updatePricing();
+}
+
+function computeAddonCents() {
+  const extraPages = Math.max(0, estimatedPageCount - FREE_PAGES);
+  let cents = extraPages * EXTRA_PAGE_CENTS;
+  if (document.getElementById('opt-colour')?.checked)     cents += COLOUR_PRINTING_CENTS;
+  if (document.getElementById('opt-registered')?.checked) cents += REGISTERED_MAIL_CENTS;
+  if (document.getElementById('opt-schedule')?.checked)   cents += SCHEDULE_LATER_CENTS;
+  return cents;
+}
 
 function updatePricing() {
   const isDomestic = document.getElementById('r-country').value === 'CA';
-  const price = isDomestic ? _priceDomCents : _priceIntlCents;
+  const basePrice = isDomestic ? _priceDomCents : _priceIntlCents;
+  const addonCents = computeAddonCents();
+  const price = basePrice + addonCents;
   const priceStr = '$' + (price / 100).toFixed(price % 100 === 0 ? 0 : 2);
   document.getElementById('preview-price').textContent   = priceStr;
   document.getElementById('summary-total').textContent   = priceStr + ' CAD';
@@ -891,6 +948,23 @@ function updatePricing() {
   const deliveryBase = isDomestic ? LH_T('send.dom.delivery') : LH_T('send.intl.delivery');
   const estDate = isDomestic ? estDeliveryDate(14) : estDeliveryDate(28);
   document.getElementById('summary-delivery').textContent = deliveryBase + ', est. ' + estDate;
+
+  const includesEl = document.getElementById('summary-includes');
+  if (includesEl) {
+    const extras = ['Envelope', 'Postage', 'Delivery'];
+    if (document.getElementById('opt-colour')?.checked) extras.unshift('Full-colour print');
+    else extras.unshift('Black & white print');
+    includesEl.textContent = extras.join(' · ');
+  }
+
+  const note = document.getElementById('page-estimate-note');
+  if (note) {
+    const extraPages = Math.max(0, estimatedPageCount - FREE_PAGES);
+    note.textContent = estimatedPageCount
+      ? `Estimated ${estimatedPageCount} page(s) from your attachments` +
+        (extraPages ? ` · +$${(extraPages * EXTRA_PAGE_CENTS / 100).toFixed(2)} for ${extraPages} page(s) beyond the first ${FREE_PAGES} free` : '')
+      : '';
+  }
 
   const sel = document.getElementById('r-province');
   const txt = document.getElementById('r-province-text');
@@ -998,11 +1072,13 @@ function handleFiles(input) {
 
   if (rejected.length) showValidationBanner(LH_T('send.file.rejected') + ' ' + rejected.join(' · '));
   input.value = '';
+  if (window.LH_updatePageEstimate) window.LH_updatePageEstimate();
 }
 
 function removeFile(idx, btn) {
   uploadedFiles[idx] = null;
   btn.parentElement.remove();
+  if (window.LH_updatePageEstimate) window.LH_updatePageEstimate();
 }
 
 async function initAutocomplete() {
@@ -1254,6 +1330,12 @@ async function submitOrder() {
     if (el) form.append(id, el.type === 'checkbox' ? (el.checked ? '1' : '') : el.value);
   });
   form.append('r-province', getRecipientProvince());
+  form.append('colour_printing',    document.getElementById('opt-colour')?.checked ? '1' : '');
+  form.append('registered_mail',    document.getElementById('opt-registered')?.checked ? '1' : '');
+  form.append('schedule_for_later', document.getElementById('opt-schedule')?.checked ? '1' : '');
+  if (document.getElementById('opt-schedule')?.checked) {
+    form.append('scheduled_date', document.getElementById('opt-schedule-date')?.value || '');
+  }
   const appliedCode = document.getElementById('discount-code-input')?.value?.trim().toUpperCase();
   if (appliedCode) form.append('discount_code', appliedCode);
   uploadedFiles.filter(Boolean).forEach(f => form.append('attachments', f));
@@ -1561,6 +1643,24 @@ function fillSavedRecipient(sel) {
   };
   window.LH_attachNextPage = function() {
     if (pdfDoc && pdfPageNum < pdfDoc.numPages) { pdfPageNum++; renderPage(pdfPageNum); }
+  };
+
+  window.LH_updatePageEstimate = async function() {
+    const files = (window.uploadedFiles || []).filter(Boolean);
+    let total = 0;
+    for (const f of files) {
+      if (f.type === 'application/pdf' || /\.pdf$/i.test(f.name)) {
+        try {
+          const buf = await f.arrayBuffer();
+          const doc = await pdfjsLib.getDocument({ data: buf }).promise;
+          total += doc.numPages;
+          continue;
+        } catch (e) { /* fall through to flat 1-page estimate below */ }
+      }
+      total += 1; // non-PDF (or unparseable) files: estimate 1 page, matches server-side fallback
+    }
+    window.estimatedPageCount = total;
+    if (window.updatePricing) window.updatePricing();
   };
 
   window.LH_renderAttachmentPreview = async function() {
