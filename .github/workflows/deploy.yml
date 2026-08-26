@@ -6,22 +6,16 @@ on:
 jobs:
   deploy:
     name: Deploy to production (letterhome.ca)
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     steps:
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          passphrase: ${{ secrets.SSH_PASSPHRASE }}
-          script: |
-            cd /var/letterhome
-            git pull
-            npm ci --omit=dev
-            pm2 reload letterhome
-            pm2 show letterhome
+      - name: Deploy
+        run: |
+          cd /var/letterhome
+          git pull
+          npm ci --omit=dev
+          pm2 reload letterhome
+          pm2 show letterhome
 
   smoke:
     name: Smoke test
