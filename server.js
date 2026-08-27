@@ -1428,7 +1428,7 @@ const STRIPE_FIXED       = 30;      // $0.30 per transaction
 app.get('/api/admin/stats', requireAdmin, (req, res) => {
   try {
     const paidOrders = db.prepare(`
-      SELECT price_cents, destination_country, customer_email
+      SELECT price_cents, destination_country, customer_email, actual_cost_cents
       FROM orders WHERE status != 'awaiting_payment' AND deleted_at IS NULL
     `).all();
 
@@ -1437,7 +1437,9 @@ app.get('/api/admin/stats', requireAdmin, (req, res) => {
     paidOrders.forEach(o => {
       revenue    += o.price_cents;
       stripeFees += Math.round(o.price_cents * STRIPE_PCT) + STRIPE_FIXED;
-      cogs       += o.destination_country === 'CA' ? COST_DOMESTIC : COST_INTERNATIONAL;
+      cogs       += o.actual_cost_cents != null
+        ? o.actual_cost_cents
+        : (o.destination_country === 'CA' ? COST_DOMESTIC : COST_INTERNATIONAL);
       customers.add(o.customer_email);
     });
 
@@ -2470,7 +2472,10 @@ app.post('/api/admin/pnl-digest', requireAdmin, async (req, res) => {
     if (o.actual_cost_cents != null) { actualCogs += o.actual_cost_cents; actualCogsCounted++; }
     custSet.add(o.customer_email);
   }
-  const net = revenue - stripeFees - estCogs;
+  const blendedCogs = orders.reduce((sum, o) => sum + (o.actual_cost_cents != null
+    ? o.actual_cost_cents
+    : (o.destination_country === 'CA' ? COST_DOMESTIC : COST_INTERNATIONAL)), 0);
+  const net = revenue - stripeFees - blendedCogs;
   const fmtCAD = c => '$' + (c / 100).toFixed(2) + ' CAD';
 
   const lines = [
@@ -3112,8 +3117,26 @@ function buildStatusPage(order) {
 <title>Letter Status | Letterhome</title>
 <link rel="stylesheet" href="/fonts.css">
 <style>
+:root{--kraft:#f1ebde;--kraft-light:#f7f2e6;--paper:#faf6ec;--ink:#2a2a2a;--ink-soft:#3a3835;--ink-muted:#6b6258;--ink-faint:#968b7d;--red:#a8472d;--red-deep:#7d3220;--red-stamp:#b85540;--line:rgba(42,42,42,0.14);--shadow-card:0 2px 6px rgba(42,42,42,0.06),0 14px 40px rgba(42,42,42,0.1)}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Source Serif 4',Georgia,serif;background:var(--kraft,#faf8f2);color:var(--ink,#111);min-height:100vh}
+body{font-family:'Source Serif 4',Georgia,serif;background:var(--kraft);color:var(--ink);line-height:1.55;min-height:100vh}
+nav{position:sticky;top:0;z-index:100;background:rgba(241,235,222,0.94);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.nav-inner{max-width:1280px;margin:0 auto;padding:20px 36px;display:flex;align-items:center;justify-content:space-between;gap:24px}
+.logo{display:flex;align-items:center;gap:12px;font-family:'DM Serif Display',serif;font-size:26px;color:var(--ink);text-decoration:none}
+.logo-mark{width:38px;height:38px;background:var(--red);display:grid;place-items:center;border-radius:2px;color:var(--paper);font-family:'DM Serif Display',serif;font-size:22px;position:relative;box-shadow:0 1px 3px rgba(0,0,0,0.15)}
+.logo-mark::before{content:'';position:absolute;inset:-3px;border:1px dashed var(--ink);border-radius:4px;opacity:0.5}
+.nav-links{display:flex;gap:36px;align-items:center}
+.nav-links a{color:var(--ink-soft);text-decoration:none;font-size:14px;font-weight:500;transition:color 0.2s}
+.nav-links a:hover{color:var(--red)}
+.btn{display:inline-block;padding:13px 26px;border-radius:2px;font-weight:500;font-size:14px;text-decoration:none;transition:all 0.25s;border:none;cursor:pointer;font-family:inherit;letter-spacing:0.02em;text-transform:uppercase}
+.btn-red{background:var(--red);color:var(--paper);border:2px dashed white}
+.btn-red:hover{background:var(--red-deep);transform:translateY(-1px)}
+footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:48px 36px 32px}
+.footer-bottom{max-width:1280px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;flex-wrap:wrap;gap:16px}
+.footer-bottom-links{display:flex;gap:28px}
+.footer-bottom a{color:rgba(255,255,255,0.5);text-decoration:none}
+.footer-bottom a:hover{color:var(--red-stamp)}
+@media(max-width:768px){.nav-links{display:none}}
 @media(max-width:600px){nav,.main{padding-left:20px!important;padding-right:20px!important}.main{padding-top:40px!important;padding-bottom:80px!important}}
 </style>
 <script>(function(){try{var t=localStorage.getItem('lh-theme')||(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
