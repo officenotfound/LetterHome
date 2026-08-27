@@ -651,7 +651,7 @@ const SECURITY_TXT = [
  'send-a-letter-to-canada-without-a-return-address',
  'mail-a-letter-online', 'send-a-letter-from-home', 'what-is-lettermail',
  'ircc-processing-times', 'n4-notice', 'ircc-documents', 'for-professionals',
- 'cra-mail', 'ltb-forms',
+ 'cra-mail', 'cra-notice-of-objection', 'ltb-forms',
  'mailed-from-canada', 'non-resident-landlord', 'n12-notice',
  'serve-eviction-notice-from-abroad', 'bc-rtb-forms',
  'from-nigeria', 'from-mexico', 'from-brazil',
