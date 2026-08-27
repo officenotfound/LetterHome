@@ -1,0 +1,240 @@
+#!/usr/bin/env python3
+"""Generate new letter-mail guide pages from the shared house template.
+One-off content generation script, not part of the build pipeline."""
+import os
+
+OUT_DIR = os.path.join(os.path.dirname(__file__), "..", "public")
+TODAY = "2026-08-27"
+
+TEMPLATE = """<!DOCTYPE html>
+<html lang="en-CA">
+<head>
+<meta charset="UTF-8">
+<link rel="preload" as="font" type="font/woff2" href="/fonts/vEFI2_tTDB4M7-auWDN0ahZJW1gb8tc.woff2" crossorigin>
+<link rel="dns-prefetch" href="https://www.googletagmanager.com">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="/ga.js" defer></script>
+<script src="/cookie-consent.js" defer></script>
+<title>{title}</title>
+<meta name="description" content="{meta_desc}">
+<link rel="canonical" href="https://letterhome.ca/{slug}">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="theme-color" content="#f1ebde" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1a1410" media="(prefers-color-scheme: dark)">
+<meta property="og:title" content="{title}">
+<meta property="og:description" content="{meta_desc}">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://letterhome.ca/{slug}">
+<meta property="og:image" content="https://letterhome.ca/og-image.jpg?v=2">
+<meta property="og:site_name" content="Letterhome">
+<meta property="og:locale" content="en_CA">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{title}">
+<meta name="twitter:description" content="{meta_desc}">
+<meta name="twitter:image" content="https://letterhome.ca/og-image.jpg?v=2">
+<script type="application/ld+json">
+{{
+  "@context": "https://schema.org",
+  "@graph": [
+    {{
+      "@type": "FAQPage",
+      "mainEntity": [
+{faq_jsonld}
+      ]
+    }},
+    {{
+      "@type": "Service",
+      "name": "{service_name}",
+      "description": "{meta_desc}",
+      "url": "https://letterhome.ca/{slug}",
+      "provider": {{
+        "@type": "Organization",
+        "name": "Letterhome",
+        "url": "https://letterhome.ca",
+        "email": "support@letterhome.ca"
+      }},
+      "hasOfferCatalog": {{
+        "@type": "OfferCatalog",
+        "name": "Letter mailing",
+        "itemListElement": [
+          {{
+            "@type": "Offer",
+            "name": "{service_name}. Domestic Canada",
+            "price": "10",
+            "priceCurrency": "CAD"
+          }}
+        ]
+      }}
+    }},
+    {{
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {{ "@type": "ListItem", "position": 1, "name": "Letterhome", "item": "https://letterhome.ca" }},
+        {{ "@type": "ListItem", "position": 2, "name": "{breadcrumb}", "item": "https://letterhome.ca/{slug}" }}
+      ]
+    }},
+    {{
+      "@type": "WebPage",
+      "@id": "https://letterhome.ca/{slug}",
+      "url": "https://letterhome.ca/{slug}",
+      "name": "{breadcrumb}",
+      "datePublished": "{date}",
+      "dateModified": "{date}",
+      "isPartOf": {{ "@id": "https://letterhome.ca/#website" }}
+    }}
+  ]
+}}
+</script>
+<link rel="stylesheet" href="/fonts.css?v=1">
+<style>
+:root {{
+  --kraft:#f1ebde;--kraft-light:#f7f2e6;--paper:#faf6ec;
+  --ink:#2a2a2a;--ink-soft:#3a3835;--ink-muted:#6b6258;--ink-faint:#968b7d;
+  --red:#a8472d;--red-deep:#7d3220;--red-stamp:#b85540;
+  --line:rgba(42,42,42,0.14);--shadow-card:0 2px 6px rgba(42,42,42,0.06),0 14px 40px rgba(42,42,42,0.1);
+}}
+*{{box-sizing:border-box;margin:0;padding:0}}
+body{{font-family:'Source Serif 4',Georgia,serif;background:var(--kraft);color:var(--ink);line-height:1.6}}
+.hero{{background:var(--ink);color:var(--paper);padding:72px 36px 64px;text-align:center}}
+.hero-eyebrow{{font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.18em;color:rgba(250,246,236,0.55);margin-bottom:20px}}
+.hero h1{{font-family:'DM Serif Display',serif;font-size:clamp(32px,5vw,52px);font-weight:400;letter-spacing:-0.02em;line-height:1.08;margin-bottom:18px}}
+.hero h1 em{{font-style:italic;color:#d4836a}}
+.hero-sub{{font-size:18px;color:rgba(250,246,236,0.72);max-width:560px;margin:0 auto 36px;line-height:1.6}}
+.hero-cta{{display:inline-block;background:var(--red);color:var(--paper);padding:16px 36px;font-family:'DM Mono',monospace;font-size:13px;letter-spacing:0.1em;text-transform:uppercase;text-decoration:none;border-radius:2px}}
+.hero-cta:hover{{background:#7d3220}}
+.answer-box{{background:#2a2a2a;border-left:3px solid #d4836a;padding:20px 24px;margin:32px auto;max-width:680px;border-radius:0 2px 2px 0}}
+.answer-box p{{color:rgba(250,246,236,0.85);font-size:15px;line-height:1.65}}
+.main{{max-width:740px;margin:0 auto;padding:64px 36px}}
+.main h2{{font-family:'DM Serif Display',serif;font-size:28px;font-weight:400;margin:48px 0 16px;letter-spacing:-0.01em}}
+.main h2:first-child{{margin-top:0}}
+.main p{{font-size:16px;color:var(--ink-soft);line-height:1.7;margin-bottom:16px}}
+.main p:last-child{{margin-bottom:0}}
+.main a{{color:var(--red)}}
+.steps{{list-style:none;counter-reset:steps;margin:24px 0}}
+.steps li{{counter-increment:steps;display:flex;gap:16px;margin-bottom:20px;align-items:flex-start}}
+.steps li::before{{content:counter(steps);min-width:28px;height:28px;background:var(--red);color:var(--paper);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:12px;font-weight:500;flex-shrink:0;margin-top:2px}}
+.steps li p{{margin:0;font-size:15px;color:var(--ink-soft);line-height:1.6}}
+.steps li strong{{display:block;font-size:15px;color:var(--ink);margin-bottom:2px}}
+.warn-box{{background:#fff8e1;border:1px solid #f0c040;border-radius:2px;padding:16px 20px;margin:24px 0;font-size:14px;color:#5a4500;line-height:1.6}}
+.warn-box strong{{color:#3a2d00}}
+.faq{{margin-top:48px}}
+.faq-item{{border-top:1px solid var(--line);padding:24px 0}}
+.faq-item:last-child{{border-bottom:1px solid var(--line)}}
+.faq-q{{font-family:'DM Serif Display',serif;font-size:19px;font-weight:400;margin-bottom:10px}}
+.faq-a{{font-size:15px;color:var(--ink-muted);line-height:1.7}}
+.related{{margin-top:56px}}
+.related-grid{{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:20px}}
+.related-card{{display:block;background:var(--paper);border:1px solid var(--line);padding:18px 20px;border-radius:2px;text-decoration:none}}
+.related-card strong{{display:block;color:var(--ink);font-size:15px;margin-bottom:4px}}
+.related-card span{{display:block;color:var(--ink-muted);font-size:13px;line-height:1.5}}
+.cta-block{{background:var(--ink);color:var(--paper);padding:48px 36px;text-align:center;margin-top:64px;border-radius:2px}}
+.cta-block h2{{font-family:'DM Serif Display',serif;font-size:32px;font-weight:400;margin-bottom:12px}}
+.cta-block p{{color:rgba(250,246,236,0.65);margin-bottom:28px;font-size:16px}}
+.cta-block a{{display:inline-block;background:var(--red);color:var(--paper);padding:15px 32px;font-family:'DM Mono',monospace;font-size:13px;letter-spacing:0.08em;text-transform:uppercase;text-decoration:none;border-radius:2px}}
+.cta-block a:hover{{background:#7d3220}}
+footer{{background:var(--ink);color:rgba(255,255,255,0.5);padding:40px 36px;margin-top:0}}
+.footer-bottom{{max-width:1280px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;flex-wrap:wrap;gap:16px}}
+.footer-bottom a{{color:rgba(255,255,255,0.4);text-decoration:none}}
+.footer-bottom a:hover{{color:#b85540}}
+.footer-bottom-links{{display:flex;gap:28px}}
+@media(max-width:640px){{.hero{{padding:48px 24px 40px}}.main{{padding:48px 24px}}.cta-block{{padding:40px 24px}}.related-grid{{grid-template-columns:1fr}}}}
+</style>
+<script>(function(){{try{{var t=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.setAttribute('data-theme',t);}}catch(e){{}}}})();</script>
+<link rel="stylesheet" href="/theme.css?v=7">
+</head>
+<body>
+<a href="#main-content" class="skip-link" style="position:absolute;left:-9999px;top:4px;z-index:9999;background:#a8472d;color:#faf6ec;padding:8px 16px;font-size:14px;font-family:Georgia,serif;text-decoration:none;border-radius:2px" onfocus="this.style.left='4px'" onblur="this.style.left='-9999px'">Skip to main content</a>
+<div id="site-header"></div>
+<script src="/header.js?v=6"></script>
+
+<div class="hero" id="main-content">
+  <p class="hero-eyebrow">{eyebrow}</p>
+  <h1>{h1_main}<br><em>{h1_em}</em></h1>
+  <p class="hero-sub">{hero_sub}</p>
+  <a href="/send" class="hero-cta">{cta_label}</a>
+  <div class="answer-box">
+    <p>{answer_box}</p>
+  </div>
+</div>
+
+<div class="main">
+  <h2>How it works</h2>
+  <ol class="steps">
+{steps_html}
+  </ol>
+{warn_html}
+{sections_html}
+  <div class="faq">
+    <h2>Common questions</h2>
+{faq_html}
+  </div>
+
+  <div class="related">
+    <h2>Related guides</h2>
+    <div class="related-grid">
+{related_html}
+    </div>
+  </div>
+
+  <div class="cta-block">
+    <h2>{cta_h2}</h2>
+    <p>{cta_p}</p>
+    <a href="/send">{cta_final}</a>
+  </div>
+</div>
+
+<footer id="site-footer"></footer>
+<script src="/footer.js" defer></script>
+<script src="/theme.js?v=2" defer></script>
+</body>
+</html>
+"""
+
+def esc_json(s):
+    return s.replace('\\', '\\\\').replace('"', '\\"')
+
+def build(g):
+    steps_html = "\n".join(
+        f'    <li>\n      <div>\n        <strong>{s[0]}</strong>\n        <p>{s[1]}</p>\n      </div>\n    </li>'
+        for s in g["steps"]
+    )
+    warn_html = ""
+    if g.get("warn"):
+        warn_html = f'  <div class="warn-box">\n    <strong>{g["warn"][0]}</strong> {g["warn"][1]}\n  </div>\n'
+    sections_html = "\n".join(
+        f'  <h2>{sec[0]}</h2>\n' + "\n".join(f'  <p>{p}</p>' for p in sec[1])
+        for sec in g["sections"]
+    )
+    faq_html = "\n".join(
+        f'    <div class="faq-item">\n      <p class="faq-q">{q}</p>\n      <p class="faq-a">{a}</p>\n    </div>'
+        for q, a in g["faq"]
+    )
+    faq_jsonld = ",\n".join(
+        f'        {{\n          "@type": "Question",\n          "name": "{esc_json(q)}",\n          "acceptedAnswer": {{\n            "@type": "Answer",\n            "text": "{esc_json(a)}"\n          }}\n        }}'
+        for q, a in g["faq"]
+    )
+    related_html = "\n".join(
+        f'      <a class="related-card" href="{href}">\n        <strong>{strong}</strong>\n        <span>{span}</span>\n      </a>'
+        for href, strong, span in g["related"]
+    )
+    return TEMPLATE.format(
+        title=g["title"], meta_desc=g["meta_desc"], slug=g["slug"],
+        service_name=g["service_name"], breadcrumb=g["breadcrumb"], date=TODAY,
+        faq_jsonld=faq_jsonld, eyebrow=g["eyebrow"], h1_main=g["h1_main"],
+        h1_em=g["h1_em"], hero_sub=g["hero_sub"], cta_label=g["cta_label"],
+        answer_box=g["answer_box"], steps_html=steps_html, warn_html=warn_html,
+        sections_html=sections_html, faq_html=faq_html, related_html=related_html,
+        cta_h2=g["cta_h2"], cta_p=g["cta_p"], cta_final=g["cta_final"],
+    )
+
+GUIDES = []  # filled by gen_data.py, imported below
+
+if __name__ == "__main__":
+    from gen_data import GUIDES as DATA
+    for g in DATA:
+        out_path = os.path.join(OUT_DIR, f"{g['slug']}.html")
+        with open(out_path, "w", encoding="utf-8") as f:
+            f.write(build(g))
+        print("wrote", out_path)
