@@ -696,6 +696,14 @@ const SECURITY_TXT = [
  'where-to-mail-documents-ubc-admissions',
  'where-to-mail-transcripts-mcgill-university',
  'where-to-mail-documents-university-of-waterloo',
+ 'where-to-mail-documents-queens-university',
+ 'where-to-mail-documents-university-of-victoria',
+ 'where-to-mail-documents-dalhousie-university',
+ 'where-to-mail-documents-simon-fraser-university',
+ 'where-to-mail-documents-wes-canada',
+ 'where-to-mail-documents-to-iqas-alberta',
+ 'where-to-mail-documents-to-ices-bc',
+ 'where-to-mail-documents-federal-court-of-canada',
 ].forEach(p =>
   app.get(`/${p}`, (req, res) =>
     res.sendFile(path.join(__dirname, 'public', `${p}.html`))

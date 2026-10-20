@@ -118,6 +118,14 @@ Verified mailing addresses (sourced from canada.ca, IRCC, and each bank's own si
 - [Where to mail documents to UBC admissions](https://letterhome.ca/where-to-mail-documents-ubc-admissions): UBC Enrolment Services' published Vancouver-campus mailing address, used for all UBC applications
 - [Where to mail transcripts to McGill University](https://letterhome.ca/where-to-mail-transcripts-mcgill-university): McGill's published Enrolment Services address for undergraduate admission documents
 - [Where to mail documents to Waterloo graduate admissions](https://letterhome.ca/where-to-mail-documents-university-of-waterloo): Waterloo GSPA's published Needles Hall courier address for graduate applicants
+- [Where to mail documents to Queen's University](https://letterhome.ca/where-to-mail-documents-queens-university): Office of the University Registrar's published Gordon Hall, Room 125 mailing address
+- [Where to mail documents to the University of Victoria](https://letterhome.ca/where-to-mail-documents-university-of-victoria): Office of the Registrar's published PO Box 3025 STN CSC address
+- [Where to mail documents to Dalhousie University](https://letterhome.ca/where-to-mail-documents-dalhousie-university): Registrar's Office address in Halifax from Dalhousie's own faculty and staff guide
+- [Where to mail documents to Simon Fraser University](https://letterhome.ca/where-to-mail-documents-simon-fraser-university): Registrar and Information Services address on SFU's Burnaby campus
+- [Where to mail documents to WES Canada](https://letterhome.ca/where-to-mail-documents-wes-canada): World Education Services' published Newmarket, ON PO Box for credential assessment documents
+- [Where to mail documents to IQAS Alberta](https://letterhome.ca/where-to-mail-documents-to-iqas-alberta): Alberta government's published mailroom address, the only channel for IQAS document submission
+- [Where to mail documents to ICES British Columbia](https://letterhome.ca/where-to-mail-documents-to-ices-bc): BCIT's published mailing address for the International Credential Evaluation Service
+- [Where to mail documents to the Federal Court of Canada](https://letterhome.ca/where-to-mail-documents-federal-court-of-canada): Courts Administration Service's published Ottawa registry address for filings such as immigration judicial review
 
 ## French-language pages
 
