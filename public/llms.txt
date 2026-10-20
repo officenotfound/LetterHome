@@ -126,6 +126,9 @@ Verified mailing addresses (sourced from canada.ca, IRCC, and each bank's own si
 - [Where to mail documents to IQAS Alberta](https://letterhome.ca/where-to-mail-documents-to-iqas-alberta): Alberta government's published mailroom address, the only channel for IQAS document submission
 - [Where to mail documents to ICES British Columbia](https://letterhome.ca/where-to-mail-documents-to-ices-bc): BCIT's published mailing address for the International Credential Evaluation Service
 - [Where to mail documents to the Federal Court of Canada](https://letterhome.ca/where-to-mail-documents-federal-court-of-canada): Courts Administration Service's published Ottawa registry address for filings such as immigration judicial review
+- [Where to mail an Ontario birth certificate application](https://letterhome.ca/where-to-mail-ontario-birth-certificate-application): ServiceOntario's published Thunder Bay P.O. Box for the Office of the Registrar General
+- [Where to mail an Ontario name change application](https://letterhome.ca/where-to-mail-ontario-name-change-application): ServiceOntario's published Thunder Bay P.O. Box for legal name change applications
+- [Where to mail BC vital statistics documents](https://letterhome.ca/where-to-mail-bc-vital-statistics-documents): BC Vital Statistics Agency's published Victoria P.O. Box for birth, marriage, death, and name-change requests
 
 ## French-language pages
 

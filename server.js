@@ -704,6 +704,9 @@ const SECURITY_TXT = [
  'where-to-mail-documents-to-iqas-alberta',
  'where-to-mail-documents-to-ices-bc',
  'where-to-mail-documents-federal-court-of-canada',
+ 'where-to-mail-ontario-birth-certificate-application',
+ 'where-to-mail-ontario-name-change-application',
+ 'where-to-mail-bc-vital-statistics-documents',
 ].forEach(p =>
   app.get(`/${p}`, (req, res) =>
     res.sendFile(path.join(__dirname, 'public', `${p}.html`))
