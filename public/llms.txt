@@ -1,6 +1,6 @@
 # Letterhome
 
-> Letterhome is a Canadian letter and document mailing service. Customers anywhere in the world upload a PDF or Word document online, and Letterhome prints it in full colour, seals it in an envelope, and mails it from inside Canada via Canada Post Lettermail, with a real Canadian mailing date. No Canadian address, printer, stamps, or post office visit required. From $10 CAD per letter.
+> Letterhome is a Canadian letter and document mailing service. Customers anywhere in the world upload a PDF or Word document online, and Letterhome prints it in black & white by default (colour available for an extra fee), seals it in an envelope, and mails it from inside Canada via Canada Post Lettermail, with a real Canadian mailing date. No Canadian address, printer, stamps, or post office visit required. From $10 CAD per letter.
 
 Letterhome is used by Canadians living abroad, immigrants sending documents to Canadian government offices (IRCC, CRA), expats sending letters to family, and anyone who needs a letter to arrive with a Canadian mailing date.
 
@@ -9,7 +9,7 @@ Letterhome is used by Canadians living abroad, immigrants sending documents to C
 - $10 CAD: letters to any Canadian address (domestic)
 - $20 CAD: letters to any of 160+ international destinations
 
-Both prices include up to 5 pages of full-colour printing, the envelope, postage, and delivery. No account required. Pay once per order.
+Both prices include up to 5 pages printed in black & white, the envelope, postage, and delivery. Colour printing, extra pages, registered mail, a large envelope, and scheduled sending are available as paid add-ons, shown before checkout. No account required. Pay once per order.
 
 ## How it works
 
@@ -98,6 +98,22 @@ Letters are mailed via Canada Post standard lettermail:
 - [From Cameroon](https://letterhome.ca/from-cameroon)
 - [From Senegal](https://letterhome.ca/from-senegal)
 - [From Israel](https://letterhome.ca/from-israel)
+
+## Where to mail it: specific addresses
+
+Verified mailing addresses (sourced from canada.ca, IRCC, and each bank's own site) for common documents newcomers, immigrants, and non-residents need to mail to Canada. Addresses can change; each page links to its official source.
+
+- [Where to mail a non-resident tax return to Canada](https://letterhome.ca/where-to-mail-non-resident-tax-return-to-canada): CRA Winnipeg and Sudbury tax centre addresses for non-resident T1 filers, by country of residence
+- [Where to mail CRA non-resident withholding forms (NR73/NR74)](https://letterhome.ca/where-to-mail-cra-non-resident-withholding-forms): CRA Non-Resident Withholding Section address in Sudbury
+- [Where to mail a CRA non-resident tax waiver application](https://letterhome.ca/where-to-mail-cra-waiver-application-ottawa): CRA International Waivers Centre of Expertise address in Ottawa
+- [Where to mail a non-resident GST/HST registration](https://letterhome.ca/where-to-mail-non-resident-gst-hst-registration): CRA Non-Resident Registration and Security unit at the Atlantic Tax Centre, Summerside PE
+- [Where to mail a Canadian citizenship application](https://letterhome.ca/where-to-mail-canadian-citizenship-application): IRCC CPC-Sydney PO Boxes for citizenship grants and resumptions
+- [Where to mail proof of citizenship documents](https://letterhome.ca/where-to-mail-proof-of-citizenship-documents): IRCC CPC-Sydney PO Boxes for proof of citizenship, search requests, and requested documents
+- [Where to mail a PR card renewal](https://letterhome.ca/where-to-mail-pr-card-renewal-canada): IRCC Sydney PO Boxes for permanent resident card renewal and replacement
+- [Where to mail IRCC sponsorship documents](https://letterhome.ca/where-to-mail-ircc-sponsorship-documents-mississauga): IRCC Digitization Centre address for CPC-Mississauga correspondence and right of permanent residence fee payments
+- [IRCC mailing addresses by application type](https://letterhome.ca/ircc-mailing-addresses-by-application-type): Overview and index of IRCC mailing addresses by application type
+- [Where to mail signed Scotiabank documents](https://letterhome.ca/where-to-mail-scotiabank-documents-canada): Scotiabank's published head office and correspondence addresses
+- [Where to mail signed TD documents](https://letterhome.ca/where-to-mail-td-bank-documents-canada): TD's published Customer Care mailing address
 
 ## French-language pages
 

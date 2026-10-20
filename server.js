@@ -681,6 +681,17 @@ const SECURITY_TXT = [
  'format-adresse-canadienne',
  'combien-coute-envoyer-une-lettre-au-canada',
  'envoyer-documents-ircc-depuis-etranger',
+ 'where-to-mail-non-resident-tax-return-to-canada',
+ 'where-to-mail-cra-non-resident-withholding-forms',
+ 'where-to-mail-cra-waiver-application-ottawa',
+ 'where-to-mail-non-resident-gst-hst-registration',
+ 'where-to-mail-canadian-citizenship-application',
+ 'where-to-mail-proof-of-citizenship-documents',
+ 'where-to-mail-pr-card-renewal-canada',
+ 'where-to-mail-ircc-sponsorship-documents-mississauga',
+ 'ircc-mailing-addresses-by-application-type',
+ 'where-to-mail-scotiabank-documents-canada',
+ 'where-to-mail-td-bank-documents-canada',
 ].forEach(p =>
   app.get(`/${p}`, (req, res) =>
     res.sendFile(path.join(__dirname, 'public', `${p}.html`))
