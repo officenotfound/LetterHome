@@ -359,7 +359,6 @@
       'success.share.heading': 'Spread the word',
       'success.share.x': 'Share on X',
       'success.share.facebook': 'Share on Facebook',
-      'success.share.instagram': 'Follow on Instagram',
       // LEGAL (shared eyebrow)
       'legal.eyebrow': 'Legal',
       // PRIVACY
@@ -2315,7 +2314,6 @@
       'success.share.heading': 'Partagez la nouvelle',
       'success.share.x': 'Partager sur X',
       'success.share.facebook': 'Partager sur Facebook',
-      'success.share.instagram': 'Nous suivre sur Instagram',
       // ACCOUNT pages (JS-rendered)
       'account.loading': 'Chargement…',
       'account.eyebrow': 'Compte client',
