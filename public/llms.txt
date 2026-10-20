@@ -114,6 +114,10 @@ Verified mailing addresses (sourced from canada.ca, IRCC, and each bank's own si
 - [IRCC mailing addresses by application type](https://letterhome.ca/ircc-mailing-addresses-by-application-type): Overview and index of IRCC mailing addresses by application type
 - [Where to mail signed Scotiabank documents](https://letterhome.ca/where-to-mail-scotiabank-documents-canada): Scotiabank's published head office and correspondence addresses
 - [Where to mail signed TD documents](https://letterhome.ca/where-to-mail-td-bank-documents-canada): TD's published Customer Care mailing address
+- [Where to mail documents to the University of Toronto](https://letterhome.ca/where-to-mail-documents-university-of-toronto): University Registrar's published mailing address for transcripts and supporting documents
+- [Where to mail documents to UBC admissions](https://letterhome.ca/where-to-mail-documents-ubc-admissions): UBC Enrolment Services' published Vancouver-campus mailing address, used for all UBC applications
+- [Where to mail transcripts to McGill University](https://letterhome.ca/where-to-mail-transcripts-mcgill-university): McGill's published Enrolment Services address for undergraduate admission documents
+- [Where to mail documents to Waterloo graduate admissions](https://letterhome.ca/where-to-mail-documents-university-of-waterloo): Waterloo GSPA's published Needles Hall courier address for graduate applicants
 
 ## French-language pages
 

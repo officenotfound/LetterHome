@@ -692,6 +692,10 @@ const SECURITY_TXT = [
  'ircc-mailing-addresses-by-application-type',
  'where-to-mail-scotiabank-documents-canada',
  'where-to-mail-td-bank-documents-canada',
+ 'where-to-mail-documents-university-of-toronto',
+ 'where-to-mail-documents-ubc-admissions',
+ 'where-to-mail-transcripts-mcgill-university',
+ 'where-to-mail-documents-university-of-waterloo',
 ].forEach(p =>
   app.get(`/${p}`, (req, res) =>
     res.sendFile(path.join(__dirname, 'public', `${p}.html`))
