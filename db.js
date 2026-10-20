@@ -77,6 +77,7 @@ try { db.exec(`ALTER TABLE orders ADD COLUMN page_count INTEGER`);            } 
 try { db.exec(`ALTER TABLE orders ADD COLUMN extra_page_cents INTEGER DEFAULT 0`); } catch {}
 try { db.exec(`ALTER TABLE orders ADD COLUMN colour_printing INTEGER DEFAULT 0`);  } catch {}
 try { db.exec(`ALTER TABLE orders ADD COLUMN registered_mail INTEGER DEFAULT 0`);  } catch {}
+try { db.exec(`ALTER TABLE orders ADD COLUMN large_envelope INTEGER DEFAULT 0`);   } catch {}
 try { db.exec(`ALTER TABLE orders ADD COLUMN schedule_for_later INTEGER DEFAULT 0`); } catch {}
 try { db.exec(`ALTER TABLE orders ADD COLUMN scheduled_date TEXT`);           } catch {}
 try {

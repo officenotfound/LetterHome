@@ -724,7 +724,7 @@ textarea.field-error { border-color: var(--red) !important; }
       <label style="display:flex;align-items:flex-start;gap:10px;padding:12px;border:1.5px solid rgba(42,42,42,0.15);border-radius:2px;margin-bottom:10px;cursor:pointer">
         <input type="checkbox" id="opt-colour" style="margin-top:3px" onchange="updatePricing()">
         <span>
-          <span style="display:block;font-weight:600" data-i18n="send.options.colour.title">Colour printing <span style="color:var(--red);font-weight:500" id="opt-colour-price">+$1.25</span></span>
+          <span style="display:block;font-weight:600" data-i18n="send.options.colour.title">Colour printing <span style="color:var(--red);font-weight:500" id="opt-colour-price">+$2</span></span>
           <span style="display:block;font-size:12px;color:var(--ink-muted)" data-i18n="send.options.colour.sub">Print your letter and attachments in full colour instead of black &amp; white. Flat fee, any number of pages.</span>
         </span>
       </label>
@@ -732,15 +732,23 @@ textarea.field-error { border-color: var(--red) !important; }
       <label style="display:flex;align-items:flex-start;gap:10px;padding:12px;border:1.5px solid rgba(42,42,42,0.15);border-radius:2px;margin-bottom:10px;cursor:pointer">
         <input type="checkbox" id="opt-registered" style="margin-top:3px" onchange="updatePricing()">
         <span>
-          <span style="display:block;font-weight:600" data-i18n="send.options.registered.title">Registered mail <span style="color:var(--red);font-weight:500" id="opt-registered-price">+$27.50</span></span>
+          <span style="display:block;font-weight:600" data-i18n="send.options.registered.title">Registered mail <span style="color:var(--red);font-weight:500" id="opt-registered-price">+$32</span></span>
           <span style="display:block;font-size:12px;color:var(--ink-muted)" data-i18n="send.options.registered.sub">Fulfilled by Canada Post. Tracked, with proof of delivery, tracking number emailed within 2-3 business days.</span>
+        </span>
+      </label>
+
+      <label style="display:flex;align-items:flex-start;gap:10px;padding:12px;border:1.5px solid rgba(42,42,42,0.15);border-radius:2px;margin-bottom:10px;cursor:pointer">
+        <input type="checkbox" id="opt-large-envelope" style="margin-top:3px" onchange="updatePricing()">
+        <span>
+          <span style="display:block;font-weight:600" data-i18n="send.options.largeenvelope.title">Large envelope <span style="color:var(--red);font-weight:500" id="opt-large-envelope-price">+$4</span></span>
+          <span style="display:block;font-size:12px;color:var(--ink-muted)" data-i18n="send.options.largeenvelope.sub">For bulkier letters that don't fit in a standard window envelope, ships flat instead of folded.</span>
         </span>
       </label>
 
       <label style="display:flex;align-items:flex-start;gap:10px;padding:12px;border:1.5px solid rgba(42,42,42,0.15);border-radius:2px;margin-bottom:6px;cursor:pointer">
         <input type="checkbox" id="opt-schedule" style="margin-top:3px" onchange="toggleSchedule(this)">
         <span>
-          <span style="display:block;font-weight:600" data-i18n="send.options.schedule.title">Schedule for later <span style="color:var(--red);font-weight:500" id="opt-schedule-price">+$0.63</span></span>
+          <span style="display:block;font-weight:600" data-i18n="send.options.schedule.title">Schedule for later <span style="color:var(--red);font-weight:500" id="opt-schedule-price">+$2</span></span>
           <span style="display:block;font-size:12px;color:var(--ink-muted)" data-i18n="send.options.schedule.sub">Choose a future date and we'll mail your letter to arrive as close to that date as possible.</span>
         </span>
       </label>
@@ -821,10 +829,6 @@ textarea.field-error { border-color: var(--red) !important; }
     </div>
 
     <div style="display:flex;gap:20px;margin-bottom:20px;flex-wrap:wrap">
-      <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-muted);font-family:'DM Mono',monospace">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--red);flex-shrink:0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-        <span><span id="trust-count">163</span> letters mailed</span>
-      </div>
       <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-muted);font-family:'DM Mono',monospace">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--red);flex-shrink:0"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
         <span>Free reprint if not delivered</span>
@@ -917,10 +921,11 @@ var estimatedPageCount = 0;
 
 // Mirrors the server-side constants in server.js (countAttachmentPages / addon pricing).
 const FREE_PAGES            = 2;
-const EXTRA_PAGE_CENTS      = 44;
-const COLOUR_PRINTING_CENTS = 125;
-const REGISTERED_MAIL_CENTS = 2750;
-const SCHEDULE_LATER_CENTS  = 63;
+const EXTRA_PAGE_CENTS      = 100;
+const COLOUR_PRINTING_CENTS = 200;
+const REGISTERED_MAIL_CENTS = 3200;
+const LARGE_ENVELOPE_CENTS  = 400;
+const SCHEDULE_LATER_CENTS  = 200;
 
 function toggleSchedule(cb) {
   document.getElementById('schedule-date-wrap').style.display = cb.checked ? 'block' : 'none';
@@ -930,9 +935,10 @@ function toggleSchedule(cb) {
 function computeAddonCents() {
   const extraPages = Math.max(0, estimatedPageCount - FREE_PAGES);
   let cents = extraPages * EXTRA_PAGE_CENTS;
-  if (document.getElementById('opt-colour')?.checked)     cents += COLOUR_PRINTING_CENTS;
-  if (document.getElementById('opt-registered')?.checked) cents += REGISTERED_MAIL_CENTS;
-  if (document.getElementById('opt-schedule')?.checked)   cents += SCHEDULE_LATER_CENTS;
+  if (document.getElementById('opt-colour')?.checked)        cents += COLOUR_PRINTING_CENTS;
+  if (document.getElementById('opt-registered')?.checked)    cents += REGISTERED_MAIL_CENTS;
+  if (document.getElementById('opt-large-envelope')?.checked) cents += LARGE_ENVELOPE_CENTS;
+  if (document.getElementById('opt-schedule')?.checked)      cents += SCHEDULE_LATER_CENTS;
   return cents;
 }
 
@@ -1332,6 +1338,7 @@ async function submitOrder() {
   form.append('r-province', getRecipientProvince());
   form.append('colour_printing',    document.getElementById('opt-colour')?.checked ? '1' : '');
   form.append('registered_mail',    document.getElementById('opt-registered')?.checked ? '1' : '');
+  form.append('large_envelope',     document.getElementById('opt-large-envelope')?.checked ? '1' : '');
   form.append('schedule_for_later', document.getElementById('opt-schedule')?.checked ? '1' : '');
   if (document.getElementById('opt-schedule')?.checked) {
     form.append('scheduled_date', document.getElementById('opt-schedule-date')?.value || '');
@@ -1401,12 +1408,6 @@ async function applyDiscountCode() {
       bar.style.cssText = 'background:#1e293b;color:#f1f5f9;text-align:center;padding:10px 20px;font-size:14px;position:relative;z-index:200';
       bar.textContent = cfg.announcement;
       document.body.insertBefore(bar, document.body.firstChild);
-    }
-
-    // Letters mailed trust counter
-    if (cfg.letters_mailed_count) {
-      const el = document.getElementById('trust-count');
-      if (el) el.textContent = cfg.letters_mailed_count.toLocaleString();
     }
 
     // Dynamic pricing

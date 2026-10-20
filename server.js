@@ -326,13 +326,14 @@ async function sendMail(opts, type = 'general', orderId = null) {
   } catch (e) { console.error('[email_log]', e.message); }
 }
 
-// Provider costs marked up 25%. Base send price ($10 domestic / $20 intl) is
-// unchanged and configurable via settings; these are the newer per-order extras.
+// Base send price ($10 domestic / $20 intl) is unchanged and configurable via settings.
+// Optional-extra pricing: 25% markup over PostPal's rate, rounded up to the nearest dollar.
 const FREE_PAGES              = 2;
-const EXTRA_PAGE_CENTS        = 44;   // $0.35 provider cost * 1.25
-const COLOUR_PRINTING_CENTS   = 125;  // $1.00 * 1.25
-const REGISTERED_MAIL_CENTS   = 2750; // $22.00 * 1.25
-const SCHEDULE_LATER_CENTS    = 63;   // $0.50 * 1.25, rounded
+const EXTRA_PAGE_CENTS        = 100;
+const COLOUR_PRINTING_CENTS   = 200;
+const REGISTERED_MAIL_CENTS   = 3200;
+const SCHEDULE_LATER_CENTS    = 200;
+const LARGE_ENVELOPE_CENTS    = 400;
 
 // Counts pages across uploaded attachments for the per-page overage charge.
 // PDFs are counted exactly; other allowed file types (doc/docx/txt) don't have
@@ -795,7 +796,6 @@ app.get('/api/site-config', (req, res) => {
     price_domestic_cents:      parseInt(getSetting('price_domestic_cents',      '1000')) || 1000,
     price_international_cents: parseInt(getSetting('price_international_cents', '2000')) || 2000,
     blocked_countries:         JSON.parse(getSetting('blocked_countries', '[]') || '[]'),
-    letters_mailed_count:      parseInt(getSetting('letters_mailed_count', '163')) || 163,
   });
 });
 
@@ -1006,11 +1006,13 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
   const extraPageCents = Math.max(0, pageCount - FREE_PAGES) * EXTRA_PAGE_CENTS;
   const colourPrinting    = b['colour_printing']    === '1' || b['colour_printing']    === 'true';
   const registeredMail    = b['registered_mail']    === '1' || b['registered_mail']    === 'true';
+  const largeEnvelope     = b['large_envelope']     === '1' || b['large_envelope']     === 'true';
   const scheduleForLater  = b['schedule_for_later'] === '1' || b['schedule_for_later'] === 'true';
   const scheduledDate     = scheduleForLater ? (b['scheduled_date'] || null) : null;
   const addonCents = extraPageCents
     + (colourPrinting   ? COLOUR_PRINTING_CENTS : 0)
     + (registeredMail   ? REGISTERED_MAIL_CENTS : 0)
+    + (largeEnvelope    ? LARGE_ENVELOPE_CENTS  : 0)
     + (scheduleForLater ? SCHEDULE_LATER_CENTS  : 0);
 
   // Validate discount code if provided
@@ -1048,8 +1050,8 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
       recipient_name, recipient_street, recipient_city, recipient_province, recipient_postal,
       destination_country, letter_type, letter_body, attachment_info, price_cents, customer_ip,
       status_token, discount_code, discount_cents,
-      page_count, extra_page_cents, colour_printing, registered_mail, schedule_for_later, scheduled_date
-    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+      page_count, extra_page_cents, colour_printing, registered_mail, large_envelope, schedule_for_later, scheduled_date
+    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
   `).run(
     rEmail, b['skip-return'] ? 1 : 0,
     b['s-name']     || null, b['s-street']   || null, b['s-city']  || null,
@@ -1068,6 +1070,7 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
     extraPageCents,
     colourPrinting   ? 1 : 0,
     registeredMail   ? 1 : 0,
+    largeEnvelope    ? 1 : 0,
     scheduleForLater ? 1 : 0,
     scheduledDate
   );
@@ -1121,6 +1124,7 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
   if (extraPageCents)  extras.push(`${pageCount - FREE_PAGES} extra page(s)`);
   if (colourPrinting)  extras.push('colour printing');
   if (registeredMail)  extras.push('registered mail');
+  if (largeEnvelope)   extras.push('large envelope');
   if (scheduleForLater) extras.push('scheduled delivery');
   const extrasNote = extras.length ? ` + ${extras.join(', ')}` : '';
 
@@ -1522,13 +1526,13 @@ app.get('/api/admin/orders/csv', requireAdmin, (req, res) => {
     SELECT id, created_at, status, customer_email,
            recipient_name, recipient_street, recipient_city, recipient_province, recipient_postal, destination_country,
            sender_name, sender_country, price_cents, printer_ref,
-           page_count, colour_printing, registered_mail, schedule_for_later, scheduled_date
+           page_count, colour_printing, registered_mail, large_envelope, schedule_for_later, scheduled_date
     FROM orders WHERE deleted_at IS NULL ORDER BY created_at DESC
   `).all();
   const cols = ['id','created_at','status','customer_email','recipient_name','recipient_street',
                 'recipient_city','recipient_province','recipient_postal','destination_country',
                 'sender_name','sender_country','price_cents','printer_ref',
-                'page_count','colour_printing','registered_mail','schedule_for_later','scheduled_date'];
+                'page_count','colour_printing','registered_mail','large_envelope','schedule_for_later','scheduled_date'];
   const rows = orders.map(o => cols.map(c => `"${String(o[c]??'').replace(/"/g,'""')}"`).join(','));
   res.setHeader('Content-Type', 'text/csv; charset=utf-8');
   res.setHeader('Content-Disposition', `attachment; filename="orders-${new Date().toISOString().slice(0,10)}.csv"`);
@@ -2429,7 +2433,7 @@ app.get('/api/admin/settings', requireAdmin, (req, res) => {
 
 const ALLOWED_SETTING_KEYS = new Set([
   'service_paused', 'announcement', 'price_domestic_cents', 'price_international_cents',
-  'daily_order_cap', 'blocked_countries', 'away_mode', 'away_message', 'letters_mailed_count',
+  'daily_order_cap', 'blocked_countries', 'away_mode', 'away_message',
 ]);
 
 app.post('/api/admin/settings', requireAdmin, (req, res) => {
@@ -2582,10 +2586,11 @@ body{font-family:Georgia,serif;color:#111;padding:40px;max-width:800px;margin:0 
   <div class="letter-body">${esc(letterBody) || '<em>(no letter body, see attachments)</em>'}</div>
 </div>
 ${attachments.length ? `<div class="attachments"><strong>${attachments.length} attached file${attachments.length > 1 ? 's' : ''}:</strong> ${attachments.map(esc).join(' · ')}</div>` : ''}
-${(order.page_count != null || order.colour_printing || order.registered_mail || order.schedule_for_later) ? `<div class="attachments" style="background:#fff8e1;border-color:#e6b800"><strong>Paid extras, select these at the provider:</strong> ${[
+${(order.page_count != null || order.colour_printing || order.registered_mail || order.large_envelope || order.schedule_for_later) ? `<div class="attachments" style="background:#fff8e1;border-color:#e6b800"><strong>Paid extras, select these at the provider:</strong> ${[
   order.page_count != null ? `${order.page_count} page(s) total` : null,
   order.colour_printing   ? 'Colour printing' : null,
   order.registered_mail   ? 'Registered mail' : null,
+  order.large_envelope    ? 'Large envelope' : null,
   order.schedule_for_later ? `Scheduled for ${esc(order.scheduled_date || 'later')}` : null,
 ].filter(Boolean).join(' · ')}</div>` : ''}
 <div class="checklist">

@@ -141,7 +141,7 @@
           "name": "How long does delivery take?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "We print and mail within one business day of payment. After that, Canada Post's standard lettermail typically takes up to 2 weeks within Canada and up to 4 weeks internationally, depending on the destination. Need proof it arrived? Add registered mail at checkout for $27.50, tracked and signed for, with the tracking number emailed within 2-3 business days."
+            "text": "We print and mail within one business day of payment. After that, Canada Post's standard lettermail typically takes up to 2 weeks within Canada and up to 4 weeks internationally, depending on the destination. Need proof it arrived? Add registered mail at checkout for $32, tracked and signed for, with the tracking number emailed within 2-3 business days."
           }
         },
         {
@@ -1115,7 +1115,6 @@ footer {
         <span data-i18n="index.meta1">From $10 CAD</span>
         <span data-i18n="index.meta2">Mailed within one business day</span>
         <span data-i18n="index.meta3">Domestic &amp; international</span>
-        <span><span id="home-trust-count">163</span> letters mailed</span>
       </div>
     </div>
 
@@ -1312,7 +1311,7 @@ footer {
 
       <details class="faq-item">
         <summary data-i18n="faq.q4">How long does delivery take?</summary>
-        <p data-i18n="faq.a4">We print and mail within one business day of payment. After that, Canada Post's standard lettermail typically takes up to 2 weeks within Canada and up to 4 weeks internationally, depending on the destination. Need proof it arrived? Add registered mail at checkout for $27.50 — tracked, signed for, and the tracking number lands in your inbox within 2-3 business days.</p>
+        <p data-i18n="faq.a4">We print and mail within one business day of payment. After that, Canada Post's standard lettermail typically takes up to 2 weeks within Canada and up to 4 weeks internationally, depending on the destination. Need proof it arrived? Add registered mail at checkout for $32 — tracked, signed for, and the tracking number lands in your inbox within 2-3 business days.</p>
       </details>
 
       <details class="faq-item">
@@ -1603,10 +1602,6 @@ window.addEventListener('load', async function personalizeTicker(){
       bar.style.cssText = 'background:#1e293b;color:#f1f5f9;text-align:center;padding:10px 20px;font-size:14px;position:relative;z-index:200';
       bar.textContent = cfg.announcement;
       document.body.insertBefore(bar, document.body.firstChild);
-    }
-    if (cfg.letters_mailed_count) {
-      const el = document.getElementById('home-trust-count');
-      if (el) el.textContent = cfg.letters_mailed_count.toLocaleString();
     }
   } catch(e) {}
 })();
