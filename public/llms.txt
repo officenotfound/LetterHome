@@ -129,6 +129,9 @@ Verified mailing addresses (sourced from canada.ca, IRCC, and each bank's own si
 - [Where to mail an Ontario birth certificate application](https://letterhome.ca/where-to-mail-ontario-birth-certificate-application): ServiceOntario's published Thunder Bay P.O. Box for the Office of the Registrar General
 - [Where to mail an Ontario name change application](https://letterhome.ca/where-to-mail-ontario-name-change-application): ServiceOntario's published Thunder Bay P.O. Box for legal name change applications
 - [Where to mail BC vital statistics documents](https://letterhome.ca/where-to-mail-bc-vital-statistics-documents): BC Vital Statistics Agency's published Victoria P.O. Box for birth, marriage, death, and name-change requests
+- [Where to mail Quebec vital statistics documents](https://letterhome.ca/where-to-mail-quebec-vital-statistics-documents): Directeur de l'état civil's published Québec City address for birth, marriage, and death certificate requests
+- [Where to mail Manitoba vital statistics documents](https://letterhome.ca/where-to-mail-manitoba-vital-statistics-documents): Vital Statistics Branch's published Winnipeg address for birth, marriage, and death certificate requests
+- [Where to mail a Canadian passport application](https://letterhome.ca/where-to-mail-a-canadian-passport-application): Service Canada's domestic mail-in addresses by province, plus guidance for applying from outside Canada
 
 ## French-language pages
 
