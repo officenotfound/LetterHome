@@ -659,7 +659,7 @@ const SECURITY_TXT = [
  'demand-letter-unpaid-invoice', 'security-deposit-demand-letter', 'cease-and-desist-letter',
  'respond-to-debt-collection-letter', 'dispute-credit-report-error', 'resignation-letter-by-mail',
  'love-letters-and-personal-mail', 'mail-transcripts-and-student-documents',
- 'mail-to-retirement-and-nursing-homes', 'schedule-a-letter-for-later',
+ 'mail-to-retirement-and-nursing-homes', 'schedule-a-letter-for-later', 'send-a-christmas-letter-to-canada',
  'mailed-from-canada', 'non-resident-landlord', 'n12-notice',
  'serve-eviction-notice-from-abroad', 'bc-rtb-forms',
  'from-nigeria', 'from-mexico', 'from-brazil',
