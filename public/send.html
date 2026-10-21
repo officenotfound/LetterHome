@@ -6,7 +6,7 @@
 <link rel="dns-prefetch" href="https://www.googletagmanager.com">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="/ga.js" defer></script>
-<script src="/cookie-consent.js" defer></script>
+<script src="/cookie-consent.js?v=2" defer></script>
 <title>Send a Letter from Canada | Letterhome</title>
 <meta name="description" content="Send a real letter or document from Canada. We print it in black & white by default (colour available), seal it, and mail it via Canada Post. Domestic $10 CAD · International $20 CAD. No account needed.">
 <link rel="canonical" href="https://letterhome.ca/send">
@@ -307,7 +307,9 @@ textarea { resize: vertical; min-height: 260px; line-height: 1.6; }
   color: var(--paper); padding-top: 16px; margin-top: 4px;
 }
 .order-summary-row .label { color: rgba(255,255,255,0.7); font-family: 'DM Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; }
-.order-summary-row .val { font-weight: 500; }
+.order-summary-row .val { font-weight: 500; text-align: right; }
+.order-summary-row { gap: 16px; }
+.order-summary-row .label { flex-shrink: 0; }
 .order-summary-row.total .val { color: var(--paper); }
 
 /* PRIVACY NOTE */
@@ -385,6 +387,35 @@ footer { background: var(--ink); color: rgba(255,255,255,0.65); padding: 48px 36
   .panel { padding: 20px 18px; }
   .panel-title { font-size: 30px; }
   .progress-wrap { padding: 14px 18px 0; }
+}
+
+/* Envelope preview: honour the line breaks buildPreview() inserts, keep text clear of the stamp */
+#preview-from-text, #preview-to-text { white-space: pre-line; }
+.preview-from { padding-right: 84px; }
+
+/* What happens next */
+.next-steps { margin: 0 0 24px; padding: 20px 22px; border: 1px dashed var(--line); background: var(--paper); border-radius: 2px; }
+.next-steps h3 { font-family: 'DM Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.14em; color: var(--red); margin: 0 0 14px; font-weight: 500; }
+.next-steps ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+.next-steps li { display: grid; grid-template-columns: 26px 1fr; gap: 12px; align-items: start; }
+.next-steps .n { width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid var(--red); color: var(--red); display: grid; place-items: center; font-family: 'DM Mono', monospace; font-size: 12px; }
+.next-steps strong { display: block; font-size: 15px; color: var(--ink); font-weight: 600; }
+.next-steps span.d { display: block; font-size: 13px; color: var(--ink-muted); line-height: 1.5; margin-top: 2px; }
+
+/* Mobile: recipient first (the thing people care about), compact account promo, thumb-friendly buttons */
+@media (max-width: 768px) {
+  .address-col:last-child { order: -1; }
+  #account-banner > div { padding: 12px 16px !important; margin-bottom: 20px !important; }
+  #account-banner-collapsed p { display: none; }
+  #account-banner-collapsed > div:first-child > div { margin-bottom: 0 !important; }
+  .panel-nav { flex-direction: column-reverse; align-items: stretch; gap: 12px; }
+  .panel-nav > span:empty { display: none; }
+  .panel-nav .btn, .panel-nav > div { width: 100%; text-align: center !important; }
+}
+@media (max-width: 480px) {
+  .preview-envelope { padding: 28px 20px; }
+  .preview-stamp { width: 56px; height: 66px; top: 14px; right: 14px; }
+  .preview-from { padding-right: 68px; }
 }
 
 /* Per-step validation (v0.2.8) */
@@ -646,14 +677,14 @@ textarea.field-error { border-color: var(--red) !important; }
         </div>
         <p class="field-note" style="margin-bottom:20px;padding-left:30px" data-i18n="send.anon.note">No return address, the recipient won't be able to reply by mail. Perfectly legal.</p>
         <div id="sender-fields">
-          <div class="form-group"><label for="s-name" data-i18n="send.from.name">Full Name</label><input id="s-name" type="text" placeholder="Margaret Tremblay" autocomplete="name"></div>
+          <div class="form-group"><label for="s-name" data-i18n="send.from.name">Full Name</label><input id="s-name" type="text" placeholder="Margaret Tremblay" autocomplete="name" autocapitalize="words"></div>
           <div class="form-group"><label for="s-street" data-i18n="send.from.street">Street Address</label><input id="s-street" type="text" placeholder="123 Main Street" autocomplete="off"><span class="field-note" data-i18n="send.autocomplete.hint">Start typing for address suggestions</span></div>
           <div class="form-grid-2">
             <div class="form-group"><label for="s-city" data-i18n="send.from.city">City</label><input id="s-city" type="text" placeholder="Toronto" autocomplete="address-level2"></div>
-            <div class="form-group"><label for="s-province" data-i18n="send.from.province">Province / State</label><input id="s-province" type="text" placeholder="ON"></div>
+            <div class="form-group"><label for="s-province" data-i18n="send.from.province">Province / State</label><input id="s-province" type="text" placeholder="ON" autocomplete="address-level1"></div>
           </div>
           <div class="form-grid-2">
-            <div class="form-group"><label for="s-postal" data-i18n="send.from.postal">Postal Code</label><input id="s-postal" type="text" placeholder="V6B 1A1" maxlength="10"></div>
+            <div class="form-group"><label for="s-postal" data-i18n="send.from.postal">Postal Code</label><input id="s-postal" type="text" placeholder="V6B 1A1" maxlength="10" autocomplete="postal-code" autocapitalize="characters"></div>
             <div class="form-group"><label for="s-country" data-i18n="send.from.country">Country</label><input id="s-country" type="text" placeholder="Canada" autocomplete="country-name"></div>
           </div>
         </div>
@@ -661,10 +692,10 @@ textarea.field-error { border-color: var(--red) !important; }
 
       <div class="address-col">
         <h3 data-i18n="send.to.h3">To. Recipient</h3>
-        <div class="form-group"><label for="r-name" data-i18n="send.from.name">Full Name</label><input id="r-name" type="text" placeholder="James Okafor"></div>
+        <div class="form-group"><label for="r-name" data-i18n="send.from.name">Full Name</label><input id="r-name" type="text" placeholder="James Okafor" autocomplete="off" autocapitalize="words"></div>
         <div class="form-group"><label for="r-street" data-i18n="send.from.street">Street Address</label><input id="r-street" type="text" placeholder="456 Oak Avenue, Apt 3" autocomplete="off"><span class="field-note" data-i18n="send.autocomplete.hint">Start typing for address suggestions</span></div>
         <div class="form-grid-2">
-          <div class="form-group"><label for="r-city" data-i18n="send.from.city">City</label><input id="r-city" type="text" placeholder="Halifax"></div>
+          <div class="form-group"><label for="r-city" data-i18n="send.from.city">City</label><input id="r-city" type="text" placeholder="Halifax" autocomplete="off" autocapitalize="words"></div>
           <div class="form-group" id="province-field">
             <label for="r-province" id="province-label">Province / State</label>
             <select id="r-province">
@@ -676,10 +707,10 @@ textarea.field-error { border-color: var(--red) !important; }
               <option>ON: Ontario</option><option>PE: Prince Edward Island</option>
               <option>QC: Quebec</option><option>SK: Saskatchewan</option><option>YT: Yukon</option>
             </select>
-            <input id="r-province-text" type="text" placeholder="State / Region / Province" style="display:none">
+            <input id="r-province-text" type="text" placeholder="State / Region / Province" autocomplete="off" style="display:none">
           </div>
         </div>
-        <div class="form-group"><label for="r-postal" data-i18n="send.to.postal">Postal / ZIP Code</label><input id="r-postal" type="text" placeholder="B3H 2L6"></div>
+        <div class="form-group"><label for="r-postal" data-i18n="send.to.postal">Postal / ZIP Code</label><input id="r-postal" type="text" placeholder="B3H 2L6" autocomplete="off" autocapitalize="characters"></div>
       </div>
     </div>
 
@@ -808,6 +839,15 @@ textarea.field-error { border-color: var(--red) !important; }
       <div class="order-summary-row"><span class="label" data-i18n="send.summary.delivery.label">Delivery estimate</span><span class="val" id="summary-delivery">Within 2 weeks</span></div>
       <div class="order-summary-row"><span class="label" data-i18n="send.summary.includes.label">Includes</span><span class="val" id="summary-includes" data-no-i18n="1">Black &amp; white print · Envelope · Postage · Delivery</span></div>
       <div class="order-summary-row total"><span class="label" style="color:rgba(255,255,255,0.7)" data-i18n="send.summary.total.label">Total</span><span class="val" id="summary-total">$10 CAD</span></div>
+    </div>
+
+    <div class="next-steps">
+      <h3 data-i18n="send.next.title">What happens after you pay</h3>
+      <ol>
+        <li><span class="n">1</span><span><strong data-i18n="send.next.1.t">Confirmation email</strong><span class="d" data-i18n="send.next.1.d">Right after payment you get an email with your order number and a link to track your letter.</span></span></li>
+        <li><span class="n">2</span><span><strong data-i18n="send.next.2.t">Printed and mailed</strong><span class="d" data-i18n="send.next.2.d">Within one business day we print, seal, stamp and mail it from inside Canada, and email you when it's in the post.</span></span></li>
+        <li><span class="n">3</span><span><strong data-i18n="send.next.3.t">Delivered</strong><span class="d" data-i18n="send.next.3.d">Typically up to 2 weeks within Canada and up to 4 weeks internationally.</span></span></li>
+      </ol>
     </div>
 
     <div class="privacy-note">
@@ -1009,15 +1049,19 @@ function buildPreview() {
   const sStreet   = document.getElementById('s-street').value;
   const sCity     = document.getElementById('s-city').value;
   const sProvince = document.getElementById('s-province').value;
+  const sPostal   = document.getElementById('s-postal').value;
   const sCountry  = document.getElementById('s-country').value;
   const rName     = document.getElementById('r-name').value;
   const rStreet   = document.getElementById('r-street').value;
   const rCity     = document.getElementById('r-city').value;
   const rPostal   = document.getElementById('r-postal').value;
+  const rProvince = getRecipientProvince().split(':')[0].trim();
+  const rCountrySel = document.getElementById('r-country');
+  const rCountry  = rCountrySel.value === 'CA' ? '' : rCountrySel.options[rCountrySel.selectedIndex].text.replace(/,\s*\$\d.*$/, '');
 
   const fromLines = skipReturn ? LH_T('send.preview.noreturn')
-    : [sName, sStreet, sCity + (sProvince ? ', ' + sProvince : ''), sCountry].filter(Boolean).join('\n');
-  const toLines = [rName, rStreet, rCity + (rPostal ? '  ' + rPostal : '')].filter(Boolean).join('\n');
+    : [sName, sStreet, [sCity, sProvince].filter(Boolean).join(', ') + (sPostal ? '  ' + sPostal : ''), sCountry].filter(Boolean).join('\n');
+  const toLines = [rName, rStreet, [rCity, rProvince].filter(Boolean).join(', ') + (rPostal ? '  ' + rPostal : ''), rCountry].filter(Boolean).join('\n');
 
   document.getElementById('preview-from-text').textContent = fromLines || '...';
   document.getElementById('preview-to-text').textContent   = toLines   || '...';
