@@ -694,6 +694,23 @@ section { position: relative; z-index: 2; }
   margin-bottom: 20px;
 }
 
+.extras {
+  max-width: 760px; margin: 36px auto 0; padding: 24px 28px;
+  border: 1px dashed var(--line); background: var(--paper); border-radius: 2px;
+}
+.extras h3 {
+  font-family: 'DM Mono', monospace; font-size: 11px; text-transform: uppercase;
+  letter-spacing: 0.14em; color: var(--red); font-weight: 500; margin: 0 0 14px;
+}
+.extras-list { list-style: none; margin: 0; padding: 0; }
+.extras-list li {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 16px;
+  padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 15px; color: var(--ink-soft);
+}
+.extras-list li:last-child { border-bottom: none; }
+.extras-list strong { font-family: 'DM Mono', monospace; font-weight: 500; color: var(--ink); white-space: nowrap; }
+.extras-note { margin: 14px 0 0; font-size: 13px; color: var(--ink-muted); }
+
 .price-includes {
   list-style: none;
   margin-bottom: 24px;
@@ -1181,7 +1198,7 @@ footer {
     <div class="section-head">
       <div class="eyebrow" data-i18n="pricing.eyebrow">Pricing</div>
       <h2 data-i18n="pricing.h2">Flat pricing. Two options.</h2>
-      <p data-i18n="pricing.sub">Each letter is one fee that covers black & white printing, the envelope, postage, and delivery. No subscriptions. Colour printing and pages beyond the first 2 free ones cost extra, see checkout for details.</p>
+      <p data-i18n="pricing.sub">Each letter is one fee that covers black & white printing, the envelope, postage, and delivery. No subscriptions. Colour printing and pages beyond the first 2 cost extra, with every price listed below.</p>
     </div>
 
     <div class="pricing-grid">
@@ -1214,6 +1231,18 @@ footer {
         </ul>
         <a href="/send" class="btn btn-outline btn-large" style="width:100%;text-align:center;" data-i18n="pricing.intl.btn">Send internationally →</a>
       </div>
+    </div>
+
+    <div class="extras">
+      <h3 data-i18n="pricing.extras.h3">Optional extras</h3>
+      <ul class="extras-list">
+        <li><span data-i18n="pricing.extras.l1">Colour printing (whole letter)</span><strong>+$2</strong></li>
+        <li><span data-i18n="pricing.extras.l2">Each page after the first 2</span><strong>+$1</strong></li>
+        <li><span data-i18n="pricing.extras.l3">Large envelope (bulkier letters)</span><strong>+$4</strong></li>
+        <li><span data-i18n="pricing.extras.l4">Schedule for a future date</span><strong>+$2</strong></li>
+        <li><span data-i18n="pricing.extras.l5">Registered mail (tracked, signed for)</span><strong>+$32</strong></li>
+      </ul>
+      <p class="extras-note" data-i18n="pricing.extras.note">Every extra is shown before you pay. No subscriptions, no hidden fees.</p>
     </div>
   </div>
 </div>
@@ -1587,7 +1616,7 @@ window.addEventListener('load', async function personalizeTicker(){
 </script>
 
 <script src="/theme.js?v=2" defer></script>
-<script src="/lang.js?v=13" defer></script>
+<script src="/lang.js?v=14" defer></script>
 <script>
 (async () => {
   try {

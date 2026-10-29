@@ -9,13 +9,13 @@ Letterhome is used by Canadians living abroad, immigrants sending documents to C
 - $10 CAD: letters to any Canadian address (domestic)
 - $20 CAD: letters to any of 160+ international destinations
 
-Both prices include up to 5 pages printed in black & white, the envelope, postage, and delivery. Colour printing, extra pages, registered mail, a large envelope, and scheduled sending are available as paid add-ons, shown before checkout. No account required. Pay once per order.
+Both prices include up to 5 documents, with the first 2 pages included, printed in black & white, plus the envelope, postage, and delivery. Optional add-ons, all shown before checkout: colour printing $2, each extra page after the first 2 $1, registered mail $32, large envelope $4, scheduled sending $2. No account required. Pay once per order.
 
 ## How it works
 
 1. Fill in the recipient address, compose or attach your letter, and enter your email.
 2. Pay by credit or debit card through Stripe.
-3. Letterhome prints the letter in full colour and mails it from Canada, usually within one business day.
+3. Letterhome prints the letter in black & white by default (colour is a $2 add-on) and mails it from Canada, usually within one business day.
 4. The customer receives an email confirmation with an order tracking link.
 
 ## Delivery

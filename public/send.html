@@ -755,7 +755,7 @@ textarea.field-error { border-color: var(--red) !important; }
       <label style="display:flex;align-items:flex-start;gap:10px;padding:12px;border:1.5px solid rgba(42,42,42,0.15);border-radius:2px;margin-bottom:10px;cursor:pointer">
         <input type="checkbox" id="opt-colour" style="margin-top:3px" onchange="updatePricing()">
         <span>
-          <span style="display:block;font-weight:600" data-i18n="send.options.colour.title">Colour printing <span style="color:var(--red);font-weight:500" id="opt-colour-price">+$2</span></span>
+          <span style="display:block;font-weight:600"><span data-i18n="send.options.colour.title">Colour printing</span> <span style="color:var(--red);font-weight:500" id="opt-colour-price">+$2</span></span>
           <span style="display:block;font-size:12px;color:var(--ink-muted)" data-i18n="send.options.colour.sub">Print your letter and attachments in full colour instead of black &amp; white. Flat fee, any number of pages.</span>
         </span>
       </label>
@@ -763,7 +763,7 @@ textarea.field-error { border-color: var(--red) !important; }
       <label style="display:flex;align-items:flex-start;gap:10px;padding:12px;border:1.5px solid rgba(42,42,42,0.15);border-radius:2px;margin-bottom:10px;cursor:pointer">
         <input type="checkbox" id="opt-registered" style="margin-top:3px" onchange="updatePricing()">
         <span>
-          <span style="display:block;font-weight:600" data-i18n="send.options.registered.title">Registered mail <span style="color:var(--red);font-weight:500" id="opt-registered-price">+$32</span></span>
+          <span style="display:block;font-weight:600"><span data-i18n="send.options.registered.title">Registered mail</span> <span style="color:var(--red);font-weight:500" id="opt-registered-price">+$32</span></span>
           <span style="display:block;font-size:12px;color:var(--ink-muted)" data-i18n="send.options.registered.sub">Fulfilled by Canada Post. Tracked, with proof of delivery, tracking number emailed within 2-3 business days.</span>
         </span>
       </label>
@@ -771,7 +771,7 @@ textarea.field-error { border-color: var(--red) !important; }
       <label style="display:flex;align-items:flex-start;gap:10px;padding:12px;border:1.5px solid rgba(42,42,42,0.15);border-radius:2px;margin-bottom:10px;cursor:pointer">
         <input type="checkbox" id="opt-large-envelope" style="margin-top:3px" onchange="updatePricing()">
         <span>
-          <span style="display:block;font-weight:600" data-i18n="send.options.largeenvelope.title">Large envelope <span style="color:var(--red);font-weight:500" id="opt-large-envelope-price">+$4</span></span>
+          <span style="display:block;font-weight:600"><span data-i18n="send.options.largeenvelope.title">Large envelope</span> <span style="color:var(--red);font-weight:500" id="opt-large-envelope-price">+$4</span></span>
           <span style="display:block;font-size:12px;color:var(--ink-muted)" data-i18n="send.options.largeenvelope.sub">For bulkier letters that don't fit in a standard window envelope, ships flat instead of folded.</span>
         </span>
       </label>
@@ -779,7 +779,7 @@ textarea.field-error { border-color: var(--red) !important; }
       <label style="display:flex;align-items:flex-start;gap:10px;padding:12px;border:1.5px solid rgba(42,42,42,0.15);border-radius:2px;margin-bottom:6px;cursor:pointer">
         <input type="checkbox" id="opt-schedule" style="margin-top:3px" onchange="toggleSchedule(this)">
         <span>
-          <span style="display:block;font-weight:600" data-i18n="send.options.schedule.title">Schedule for later <span style="color:var(--red);font-weight:500" id="opt-schedule-price">+$2</span></span>
+          <span style="display:block;font-weight:600"><span data-i18n="send.options.schedule.title">Schedule for later</span> <span style="color:var(--red);font-weight:500" id="opt-schedule-price">+$2</span></span>
           <span style="display:block;font-size:12px;color:var(--ink-muted)" data-i18n="send.options.schedule.sub">Choose a future date and we'll mail your letter to arrive as close to that date as possible.</span>
         </span>
       </label>
@@ -1662,7 +1662,7 @@ function fillSavedRecipient(sel) {
   } catch(e) {}
 }
 </script>
-<script src="/lang.js?v=13" defer></script>
+<script src="/lang.js?v=14" defer></script>
 <script type="module">
   import * as pdfjsLib from '/vendor/pdfjs/pdf.min.mjs';
   pdfjsLib.GlobalWorkerOptions.workerSrc = '/vendor/pdfjs/pdf.worker.min.mjs';

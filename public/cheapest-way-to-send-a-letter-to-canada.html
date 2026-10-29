@@ -235,10 +235,10 @@ table.cost td:first-child{font-weight:600;color:var(--ink)}
       <tr><td>In Canada, no printer</td><td>$5–$15 at a print shop + stamp</td><td>$10 CAD</td></tr>
       <tr><td>In the US, mailing to Canada</td><td>~US$1.70 stamp + printing</td><td>$10 CAD (~US$7)</td></tr>
       <tr><td>Outside Canada, no printer</td><td>Variable + international postage</td><td>$10 CAD all-in</td></tr>
-      <tr><td>5 documents, black & white by default</td><td>Significant print shop cost + postage</td><td>$10 CAD all-in</td></tr>
+      <tr><td>5 pages, black & white by default</td><td>Significant print shop cost + postage</td><td>$13 CAD all-in ($10 + $1 per page after the first 2)</td></tr>
     </tbody>
   </table>
-  <p class="caption" data-i18n="cheapest.s3.caption">Letterhome is $10 CAD regardless of document count (up to 5 pages), which makes it particularly cost-effective for multi-page submissions.</p>
+  <p class="caption" data-i18n="cheapest.s3.caption">Letterhome includes the first 2 pages in the $10 CAD, then adds $1 per extra page, so a 5-page submission is $13 CAD all-in, still cost-effective for multi-page submissions.</p>
 
   <h2 data-i18n="cheapest.faq.h2">Frequently asked questions</h2>
   <div class="faq-list">
@@ -252,7 +252,7 @@ table.cost td:first-child{font-weight:600;color:var(--ink)}
     </div>
     <div class="faq-item">
       <button class="faq-q" onclick="toggle(2)" aria-expanded="false" aria-controls="a2"><span data-i18n="cheapest.faq.q3">Is a print-and-mail service worth it if I'm already in Canada?</span><svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
-      <div class="faq-a" id="a2" hidden data-i18n="cheapest.faq.a3">If you own a printer and have supplies, doing it yourself is cheaper for a simple one-page letter. But if you need black & white printing by default (colour available), multiple documents, or want to skip the trip to a mailbox, $10 CAD all-in is a reasonable trade.</div>
+      <div class="faq-a" id="a2" hidden data-i18n="cheapest.faq.a3">If you own a printer and have supplies, doing it yourself is cheaper for a simple one-page letter. But if you need colour printing, multiple documents, or want to skip the trip to a mailbox, $10 CAD all-in is a reasonable trade.</div>
     </div>
     <div class="faq-item">
       <button class="faq-q" onclick="toggle(3)" aria-expanded="false" aria-controls="a3"><span data-i18n="cheapest.faq.q4">Does it matter whether the letter is mailed from inside Canada or internationally?</span><svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
@@ -281,7 +281,7 @@ table.cost td:first-child{font-weight:600;color:var(--ink)}
 <script src="/footer.js?v=2" defer></script>
 
 <script src="/theme.js?v=2" defer></script>
-<script src="/lang.js?v=13" defer></script>
+<script src="/lang.js?v=14" defer></script>
 <script>
   function toggle(i) {
     const btn = document.querySelectorAll('.faq-q')[i];
