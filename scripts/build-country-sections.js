@@ -89,10 +89,8 @@ const HUBS = [
 const REDIRECTS = {};
 for (const h of HUBS) for (const c of h.countries) REDIRECTS[`/from-${c}`] = `/${h.slug}#${c}`;
 
-const tpl = fs.readFileSync(path.join(PUB, 'from-poland.html'), 'utf8').replace(/^[\s\S]*$/, m => m); // template source (removed after the build)
-const tplFile = fs.existsSync(path.join(__dirname, 'data', 'hub-template.html')) ? path.join(__dirname, 'data', 'hub-template.html') : null;
-const source = tplFile ? fs.readFileSync(tplFile, 'utf8') : tpl;
-if (!tplFile) fs.writeFileSync(path.join(__dirname, 'data', 'hub-template.html'), tpl); // keep a copy so the build works after from-poland is deleted
+const tplFile = path.join(__dirname, 'data', 'hub-template.html'); // saved copy of the old from-poland page layout
+const source = fs.readFileSync(tplFile, 'utf8');
 
 const cssStart = source.indexOf('<link rel="stylesheet" href="/fonts.css');
 const pageStart = source.indexOf('<div class="page" id="main-content">');
@@ -105,7 +103,7 @@ function cell(v) { return v ? esc(v) : '<span style="color:var(--ink-faint)">not
 
 for (const h of HUBS) {
   const url = `${SITE}/${h.slug}`;
-  const title = `Send a Letter from ${h.name.replace(/^the /, '')} to Canada: Country-by-Country Guide (2026)`;
+  const title = `Send a Letter from ${h.name.replace(/^the /, '')} to Canada: Guide (2026)`;
   const desc = `Mailing a letter to Canada from ${h.name}? Verified postal operators, visa application centres and Canadian offices by country, plus the easiest way to send: $5 CAD via Letterhome.`;
   const cs = h.countries.map(c => facts[c]);
   const rows = cs.map(j => {
