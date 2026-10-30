@@ -258,6 +258,29 @@ test('funnel endpoint records only known steps, anonymously', async () => {
   assert.ok(!rows.some(r => r.step === 'DROP TABLE orders'));
 });
 
+test('extra pages: $0.40 each in B&W, $0.55 each in colour, counted from an uploaded PDF', async () => {
+  const { PDFDocument } = require('pdf-lib');
+  const pdf = await PDFDocument.create();
+  for (let i = 0; i < 4; i++) pdf.addPage();
+  const bytes = await pdf.save();
+  const send = async (email, extra) => {
+    const fd = new FormData();
+    Object.entries({ 'r-email': email, 'r-name': 'Page Test', 'r-street': '1 Main St', 'r-city': 'Toronto', 'r-province': 'ON',
+      'r-postal': 'M5V 1A1', 'r-country': 'CA', 'letter-body': 'See attached.', 'letter-type': 'standard', ...extra }).forEach(([k, v]) => fd.append(k, v));
+    fd.append('attachments', new Blob([bytes], { type: 'application/pdf' }), 'four-pages.pdf');
+    const res = await fetch(`${base}/api/create-order`, { method: 'POST', body: fd });
+    assert.equal(res.status, 200, await res.clone().text());
+    return db.prepare('SELECT price_cents, page_count, extra_page_cents FROM orders WHERE customer_email = ? ORDER BY id DESC LIMIT 1').get(email);
+  };
+  const bw = await send('pages-bw@example.com', {});
+  assert.equal(bw.page_count, 4);
+  assert.equal(bw.extra_page_cents, 80);          // 2 extra pages x $0.40
+  assert.equal(bw.price_cents, 580);              // $5 + $0.80
+  const col = await send('pages-col@example.com', { colour_printing: '1' });
+  assert.equal(col.extra_page_cents, 110);        // 2 extra pages x $0.55
+  assert.equal(col.price_cents, 710);             // $5 + $1 colour + $1.10
+});
+
 test('POST /webhook with valid signature marks order paid', async () => {
   const sessionId = seedOrder({ status: 'awaiting_payment' });
 

@@ -996,7 +996,8 @@ var estimatedPageCount = 0;
 
 // Mirrors the server-side constants in server.js (countAttachmentPages / addon pricing).
 const FREE_PAGES            = 2;
-const EXTRA_PAGE_CENTS      = 30;
+const EXTRA_PAGE_CENTS      = 40;
+const EXTRA_PAGE_COLOUR_CENTS = 55;
 const COLOUR_PRINTING_CENTS = 100;
 const REGISTERED_MAIL_CENTS = 2500;
 const LARGE_ENVELOPE_CENTS  = 300;
@@ -1009,7 +1010,8 @@ function toggleSchedule(cb) {
 
 function computeAddonCents() {
   const extraPages = Math.max(0, estimatedPageCount - FREE_PAGES);
-  let cents = extraPages * EXTRA_PAGE_CENTS;
+  const isColour = !!document.getElementById('opt-colour')?.checked;
+  let cents = extraPages * (isColour ? EXTRA_PAGE_COLOUR_CENTS : EXTRA_PAGE_CENTS);
   if (document.getElementById('opt-colour')?.checked)        cents += COLOUR_PRINTING_CENTS;
   if (document.getElementById('opt-registered')?.checked)    cents += REGISTERED_MAIL_CENTS;
   if (document.getElementById('opt-large-envelope')?.checked) cents += LARGE_ENVELOPE_CENTS;
@@ -1051,7 +1053,7 @@ function updatePricing() {
     const extraPages = Math.max(0, estimatedPageCount - FREE_PAGES);
     note.textContent = estimatedPageCount
       ? `Estimated ${estimatedPageCount} page(s) from your attachments` +
-        (extraPages ? ` · +$${(extraPages * EXTRA_PAGE_CENTS / 100).toFixed(2)} for ${extraPages} page(s) beyond the first ${FREE_PAGES} free` : '')
+        (extraPages ? ` · +$${(extraPages * (document.getElementById('opt-colour')?.checked ? EXTRA_PAGE_COLOUR_CENTS : EXTRA_PAGE_CENTS) / 100).toFixed(2)} for ${extraPages} page(s) beyond the first ${FREE_PAGES} free` : '')
       : '';
   }
 
@@ -1756,7 +1758,7 @@ function fillSavedRecipient(sel) {
   } catch(e) {}
 }
 </script>
-<script src="/lang.js?v=19" defer></script>
+<script src="/lang.js?v=20" defer></script>
 <script type="module">
   import * as pdfjsLib from '/vendor/pdfjs/pdf.min.mjs';
   pdfjsLib.GlobalWorkerOptions.workerSrc = '/vendor/pdfjs/pdf.worker.min.mjs';

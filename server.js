@@ -329,7 +329,8 @@ async function sendMail(opts, type = 'general', orderId = null) {
 // Base send price ($5 Canada / $11 United States / $20 elsewhere) is configurable via settings.
 // Optional-extra pricing (cents).
 const FREE_PAGES              = 2;
-const EXTRA_PAGE_CENTS        = 30;
+const EXTRA_PAGE_CENTS        = 40;
+const EXTRA_PAGE_COLOUR_CENTS = 55;   // colour pages cost more to print
 const COLOUR_PRINTING_CENTS   = 100;
 const REGISTERED_MAIL_CENTS   = 2500;
 const SCHEDULE_LATER_CENTS    = 0;
@@ -1043,8 +1044,8 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
   const basePriceCents = getBasePriceCents(b['r-country']);
 
   const pageCount = await countAttachmentPages(req.files || []);
-  const extraPageCents = Math.max(0, pageCount - FREE_PAGES) * EXTRA_PAGE_CENTS;
   const colourPrinting    = b['colour_printing']    === '1' || b['colour_printing']    === 'true';
+  const extraPageCents = Math.max(0, pageCount - FREE_PAGES) * (colourPrinting ? EXTRA_PAGE_COLOUR_CENTS : EXTRA_PAGE_CENTS);
   const registeredMail    = b['registered_mail']    === '1' || b['registered_mail']    === 'true';
   const largeEnvelope     = b['large_envelope']     === '1' || b['large_envelope']     === 'true';
   const scheduleForLater  = b['schedule_for_later'] === '1' || b['schedule_for_later'] === 'true';
