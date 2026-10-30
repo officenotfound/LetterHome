@@ -594,11 +594,16 @@ section { position: relative; z-index: 2; }
    international lives as a secondary tier alongside. */
 .pricing-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px;
   margin: 32px auto 0;
-  max-width: 880px;
+  max-width: 1120px;
   align-items: stretch;
+}
+.pricing-grid .price-card { display: flex; flex-direction: column; padding: 38px 26px 30px; }
+.pricing-grid .price-card .price-includes { flex: 1; }
+@media (max-width: 1000px) {
+  .pricing-grid { grid-template-columns: 1fr; max-width: 520px; }
 }
 
 .price-card {
@@ -630,6 +635,12 @@ section { position: relative; z-index: 2; }
   transform: rotate(8deg);
 }
 .price-card:not(.featured)::after { background-image: url("/stamp-intl.svg?v=3"); }
+.price-card.usa::after { background-image: url("/stamp-us.svg?v=1"); }
+/* three-up grid: smaller stamps so they never crowd the headings */
+@media (min-width: 1001px) {
+  .pricing-grid .price-card::after { width: 168px; height: 153px; top: -44px; right: -52px; opacity: 0.55; }
+  .pricing-grid .price-card.featured::after { top: auto; right: auto; left: -58px; bottom: -48px; opacity: 0.4; }
+}
 .price-card.featured::after { top: auto; right: auto; left: -84px; bottom: -58px; transform: rotate(-9deg); opacity: 0.45; }
 .price-card:hover { transform: translateY(-3px); box-shadow: 0 6px 18px rgba(0,0,0,0.09), 0 26px 54px rgba(0,0,0,0.13); }
 [data-theme="dark"] .price-card { background: #1c1714 !important; }
@@ -1239,13 +1250,27 @@ footer {
         <a href="/send" class="btn btn-red btn-large" style="width:100%;text-align:center;" data-i18n="pricing.dom.btn">Send to Canada →</a>
       </div>
 
+      <div class="price-card usa">
+        <span class="price-tag" data-i18n="pricing.usa.tag">To the United States</span>
+        <h3 data-i18n="pricing.usa.h3">United States</h3>
+        <p class="price-sub" data-i18n="pricing.usa.sub">To any US address</p>
+        <div class="price">$11<small>CAD</small></div>
+        <div class="price-meta" data-i18n="pricing.usa.meta">Typically 2–4 weeks</div>
+        <ul class="price-includes">
+          <li data-i18n="pricing.usa.li1">2 pages included, then $0.40 per extra page ($0.55 in colour)</li>
+          <li data-i18n="pricing.usa.li2">Black &amp; white by default (colour +$1), single‑sided</li>
+          <li data-i18n="pricing.usa.li3">Envelope and international postage</li>
+          <li data-i18n="pricing.usa.li4">Attach up to 5 PDF or Word files</li>
+        </ul>
+        <a href="/send" class="btn btn-outline btn-large" style="width:100%;text-align:center;" data-i18n="pricing.usa.btn">Send to the United States →</a>
+      </div>
+
       <div class="price-card">
         <span class="price-tag" data-i18n="pricing.intl.tag">Anywhere else</span>
         <h3 data-i18n="pricing.intl.h3">International</h3>
-        <p class="price-sub" data-i18n="pricing.intl.sub">160+ countries worldwide</p>
+        <p class="price-sub" data-i18n="pricing.intl.sub">All other countries (160+)</p>
         <div class="price">$20<small>CAD</small></div>
         <div class="price-meta" data-i18n="pricing.intl.meta">Typically 2–4 weeks</div>
-        <p class="price-usa" data-i18n="pricing.intl.usa">To the United States: $11 CAD</p>
         <ul class="price-includes">
           <li data-i18n="pricing.intl.li1">2 pages included, then $0.40 per extra page ($0.55 in colour)</li>
           <li data-i18n="pricing.intl.li2">Black &amp; white by default (colour +$1), single‑sided</li>
@@ -1659,7 +1684,7 @@ window.addEventListener('load', async function personalizeTicker(){
 </script>
 
 <script src="/theme.js?v=2" defer></script>
-<script src="/lang.js?v=21" defer></script>
+<script src="/lang.js?v=22" defer></script>
 <script>
 (async () => {
   try {
