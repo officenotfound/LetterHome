@@ -195,7 +195,7 @@ textarea:focus {
 .step p                       { font-size: 16px; line-height: 1.75; }
 .faq-item p                   { font-size: 16px; line-height: 1.75; }
 .usecase p                    { font-size: 15px; line-height: 1.65; }
-.price-includes li            { font-size: 15px; }
+.price-includes li            { font-size: 16.5px; }
 .section-head p               { font-size: 18px; line-height: 1.65; }
 
 /* About page */
@@ -224,7 +224,7 @@ textarea:focus {
 [data-theme="dark"] .price-card.featured .price-sub,
 [data-theme="dark"] .price-card.featured .price-meta,
 [data-theme="dark"] .price-card.featured .price small                { color: var(--ink-muted); }
-[data-theme="dark"] .price-card.featured .price-includes li          { color: var(--ink-soft); border-bottom-color: rgba(237,225,197,0.12); }
+[data-theme="dark"] .price-card.featured .price-includes li          { color: var(--ink); border-bottom-color: rgba(237,225,197,0.12); }
 
 /* Order summary (send page) */
 [data-theme="dark"] .order-summary                                   { background: var(--kraft-deep); color: var(--ink); }
