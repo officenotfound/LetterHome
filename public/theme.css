@@ -460,3 +460,15 @@ footer { background: #3d2c1a !important; border-top: 5px solid; border-image: re
 [data-theme="dark"] .status-printing { background: rgba(59,130,246,0.15)  !important; color: #60a5fa !important; }
 [data-theme="dark"] .status-mailed   { background: rgba(34,197,94,0.15)   !important; color: #4ade80 !important; }
 [data-theme="dark"] td { border-bottom-color: rgba(250,246,236,0.08) !important; }
+
+/* footer-wrap-fix: the footer is a fixed-height nowrap strip; let it wrap instead of forcing sideways scroll */
+@media (max-width: 1100px) {
+  footer { height: auto !important; padding-top: 14px !important; padding-bottom: 14px !important; }
+  .footer-bottom { flex-wrap: wrap !important; row-gap: 10px !important; }
+  .footer-bottom > div:first-child { white-space: normal !important; overflow: visible !important; text-overflow: clip !important; }
+  .footer-bottom-links { flex-shrink: 1 !important; flex-wrap: wrap !important; row-gap: 4px !important; }
+}
+@media (max-width: 640px) {
+  .footer-bottom-links a { padding: 8px 0 !important; }
+  .price-card::after { display: none !important; }
+}
