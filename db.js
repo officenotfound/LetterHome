@@ -106,6 +106,17 @@ try { db.exec(`ALTER TABLE customers ADD COLUMN sender_country TEXT`); } catch {
 try { db.exec(`ALTER TABLE customers ADD COLUMN password_hash TEXT`);         } catch {}
 try { db.exec(`ALTER TABLE customers ADD COLUMN account_created_at DATETIME`);} catch {}
 try { db.exec(`ALTER TABLE customers ADD COLUMN unsubscribed_at DATETIME`);   } catch {}
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS funnel_events (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    step       TEXT NOT NULL,
+    country    TEXT,
+    day        TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+  CREATE INDEX IF NOT EXISTS idx_funnel_day_step ON funnel_events(day, step);
+`);
 try { db.exec(`CREATE INDEX IF NOT EXISTS idx_orders_email      ON orders(customer_email)`); } catch {}
 try { db.exec(`CREATE INDEX IF NOT EXISTS idx_orders_status     ON orders(status)`);         } catch {}
 try { db.exec(`CREATE INDEX IF NOT EXISTS idx_orders_deleted    ON orders(deleted_at)`);     } catch {}

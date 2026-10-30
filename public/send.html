@@ -248,6 +248,17 @@ textarea { resize: vertical; min-height: 260px; line-height: 1.6; }
 .attach-list li .remove { margin-left: auto; color: var(--red); cursor: pointer; font-size: 16px; line-height: 1; background: none; border: none; min-width: 44px; min-height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 2px; }
 
 .sr-only { position:absolute; width:1px; height:1px; margin:-1px; padding:0; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0; }
+/* Running total + saved-draft banner */
+.total-bar { display:flex; justify-content:space-between; align-items:center; gap:6px 18px; flex-wrap:wrap; margin:0 0 14px; padding:10px 16px; border:1px dashed var(--line); background:var(--paper); border-radius:2px; font-size:15px; color:var(--ink-soft); }
+.total-bar strong { font-family:'DM Serif Display',serif; font-size:22px; font-weight:400; color:var(--ink); margin-right:6px; }
+.total-bar .tb-sub { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:0.04em; color:var(--ink-muted); }
+.draft-banner { display:none; margin:0 0 22px; padding:14px 18px; border:1px solid var(--red); border-left-width:3px; background:var(--paper); border-radius:2px; font-size:15px; color:var(--ink-soft); }
+.draft-banner .db-row { display:flex; flex-wrap:wrap; align-items:center; gap:8px 12px; }
+.draft-banner button { font:inherit; font-size:13px; letter-spacing:0.04em; text-transform:uppercase; padding:9px 16px; border-radius:2px; cursor:pointer; min-height:40px; }
+.draft-banner .db-go { background:var(--red); color:#faf6ec; border:1.5px solid var(--red); }
+.draft-banner .db-no { background:transparent; color:var(--ink); border:1.5px solid rgba(42,42,42,0.35); }
+.draft-banner .tb-sub { display:block; margin-top:8px; font-family:'DM Mono',monospace; font-size:11px; color:var(--ink-muted); }
+
 /* PREVIEW PANEL */
 .preview-envelope {
   background: var(--paper); border: 1px solid rgba(42,42,42,0.12);
@@ -476,11 +487,25 @@ textarea.field-error { border-color: var(--red) !important; }
 <div class="send-wrap">
   <h1 class="sr-only" data-i18n="send.h1">Send a letter to Canada or anywhere in the world</h1>
 
+  <div class="total-bar" id="total-bar" role="status">
+    <span><strong id="total-bar-amt">$5 CAD</strong><span data-i18n="send.totalbar.to">to send this letter</span></span>
+    <span class="tb-sub" data-i18n="send.totalbar.sub">Printing, envelope and postage included · mailed within 1 business day · free reprint if not delivered</span>
+  </div>
+
   <!-- STEP 1: ADDRESSES -->
   <div class="panel active" id="panel-1">
     <div class="eyebrow" data-i18n="send.step1.eyebrow">Step One</div>
     <h2 class="panel-title serif" data-i18n="send.step1.title">Who is this going to?</h2>
     <p class="panel-sub" data-i18n="send.step1.sub">Enter the sender and recipient addresses. The sender address appears as the return address on the envelope.</p>
+
+    <div class="draft-banner" id="draft-banner" role="status">
+      <div class="db-row">
+        <span data-i18n="send.draft.msg">You have an unfinished letter saved on this device.</span>
+        <button type="button" class="db-go" id="draft-resume" data-i18n="send.draft.resume">Resume</button>
+        <button type="button" class="db-no" id="draft-discard" data-i18n="send.draft.discard">Start over</button>
+      </div>
+      <span class="tb-sub" data-i18n="send.draft.note">Saved only in this browser. Attachments need to be added again.</span>
+    </div>
 
     <div id="account-banner" style="display:none"></div>
 
@@ -921,12 +946,18 @@ function estDeliveryDate(daysToAdd) {
 // Countries where state/province is a required part of a postal address
 const PROVINCE_REQUIRED = new Set(['US','AU','IN','BR','MX','MY','NG','PH','CN','ZA','AR','CO','ID']);
 
+function track(step) {
+  try { navigator.sendBeacon('/api/funnel', JSON.stringify({ step, country: document.getElementById('r-country')?.value || '' })); } catch (e) {}
+}
+
 function goTo(step) {
   document.getElementById('panel-' + currentStep).classList.remove('active');
   currentStep = step;
   document.getElementById('panel-' + step).classList.add('active');
   updateStepUI();
   if (step === 3) buildPreview();
+  if (step === 2) track('step2');
+  if (step === 3) track('step3');
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -1000,6 +1031,7 @@ function updatePricing() {
   const price = Math.max(50, basePrice + addonCents - discount);
   const priceStr = '$' + (price / 100).toFixed(price % 100 === 0 ? 0 : 2);
   document.getElementById('preview-price').textContent   = priceStr;
+  const _tb = document.getElementById('total-bar-amt'); if (_tb) _tb.textContent = priceStr + ' CAD';
   document.getElementById('summary-total').textContent   = priceStr + ' CAD';
   document.getElementById('summary-dest').textContent    = isDomestic ? LH_T('send.dom.dest') : LH_T('send.intl.dest');
   const deliveryBase = isDomestic ? LH_T('send.dom.delivery') : LH_T('send.intl.delivery');
@@ -1361,10 +1393,58 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
+
+// ---- Draft autosave: kept in this browser only (localStorage), expires after 7 days ----
+const DRAFT_KEY = 'lh-draft', DRAFT_TTL = 7 * 24 * 3600 * 1000;
+const DRAFT_FIELDS = ['skip-return','s-name','s-street','s-city','s-province','s-postal','s-country','r-country','r-name','r-street','r-city','r-province','r-province-text','r-postal','r-email','letter-body','opt-schedule-date'];
+const DRAFT_BOXES  = ['opt-colour','opt-registered','opt-large-envelope','opt-schedule'];
+function readDraft() {
+  try {
+    const d = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null');
+    if (!d || !d.v || Date.now() - d.t > DRAFT_TTL) { localStorage.removeItem(DRAFT_KEY); return null; }
+    return d;
+  } catch (e) { return null; }
+}
+function saveDraft() {
+  try {
+    const v = {};
+    DRAFT_FIELDS.forEach(id => { const el = document.getElementById(id); if (el) v[id] = el.type === 'checkbox' ? el.checked : el.value; });
+    DRAFT_BOXES.forEach(id => { const el = document.getElementById(id); if (el) v[id] = el.checked; });
+    if (!['r-name','r-street','letter-body','s-name','s-street'].some(k => (v[k] || '').toString().trim())) return;
+    localStorage.setItem(DRAFT_KEY, JSON.stringify({ t: Date.now(), v }));
+  } catch (e) {}
+}
+let _draftTimer;
+function scheduleDraftSave() { clearTimeout(_draftTimer); _draftTimer = setTimeout(saveDraft, 500); }
+function applyDraft(d) {
+  const v = d.v;
+  const set = (id, val) => { const el = document.getElementById(id); if (!el || val === undefined) return; if (el.type === 'checkbox') el.checked = !!val; else el.value = val; };
+  set('r-country', v['r-country']);
+  set('skip-return', v['skip-return']); toggleReturn(document.getElementById('skip-return'));
+  DRAFT_BOXES.forEach(id => set(id, v[id]));
+  if (v['opt-schedule']) toggleSchedule(document.getElementById('opt-schedule'));
+  updatePricing();
+  DRAFT_FIELDS.filter(id => id !== 'r-country' && id !== 'skip-return').forEach(id => set(id, v[id]));
+  updatePricing();
+}
+document.addEventListener('DOMContentLoaded', () => {
+  track('send_view');
+  document.addEventListener('input', scheduleDraftSave);
+  document.addEventListener('change', scheduleDraftSave);
+  const d = readDraft(), banner = document.getElementById('draft-banner');
+  const blank = !['r-name','r-street','letter-body','s-name','s-street'].some(id => (document.getElementById(id)?.value || '').trim());
+  if (d && banner && blank) {
+    banner.style.display = 'block';
+    document.getElementById('draft-resume').addEventListener('click', () => { applyDraft(d); banner.style.display = 'none'; });
+    document.getElementById('draft-discard').addEventListener('click', () => { try { localStorage.removeItem(DRAFT_KEY); } catch (e) {} banner.style.display = 'none'; });
+  }
+});
+
+let _leavingForCheckout = false;
 window.addEventListener('beforeunload', function(e) {
-  const ids = ['s-name', 's-street', 'r-name', 'r-street', 'r-email', 'letter-body'];
-  const hasData = ids.some(id => { const el = document.getElementById(id); return el && el.value.trim(); });
-  if (hasData) { e.preventDefault(); e.returnValue = ''; }
+  // Text is autosaved as a draft; only warn when uploaded files would be lost.
+  if (_leavingForCheckout) return;
+  if (uploadedFiles.filter(Boolean).length) { e.preventDefault(); e.returnValue = ''; }
 });
 
 async function submitOrder() {
@@ -1402,11 +1482,13 @@ async function submitOrder() {
   if (appliedCode) form.append('discount_code', appliedCode);
   uploadedFiles.filter(Boolean).forEach(f => form.append('attachments', f));
 
+  track('pay_click');
   try {
     const res  = await fetch('/api/create-order', { method: 'POST', body: form });
     const data = await res.json();
     if (data.checkoutUrl) {
       btn.innerHTML = `<span style="display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,0.4);border-top-color:#fff;border-radius:50%;animation:lh-spin 0.7s linear infinite;vertical-align:middle;margin-right:8px"></span>${LH_T('send.redirecting')}`;
+      _leavingForCheckout = true;
       window.location.href = data.checkoutUrl;
     } else {
       throw new Error(data.error || 'Unknown error');
@@ -1674,7 +1756,7 @@ function fillSavedRecipient(sel) {
   } catch(e) {}
 }
 </script>
-<script src="/lang.js?v=18" defer></script>
+<script src="/lang.js?v=19" defer></script>
 <script type="module">
   import * as pdfjsLib from '/vendor/pdfjs/pdf.min.mjs';
   pdfjsLib.GlobalWorkerOptions.workerSrc = '/vendor/pdfjs/pdf.worker.min.mjs';

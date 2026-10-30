@@ -38,7 +38,9 @@ const mockStripe = function StripeClient(_key) {
           id:             sessionId,
           amount_total:   1000,
           payment_status: 'paid',
+          status:         'open',
         }),
+        expire: async (sessionId) => ({ id: sessionId, status: 'expired' }),
       },
     },
     webhooks: {
@@ -223,6 +225,37 @@ test('discount codes apply to base plus add-ons, matching what checkout displays
   assert.equal((await order('d2@example.com', 'TEST100')).price_cents, 400);
   // no code: unchanged
   assert.equal((await order('d3@example.com', '', { colour_printing: '1' })).price_cents, 600);
+});
+
+test('resume link rebuilds checkout for an unpaid order and rotates the session id', async () => {
+  const form = new URLSearchParams({
+    'r-email': 'resume@example.com', 'r-name': 'Res Ume', 'r-street': '1 Main St', 'r-city': 'Toronto',
+    'r-province': 'ON', 'r-postal': 'M5V 1A1', 'r-country': 'CA', 'letter-body': 'Hello again.', 'letter-type': 'standard',
+  });
+  const created = await fetch(`${base}/api/create-order`, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: form.toString() });
+  assert.equal(created.status, 200);
+  const before = db.prepare("SELECT id, status_token, stripe_session_id FROM orders WHERE customer_email = 'resume@example.com' ORDER BY id DESC LIMIT 1").get();
+  assert.ok(before.status_token, 'order needs a status token');
+  const res = await fetch(`${base}/resume/${before.status_token}`, { redirect: 'manual' });
+  assert.equal(res.status, 303);
+  assert.equal(res.headers.get('location'), 'https://checkout.stripe.com/c/pay/test');
+  const after = db.prepare('SELECT stripe_session_id FROM orders WHERE id = ?').get(before.id);
+  assert.notEqual(after.stripe_session_id, before.stripe_session_id, 'session id must rotate');
+  // unknown token goes back to the form, a paid order goes to its status page
+  const bad = await fetch(`${base}/resume/not-a-real-token`, { redirect: 'manual' });
+  assert.equal(bad.headers.get('location'), '/send');
+  db.prepare("UPDATE orders SET status = 'paid' WHERE id = ?").run(before.id);
+  const paid = await fetch(`${base}/resume/${before.status_token}`, { redirect: 'manual' });
+  assert.equal(paid.headers.get('location'), `/status/${before.status_token}`);
+});
+
+test('funnel endpoint records only known steps, anonymously', async () => {
+  const post = (b) => fetch(`${base}/api/funnel`, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(b) });
+  assert.equal((await post({ step: 'send_view', country: 'FR' })).status, 204);
+  assert.equal((await post({ step: 'DROP TABLE orders' })).status, 204);
+  const rows = db.prepare('SELECT step, country FROM funnel_events').all();
+  assert.ok(rows.some(r => r.step === 'send_view' && r.country === 'FR'));
+  assert.ok(!rows.some(r => r.step === 'DROP TABLE orders'));
 });
 
 test('POST /webhook with valid signature marks order paid', async () => {

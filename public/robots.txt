@@ -25,6 +25,7 @@ Allow: /
 Disallow: /admin/
 Disallow: /api/
 Disallow: /order-success
+Disallow: /resume/
 
 # ---------------------------------------------------------------------------
 # AI SEARCH / real-time answer bots, explicitly welcomed.

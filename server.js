@@ -473,6 +473,10 @@ async function abandonedOrderRecovery() {
         AND customer_email IS NOT NULL
         AND customer_email LIKE '%_@_%.__%'
         AND NOT EXISTS (
+          SELECT 1 FROM customers c
+          WHERE lower(c.email) = lower(orders.customer_email) AND c.unsubscribed_at IS NOT NULL
+        )
+        AND NOT EXISTS (
           SELECT 1 FROM orders o2
           WHERE o2.customer_email = orders.customer_email
             AND o2.recovery_sent_at > ?
@@ -1202,6 +1206,71 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
     .run(stripeSession.id, orderId);
 
   res.json({ checkoutUrl: stripeSession.url });
+});
+
+// One-click return to payment for an unpaid order (used by the abandoned-order email).
+// The previous Stripe session is expired first so a payment can never land on a session
+// the order no longer points at.
+app.get('/resume/:token', trackLimiter, async (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  res.setHeader('X-Robots-Tag', 'noindex');
+  const order = db.prepare('SELECT * FROM orders WHERE status_token = ? AND deleted_at IS NULL').get(req.params.token);
+  if (!order) return res.redirect('/send');
+  if (order.status !== 'awaiting_payment') return res.redirect(`/status/${order.status_token}`);
+  try {
+    if (order.stripe_session_id) {
+      const old = await stripe.checkout.sessions.retrieve(order.stripe_session_id);
+      if (old.status === 'complete') return res.redirect(`/order-success?session_id=${encodeURIComponent(old.id)}`);
+      if (old.status === 'open') await stripe.checkout.sessions.expire(old.id);
+    }
+    const extras = [];
+    if (order.extra_page_cents > 0) extras.push(`${(order.page_count || 0) - FREE_PAGES} extra page(s)`);
+    if (order.colour_printing)   extras.push('colour printing');
+    if (order.registered_mail)   extras.push('registered mail');
+    if (order.large_envelope)    extras.push('large envelope');
+    if (order.schedule_for_later) extras.push('scheduled delivery');
+    const extrasNote = extras.length ? ` + ${extras.join(', ')}` : '';
+    const session = await stripe.checkout.sessions.create({
+      customer_email: order.customer_email,
+      line_items: [{
+        price_data: {
+          currency: 'cad',
+          product_data: {
+            name: order.destination_country === 'CA' ? 'Letterhome Domestic Letter' : 'Letterhome International Letter',
+            description: `To: ${order.recipient_name}, ${[order.recipient_city, order.destination_country].filter(Boolean).join(' ')}${extrasNote}`,
+          },
+          unit_amount: order.price_cents,
+        },
+        quantity: 1,
+      }],
+      mode: 'payment',
+      success_url: `${process.env.BASE_URL}/order-success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url:  `${process.env.BASE_URL}/send`,
+      metadata: { order_id: String(order.id) },
+    });
+    db.prepare('UPDATE orders SET stripe_session_id = ? WHERE id = ?').run(session.id, order.id);
+    recordFunnel('resume_click', order.destination_country);
+    return res.redirect(303, session.url);
+  } catch (e) {
+    console.error('[resume] failed:', e.message);
+    return res.redirect('/send');
+  }
+});
+
+// Anonymous, aggregate-only funnel counters (no IP, no cookies, no identifiers).
+const FUNNEL_STEPS = new Set(['send_view', 'step2', 'step3', 'pay_click']);
+function recordFunnel(step, country) {
+  try {
+    db.prepare('INSERT INTO funnel_events (step, country, day) VALUES (?,?,?)')
+      .run(step, String(country || '').slice(0, 2).toUpperCase() || null, new Date().toISOString().slice(0, 10));
+  } catch (e) { console.error('[funnel]', e.message); }
+}
+const funnelLimiter = rateLimit({ windowMs: 60 * 1000, max: 60, standardHeaders: false, legacyHeaders: false, skip: () => process.env.NODE_ENV === 'test', handler: (req, res) => res.status(204).end() });
+app.post('/api/funnel', funnelLimiter, express.text({ type: '*/*', limit: '1kb' }), (req, res) => {
+  let body = req.body;
+  if (typeof body === 'string') { try { body = JSON.parse(body); } catch { body = {}; } }
+  if (body && FUNNEL_STEPS.has(body.step)) recordFunnel(body.step, body.country);
+  res.status(204).end();
 });
 
 app.get('/api/order-status', trackLimiter, (req, res) => {
@@ -3229,24 +3298,32 @@ a{color:#a8472d}</style></head>
 }
 
 function buildRecoveryEmail(order) {
-  const esc = s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  const recipientHint    = order.recipient_name ? ` to ${order.recipient_name}` : '';
-  const recipientHintEsc = order.recipient_name ? ` to ${esc(order.recipient_name)}` : '';
+  const esc = v => String(v || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const base      = process.env.BASE_URL || '';
+  const link      = order.status_token ? `${base}/resume/${order.status_token}` : `${base}/send`;
+  const total     = (order.price_cents / 100).toFixed(order.price_cents % 100 === 0 ? 0 : 2);
+  const toLine    = [order.recipient_name, [order.recipient_city, order.destination_country].filter(Boolean).join(', ')].filter(Boolean).join(' · ');
+  const subject   = order.recipient_name ? `Your letter to ${order.recipient_name} is ready to mail` : 'Your letter is ready to mail';
+  const unsub     = unsubscribeLink(order.customer_email);
+  const benefits  = ['Mailed from Canada within one business day', 'A real Canadian postmark and stamp', 'Free reprint and resend if it doesn\'t arrive'];
   return {
     from:    process.env.EMAIL_FROM,
     to:      order.customer_email,
-    subject: 'You left a letter unsent | Letterhome',
-    text:    `You left a letter unsent.\n\nSomeone back home is waiting to hear from you. Your letter${recipientHint} is still ready to go.\n\nSend your letter: ${process.env.BASE_URL || ''}/send\n\nWe only send this reminder once.\n\nLetterhome · ${MAILING_ADDRESS}\n\nLetterhome`,
+    subject,
+    text:    `Your letter is one step from the mailbox.\n\n${toLine ? 'To: ' + toLine + '\n' : ''}Total: $${total} CAD (printing, envelope and postage included)\n\n${benefits.map(b => '- ' + b).join('\n')}\n\nFinish your order: ${link}\n\nSomething not right, or a question first? Just reply to this email. We only send this reminder once.\n\nLetterhome · ${MAILING_ADDRESS}\nUnsubscribe: ${unsub}`,
     html: `<!DOCTYPE html><html>
 <body style="font-family:Georgia,serif;background:#ede5d3;padding:40px 20px;color:#2a2a2a;margin:0">
-  <div style="max-width:520px;margin:0 auto;background:#faf6ec;border:1px solid rgba(42,42,42,0.12);padding:48px">
-    <div style="width:38px;height:38px;background:#a8472d;display:inline-flex;align-items:center;justify-content:center;color:#faf6ec;font-size:20px;font-family:Georgia,serif;margin-bottom:28px">L</div>
-    <h1 style="font-size:28px;font-weight:400;margin:0 0 10px;letter-spacing:-0.02em">You left a letter unsent.</h1>
-    <p style="color:#6b6258;margin:0 0 32px;font-size:16px;line-height:1.6">Someone back home is waiting to hear from you. Your letter${recipientHintEsc} is still ready to go.</p>
-    <a href="${process.env.BASE_URL || ''}/send" style="display:inline-block;background:#a8472d;color:#faf6ec;padding:14px 28px;font-family:Georgia,serif;font-size:15px;text-decoration:none;letter-spacing:0.02em;margin-bottom:32px">Send Your Letter →</a>
-    <div style="border-top:1px solid rgba(42,42,42,0.1);padding-top:20px;font-size:12px;color:#968b7d">
+  <div style="max-width:520px;margin:0 auto;background:#faf6ec;border:1px solid rgba(42,42,42,0.12);padding:44px">
+    <div style="width:38px;height:38px;background:#a8472d;display:inline-flex;align-items:center;justify-content:center;color:#faf6ec;font-size:20px;font-family:Georgia,serif;margin-bottom:26px">L</div>
+    <h1 style="font-size:28px;font-weight:400;margin:0 0 14px;letter-spacing:-0.02em">Your letter is one step from the mailbox.</h1>
+    ${toLine ? `<p style="margin:0 0 4px;font-size:15px;color:#6b6258">To: <strong style="color:#2a2a2a">${esc(toLine)}</strong></p>` : ''}
+    <p style="margin:0 0 22px;font-size:15px;color:#6b6258">Total: <strong style="color:#2a2a2a">$${total} CAD</strong>, printing, envelope and postage included.</p>
+    <ul style="margin:0 0 28px;padding-left:18px;font-size:15px;line-height:1.7;color:#3a3835">${benefits.map(b => `<li>${esc(b)}</li>`).join('')}</ul>
+    <a href="${link}" style="display:inline-block;background:#a8472d;color:#faf6ec;padding:15px 30px;font-family:Georgia,serif;font-size:16px;text-decoration:none;letter-spacing:0.02em;margin-bottom:28px">Finish my order →</a>
+    <p style="margin:0 0 22px;font-size:14px;color:#6b6258;line-height:1.6">Something not right, or a question first? Just reply to this email and a person will answer.</p>
+    <div style="border-top:1px solid rgba(42,42,42,0.1);padding-top:18px;font-size:12px;color:#968b7d;line-height:1.6">
       <p style="margin:0">We only send this reminder once.</p>
-      <p style="margin:12px 0 0;font-size:11px">Letterhome · ${MAILING_ADDRESS}</p>
+      <p style="margin:10px 0 0;font-size:11px">Letterhome · ${MAILING_ADDRESS}<br><a href="${unsub}" style="color:#968b7d">Unsubscribe</a></p>
     </div>
   </div>
 </body></html>`,
