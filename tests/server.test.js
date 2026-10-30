@@ -154,7 +154,37 @@ test('POST /api/create-order persists order and returns checkoutUrl', async () =
   assert.equal(row.recipient_name, 'Jane Doe');
   assert.equal(row.status, 'awaiting_payment');
   assert.equal(row.destination_country, 'CA');
-  assert.equal(row.price_cents, 1000);
+  assert.equal(row.price_cents, 500);
+});
+
+test('pricing: international base plus colour, large envelope and free scheduling', async () => {
+  const form = new URLSearchParams({
+    'r-email':    'pricing@example.com',
+    'r-name':     'Marie Dupont',
+    'r-street':   '1 Rue de Rivoli',
+    'r-city':     'Paris',
+    'r-postal':   '75001',
+    'r-country':  'FR',
+    'letter-body': 'Bonjour.',
+    'letter-type': 'standard',
+    'colour_printing':    '1',
+    'large_envelope':     '1',
+    'schedule_for_later': '1',
+    'scheduled_date':     '2026-12-10',
+  });
+  const res  = await fetch(`${base}/api/create-order`, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body:    form.toString(),
+  });
+  assert.equal(res.status, 200, await res.clone().text());
+  const row = db.prepare(
+    "SELECT * FROM orders WHERE customer_email = 'pricing@example.com' ORDER BY id DESC LIMIT 1"
+  ).get();
+  // $11 international + $1 colour + $3 large envelope + $0 scheduling
+  assert.equal(row.price_cents, 1500);
+  assert.equal(row.large_envelope, 1);
+  assert.equal(row.schedule_for_later, 1);
 });
 
 test('POST /webhook with valid signature marks order paid', async () => {

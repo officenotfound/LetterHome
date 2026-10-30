@@ -326,14 +326,14 @@ async function sendMail(opts, type = 'general', orderId = null) {
   } catch (e) { console.error('[email_log]', e.message); }
 }
 
-// Base send price ($10 domestic / $20 intl) is unchanged and configurable via settings.
-// Optional-extra pricing: 25% markup over PostPal's rate, rounded up to the nearest dollar.
+// Base send price ($5 domestic / $11 intl) is configurable via settings.
+// Optional-extra pricing (cents).
 const FREE_PAGES              = 2;
-const EXTRA_PAGE_CENTS        = 100;
-const COLOUR_PRINTING_CENTS   = 200;
-const REGISTERED_MAIL_CENTS   = 3200;
-const SCHEDULE_LATER_CENTS    = 200;
-const LARGE_ENVELOPE_CENTS    = 400;
+const EXTRA_PAGE_CENTS        = 30;
+const COLOUR_PRINTING_CENTS   = 100;
+const REGISTERED_MAIL_CENTS   = 2500;
+const SCHEDULE_LATER_CENTS    = 0;
+const LARGE_ENVELOPE_CENTS    = 300;
 
 // Counts pages across uploaded attachments for the per-page overage charge.
 // PDFs are counted exactly; other allowed file types (doc/docx/txt) don't have
@@ -822,8 +822,8 @@ app.get('/api/site-config', (req, res) => {
   res.json({
     orders_open:               getSetting('service_paused', 'false') !== 'true',
     announcement:              getSetting('announcement', ''),
-    price_domestic_cents:      parseInt(getSetting('price_domestic_cents',      '1000')) || 1000,
-    price_international_cents: parseInt(getSetting('price_international_cents', '2000')) || 2000,
+    price_domestic_cents:      parseInt(getSetting('price_domestic_cents',      '500')) || 500,
+    price_international_cents: parseInt(getSetting('price_international_cents', '1100')) || 1100,
     blocked_countries:         JSON.parse(getSetting('blocked_countries', '[]') || '[]'),
   });
 });
@@ -1028,8 +1028,8 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
 
   const isDomestic = b['r-country'] === 'CA';
   const basePriceCents = isDomestic
-    ? (parseInt(getSetting('price_domestic_cents',      '1000')) || 1000)
-    : (parseInt(getSetting('price_international_cents', '2000')) || 2000);
+    ? (parseInt(getSetting('price_domestic_cents',      '500')) || 500)
+    : (parseInt(getSetting('price_international_cents', '1100')) || 1100);
 
   const pageCount = await countAttachmentPages(req.files || []);
   const extraPageCents = Math.max(0, pageCount - FREE_PAGES) * EXTRA_PAGE_CENTS;
@@ -1219,8 +1219,8 @@ app.post('/api/validate-code', trackLimiter, (req, res) => {
 
   const isDomestic = country === 'CA';
   const baseCents = isDomestic
-    ? (parseInt(getSetting('price_domestic_cents',  '1000')) || 1000)
-    : (parseInt(getSetting('price_international_cents', '2000')) || 2000);
+    ? (parseInt(getSetting('price_domestic_cents',  '500')) || 500)
+    : (parseInt(getSetting('price_international_cents', '1100')) || 1100);
 
   const dc = db.prepare(`
     SELECT * FROM discount_codes
