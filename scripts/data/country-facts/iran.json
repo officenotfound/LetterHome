@@ -1,0 +1,33 @@
+{
+  "slug": "iran",
+  "country": "Iran",
+  "checked": "2026-10-30",
+  "postal_operator": {
+    "name": "Iran Post (Post Company of Iran)",
+    "url": "https://www.post.ir",
+    "source_url": null
+  },
+  "international_letter": null,
+  "transit_to_canada": null,
+  "canada_visa_application_centre": null,
+  "canadian_mission": {
+    "name": "Embassy of Canada to Türkiye (also offers consular services to Canadians in Iran; Canada has no mission in Iran)",
+    "city": "Ankara",
+    "url": "https://www.international.gc.ca/country-pays/iran/index.aspx?lang=eng"
+  },
+  "notes_for_senders": [
+    {
+      "fact": "Canada Post: 'Iran: Postal services suspended' (posted March 12, 2026): 'Postal services have been suspended to Iran due to the lack of available transportation.' Canada Post status page lists Iran as not accepting mail and parcels due to a temporary service disruption. This concerns mail sent from Canada to Iran; no official source was readable for mail from Iran to Canada.",
+      "source_url": "https://www.canadapost-postescanada.ca/cpc/en/our-company/support-dashboard.page"
+    },
+    {
+      "fact": "Canada Post status page, red alert: 'Canada Post is not accepting mail and parcels for these destinations due to a temporary service disruption' - Iran posted March 12, 2026.",
+      "source_url": "https://www.canadapost-postescanada.ca/status"
+    }
+  ],
+  "unverified_skipped": [
+    "Iran Post (post.ir) refused connections; no official current source on outbound mail from Iran to Canada, price or transit time.",
+    "Iran is not listed on the IRCC 'Find a visa application centre' page (no VAC in Iran), so the field is null.",
+    "Canadian mission: the Canada-and-Iran page lists the Ankara embassy as 'Offering consular services to Canadians in Iran'; that page was opened but it is the Iran country page, not the Ankara mission page."
+  ]
+}

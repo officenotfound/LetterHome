@@ -1,0 +1,36 @@
+{
+  "slug": "poland",
+  "country": "Poland",
+  "checked": "2026-10-30",
+  "postal_operator": {
+    "name": "Poczta Polska",
+    "url": "https://www.poczta-polska.pl",
+    "source_url": "https://cennik.poczta-polska.pl/usluga,zagraniczny_przesylka_listowa.html"
+  },
+  "international_letter": {
+    "description": "standard letter, up to 20 g, to Canada (priority unregistered letter, first weight step 'do 50g')",
+    "price_text": "11.00 PLN (zone B 'Ameryka Północna, Afryka', up to 50 g; service exempt from VAT)",
+    "currency": "PLN",
+    "source_url": "https://cennik.poczta-polska.pl/usluga,zagraniczny_przesylka_listowa.html",
+    "notes": "Przesyłka listowa nierejestrowana priorytetowa. Zone B is labelled 'Ameryka Północna, Afryka' (North America, Africa); Canada is not named individually, its zone is read from the continent label. Weight steps start at 'do 50g'. Zone A (Europe) is 10.00 PLN, zone C 12.00 PLN, zone D 13.00 PLN for the same step."
+  },
+  "transit_to_canada": null,
+  "canada_visa_application_centre": {
+    "operator": "VFS Global",
+    "cities": [
+      "Warsaw"
+    ],
+    "source_url": "https://www.canada.ca/en/immigration-refugees-citizenship/corporate/contact-ircc/offices/find-visa-application-centre.html"
+  },
+  "canadian_mission": {
+    "name": "Embassy of Canada to Poland",
+    "city": "Warsaw",
+    "url": "https://www.international.gc.ca/country-pays/poland-pologne/warsaw-varsovie.aspx?lang=eng"
+  },
+  "notes_for_senders": [],
+  "unverified_skipped": [
+    "Transit time to Canada: not found on Poczta Polska pages opened.",
+    "The 'informacje dodatkowe' PDF (01.01.2026) is a compressed PDF whose text could not be extracted, so no country-zone list was read.",
+    "VAC operator 'VFS Global' taken from the VAC website links (visa.vfsglobal.com/.../can) on the IRCC page; the IRCC page itself does not print the operator name."
+  ]
+}

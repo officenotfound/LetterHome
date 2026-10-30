@@ -1,0 +1,36 @@
+{
+  "slug": "argentina",
+  "country": "Argentina",
+  "checked": "2026-10-30",
+  "postal_operator": {
+    "name": "Correo Argentino",
+    "url": "https://www.correoargentino.com.ar",
+    "source_url": "https://www.correoargentino.com.ar/servicios/postales/carta-simple-2"
+  },
+  "international_letter": null,
+  "transit_to_canada": {
+    "text": "'de 7 a 15 días, según origen y destino' (Carta Simple service page)",
+    "source_url": "https://www.correoargentino.com.ar/servicios/postales/carta-simple-2"
+  },
+  "canada_visa_application_centre": {
+    "cities": [
+      "Buenos Aires"
+    ],
+    "source_url": "https://www.canada.ca/en/immigration-refugees-citizenship/corporate/contact-ircc/offices/find-visa-application-centre.html",
+    "note": "The IRCC page lists these cities and does not name an operator."
+  },
+  "canadian_offices": {
+    "offices": [
+      {
+        "name": "Embassy of Canada",
+        "city": "Buenos Aires"
+      }
+    ],
+    "source_url": "https://travel.gc.ca/assistance/embassies-consulates/argentina",
+    "note": "Offices exactly as listed on the Government of Canada travel.gc.ca page."
+  },
+  "notes_for_senders": [],
+  "unverified_skipped": [
+    "International letter price for Canada not recorded: the Carta Simple table groups destinations by region, does not name Canada, and does not state the currency."
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "slug": "france",
+  "country": "France",
+  "checked": "2026-10-30",
+  "postal_operator": {
+    "name": "La Poste",
+    "url": "https://www.laposte.fr",
+    "source_url": "https://www.laposte.fr/tarifs-postaux-etranger"
+  },
+  "international_letter": {
+    "description": "Lettre internationale, 20 g",
+    "price_text": "€2.25 with stamps (counter or machine); €2.19 with the print-at-home stamp",
+    "currency": "EUR",
+    "source_url": "https://www.laposte.fr/tarifs-postaux-etranger",
+    "notes": "The page shows one price per weight for international letters and says transport times, rates and customs formalities differ by destination. Canada is not named."
+  },
+  "transit_to_canada": {
+    "text": "'Quelques jours à plusieurs semaines hors Union européenne' (given as indicative)",
+    "source_url": "https://www.laposte.fr/tarifs-postaux-etranger"
+  },
+  "canada_visa_application_centre": {
+    "cities": [
+      "Lyon",
+      "Paris"
+    ],
+    "source_url": "https://www.canada.ca/en/immigration-refugees-citizenship/corporate/contact-ircc/offices/find-visa-application-centre.html",
+    "note": "The IRCC page lists these cities and does not name an operator."
+  },
+  "canadian_offices": {
+    "offices": [
+      {
+        "name": "Embassy of Canada",
+        "city": "Paris"
+      },
+      {
+        "name": "Honorary consul of Canada",
+        "city": "Lyon"
+      },
+      {
+        "name": "Honorary consul of Canada",
+        "city": "Nice"
+      }
+    ],
+    "source_url": "https://travel.gc.ca/assistance/embassies-consulates/france",
+    "note": "Offices exactly as listed on the Government of Canada travel.gc.ca page."
+  },
+  "notes_for_senders": [],
+  "unverified_skipped": []
+}

@@ -1,0 +1,34 @@
+{
+  "slug": "philippines",
+  "country": "Philippines",
+  "checked": "2026-10-30",
+  "postal_operator": null,
+  "international_letter": null,
+  "transit_to_canada": null,
+  "canada_visa_application_centre": {
+    "cities": [
+      "Cebu",
+      "Manila"
+    ],
+    "source_url": "https://www.canada.ca/en/immigration-refugees-citizenship/corporate/contact-ircc/offices/find-visa-application-centre.html",
+    "note": "The IRCC page lists these cities and does not name an operator."
+  },
+  "canadian_offices": {
+    "offices": [
+      {
+        "name": "Embassy of Canada",
+        "city": "Manila"
+      },
+      {
+        "name": "Honorary consul of Canada",
+        "city": "Cebu"
+      }
+    ],
+    "source_url": "https://travel.gc.ca/assistance/embassies-consulates/philippines",
+    "note": "Offices exactly as listed on the Government of Canada travel.gc.ca page."
+  },
+  "notes_for_senders": [],
+  "unverified_skipped": [
+    "No current PHLPost letter rate to Canada was found on a readable official page."
+  ]
+}

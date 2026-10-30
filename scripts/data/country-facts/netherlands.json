@@ -1,0 +1,39 @@
+{
+  "slug": "netherlands",
+  "country": "Netherlands",
+  "checked": "2026-10-30",
+  "postal_operator": {
+    "name": "PostNL",
+    "url": "https://www.postnl.nl",
+    "source_url": "https://www.postnl.nl/versturen/brief-of-kaart-versturen/brief-of-kaart-buitenland/"
+  },
+  "international_letter": null,
+  "transit_to_canada": null,
+  "canada_visa_application_centre": {
+    "operator": "VFS Global",
+    "cities": [
+      "The Hague"
+    ],
+    "source_url": "https://www.canada.ca/en/immigration-refugees-citizenship/corporate/contact-ircc/offices/find-visa-application-centre.html"
+  },
+  "canadian_mission": {
+    "name": "Embassy of Canada to the Netherlands",
+    "city": "The Hague",
+    "url": "https://www.international.gc.ca/country-pays/netherlands-pays_bas/the_hague-la_haye.aspx?lang=eng"
+  },
+  "notes_for_senders": [
+    {
+      "fact": "PostNL: a letter or card abroad must carry international stamps (or a postzegelcode); maximum size 38 x 26.5 x 3.2 cm, minimum 14 x 9 cm, maximum weight 2 kg.",
+      "source_url": "https://www.postnl.nl/versturen/brief-of-kaart-versturen/brief-of-kaart-buitenland/"
+    },
+    {
+      "fact": "PostNL publishes 'from €2,11' as the starting price for a letter or card abroad; the exact price depends on weight and destination.",
+      "source_url": "https://www.postnl.nl/versturen/brief-of-kaart-versturen/brief-of-kaart-buitenland/"
+    }
+  ],
+  "unverified_skipped": [
+    "Price of a 20 g letter to Canada: PostNL page gives only 'from €2,11'; the 2026 tariff booklet PDF (tarievenboekje-12-juli-2026.pdf) could not be read as text, so no Canada/zone row verified.",
+    "Transit time to Canada: PostNL publishes only '2 à 3 werkdagen' for many European countries and 'Buiten Europa: 2-3 werkdagen' for business express; no consumer figure for Canada found.",
+    "VAC operator 'VFS Global' taken from the VAC website links (visa.vfsglobal.com/.../can) on the IRCC page; the IRCC page itself does not print the operator name."
+  ]
+}

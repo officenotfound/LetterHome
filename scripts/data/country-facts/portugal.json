@@ -1,0 +1,43 @@
+{
+  "slug": "portugal",
+  "country": "Portugal",
+  "checked": "2026-10-30",
+  "postal_operator": {
+    "name": "CTT - Correios de Portugal",
+    "url": "https://www.ctt.pt",
+    "source_url": "https://www.ctt.pt/particulares/enviar/para-o-estrangeiro/correio-normal"
+  },
+  "international_letter": {
+    "description": "standard letter, up to 20 g, to Canada (Correio Normal, 'Normalizado (só documentos)')",
+    "price_text": "1,45 € (Resto do mundo sem EUA, até 20g)",
+    "currency": "EUR",
+    "source_url": "https://www.ctt.pt/particulares/enviar/para-o-estrangeiro/correio-normal",
+    "notes": "Normalised documents only (standard-size white or pale envelope, correctly addressed). Canada is listed (ISO code CA) in the 'Resto do Mundo' zone on the CTT zones page. Same page: >20g-50g normalised is 2,85 €; non-standard-format documents up to 20 g are 2,85 € and postal packet (goods and documents) 3,55 €."
+  },
+  "transit_to_canada": {
+    "text": "cerca de 7 dias úteis (not counting customs clearance time, if needed)",
+    "source_url": "https://www.ctt.pt/particulares/enviar/para-o-estrangeiro/correio-normal"
+  },
+  "canada_visa_application_centre": {
+    "operator": "VFS Global",
+    "cities": [
+      "Lisbon"
+    ],
+    "source_url": "https://www.canada.ca/en/immigration-refugees-citizenship/corporate/contact-ircc/offices/find-visa-application-centre.html"
+  },
+  "canadian_mission": {
+    "name": "Embassy of Canada to Portugal",
+    "city": "Lisbon",
+    "url": "https://www.international.gc.ca/country-pays/portugal/lisbon-lisbonne.aspx?lang=eng"
+  },
+  "notes_for_senders": [
+    {
+      "fact": "CTT zones page lists Canada in the 'Resto do Mundo' zone.",
+      "source_url": "https://www.ctt.pt/transversais/zonas-de-destino"
+    }
+  ],
+  "unverified_skipped": [
+    "Delivery-time figure is the one stated on the Correio Normal page; the page gives no explicit effective date for 2026 prices (site links 'Conheça o Tarifário 2026').",
+    "VAC operator 'VFS Global' taken from the VAC website links (visa.vfsglobal.com/.../can) on the IRCC page; the IRCC page itself does not print the operator name."
+  ]
+}

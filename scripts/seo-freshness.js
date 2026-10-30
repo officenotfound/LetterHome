@@ -22,16 +22,16 @@ const HAS_UPDATED = new Set([
   'can-you-mail-cash-to-canada.html',
   'can-i-mail-a-package-to-canada.html',
   'combien-coute-envoyer-une-lettre-au-canada.html',
-  'from-cameroon.html','format-adresse-canadienne.html',
+  'format-adresse-canadienne.html',
   'cheapest-way-to-send-a-letter-to-canada.html',
   'from-belgium.html','envoyer-documents-ircc-depuis-etranger.html',
   'comment-envoyer-une-lettre-au-canada.html','from-dominican-republic.html',
-  'from-argentina.html','from-chile.html','from-iran.html',
-  'from-netherlands.html','from-morocco.html','from-israel.html',
-  'from-senegal.html','from-portugal.html','from-poland.html',
-  'from-turkey.html','from-tanzania.html','from-peru.html',
-  'from-sweden.html','from-uganda.html','from-romania.html',
-  'from-venezuela.html','how-to-mail-cra-tax-forms-from-outside-canada.html',
+  'from-argentina.html',
+  
+  
+  
+  
+  'how-to-mail-cra-tax-forms-from-outside-canada.html',
   'how-to-send-mail-to-canada-without-a-canadian-address.html',
   'how-long-does-it-take-to-mail-a-letter-to-canada.html',
   'how-much-does-it-cost-to-mail-a-letter-to-canada.html',

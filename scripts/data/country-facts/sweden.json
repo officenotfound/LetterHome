@@ -1,0 +1,40 @@
+{
+  "slug": "sweden",
+  "country": "Sweden",
+  "checked": "2026-10-30",
+  "postal_operator": {
+    "name": "PostNord Sverige",
+    "url": "https://www.postnord.se",
+    "source_url": "https://www.postnord.se/en/private/prices-terms-and-conditions-for-private-individuals/postage-rates/postage-rates-for-letters/"
+  },
+  "international_letter": {
+    "description": "standard international letter, up to 20 g, to Canada (International Letter, first weight band up to 50 g)",
+    "price_text": "44 SEK (up to 50 g, stamp or postnord.se), prices valid from January 1, 2026, exempt from VAT",
+    "currency": "SEK",
+    "source_url": "https://www.postnord.se/en/private/prices-terms-and-conditions-for-private-individuals/postage-rates/postage-rates-for-letters/",
+    "notes": "Single international rate table, not split by destination zone. Mark the letter with the 'Prioritaire' label or write 'Prioritaire' on the left side of the stamp. Other bands: 100 g 66 SEK, 250 g 110 SEK (92 via postnord.se), 500 g 140 SEK (115), 1,000 g 200 SEK (180), 2,000 g 240 SEK (220)."
+  },
+  "transit_to_canada": null,
+  "canada_visa_application_centre": {
+    "operator": "VFS Global",
+    "cities": [
+      "Stockholm"
+    ],
+    "source_url": "https://www.canada.ca/en/immigration-refugees-citizenship/corporate/contact-ircc/offices/find-visa-application-centre.html"
+  },
+  "canadian_mission": {
+    "name": "Embassy of Canada to Sweden",
+    "city": "Stockholm",
+    "url": "https://www.international.gc.ca/country-pays/sweden-suede/stockholm.aspx?lang=eng"
+  },
+  "notes_for_senders": [
+    {
+      "fact": "PostNord: write the sender's name and address on the letter, otherwise it cannot be sent to the receiving country.",
+      "source_url": "https://www.postnord.se/en/private/prices-terms-and-conditions-for-private-individuals/postage-rates/postage-rates-for-letters/"
+    }
+  ],
+  "unverified_skipped": [
+    "Transit time to Canada: not found on PostNord pages opened.",
+    "VAC operator 'VFS Global' taken from the VAC website links (visa.vfsglobal.com/.../can) on the IRCC page; the IRCC page itself does not print the operator name."
+  ]
+}

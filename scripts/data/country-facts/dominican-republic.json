@@ -1,0 +1,37 @@
+{
+  "slug": "dominican-republic",
+  "country": "Dominican Republic",
+  "checked": "2026-10-30",
+  "postal_operator": null,
+  "international_letter": null,
+  "transit_to_canada": null,
+  "canada_visa_application_centre": {
+    "cities": [
+      "Santo Domingo"
+    ],
+    "source_url": "https://www.canada.ca/en/immigration-refugees-citizenship/corporate/contact-ircc/offices/find-visa-application-centre.html",
+    "note": "The IRCC page lists these cities and does not name an operator."
+  },
+  "canadian_offices": {
+    "offices": [
+      {
+        "name": "Embassy of Canada",
+        "city": "Santo Domingo"
+      },
+      {
+        "name": "Office of the Embassy of Canada",
+        "city": "Punta Cana"
+      },
+      {
+        "name": "Honorary consul of Canada",
+        "city": "Puerto Plata"
+      }
+    ],
+    "source_url": "https://travel.gc.ca/assistance/embassies-consulates/dominican-republic",
+    "note": "Offices exactly as listed on the Government of Canada travel.gc.ca page."
+  },
+  "notes_for_senders": [],
+  "unverified_skipped": [
+    "INPOSDOM publishes parcel and EMS tariffs but no international letter tariff was found on a readable page."
+  ]
+}

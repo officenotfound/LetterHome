@@ -1,0 +1,32 @@
+{
+  "slug": "uganda",
+  "country": "Uganda",
+  "checked": "2026-10-30",
+  "postal_operator": null,
+  "international_letter": null,
+  "transit_to_canada": null,
+  "canada_visa_application_centre": {
+    "cities": [
+      "Kampala"
+    ],
+    "source_url": "https://www.canada.ca/en/immigration-refugees-citizenship/corporate/contact-ircc/offices/find-visa-application-centre.html",
+    "note": "The IRCC page marks the Kampala VAC as 'Limited Services' until further notice and advises checking the VAC website first."
+  },
+  "canadian_offices": {
+    "offices": [
+      {
+        "name": "Honorary consul of Canada",
+        "city": "Kampala"
+      },
+      {
+        "name": "High Commission of Canada (consular district includes Uganda)",
+        "city": "Nairobi, Kenya"
+      }
+    ],
+    "source_url": "https://travel.gc.ca/assistance/embassies-consulates/uganda"
+  },
+  "notes_for_senders": [],
+  "unverified_skipped": [
+    "postal operator, prices and transit times not researched"
+  ]
+}

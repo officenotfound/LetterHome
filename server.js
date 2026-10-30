@@ -644,6 +644,28 @@ const SECURITY_TXT = [
   })
 );
 
+const REGION_REDIRECTS = {
+  "/from-poland": "/letters-from-europe-to-canada#poland",
+  "/from-portugal": "/letters-from-europe-to-canada#portugal",
+  "/from-romania": "/letters-from-europe-to-canada#romania",
+  "/from-sweden": "/letters-from-europe-to-canada#sweden",
+  "/from-netherlands": "/letters-from-europe-to-canada#netherlands",
+  "/from-turkey": "/letters-from-middle-east-and-north-africa-to-canada#turkey",
+  "/from-israel": "/letters-from-middle-east-and-north-africa-to-canada#israel",
+  "/from-iran": "/letters-from-middle-east-and-north-africa-to-canada#iran",
+  "/from-morocco": "/letters-from-middle-east-and-north-africa-to-canada#morocco",
+  "/from-cameroon": "/letters-from-sub-saharan-africa-to-canada#cameroon",
+  "/from-senegal": "/letters-from-sub-saharan-africa-to-canada#senegal",
+  "/from-tanzania": "/letters-from-sub-saharan-africa-to-canada#tanzania",
+  "/from-uganda": "/letters-from-sub-saharan-africa-to-canada#uganda",
+  "/from-peru": "/letters-from-latin-america-to-canada#peru",
+  "/from-chile": "/letters-from-latin-america-to-canada#chile",
+  "/from-venezuela": "/letters-from-latin-america-to-canada#venezuela"
+};
+Object.entries(REGION_REDIRECTS).forEach(([from, to]) =>
+  app.get(from, (_req, res) => res.redirect(301, to))
+);
+
 ['send', 'guides', 'privacy', 'terms', 'refunds', 'about', 'contact', 'track', 'order-success',
  'from-usa', 'from-uk', 'from-australia', 'from-uae', 'from-france',
  'from-hong-kong', 'from-india', 'from-philippines',
@@ -678,11 +700,8 @@ const SECURITY_TXT = [
  'how-to-write-a-letter-to-canada',
  'how-to-send-a-registered-letter-to-canada',
  'can-i-mail-a-package-to-canada',
- 'from-iran', 'from-morocco', 'from-turkey', 'from-poland', 'from-romania',
- 'from-portugal', 'from-sweden', 'from-netherlands', 'from-argentina', 'from-peru',
- 'from-chile', 'from-venezuela', 'from-dominican-republic', 'from-tanzania',
- 'from-uganda', 'from-cameroon', 'from-senegal', 'from-israel',
- 'from-belgium',
+ 'from-argentina', 'from-dominican-republic', 'from-belgium',
+ 'letters-from-europe-to-canada', 'letters-from-middle-east-and-north-africa-to-canada', 'letters-from-sub-saharan-africa-to-canada', 'letters-from-latin-america-to-canada',
  'format-adresse-canadienne',
  'combien-coute-envoyer-une-lettre-au-canada',
  'envoyer-documents-ircc-depuis-etranger',

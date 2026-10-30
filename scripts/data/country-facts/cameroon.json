@@ -1,0 +1,27 @@
+{
+  "slug": "cameroon",
+  "country": "Cameroon",
+  "checked": "2026-10-30",
+  "postal_operator": null,
+  "international_letter": null,
+  "transit_to_canada": null,
+  "canada_visa_application_centre": {
+    "cities": [
+      "Yaoundé"
+    ],
+    "source_url": "https://www.canada.ca/en/immigration-refugees-citizenship/corporate/contact-ircc/offices/find-visa-application-centre.html"
+  },
+  "canadian_offices": {
+    "offices": [
+      {
+        "name": "High Commission of Canada",
+        "city": "Yaoundé"
+      }
+    ],
+    "source_url": "https://travel.gc.ca/assistance/embassies-consulates/cameroon"
+  },
+  "notes_for_senders": [],
+  "unverified_skipped": [
+    "postal operator, prices and transit times not researched"
+  ]
+}

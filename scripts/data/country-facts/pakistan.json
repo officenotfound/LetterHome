@@ -1,0 +1,35 @@
+{
+  "slug": "pakistan",
+  "country": "Pakistan",
+  "checked": "2026-10-30",
+  "postal_operator": null,
+  "international_letter": null,
+  "transit_to_canada": null,
+  "canada_visa_application_centre": {
+    "cities": [
+      "Islamabad",
+      "Karachi",
+      "Lahore"
+    ],
+    "source_url": "https://www.canada.ca/en/immigration-refugees-citizenship/corporate/contact-ircc/offices/find-visa-application-centre.html",
+    "note": "The IRCC page lists these cities and does not name an operator."
+  },
+  "canadian_offices": {
+    "offices": [
+      {
+        "name": "High Commission of Canada",
+        "city": "Islamabad"
+      },
+      {
+        "name": "Consulate of Canada",
+        "city": "Lahore"
+      }
+    ],
+    "source_url": "https://travel.gc.ca/assistance/embassies-consulates/pakistan",
+    "note": "Offices exactly as listed on the Government of Canada travel.gc.ca page."
+  },
+  "notes_for_senders": [],
+  "unverified_skipped": [
+    "Only older (2020 and 2022) Pakistan Post letter tariff sheets were found, which are too old to publish as current."
+  ]
+}

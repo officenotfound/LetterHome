@@ -1,0 +1,45 @@
+{
+  "slug": "australia",
+  "country": "Australia",
+  "checked": "2026-10-30",
+  "postal_operator": {
+    "name": "Australia Post",
+    "url": "https://auspost.com.au",
+    "source_url": "https://auspost.com.au/personal/sending/stamps/stamp-prices"
+  },
+  "international_letter": {
+    "description": "International small letter, Zone 3 which Australia Post names 'US and Canada'",
+    "price_text": "A$4.40",
+    "currency": "AUD",
+    "source_url": "https://auspost.com.au/personal/sending/stamps/stamp-prices",
+    "notes": "The page does not state an effective date or the size limits for international letters."
+  },
+  "transit_to_canada": null,
+  "canada_visa_application_centre": {
+    "cities": [
+      "Perth",
+      "Melbourne",
+      "Sydney"
+    ],
+    "source_url": "https://www.canada.ca/en/immigration-refugees-citizenship/corporate/contact-ircc/offices/find-visa-application-centre.html",
+    "note": "The IRCC page lists these cities and does not name an operator."
+  },
+  "canadian_offices": {
+    "offices": [
+      {
+        "name": "High Commission of Canada",
+        "city": "Canberra"
+      },
+      {
+        "name": "Consulate General of Canada",
+        "city": "Sydney"
+      }
+    ],
+    "source_url": "https://travel.gc.ca/assistance/embassies-consulates/australia",
+    "note": "Offices exactly as listed on the Government of Canada travel.gc.ca page."
+  },
+  "notes_for_senders": [],
+  "unverified_skipped": [
+    "Transit time to Canada not located on an official page that could be opened."
+  ]
+}

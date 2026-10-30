@@ -533,3 +533,27 @@ test('authenticated admin can soft-delete an order', async () => {
   const row = db.prepare('SELECT deleted_at FROM orders WHERE id = ?').get(id);
   assert.ok(row.deleted_at, 'order should be soft-deleted (deleted_at set)');
 });
+
+test('consolidated country pages 301 to their regional hub', async () => {
+  const map = {
+    '/from-poland': '/letters-from-europe-to-canada#poland',
+    '/from-turkey': '/letters-from-middle-east-and-north-africa-to-canada#turkey',
+    '/from-uganda': '/letters-from-sub-saharan-africa-to-canada#uganda',
+    '/from-chile': '/letters-from-latin-america-to-canada#chile',
+  };
+  for (const [from, to] of Object.entries(map)) {
+    const res = await fetch(`${base}${from}`, { redirect: 'manual' });
+    assert.equal(res.status, 301, from);
+    assert.equal(res.headers.get('location'), to, from);
+  }
+});
+
+test('regional hub pages are served and canonical', async () => {
+  for (const slug of ['letters-from-europe-to-canada', 'letters-from-middle-east-and-north-africa-to-canada',
+                      'letters-from-sub-saharan-africa-to-canada', 'letters-from-latin-america-to-canada']) {
+    const res = await fetch(`${base}/${slug}`);
+    assert.equal(res.status, 200, slug);
+    const html = await res.text();
+    assert.ok(html.includes(`<link rel="canonical" href="https://letterhome.ca/${slug}">`), slug);
+  }
+});

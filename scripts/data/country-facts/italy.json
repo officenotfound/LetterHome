@@ -1,0 +1,44 @@
+{
+  "slug": "italy",
+  "country": "Italy",
+  "checked": "2026-10-30",
+  "postal_operator": {
+    "name": "Poste Italiane",
+    "url": "https://www.poste.it",
+    "source_url": "https://www.poste.it/lettera/postamail-internazionale"
+  },
+  "international_letter": {
+    "description": "Postamail Internazionale (ordinary international letter), standard format up to 20 g, Zone 2 (which lists Canada under the Americas)",
+    "price_text": "€2.55",
+    "currency": "EUR",
+    "source_url": "https://www.poste.it/lettera/postamail-internazionale",
+    "notes": "Zone 2 membership of Canada confirmed on https://www.poste.it/lettera/postamail-internazionale/zone-tariffarie-di-postamail-internazionale"
+  },
+  "transit_to_canada": {
+    "text": "For North America and Oceania, delivery within 16 working days in 85% of cases (counted from the day after posting, excluding Saturdays and holidays)",
+    "source_url": "https://www.poste.it/lettera/postamail-internazionale"
+  },
+  "canada_visa_application_centre": {
+    "cities": [
+      "Rome"
+    ],
+    "source_url": "https://www.canada.ca/en/immigration-refugees-citizenship/corporate/contact-ircc/offices/find-visa-application-centre.html",
+    "note": "The IRCC page lists these cities and does not name an operator."
+  },
+  "canadian_offices": {
+    "offices": [
+      {
+        "name": "Embassy of Canada",
+        "city": "Rome"
+      },
+      {
+        "name": "Consulate of Canada",
+        "city": "Milan"
+      }
+    ],
+    "source_url": "https://travel.gc.ca/assistance/embassies-consulates/italy",
+    "note": "Offices exactly as listed on the Government of Canada travel.gc.ca page."
+  },
+  "notes_for_senders": [],
+  "unverified_skipped": []
+}

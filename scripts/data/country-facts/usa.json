@@ -1,0 +1,88 @@
+{
+  "slug": "usa",
+  "country": "United States",
+  "checked": "2026-10-30",
+  "postal_operator": {
+    "name": "USPS (United States Postal Service)",
+    "url": "https://www.usps.com",
+    "source_url": "https://www.usps.com/international/letters.htm"
+  },
+  "international_letter": {
+    "description": "1 oz international letter (Global Forever stamp)",
+    "price_text": "US$1.75",
+    "currency": "USD",
+    "source_url": "https://www.usps.com/international/letters.htm",
+    "notes": "USPS states the Global Forever stamp is $1.75 for a 1 oz letter. The page does not mention Canada specifically."
+  },
+  "transit_to_canada": null,
+  "canada_visa_application_centre": {
+    "cities": [
+      "Los Angeles",
+      "New York"
+    ],
+    "source_url": "https://www.canada.ca/en/immigration-refugees-citizenship/corporate/contact-ircc/offices/find-visa-application-centre.html",
+    "note": "The IRCC page lists these cities and does not name an operator."
+  },
+  "canadian_offices": {
+    "offices": [
+      {
+        "name": "Embassy of Canada",
+        "city": "Washington"
+      },
+      {
+        "name": "Consulate General of Canada",
+        "city": "Atlanta"
+      },
+      {
+        "name": "Consulate General of Canada",
+        "city": "Boston"
+      },
+      {
+        "name": "Consulate General of Canada",
+        "city": "Chicago"
+      },
+      {
+        "name": "Consulate General of Canada",
+        "city": "Dallas"
+      },
+      {
+        "name": "Consulate General of Canada",
+        "city": "Denver"
+      },
+      {
+        "name": "Consulate General of Canada",
+        "city": "Detroit"
+      },
+      {
+        "name": "Consulate General of Canada",
+        "city": "Los Angeles"
+      },
+      {
+        "name": "Consulate General of Canada",
+        "city": "Miami"
+      },
+      {
+        "name": "Consulate General of Canada",
+        "city": "Minneapolis"
+      },
+      {
+        "name": "Consulate General of Canada",
+        "city": "New York"
+      },
+      {
+        "name": "Consulate General of Canada",
+        "city": "San Francisco"
+      },
+      {
+        "name": "Consulate General of Canada",
+        "city": "Seattle"
+      }
+    ],
+    "source_url": "https://travel.gc.ca/assistance/embassies-consulates/united-states",
+    "note": "Offices exactly as listed on the Government of Canada travel.gc.ca page."
+  },
+  "notes_for_senders": [],
+  "unverified_skipped": [
+    "No transit-time estimate is given on the USPS international letters page (it links to a transit time map)."
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "slug": "romania",
+  "country": "Romania",
+  "checked": "2026-10-30",
+  "postal_operator": {
+    "name": "Compania Națională Poșta Română",
+    "url": "https://www.posta-romana.ro",
+    "source_url": "https://www.posta-romana.ro/a321/tarife/scrisori-carti-postale/in-afara-romaniei/corespondenta-internaional.html"
+  },
+  "international_letter": {
+    "description": "priority international correspondence (Corespondență prioritară), first band 'Până la 100 g (inclusiv)' (no separate 20 g band)",
+    "price_text": "16,00 lei (Scutit de TVA)",
+    "currency": "RON",
+    "source_url": "https://www.posta-romana.ro/a321/tarife/scrisori-carti-postale/in-afara-romaniei/corespondenta-internaional.html",
+    "notes": "Page is the 'in afara României' (outside Romania) correspondence tariff; it states no zones and no effective date, and does not name Canada. Price read from the first weight band."
+  },
+  "transit_to_canada": null,
+  "canada_visa_application_centre": {
+    "operator": "VFS Global",
+    "cities": [
+      "Bucharest"
+    ],
+    "source_url": "https://www.canada.ca/en/immigration-refugees-citizenship/corporate/contact-ircc/offices/find-visa-application-centre.html"
+  },
+  "canadian_mission": {
+    "name": "Embassy of Canada to Romania",
+    "city": "Bucharest",
+    "url": "https://www.international.gc.ca/country-pays/romania-roumanie/bucharest-bucarest.aspx?lang=eng"
+  },
+  "notes_for_senders": [],
+  "unverified_skipped": [
+    "Zone/country coverage for Canada and effective date of the 16,00 lei price: not stated on the tariff page; the linked PDF of countries was not read.",
+    "Transit time to Canada: not found.",
+    "Annex 4 (external non-universal tariffs, 01.08.2025) was read but contains no standard letter prices.",
+    "VAC operator 'VFS Global' taken from the VAC website links (visa.vfsglobal.com/.../can) on the IRCC page; the IRCC page itself does not print the operator name."
+  ]
+}

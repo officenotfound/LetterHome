@@ -1,0 +1,57 @@
+{
+  "slug": "germany",
+  "country": "Germany",
+  "checked": "2026-10-30",
+  "postal_operator": {
+    "name": "Deutsche Post",
+    "url": "https://www.deutschepost.de",
+    "source_url": "https://www.deutschepost.de/de/b/briefe-ins-ausland.html"
+  },
+  "international_letter": {
+    "description": "Standardbrief International, up to 20 g (14 to 23.5 cm long, 9 to 12.5 cm wide, up to 0.5 cm thick)",
+    "price_text": "€1.25",
+    "currency": "EUR",
+    "source_url": "https://www.deutschepost.de/de/b/briefe-ins-ausland.html",
+    "notes": "Deutsche Post prices this product the same for every country worldwide ('Alle Länder – ein Preis – weltweit')."
+  },
+  "transit_to_canada": null,
+  "canada_visa_application_centre": {
+    "cities": [
+      "Berlin",
+      "Düsseldorf"
+    ],
+    "source_url": "https://www.canada.ca/en/immigration-refugees-citizenship/corporate/contact-ircc/offices/find-visa-application-centre.html",
+    "note": "The IRCC page lists these cities and does not name an operator."
+  },
+  "canadian_offices": {
+    "offices": [
+      {
+        "name": "Embassy of Canada",
+        "city": "Berlin"
+      },
+      {
+        "name": "Consulate of Canada",
+        "city": "Düsseldorf"
+      },
+      {
+        "name": "Consulate of Canada",
+        "city": "Munich"
+      },
+      {
+        "name": "Honorary consul of Canada",
+        "city": "Stuttgart"
+      }
+    ],
+    "source_url": "https://travel.gc.ca/assistance/embassies-consulates/germany",
+    "note": "Offices exactly as listed on the Government of Canada travel.gc.ca page."
+  },
+  "notes_for_senders": [
+    {
+      "fact": "Einschreiben International (registered) adds €3.70 to the base postage.",
+      "source_url": "https://www.deutschepost.de/de/b/briefe-ins-ausland.html"
+    }
+  ],
+  "unverified_skipped": [
+    "Delivery time not stated on the page (it links to a separate Brieflaufzeiten tool)."
+  ]
+}

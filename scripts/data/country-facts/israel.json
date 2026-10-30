@@ -1,0 +1,34 @@
+{
+  "slug": "israel",
+  "country": "Israel",
+  "checked": "2026-10-30",
+  "postal_operator": {
+    "name": "Israel Postal Company (Israel Post)",
+    "url": "https://www.israelpost.co.il",
+    "source_url": null
+  },
+  "international_letter": null,
+  "transit_to_canada": null,
+  "canada_visa_application_centre": {
+    "operator": "VFS Global",
+    "cities": [
+      "Tel Aviv"
+    ],
+    "source_url": "https://www.canada.ca/en/immigration-refugees-citizenship/corporate/contact-ircc/offices/find-visa-application-centre.html"
+  },
+  "canadian_mission": {
+    "name": "Embassy of Canada to Israel",
+    "city": "Tel Aviv",
+    "url": "https://www.international.gc.ca/country-pays/israel/tel_aviv.aspx?lang=eng"
+  },
+  "notes_for_senders": [
+    {
+      "fact": "Canada Post (mail from Canada) lists Israel under 'SERVICE AVAILABLE' in its Oct 1, 2026 table, within a 'Many destinations impacted' delay alert (not a suspension).",
+      "source_url": "https://www.canadapost-postescanada.ca/cpc/en/our-company/support-dashboard.page"
+    }
+  ],
+  "unverified_skipped": [
+    "Israel Post sites (israelpost.co.il, doar.israelpost.co.il) returned 'access blocked' / HTTP 403 to automated access, so international letter price and transit time could not be read; rate pages found only by search were dated 2018 and not used.",
+    "VAC operator 'VFS Global' taken from the VAC website links (visa.vfsglobal.com/.../can) on the IRCC page; the IRCC page itself does not print the operator name."
+  ]
+}
