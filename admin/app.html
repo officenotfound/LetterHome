@@ -2233,7 +2233,8 @@ async function showSettings() {
 
   const paused       = settings['service_paused'] === 'true';
   const announcement = settings['announcement'] || '';
-  const priceDom     = settings['price_domestic_cents']      || '1000';
+  const priceDom     = settings['price_domestic_cents']      || '500';
+  const priceUsa     = settings['price_usa_cents']           || '1100';
   const priceIntl    = settings['price_international_cents'] || '2000';
   const dailyCap     = settings['daily_order_cap']           || '0';
   const blockedRaw   = settings['blocked_countries']         || '[]';
@@ -2274,14 +2275,19 @@ async function showSettings() {
           <label>Announcement Banner <span style="color:#9a9a9a;font-weight:400">(shown on the site — leave blank to hide)</span></label>
           <input id="setting-announcement" type="text" value="${esc(announcement)}" placeholder="e.g. Holiday closure Dec 24–Jan 2. Orders resume Jan 3.">
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px">
           <div class="field">
-            <label>Domestic Price (CAD cents)</label>
-            <input id="setting-price-dom" type="number" min="100" step="100" value="${priceDom}">
+            <label>Canada Price (CAD cents)</label>
+            <input id="setting-price-dom" type="number" min="50" step="50" value="${priceDom}">
             <span style="font-size:11px;color:#9a9a9a">Currently $${(parseInt(priceDom)/100).toFixed(2)} CAD</span>
           </div>
           <div class="field">
-            <label>International Price (CAD cents)</label>
+            <label>United States Price (CAD cents)</label>
+            <input id="setting-price-usa" type="number" min="50" step="50" value="${priceUsa}">
+            <span style="font-size:11px;color:#9a9a9a">Currently $${(parseInt(priceUsa)/100).toFixed(2)} CAD</span>
+          </div>
+          <div class="field">
+            <label>Rest of World Price (CAD cents)</label>
             <input id="setting-price-intl" type="number" min="100" step="100" value="${priceIntl}">
             <span style="font-size:11px;color:#9a9a9a">Currently $${(parseInt(priceIntl)/100).toFixed(2)} CAD</span>
           </div>
@@ -2411,7 +2417,8 @@ function renderBlockedChips() {
 
 async function saveAllSettings() {
   const announcement = document.getElementById('setting-announcement')?.value || '';
-  const priceDom     = parseInt(document.getElementById('setting-price-dom')?.value) || 1000;
+  const priceDom     = parseInt(document.getElementById('setting-price-dom')?.value) || 500;
+  const priceUsa     = parseInt(document.getElementById('setting-price-usa')?.value) || 1100;
   const priceIntl    = parseInt(document.getElementById('setting-price-intl')?.value) || 2000;
   const dailyCap     = parseInt(document.getElementById('setting-daily-cap')?.value) || 0;
   const blocked      = JSON.stringify(window._blockedCountries || []);
@@ -2419,6 +2426,7 @@ async function saveAllSettings() {
   const r = await post('/api/admin/settings/batch', {
     announcement,
     price_domestic_cents:      String(priceDom),
+    price_usa_cents:           String(priceUsa),
     price_international_cents: String(priceIntl),
     daily_order_cap:           String(dailyCap),
     blocked_countries:         blocked,

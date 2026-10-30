@@ -326,7 +326,7 @@ async function sendMail(opts, type = 'general', orderId = null) {
   } catch (e) { console.error('[email_log]', e.message); }
 }
 
-// Base send price ($5 domestic / $11 intl) is configurable via settings.
+// Base send price ($5 Canada / $11 United States / $20 elsewhere) is configurable via settings.
 // Optional-extra pricing (cents).
 const FREE_PAGES              = 2;
 const EXTRA_PAGE_CENTS        = 30;
@@ -818,12 +818,20 @@ app.get('/ga.js', (req, res) => {
 `.trim());
 });
 
+// Base send price by destination: Canada, United States, rest of world.
+function getBasePriceCents(country) {
+  if (country === 'CA') return parseInt(getSetting('price_domestic_cents', '500')) || 500;
+  if (country === 'US') return parseInt(getSetting('price_usa_cents', '1100')) || 1100;
+  return parseInt(getSetting('price_international_cents', '2000')) || 2000;
+}
+
 app.get('/api/site-config', (req, res) => {
   res.json({
     orders_open:               getSetting('service_paused', 'false') !== 'true',
     announcement:              getSetting('announcement', ''),
     price_domestic_cents:      parseInt(getSetting('price_domestic_cents',      '500')) || 500,
-    price_international_cents: parseInt(getSetting('price_international_cents', '1100')) || 1100,
+    price_usa_cents:           parseInt(getSetting('price_usa_cents',           '1100')) || 1100,
+    price_international_cents: parseInt(getSetting('price_international_cents', '2000')) || 2000,
     blocked_countries:         JSON.parse(getSetting('blocked_countries', '[]') || '[]'),
   });
 });
@@ -911,6 +919,7 @@ app.use((req, res, next) => {
 const orderLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   max: 8,
+  skip: () => process.env.NODE_ENV === 'test',
   standardHeaders: true,
   legacyHeaders: false,
   handler: (req, res) => {
@@ -1027,9 +1036,7 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
   }
 
   const isDomestic = b['r-country'] === 'CA';
-  const basePriceCents = isDomestic
-    ? (parseInt(getSetting('price_domestic_cents',      '500')) || 500)
-    : (parseInt(getSetting('price_international_cents', '1100')) || 1100);
+  const basePriceCents = getBasePriceCents(b['r-country']);
 
   const pageCount = await countAttachmentPages(req.files || []);
   const extraPageCents = Math.max(0, pageCount - FREE_PAGES) * EXTRA_PAGE_CENTS;
@@ -1217,10 +1224,7 @@ app.post('/api/validate-code', trackLimiter, (req, res) => {
   const country = (req.body?.country || 'CA');
   if (!code) return res.status(400).json({ error: 'No code provided.' });
 
-  const isDomestic = country === 'CA';
-  const baseCents = isDomestic
-    ? (parseInt(getSetting('price_domestic_cents',  '500')) || 500)
-    : (parseInt(getSetting('price_international_cents', '1100')) || 1100);
+  const baseCents = getBasePriceCents(country);
 
   const dc = db.prepare(`
     SELECT * FROM discount_codes
@@ -2461,7 +2465,7 @@ app.get('/api/admin/settings', requireAdmin, (req, res) => {
 });
 
 const ALLOWED_SETTING_KEYS = new Set([
-  'service_paused', 'announcement', 'price_domestic_cents', 'price_international_cents',
+  'service_paused', 'announcement', 'price_domestic_cents', 'price_usa_cents', 'price_international_cents',
   'daily_order_cap', 'blocked_countries', 'away_mode', 'away_message',
 ]);
 

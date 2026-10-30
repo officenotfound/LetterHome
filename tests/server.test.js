@@ -157,7 +157,7 @@ test('POST /api/create-order persists order and returns checkoutUrl', async () =
   assert.equal(row.price_cents, 500);
 });
 
-test('pricing: international base plus colour, large envelope and free scheduling', async () => {
+test('pricing: rest-of-world base plus colour, large envelope and free scheduling', async () => {
   const form = new URLSearchParams({
     'r-email':    'pricing@example.com',
     'r-name':     'Marie Dupont',
@@ -181,10 +181,48 @@ test('pricing: international base plus colour, large envelope and free schedulin
   const row = db.prepare(
     "SELECT * FROM orders WHERE customer_email = 'pricing@example.com' ORDER BY id DESC LIMIT 1"
   ).get();
-  // $11 international + $1 colour + $3 large envelope + $0 scheduling
-  assert.equal(row.price_cents, 1500);
+  // $20 rest-of-world + $1 colour + $3 large envelope + $0 scheduling
+  assert.equal(row.price_cents, 2400);
   assert.equal(row.large_envelope, 1);
   assert.equal(row.schedule_for_later, 1);
+});
+
+test('pricing: United States has its own tier ($11) and Canada stays $5', async () => {
+  const mk = (email, country) => new URLSearchParams({
+    'r-email': email, 'r-name': 'Tier Test', 'r-street': '1 Main St', 'r-city': 'Town',
+    'r-postal': '12345', 'r-country': country, 'letter-body': 'Hi there.', 'letter-type': 'standard',
+  }).toString();
+  for (const [email, country, cents] of [['tier-us@example.com','US',1100],['tier-ca@example.com','CA',500],['tier-de@example.com','DE',2000]]) {
+    const res = await fetch(`${base}/api/create-order`, {
+      method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: mk(email, country),
+    });
+    assert.equal(res.status, 200, await res.clone().text());
+    const row = db.prepare('SELECT price_cents FROM orders WHERE customer_email = ? ORDER BY id DESC LIMIT 1').get(email);
+    assert.equal(row.price_cents, cents, `${country} should cost ${cents}`);
+  }
+  const cfg = await (await fetch(`${base}/api/site-config`)).json();
+  assert.equal(cfg.price_usa_cents, 1100);
+});
+
+test('discount codes apply to base plus add-ons, matching what checkout displays', async () => {
+  db.prepare("INSERT OR REPLACE INTO discount_codes (code, discount_pct, active) VALUES ('TEST20', 20, 1)").run();
+  db.prepare("INSERT OR REPLACE INTO discount_codes (code, discount_cents, active) VALUES ('TEST100', 100, 1)").run();
+  const order = async (email, code, extra = {}) => {
+    const form = new URLSearchParams({
+      'r-email': email, 'r-name': 'Disc Test', 'r-street': '1 Main St', 'r-city': 'Toronto', 'r-province': 'ON',
+      'r-postal': 'M5V 1A1', 'r-country': 'CA', 'letter-body': 'Hello there.', 'letter-type': 'standard',
+      discount_code: code, ...extra,
+    });
+    const res = await fetch(`${base}/api/create-order`, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: form.toString() });
+    assert.equal(res.status, 200, await res.clone().text());
+    return db.prepare('SELECT price_cents, discount_cents FROM orders WHERE customer_email = ? ORDER BY id DESC LIMIT 1').get(email);
+  };
+  // $5 base + $1 colour = $6.00; 20% off = $4.80
+  assert.equal((await order('d1@example.com', 'TEST20', { colour_printing: '1' })).price_cents, 480);
+  // fixed $1.00 off $5 = $4.00
+  assert.equal((await order('d2@example.com', 'TEST100')).price_cents, 400);
+  // no code: unchanged
+  assert.equal((await order('d3@example.com', '', { colour_printing: '1' })).price_cents, 600);
 });
 
 test('POST /webhook with valid signature marks order paid', async () => {

@@ -8,7 +8,7 @@
 <script src="/ga.js" defer></script>
 <script src="/cookie-consent.js?v=2" defer></script>
 <title>Letterhome: Canadian Mailing Service | From $5 CAD</title>
-<meta name="description" content="Need a Canadian mailing date on a legal notice, tax form, or immigration document but you're not in Canada? Upload your PDF and we mail it from Canada via Canada Post the next business day. From $5 CAD.">
+<meta name="description" content="Need a Canadian mailing date but you're not in Canada? Upload your PDF and we print and mail it from Canada via Canada Post the next business day. From $5 CAD.">
 <meta name="keywords" content="send mail to canada, canadian expat mail service, mail letters from abroad, send documents to canada from overseas, mail from canada internationally, send a letter online canada">
 <link rel="canonical" href="https://letterhome.ca/">
 <link rel="icon" href="/favicon.ico" sizes="any">
@@ -94,14 +94,21 @@
             "name": "Domestic letter, within Canada",
             "price": "5",
             "priceCurrency": "CAD",
-            "description": "Up to 5 documents, envelope, Canadian postage, delivered within Canada"
+            "description": "2 pages included (then $0.30 per extra page), envelope, Canadian postage, delivered within Canada"
           },
           {
             "@type": "Offer",
-            "name": "International letter, 160+ countries",
+            "name": "Letter to the United States",
             "price": "11",
             "priceCurrency": "CAD",
-            "description": "Up to 5 documents, envelope, Canadian postage, delivered internationally"
+            "description": "2 pages included (then $0.30 per extra page), envelope, Canadian postage, delivered to the United States"
+          },
+          {
+            "@type": "Offer",
+            "name": "International letter, 160+ other countries",
+            "price": "20",
+            "priceCurrency": "CAD",
+            "description": "2 pages included (then $0.30 per extra page), envelope, Canadian postage, delivered internationally"
           }
         ]
       }
@@ -128,10 +135,10 @@
         },
         {
           "@type": "Question",
-          "name": "What's the difference between domestic and international pricing?",
+          "name": "What does it cost to mail to Canada, the United States, or elsewhere?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Two prices: $5 CAD for letters to a Canadian address, $11 CAD for letters to any of 160+ international destinations. Either price covers up to 5 documents of black & white printing by default (colour available) on letter-size paper, the envelope, postage, and the trip to the post office."
+            "text": "Three prices: $5 CAD for letters to a Canadian address, $11 CAD for letters to the United States, and $20 CAD for letters to any of 160+ other destinations. Every price covers 2 pages of black & white printing by default (colour +$1; extra pages $0.30 each) on letter-size paper, the envelope, postage, and the trip to the post office."
           }
         },
         {
@@ -711,6 +718,11 @@ section { position: relative; z-index: 2; }
 .extras-list strong { font-family: 'DM Mono', monospace; font-weight: 500; color: var(--ink); white-space: nowrap; }
 .extras-note { margin: 14px 0 0; font-size: 13px; color: var(--ink-muted); }
 
+.price-usa {
+  font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: 0.04em;
+  color: var(--red); text-align: center; margin: -8px 0 16px;
+}
+
 .price-includes {
   list-style: none;
   margin-bottom: 24px;
@@ -1197,7 +1209,7 @@ footer {
   <div class="section-inner">
     <div class="section-head">
       <div class="eyebrow" data-i18n="pricing.eyebrow">Pricing</div>
-      <h2 data-i18n="pricing.h2">Flat pricing. Two options.</h2>
+      <h2 data-i18n="pricing.h2">Flat pricing. No surprises.</h2>
       <p data-i18n="pricing.sub">Each letter is one fee that covers black & white printing, the envelope, postage, and delivery. No subscriptions. Colour printing and pages beyond the first 2 cost extra, with every price listed below.</p>
     </div>
 
@@ -1209,10 +1221,10 @@ footer {
         <div class="price">$5<small>CAD</small></div>
         <div class="price-meta" data-i18n="pricing.dom.meta">Typically 1–2 weeks</div>
         <ul class="price-includes">
-          <li data-i18n="pricing.dom.li1">Up to 5 documents, printed in black & white by default (colour available)</li>
-          <li data-i18n="pricing.dom.li2">Single-sided letter-size pages</li>
+          <li data-i18n="pricing.dom.li1">2 pages included, then $0.30 per extra page</li>
+          <li data-i18n="pricing.dom.li2">Black & white by default (colour +$1), single-sided</li>
           <li data-i18n="pricing.dom.li3">Envelope and Canadian postage</li>
-          <li data-i18n="pricing.dom.li4">PDF or Word attachments included</li>
+          <li data-i18n="pricing.dom.li4">Attach up to 5 PDF or Word files</li>
         </ul>
         <a href="/send" class="btn btn-red btn-large" style="width:100%;text-align:center;" data-i18n="pricing.dom.btn">Send to Canada →</a>
       </div>
@@ -1221,13 +1233,14 @@ footer {
         <span class="price-tag" data-i18n="pricing.intl.tag">Anywhere else</span>
         <h3 data-i18n="pricing.intl.h3">International</h3>
         <p class="price-sub" data-i18n="pricing.intl.sub">160+ countries worldwide</p>
-        <div class="price">$11<small>CAD</small></div>
+        <div class="price">$20<small>CAD</small></div>
         <div class="price-meta" data-i18n="pricing.intl.meta">Typically 2–4 weeks</div>
+        <p class="price-usa" data-i18n="pricing.intl.usa">To the United States: $11 CAD</p>
         <ul class="price-includes">
-          <li data-i18n="pricing.intl.li1">Up to 5 documents, printed in black & white by default (colour available)</li>
-          <li data-i18n="pricing.intl.li2">Single-sided letter-size pages</li>
+          <li data-i18n="pricing.intl.li1">2 pages included, then $0.30 per extra page</li>
+          <li data-i18n="pricing.intl.li2">Black & white by default (colour +$1), single-sided</li>
           <li data-i18n="pricing.intl.li3">Envelope and international postage</li>
-          <li data-i18n="pricing.intl.li4">PDF or Word attachments included</li>
+          <li data-i18n="pricing.intl.li4">Attach up to 5 PDF or Word files</li>
         </ul>
         <a href="/send" class="btn btn-outline btn-large" style="width:100%;text-align:center;" data-i18n="pricing.intl.btn">Send internationally →</a>
       </div>
@@ -1330,8 +1343,8 @@ footer {
       </details>
 
       <details class="faq-item">
-        <summary data-i18n="faq.q3">What's the difference between domestic and international pricing?</summary>
-        <p data-i18n="faq.a3">Two prices: $5 CAD for letters to a Canadian address, $11 CAD for letters to any of 160+ international destinations. Either price covers up to 5 documents of black & white printing by default (colour available) on letter-size paper, the envelope, postage, and the trip to the post office.</p>
+        <summary data-i18n="faq.q3">What does it cost to mail to Canada, the United States, or elsewhere?</summary>
+        <p data-i18n="faq.a3">Three prices: $5 CAD for letters to a Canadian address, $11 CAD for letters to the United States, and $20 CAD for letters to any of 160+ other destinations. Every price covers 2 pages of black & white printing by default (colour +$1; extra pages $0.30 each) on letter-size paper, the envelope, postage, and the trip to the post office.</p>
       </details>
 
       <details class="faq-item">
@@ -1616,7 +1629,7 @@ window.addEventListener('load', async function personalizeTicker(){
 </script>
 
 <script src="/theme.js?v=2" defer></script>
-<script src="/lang.js?v=16" defer></script>
+<script src="/lang.js?v=18" defer></script>
 <script>
 (async () => {
   try {
