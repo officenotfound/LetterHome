@@ -3742,7 +3742,7 @@
       'cheapest.s3.p2': 'Cette option est judicieuse quand une ou plusieurs de ces conditions s\'appliquent :',
       'cheapest.s3.p3': 'Vous êtes à l\'extérieur du Canada et n\'avez pas d\'imprimante. Vous devez envoyer plusieurs documents en impression en noir et blanc (couleur disponible). Vous n\'avez pas accès à un bureau de poste local, ou les tarifs d\'affranchissement international depuis votre pays sont élevés. Vous devriez autrement demander à quelqu\'un au Canada de l\'envoyer pour vous. Ou vous voulez simplement que ça soit réglé sans faire de déplacement.',
       'cheapest.s3.h3': 'Comment ça se compare',
-      'cheapest.s3.caption': 'Letterhome inclut les 2 premières pages dans les 6 $ CA, puis ajoute 0,45 $ par page supplémentaire (0,55 $ en couleur); une soumission de 5 pages coûte donc 6,20 $ CA tout compris, ce qui reste économique pour les soumissions de plusieurs pages.',
+      'cheapest.s3.caption': 'Letterhome inclut les 2 premières pages dans les 6 $ CA, puis ajoute 0,45 $ par page supplémentaire (0,55 $ en couleur); une soumission de 5 pages coûte donc 7,35 $ CA tout compris, ce qui reste économique pour les soumissions de plusieurs pages.',
       'cheapest.faq.h2': 'Questions fréquentes',
       'cheapest.faq.q1': 'Quelle est la façon la moins chère d\'envoyer une lettre au Canada?',
       'cheapest.faq.a1': 'Si vous êtes déjà au Canada avec une imprimante et des enveloppes, un timbre de Postes Canada à 1,24 $ (tarif carnet) est l\'option la moins chère. Si vous êtes à l\'extérieur du Canada, un service d\'impression et d\'envoi comme Letterhome à 6 $ CA tout compris est souvent l\'option la plus rentable une fois que vous tenez compte de l\'affranchissement international, de l\'impression et de votre temps.',

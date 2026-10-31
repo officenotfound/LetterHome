@@ -2478,8 +2478,8 @@ function renderBlockedChips() {
 
 async function saveAllSettings() {
   const announcement = document.getElementById('setting-announcement')?.value || '';
-  const priceDom     = parseInt(document.getElementById('setting-price-dom')?.value) || 500;
-  const priceUsa     = parseInt(document.getElementById('setting-price-usa')?.value) || 1100;
+  const priceDom     = parseInt(document.getElementById('setting-price-dom')?.value) || 600;
+  const priceUsa     = parseInt(document.getElementById('setting-price-usa')?.value) || 700;
   const priceIntl    = parseInt(document.getElementById('setting-price-intl')?.value) || 2000;
   const dailyCap     = parseInt(document.getElementById('setting-daily-cap')?.value) || 0;
   const blocked      = JSON.stringify(window._blockedCountries || []);
