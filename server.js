@@ -314,15 +314,15 @@ const transport = mailer.createTransport({
 });
 
 // CASL: commercial electronic messages must carry a valid physical mailing address.
-const MAILING_ADDRESS = '90 King St E, Hamilton, ON L8G 1K7, Canada';
+const MAILING_ADDRESS = '1515 Discovery St, Vancouver, BC V6R 4K5, Canada';
 
 async function sendMail(opts, type = 'general', orderId = null) {
   if (!process.env.SMTP_HOST) return;
   await transport.sendMail(opts);
   try {
     const toAddr = Array.isArray(opts.to) ? opts.to.join(', ') : (opts.to || '');
-    db.prepare('INSERT INTO email_log (to_email, subject, type, order_id) VALUES (?,?,?,?)')
-      .run(toAddr, opts.subject || '', type, orderId || null);
+    db.prepare('INSERT INTO email_log (to_email, subject, type, order_id, body) VALUES (?,?,?,?,?)')
+      .run(toAddr, opts.subject || '', type, orderId || null, type === 'operator_message' ? (opts.text || null) : null);
   } catch (e) { console.error('[email_log]', e.message); }
 }
 
@@ -846,7 +846,7 @@ app.get('/ga.js', (req, res) => {
 function getBasePriceCents(country) {
   if (country === 'CA') return parseInt(getSetting('price_domestic_cents', '500')) || 500;
   if (country === 'US') return parseInt(getSetting('price_usa_cents', '1100')) || 1100;
-  return parseInt(getSetting('price_international_cents', '2000')) || 2000;
+  return parseInt(getSetting('price_international_cents', '1100')) || 1100;
 }
 
 app.get('/api/site-config', (req, res) => {
@@ -855,7 +855,7 @@ app.get('/api/site-config', (req, res) => {
     announcement:              getSetting('announcement', ''),
     price_domestic_cents:      parseInt(getSetting('price_domestic_cents',      '500')) || 500,
     price_usa_cents:           parseInt(getSetting('price_usa_cents',           '1100')) || 1100,
-    price_international_cents: parseInt(getSetting('price_international_cents', '2000')) || 2000,
+    price_international_cents: parseInt(getSetting('price_international_cents', '1100')) || 1100,
     blocked_countries:         JSON.parse(getSetting('blocked_countries', '[]') || '[]'),
   });
 });
@@ -1994,6 +1994,32 @@ app.delete('/api/admin/customers/:email/tags/:tag', requireAdmin, (req, res) => 
   res.json({ ok: true });
 });
 
+// ── Admin notifications and order email history ──────────────────────────────
+// `since` is the "last seen" instant the admin browser keeps (SQLite UTC, "YYYY-MM-DD HH:MM:SS").
+app.get('/api/admin/notifications', requireAdmin, (req, res) => {
+  const since = /^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}/.test(String(req.query.since || ''))
+    ? String(req.query.since).replace('T', ' ').slice(0, 19)
+    : null;
+  const now = db.prepare("SELECT strftime('%Y-%m-%d %H:%M:%S','now') AS t").get().t;
+  const orders = db.prepare(`
+    SELECT id, customer_email, recipient_name, destination_country, price_cents, paid_at
+    FROM orders
+    WHERE deleted_at IS NULL AND paid_at IS NOT NULL ${since ? 'AND paid_at > ?' : ''}
+    ORDER BY paid_at DESC LIMIT 20`).all(...(since ? [since] : []));
+  const contacts = db.prepare(`
+    SELECT id, name, email, substr(message,1,120) AS preview, created_at
+    FROM contact_submissions
+    WHERE read_at IS NULL ${since ? 'AND created_at > ?' : ''}
+    ORDER BY created_at DESC LIMIT 20`).all(...(since ? [since] : []));
+  const unreadContacts = db.prepare('SELECT COUNT(*) AS n FROM contact_submissions WHERE read_at IS NULL').get().n;
+  res.json({ now, orders, contacts, unreadContacts });
+});
+
+app.get('/api/admin/orders/:id/emails', requireAdmin, (req, res) => {
+  res.json(db.prepare(`SELECT id, to_email, subject, type, body, created_at FROM email_log
+                       WHERE order_id = ? ORDER BY created_at DESC LIMIT 50`).all(Number(req.params.id)));
+});
+
 app.post('/api/admin/orders/:id/message', requireAdmin, async (req, res) => {
   const { subject, body } = req.body;
   if (!subject?.trim() || !body?.trim()) return res.status(400).json({ error: 'Subject and body required' });
@@ -3003,7 +3029,7 @@ async function fulfillOrder(sessionId) {
 
   // Atomic status transition, if another concurrent webhook call already changed
   // the status, changes will be 0 and we bail out to prevent double-fulfillment.
-  const result = db.prepare("UPDATE orders SET status = 'paid' WHERE id = ? AND status = 'awaiting_payment'").run(order.id);
+  const result = db.prepare("UPDATE orders SET status = 'paid', paid_at = CURRENT_TIMESTAMP WHERE id = ? AND status = 'awaiting_payment'").run(order.id);
   if (result.changes === 0) return;
 
   const amountCAD  = (session.amount_total / 100).toFixed(2);

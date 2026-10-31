@@ -88,6 +88,25 @@ html[data-theme="dark"] .admin-theme-toggle .label-dark{display:inline}
 .content{margin-left:240px;flex:1;min-height:100vh;display:flex;flex-direction:column}
 .topbar{background:transparent;border-bottom:1px solid #ececec;padding:0 36px;height:72px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
 .topbar-title{font-size:20px;font-weight:600;color:#111111;letter-spacing:-0.02em;font-family:Georgia,serif}
+
+.notif-wrap{position:relative}
+.notif-btn{position:relative;background:none;border:1px solid #e3e3e3;border-radius:4px;width:38px;height:38px;display:grid;place-items:center;cursor:pointer;color:#2a2a2a}
+.notif-btn:hover{background:#f5f5f5}
+.notif-count{position:absolute;top:-6px;right:-6px;background:#b42318;color:#fff;font-size:11px;font-weight:600;min-width:18px;height:18px;border-radius:9px;display:grid;place-items:center;padding:0 4px;font-family:ui-monospace,monospace}
+.notif-panel{position:absolute;right:0;top:46px;width:340px;max-width:calc(100vw - 24px);background:#fff;border:1px solid #e3e3e3;border-radius:6px;box-shadow:0 8px 28px rgba(0,0,0,.14);z-index:300;overflow:hidden}
+.notif-head{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid #eee;font-size:14px}
+.notif-clear{background:none;border:none;color:#7d3220;font-size:12px;cursor:pointer}
+.notif-item{display:block;width:100%;text-align:left;background:none;border:none;border-bottom:1px solid #f1f1f1;padding:11px 14px;cursor:pointer;font-size:13px;line-height:1.45;color:#2a2a2a}
+.notif-item:hover{background:#faf8f4}
+.notif-item small{display:block;color:#777;font-size:11px;margin-top:2px}
+.notif-empty{padding:18px 14px;font-size:13px;color:#777}
+.notif-foot{padding:10px 14px;font-size:12px;color:#777;border-top:1px solid #eee}
+.notif-foot button{background:none;border:none;color:#7d3220;cursor:pointer;font-size:12px;padding:0}
+.toast-stack{position:fixed;right:16px;bottom:16px;display:flex;flex-direction:column;gap:8px;z-index:400}
+.toast{background:#1f1f1f;color:#fff;padding:12px 16px;border-radius:6px;font-size:13px;box-shadow:0 6px 20px rgba(0,0,0,.25);cursor:pointer;max-width:320px}
+.email-hist{border-top:1px solid #eee;margin-top:16px;padding-top:12px}
+.email-hist-item{padding:8px 0;border-bottom:1px solid #f3f3f3;font-size:13px}
+.email-hist-item pre{white-space:pre-wrap;font-family:inherit;color:#555;margin:4px 0 0;font-size:12px}
 .topbar-user{font-size:10px;color:#6b6b6b;font-family:'DM Mono',ui-monospace,monospace;text-transform:uppercase;letter-spacing:0.12em}
 .main{padding:36px;flex:1;max-width:1400px}
 
@@ -328,8 +347,22 @@ html[data-theme="dark"] .dash-grid-5{background:rgba(255,255,255,0.08);border-co
   <div class="topbar">
     <button class="mob-menu-btn" onclick="toggleMobSidebar()" aria-label="Open menu">☰</button>
     <div class="topbar-title" id="topbar-title">Dashboard</div>
-    <div class="topbar-user" id="topbar-user"></div>
+    <div style="display:flex;align-items:center;gap:16px">
+      <div class="notif-wrap">
+        <button class="notif-btn" id="notif-btn" onclick="toggleNotifPanel()" aria-label="Notifications" aria-expanded="false">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+          <span class="notif-count" id="notif-count" style="display:none">0</span>
+        </button>
+        <div class="notif-panel" id="notif-panel" style="display:none">
+          <div class="notif-head"><strong>Notifications</strong><button class="notif-clear" onclick="markNotifsRead()">Mark all read</button></div>
+          <div id="notif-list"><div class="notif-empty">Nothing new.</div></div>
+          <div class="notif-foot" id="notif-foot"></div>
+        </div>
+      </div>
+      <div class="topbar-user" id="topbar-user"></div>
+    </div>
   </div>
+  <div id="toast-stack" class="toast-stack" aria-live="polite"></div>
   <div id="twofa-banner" style="display:none;background:#7d3220;color:#faf6ec;padding:10px 20px;font-size:13px;font-family:'DM Mono',ui-monospace,monospace;text-align:center">
     ⚠ Your account has no 2FA code set up. Ask whoever manages the server to add one for you — until then your login only needs a password.
   </div>
@@ -356,6 +389,7 @@ async function init() {
   }
   window.addEventListener('popstate', () => route());
   startCountdownTicker();
+  startNotifications();
   api('/api/admin/contacts/unread').then(d => { if (d) updateContactsBadge(d.unread); });
   route();
 }
@@ -968,6 +1002,10 @@ async function showOrder(id) {
       <div class="card-header"><div class="card-title">Email ${esc(o.customer_email)}</div></div>
       <div style="padding:20px">
         <div class="field" style="margin-bottom:12px">
+          <label>Template</label>
+          <select id="msg-template" onchange="applyMsgTemplate()"><option value="">Write from scratch</option></select>
+        </div>
+        <div class="field" style="margin-bottom:12px">
           <label>Subject</label>
           <input id="msg-subject" type="text" value="Re: Letterhome order #${o.id}">
         </div>
@@ -980,6 +1018,7 @@ async function showOrder(id) {
           <button class="btn btn-outline btn-sm" onclick="toggleMessageForm(${o.id})">Cancel</button>
           <span id="msg-status" style="font-size:12px;color:#16a34a;align-self:center;display:none">✓ Sent</span>
         </div>
+        <div class="email-hist"><div style="font-size:12px;color:#777;margin-bottom:4px;text-transform:uppercase;letter-spacing:.08em">Emails sent for this order</div><div id="msg-history"><div class="notif-empty" style="padding:6px 0">Loading…</div></div></div>
       </div>
     </div>
     ${slaBanner(o.created_at, o.status)}
@@ -1046,9 +1085,34 @@ async function showOrder(id) {
     </div>`);
 }
 
-function toggleMessageForm() {
+let _msgTemplates = [];
+let _msgOrderId = null;
+function toggleMessageForm(id) {
   const f = document.getElementById('message-form');
-  f.style.display = f.style.display === 'none' ? 'block' : 'none';
+  const open = f.style.display === 'none';
+  f.style.display = open ? 'block' : 'none';
+  if (open && id) { _msgOrderId = id; loadMsgTemplates(); loadMsgHistory(id); }
+}
+
+async function loadMsgTemplates() {
+  const sel = document.getElementById('msg-template');
+  if (!sel || sel.options.length > 1) return;
+  _msgTemplates = (await api('/api/admin/templates')) || [];
+  _msgTemplates.forEach(t => { const o = document.createElement('option'); o.value = t.id; o.textContent = t.name; sel.appendChild(o); });
+}
+
+function applyMsgTemplate() {
+  const t = _msgTemplates.find(x => String(x.id) === document.getElementById('msg-template').value);
+  if (!t) return;
+  document.getElementById('msg-subject').value = t.subject;
+  document.getElementById('msg-body').value = t.body;
+}
+
+async function loadMsgHistory(id) {
+  const box = document.getElementById('msg-history');
+  const rows = (await api(`/api/admin/orders/${id}/emails`)) || [];
+  box.innerHTML = rows.length ? rows.map(r => `<div class="email-hist-item"><strong>${esc(r.subject)}</strong> <span style="color:#888">${fmtDateTime(r.created_at)} · ${esc(String(r.type || '').replace(/_/g, ' '))}</span>${r.body ? `<pre>${esc(r.body)}</pre>` : ''}</div>`).join('')
+    : '<div class="notif-empty" style="padding:6px 0">No emails sent yet.</div>';
 }
 
 async function sendMessage(id) {
@@ -1061,9 +1125,88 @@ async function sendMessage(id) {
     s.style.display = 'inline';
     document.getElementById('msg-body').value = '';
     setTimeout(() => s.style.display = 'none', 3000);
+    loadMsgHistory(id);
   } else {
     alert('Could not send: ' + (r?.error || 'unknown error'));
   }
+}
+
+// ── Notifications (new paid orders + unread contact messages) ────────────────
+const NOTIF_KEY = 'lh-admin-notif-seen';
+let _notifItems = [];
+let _notifSince = null;
+let _notifFirst = true;
+
+function readSeen() { try { return localStorage.getItem(NOTIF_KEY); } catch { return null; } }
+function writeSeen(v) { try { localStorage.setItem(NOTIF_KEY, v); } catch {} }
+
+function showToast(text, onClick) {
+  const el = document.createElement('div');
+  el.className = 'toast'; el.textContent = text;
+  el.onclick = () => { el.remove(); if (onClick) onClick(); };
+  document.getElementById('toast-stack').appendChild(el);
+  setTimeout(() => el.remove(), 9000);
+}
+
+function renderNotifs(unreadContacts) {
+  const n = _notifItems.length;
+  const badge = document.getElementById('notif-count');
+  badge.textContent = n > 99 ? '99+' : n; badge.style.display = n ? 'grid' : 'none';
+  document.title = (n ? `(${n}) ` : '') + 'Letterhome Admin';
+  const list = document.getElementById('notif-list');
+  list.innerHTML = n ? _notifItems.map((it, i) => `<button class="notif-item" onclick="openNotif(${i})">${it.html}<small>${esc(it.when)}</small></button>`).join('')
+    : '<div class="notif-empty">Nothing new.</div>';
+  document.getElementById('notif-foot').innerHTML = unreadContacts ? `<button onclick="go('/admin/contacts')">${unreadContacts} unread contact message${unreadContacts > 1 ? 's' : ''} →</button>` : '';
+}
+
+function openNotif(i) {
+  const it = _notifItems[i];
+  document.getElementById('notif-panel').style.display = 'none';
+  if (it) go(it.path);
+}
+
+function toggleNotifPanel() {
+  const p = document.getElementById('notif-panel');
+  const open = p.style.display === 'none';
+  p.style.display = open ? 'block' : 'none';
+  document.getElementById('notif-btn').setAttribute('aria-expanded', open);
+  if (open && 'Notification' in window && Notification.permission === 'default') Notification.requestPermission();
+}
+
+function markNotifsRead() {
+  if (_notifSince) writeSeen(_notifSince);
+  _notifItems = []; renderNotifs(0);
+  document.getElementById('notif-panel').style.display = 'none';
+}
+
+async function pollNotifications() {
+  const seen = readSeen();
+  const d = await api('/api/admin/notifications' + (seen ? `?since=${encodeURIComponent(seen)}` : ''));
+  if (!d) return;
+  _notifSince = d.now;
+  if (!seen) { writeSeen(d.now); } // first ever visit: start counting from now, not the whole history
+  const items = [];
+  (seen ? d.orders : []).forEach(o => items.push({ key: 'o' + o.id, path: `/admin/orders/${o.id}`,
+    html: `<strong>New order #${o.id}</strong> · $${(o.price_cents / 100).toFixed(2)} CAD<br>${esc(o.recipient_name || '')} (${esc(o.destination_country || '')})`, when: o.paid_at + ' UTC' }));
+  (seen ? d.contacts : []).forEach(c => items.push({ key: 'c' + c.id, path: '/admin/contacts',
+    html: `<strong>Message from ${esc(c.name)}</strong><br>${esc(c.preview)}`, when: c.created_at + ' UTC' }));
+  const known = new Set(_notifItems.map(i => i.key));
+  const fresh = items.filter(i => !known.has(i.key));
+  _notifItems = items;
+  if (!_notifFirst) fresh.forEach(i => {
+    const plain = i.html.replace(/<br>/g, ' · ').replace(/<[^>]+>/g, '');
+    showToast(plain, () => go(i.path));
+    try { if ('Notification' in window && Notification.permission === 'granted' && document.hidden) new Notification('Letterhome', { body: plain }); } catch {}
+  });
+  _notifFirst = false;
+  renderNotifs(d.unreadContacts);
+}
+
+function startNotifications() {
+  pollNotifications();
+  setInterval(() => { if (!document.hidden) pollNotifications(); }, 30000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) pollNotifications(); });
+  document.addEventListener('click', e => { if (!e.target.closest('.notif-wrap')) document.getElementById('notif-panel').style.display = 'none'; });
 }
 
 async function saveActualCost(id) {

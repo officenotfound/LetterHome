@@ -183,8 +183,8 @@ test('pricing: rest-of-world base plus colour, large envelope and free schedulin
   const row = db.prepare(
     "SELECT * FROM orders WHERE customer_email = 'pricing@example.com' ORDER BY id DESC LIMIT 1"
   ).get();
-  // $20 rest-of-world + $1 colour + $3 large envelope + $0 scheduling
-  assert.equal(row.price_cents, 2400);
+  // $11 rest-of-world + $1 colour + $3 large envelope + $0 scheduling
+  assert.equal(row.price_cents, 1500);
   assert.equal(row.large_envelope, 1);
   assert.equal(row.schedule_for_later, 1);
 });
@@ -194,7 +194,7 @@ test('pricing: United States has its own tier ($11) and Canada stays $5', async 
     'r-email': email, 'r-name': 'Tier Test', 'r-street': '1 Main St', 'r-city': 'Town',
     'r-postal': '12345', 'r-country': country, 'letter-body': 'Hi there.', 'letter-type': 'standard',
   }).toString();
-  for (const [email, country, cents] of [['tier-us@example.com','US',1100],['tier-ca@example.com','CA',500],['tier-de@example.com','DE',2000]]) {
+  for (const [email, country, cents] of [['tier-us@example.com','US',1100],['tier-ca@example.com','CA',500],['tier-de@example.com','DE',1100]]) {
     const res = await fetch(`${base}/api/create-order`, {
       method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: mk(email, country),
     });
@@ -555,5 +555,49 @@ test('regional hub pages are served and canonical', async () => {
     assert.equal(res.status, 200, slug);
     const html = await res.text();
     assert.ok(html.includes(`<link rel="canonical" href="https://letterhome.ca/${slug}">`), slug);
+  }
+});
+
+test('admin notifications, plus per-order email history', async () => {
+  const anon = await fetch(`${base}/api/admin/notifications`);
+  assert.equal(anon.status, 401);
+
+  const { cookie } = await loginAdmin();
+  const sessionId = seedOrder({ status: 'paid', priceCents: 500, recipientName: 'Notif Person' });
+  db.prepare("UPDATE orders SET paid_at = strftime('%Y-%m-%d %H:%M:%S','now') WHERE stripe_session_id = ?").run(sessionId);
+  db.prepare('INSERT INTO contact_submissions (name, email, message) VALUES (?,?,?)').run('Contact Tester', 'c@example.com', 'Where is my letter?');
+
+  const res = await fetch(`${base}/api/admin/notifications?since=2000-01-01%2000:00:00`, { headers: { Cookie: cookie } });
+  assert.equal(res.status, 200);
+  const body = await res.json();
+  assert.ok(body.orders.some(o => o.recipient_name === 'Notif Person' && o.price_cents === 500));
+  assert.ok(body.contacts.some(c => c.name === 'Contact Tester'));
+  assert.ok(body.unreadContacts >= 1);
+
+  // Nothing is "new" relative to a timestamp in the future.
+  const later = await fetch(`${base}/api/admin/notifications?since=2999-01-01%2000:00:00`, { headers: { Cookie: cookie } });
+  const l = await later.json();
+  assert.equal(l.orders.length, 0);
+  assert.equal(l.contacts.length, 0);
+
+  // Operator messages are logged with their body and listed on the order (same login: the login limiter is tight).
+  const sid2 = seedOrder({ status: 'paid', email: 'cust@example.com' });
+  const id = db.prepare('SELECT id FROM orders WHERE stripe_session_id = ?').get(sid2).id;
+  db.prepare("INSERT INTO email_log (to_email, subject, type, order_id, body) VALUES (?,?,?,?,?)")
+    .run('cust@example.com', 'Re: order', 'operator_message', id, 'We need a different address.');
+  const emailsRes = await fetch(`${base}/api/admin/orders/${id}/emails`, { headers: { Cookie: cookie } });
+  assert.equal(emailsRes.status, 200);
+  const rows = await emailsRes.json();
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].body, 'We need a different address.');
+});
+
+test('the retired mailing address never appears in served pages, scripts or server code', () => {
+  const root = path.join(__dirname, '..');
+  const dirs = ['public', 'admin'];
+  const files = ['server.js', 'db.js', ...dirs.flatMap(d => fs.readdirSync(path.join(root, d)).filter(f => /\.(html|js|txt|json|xml|md)$/.test(f)).map(f => path.join(d, f)))];
+  for (const f of files) {
+    const text = fs.readFileSync(path.join(root, f), 'utf8');
+    assert.ok(!/90 King St/i.test(text) && !/L8G\s?1K7/i.test(text), `${f} still contains the old mailing address`);
   }
 });

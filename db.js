@@ -78,6 +78,7 @@ try { db.exec(`ALTER TABLE orders ADD COLUMN extra_page_cents INTEGER DEFAULT 0`
 try { db.exec(`ALTER TABLE orders ADD COLUMN colour_printing INTEGER DEFAULT 0`);  } catch {}
 try { db.exec(`ALTER TABLE orders ADD COLUMN registered_mail INTEGER DEFAULT 0`);  } catch {}
 try { db.exec(`ALTER TABLE orders ADD COLUMN large_envelope INTEGER DEFAULT 0`);   } catch {}
+try { db.exec(`ALTER TABLE orders ADD COLUMN paid_at DATETIME`); } catch {}
 try { db.exec(`ALTER TABLE orders ADD COLUMN schedule_for_later INTEGER DEFAULT 0`); } catch {}
 try { db.exec(`ALTER TABLE orders ADD COLUMN scheduled_date TEXT`);           } catch {}
 try {
@@ -315,6 +316,7 @@ try {
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   )`);
   db.exec(`CREATE INDEX IF NOT EXISTS idx_email_log_to ON email_log(to_email)`);
+  try { db.exec(`ALTER TABLE email_log ADD COLUMN body TEXT`); } catch {}
 } catch (e) { console.error('[init] email_log table:', e.message); }
 
 try {
