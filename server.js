@@ -41,7 +41,7 @@ const DEPLOY_INFO = (() => {
   }
 })();
 const fs   = require('fs');
-const { randomUUID, createHmac, createHash, createCipheriv, scryptSync, randomBytes, timingSafeEqual } = require('node:crypto');
+const { randomUUID, randomInt, createHmac, createHash, createCipheriv, scryptSync, randomBytes, timingSafeEqual } = require('node:crypto');
 const B2 = require('backblaze-b2');
 
 fs.mkdirSync('uploads', { recursive: true });
@@ -3777,8 +3777,103 @@ cron.schedule('0 * * * *', () => {
   abandonedOrderRecovery();
 });
 
+// ── Thank-you coupon: one single-use 15% code, emailed 7 days after a paid order ──
+const THANKYOU_PCT = 15;
+const THANKYOU_DELAY_DAYS = 7;
+const THANKYOU_VALID_DAYS = 30;
+
+function newThankYouCode() {
+  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no 0/O/1/I
+  let suffix = '';
+  for (let i = 0; i < 6; i++) suffix += alphabet[randomInt(alphabet.length)];
+  return `THANKS-${suffix}`;
+}
+
+function buildThankYouEmail(order, code, expiresOn) {
+  const base   = process.env.BASE_URL || '';
+  const link   = `${base}/send?code=${encodeURIComponent(code)}`;
+  const unsub  = unsubscribeLink(order.customer_email);
+  const name   = String(order.sender_name || '').trim().split(/\s+/)[0] || '';
+  const hello  = name ? `Hi ${name},` : 'Hello,';
+  const esc    = v => String(v || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const subject = `${THANKYOU_PCT}% off your next letter`;
+  return {
+    from:    process.env.EMAIL_FROM,
+    to:      order.customer_email,
+    replyTo: process.env.OPERATOR_EMAIL,
+    subject,
+    headers: { 'List-Unsubscribe': `<${unsub}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' },
+    text: `${hello}\n\nThanks for sending a letter with Letterhome. Here is ${THANKYOU_PCT}% off your next one:\n\n${code}\n\nUse it at checkout, or open this link and it applies automatically:\n${link}\n\nThe code works once and expires on ${expiresOn}.\n\nLetterhome · ${MAILING_ADDRESS}\nYou're receiving this because you placed an order with us. To stop these emails: ${unsub}`,
+    html: `<!DOCTYPE html><html>
+<body style="font-family:Georgia,serif;background:#ede5d3;padding:40px 20px;color:#2a2a2a;margin:0">
+  <div style="max-width:520px;margin:0 auto;background:#faf6ec;border:1px solid rgba(42,42,42,0.12);padding:44px">
+    <h1 style="font-size:26px;font-weight:400;margin:0 0 14px;letter-spacing:-0.02em">${THANKYOU_PCT}% off your next letter</h1>
+    <p style="margin:0 0 18px;font-size:15px;line-height:1.6;color:#3a3835">${esc(hello)}<br>Thanks for sending a letter with Letterhome. Here is a thank-you for your next one.</p>
+    <p style="margin:0 0 22px;text-align:center"><span style="display:inline-block;border:1.5px dashed #a8472d;padding:14px 26px;font-family:'Courier New',monospace;font-size:22px;letter-spacing:0.08em;color:#a8472d">${esc(code)}</span></p>
+    <p style="margin:0 0 26px;text-align:center"><a href="${link}" style="display:inline-block;background:#a8472d;color:#faf6ec;padding:15px 30px;font-size:16px;text-decoration:none">Send a letter with ${THANKYOU_PCT}% off</a></p>
+    <p style="margin:0 0 22px;font-size:14px;color:#6b6258;line-height:1.6">The code works once and expires on ${esc(expiresOn)}. Questions? Reply to this email and a person will answer.</p>
+    <div style="border-top:1px solid rgba(42,42,42,0.1);padding-top:18px;font-size:12px;color:#968b7d;line-height:1.6">
+      <p style="margin:0">You're receiving this because you placed an order with us.</p>
+      <p style="margin:10px 0 0;font-size:11px">Letterhome · ${MAILING_ADDRESS}<br><a href="${unsub}" style="color:#968b7d">Unsubscribe</a></p>
+    </div>
+  </div>
+</body></html>`,
+  };
+}
+
+// One email per customer, ever. Only orders paid (paid_at is set) 7 to 30 days ago,
+// so old orders from before this feature never get a surprise email.
+async function thankYouCouponJob() {
+  if (!process.env.SMTP_HOST) return { sent: 0 };
+  let sent = 0;
+  try {
+    const due = db.prepare(`
+      SELECT * FROM orders
+      WHERE status IN ('paid','submitted_to_printer','printing','mailed','delivered')
+        AND paid_at IS NOT NULL
+        AND paid_at <= datetime('now', ?)
+        AND paid_at >  datetime('now', ?)
+        AND thankyou_sent_at IS NULL
+        AND deleted_at IS NULL
+        AND customer_email LIKE '%_@_%.__%'
+        AND NOT EXISTS (
+          SELECT 1 FROM customers c
+          WHERE lower(c.email) = lower(orders.customer_email) AND c.unsubscribed_at IS NOT NULL
+        )
+        AND NOT EXISTS (
+          SELECT 1 FROM orders o2
+          WHERE lower(o2.customer_email) = lower(orders.customer_email) AND o2.thankyou_sent_at IS NOT NULL
+        )
+      GROUP BY lower(customer_email)
+      ORDER BY paid_at
+      LIMIT 50
+    `).all(`-${THANKYOU_DELAY_DAYS} days`, `-${THANKYOU_DELAY_DAYS + 23} days`);
+    for (const order of due) {
+      let code = null;
+      try {
+        const expires = new Date(Date.now() + THANKYOU_VALID_DAYS * 86400 * 1000);
+        const expiresSql = expires.toISOString().replace('T', ' ').slice(0, 19);
+        const expiresOn  = expires.toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'America/Vancouver' });
+        code = newThankYouCode();
+        db.prepare(`INSERT INTO discount_codes (code, description, discount_pct, max_uses, expires_at)
+                    VALUES (?, ?, ?, 1, ?)`).run(code, `Thank-you coupon for order #${order.id}`, THANKYOU_PCT, expiresSql);
+        await sendMail(buildThankYouEmail(order, code, expiresOn), 'thankyou_coupon', order.id);
+        db.prepare('UPDATE orders SET thankyou_sent_at = CURRENT_TIMESTAMP WHERE id = ?').run(order.id);
+        sent++;
+        console.log(`[thankyou] sent coupon ${code} for order #${order.id}`);
+      } catch (e) {
+        if (code) db.prepare('DELETE FROM discount_codes WHERE code = ?').run(code);
+        console.error(`[thankyou] failed for order #${order.id}:`, e.message);
+      }
+    }
+  } catch (e) { console.error('[thankyou] job failed:', e.message); }
+  return { sent };
+}
+
+cron.schedule('15 * * * *', () => { thankYouCouponJob(); });
+
 const PORT = process.env.PORT || 3000;
 if (!process.env.TEST_MODE) {
   app.listen(PORT, () => console.log(`Letterhome running on port ${PORT}`));
 }
-module.exports = { app, db };
+module.exports = { app, db, thankYouCouponJob };

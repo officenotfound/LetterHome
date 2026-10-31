@@ -71,7 +71,11 @@ require.cache[stripeResolvePath] = {
 };
 
 // ── Load server (gets mocked stripe) ─────────────────────────────────────────
-const { app, db } = require('../server');
+// Capture outgoing mail instead of sending it (the SMTP_HOST gate stays off except inside tests that set it).
+const sentMail = [];
+require('nodemailer').createTransport = () => ({ sendMail: async (o) => { sentMail.push(o); return {}; } });
+
+const { app, db, thankYouCouponJob } = require('../server');
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function webhookSig(payload) {
@@ -599,5 +603,51 @@ test('the retired mailing address never appears in served pages, scripts or serv
   for (const f of files) {
     const text = fs.readFileSync(path.join(root, f), 'utf8');
     assert.ok(!/90 King St/i.test(text) && !/L8G\s?1K7/i.test(text), `${f} still contains the old mailing address`);
+  }
+});
+
+test('thank-you coupon: one single-use 15% code per customer, 7 days after payment, skips unsubscribed and old orders', async () => {
+  process.env.SMTP_HOST = 'smtp.test';
+  try {
+    const mk = (email, paidAgo, status = 'paid') => {
+      const sid = seedOrder({ email, status });
+      db.prepare("UPDATE orders SET paid_at = datetime('now', ?) WHERE stripe_session_id = ?").run(paidAgo, sid);
+      return db.prepare('SELECT id FROM orders WHERE stripe_session_id = ?').get(sid).id;
+    };
+    const fresh   = mk('fresh@example.com',   '-2 days');
+    const due     = mk('due@example.com',     '-8 days');
+    const dup     = mk('due@example.com',     '-9 days');
+    const old     = mk('old@example.com',     '-90 days');
+    const unsub   = mk('unsub@example.com',   '-8 days');
+    const refund  = mk('refund@example.com',  '-8 days', 'refunded');
+    db.prepare("INSERT OR REPLACE INTO customers (email, unsubscribed_at) VALUES ('unsub@example.com', CURRENT_TIMESTAMP)").run();
+
+    sentMail.length = 0;
+    const r1 = await thankYouCouponJob();
+    assert.equal(r1.sent, 1);
+    assert.equal(sentMail.length, 1);
+    assert.equal(sentMail[0].to, 'due@example.com');
+    assert.match(sentMail[0].text, /THANKS-[A-Z2-9]{6}/);
+    assert.match(sentMail[0].text, /Vancouver/);
+    assert.ok(sentMail[0].headers['List-Unsubscribe']);
+
+    const code = sentMail[0].text.match(/THANKS-[A-Z2-9]{6}/)[0];
+    const dc = db.prepare('SELECT * FROM discount_codes WHERE code = ?').get(code);
+    assert.equal(dc.discount_pct, 15);
+    assert.equal(dc.max_uses, 1);
+    assert.ok(dc.expires_at);
+
+    const res = await fetch(base + '/api/validate-code', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code, country: 'CA' }) });
+    const body = await res.json();
+    assert.equal(body.valid, true);
+    assert.equal(body.discount_pct, 15);
+
+    const r2 = await thankYouCouponJob();          // nothing left to send
+    assert.equal(r2.sent, 0);
+    for (const id of [fresh, dup, old, unsub, refund]) {
+      assert.equal(db.prepare('SELECT thankyou_sent_at FROM orders WHERE id = ?').get(id).thankyou_sent_at, null);
+    }
+  } finally {
+    delete process.env.SMTP_HOST;
   }
 });

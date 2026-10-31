@@ -1519,6 +1519,12 @@ async function submitOrder() {
   }
 }
 
+document.addEventListener('DOMContentLoaded', () => {
+  const c = (new URLSearchParams(location.search).get('code') || '').trim().toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 32);
+  const input = document.getElementById('discount-code-input');
+  if (c && input) { input.value = c; applyDiscountCode(); }
+});
+
 async function applyDiscountCode() {
   const input = document.getElementById('discount-code-input');
   const msg   = document.getElementById('discount-msg');
