@@ -160,7 +160,7 @@ test('POST /api/create-order persists order and returns checkoutUrl', async () =
   assert.equal(row.recipient_name, 'Jane Doe');
   assert.equal(row.status, 'awaiting_payment');
   assert.equal(row.destination_country, 'CA');
-  assert.equal(row.price_cents, 500);
+  assert.equal(row.price_cents, 600);
 });
 
 test('pricing: rest-of-world base plus colour, large envelope and free scheduling', async () => {
@@ -187,18 +187,18 @@ test('pricing: rest-of-world base plus colour, large envelope and free schedulin
   const row = db.prepare(
     "SELECT * FROM orders WHERE customer_email = 'pricing@example.com' ORDER BY id DESC LIMIT 1"
   ).get();
-  // $11 rest-of-world + $1 colour + $3 large envelope + $0 scheduling
-  assert.equal(row.price_cents, 1500);
+  // $20 rest-of-world + $1 colour + $3 large envelope + $0 scheduling
+  assert.equal(row.price_cents, 2400);
   assert.equal(row.large_envelope, 1);
   assert.equal(row.schedule_for_later, 1);
 });
 
-test('pricing: United States has its own tier ($11) and Canada stays $5', async () => {
+test('pricing: Canada $6, United States $7, everywhere else $20', async () => {
   const mk = (email, country) => new URLSearchParams({
     'r-email': email, 'r-name': 'Tier Test', 'r-street': '1 Main St', 'r-city': 'Town',
     'r-postal': '12345', 'r-country': country, 'letter-body': 'Hi there.', 'letter-type': 'standard',
   }).toString();
-  for (const [email, country, cents] of [['tier-us@example.com','US',1100],['tier-ca@example.com','CA',500],['tier-de@example.com','DE',1100]]) {
+  for (const [email, country, cents] of [['tier-us@example.com','US',700],['tier-ca@example.com','CA',600],['tier-de@example.com','DE',2000]]) {
     const res = await fetch(`${base}/api/create-order`, {
       method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: mk(email, country),
     });
@@ -207,7 +207,9 @@ test('pricing: United States has its own tier ($11) and Canada stays $5', async 
     assert.equal(row.price_cents, cents, `${country} should cost ${cents}`);
   }
   const cfg = await (await fetch(`${base}/api/site-config`)).json();
-  assert.equal(cfg.price_usa_cents, 1100);
+  assert.equal(cfg.price_usa_cents, 700);
+  assert.equal(cfg.price_domestic_cents, 600);
+  assert.equal(cfg.price_international_cents, 2000);
 });
 
 test('discount codes apply to base plus add-ons, matching what checkout displays', async () => {
@@ -223,12 +225,12 @@ test('discount codes apply to base plus add-ons, matching what checkout displays
     assert.equal(res.status, 200, await res.clone().text());
     return db.prepare('SELECT price_cents, discount_cents FROM orders WHERE customer_email = ? ORDER BY id DESC LIMIT 1').get(email);
   };
-  // $5 base + $1 colour = $6.00; 20% off = $4.80
-  assert.equal((await order('d1@example.com', 'TEST20', { colour_printing: '1' })).price_cents, 480);
-  // fixed $1.00 off $5 = $4.00
-  assert.equal((await order('d2@example.com', 'TEST100')).price_cents, 400);
+  // $6 base + $1 colour = $7.00; 20% off = $5.60
+  assert.equal((await order('d1@example.com', 'TEST20', { colour_printing: '1' })).price_cents, 560);
+  // fixed $1.00 off $6 = $5.00
+  assert.equal((await order('d2@example.com', 'TEST100')).price_cents, 500);
   // no code: unchanged
-  assert.equal((await order('d3@example.com', '', { colour_printing: '1' })).price_cents, 600);
+  assert.equal((await order('d3@example.com', '', { colour_printing: '1' })).price_cents, 700);
 });
 
 test('resume link rebuilds checkout for an unpaid order and rotates the session id', async () => {
@@ -262,7 +264,7 @@ test('funnel endpoint records only known steps, anonymously', async () => {
   assert.ok(!rows.some(r => r.step === 'DROP TABLE orders'));
 });
 
-test('extra pages: $0.40 each in B&W, $0.55 each in colour, counted from an uploaded PDF', async () => {
+test('extra pages: $0.45 each in B&W, $0.55 each in colour, counted from an uploaded PDF', async () => {
   const { PDFDocument } = require('pdf-lib');
   const pdf = await PDFDocument.create();
   for (let i = 0; i < 4; i++) pdf.addPage();
@@ -278,11 +280,11 @@ test('extra pages: $0.40 each in B&W, $0.55 each in colour, counted from an uplo
   };
   const bw = await send('pages-bw@example.com', {});
   assert.equal(bw.page_count, 4);
-  assert.equal(bw.extra_page_cents, 80);          // 2 extra pages x $0.40
-  assert.equal(bw.price_cents, 580);              // $5 + $0.80
+  assert.equal(bw.extra_page_cents, 90);          // 2 extra pages x $0.45
+  assert.equal(bw.price_cents, 690);              // $6 + $0.90
   const col = await send('pages-col@example.com', { colour_printing: '1' });
   assert.equal(col.extra_page_cents, 110);        // 2 extra pages x $0.55
-  assert.equal(col.price_cents, 710);             // $5 + $1 colour + $1.10
+  assert.equal(col.price_cents, 810);             // $6 + $1 colour + $1.10
 });
 
 test('POST /webhook with valid signature marks order paid', async () => {
@@ -650,4 +652,24 @@ test('thank-you coupon: one single-use 15% code per customer, 7 days after payme
   } finally {
     delete process.env.SMTP_HOST;
   }
+});
+
+test('registered mail is paused: checkout rejects it, and the send page no longer offers it', async () => {
+  const res = await fetch(`${base}/api/create-order`, {
+    method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ 'r-email': 'reg@example.com', 'r-name': 'Reg Test', 'r-street': '1 Main St', 'r-city': 'Town',
+      'r-postal': 'M5V 1A1', 'r-country': 'CA', 'letter-body': 'Hi.', 'letter-type': 'standard', registered_mail: '1' }).toString(),
+  });
+  assert.equal(res.status, 400);
+  assert.match((await res.json()).error, /registered/i);
+  const html = await (await fetch(`${base}/send`)).text();
+  assert.ok(!/id="opt-registered"/.test(html.replace(/<!--[\s\S]*?-->/g, '')), 'registered checkbox should not render');
+});
+
+test('bulk mailing page is served and lists the volume tiers', async () => {
+  const res = await fetch(`${base}/bulk-mailing`);
+  assert.equal(res.status, 200);
+  const html = await res.text();
+  assert.ok(html.includes('rel="canonical" href="https://letterhome.ca/bulk-mailing"'));
+  for (const price of ['$5.50', '$5.00', '$4.50', '$6.50', '$6.00', '$5.50']) assert.ok(html.includes(price), price);
 });

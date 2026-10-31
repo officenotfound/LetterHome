@@ -116,11 +116,11 @@ for (const h of HUBS) {
   <ul class="verified-facts">
 ${factList(j).map(i => `    <li>${i}</li>`).join('\n')}
   </ul>
-  <p>${j.international_letter && j.international_letter.price_text ? 'Posting directly costs the amount above plus your time at the post office, and the letter still has to be routed internationally.' : 'We could not verify a current price for a letter to Canada from the official operator, so check with them directly.'} With Letterhome you upload your letter online and it is printed and mailed from inside Canada for <strong>$5 CAD</strong>.</p>`).join('\n\n');
+  <p>${j.international_letter && j.international_letter.price_text ? 'Posting directly costs the amount above plus your time at the post office, and the letter still has to be routed internationally.' : 'We could not verify a current price for a letter to Canada from the official operator, so check with them directly.'} With Letterhome you upload your letter online and it is printed and mailed from inside Canada for <strong>$6 CAD</strong>.</p>`).join('\n\n');
 
   const faqs = [
     [`How do I send a letter from ${h.name} to Canada without posting it?`, `Upload your document at letterhome.ca/send, enter the Canadian recipient's address and pay online. Letterhome prints it and mails it from inside Canada via Canada Post, so you never need a printer, stamps or a post office.`],
-    [`How much does Letterhome cost for a letter to a Canadian address?`, `$5 CAD for a Canadian address, with 2 pages in black and white, the envelope and Canadian postage included. Colour is +$1 and extra pages are $0.40 each ($0.55 in colour).`],
+    [`How much does Letterhome cost for a letter to a Canadian address?`, `$6 CAD for a Canadian address, with 2 pages in black and white, the envelope and Canadian postage included. Colour is +$1 and extra pages are $0.45 each ($0.55 in colour).`],
     [`Do I need a Canadian address or bank account?`, `No. You only need the recipient's Canadian address. You can pay online by card from anywhere.`],
     [`How long does delivery take?`, `Letters are printed and mailed within one business day of payment, then delivered by Canada Post standard lettermail, typically within up to 2 weeks.`],
   ];
@@ -171,11 +171,11 @@ ${JSON.stringify(ld, null, 2)}
   <div class="eyebrow">Mailing from ${esc(h.name)}</div>
   <h1>Send a letter from ${esc(h.name.replace(/^the /, ''))} to Canada</h1>
   <p class="updated" style="font-family:'DM Mono',monospace;font-size:12px;letter-spacing:0.06em;color:var(--ink-faint,#968b7d);margin-bottom:20px">Updated October 2026</p>
-  <p class="answer-capsule"><strong>Short answer:</strong> you can post a letter to Canada through your national postal operator, or upload it at Letterhome and have it printed and mailed from inside Canada for <strong>$5 CAD</strong>. This guide lists the verified postal, visa-centre and Canadian-office details for ${cs.map(j => esc(j.country)).join(', ')}.</p>
+  <p class="answer-capsule"><strong>Short answer:</strong> you can post a letter to Canada through your national postal operator, or upload it at Letterhome and have it printed and mailed from inside Canada for <strong>$6 CAD</strong>. This guide lists the verified postal, visa-centre and Canadian-office details for ${cs.map(j => esc(j.country)).join(', ')}.</p>
 
   <div class="cta-row">
     <a href="/send" class="btn btn-red">Send a letter now</a>
-    <span class="price-note">From $5 CAD &nbsp;·&nbsp; No account required</span>
+    <span class="price-note">From $6 CAD &nbsp;·&nbsp; No account required</span>
   </div>
 
   <h2>At a glance</h2>

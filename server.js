@@ -326,13 +326,14 @@ async function sendMail(opts, type = 'general', orderId = null) {
   } catch (e) { console.error('[email_log]', e.message); }
 }
 
-// Base send price ($5 Canada / $11 United States / $20 elsewhere) is configurable via settings.
+// Base send price ($6 Canada / $7 United States / $20 elsewhere) is configurable via settings.
 // Optional-extra pricing (cents).
 const FREE_PAGES              = 2;
-const EXTRA_PAGE_CENTS        = 40;
+const EXTRA_PAGE_CENTS        = 45;
 const EXTRA_PAGE_COLOUR_CENTS = 55;   // colour pages cost more to print
 const COLOUR_PRINTING_CENTS   = 100;
 const REGISTERED_MAIL_CENTS   = 2500;
+const REGISTERED_MAIL_ENABLED = false;   // paused until the carrier cost is confirmed
 const SCHEDULE_LATER_CENTS    = 0;
 const LARGE_ENVELOPE_CENTS    = 300;
 
@@ -678,7 +679,7 @@ Object.entries(REGION_REDIRECTS).forEach(([from, to]) =>
  'cheapest-way-to-send-a-letter-to-canada',
  'send-a-letter-to-canada-without-a-return-address',
  'mail-a-letter-online', 'send-a-letter-from-home', 'what-is-lettermail',
- 'ircc-processing-times', 'n4-notice', 'ircc-documents', 'for-professionals',
+ 'ircc-processing-times', 'n4-notice', 'ircc-documents', 'for-professionals', 'bulk-mailing',
  'cra-mail', 'cra-notice-of-objection', 'ltb-forms',
  'registered-mail-vs-xpresspost', 'proof-of-mailing', 'government-forms-that-require-mail',
  'n9-notice', 'renew-pr-card-by-mail', 'canadian-citizenship-application-by-mail',
@@ -844,18 +845,18 @@ app.get('/ga.js', (req, res) => {
 
 // Base send price by destination: Canada, United States, rest of world.
 function getBasePriceCents(country) {
-  if (country === 'CA') return parseInt(getSetting('price_domestic_cents', '500')) || 500;
-  if (country === 'US') return parseInt(getSetting('price_usa_cents', '1100')) || 1100;
-  return parseInt(getSetting('price_international_cents', '1100')) || 1100;
+  if (country === 'CA') return parseInt(getSetting('price_domestic_cents', '600')) || 600;
+  if (country === 'US') return parseInt(getSetting('price_usa_cents', '700')) || 700;
+  return parseInt(getSetting('price_international_cents', '2000')) || 2000;
 }
 
 app.get('/api/site-config', (req, res) => {
   res.json({
     orders_open:               getSetting('service_paused', 'false') !== 'true',
     announcement:              getSetting('announcement', ''),
-    price_domestic_cents:      parseInt(getSetting('price_domestic_cents',      '500')) || 500,
-    price_usa_cents:           parseInt(getSetting('price_usa_cents',           '1100')) || 1100,
-    price_international_cents: parseInt(getSetting('price_international_cents', '1100')) || 1100,
+    price_domestic_cents:      parseInt(getSetting('price_domestic_cents',      '600')) || 600,
+    price_usa_cents:           parseInt(getSetting('price_usa_cents',           '700')) || 700,
+    price_international_cents: parseInt(getSetting('price_international_cents', '2000')) || 2000,
     blocked_countries:         JSON.parse(getSetting('blocked_countries', '[]') || '[]'),
   });
 });
@@ -1066,6 +1067,9 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
   const colourPrinting    = b['colour_printing']    === '1' || b['colour_printing']    === 'true';
   const extraPageCents = Math.max(0, pageCount - FREE_PAGES) * (colourPrinting ? EXTRA_PAGE_COLOUR_CENTS : EXTRA_PAGE_CENTS);
   const registeredMail    = b['registered_mail']    === '1' || b['registered_mail']    === 'true';
+  if (registeredMail && !REGISTERED_MAIL_ENABLED) {
+    return res.status(400).json({ error: 'Registered mail is temporarily unavailable. Please remove it and continue, or email support@letterhome.ca.' });
+  }
   const largeEnvelope     = b['large_envelope']     === '1' || b['large_envelope']     === 'true';
   const scheduleForLater  = b['schedule_for_later'] === '1' || b['schedule_for_later'] === 'true';
   const scheduledDate     = scheduleForLater ? (b['scheduled_date'] || null) : null;

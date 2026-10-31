@@ -19,7 +19,7 @@
 <meta property="og:description" content="Your letter order has been confirmed. We'll print and mail it within one business day.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Letterhome">
-<meta property="og:image" content="https://letterhome.ca/og-image.jpg?v=3">
+<meta property="og:image" content="https://letterhome.ca/og-image.jpg?v=4">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="stylesheet" href="/fonts.css?v=1">
 <style>
@@ -159,7 +159,7 @@ function copyOrderNum(id) {
 
       <div class="detail-row"><span class="label">${LH_T('success.label.recipient')}</span><span class="val">${esc(data.recipientName)}${data.recipientCity ? ', ' + esc(data.recipientCity) : ''}</span></div>
       <div class="detail-row"><span class="label">${LH_T('success.label.destination')}</span><span class="val">${esc(destName)}</span></div>
-      <div class="detail-row"><span class="label">${LH_T('success.label.price')}</span><span class="val">${data.priceCents ? '$' + (data.priceCents / 100).toFixed(data.priceCents % 100 === 0 ? 0 : 2) : (isDomestic ? '$5' : (data.destinationCountry === 'US' ? '$11' : '$11'))} CAD</span></div>
+      <div class="detail-row"><span class="label">${LH_T('success.label.price')}</span><span class="val">${data.priceCents ? '$' + (data.priceCents / 100).toFixed(data.priceCents % 100 === 0 ? 0 : 2) : (isDomestic ? '$6' : (data.destinationCountry === 'US' ? '$7' : '$20'))} CAD</span></div>
       <div class="detail-row"><span class="label">${LH_T('success.label.delivery')}</span><span class="val">${isDomestic ? LH_T('success.dom.delivery') : LH_T('success.intl.delivery')}</span></div>
       <div class="detail-row"><span class="label">${LH_T('success.label.status')}</span><span class="val" style="color:var(--red)">${LH_T('success.status.val')}</span></div>
     `;
@@ -187,6 +187,6 @@ function copyOrderNum(id) {
 })();
 </script>
 <script src="/theme.js?v=2" defer></script>
-<script src="/lang.js?v=23" defer></script>
+<script src="/lang.js?v=24" defer></script>
 </body>
 </html>
