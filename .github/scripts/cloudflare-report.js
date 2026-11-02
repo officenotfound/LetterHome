@@ -63,7 +63,7 @@ function createIssue(token, repo, title, body) {
 }
 
 (async () => {
-  if (!ZONE_ID || !CF_TOKEN) { console.error('CF_ZONE_ID or CLOUDFLARE_API_TOKEN not set'); process.exit(1); }
+  if (!ZONE_ID || !CF_TOKEN) { console.log('CF_ZONE_ID or CLOUDFLARE_API_TOKEN not set: skipping Cloudflare report.'); process.exit(0); }
 
   const startDate = daysAgo(8);
   const endDate   = daysAgo(1);

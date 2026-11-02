@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 // Checks how uploaded files will be turned into the PDF we send to PostGrid.
-//   node scripts/test-conversion.js file1.docx file2.doc notes.txt scan.pdf
+//   node scripts/check-conversion.js file1.docx file2.doc notes.txt scan.pdf
 // Writes <name>.converted.pdf into ./conversion-test-out/ and prints sheet counts so you can open the PDFs
 // and compare them with the originals. Needs LibreOffice (soffice) for .doc/.docx.
 const fs = require('node:fs');
@@ -10,7 +10,7 @@ const { PDFDocument } = require('pdf-lib');
 const { createPostGrid } = require('../postgrid');
 
 const files = process.argv.slice(2);
-if (!files.length) { console.error('usage: node scripts/test-conversion.js <file> [file...]'); process.exit(1); }
+if (!files.length) { console.error('usage: node scripts/check-conversion.js <file> [file...]'); process.exit(1); }
 const out = path.resolve('conversion-test-out');
 fs.mkdirSync(out, { recursive: true });
 const pg = createPostGrid({ db: null, getSetting: (k, f) => f, orderDirPath: () => '.' });

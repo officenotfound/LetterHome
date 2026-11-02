@@ -54,7 +54,7 @@ function createIssue(token, repo, title, body) {
 }
 
 (async () => {
-  if (!API_KEY) { console.error('BING_API_KEY not set'); process.exit(1); }
+  if (!API_KEY) { console.log('BING_API_KEY not set: skipping Bing report.'); process.exit(0); }
 
   const startDate = dateStr(30);
   const endDate   = dateStr(2);

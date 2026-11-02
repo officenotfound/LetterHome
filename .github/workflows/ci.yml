@@ -29,10 +29,11 @@ jobs:
         run: npm ci --omit=dev
 
       - name: Syntax check — server + tests
-        run: node --check server.js && node --check tests/server.test.js
+        run: node --check server.js && node --check postgrid.js && node --check destinations.js && node --check tests/server.test.js && node --check tests/postgrid.test.js
 
       - name: Run tests
-        run: node --test --test-force-exit
+        # Only the unit/integration suites; tests/smoke.js hits the live site and has its own workflow.
+        run: node --test --test-force-exit tests/*.test.js
 
   # ── 2. Lint & validate ────────────────────────────────────────────────────
   lint:

@@ -93,6 +93,9 @@ function daysAgo(n) {
 }
 
 (async () => {
+  if (!process.env.GSC_CLIENT_ID || !process.env.GSC_CLIENT_SECRET || !process.env.GSC_REFRESH_TOKEN) {
+    console.log('Search Console credentials not set: skipping GSC report.'); process.exit(0);
+  }
   const accessToken = await getAccessToken();
   if (!accessToken) { console.error('Could not get access token'); process.exit(1); }
 
