@@ -466,6 +466,31 @@ function sendMailedNotification(order) {
   }, 'mailed_notification', order.id).catch(console.error);
 }
 
+// Emails the customer once that their letter has gone to the printer (live PostGrid letters only).
+function sendAtPrinterEmail(orderId) {
+  const claim = db.prepare(`UPDATE orders SET printer_email_sent_at = CURRENT_TIMESTAMP
+    WHERE id = ? AND printer_email_sent_at IS NULL AND postgrid_mode = 'live' AND status IN ('submitted_to_printer', 'printing')`).run(orderId);
+  if (claim.changes !== 1) return;
+  const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(orderId);
+  if (!order?.customer_email) return;
+  const toAddr = [
+    order.recipient_name, order.recipient_street,
+    `${order.recipient_city || ''} ${order.recipient_province || ''} ${order.recipient_postal || ''}`.trim(),
+    order.destination_country,
+  ].filter(Boolean).join('\n');
+  sendMail({
+    from:    process.env.EMAIL_FROM,
+    to:      order.customer_email,
+    replyTo: process.env.OPERATOR_EMAIL,
+    subject: `Your letter to ${order.recipient_name} is at the printer: order #${order.id}`,
+    html:    buildAtPrinterEmail(order, toAddr),
+    text:    buildAtPrinterEmailText(order, toAddr),
+  }, 'at_printer_notification', order.id).catch(err => {
+    console.error(`[email] at-printer email failed for #${order.id}:`, err.message);
+    db.prepare('UPDATE orders SET printer_email_sent_at = NULL WHERE id = ?').run(order.id);   // retried by the next sweep
+  });
+}
+
 // Submits one paid order. Never throws: failures are recorded on the order
 // ("MANUAL:" = needs a human, "RETRY:" = transient, the sweep tries again).
 async function postgridSubmit(orderId, opts) {
@@ -473,6 +498,7 @@ async function postgridSubmit(orderId, opts) {
   if (!order) return { ok: false, error: 'Order not found' };
   try {
     const r = await postgrid.submitOrder(order, opts);
+    if (r.letter.live) sendAtPrinterEmail(orderId);
     return { ok: true, letter_id: r.letter.id, warnings: r.warnings };
   } catch (e) {
     const manual = !!e.manual || (e.status >= 400 && e.status < 500 && e.status !== 429);
@@ -492,6 +518,8 @@ async function postgridSweep() {
         AND (scheduled_date IS NULL OR scheduled_date <= ?) AND paid_at > datetime('now','-3 days') LIMIT 20`).all(today);
       for (const o of due) await postgridSubmit(o.id);
     }
+    for (const o of db.prepare(`SELECT id FROM orders WHERE postgrid_mode = 'live' AND printer_email_sent_at IS NULL
+        AND status IN ('submitted_to_printer', 'printing') AND deleted_at IS NULL`).all()) sendAtPrinterEmail(o.id);
     const live = db.prepare(`SELECT * FROM orders WHERE postgrid_letter_id IS NOT NULL AND deleted_at IS NULL
       AND COALESCE(postgrid_status,'') NOT IN ('completed','cancelled') LIMIT 100`).all();
     for (const o of live) {
@@ -3418,6 +3446,49 @@ function buildCustomerEmail(o, toAddr, amountCAD, isDomestic) {
 </body></html>`;
 }
 
+// "Your letter is at the printer": sent once, when a live letter has gone to PostGrid.
+function buildAtPrinterEmail(o, toAddr) {
+  const esc = s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const carrier = mailFacts(o).carrier;
+  return `
+<!DOCTYPE html><html>
+<body style="font-family:Georgia,serif;background:#ede5d3;padding:40px 20px;color:#2a2a2a;margin:0">
+  <div style="max-width:520px;margin:0 auto;background:#faf6ec;border:1px solid rgba(42,42,42,0.12);padding:48px">
+    <div style="width:38px;height:38px;background:#a8472d;display:inline-flex;align-items:center;justify-content:center;color:#faf6ec;font-size:20px;font-family:Georgia,serif;margin-bottom:28px">L</div>
+    <h1 style="font-size:28px;font-weight:400;margin:0 0 10px;letter-spacing:-0.02em">Your letter is at the printer.</h1>
+    <p style="color:#6b6258;margin:0 0 32px;font-size:16px;line-height:1.6">We've reviewed order #${o.id} and sent it to our print partner. It will be printed, sealed and handed to ${carrier} within two business days, and we'll email you again as soon as it's in the post.</p>
+    <div style="background:#2a2a2a;color:#faf6ec;padding:24px;margin-bottom:28px">
+      <p style="font-size:11px;text-transform:uppercase;letter-spacing:0.15em;color:rgba(250,246,236,0.55);margin:0 0 10px">Delivering to</p>
+      <p style="font-size:18px;line-height:1.5;white-space:pre-line;margin:0">${esc(toAddr)}</p>
+    </div>
+    <p style="color:#6b6258;font-size:14px;line-height:1.7;margin:0 0 24px">Spotted a mistake in the address or the letter? Reply to this email right away and we'll do our best to stop it before it prints.</p>
+    <div style="border-top:1px solid rgba(42,42,42,0.1);padding-top:20px;font-size:13px;color:#6b6258">
+      <p style="margin:0 0 8px">Order #${o.id}</p>
+      ${o.status_token ? `<p style="margin:0 0 8px">Track your letter: <a href="${process.env.BASE_URL}/status/${o.status_token}" style="color:#a8472d">${process.env.BASE_URL}/status/${o.status_token}</a></p>` : ''}
+      <p style="margin:12px 0 0;color:#968b7d;font-size:11px">Letterhome · ${MAILING_ADDRESS}</p>
+    </div>
+  </div>
+</body></html>`;
+}
+
+function buildAtPrinterEmailText(o, toAddr) {
+  return [
+    'Your letter is at the printer.',
+    '',
+    `We've reviewed order #${o.id} and sent it to our print partner. It will be printed, sealed and handed to ${mailFacts(o).carrier} within two business days, and we'll email you again as soon as it's in the post.`,
+    '',
+    'Delivering to:',
+    toAddr,
+    '',
+    'Spotted a mistake in the address or the letter? Reply to this email right away and we\'ll do our best to stop it before it prints.',
+    '',
+    `Order #${o.id}`,
+    o.status_token ? `Track your letter: ${process.env.BASE_URL}/status/${o.status_token}` : '',
+    '',
+    `Letterhome · ${MAILING_ADDRESS}`,
+  ].join('\n');
+}
+
 function buildMailedEmail(o, toAddr, deliveryText) {
   const delivery = deliveryText || mailFacts(o).defaultDelivery;
   const esc = s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -4150,4 +4221,4 @@ const PORT = process.env.PORT || 3000;
 if (!process.env.TEST_MODE) {
   app.listen(PORT, () => console.log(`Letterhome running on port ${PORT}`));
 }
-module.exports = { app, db, thankYouCouponJob, postgrid, postgridSubmit, postgridSweep };
+module.exports = { app, db, thankYouCouponJob, postgrid, postgridSubmit, postgridSweep, sendAtPrinterEmail };

@@ -87,6 +87,7 @@ try { db.exec(`ALTER TABLE orders ADD COLUMN registered_mail INTEGER DEFAULT 0`)
 try { db.exec(`ALTER TABLE orders ADD COLUMN certified_mail INTEGER DEFAULT 0`);   } catch {}
 try { db.exec(`ALTER TABLE orders ADD COLUMN express_mail INTEGER DEFAULT 0`);     } catch {}
 try { db.exec(`ALTER TABLE orders ADD COLUMN mail_service_cents INTEGER`);         } catch {}
+try { db.exec(`ALTER TABLE orders ADD COLUMN printer_email_sent_at DATETIME`);   } catch {}
 try { db.exec(`ALTER TABLE orders ADD COLUMN large_envelope INTEGER DEFAULT 0`);   } catch {}
 try { db.exec(`ALTER TABLE orders ADD COLUMN paid_at DATETIME`); } catch {}
 try { db.exec(`ALTER TABLE orders ADD COLUMN schedule_for_later INTEGER DEFAULT 0`); } catch {}

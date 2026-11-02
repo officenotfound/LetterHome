@@ -75,7 +75,7 @@ require.cache[stripeResolvePath] = {
 const sentMail = [];
 require('nodemailer').createTransport = () => ({ sendMail: async (o) => { sentMail.push(o); return {}; } });
 
-const { app, db, thankYouCouponJob } = require('../server');
+const { app, db, thankYouCouponJob, sendAtPrinterEmail } = require('../server');
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function webhookSig(payload) {
@@ -749,4 +749,27 @@ test('checkout stores the province code, not the dropdown label', async () => {
       'r-province': 'QC: Quebec', 'r-postal': 'G7X 9W7', 'r-country': 'CA', 'letter-body': 'Bonjour.', 'letter-type': 'standard' }).toString() });
   assert.equal(res.status, 200);
   assert.equal(db.prepare("SELECT recipient_province FROM orders WHERE customer_email = 'prov@example.com'").get().recipient_province, 'QC');
+});
+
+test('"at the printer" email goes once to a live PostGrid order (like #17, sent before the feature), never to test letters', async () => {
+  process.env.SMTP_HOST = 'smtp.test';
+  try {
+    const mk = (mode, status) => {
+      const sid = seedOrder({ email: `printer-${mode}-${status}@example.com`, status, recipientName: 'Nathalie Villeneuve' });
+      db.prepare("UPDATE orders SET postgrid_letter_id = 'letter_x', postgrid_mode = ?, postgrid_status = 'ready' WHERE stripe_session_id = ?").run(mode, sid);
+      return db.prepare('SELECT id FROM orders WHERE stripe_session_id = ?').get(sid).id;
+    };
+    const live = mk('live', 'submitted_to_printer');
+    const test = mk('test', 'submitted_to_printer');
+    const mailed = mk('live', 'mailed');
+    const before = sentMail.length;
+    for (const id of [live, live, test, mailed]) sendAtPrinterEmail(id);
+    await new Promise(r => setTimeout(r, 50));
+    const sent = sentMail.slice(before);
+    assert.equal(sent.length, 1);
+    assert.equal(sent[0].to, 'printer-live-submitted_to_printer@example.com');
+    assert.match(sent[0].subject, /at the printer/);
+    assert.match(sent[0].text, /within two business days/);
+    assert.ok(db.prepare('SELECT printer_email_sent_at FROM orders WHERE id = ?').get(live).printer_email_sent_at);
+  } finally { delete process.env.SMTP_HOST; }
 });
