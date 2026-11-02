@@ -31,6 +31,43 @@ function twemojiName(g) {
   return (g.includes('\u200d') ? cps : cps.filter(c => c !== 'fe0f')).join('-');
 }
 
+// Turns whatever a customer typed as a country ("Canada", "canada", "États-Unis", "USA", "UK", "CA")
+// into the ISO 3166-1 alpha-2 code PostGrid requires. Returns null when it can't be recognised.
+const COUNTRY_ALIASES = {
+  usa: 'US', 'u s a': 'US', 'u s': 'US', us: 'US', 'united states of america': 'US', america: 'US',
+  uk: 'GB', 'u k': 'GB', 'great britain': 'GB', britain: 'GB', england: 'GB', scotland: 'GB', wales: 'GB', 'northern ireland': 'GB',
+  'republic of ireland': 'IE', holland: 'NL', 'the netherlands': 'NL', 'south korea': 'KR', korea: 'KR', 'north korea': 'KP',
+  russia: 'RU', 'czech republic': 'CZ', 'ivory coast': 'CI', uae: 'AE', 'hong kong': 'HK', macau: 'MO', macao: 'MO',
+  palestine: 'PS', vatican: 'VA', burma: 'MM', turkey: 'TR', turquie: 'TR', turkiye: 'TR',
+};
+// Two-letter codes Intl knows that are reserved or obsolete, never valid for mail.
+const NOT_COUNTRIES = new Set(['UK', 'FX', 'EU', 'EZ', 'UN', 'QO', 'XA', 'XB', 'ZZ', 'AN', 'BU', 'CS', 'DD', 'DY', 'HV', 'NH', 'RH', 'SU', 'TP', 'YU', 'ZR', 'AC', 'CP', 'DG', 'EA', 'IC', 'TA', 'CQ', 'XK', 'VD', 'NT', 'PC', 'PZ', 'JT', 'MI', 'WK', 'PU', 'YD', 'ZR']);
+const normCountry = s => String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+  .replace(/&/g, ' and ').replace(/[\u2019'.]/g, ' ').replace(/[-_,]/g, ' ').replace(/\s+/g, ' ').trim()
+  .replace(/\bsaint\b/g, 'st').replace(/\bthe /g, '');
+let COUNTRY_NAMES = null;
+function countryCodeOf(input) {
+  const key = normCountry(input);
+  if (!key) return null;
+  if (!COUNTRY_NAMES) {
+    COUNTRY_NAMES = new Map();
+    const A = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    for (const lang of ['en', 'fr', 'es', 'de']) {
+      const dn = new Intl.DisplayNames([lang], { type: 'region' });
+      for (const a of A) for (const b of A) {
+        const code = a + b;
+        if (NOT_COUNTRIES.has(code)) continue;
+        let name; try { name = dn.of(code); } catch { continue; }
+        if (!name || name === code) continue;
+        const n = normCountry(name);
+        if (!COUNTRY_NAMES.has(code.toLowerCase())) COUNTRY_NAMES.set(code.toLowerCase(), code);
+        if (!COUNTRY_NAMES.has(n)) COUNTRY_NAMES.set(n, code);
+      }
+    }
+  }
+  return COUNTRY_ALIASES[key] || COUNTRY_NAMES.get(key) || null;
+}
+
 async function fetchTwemoji(name) {
   const file = path.join(EMOJI_CACHE, name + '.png');
   try { return fs.readFileSync(file); } catch {}
@@ -283,18 +320,19 @@ function createPostGrid({ db, getSetting, orderDirPath, fetchImpl, convertWord =
       city: p.city || undefined,
       provinceOrState: p.province || undefined,
       postalOrZip: p.postal || undefined,
-      countryCode: (p.country || 'CA').toUpperCase(),
+      countryCode: countryCodeOf(p.country || 'CA'),
     };
     if (lines[1]) c.addressLine2 = lines.slice(1).join(', ');
+    if (!c.countryCode) throw new PostGridError(`Country "${p.country}" in the ${p.role || 'address'} was not recognised; fix the address and resend.`, { manual: true });
     if (!c.firstName) { delete c.firstName; c.companyName = 'Resident'; }   // PostGrid needs firstName or companyName
     if (!c.lastName) delete c.lastName;
     return c;
   }
-  const recipientOf = o => ({ name: o.recipient_name, street: o.recipient_street, city: o.recipient_city,
+  const recipientOf = o => ({ role: 'recipient address', name: o.recipient_name, street: o.recipient_street, city: o.recipient_city,
     province: o.recipient_province, postal: o.recipient_postal, country: o.destination_country });
   const senderOf = o => (o.skip_return || !o.sender_street)
     ? FALLBACK_FROM
-    : { name: o.sender_name || 'Sender', street: o.sender_street, city: o.sender_city,
+    : { role: 'return address', name: o.sender_name || 'Sender', street: o.sender_street, city: o.sender_city,
         province: o.sender_province, postal: o.sender_postal, country: o.sender_country || 'CA' };
 
 
@@ -462,4 +500,4 @@ function createPostGrid({ db, getSetting, orderDirPath, fetchImpl, convertWord =
   return { isConfigured, mode, autoSubmit, countries, serviceOf, eligibility, buildLetterPdf, buildPreviewPdf, submitOrder, refreshOrder, cancelOrder, clearTestLetter, progressTestLetter, PostGridError };
 }
 
-module.exports = { createPostGrid, PostGridError, MAX_SHEETS };
+module.exports = { createPostGrid, PostGridError, MAX_SHEETS, countryCodeOf };

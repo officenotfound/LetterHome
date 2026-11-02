@@ -262,3 +262,20 @@ test('emojis print as colour images (skin tones, variation selectors, ZWJ sequen
   const m = await pgMissing.buildLetterPdf(seed({ body: 'Hi ❤️' }));
   assert.match(m.warnings.join(' '), /emoji/);
 });
+
+test('typed sender countries ("Canada", "États-Unis", "UK") are sent to PostGrid as ISO codes; an unknown one goes to the manual queue', async () => {
+  const { countryCodeOf } = require('../postgrid');
+  for (const [name, code] of [['Canada', 'CA'], ['canada', 'CA'], ['CA', 'CA'], ['États-Unis', 'US'], ['USA', 'US'], ['UK', 'GB'],
+    ['Royaume-Uni', 'GB'], ['France', 'FR'], ['Vietnam', 'VN'], ['Trinidad and Tobago', 'TT'], ['Saint Lucia', 'LC'], ['Narnia', null]]) {
+    assert.equal(countryCodeOf(name), code, name);
+  }
+  const o = seed({ skip: 0 });
+  db.prepare("UPDATE orders SET sender_name = 'Tom', sender_street = '9 Rue Cler', sender_city = 'Paris', sender_country = 'France' WHERE id = ?").run(o.id);
+  calls.length = 0;
+  await pg.submitOrder(db.prepare('SELECT * FROM orders WHERE id = ?').get(o.id));
+  const from = JSON.parse(calls.filter(c => c.url.endsWith('/contacts'))[1].opts.body);
+  assert.equal(from.countryCode, 'FR');
+  const bad = seed({ skip: 0 });
+  db.prepare("UPDATE orders SET sender_name = 'Tom', sender_street = '1 Road', sender_country = 'Narnia' WHERE id = ?").run(bad.id);
+  await assert.rejects(pg.submitOrder(db.prepare('SELECT * FROM orders WHERE id = ?').get(bad.id)), e => e.manual && /Narnia/.test(e.message) && /return address/.test(e.message));
+});
