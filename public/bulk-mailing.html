@@ -91,7 +91,7 @@ footer{background:var(--ink);color:rgba(255,255,255,0.5);padding:40px 36px;margi
 .tier-table td:first-child{font-weight:600}
 .tier-note{font-size:13px;color:var(--ink-muted)}
 </style>
-<script>(function(){try{var t=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+<script>(function(){try{var t=localStorage.getItem('lh-theme');if(t!=='dark'&&t!=='light')t=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 <link rel="stylesheet" href="/theme.css?v=9">
 <link rel="stylesheet" href="/guide.css?v=6">
 </head>
@@ -101,81 +101,83 @@ footer{background:var(--ink);color:rgba(255,255,255,0.5);padding:40px 36px;margi
 <script src="/header.js?v=6"></script>
 
 <div class="hero" id="main-content">
-  <p class="hero-eyebrow">Bulk Mailing</p>
-  <h1>Sending more than a few letters?<br><em>The more you send, the less each costs.</em></h1>
-  <p class="hero-sub">Volume pricing for 10 or more letters in one order. Printing, envelope and postage are included, mailed from Canada.</p>
+  <p class="hero-eyebrow" data-i18n="bulk.eyebrow">Bulk Mailing</p>
+  <h1 data-i18n-html="bulk.h1">Sending more than a few letters?<br><em>The more you send, the less each costs.</em></h1>
+  <p class="hero-sub" data-i18n="bulk.sub">Volume pricing for 10 or more letters in one order. Printing, envelope and postage are included, mailed from Canada.</p>
 </div>
 
 <div class="main">
-  <h2>Volume pricing per letter</h2>
+  <h2 data-i18n="bulk.h2.price">Volume pricing per letter</h2>
   <table class="tier-table">
-    <tr><th>Letters in one order</th><th>Within Canada</th><th>To the United States</th></tr>
-    <tr><td>1 to 9</td><td>$6.00</td><td>$6.00</td></tr>
-    <tr><td>10 or more</td><td>$5.50</td><td>$5.50</td></tr>
-    <tr><td>25 or more</td><td>$5.00</td><td>$5.00</td></tr>
-    <tr><td>50 or more</td><td>$4.75</td><td>$4.75</td></tr>
+    <tr><th data-i18n="bulk.th1">Letters in one order</th><th data-i18n="bulk.th2">Within Canada</th><th data-i18n="bulk.th3">To the United States</th></tr>
+    <tr><td data-i18n="bulk.t1">1 to 9</td><td>$6.00</td><td>$6.00</td></tr>
+    <tr><td data-i18n="bulk.t2">10 or more</td><td>$5.50</td><td>$5.50</td></tr>
+    <tr><td data-i18n="bulk.t3">25 or more</td><td>$5.00</td><td>$5.00</td></tr>
+    <tr><td data-i18n="bulk.t4">50 or more</td><td>$4.75</td><td>$4.75</td></tr>
   </table>
-  <p class="tier-note">Prices in CAD, per letter. Each letter includes 2 pages in black &amp; white, the envelope and postage. Extra pages are $0.45 each ($0.55 in colour), and colour printing is +$1 per letter. International letters ($20) are not discounted.</p>
+  <p class="tier-note" data-i18n="bulk.note">Prices in CAD, per letter. Each letter includes 2 pages in black &amp; white, the envelope and postage. Extra pages are $0.45 each ($0.55 in colour), and colour printing is +$1 per letter. International letters ($20) are not discounted.</p>
 
-  <h2>How a bulk order works</h2>
+  <h2 data-i18n="bulk.h2.how">How a bulk order works</h2>
   <ul class="feature-list">
-    <li>Tell us roughly how many letters, where they are going, and whether they share one document or each one is different</li>
-    <li>We reply within one business day with the exact total and a secure payment link</li>
-    <li>You send us the letters and a list of recipient addresses; we check the addresses before anything is printed</li>
-    <li>Everything is printed and mailed from Canada through Canada Post, and you get a dated confirmation for your records</li>
+    <li data-i18n="bulk.how1">Tell us roughly how many letters, where they are going, and whether they share one document or each one is different</li>
+    <li data-i18n="bulk.how2">We reply within one business day with the exact total and a secure payment link</li>
+    <li data-i18n="bulk.how3">You send us the letters and a list of recipient addresses; we check the addresses before anything is printed</li>
+    <li data-i18n="bulk.how4">Everything is printed and mailed, and we email you when your letters go out</li>
   </ul>
 
-  <h2>Who it is for</h2>
-  <p>Landlords and property managers serving notices, immigration consultants and paralegals mailing for several clients, small businesses sending invoices or statements, clubs and charities, and families mailing invitations or holiday cards from abroad.</p>
+  <h2 data-i18n="bulk.h2.who">Who it is for</h2>
+  <p data-i18n="bulk.who">Landlords and property managers serving notices, immigration consultants and paralegals mailing for several clients, small businesses sending invoices or statements, clubs and charities, and families mailing invitations or holiday cards from abroad.</p>
 
   <div class="contact-form">
-    <h3>Request a bulk order</h3>
-    <p class="sub">Tell us what you need to send and we will reply with an exact total.</p>
-    <div class="field"><label>Your name</label><input type="text" id="bulk-name" placeholder="Jane Smith"></div>
-    <div class="field"><label>Email</label><input type="email" id="bulk-email" placeholder="jane@example.com"></div>
+    <h3 data-i18n="bulk.form.h3">Request a bulk order</h3>
+    <p class="sub" data-i18n="bulk.form.sub">Tell us what you need to send and we will reply with an exact total.</p>
+    <div class="field"><label data-i18n="bulk.f.name">Your name</label><input type="text" id="bulk-name" data-i18n-placeholder="bulk.ph.name" placeholder="Jane Smith"></div>
+    <div class="field"><label data-i18n="bulk.f.email">Email</label><input type="email" id="bulk-email" data-i18n-placeholder="bulk.ph.email" placeholder="jane@example.com"></div>
     <div class="field">
-      <label>About how many letters?</label>
+      <label data-i18n="bulk.f.qty">About how many letters?</label>
       <select id="bulk-qty">
-        <option value="">Select…</option>
-        <option>10 to 24</option>
-        <option>25 to 49</option>
-        <option>50 to 99</option>
-        <option>100 or more</option>
+        <option value="" data-i18n="bulk.select">Select…</option>
+        <option data-i18n="bulk.q1">10 to 24</option>
+        <option data-i18n="bulk.q2">25 to 49</option>
+        <option data-i18n="bulk.q3">50 to 99</option>
+        <option data-i18n="bulk.q4">100 or more</option>
       </select>
     </div>
     <div class="field">
-      <label>Where are they going?</label>
+      <label data-i18n="bulk.f.dest">Where are they going?</label>
       <select id="bulk-dest">
-        <option value="">Select…</option>
-        <option>Mostly within Canada</option>
-        <option>Mostly the United States</option>
-        <option>A mix of Canada and the United States</option>
-        <option>Other countries too</option>
+        <option value="" data-i18n="bulk.select">Select…</option>
+        <option data-i18n="bulk.d1">Mostly within Canada</option>
+        <option data-i18n="bulk.d2">Mostly the United States</option>
+        <option data-i18n="bulk.d3">A mix of Canada and the United States</option>
+        <option data-i18n="bulk.d4">Other countries too</option>
       </select>
     </div>
     <div class="field">
-      <label>Details</label>
-      <textarea id="bulk-message" placeholder="e.g. one 2-page notice to 40 tenants, black and white, mailed next week."></textarea>
+      <label data-i18n="bulk.f.details">Details</label>
+      <textarea id="bulk-message" data-i18n-placeholder="bulk.ph.msg" placeholder="e.g. one 2-page notice to 40 tenants, black and white, mailed next week."></textarea>
     </div>
-    <button class="submit-btn" id="bulk-submit" onclick="submitBulkForm()">Request a quote →</button>
-    <div id="form-success">Thanks, we will reply within one business day with the exact total and a payment link.</div>
+    <button class="submit-btn" id="bulk-submit" onclick="submitBulkForm()" data-i18n="bulk.f.btn">Request a quote →</button>
+    <div id="form-success" data-i18n="bulk.f.ok">Thanks, we will reply within one business day with the exact total and a payment link.</div>
   </div>
 </div>
 
 <footer id="site-footer"></footer>
 <script src="/footer.js?v=4" defer></script>
-<script src="/theme.js?v=2" defer></script>
+<script src="/theme.js?v=3" defer></script>
+<script src="/lang.js?v=39" defer></script>
 <script>
+const FR = () => document.documentElement.getAttribute('data-lang') === 'fr';
 async function submitBulkForm() {
   const name    = document.getElementById('bulk-name').value.trim();
   const email   = document.getElementById('bulk-email').value.trim();
   const qty     = document.getElementById('bulk-qty').value;
   const dest    = document.getElementById('bulk-dest').value;
   const message = document.getElementById('bulk-message').value.trim();
-  if (!name || !email || !qty || !dest || !message) { alert('Please fill in all fields.'); return; }
+  if (!name || !email || !qty || !dest || !message) { alert(FR() ? 'Veuillez remplir tous les champs.' : 'Please fill in all fields.'); return; }
   const btn = document.getElementById('bulk-submit');
   btn.disabled = true;
-  btn.textContent = 'Sending…';
+  btn.textContent = FR() ? 'Envoi…' : 'Sending…';
   try {
     const res = await fetch('/api/contact', {
       method: 'POST',
@@ -188,8 +190,8 @@ async function submitBulkForm() {
     } else { throw new Error(); }
   } catch {
     btn.disabled = false;
-    btn.textContent = 'Request a quote →';
-    alert('Something went wrong. Please email us directly at support@letterhome.ca');
+    btn.textContent = FR() ? 'Demander un prix →' : 'Request a quote →';
+    alert(FR() ? 'Une erreur est survenue. Écrivez-nous directement à support@letterhome.ca' : 'Something went wrong. Please email us directly at support@letterhome.ca');
   }
 }
 </script>

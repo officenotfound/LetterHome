@@ -2051,6 +2051,46 @@
       'rate.inc.4': 'Jusqu’à 5 fichiers PDF ou Word joints',
       'rate.inc.5': 'Vérifiée par une personne avant l’impression',
       'rate.inc.btn': 'Commencer une lettre →',
+      'bulk.eyebrow': 'Envois en lot',
+      'bulk.h1': 'Plus de quelques lettres à envoyer?<br><em>Plus vous en envoyez, moins chacune coûte.</em>',
+      'bulk.sub': 'Prix de volume dès 10 lettres par commande. Impression, enveloppe et affranchissement inclus.',
+      'bulk.h2.price': 'Prix de volume par lettre',
+      'bulk.th1': 'Lettres par commande',
+      'bulk.th2': 'Au Canada',
+      'bulk.th3': 'Vers les États-Unis',
+      'bulk.t1': '1 à 9',
+      'bulk.t2': '10 ou plus',
+      'bulk.t3': '25 ou plus',
+      'bulk.t4': '50 ou plus',
+      'bulk.note': 'Prix en dollars canadiens, par lettre. Chaque lettre comprend 2 pages en noir et blanc, l’enveloppe et l’affranchissement. Les pages supplémentaires coûtent 0,45 $ chacune (0,55 $ en couleur) et l’impression couleur ajoute 1 $ par lettre. Les lettres internationales (20 $) ne sont pas réduites.',
+      'bulk.h2.how': 'Comment fonctionne une commande en lot',
+      'bulk.how1': 'Dites-nous combien de lettres environ, leur destination, et s’il s’agit d’un même document ou de lettres différentes',
+      'bulk.how2': 'Nous répondons en un jour ouvrable avec le total exact et un lien de paiement sécurisé',
+      'bulk.how3': 'Vous nous envoyez les lettres et la liste des adresses; nous vérifions les adresses avant toute impression',
+      'bulk.how4': 'Tout est imprimé et posté, et nous vous écrivons quand vos lettres partent',
+      'bulk.h2.who': 'Pour qui',
+      'bulk.who': 'Propriétaires et gestionnaires immobiliers qui envoient des avis, consultants en immigration et parajuristes qui postent pour plusieurs clients, petites entreprises qui envoient factures ou relevés, clubs et organismes de bienfaisance, et familles qui envoient invitations ou cartes de vœux depuis l’étranger.',
+      'bulk.form.h3': 'Demander une commande en lot',
+      'bulk.form.sub': 'Dites-nous ce que vous voulez envoyer et nous vous répondrons avec un total exact.',
+      'bulk.f.name': 'Votre nom',
+      'bulk.f.email': 'Courriel',
+      'bulk.f.qty': 'Combien de lettres environ?',
+      'bulk.f.dest': 'Où vont-elles?',
+      'bulk.f.details': 'Détails',
+      'bulk.q1': '10 à 24',
+      'bulk.q2': '25 à 49',
+      'bulk.q3': '50 à 99',
+      'bulk.q4': '100 ou plus',
+      'bulk.d1': 'Surtout au Canada',
+      'bulk.d2': 'Surtout aux États-Unis',
+      'bulk.d3': 'Canada et États-Unis',
+      'bulk.d4': 'Aussi d’autres pays',
+      'bulk.f.btn': 'Demander un prix →',
+      'bulk.f.ok': 'Merci, nous répondrons en un jour ouvrable avec le total exact et un lien de paiement.',
+      'bulk.select': 'Choisir…',
+      'bulk.ph.name': 'Jeanne Tremblay',
+      'bulk.ph.email': 'jeanne@exemple.com',
+      'bulk.ph.msg': 'ex. un avis de 2 pages à 40 locataires, noir et blanc, posté la semaine prochaine.',
       'pricing.extras.note': 'Chaque supplément est affiché avant le paiement. Pas d\'abonnement, pas de frais cachés.',
       'pricing.bulk.link': 'Vous envoyez 10 lettres ou plus\u00a0? Voir les tarifs en volume →',
       'pricing.dom.tag': 'Au Canada',
@@ -3962,14 +4002,14 @@
   window.toggleLang = function () {
     var current = document.documentElement.getAttribute('data-lang') || 'en';
     var next = current === 'en' ? 'fr' : 'en';
-    try { sessionStorage.setItem('lh-lang', next); } catch(e) {}
+    try { localStorage.setItem('lh-lang', next); } catch(e) {}   // remembered on every page and visit
     applyLang(next);
   };
 
   document.addEventListener('DOMContentLoaded', function () {
     // Respect French dedicated-URL pages (html lang="fr-...") regardless of session
     var isFrenchPage = (document.documentElement.lang || '').toLowerCase().indexOf('fr') === 0;
-    var saved = !isFrenchPage && (function(){ try { return sessionStorage.getItem('lh-lang'); } catch(e) { return null; } })();
+    var saved = !isFrenchPage && (function(){ try { return localStorage.getItem('lh-lang') || sessionStorage.getItem('lh-lang'); } catch(e) { return null; } })();
     var lang = saved || document.documentElement.getAttribute('data-lang') || 'en';
     if (lang !== 'en') applyLang(lang);
     document.querySelectorAll('.lang-toggle').forEach(function (btn) {
