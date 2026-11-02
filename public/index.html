@@ -602,6 +602,8 @@ section { position: relative; z-index: 2; }
 }
 .pricing-grid .price-card { display: flex; flex-direction: column; padding: 38px 26px 30px; }
 .pricing-grid .price-card .price-includes { flex: 1; }
+/* every card's button is the same height, whatever its label */
+.pricing-grid .price-card > .btn { min-height: 72px; display: flex; align-items: center; justify-content: center; text-wrap: balance; }
 /* One row on desktop: 3 cards, or 5 once UK and Australia are printed locally (hidden cards take no column) */
 @media (min-width: 1001px) {
   .pricing-grid { grid-auto-flow: column; grid-template-columns: none; grid-auto-columns: minmax(0, 1fr); }
@@ -1246,7 +1248,7 @@ footer {
       <div class="price-card featured">
         <span class="price-tag" data-i18n="pricing.dom.tag">Within Canada</span>
         <h3 data-i18n="pricing.dom.h3">Domestic</h3>
-        <p class="price-sub" data-i18n="pricing.dom.sub">To any Canadian address</p>
+        <p class="price-sub" data-i18n="pricing.dom.sub">Any Canadian address</p>
         <div class="price">$6<small>CAD</small></div>
         <div class="price-meta" data-i18n="pricing.dom.meta">Typically 1–2 weeks</div>
         <ul class="price-includes">
@@ -1261,7 +1263,7 @@ footer {
       <div class="price-card usa">
         <span class="price-tag" data-i18n="pricing.usa.tag">To the United States</span>
         <h3 data-i18n="pricing.usa.h3">United States</h3>
-        <p class="price-sub" data-i18n="pricing.usa.sub">To any US address</p>
+        <p class="price-sub" data-i18n="pricing.usa.sub">Any US address</p>
         <div class="price">$6<small>CAD</small></div>
         <div class="price-meta" data-i18n="pricing.usa.meta">Typically 2–4 weeks</div>
         <ul class="price-includes">
@@ -1270,19 +1272,20 @@ footer {
           <li data-i18n="pricing.usa.li3">Envelope and international postage</li>
           <li data-i18n="pricing.usa.li4">Attach up to 5 PDF or Word files</li>
         </ul>
-        <a href="/send" class="btn btn-outline btn-large" style="width:100%;text-align:center;" data-i18n="pricing.usa.btn">Send to the United States →</a>
+        <a href="/send" class="btn btn-outline btn-large" style="width:100%;text-align:center;" data-i18n="pricing.usa.btn">Send to the US →</a>
       </div>
 
       <div class="price-card local" data-dest="GB" hidden>
         <span class="price-tag" data-i18n="pricing.uk.tag">To the United Kingdom</span>
         <h3 data-i18n="pricing.uk.h3">United Kingdom</h3>
-        <p class="price-sub" data-i18n="pricing.uk.sub">To any UK address</p>
+        <p class="price-sub" data-i18n="pricing.uk.sub">Any UK address</p>
         <div class="price"><span class="amt">$9</span><small>CAD</small></div>
-        <div class="price-meta" data-i18n="pricing.uk.meta">Printed and mailed inside the UK</div>
+        <div class="price-meta" data-i18n="pricing.uk.meta">Printed in the UK</div>
         <ul class="price-includes">
-          <li data-i18n="pricing.uk.li1">Royal Mail delivery within the UK</li>
-          <li data-i18n="pricing.uk.li2">Printed on A4 paper, black &amp; white</li>
+          <li data-i18n="pricing.uk.li1">2 pages included, then $0.45 per extra page ($0.55 in colour)</li>
+          <li data-i18n="pricing.uk.li2">Black &amp; white by default (colour +$1), single‑sided</li>
           <li data-i18n="pricing.uk.li3">Envelope and UK postage</li>
+          <li data-i18n="pricing.uk.li4">Attach up to 5 PDF or Word files</li>
         </ul>
         <a href="/send" class="btn btn-outline btn-large" style="width:100%;text-align:center;" data-i18n="pricing.uk.btn">Send to the UK →</a>
       </div>
@@ -1290,13 +1293,14 @@ footer {
       <div class="price-card local" data-dest="AU" hidden>
         <span class="price-tag" data-i18n="pricing.au.tag">To Australia</span>
         <h3 data-i18n="pricing.au.h3">Australia</h3>
-        <p class="price-sub" data-i18n="pricing.au.sub">To any Australian address</p>
+        <p class="price-sub" data-i18n="pricing.au.sub">Any Australian address</p>
         <div class="price"><span class="amt">$9</span><small>CAD</small></div>
-        <div class="price-meta" data-i18n="pricing.au.meta">Printed and mailed inside Australia</div>
+        <div class="price-meta" data-i18n="pricing.au.meta">Printed in Australia</div>
         <ul class="price-includes">
-          <li data-i18n="pricing.au.li1">Australia Post delivery within Australia</li>
-          <li data-i18n="pricing.au.li2">Printed on A4 paper, black &amp; white</li>
+          <li data-i18n="pricing.au.li1">2 pages included, then $0.45 per extra page ($0.55 in colour)</li>
+          <li data-i18n="pricing.au.li2">Black &amp; white by default (colour +$1), single‑sided</li>
           <li data-i18n="pricing.au.li3">Envelope and Australian postage</li>
+          <li data-i18n="pricing.au.li4">Attach up to 5 PDF or Word files</li>
         </ul>
         <a href="/send" class="btn btn-outline btn-large" style="width:100%;text-align:center;" data-i18n="pricing.au.btn">Send to Australia →</a>
       </div>
@@ -1304,7 +1308,7 @@ footer {
       <div class="price-card">
         <span class="price-tag" data-i18n="pricing.intl.tag">Anywhere else</span>
         <h3 data-i18n="pricing.intl.h3">International</h3>
-        <p class="price-sub" data-i18n="pricing.intl.sub">All other countries (160+)</p>
+        <p class="price-sub" data-i18n="pricing.intl.sub">160+ other countries</p>
         <div class="price">$20<small>CAD</small></div>
         <div class="price-meta" data-i18n="pricing.intl.meta">Typically 2–4 weeks</div>
         <ul class="price-includes">
@@ -1313,7 +1317,7 @@ footer {
           <li data-i18n="pricing.intl.li3">Envelope and international postage</li>
           <li data-i18n="pricing.intl.li4">Attach up to 5 PDF or Word files</li>
         </ul>
-        <a href="/send" class="btn btn-outline btn-large" style="width:100%;text-align:center;" data-i18n="pricing.intl.btn">Send internationally →</a>
+        <a href="/send" class="btn btn-outline btn-large" style="width:100%;text-align:center;" data-i18n="pricing.intl.btn">Send abroad →</a>
       </div>
     </div>
 
@@ -1719,7 +1723,7 @@ window.addEventListener('load', async function personalizeTicker(){
 </script>
 
 <script src="/theme.js?v=2" defer></script>
-<script src="/lang.js?v=32" defer></script>
+<script src="/lang.js?v=33" defer></script>
 <script>
 (async () => {
   try {
