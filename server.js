@@ -500,6 +500,15 @@ async function postgridSweep() {
         if (r.mailed) sendMailedNotification(db.prepare('SELECT * FROM orders WHERE id = ?').get(o.id));
       } catch (e) { console.error(`[postgrid] refresh #${o.id} failed:`, e.message); }
     }
+    // A live letter not handed to the post office 4 days after submission (PostGrid's promise is 2 business days): alert once.
+    const stuck = db.prepare(`SELECT id, postgrid_letter_id, postgrid_status, postgrid_submitted_at FROM orders
+      WHERE postgrid_mode = 'live' AND postgrid_status IN ('ready', 'printing') AND deleted_at IS NULL
+        AND postgrid_submitted_at < datetime('now', '-4 days') AND sla_alert_sent_at IS NULL`).all();
+    for (const o of stuck) {
+      sendErrorAlert(`Order #${o.id}: PostGrid letter not mailed after 4 days`,
+        `Letter ${o.postgrid_letter_id} has been "${o.postgrid_status}" since ${o.postgrid_submitted_at} UTC. Check it in the PostGrid dashboard or contact support@postgrid.com.`);
+      db.prepare('UPDATE orders SET sla_alert_sent_at = CURRENT_TIMESTAMP WHERE id = ?').run(o.id);
+    }
   } catch (e) { console.error('[postgrid] sweep failed:', e.message); }
 }
 
@@ -602,6 +611,8 @@ abandonedOrderRecovery();
         AND created_at < ?
         AND sla_alert_sent_at IS NULL
         AND deleted_at IS NULL
+        -- live PostGrid letters run on PostGrid's own 2-business-day clock; the 15-minute sync tracks them
+        AND NOT (postgrid_mode = 'live' AND COALESCE(postgrid_status, '') != 'cancelled')
     `).all(cutoff20h);
     if (overdue.length) {
       const lines = overdue.map(o =>
