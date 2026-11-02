@@ -287,11 +287,14 @@ function createPostGrid({ db, getSetting, orderDirPath, fetchImpl, convertWord =
   }
 
   // ---- actions -------------------------------------------------------------
+  // Test-mode letters are never mailed, so they must not move the customer's order or trigger customer emails.
   function saveLetter(orderId, letter) {
+    const live = !!letter.live;
     db.prepare(`UPDATE orders SET postgrid_letter_id = ?, postgrid_status = ?, postgrid_url = ?, postgrid_error = NULL,
                 postgrid_submitted_at = CURRENT_TIMESTAMP, postgrid_mode = ?,
-                status = 'submitted_to_printer', printer_ref = ? WHERE id = ?`)
-      .run(letter.id, letter.status || 'ready', letter.url || null, letter.live ? 'live' : 'test', `postgrid:${letter.id}`, orderId);
+                status = CASE WHEN ? THEN 'submitted_to_printer' ELSE status END,
+                printer_ref = CASE WHEN ? THEN ? ELSE printer_ref END WHERE id = ?`)
+      .run(letter.id, letter.status || 'ready', letter.url || null, live ? 'live' : 'test', live ? 1 : 0, live ? 1 : 0, `postgrid:${letter.id}`, orderId);
   }
 
   async function submitOrder(order, { force = false } = {}) {
@@ -345,6 +348,10 @@ function createPostGrid({ db, getSetting, orderDirPath, fetchImpl, convertWord =
     if (!order.postgrid_letter_id) throw new PostGridError('Order was not sent through PostGrid.', { manual: true });
     const letter = await api('GET', `/letters/${encodeURIComponent(order.postgrid_letter_id)}`);
     const st = letter.status;
+    if (!letter.live) {   // test letter: record PostGrid's status only
+      db.prepare('UPDATE orders SET postgrid_status = ?, postgrid_url = COALESCE(?, postgrid_url) WHERE id = ?').run(st, letter.url || null, order.id);
+      return { changed: st !== order.postgrid_status, status: st, mailed: false, test: true };
+    }
     const map = { ready: 'submitted_to_printer', printing: 'printing', processed_for_delivery: 'mailed', completed: 'mailed' };
     let next = map[st];
     if (st === 'cancelled') next = 'paid';             // back to the manual queue
@@ -364,6 +371,13 @@ function createPostGrid({ db, getSetting, orderDirPath, fetchImpl, convertWord =
                 postgrid_error = 'Cancelled by admin; needs manual fulfilment or resubmission.' WHERE id = ?`).run(order.id);
   }
 
+  // Clears a test letter from a real order so it can be sent for real later (live key).
+  function clearTestLetter(order) {
+    if (order.postgrid_mode !== 'test') throw new PostGridError('Only a test-mode letter can be cleared.', { manual: true });
+    db.prepare(`UPDATE orders SET postgrid_letter_id = NULL, postgrid_status = NULL, postgrid_url = NULL, postgrid_error = NULL,
+                postgrid_submitted_at = NULL, postgrid_mode = NULL WHERE id = ?`).run(order.id);
+  }
+
   // Test mode only: advance a test letter through the statuses.
   async function progressTestLetter(order) {
     if (order.postgrid_mode !== 'test') throw new PostGridError('Only test-mode letters can be progressed.', { manual: true });
@@ -371,7 +385,7 @@ function createPostGrid({ db, getSetting, orderDirPath, fetchImpl, convertWord =
     return refreshOrder(db.prepare('SELECT * FROM orders WHERE id = ?').get(order.id));
   }
 
-  return { isConfigured, mode, autoSubmit, countries, serviceOf, eligibility, buildLetterPdf, buildPreviewPdf, submitOrder, refreshOrder, cancelOrder, progressTestLetter, PostGridError };
+  return { isConfigured, mode, autoSubmit, countries, serviceOf, eligibility, buildLetterPdf, buildPreviewPdf, submitOrder, refreshOrder, cancelOrder, clearTestLetter, progressTestLetter, PostGridError };
 }
 
 module.exports = { createPostGrid, PostGridError, MAX_SHEETS };

@@ -439,11 +439,18 @@ function orderDirPath(id, createdAt) {
 const { createPostGrid, MAX_SHEETS } = require('./postgrid');
 const { makeDestinations, SERVICE_NAMES } = require('./destinations');
 const destinations = makeDestinations(getSetting);
+// Who carries the letter: printed and mailed locally when that country's PostGrid network is on, otherwise from Canada.
+const LOCAL_CARRIERS = { CA: 'Canada Post', US: 'USPS', GB: 'Royal Mail', AU: 'Australia Post' };
+function mailFacts(order) {
+  const cc = String(order?.destination_country || 'CA').toUpperCase();
+  const local = cc === 'CA' || (destinations.liveCountries().includes(cc) && !!LOCAL_CARRIERS[cc]);
+  return { carrier: local ? LOCAL_CARRIERS[cc] : 'Canada Post', local, defaultDelivery: local ? 'within 2 weeks' : 'within 4 weeks' };
+}
 const postgrid = createPostGrid({ db, getSetting, orderDirPath, destinations });
 
 function sendMailedNotification(order) {
   if (!order?.customer_email) return;
-  const deliveryText = order.estimated_delivery || (order.destination_country === 'CA' ? 'within 2 weeks' : 'within 4 weeks');
+  const deliveryText = order.estimated_delivery || mailFacts(order).defaultDelivery;
   const toAddr = [
     order.recipient_name, order.recipient_street,
     `${order.recipient_city || ''} ${order.recipient_province || ''} ${order.recipient_postal || ''}`.trim(),
@@ -1507,7 +1514,7 @@ app.post('/api/track', trackLimiter, (req, res) => {
     paid:                  'Payment confirmed. Your letter is being prepared for printing.',
     submitted_to_printer:  'Submitted to printer, being prepared for mailing.',
     printing:              'Printing in progress.',
-    mailed:                'Mailed, in transit with Canada Post.',
+    mailed:                `Mailed, in transit with ${mailFacts(order).carrier}.`,
     delivered:             'Delivered.',
     refunded:              'Refunded.',
   };
@@ -1748,6 +1755,15 @@ app.get('/api/admin/stats', requireAdmin, (req, res) => {
 
 app.get('/api/admin/orders', requireAdmin, (req, res) => {
   const { status } = req.query;
+  // "Needs you": paid orders that PostGrid has not taken (refused, failing, or not picked up within 30 minutes).
+  if (status === 'needs_you') {
+    return res.json(db.prepare(`SELECT id, stripe_session_id, customer_email, recipient_name, recipient_street, recipient_city, recipient_province, recipient_postal,
+        destination_country, letter_type, attachment_info, price_cents, status, status_token, created_at, recovery_sent_at, postgrid_error, postgrid_mode
+      FROM orders WHERE status = 'paid' AND deleted_at IS NULL
+        AND ((postgrid_letter_id IS NULL AND (postgrid_error IS NOT NULL OR paid_at IS NULL OR paid_at < datetime('now', '-30 minutes')))
+             OR postgrid_mode = 'test')
+      ORDER BY created_at`).all().map(o => o.postgrid_mode === 'test' && !o.postgrid_error ? { ...o, postgrid_error: 'Only a TEST letter exists (not mailed). Clear it and send for real.' } : o));
+  }
   const rows = status
     ? db.prepare("SELECT id, stripe_session_id, customer_email, recipient_name, recipient_street, recipient_city, recipient_province, recipient_postal, destination_country, letter_type, attachment_info, price_cents, status, status_token, created_at, recovery_sent_at FROM orders WHERE status = ? AND deleted_at IS NULL ORDER BY created_at DESC").all(status)
     : db.prepare("SELECT id, stripe_session_id, customer_email, recipient_name, recipient_street, recipient_city, recipient_province, recipient_postal, destination_country, letter_type, attachment_info, price_cents, status, status_token, created_at, recovery_sent_at FROM orders WHERE deleted_at IS NULL ORDER BY created_at DESC").all();
@@ -1821,7 +1837,7 @@ app.post('/api/admin/orders/:id/status', requireAdmin, async (req, res) => {
     const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(id);
     if (order?.customer_email) {
       const isDomestic = order.destination_country === 'CA';
-      const deliveryText = order.estimated_delivery || (isDomestic ? 'within 2 weeks' : 'within 4 weeks');
+      const deliveryText = order.estimated_delivery || mailFacts(order).defaultDelivery;
       const toAddr = [
         order.recipient_name, order.recipient_street,
         `${order.recipient_city || ''} ${order.recipient_province || ''} ${order.recipient_postal || ''}`.trim(),
@@ -1848,7 +1864,9 @@ app.get('/api/admin/postgrid/status', requireAdmin, (req, res) => {
     auto_submit: getSetting('postgrid_auto_submit', 'false') === 'true',
     countries: postgrid.countries(),
     in_flight: db.prepare("SELECT COUNT(*) n FROM orders WHERE postgrid_letter_id IS NOT NULL AND COALESCE(postgrid_status,'') NOT IN ('completed','cancelled')").get().n,
-    needs_manual: db.prepare("SELECT COUNT(*) n FROM orders WHERE status = 'paid' AND postgrid_error LIKE 'MANUAL:%' AND deleted_at IS NULL").get().n,
+    needs_manual: db.prepare(`SELECT COUNT(*) n FROM orders WHERE status = 'paid' AND deleted_at IS NULL
+      AND ((postgrid_letter_id IS NULL AND (postgrid_error IS NOT NULL OR paid_at IS NULL OR paid_at < datetime('now', '-30 minutes')))
+           OR postgrid_mode = 'test')`).get().n,
   });
 });
 
@@ -1881,6 +1899,13 @@ app.post('/api/admin/orders/:id/postgrid/cancel', requireAdmin, async (req, res)
     logAudit(req, 'order.postgrid_cancel', 'order', id, { letter_id: order.postgrid_letter_id });
     res.json({ ok: true });
   } catch (e) { res.status(502).json({ error: e.message }); }
+});
+
+app.post('/api/admin/orders/:id/postgrid/clear-test', requireAdmin, (req, res) => {
+  const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(Number(req.params.id));
+  if (!order) return res.status(404).json({ error: 'Order not found' });
+  try { postgrid.clearTestLetter(order); logAudit(req, 'order.postgrid_clear_test', 'order', order.id, { letter_id: order.postgrid_letter_id }); res.json({ ok: true }); }
+  catch (e) { res.status(400).json({ error: e.message }); }
 });
 
 app.post('/api/admin/orders/:id/postgrid/progress', requireAdmin, async (req, res) => {
@@ -2450,7 +2475,7 @@ app.post('/api/admin/orders/bulk-status', requireAdmin, async (req, res) => {
       const id = order.id;
       if (!order?.customer_email) continue;
       const isDomestic = order.destination_country === 'CA';
-      const deliveryText = order.estimated_delivery || (isDomestic ? 'within 2 weeks' : 'within 4 weeks');
+      const deliveryText = order.estimated_delivery || mailFacts(order).defaultDelivery;
       const toAddr = [
         order.recipient_name, order.recipient_street,
         `${order.recipient_city || ''} ${order.recipient_province || ''} ${order.recipient_postal || ''}`.trim(),
@@ -3331,7 +3356,7 @@ function buildOperatorEmailText(o, fromAddr, toAddr, amountCAD, attachCount) {
 }
 
 function buildCustomerEmailText(o, toAddr, amountCAD, isDomestic) {
-  const delivery = isDomestic ? 'within 2 weeks' : 'within 4 weeks';
+  const delivery = mailFacts(o).defaultDelivery;
   return [
     'Your letter is in.',
     '',
@@ -3352,7 +3377,7 @@ function buildCustomerEmailText(o, toAddr, amountCAD, isDomestic) {
 }
 
 function buildCustomerEmail(o, toAddr, amountCAD, isDomestic) {
-  const delivery = isDomestic ? 'within 2 weeks' : 'within 4 weeks';
+  const delivery = mailFacts(o).defaultDelivery;
   const esc = s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   toAddr = esc(toAddr);
   return `
@@ -3378,7 +3403,7 @@ function buildCustomerEmail(o, toAddr, amountCAD, isDomestic) {
 }
 
 function buildMailedEmail(o, toAddr, deliveryText) {
-  const delivery = deliveryText || (o.destination_country === 'CA' ? 'within 2 weeks' : 'within 4 weeks');
+  const delivery = deliveryText || mailFacts(o).defaultDelivery;
   const esc = s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   toAddr = esc(toAddr);
   return `
@@ -3387,7 +3412,7 @@ function buildMailedEmail(o, toAddr, deliveryText) {
   <div style="max-width:520px;margin:0 auto;background:#faf6ec;border:1px solid rgba(42,42,42,0.12);padding:48px">
     <div style="width:38px;height:38px;background:#a8472d;display:inline-flex;align-items:center;justify-content:center;color:#faf6ec;font-size:20px;font-family:Georgia,serif;margin-bottom:28px">L</div>
     <h1 style="font-size:28px;font-weight:400;margin:0 0 10px;letter-spacing:-0.02em">Your letter is on its way.</h1>
-    <p style="color:#6b6258;margin:0 0 32px;font-size:16px;line-height:1.6">Order #${o.id} has been printed, sealed, stamped, and dropped in the post. From here, it's in Canada Post's hands.</p>
+    <p style="color:#6b6258;margin:0 0 32px;font-size:16px;line-height:1.6">Order #${o.id} has been printed, sealed, stamped, and dropped in the post. From here, it's in ${mailFacts(o).carrier}'s hands.</p>
     <div style="background:#2a2a2a;color:#faf6ec;padding:24px;margin-bottom:28px">
       <p style="font-size:11px;text-transform:uppercase;letter-spacing:0.15em;color:rgba(250,246,236,0.55);margin:0 0 10px">Delivering to</p>
       <p style="font-size:18px;line-height:1.5;white-space:pre-line;margin:0 0 16px">${toAddr}</p>
@@ -3405,11 +3430,11 @@ function buildMailedEmail(o, toAddr, deliveryText) {
 }
 
 function buildMailedEmailText(o, toAddr, deliveryText) {
-  const delivery = deliveryText || (o.destination_country === 'CA' ? 'within 2 weeks' : 'within 4 weeks');
+  const delivery = deliveryText || mailFacts(o).defaultDelivery;
   return [
     'Your letter is on its way.',
     '',
-    `Order #${o.id} has been printed, sealed, stamped, and dropped in the post. From here, it's in Canada Post's hands.`,
+    `Order #${o.id} has been printed, sealed, stamped, and dropped in the post. From here, it's in ${mailFacts(o).carrier}'s hands.`,
     '',
     'Delivering to:',
     toAddr,
@@ -3446,9 +3471,9 @@ function buildStatusPage(order) {
     </div>`;
   }
 
-  const deliveryLine = order.estimated_delivery ? esc(order.estimated_delivery) : (order.destination_country === 'CA' ? 'within 2 weeks' : 'within 4 weeks');
+  const deliveryLine = order.estimated_delivery ? esc(order.estimated_delivery) : mailFacts(order).defaultDelivery;
   const step3Desc = stageIndex >= 2
-    ? `Dropped off with Canada Post. Estimated arrival: ${deliveryLine}`
+    ? `Dropped off with ${mailFacts(order).carrier}. Estimated arrival: ${deliveryLine}`
     : 'Once mailed, your estimated delivery will appear here.';
 
   return `<!DOCTYPE html>
@@ -3533,7 +3558,8 @@ function buildRecoveryEmail(order) {
   const toLine    = [order.recipient_name, [order.recipient_city, order.destination_country].filter(Boolean).join(', ')].filter(Boolean).join(' · ');
   const subject   = order.recipient_name ? `Your letter to ${order.recipient_name} is ready to mail` : 'Your letter is ready to mail';
   const unsub     = unsubscribeLink(order.customer_email);
-  const benefits  = ['Mailed from Canada within one business day', 'A real Canadian postmark and stamp', 'Free reprint and resend if it doesn\'t arrive'];
+  const facts     = mailFacts(order);
+  const benefits  = ['Printed and mailed within two business days', facts.carrier !== 'Canada Post' ? `Mailed locally with ${facts.carrier}` : 'A real Canadian postmark and stamp', 'Free reprint and resend if it doesn\'t arrive'];
   return {
     from:    process.env.EMAIL_FROM,
     to:      order.customer_email,

@@ -21,14 +21,15 @@ const { PDFDocument } = require('pdf-lib');
 const calls = [];
 let letterStatus = 'ready';
 let existingLetters = [];
+let liveLetters = true;   // most tests simulate live letters; one test covers test-mode isolation
 let recipientStatus = 'verified';
 const fakeFetch = async (url, opts) => {
   calls.push({ url, opts });
   const body = (o, status = 200) => ({ ok: status < 400, status, json: async () => o });
   if (url.endsWith('/contacts')) return body({ id: 'contact_' + calls.length, addressStatus: recipientStatus, addressErrors: recipientStatus === 'failed' ? 'generic: Unable to find a match for this address' : undefined });
   if (url.includes('/letters?') && opts.method === 'GET') return body({ object: 'list', data: existingLetters, totalCount: existingLetters.length });
-  if (url.endsWith('/letters') && opts.method === 'POST') return body({ id: 'letter_1', live: false, status: 'ready', url: 'https://pg/preview.pdf' });
-  if (/\/letters\/letter_1$/.test(url) && opts.method === 'GET') return body({ id: 'letter_1', status: letterStatus, url: 'https://pg/p.pdf' });
+  if (url.endsWith('/letters') && opts.method === 'POST') return body({ id: 'letter_1', live: liveLetters, status: 'ready', url: 'https://pg/preview.pdf' });
+  if (/\/letters\/letter_1$/.test(url) && opts.method === 'GET') return body({ id: 'letter_1', live: liveLetters, status: letterStatus, url: 'https://pg/p.pdf' });
   if (/\/letters\/letter_1$/.test(url) && opts.method === 'DELETE') return body({ id: 'letter_1', status: 'cancelled' });
   return body({ error: { type: 'x', message: 'nope' } }, 404);
 };
@@ -72,7 +73,7 @@ test('submit creates contacts and a letter, stores the id, and marks the order s
   const row = db.prepare('SELECT * FROM orders WHERE id = ?').get(o.id);
   assert.equal(row.status, 'submitted_to_printer');
   assert.equal(row.postgrid_letter_id, 'letter_1');
-  assert.equal(row.postgrid_mode, 'test');
+  assert.equal(row.postgrid_mode, 'live');
   const post = calls.find(c => c.url.endsWith('/letters'));
   assert.equal(post.opts.headers['Idempotency-Key'], `lh-order-${o.id}`);
   assert.equal(post.opts.headers['x-api-key'], 'test_abc123');
@@ -220,4 +221,25 @@ test('UK and Australia letters are A4 and sent with size a4; a chosen service is
   assert.deepEqual(JSON.parse(search), { 'metadata.orderId': String(us.id) });
   const ex = seed(); db.prepare("UPDATE orders SET destination_country = 'US', express_mail = 1 WHERE id = ?").run(ex.id);
   await assert.rejects(pg2.submitOrder(db.prepare('SELECT * FROM orders WHERE id = ?').get(ex.id)), e => e.manual && /express/.test(e.message));
+});
+
+test('a TEST-mode letter on a real order never changes its status or reports it as mailed, and can be cleared', async () => {
+  liveLetters = false;
+  try {
+    const o = seed();
+    await pg.submitOrder(o);
+    let row = db.prepare('SELECT * FROM orders WHERE id = ?').get(o.id);
+    assert.equal(row.status, 'paid');                     // customer-facing status untouched
+    assert.equal(row.postgrid_mode, 'test');
+    letterStatus = 'completed';
+    const r = await pg.refreshOrder(row);
+    assert.equal(r.mailed, false);                        // no "mailed" email to the customer
+    row = db.prepare('SELECT * FROM orders WHERE id = ?').get(o.id);
+    assert.equal(row.status, 'paid');
+    assert.equal(row.postgrid_status, 'completed');
+    pg.clearTestLetter(row);
+    row = db.prepare('SELECT * FROM orders WHERE id = ?').get(o.id);
+    assert.equal(row.postgrid_letter_id, null);
+    assert.equal(pg.eligibility(row), null);              // ready to send for real
+  } finally { liveLetters = true; letterStatus = 'ready'; }
 });

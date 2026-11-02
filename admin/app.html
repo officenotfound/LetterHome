@@ -689,8 +689,8 @@ async function showOrders(filter) {
   const url = orderFilter ? `/api/admin/orders?status=${orderFilter}` : '/api/admin/orders';
   allOrders = await api(url) || [];
 
-  const statuses = ['','awaiting_payment','paid','submitted_to_printer','printing','mailed','delivered'];
-  const labels   = ['All','Awaiting','Paid','At Printer','Printing','Mailed','Delivered'];
+  const statuses = ['','needs_you','awaiting_payment','paid','submitted_to_printer','printing','mailed','delivered'];
+  const labels   = ['All','⚠ Needs you','Awaiting','Paid','At Printer','Printing','Mailed','Delivered'];
   const filters  = statuses.map((s,i) => `<button class="filter-btn ${orderFilter===s?'active':''}" onclick="showOrders('${s}')">${labels[i]}</button>`).join('');
 
   setMain(`
@@ -748,7 +748,7 @@ function renderOrdersTable() {
       <td><input type="checkbox" class="order-cb" value="${o.id}" onchange="updateBulkBar()"></td>
       <td><button class="link" onclick="go('/admin/orders/${o.id}')">#${o.id}</button></td>
       <td>${fmtDateTime(o.created_at)}</td>
-      <td>${esc(o.recipient_name)}</td>
+      <td>${esc(o.recipient_name)}${o.postgrid_error !== undefined ? `<div style="font-size:12px;color:#b42318;margin-top:3px;max-width:360px;line-height:1.4">${esc((o.postgrid_error || 'Not picked up by PostGrid (auto-send off, or PostGrid not configured)').replace(/^(MANUAL|RETRY): /, ''))}</div>` : ''}</td>
       <td>${esc(o.recipient_city||'')}${o.recipient_city&&o.destination_country?', ':''}${o.destination_country||''}</td>
       <td>${statusBadge(o.status)}</td>
       <td>${timeLeftHTML(o.created_at, o.status)}</td>
@@ -1210,7 +1210,9 @@ function postgridCard(o) {
           <button class="btn btn-outline btn-sm" onclick="pgAction(${o.id},'refresh')">Refresh status</button>
           ${canCancel ? `<button class="btn btn-outline btn-sm" style="color:#b42318;border-color:#b42318" onclick="pgAction(${o.id},'cancel')">Cancel letter</button>` : ''}
           ${o.postgrid_mode === 'test' && !['completed','cancelled'].includes(o.postgrid_status) ? `<button class="btn btn-outline btn-sm" onclick="pgAction(${o.id},'progress')">Advance test letter</button>` : ''}
-        </div>`;
+          ${o.postgrid_mode === 'test' ? `<button class="btn btn-outline btn-sm" onclick="pgAction(${o.id},'clear-test')">Clear test letter</button>` : ''}
+        </div>
+        ${o.postgrid_mode === 'test' ? `<p style="font-size:12px;color:#92400e;margin-top:10px;line-height:1.5">Test letter: nothing is mailed, and the customer's order status and emails are not affected. Clear it to send this order for real once the live key is in place.</p>` : ''}`;
   } else {
     const why = o.postgrid_eligibility;
     body = row('Mode', modeBadge(o.postgrid_api_mode))
@@ -1228,7 +1230,7 @@ function postgridCard(o) {
 }
 
 async function pgAction(id, action) {
-  const labels = { submit: 'Send this letter through PostGrid now?', cancel: 'Cancel this letter at PostGrid? It returns to the manual queue.' };
+  const labels = { submit: 'Send this letter through PostGrid now?', cancel: 'Cancel this letter at PostGrid? It returns to the manual queue.', 'clear-test': 'Clear the test letter from this order? The order stays paid and can then be sent for real.' };
   if (labels[action] && !confirm(labels[action])) return;
   const msg = document.getElementById('pg-msg');
   if (msg) { msg.style.color = '#6b6b6b'; msg.textContent = 'Working…'; }
@@ -2356,7 +2358,7 @@ async function renderPostgridSettings(settings) {
   const cents = (key, def) => settings[key] || String(def);
   box.innerHTML = `
     <div style="font-size:13px;color:#444;margin-bottom:6px">API: ${modeTxt}</div>
-    <div style="font-size:13px;color:#6b6b6b;margin-bottom:14px">${st.in_flight ?? 0} letters in flight · ${st.needs_manual ?? 0} paid orders need manual fulfilment</div>
+    <div style="font-size:13px;color:#6b6b6b;margin-bottom:14px">${st.in_flight ?? 0} letters in flight · ${st.needs_manual ? `<button class="link" style="color:#b42318" onclick="orderFilter='needs_you'; go('/admin/orders')">${st.needs_manual} paid orders need you →</button>` : '0 paid orders need you'}</div>
     ${chk('pg-auto', auto, 'Send paid orders to PostGrid automatically', 'Every 15 minutes, and right after payment. Orders PostGrid can\'t handle go to the manual queue with an email alert.')}
     <div style="font-size:12px;font-weight:600;color:#111;margin:14px 0 4px;letter-spacing:.04em;text-transform:uppercase">Delivery networks enabled on your PostGrid account</div>
     <div style="font-size:12px;color:#6b6b6b;margin-bottom:6px">Tick a country only after PostGrid has enabled that network. UK and Australia sell at their local price only when ticked; otherwise they are sold as international mail.</div>

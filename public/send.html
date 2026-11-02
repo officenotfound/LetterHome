@@ -718,6 +718,7 @@ textarea.field-error { border-color: var(--red) !important; }
             <option value="ZM">Zambia, $20 CAD</option>
         </select>
         <span class="field-note" data-i18n="send.dest.note">Canada and United States $6 · Everywhere else $20, all prices CAD</span>
+        <span class="field-note" id="dest-note-local" style="display:none"><span data-i18n="send.dest.local">Printed and mailed locally:</span> <span id="dest-note-local-list"></span></span>
       </div>
     </div>
 
@@ -849,7 +850,7 @@ textarea.field-error { border-color: var(--red) !important; }
   <div class="panel" id="panel-3">
     <div class="eyebrow" data-i18n="send.step3.eyebrow">Step Three</div>
     <h2 class="panel-title serif" data-i18n="send.step3.title">Review your order.</h2>
-    <p class="panel-sub" data-i18n="send.step3.sub">Have one last look before paying. After checkout, your letter is printed in black & white by default (colour available) and mailed from Canada within two business days.</p>
+    <p class="panel-sub" data-i18n="send.step3.sub" data-ship="canada">Have one last look before paying. After checkout, your letter is printed in black & white by default (colour available) and mailed from Canada within two business days.</p><p class="panel-sub" style="display:none" data-i18n="send.step3.sub.local" data-ship="local">Have one last look before paying. After checkout, your letter is printed in black &amp; white by default (colour available) and mailed within two business days, printed and posted inside the destination country.</p>
 
     <div class="preview-envelope">
       <div class="preview-stamp">
@@ -905,7 +906,7 @@ textarea.field-error { border-color: var(--red) !important; }
       <h3 data-i18n="send.next.title">What happens after you pay</h3>
       <ol>
         <li><span class="n">1</span><span><strong data-i18n="send.next.1.t">Confirmation email</strong><span class="d" data-i18n="send.next.1.d">Right after payment you get an email with your order number and a link to track your letter.</span></span></li>
-        <li><span class="n">2</span><span><strong data-i18n="send.next.2.t">Printed and mailed</strong><span class="d" data-i18n="send.next.2.d">Within two business days we print, seal, stamp and mail it from inside Canada, and email you when it's in the post.</span></span></li>
+        <li><span class="n">2</span><span><strong data-i18n="send.next.2.t">Printed and mailed</strong><span class="d" data-i18n="send.next.2.d" data-ship="canada">Within two business days we print, seal, stamp and mail it from inside Canada, and email you when it's in the post.</span><span class="d" style="display:none" data-i18n="send.next.2.d.local" data-ship="local">Within two business days we print, seal, stamp and mail it inside the destination country, and email you when it's in the post.</span></span></li>
         <li><span class="n">3</span><span><strong data-i18n="send.next.3.t">Delivered</strong><span class="d" data-i18n="send.next.3.d">Typically up to 2 weeks within Canada and up to 4 weeks internationally.</span></span></li>
       </ol>
     </div>
@@ -1028,6 +1029,9 @@ let _priceUsaCents  = 600;
 let _priceIntlCents = 2000;
 let _destCfg = null;          // per-destination price, local printing and services from /api/site-config
 let _svcDest = null;          // destination the service list was last drawn for
+// Redraw prices and labels built in JS when the visitor switches language.
+new MutationObserver(() => { _svcDest = null; if (typeof updatePricing === 'function') updatePricing(); })
+  .observe(document.documentElement, { attributes: true, attributeFilter: ['data-lang'] });
 
 // Draws the optional mail services (registered / certified / express) offered for the chosen destination.
 function renderMailServices(dest) {
@@ -1094,6 +1098,20 @@ function updatePricing() {
   const basePrice = (_destCfg && _destCfg[dest]) ? _destCfg[dest].price_cents
     : (isDomestic ? _priceDomCents : (dest === 'US' ? _priceUsaCents : _priceIntlCents));
   const isLocal = !isDomestic && !!(_destCfg && _destCfg[dest] && _destCfg[dest].local);
+  // Copy that says "from Canada" swaps for the local version when this letter is printed in its own country.
+  document.querySelectorAll('[data-ship="canada"]').forEach(el => { el.style.display = isLocal ? 'none' : ''; });
+  document.querySelectorAll('[data-ship="local"]').forEach(el => { el.style.display = isLocal ? '' : 'none'; });
+  const extraLocal = _destCfg ? Object.entries(_destCfg).filter(([cc, d]) => d.local && cc !== 'CA' && cc !== 'US') : [];
+  const noteLocal = document.getElementById('dest-note-local');
+  if (noteLocal) {
+    noteLocal.style.display = extraLocal.length ? 'block' : 'none';
+    document.getElementById('dest-note-local-list').textContent = extraLocal
+      .map(([cc, d]) => {
+        const n = LH_T('country.' + cc), amt = (d.price_cents / 100).toFixed(d.price_cents % 100 ? 2 : 0);
+        const fr = document.documentElement.getAttribute('data-lang') === 'fr';
+        return (n === 'country.' + cc ? d.name : n) + ' ' + (fr ? amt.replace('.', ',') + '\u00a0$' : '$' + amt);
+      }).join(' · ');
+  }
   const addonCents = computeAddonCents();
   let discount = 0;
   if (_appliedDiscount) {
@@ -1642,6 +1660,8 @@ async function applyDiscountCode() {
 <script src="/theme.js?v=2" defer></script>
 <script>
 (async () => {
+  // lang.js is deferred; wait for its LH_T before building any translated UI (max 5 s).
+  for (let i = 0; i < 100 && typeof window.LH_T !== 'function'; i++) await new Promise(r => setTimeout(r, 50));
   try {
     const cfg = await fetch('/api/site-config').then(r => r.json());
 
@@ -1871,7 +1891,7 @@ function fillSavedRecipient(sel) {
   } catch(e) {}
 }
 </script>
-<script src="/lang.js?v=27" defer></script>
+<script src="/lang.js?v=28" defer></script>
 <script type="module">
   import * as pdfjsLib from '/vendor/pdfjs/pdf.min.mjs';
   pdfjsLib.GlobalWorkerOptions.workerSrc = '/vendor/pdfjs/pdf.worker.min.mjs';
