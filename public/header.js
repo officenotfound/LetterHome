@@ -16,7 +16,9 @@
   // Hide toggle only on the /guides index page (not on individual blog/guide pages).
   var isGuidesIndex = window.location.pathname === '/guides' || window.location.pathname === '/guides/';
 
-  var langToggle = (!isFrench && !isGuidesIndex) ?
+  // English-only guide pages (<html data-en-only>) have no French version, so no toggle.
+  var enOnly = document.documentElement.hasAttribute('data-en-only');
+  var langToggle = (!isFrench && !isGuidesIndex && !enOnly) ?
     '<button type="button" class="lang-toggle" onclick="toggleLang()" aria-label="Toggle language">FR</button>' : '';
 
   var sendLabel = isFrench ? 'Envoyer une lettre' : 'Send a letter';

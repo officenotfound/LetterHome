@@ -92,13 +92,13 @@ footer{background:var(--ink);color:rgba(255,255,255,0.5);padding:40px 36px;margi
 .tier-note{font-size:13px;color:var(--ink-muted)}
 </style>
 <script>(function(){try{var t=localStorage.getItem('lh-theme');if(t!=='dark'&&t!=='light')t=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
-<link rel="stylesheet" href="/theme.css?v=9">
-<link rel="stylesheet" href="/guide.css?v=6">
+<link rel="stylesheet" href="/theme.css?v=11">
+<link rel="stylesheet" href="/guide.css?v=7">
 </head>
 <body>
 <a href="#main-content" class="skip-link" style="position:absolute;left:-9999px;top:4px;z-index:9999;background:#a8472d;color:#faf6ec;padding:8px 16px;font-size:14px;font-family:Georgia,serif;text-decoration:none;border-radius:2px" onfocus="this.style.left='4px'" onblur="this.style.left='-9999px'">Skip to main content</a>
 <div id="site-header"></div>
-<script src="/header.js?v=6"></script>
+<script src="/header.js?v=7"></script>
 
 <div class="hero" id="main-content">
   <p class="hero-eyebrow" data-i18n="bulk.eyebrow">Bulk Mailing</p>
@@ -110,10 +110,10 @@ footer{background:var(--ink);color:rgba(255,255,255,0.5);padding:40px 36px;margi
   <h2 data-i18n="bulk.h2.price">Volume pricing per letter</h2>
   <table class="tier-table">
     <tr><th data-i18n="bulk.th1">Letters in one order</th><th data-i18n="bulk.th2">Within Canada</th><th data-i18n="bulk.th3">To the United States</th></tr>
-    <tr><td data-i18n="bulk.t1">1 to 9</td><td>$6.00</td><td>$6.00</td></tr>
-    <tr><td data-i18n="bulk.t2">10 or more</td><td>$5.50</td><td>$5.50</td></tr>
-    <tr><td data-i18n="bulk.t3">25 or more</td><td>$5.00</td><td>$5.00</td></tr>
-    <tr><td data-i18n="bulk.t4">50 or more</td><td>$4.75</td><td>$4.75</td></tr>
+    <tr><td data-i18n="bulk.t1">1 to 9</td><td data-i18n="bulk.p600">$6.00</td><td data-i18n="bulk.p600">$6.00</td></tr>
+    <tr><td data-i18n="bulk.t2">10 or more</td><td data-i18n="bulk.p550">$5.50</td><td data-i18n="bulk.p550">$5.50</td></tr>
+    <tr><td data-i18n="bulk.t3">25 or more</td><td data-i18n="bulk.p500">$5.00</td><td data-i18n="bulk.p500">$5.00</td></tr>
+    <tr><td data-i18n="bulk.t4">50 or more</td><td data-i18n="bulk.p475">$4.75</td><td data-i18n="bulk.p475">$4.75</td></tr>
   </table>
   <p class="tier-note" data-i18n="bulk.note">Prices in CAD, per letter. Each letter includes 2 pages in black &amp; white, the envelope and postage. Extra pages are $0.45 each ($0.55 in colour), and colour printing is +$1 per letter. International letters ($20) are not discounted.</p>
 
@@ -165,7 +165,7 @@ footer{background:var(--ink);color:rgba(255,255,255,0.5);padding:40px 36px;margi
 <footer id="site-footer"></footer>
 <script src="/footer.js?v=4" defer></script>
 <script src="/theme.js?v=3" defer></script>
-<script src="/lang.js?v=39" defer></script>
+<script src="/lang.js?v=41" defer></script>
 <script>
 const FR = () => document.documentElement.getAttribute('data-lang') === 'fr';
 async function submitBulkForm() {

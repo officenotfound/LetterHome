@@ -472,3 +472,18 @@ footer { background: #3d2c1a !important; border-top: 5px solid; border-image: re
   .footer-bottom-links a { padding: 8px 0 !important; }
   .price-card::after { display: none !important; }
 }
+
+/* Dark mode: text that sits on red or on an "ink" (dark-in-light-mode) surface uses var(--paper),
+   which turns near-black in dark mode. Keep it light, and keep ink surfaces dark. */
+[data-theme="dark"] .btn-red, [data-theme="dark"] .btn-red:visited,
+[data-theme="dark"] .nav-cta, [data-theme="dark"] .nav-cta:hover, [data-theme="dark"] .nav-cta:visited,
+[data-theme="dark"] .hero-cta, [data-theme="dark"] .cta-block a,
+[data-theme="dark"] .btn-primary { color: #fffaf2 !important; }
+[data-theme="dark"] .btn-ink { background: #2a2420 !important; color: var(--ink) !important; border-color: var(--line) !important; }
+[data-theme="dark"] .cta-band  { background: #231d18 !important; color: var(--ink) !important; border-color: var(--red) !important; }
+[data-theme="dark"] .cta-band h2 { color: var(--ink) !important; }
+[data-theme="dark"] .cta-band p  { color: var(--ink-muted) !important; }
+[data-theme="dark"] .cta-strip { background: #1c1714 !important; color: var(--ink) !important; border: 1px solid var(--line); }
+[data-theme="dark"] .cta-strip a { color: var(--ink) !important; }
+[data-theme="dark"] pre { background: #231d18 !important; color: var(--ink) !important; }
+[data-theme="dark"] .submit-btn, [data-theme="dark"] .preview-stamp, [data-theme="dark"] .preview-stamp strong { color: #fffaf2 !important; }

@@ -287,6 +287,23 @@ nav {
 [data-theme="dark"] .cta-band h2   { color: var(--ink) !important; }
 [data-theme="dark"] .cta-band p    { color: var(--ink-muted) !important; }
 
+/* Dark banners on landing/guide pages use var(--ink) as their background, which turns
+   light in dark mode; keep them dark there, with light text. */
+[data-theme="dark"] .hero,
+[data-theme="dark"] .cta-block,
+[data-theme="dark"] .cta-strip    { background: #1c1714 !important; color: var(--ink) !important; border-bottom: 1px solid var(--line); }
+[data-theme="dark"] .cta-block,
+[data-theme="dark"] .cta-strip    { border: 1px solid var(--line); }
+[data-theme="dark"] .hero h1, [data-theme="dark"] .hero h1 em,
+[data-theme="dark"] .cta-block h2 { color: var(--ink) !important; }
+[data-theme="dark"] .hero h1 em { color: var(--red) !important; }
+[data-theme="dark"] .hero-sub,
+[data-theme="dark"] .hero p,
+[data-theme="dark"] .cta-block p  { color: var(--ink-muted) !important; }
+[data-theme="dark"] .warn-box     { background: #2a2312 !important; border-color: #6b5410 !important; color: #f0dc9a !important; }
+[data-theme="dark"] .warn-box strong, [data-theme="dark"] .warn-box a { color: #ffe9a8 !important; }
+[data-theme="dark"] pre           { background: #231d18 !important; color: var(--ink) !important; border-color: var(--line) !important; }
+
 /* ── Letter template block (how-to-write guide) ──────────────────────────── */
 .letter-template {
   background: var(--paper);
