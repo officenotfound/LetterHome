@@ -1,7 +1,7 @@
 module.exports = {
   ci: {
     collect: {
-      urls: [
+      url: [   // LHCI reads ci.collect.url (an array); 'urls' is ignored
         'https://letterhome.ca/',
         'https://letterhome.ca/send',
         'https://letterhome.ca/track',

@@ -16,33 +16,38 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
       - name: Broken link monitor
+        continue-on-error: true
         run: node .github/scripts/check-links.js
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
 
       - name: Reddit opportunity digest
+        continue-on-error: true
         run: node .github/scripts/reddit-digest.js
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
 
       - name: HARO / journalist monitor
+        continue-on-error: true
         run: node .github/scripts/haro-monitor.js
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
 
       - name: Internal link suggestions
+        continue-on-error: true
         run: node .github/scripts/suggest-links.js
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
 
       - name: Core Web Vitals monitor
+        continue-on-error: true
         run: node .github/scripts/pagespeed.js
         env:
           PAGESPEED_API_KEY: ${{ secrets.PAGESPEED_API_KEY }}
@@ -50,6 +55,7 @@ jobs:
           REPO: ${{ github.repository }}
 
       - name: Google Search Console report
+        continue-on-error: true
         run: node .github/scripts/gsc-report.js
         env:
           GSC_CLIENT_ID:     ${{ secrets.GSC_CLIENT_ID }}
@@ -59,6 +65,7 @@ jobs:
           REPO: ${{ github.repository }}
 
       - name: Bing Webmaster report
+        continue-on-error: true
         run: node .github/scripts/bing-report.js
         env:
           BING_API_KEY: ${{ secrets.BING_API_KEY }}
@@ -66,6 +73,7 @@ jobs:
           REPO: ${{ github.repository }}
 
       - name: Cloudflare analytics report
+        continue-on-error: true
         run: node .github/scripts/cloudflare-report.js
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
