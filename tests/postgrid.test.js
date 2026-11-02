@@ -279,3 +279,15 @@ test('typed sender countries ("Canada", "États-Unis", "UK") are sent to PostGri
   db.prepare("UPDATE orders SET sender_name = 'Tom', sender_street = '1 Road', sender_country = 'Narnia' WHERE id = ?").run(bad.id);
   await assert.rejects(pg.submitOrder(db.prepare('SELECT * FROM orders WHERE id = ?').get(bad.id)), e => e.manual && /Narnia/.test(e.message) && /return address/.test(e.message));
 });
+
+test('provinces from the checkout list ("QC: Quebec") and typed names ("Québec") reach PostGrid as codes', async () => {
+  const o = seed({ skip: 0 });
+  db.prepare(`UPDATE orders SET recipient_province = 'QC: Quebec', sender_name = 'Coco', sender_street = '2549 Rue de Alpes',
+              sender_city = 'Jonquière', sender_province = 'Québec', sender_postal = 'G7X 9W7', sender_country = 'Canada' WHERE id = ?`).run(o.id);
+  calls.length = 0;
+  await pg.submitOrder(db.prepare('SELECT * FROM orders WHERE id = ?').get(o.id));
+  const [to, from] = calls.filter(c => c.url.endsWith('/contacts')).map(c => JSON.parse(c.opts.body));
+  assert.equal(to.provinceOrState, 'QC');
+  assert.equal(from.provinceOrState, 'QC');
+  assert.equal(from.countryCode, 'CA');
+});

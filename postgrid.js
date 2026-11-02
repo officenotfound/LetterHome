@@ -68,6 +68,21 @@ function countryCodeOf(input) {
   return COUNTRY_ALIASES[key] || COUNTRY_NAMES.get(key) || null;
 }
 
+// The checkout's province list stores "QC: Quebec"; PostGrid and Canada Post want "QC".
+const CA_PROVINCES = {
+  alberta: 'AB', 'british columbia': 'BC', 'colombie britannique': 'BC', manitoba: 'MB', 'new brunswick': 'NB', 'nouveau brunswick': 'NB',
+  'newfoundland and labrador': 'NL', newfoundland: 'NL', 'terre neuve et labrador': 'NL', 'nova scotia': 'NS', 'nouvelle ecosse': 'NS',
+  ontario: 'ON', 'prince edward island': 'PE', 'ile du prince edouard': 'PE', quebec: 'QC', saskatchewan: 'SK',
+  'northwest territories': 'NT', 'territoires du nord ouest': 'NT', nunavut: 'NU', yukon: 'YT',
+};
+function provinceOf(v) {
+  const s = String(v || '').trim();
+  const m = s.match(/^([A-Za-z]{2,3})\s*:/);
+  if (m) return m[1].toUpperCase();
+  const key = s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[-.]/g, ' ').replace(/\s+/g, ' ').trim();
+  return CA_PROVINCES[key] || s || undefined;
+}
+
 async function fetchTwemoji(name) {
   const file = path.join(EMOJI_CACHE, name + '.png');
   try { return fs.readFileSync(file); } catch {}
@@ -318,7 +333,7 @@ function createPostGrid({ db, getSetting, orderDirPath, fetchImpl, convertWord =
       ...splitName(p.name),
       addressLine1: lines[0] || '',
       city: p.city || undefined,
-      provinceOrState: p.province || undefined,
+      provinceOrState: provinceOf(p.province),
       postalOrZip: p.postal || undefined,
       countryCode: countryCodeOf(p.country || 'CA'),
     };
@@ -342,24 +357,24 @@ function createPostGrid({ db, getSetting, orderDirPath, fetchImpl, convertWord =
     const doc = await PDFDocument.load(built.pdf);
     const font = await doc.embedFont(StandardFonts.Helvetica);
     const regionName = code => { try { return new Intl.DisplayNames(['en'], { type: 'region' }).of(String(code).toUpperCase()); } catch { return code; } };
-    const addr = c => [c.name, ...String(c.street || '').split(/\r?\n/), [c.city, c.province, c.postal].filter(Boolean).join(' '), c.country ? regionName(c.country) : ''].map(s => String(s || '').trim()).filter(Boolean);
+    const dc = String(order.destination_country || 'CA').toUpperCase();
+    const addr = c => [c.name, ...String(c.street || '').split(/\r?\n/), [[c.city, provinceOf(c.province)].filter(Boolean).join(', '), c.postal].filter(Boolean).join(' '),
+      c.country && countryCodeOf(c.country) !== dc ? regionName(countryCodeOf(c.country) || c.country) : ''].map(s => String(s || '').trim()).filter(Boolean);
     const safe = (f, t) => { try { f.encodeText(t); return t; } catch { return t.replace(/[^\x20-\x7E\u00A0-\u00FF]/g, '?'); } };
     const PAGE = pageSizeOf(order.destination_country);
     const page = built.placement === 'insert_blank_page' ? doc.insertPage(0, [PAGE.w, PAGE.h]) : doc.getPage(0);
     // Draw lines inside a zone given in inches from the top-left, as PostGrid stamps them (see destinations.js).
     const block = (lines, [zx, zy, zw, zh], { center = false, valign = 'middle' } = {}) => {
       if (!lines.length) return;
-      let size = 9; while (size > 6 && lines.length * size * 1.18 > zh * IN - 6) size -= 0.5;
-      const lead = size * 1.18, total = lines.length * lead;
+      let size = 7.5; while (size > 6 && lines.length * size * 1.25 > zh * IN - 6) size -= 0.5;
+      const lead = size * 1.25, total = lines.length * lead;
       const top = zy * IN + (valign === 'top' ? 6 : valign === 'bottom' ? zh * IN - total - 6 : (zh * IN - total) / 2);
       let y = PAGE.h - top - size;
-      for (const raw of lines) {
-        const t = safe(font, raw.toUpperCase());
-        let s = size; while (s > 5 && font.widthOfTextAtSize(t, s) > zw * IN - 12) s -= 0.5;
-        const x = center ? zx * IN + (zw * IN - font.widthOfTextAtSize(t, s)) / 2 : zx * IN + 8;
-        page.drawText(t, { x, y, size: s, font, color: rgb(0.1, 0.1, 0.1) });
-        y -= lead;
-      }
+      const texts = lines.map(raw => safe(font, raw.toUpperCase()));
+      const sizes = texts.map(t => { let s = size; while (s > 5 && font.widthOfTextAtSize(t, s) > zw * IN - 12) s -= 0.5; return s; });
+      const blockW = Math.max(...texts.map((t, i) => font.widthOfTextAtSize(t, sizes[i])));
+      const x = center ? zx * IN + (zw * IN - blockW) / 2 : zx * IN + 8;   // block centred, lines left-aligned
+      texts.forEach((t, i) => { page.drawText(t, { x, y, size: sizes[i], font, color: rgb(0.1, 0.1, 0.1) }); y -= lead; });
     };
     const d = destinationOf(order.destination_country) || destinationOf('CA');
     const to = addr(recipientOf(order)), from = addr(senderOf(order));

@@ -742,3 +742,11 @@ test('destinations and services follow the admin switches: local UK price, Canad
     assert.equal(r.res.status, 400);                               // not offered for the UK
   } finally { clear(); }
 });
+
+test('checkout stores the province code, not the dropdown label', async () => {
+  const res = await fetch(`${base}/api/create-order`, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ 'r-email': 'prov@example.com', 'r-name': 'Prov Test', 'r-street': '1 Rue', 'r-city': 'Jonquière',
+      'r-province': 'QC: Quebec', 'r-postal': 'G7X 9W7', 'r-country': 'CA', 'letter-body': 'Bonjour.', 'letter-type': 'standard' }).toString() });
+  assert.equal(res.status, 200);
+  assert.equal(db.prepare("SELECT recipient_province FROM orders WHERE customer_email = 'prov@example.com'").get().recipient_province, 'QC');
+});

@@ -1168,6 +1168,8 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
   });
 
   const b = req.body;
+  // The province list sends "QC: Quebec"; store just the code.
+  if (b['r-province']) b['r-province'] = String(b['r-province']).replace(/^\s*([A-Za-z]{2,3})\s*:.*$/s, (m, c) => c.toUpperCase());
   const rEmail  = (b['r-email']  || '').trim().toLowerCase();
   const rName   = (b['r-name']   || '').trim();
   const rStreet = (b['r-street'] || '').trim();
