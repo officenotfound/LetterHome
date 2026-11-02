@@ -3363,7 +3363,7 @@ function buildCustomerEmailText(o, toAddr, amountCAD, isDomestic) {
   return [
     'Your letter is in.',
     '',
-    `We've received your payment. Your letter will be printed and mailed within one business day.`,
+    `We've received your payment. Your letter will be printed and mailed within two business days.`,
     '',
     'Delivering to:',
     toAddr,
@@ -3389,7 +3389,7 @@ function buildCustomerEmail(o, toAddr, amountCAD, isDomestic) {
   <div style="max-width:520px;margin:0 auto;background:#faf6ec;border:1px solid rgba(42,42,42,0.12);padding:48px">
     <div style="width:38px;height:38px;background:#a8472d;display:inline-flex;align-items:center;justify-content:center;color:#faf6ec;font-size:20px;font-family:Georgia,serif;margin-bottom:28px">L</div>
     <h1 style="font-size:28px;font-weight:400;margin:0 0 10px;letter-spacing:-0.02em">Your letter is in.</h1>
-    <p style="color:#6b6258;margin:0 0 32px;font-size:16px;line-height:1.6">We've received your payment. Your letter will be printed and mailed within one business day.</p>
+    <p style="color:#6b6258;margin:0 0 32px;font-size:16px;line-height:1.6">We've received your payment. Your letter will be printed and mailed within two business days.</p>
     <div style="background:#2a2a2a;color:#faf6ec;padding:24px;margin-bottom:28px">
       <p style="font-size:11px;text-transform:uppercase;letter-spacing:0.15em;color:rgba(250,246,236,0.55);margin:0 0 10px">Delivering to</p>
       <p style="font-size:18px;line-height:1.5;white-space:pre-line;margin:0 0 16px">${toAddr}</p>
@@ -3415,7 +3415,7 @@ function buildMailedEmail(o, toAddr, deliveryText) {
   <div style="max-width:520px;margin:0 auto;background:#faf6ec;border:1px solid rgba(42,42,42,0.12);padding:48px">
     <div style="width:38px;height:38px;background:#a8472d;display:inline-flex;align-items:center;justify-content:center;color:#faf6ec;font-size:20px;font-family:Georgia,serif;margin-bottom:28px">L</div>
     <h1 style="font-size:28px;font-weight:400;margin:0 0 10px;letter-spacing:-0.02em">Your letter is on its way.</h1>
-    <p style="color:#6b6258;margin:0 0 32px;font-size:16px;line-height:1.6">Order #${o.id} has been printed, sealed, stamped, and dropped in the post. From here, it's in ${mailFacts(o).carrier}'s hands.</p>
+    <p style="color:#6b6258;margin:0 0 32px;font-size:16px;line-height:1.6">Order #${o.id} has been printed, sealed, and handed to the post office. From here, it's in ${mailFacts(o).carrier}'s hands.</p>
     <div style="background:#2a2a2a;color:#faf6ec;padding:24px;margin-bottom:28px">
       <p style="font-size:11px;text-transform:uppercase;letter-spacing:0.15em;color:rgba(250,246,236,0.55);margin:0 0 10px">Delivering to</p>
       <p style="font-size:18px;line-height:1.5;white-space:pre-line;margin:0 0 16px">${toAddr}</p>
@@ -3437,7 +3437,7 @@ function buildMailedEmailText(o, toAddr, deliveryText) {
   return [
     'Your letter is on its way.',
     '',
-    `Order #${o.id} has been printed, sealed, stamped, and dropped in the post. From here, it's in ${mailFacts(o).carrier}'s hands.`,
+    `Order #${o.id} has been printed, sealed, and handed to the post office. From here, it's in ${mailFacts(o).carrier}'s hands.`,
     '',
     'Delivering to:',
     toAddr,
@@ -3562,7 +3562,7 @@ function buildRecoveryEmail(order) {
   const subject   = order.recipient_name ? `Your letter to ${order.recipient_name} is ready to mail` : 'Your letter is ready to mail';
   const unsub     = unsubscribeLink(order.customer_email);
   const facts     = mailFacts(order);
-  const benefits  = ['Printed and mailed within two business days', facts.carrier !== 'Canada Post' ? `Mailed locally with ${facts.carrier}` : 'A real Canadian postmark and stamp', 'Free reprint and resend if it doesn\'t arrive'];
+  const benefits  = ['Printed and mailed within two business days', facts.carrier !== 'Canada Post' ? `Mailed locally with ${facts.carrier}` : 'Mailed inside Canada through Canada Post', 'Free reprint and resend if it doesn\'t arrive'];
   return {
     from:    process.env.EMAIL_FROM,
     to:      order.customer_email,
