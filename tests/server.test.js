@@ -671,5 +671,5 @@ test('bulk mailing page is served and lists the volume tiers', async () => {
   assert.equal(res.status, 200);
   const html = await res.text();
   assert.ok(html.includes('rel="canonical" href="https://letterhome.ca/bulk-mailing"'));
-  for (const price of ['$5.50', '$5.00', '$4.50', '$6.50', '$6.00', '$5.50']) assert.ok(html.includes(price), price);
+  for (const price of ['$5.50', '$5.00', '$4.75', '$6.50', '$6.00', '$5.50']) assert.ok(html.includes(price), price);
 });

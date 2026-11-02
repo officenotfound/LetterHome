@@ -784,8 +784,8 @@ app.get('/unsubscribe', (req, res) => {
 });
 
 app.post('/unsubscribe', (req, res) => {
-  const email = (req.body.email || '').toString().trim().toLowerCase();
-  const token = (req.body.token || '').toString();
+  const email = ((req.body.email ?? req.query.email) || '').toString().trim().toLowerCase();
+  const token = ((req.body.token ?? req.query.token) || '').toString();
   const expected2 = unsubscribeToken(email);
   const safe2 = token.length === expected2.length && timingSafeEqual(Buffer.from(token), Buffer.from(expected2));
   if (!email || !safe2) return res.status(400).send(unsubPage('invalid'));
@@ -1034,6 +1034,12 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
   if (getSetting('service_paused', 'false') === 'true')
     return res.status(503).json({ error: 'Orders are currently paused. Please check back soon.' });
 
+  // Uploaded temp files are moved on success; on any rejected request, remove them.
+  res.on('finish', () => {
+    if (res.statusCode < 400) return;
+    for (const f of (req.files || [])) { try { fs.unlinkSync(f.path); } catch {} }
+  });
+
   const b = req.body;
   const rEmail  = (b['r-email']  || '').trim().toLowerCase();
   const rName   = (b['r-name']   || '').trim();
@@ -1063,13 +1069,14 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
   const isDomestic = b['r-country'] === 'CA';
   const basePriceCents = getBasePriceCents(b['r-country']);
 
-  const pageCount = await countAttachmentPages(req.files || []);
-  const colourPrinting    = b['colour_printing']    === '1' || b['colour_printing']    === 'true';
-  const extraPageCents = Math.max(0, pageCount - FREE_PAGES) * (colourPrinting ? EXTRA_PAGE_COLOUR_CENTS : EXTRA_PAGE_CENTS);
   const registeredMail    = b['registered_mail']    === '1' || b['registered_mail']    === 'true';
   if (registeredMail && !REGISTERED_MAIL_ENABLED) {
     return res.status(400).json({ error: 'Registered mail is temporarily unavailable. Please remove it and continue, or email support@letterhome.ca.' });
   }
+
+  const pageCount = await countAttachmentPages(req.files || []);
+  const colourPrinting    = b['colour_printing']    === '1' || b['colour_printing']    === 'true';
+  const extraPageCents = Math.max(0, pageCount - FREE_PAGES) * (colourPrinting ? EXTRA_PAGE_COLOUR_CENTS : EXTRA_PAGE_CENTS);
   const largeEnvelope     = b['large_envelope']     === '1' || b['large_envelope']     === 'true';
   const scheduleForLater  = b['schedule_for_later'] === '1' || b['schedule_for_later'] === 'true';
   const scheduledDate     = scheduleForLater ? (b['scheduled_date'] || null) : null;
@@ -1139,7 +1146,6 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
     scheduledDate
   );
   if (appliedCode) {
-    db.prepare('UPDATE discount_codes SET uses_count = uses_count + 1 WHERE code = ?').run(appliedCode);
   }
 
   const orderId  = row.lastInsertRowid;
@@ -1241,6 +1247,7 @@ app.get('/resume/:token', trackLimiter, async (req, res) => {
   const order = db.prepare('SELECT * FROM orders WHERE status_token = ? AND deleted_at IS NULL').get(req.params.token);
   if (!order) return res.redirect('/send');
   if (order.status !== 'awaiting_payment') return res.redirect(`/status/${order.status_token}`);
+  if (order.registered_mail && !REGISTERED_MAIL_ENABLED) return res.redirect('/send');
   try {
     if (order.stripe_session_id) {
       const old = await stripe.checkout.sessions.retrieve(order.stripe_session_id);
@@ -1517,8 +1524,12 @@ app.post('/api/admin/email-opens', requireAdmin, (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-const COST_DOMESTIC      = 600;     // $6 per Canadian letter
-const COST_INTERNATIONAL = 1200;    // $12 per international letter
+// Estimated print + postage cost in CAD cents (PostGrid USD rates at ~1.40, 2 pages B&W).
+// Used only until an order has actual_cost_cents. International is a placeholder pending a PostGrid quote.
+const COST_DOMESTIC      = 325;     // PostGrid Canada $2.32 USD
+const COST_USA           = 160;     // PostGrid USA $1.16 USD
+const COST_INTERNATIONAL = 1200;    // placeholder
+const estCostCents = c => c === 'CA' ? COST_DOMESTIC : c === 'US' ? COST_USA : COST_INTERNATIONAL;
 const STRIPE_PCT         = 0.029;   // 2.9% Canadian card rate
 const STRIPE_FIXED       = 30;      // $0.30 per transaction
 
@@ -1536,7 +1547,7 @@ app.get('/api/admin/stats', requireAdmin, (req, res) => {
       stripeFees += Math.round(o.price_cents * STRIPE_PCT) + STRIPE_FIXED;
       cogs       += o.actual_cost_cents != null
         ? o.actual_cost_cents
-        : (o.destination_country === 'CA' ? COST_DOMESTIC : COST_INTERNATIONAL);
+        : estCostCents(o.destination_country);
       customers.add(o.customer_email);
     });
 
@@ -2591,13 +2602,13 @@ app.post('/api/admin/pnl-digest', requireAdmin, async (req, res) => {
   for (const o of orders) {
     revenue += o.price_cents;
     stripeFees += Math.round(o.price_cents * STRIPE_PCT) + STRIPE_FIXED;
-    estCogs += o.destination_country === 'CA' ? COST_DOMESTIC : COST_INTERNATIONAL;
+    estCogs += estCostCents(o.destination_country);
     if (o.actual_cost_cents != null) { actualCogs += o.actual_cost_cents; actualCogsCounted++; }
     custSet.add(o.customer_email);
   }
   const blendedCogs = orders.reduce((sum, o) => sum + (o.actual_cost_cents != null
     ? o.actual_cost_cents
-    : (o.destination_country === 'CA' ? COST_DOMESTIC : COST_INTERNATIONAL)), 0);
+    : estCostCents(o.destination_country)), 0);
   const net = revenue - stripeFees - blendedCogs;
   const fmtCAD = c => '$' + (c / 100).toFixed(2) + ' CAD';
 
@@ -2995,6 +3006,7 @@ async function fulfillOrder(sessionId) {
   // the status, changes will be 0 and we bail out to prevent double-fulfillment.
   const result = db.prepare("UPDATE orders SET status = 'paid', paid_at = CURRENT_TIMESTAMP WHERE id = ? AND status = 'awaiting_payment'").run(order.id);
   if (result.changes === 0) return;
+  if (order.discount_code) db.prepare('UPDATE discount_codes SET uses_count = uses_count + 1 WHERE code = ?').run(order.discount_code);
 
   const amountCAD  = (session.amount_total / 100).toFixed(2);
   const isDomestic = order.destination_country === 'CA';
@@ -3827,8 +3839,10 @@ function buildThankYouEmail(order, code, expiresOn) {
 
 // One email per customer, ever. Only orders paid (paid_at is set) 7 to 30 days ago,
 // so old orders from before this feature never get a surprise email.
+let thankYouRunning = false;
 async function thankYouCouponJob() {
-  if (!process.env.SMTP_HOST) return { sent: 0 };
+  if (!process.env.SMTP_HOST || thankYouRunning) return { sent: 0 };
+  thankYouRunning = true;
   let sent = 0;
   try {
     const due = db.prepare(`
@@ -3854,6 +3868,9 @@ async function thankYouCouponJob() {
     `).all(`-${THANKYOU_DELAY_DAYS} days`, `-${THANKYOU_DELAY_DAYS + 23} days`);
     for (const order of due) {
       let code = null;
+      const claim = db.prepare('UPDATE orders SET thankyou_sent_at = CURRENT_TIMESTAMP WHERE id = ? AND thankyou_sent_at IS NULL').run(order.id);
+      if (claim.changes !== 1) continue;
+      let mailed = false;
       try {
         const expires = new Date(Date.now() + THANKYOU_VALID_DAYS * 86400 * 1000);
         const expiresSql = expires.toISOString().replace('T', ' ').slice(0, 19);
@@ -3862,15 +3879,19 @@ async function thankYouCouponJob() {
         db.prepare(`INSERT INTO discount_codes (code, description, discount_pct, max_uses, expires_at)
                     VALUES (?, ?, ?, 1, ?)`).run(code, `Thank-you coupon for order #${order.id}`, THANKYOU_PCT, expiresSql);
         await sendMail(buildThankYouEmail(order, code, expiresOn), 'thankyou_coupon', order.id);
-        db.prepare('UPDATE orders SET thankyou_sent_at = CURRENT_TIMESTAMP WHERE id = ?').run(order.id);
+        mailed = true;
         sent++;
         console.log(`[thankyou] sent coupon ${code} for order #${order.id}`);
       } catch (e) {
-        if (code) db.prepare('DELETE FROM discount_codes WHERE code = ?').run(code);
+        if (!mailed) {
+          if (code) db.prepare('DELETE FROM discount_codes WHERE code = ?').run(code);
+          db.prepare('UPDATE orders SET thankyou_sent_at = NULL WHERE id = ?').run(order.id);
+        }
         console.error(`[thankyou] failed for order #${order.id}:`, e.message);
       }
     }
   } catch (e) { console.error('[thankyou] job failed:', e.message); }
+  finally { thankYouRunning = false; }
   return { sent };
 }
 

@@ -8,7 +8,7 @@ const pages = [
     country: 'the United States',
     countryShort: 'USA',
     title: 'Send Mail to Canada from the United States | Letterhome',
-    description: 'Send a real letter or document to Canada from anywhere in the US. We print, stamp with Canadian postage, and mail it via Canada Post. From $10 CAD.',
+    description: 'Send a real letter or document to Canada from anywhere in the US. We print, stamp with Canadian postage, and mail it via Canada Post. From $6 CAD.',
     canonical: 'https://letterhome.ca/from-usa',
     eyebrow: 'Mailing from the US',
     h1: 'Send mail to Canada from the United States',
@@ -43,7 +43,7 @@ const pages = [
     country: 'the United Kingdom',
     countryShort: 'UK',
     title: 'Send Mail to Canada from the UK | Letterhome',
-    description: 'Send a real letter or document to Canada from the UK. We print it and post it from inside Canada via Canada Post. From $10 CAD — no Canadian address needed.',
+    description: 'Send a real letter or document to Canada from the UK. We print it and post it from inside Canada via Canada Post. From $6 CAD — no Canadian address needed.',
     canonical: 'https://letterhome.ca/from-uk',
     eyebrow: 'Mailing from the UK',
     h1: 'Send mail to Canada from the UK',
@@ -78,7 +78,7 @@ const pages = [
     country: 'Australia',
     countryShort: 'Australia',
     title: 'Send Mail to Canada from Australia | Letterhome',
-    description: 'Send a real letter or document to Canada from Australia. We print and post from inside Canada via Canada Post. From $10 CAD — no Canadian address or stamp required.',
+    description: 'Send a real letter or document to Canada from Australia. We print and post from inside Canada via Canada Post. From $6 CAD — no Canadian address or stamp required.',
     canonical: 'https://letterhome.ca/from-australia',
     eyebrow: 'Mailing from Australia',
     h1: 'Send mail to Canada from Australia',
@@ -113,7 +113,7 @@ const pages = [
     country: 'the UAE',
     countryShort: 'UAE',
     title: 'Send Mail to Canada from Dubai & the UAE | Letterhome',
-    description: 'Send a real letter or document to Canada from Dubai or anywhere in the UAE. We print and mail from inside Canada via Canada Post. From $10 CAD.',
+    description: 'Send a real letter or document to Canada from Dubai or anywhere in the UAE. We print and mail from inside Canada via Canada Post. From $6 CAD.',
     canonical: 'https://letterhome.ca/from-uae',
     eyebrow: 'Mailing from the UAE',
     h1: 'Send mail to Canada from Dubai and the UAE',
@@ -183,7 +183,7 @@ const pages = [
     country: null,
     countryShort: null,
     title: 'Send Documents to Canada from Anywhere | Letterhome',
-    description: 'Send immigration forms, legal documents, contracts, or tax paperwork to any Canadian address — printed in full colour and mailed via Canada Post. From $10 CAD.',
+    description: 'Send immigration forms, legal documents, contracts, or tax paperwork to any Canadian address — printed in full colour and mailed via Canada Post. From $6 CAD.',
     canonical: 'https://letterhome.ca/send-documents-to-canada',
     eyebrow: 'Document mailing to Canada',
     h1: 'Send documents to Canada from anywhere in the world',
@@ -375,7 +375,7 @@ footer a{color:var(--ink-muted);margin:0 8px}
 
   <div class="cta-row">
     <a href="/send" class="btn btn-red">Send a letter now</a>
-    <span class="price-note">From $10 CAD &nbsp;·&nbsp; No account required</span>
+    <span class="price-note">From $6 CAD &nbsp;·&nbsp; No account required</span>
   </div>
 
   <h2>Who uses Letterhome${p.country ? ' from ' + p.country : ''}</h2>
@@ -386,7 +386,7 @@ ${whoItems}
   <h2>Pricing</h2>
   <div class="pricing-cards">
     <div class="price-card">
-      <div class="price-amount">$10 CAD</div>
+      <div class="price-amount">$6 CAD</div>
       <div class="price-label">Domestic</div>
       <div class="price-desc">Letters to any Canadian address. Includes up to 5 documents, full-colour printing, envelope, and Canadian postage.</div>
     </div>

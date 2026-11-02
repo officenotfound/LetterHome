@@ -63,7 +63,7 @@ const template = (c) => `<!DOCTYPE html>
       "mainEntity": [
         { "@type": "Question", "name": "How do I send a letter from ${c.name} to Canada?", "acceptedAnswer": { "@type": "Answer", "text": "You can send via ${c.postal} at your local post office, use a courier like DHL or FedEx, or use Letterhome — upload your document online and we mail it from inside Canada via Canada Post." } },
         { "@type": "Question", "name": "How long does a letter from ${c.name} to Canada take?", "acceptedAnswer": { "@type": "Answer", "text": "Standard lettermail from ${c.name} to Canada takes approximately ${c.delivery}. Couriers like DHL typically arrive in 3–7 business days." } },
-        { "@type": "Question", "name": "How much does it cost to mail a letter from ${c.name} to Canada?", "acceptedAnswer": { "@type": "Answer", "text": "Standard postage from ${c.name} to Canada costs approximately ${c.cost}. Courier services cost more but offer tracking and faster delivery. Letterhome costs CAD $10 regardless of your location." } }
+        { "@type": "Question", "name": "How much does it cost to mail a letter from ${c.name} to Canada?", "acceptedAnswer": { "@type": "Answer", "text": "Standard postage from ${c.name} to Canada costs approximately ${c.cost}. Courier services cost more but offer tracking and faster delivery. Letterhome costs CAD $6 per letter to Canada." } }
       ]
     },
     {
@@ -127,7 +127,7 @@ code{font-family:'DM Mono','Courier New',monospace;font-size:.875em;background:v
   <div class="eyebrow">Guide</div>
 
   <h1>${c.flag} Send a letter from ${c.name} to Canada</h1>
-  <p class="answer-capsule"><strong>The easiest way to send a letter from ${c.name} to Canada</strong> is Letterhome — upload your document, pay CAD $10, and we print and mail it from inside Canada via Canada Post. No post office, no stamps, no international postage required. Or use ${c.postal} at your local post office for ~${c.cost}.</p>
+  <p class="answer-capsule"><strong>The easiest way to send a letter from ${c.name} to Canada</strong> is Letterhome — upload your document, pay CAD $6, and we print and mail it from inside Canada via Canada Post. No post office, no stamps, no international postage required. Or use ${c.postal} at your local post office for ~${c.cost}.</p>
   <p class="updated">Updated June 2026</p>
 
   <h2>Mailing options from ${c.name} to Canada</h2>
@@ -166,7 +166,7 @@ code{font-family:'DM Mono','Courier New',monospace;font-size:.875em;background:v
     <li>Your document is uploaded online — no trip to the post office</li>
     <li>We print and mail it from <strong>inside Canada</strong> via Canada Post Lettermail</li>
     <li>The recipient gets a domestic Canadian letter — faster and more reliable</li>
-    <li>Flat rate of CAD $10, regardless of your location</li>
+    <li>CAD $6 per letter, regardless of your location</li>
   </ul>
 
   <h2>How to send a letter from ${c.name} via Letterhome</h2>
@@ -206,7 +206,7 @@ CANADA</pre>
   <p>Standard post: approximately ${c.delivery}. Courier services: 3–7 business days. Letterhome: up to 2 weeks after upload (mailed domestically within Canada).</p>
 
   <h3>How much does it cost to mail a letter from ${c.name} to Canada?</h3>
-  <p>Standard postage costs approximately ${c.cost}. Couriers cost US$30–80. Letterhome is CAD $10 flat.</p>
+  <p>Standard postage costs approximately ${c.cost}. Couriers cost US$30–80. Letterhome is CAD $6.</p>
 
   <div style="margin:32px 0 16px">
     <a href="/send" class="btn btn-red">Send your letter now →</a>

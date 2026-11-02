@@ -992,7 +992,6 @@ const FREE_PAGES            = 2;
 const EXTRA_PAGE_CENTS      = 45;
 const EXTRA_PAGE_COLOUR_CENTS = 55;
 const COLOUR_PRINTING_CENTS = 100;
-const REGISTERED_MAIL_CENTS = 2500;
 const LARGE_ENVELOPE_CENTS  = 300;
 const SCHEDULE_LATER_CENTS  = 0;
 
@@ -1006,7 +1005,6 @@ function computeAddonCents() {
   const isColour = !!document.getElementById('opt-colour')?.checked;
   let cents = extraPages * (isColour ? EXTRA_PAGE_COLOUR_CENTS : EXTRA_PAGE_CENTS);
   if (document.getElementById('opt-colour')?.checked)        cents += COLOUR_PRINTING_CENTS;
-  if (document.getElementById('opt-registered')?.checked)    cents += REGISTERED_MAIL_CENTS;
   if (document.getElementById('opt-large-envelope')?.checked) cents += LARGE_ENVELOPE_CENTS;
   if (document.getElementById('opt-schedule')?.checked)      cents += SCHEDULE_LATER_CENTS;
   return cents;
@@ -1409,7 +1407,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // ---- Draft autosave: kept in this browser only (localStorage), expires after 7 days ----
 const DRAFT_KEY = 'lh-draft', DRAFT_TTL = 7 * 24 * 3600 * 1000;
 const DRAFT_FIELDS = ['skip-return','s-name','s-street','s-city','s-province','s-postal','s-country','r-country','r-name','r-street','r-city','r-province','r-province-text','r-postal','r-email','letter-body','opt-schedule-date'];
-const DRAFT_BOXES  = ['opt-colour','opt-registered','opt-large-envelope','opt-schedule'];
+const DRAFT_BOXES  = ['opt-colour','opt-large-envelope','opt-schedule'];
 function readDraft() {
   try {
     const d = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null');
@@ -1484,7 +1482,6 @@ async function submitOrder() {
   });
   form.append('r-province', getRecipientProvince());
   form.append('colour_printing',    document.getElementById('opt-colour')?.checked ? '1' : '');
-  form.append('registered_mail',    document.getElementById('opt-registered')?.checked ? '1' : '');
   form.append('large_envelope',     document.getElementById('opt-large-envelope')?.checked ? '1' : '');
   form.append('schedule_for_later', document.getElementById('opt-schedule')?.checked ? '1' : '');
   if (document.getElementById('opt-schedule')?.checked) {
