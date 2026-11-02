@@ -1919,9 +1919,10 @@ app.get('/api/admin/orders/:id/postgrid/preview', requireAdmin, async (req, res)
   const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(Number(req.params.id));
   if (!order) return res.status(404).json({ error: 'Order not found' });
   try {
-    const b = await postgrid.buildLetterPdf(order);
+    // Default: the finished look, with addresses where PostGrid stamps them. ?raw=1: the exact file uploaded to PostGrid.
+    const b = req.query.raw ? await postgrid.buildLetterPdf(order) : await postgrid.buildPreviewPdf(order);
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('X-Letter-Sheets', String(b.sheets));
+    if (b.sheets !== undefined) res.setHeader('X-Letter-Sheets', String(b.sheets));
     res.setHeader('X-Letter-Unsupported', encodeURIComponent(b.unsupported.join(',')));
     res.send(b.pdf);
   } catch (e) { res.status(500).json({ error: e.message }); }

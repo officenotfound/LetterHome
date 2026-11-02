@@ -1219,7 +1219,8 @@ function postgridCard(o) {
       + (why ? `<p style="font-size:13px;color:#6b6b6b;margin:8px 0;line-height:1.5">${esc(why)}</p>` : `<p style="font-size:13px;color:#16a34a;margin:8px 0">Ready to send through PostGrid.</p>`)
       + err
       + `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
-          <a class="btn btn-outline btn-sm" href="/api/admin/orders/${o.id}/postgrid/preview" target="_blank" rel="noopener">Preview print PDF</a>
+          <a class="btn btn-outline btn-sm" href="/api/admin/orders/${o.id}/postgrid/preview" target="_blank" rel="noopener" title="As it will look, with the addresses where PostGrid stamps them">Preview letter</a>
+          <a class="btn btn-outline btn-sm" href="/api/admin/orders/${o.id}/postgrid/preview?raw=1" target="_blank" rel="noopener" title="The exact file uploaded to PostGrid (no addresses; PostGrid stamps them)">File sent to PostGrid</a>
           ${o.status === 'paid' ? `<button class="btn btn-primary btn-sm" onclick="pgAction(${o.id},'submit')">Send via PostGrid</button>` : ''}
         </div>`;
   }
