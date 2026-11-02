@@ -1145,17 +1145,40 @@ async function addOrderNote(id) {
   else alert('Error: ' + (r?.error || 'could not add note'));
 }
 
-function fulfillmentCard(o, statusOpts) {
-  if (o.status === 'paid') {
-    return `<div class="detail-card">
-      <div class="detail-card-title">Fulfillment — Submit to Printer</div>
-      <p style="font-size:13px;color:#6b6b6b;margin-bottom:16px;line-height:1.6">Upload this order to the printer's portal, then enter the reference number they assign.</p>
+function manualSubmitForm(o) {
+  return `<p style="font-size:13px;color:#6b6b6b;margin-bottom:16px;line-height:1.6">Upload this order to the printer's portal, then enter the reference number they assign.</p>
       <div class="field" style="margin-bottom:12px">
         <label>Printer Reference Number</label>
         <input id="printer-ref" type="text" placeholder="8-digit ref" maxlength="20" style="font-family:monospace">
       </div>
       <button class="btn btn-primary" onclick="submitToPrinter(${o.id})">Mark as Submitted to Printer</button>
-      <div id="submit-msg" style="font-size:12px;color:#16a34a;margin-top:10px;display:none">✓ Saved — status updated to At Printer</div>
+      <div id="submit-msg" style="font-size:12px;color:#16a34a;margin-top:10px;display:none">✓ Saved — status updated to At Printer</div>`;
+}
+
+function fulfillmentCard(o, statusOpts) {
+  // Orders sent to PostGrid for real update themselves: no manual steps.
+  if (o.postgrid_letter_id && o.postgrid_mode === 'live' && o.postgrid_status !== 'cancelled') {
+    const steps = { submitted_to_printer: 'At the printer', printing: 'Printing', mailed: 'Mailed', delivered: 'Delivered' };
+    return `<div class="detail-card">
+      <div class="detail-card-title">Fulfillment — Automatic (PostGrid)</div>
+      <p style="font-size:13px;color:#444;margin-bottom:10px;line-height:1.6">Now: <strong>${esc(steps[o.status] || o.status)}</strong> · PostGrid: ${esc(o.postgrid_status || '—')}</p>
+      <p style="font-size:13px;color:#6b6b6b;line-height:1.6;margin:0">Nothing to do here. The status updates from PostGrid every 15 minutes, and the customer is emailed automatically when the letter reaches the post office. You'll get an alert if it isn't mailed within 4 days.</p>
+    </div>`;
+  }
+  if (o.status === 'paid' && o.postgrid_configured) {
+    return `<div class="detail-card">
+      <div class="detail-card-title">Fulfillment — Review &amp; send</div>
+      <p style="font-size:13px;color:#444;margin-bottom:12px;line-height:1.6">Check the letter with <strong>Preview letter</strong> in the PostGrid card below, then click <strong>Send via PostGrid</strong>. Everything after that is automatic.</p>
+      <details style="font-size:13px;color:#6b6b6b">
+        <summary style="cursor:pointer">Fulfil this order by hand instead</summary>
+        <div style="margin-top:12px">${manualSubmitForm(o)}</div>
+      </details>
+    </div>`;
+  }
+  if (o.status === 'paid') {
+    return `<div class="detail-card">
+      <div class="detail-card-title">Fulfillment — Submit to Printer</div>
+      ${manualSubmitForm(o)}
     </div>`;
   }
   if (o.status === 'submitted_to_printer') {
