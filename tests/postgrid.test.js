@@ -291,3 +291,16 @@ test('provinces from the checkout list ("QC: Quebec") and typed names ("Québec"
   assert.equal(from.provinceOrState, 'QC');
   assert.equal(from.countryCode, 'CA');
 });
+
+test('rate limiting (HTTP 429) is retried before giving up', async () => {
+  let n = 0;
+  const flaky = async (url, opts) => {
+    if (url.includes('/letters/letter_rl') && n++ < 2) return { ok: false, status: 429, json: async () => ({ error: { message: 'Rate limit exceeded' } }) };
+    return { ok: true, status: 200, json: async () => ({ id: 'letter_rl', live: false, status: 'ready' }) };
+  };
+  const pgRl = createPostGrid({ db, getSetting: (k, f) => f, orderDirPath: () => os.tmpdir(), fetchImpl: flaky, emojiImage: fakeEmoji, rateLimitWaitMs: 5 });
+  const o = seed(); db.prepare("UPDATE orders SET postgrid_letter_id = 'letter_rl', postgrid_mode = 'test' WHERE id = ?").run(o.id);
+  const r = await pgRl.refreshOrder(db.prepare('SELECT * FROM orders WHERE id = ?').get(o.id));
+  assert.equal(r.status, 'ready');
+  assert.equal(n, 3);
+});

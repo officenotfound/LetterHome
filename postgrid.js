@@ -132,7 +132,7 @@ function libreOfficeConvert(file, name) {
   });
 }
 
-function createPostGrid({ db, getSetting, orderDirPath, fetchImpl, convertWord = libreOfficeConvert, destinations, emojiImage = fetchTwemoji }) {
+function createPostGrid({ db, getSetting, orderDirPath, fetchImpl, convertWord = libreOfficeConvert, destinations, emojiImage = fetchTwemoji, rateLimitWaitMs = 20000 }) {
   const doFetch = (...a) => (fetchImpl || fetch)(...a);
   const dest = destinations || makeDestinations(getSetting);
 
@@ -150,10 +150,15 @@ function createPostGrid({ db, getSetting, orderDirPath, fetchImpl, convertWord =
     if (form) body = form;                       // fetch sets the multipart boundary itself
     if (idempotencyKey) headers['Idempotency-Key'] = idempotencyKey;
     let res;
-    try {
-      res = await doFetch(BASE_URL + route, { method, headers, body, signal: AbortSignal.timeout(30000) });
-    } catch (e) {
-      throw new PostGridError(`PostGrid request failed: ${e.message}`);
+    // PostGrid rate-limits bursts (HTTP 429, "try again in a minute"): wait and retry, up to 3 times.
+    for (let attempt = 0; ; attempt++) {
+      try {
+        res = await doFetch(BASE_URL + route, { method, headers, body, signal: AbortSignal.timeout(30000) });
+      } catch (e) {
+        throw new PostGridError(`PostGrid request failed: ${e.message}`);
+      }
+      if (res.status !== 429 || attempt >= 3) break;
+      await new Promise(r => setTimeout(r, rateLimitWaitMs * (attempt + 1)));
     }
     let data = null;
     try { data = await res.json(); } catch {}

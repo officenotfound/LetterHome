@@ -498,7 +498,11 @@ async function postgridSweep() {
       try {
         const r = await postgrid.refreshOrder(o);
         if (r.mailed) sendMailedNotification(db.prepare('SELECT * FROM orders WHERE id = ?').get(o.id));
-      } catch (e) { console.error(`[postgrid] refresh #${o.id} failed:`, e.message); }
+      } catch (e) {
+        console.error(`[postgrid] refresh #${o.id} failed:`, e.message);
+        if (e.status === 429) break;                     // still rate-limited after retries: resume next sweep
+      }
+      await new Promise(r => setTimeout(r, 500));        // stay well under PostGrid's rate limit
     }
     // A live letter not handed to the post office 4 days after submission (PostGrid's promise is 2 business days): alert once.
     const stuck = db.prepare(`SELECT id, postgrid_letter_id, postgrid_status, postgrid_submitted_at FROM orders
