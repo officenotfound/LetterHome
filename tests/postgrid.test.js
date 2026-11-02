@@ -128,3 +128,13 @@ test('Word files are converted to PDF and printed; a missing converter falls bac
   const none = createPostGrid({ db, getSetting: (k, f) => f, orderDirPath: () => os.tmpdir(), fetchImpl: fakeFetch, convertWord: async () => null });
   assert.deepEqual((await none.buildLetterPdf(seed({ body: '', attach }))).unsupported, ['letter.docx']);
 });
+
+test('rotated source pages stay Letter-size; non-Latin text is refused instead of printing question marks', async () => {
+  const { degrees } = require('pdf-lib');
+  const src = await PDFDocument.create(); const p = src.addPage([612, 792]); p.drawText('x'); p.setRotation(degrees(90));
+  const f = path.join(os.tmpdir(), `r-${randomUUID()}.pdf`); fs.writeFileSync(f, await src.save());
+  const b = await pg.buildLetterPdf(seed({ body: '', attach: JSON.stringify([{ path: f, originalName: 'r.pdf' }]) }));
+  const doc = await PDFDocument.load(b.pdf);
+  assert.deepEqual([doc.getPage(0).getWidth(), doc.getPage(0).getHeight()], [612, 792]);
+  await assert.rejects(pg.submitOrder(seed({ body: 'Привет 你好' })), e => e.manual && /Latin alphabet/.test(e.message));
+});

@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
 const { execFile } = require('node:child_process');
-const { PDFDocument, StandardFonts, rgb } = require('pdf-lib');
+const { PDFDocument, StandardFonts, rgb, degrees } = require('pdf-lib');
 
 const BASE_URL = 'https://api.postgrid.com/print-mail/v1';
 const LETTER = { w: 612, h: 792 };            // US Letter in points; PostGrid needs consistent Letter pages
@@ -87,7 +87,7 @@ function createPostGrid({ db, getSetting, orderDirPath, fetchImpl, convertWord =
       try { font.encodeText(ch); out += ch; } catch {
         const map = { '‘': "'", '’': "'", '“': '"', '”': '"', '–': '-', '—': '-', '…': '...', ' ': ' ' };
         if (map[ch]) out += map[ch];
-        else { out += '?'; warnings.add('Some characters could not be printed and were replaced with "?".'); }
+        else { out += '?'; warnings.add('The text has characters outside the Latin alphabet (for example Cyrillic, CJK or emoji) that our printer font cannot print.'); }
       }
     }
     return out;
@@ -163,9 +163,16 @@ function createPostGrid({ db, getSetting, orderDirPath, fetchImpl, convertWord =
         let p;
         if (!src.getPage(idx).node.Contents()) continue;   // blank page (no contents): keep it blank
         try { [p] = await doc.embedPdf(src, [idx]); } catch { continue; }
-        const scale = Math.min(LETTER.w / p.width, LETTER.h / p.height);
+        // Honour the source page's /Rotate so scans keep their orientation, then fit to Letter.
+        const rot = ((src.getPage(idx).getRotation().angle % 360) + 360) % 360;
+        const sideways = rot === 90 || rot === 270;
+        const scale = Math.min(LETTER.w / (sideways ? p.height : p.width), LETTER.h / (sideways ? p.width : p.height));
         const w = p.width * scale, h = p.height * scale;
-        page.drawPage(p, { x: (LETTER.w - w) / 2, y: (LETTER.h - h) / 2, width: w, height: h });
+        const dispW = sideways ? h : w, dispH = sideways ? w : h;
+        const left = (LETTER.w - dispW) / 2, bottom = (LETTER.h - dispH) / 2;
+        const at = { 0: { x: left, y: bottom }, 90: { x: left, y: bottom + dispH },
+                     180: { x: left + dispW, y: bottom + dispH }, 270: { x: left + dispW, y: bottom } }[rot] || { x: left, y: bottom };
+        page.drawPage(p, { ...at, width: w, height: h, rotate: degrees(-rot) });
       }
     }
 
@@ -223,6 +230,8 @@ function createPostGrid({ db, getSetting, orderDirPath, fetchImpl, convertWord =
     const built = await buildLetterPdf(order);
     if (built.unsupported.length)
       throw new PostGridError(`Cannot auto-print: ${built.unsupported.join(', ')} (convert to PDF and upload by hand).`, { manual: true });
+    if (built.warnings.length)
+      throw new PostGridError(`Cannot auto-print: ${built.warnings.join(' ')} Fulfil by hand or ask the customer for a PDF.`, { manual: true });
     if (!built.pages) throw new PostGridError('The order has no printable content.', { manual: true });
     if (built.sheets > MAX_SHEETS)
       throw new PostGridError(`${built.sheets} sheets exceeds the ${MAX_SHEETS}-sheet envelope limit; fulfil manually.`, { manual: true });
