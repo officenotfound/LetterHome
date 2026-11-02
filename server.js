@@ -459,7 +459,6 @@ function sendMailedNotification(order) {
   sendMail({
     from:    process.env.EMAIL_FROM,
     to:      order.customer_email,
-    bcc:     'letterhome.ca+d4739788a2@invite.trustpilot.com',
     subject: `Your letter to ${order.recipient_name} has been mailed: order #${order.id}`,
     html:    buildMailedEmail(order, toAddr, deliveryText),
     text:    buildMailedEmailText(order, toAddr, deliveryText),
@@ -954,6 +953,13 @@ app.get('/ga.js', (req, res) => {
 });
 
 // Base send price by destination: Canada, United States, rest of world.
+// Name on the Stripe receipt, e.g. "Letterhome Letter to the United Kingdom".
+function stripeProductName(country) {
+  const cc = String(country || 'CA').toUpperCase();
+  const names = { CA: 'within Canada', US: 'to the United States', GB: 'to the United Kingdom', AU: 'to Australia' };
+  return names[cc] ? `Letterhome Letter ${names[cc]}` : 'Letterhome International Letter';
+}
+
 function getBasePriceCents(country) {
   return destinations.priceFor(country);
 }
@@ -1257,7 +1263,7 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
   const pageCount = analysis ? analysis.pages : await countAttachmentPages(req.files || []);
   const colourPrinting    = b['colour_printing']    === '1' || b['colour_printing']    === 'true';
   const extraPageCents = Math.max(0, pageCount - FREE_PAGES) * (colourPrinting ? EXTRA_PAGE_COLOUR_CENTS : EXTRA_PAGE_CENTS);
-  const largeEnvelope     = b['large_envelope']     === '1' || b['large_envelope']     === 'true';
+  const largeEnvelope     = false;   // option retired: letters go in a standard #10 envelope
   const scheduleForLater  = b['schedule_for_later'] === '1' || b['schedule_for_later'] === 'true';
   const scheduledDate     = scheduleForLater ? (b['scheduled_date'] || null) : null;
   const addonCents = extraPageCents
@@ -1392,7 +1398,7 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
         price_data: {
           currency: 'cad',
           product_data: {
-            name: isDomestic ? 'Letterhome Domestic Letter' : 'Letterhome International Letter',
+            name: stripeProductName(b['r-country']),
             description: `To: ${rName}, ${[b['r-city'], b['r-country']].filter(Boolean).join(' ')}${extrasNote}`,
           },
           unit_amount: priceCents,
@@ -1454,7 +1460,7 @@ app.get('/resume/:token', trackLimiter, async (req, res) => {
         price_data: {
           currency: 'cad',
           product_data: {
-            name: order.destination_country === 'CA' ? 'Letterhome Domestic Letter' : 'Letterhome International Letter',
+            name: stripeProductName(order.destination_country),
             description: `To: ${order.recipient_name}, ${[order.recipient_city, order.destination_country].filter(Boolean).join(' ')}${extrasNote}`,
           },
           unit_amount: order.price_cents,
@@ -1646,7 +1652,7 @@ app.use('/api/admin', (req, res, next) => {
   // Origin layer: block cross-origin browser requests outright.
   const origin = req.headers.origin;
   const base = (process.env.BASE_URL || '').replace(/\/$/, '');
-  if (origin && base && !origin.startsWith(base)) return res.status(403).json({ error: 'Forbidden' });
+  if (origin && base && origin !== base && origin !== base.replace('://', '://www.')) return res.status(403).json({ error: 'Forbidden' });
   // CSRF token layer: require X-CSRF-Token matching the session token.
   const sessionToken = req.session?.csrfToken;
   const requestToken = req.headers['x-csrf-token'];
@@ -1891,7 +1897,6 @@ app.post('/api/admin/orders/:id/status', requireAdmin, async (req, res) => {
       sendMail({
         from:    process.env.EMAIL_FROM,
         to:      order.customer_email,
-        bcc:     'letterhome.ca+d4739788a2@invite.trustpilot.com',
         subject: `Your letter to ${order.recipient_name} has been mailed: order #${order.id}`,
         html:    buildMailedEmail(order, toAddr, deliveryText),
         text:    buildMailedEmailText(order, toAddr, deliveryText),
@@ -2005,7 +2010,6 @@ app.post('/api/admin/orders/:id/mark-mailed', requireAdmin, async (req, res) => 
   sendMail({
     from:    process.env.EMAIL_FROM,
     to:      order.customer_email,
-    bcc:     'letterhome.ca+d4739788a2@invite.trustpilot.com',
     subject: `Your letter to ${order.recipient_name} has been mailed: order #${order.id}`,
     html:    buildMailedEmail(order, toAddr, estimated_delivery.trim()),
     text:    buildMailedEmailText(order, toAddr, estimated_delivery.trim()),
@@ -2529,7 +2533,6 @@ app.post('/api/admin/orders/bulk-status', requireAdmin, async (req, res) => {
       sendMail({
         from:    process.env.EMAIL_FROM,
         to:      order.customer_email,
-        bcc:     'letterhome.ca+d4739788a2@invite.trustpilot.com',
         subject: `Your letter to ${order.recipient_name} has been mailed: order #${order.id}`,
         html:    buildMailedEmail(order, toAddr, deliveryText),
         text:    buildMailedEmailText(order, toAddr, deliveryText),

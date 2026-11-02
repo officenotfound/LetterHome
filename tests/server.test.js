@@ -163,7 +163,7 @@ test('POST /api/create-order persists order and returns checkoutUrl', async () =
   assert.equal(row.price_cents, 600);
 });
 
-test('pricing: rest-of-world base plus colour, large envelope and free scheduling', async () => {
+test('pricing: rest-of-world base plus colour and free scheduling; retired large envelope is ignored', async () => {
   const form = new URLSearchParams({
     'r-email':    'pricing@example.com',
     'r-name':     'Marie Dupont',
@@ -187,9 +187,9 @@ test('pricing: rest-of-world base plus colour, large envelope and free schedulin
   const row = db.prepare(
     "SELECT * FROM orders WHERE customer_email = 'pricing@example.com' ORDER BY id DESC LIMIT 1"
   ).get();
-  // $20 rest-of-world + $1 colour + $3 large envelope + $0 scheduling
-  assert.equal(row.price_cents, 2400);
-  assert.equal(row.large_envelope, 1);
+  // $20 rest-of-world + $1 colour + $0 scheduling; a posted large_envelope flag no longer charges
+  assert.equal(row.price_cents, 2100);
+  assert.equal(row.large_envelope, 0);
   assert.equal(row.schedule_for_later, 1);
 });
 
