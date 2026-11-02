@@ -602,6 +602,12 @@ section { position: relative; z-index: 2; }
 }
 .pricing-grid .price-card { display: flex; flex-direction: column; padding: 38px 26px 30px; }
 .pricing-grid .price-card .price-includes { flex: 1; }
+/* UK and Australia (shown only when printed locally) take a second row of two */
+@media (min-width: 1001px) {
+  .pricing-grid { grid-template-columns: repeat(6, 1fr); }
+  .pricing-grid .price-card { grid-column: span 2; }
+  .pricing-grid .price-card.local { grid-column: span 3; }
+}
 @media (max-width: 1000px) {
   .pricing-grid { grid-template-columns: 1fr; max-width: 520px; }
 }
@@ -1279,6 +1285,34 @@ footer {
         </ul>
         <a href="/send" class="btn btn-outline btn-large" style="width:100%;text-align:center;" data-i18n="pricing.intl.btn">Send internationally →</a>
       </div>
+
+      <div class="price-card local" data-dest="GB" hidden>
+        <span class="price-tag" data-i18n="pricing.uk.tag">To the United Kingdom</span>
+        <h3 data-i18n="pricing.uk.h3">United Kingdom</h3>
+        <p class="price-sub" data-i18n="pricing.uk.sub">England, Scotland, Wales and Northern Ireland</p>
+        <div class="price"><span class="amt">$9</span><small>CAD</small></div>
+        <div class="price-meta" data-i18n="pricing.uk.meta">Printed and mailed inside the UK</div>
+        <ul class="price-includes">
+          <li data-i18n="pricing.uk.li1">Royal Mail delivery within the UK</li>
+          <li data-i18n="pricing.uk.li2">Printed on A4 paper, black &amp; white</li>
+          <li data-i18n="pricing.uk.li3">Envelope and UK postage</li>
+        </ul>
+        <a href="/send" class="btn btn-outline btn-large" style="width:100%;text-align:center;" data-i18n="pricing.uk.btn">Send to the UK →</a>
+      </div>
+
+      <div class="price-card local" data-dest="AU" hidden>
+        <span class="price-tag" data-i18n="pricing.au.tag">To Australia</span>
+        <h3 data-i18n="pricing.au.h3">Australia</h3>
+        <p class="price-sub" data-i18n="pricing.au.sub">To any Australian address</p>
+        <div class="price"><span class="amt">$9</span><small>CAD</small></div>
+        <div class="price-meta" data-i18n="pricing.au.meta">Printed and mailed inside Australia</div>
+        <ul class="price-includes">
+          <li data-i18n="pricing.au.li1">Australia Post delivery within Australia</li>
+          <li data-i18n="pricing.au.li2">Printed on A4 paper, black &amp; white</li>
+          <li data-i18n="pricing.au.li3">Envelope and Australian postage</li>
+        </ul>
+        <a href="/send" class="btn btn-outline btn-large" style="width:100%;text-align:center;" data-i18n="pricing.au.btn">Send to Australia →</a>
+      </div>
     </div>
 
     <div class="extras">
@@ -1683,7 +1717,7 @@ window.addEventListener('load', async function personalizeTicker(){
 </script>
 
 <script src="/theme.js?v=2" defer></script>
-<script src="/lang.js?v=31" defer></script>
+<script src="/lang.js?v=32" defer></script>
 <script>
 (async () => {
   try {
@@ -1694,6 +1728,14 @@ window.addEventListener('load', async function personalizeTicker(){
       bar.textContent = cfg.announcement;
       document.body.insertBefore(bar, document.body.firstChild);
     }
+    // UK/Australia cards appear only when that country is printed locally (otherwise the $20 international price applies)
+    document.querySelectorAll('.price-card[data-dest]').forEach(card => {
+      const d = cfg.destinations && cfg.destinations[card.dataset.dest];
+      if (!d || !d.local) return;
+      card.querySelector('.amt').textContent = '$' + (d.price_cents / 100).toFixed(d.price_cents % 100 ? 2 : 0);
+      card.hidden = false;
+      card.style.opacity = '1'; card.style.transform = 'none';   // skip the scroll fade-in, which ran while the card was hidden
+    });
   } catch(e) {}
 })();
 </script>
