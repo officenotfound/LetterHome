@@ -26,7 +26,7 @@ const pages = [
       },
       {
         q: 'How long does delivery from the US take?',
-        a: 'We print and mail within two business days of payment. After that, Canada Post standard lettermail typically delivers within Canada in up to 2 weeks.',
+        a: 'We print and mail within two business days. After that, Canada Post standard lettermail typically delivers within Canada in up to 2 weeks.',
       },
       {
         q: 'Can I send a PDF or Word document?',
@@ -61,7 +61,7 @@ const pages = [
       },
       {
         q: 'How long does delivery take to Canada from the UK?',
-        a: 'We print and post within two business days of payment. The letter goes out via Canada Post standard lettermail, which typically delivers within Canada in up to 2 weeks.',
+        a: 'We print and post within two business days. The letter goes out via Canada Post standard lettermail, which typically delivers within Canada in up to 2 weeks.',
       },
       {
         q: 'Can I send documents like PDFs?',
@@ -96,7 +96,7 @@ const pages = [
       },
       {
         q: 'How long does delivery take?',
-        a: 'We print and mail within two business days of payment. Canada Post standard lettermail then delivers within Canada in up to 2 weeks.',
+        a: 'We print and mail within two business days. Canada Post standard lettermail then delivers within Canada in up to 2 weeks.',
       },
       {
         q: 'Can I attach documents?',
@@ -170,7 +170,7 @@ const pages = [
       },
       {
         q: 'How long does delivery take?',
-        a: 'We mail within two business days of payment. Canada Post standard lettermail then delivers within Canada in up to 2 weeks.',
+        a: 'We mail within two business days. Canada Post standard lettermail then delivers within Canada in up to 2 weeks.',
       },
       {
         q: 'Can I send documents like PDFs?',

@@ -1,6 +1,6 @@
 # Letterhome
 
-> Letterhome is a Canadian letter and document mailing service. Customers anywhere in the world upload a PDF or Word document online, and Letterhome prints it in black & white by default (colour available for an extra fee), seals it in an envelope, and mails it from inside Canada via Canada Post Lettermail. No Canadian address, printer, stamps, or post office visit required. From $6 CAD per letter.
+> Letterhome is a Canadian letter and document mailing service. Customers anywhere in the world type a letter or upload a PDF, Word or text document online. A person reviews every order, then Letterhome's print-and-mail partner prints it in Canada in black & white by default (colour available for an extra fee), folds it into a window envelope, applies metered postage, and hands it to Canada Post as Lettermail. No Canadian address, printer, stamps, or post office visit required. From $6 CAD per letter.
 
 Letterhome is used by Canadians living abroad, immigrants sending documents to Canadian government offices (IRCC, CRA), expats sending letters to family, and anyone who needs a letter mailed from inside Canada.
 
@@ -16,14 +16,20 @@ All prices include the first 2 pages printed in black & white, plus the envelope
 
 1. Fill in the recipient address, compose or attach your letter, and enter your email.
 2. Pay by credit or debit card through Stripe.
-3. Letterhome prints the letter in black & white by default (colour is a $1 add-on) and mails it from Canada, usually within two business days.
-4. The customer receives an email confirmation with an order tracking link.
+3. A person reviews the order, then it is printed in Canada in black & white by default (colour is a $1 add-on) and handed to Canada Post within two business days of being sent to the printer.
+4. The customer receives an email confirmation with an order status link (payment received, at printer, printing, mailed) and an email when the letter is handed to Canada Post.
 
 ## Delivery
 
 Letters are mailed via Canada Post standard lettermail:
 - Within Canada: typically up to 2 weeks
-- International: typically up to 4 weeks
+- United States and international: typically up to 4 weeks
+
+All letters are currently printed in Canada and mailed by Canada Post. Lettermail has no tracking or delivery confirmation, and Letterhome does not currently offer registered, certified, express or signature mail, or an official Canada Post proof of mailing. Letters use metered postage and may not carry a dated postmark.
+
+## Cancellations and reprints
+
+An order can be cancelled for a full refund until it is sent to the printer; after that it can't be stopped. If a letter doesn't arrive, Letterhome reprints and resends it once for free when it's reported within 30 days of the "mailed" email and the recipient address passed verification at printing (excludes addresses entered incorrectly and returned anonymous letters). Details: https://letterhome.ca/refunds
 
 ## Key pages
 

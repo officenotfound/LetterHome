@@ -515,7 +515,7 @@ textarea.field-error { border-color: var(--red) !important; }
 
   <div class="total-bar" id="total-bar" role="status">
     <span><strong id="total-bar-amt">$6 CAD</strong><span data-i18n="send.totalbar.to">to send this letter</span></span>
-    <span class="tb-sub" data-i18n="send.totalbar.sub">Printing, envelope and postage included · mailed within 2 business days · free reprint if not delivered</span>
+    <span class="tb-sub" data-i18n="send.totalbar.sub">Printing, envelope and postage included · mailed within 2 business days · free reprint if it doesn't arrive (conditions apply)</span>
   </div>
 
   <!-- STEP 1: ADDRESSES -->
@@ -810,7 +810,7 @@ textarea.field-error { border-color: var(--red) !important; }
         <input type="checkbox" id="opt-colour" style="margin-top:3px" onchange="updatePricing()">
         <span>
           <span style="display:block;font-weight:600"><span data-i18n="send.options.colour.title">Colour printing</span> <span style="color:var(--red);font-weight:500" id="opt-colour-price">+$1</span></span>
-          <span style="display:block;font-size:12px;color:var(--ink-muted)" data-i18n="send.options.colour.sub">Print your letter and attachments in full colour instead of black &amp; white. Flat fee, any number of pages.</span>
+          <span style="display:block;font-size:12px;color:var(--ink-muted)" data-i18n="send.options.colour.sub">Print your letter and attachments in full colour instead of black & white. +$1 per letter; extra pages are $0.55 instead of $0.45.</span>
         </span>
       </label>
 
@@ -823,7 +823,7 @@ textarea.field-error { border-color: var(--red) !important; }
         <input type="checkbox" id="opt-schedule" style="margin-top:3px" onchange="toggleSchedule(this)">
         <span>
           <span style="display:block;font-weight:600"><span data-i18n="send.options.schedule.title">Schedule for later</span> <span style="color:var(--red);font-weight:500" id="opt-schedule-price">Free</span></span>
-          <span style="display:block;font-size:12px;color:var(--ink-muted)" data-i18n="send.options.schedule.sub">Choose a future date and we'll mail your letter to arrive as close to that date as possible.</span>
+          <span style="display:block;font-size:12px;color:var(--ink-muted)" data-i18n="send.options.schedule.sub">Choose a future date and we'll send your letter to the printer on that date; it's mailed within two business days after that.</span>
         </span>
       </label>
       <div id="schedule-date-wrap" style="display:none;margin:0 0 10px 0">
@@ -841,7 +841,7 @@ textarea.field-error { border-color: var(--red) !important; }
   <div class="panel" id="panel-3">
     <div class="eyebrow" data-i18n="send.step3.eyebrow">Step Three</div>
     <h2 class="panel-title serif" data-i18n="send.step3.title">Review your order.</h2>
-    <p class="panel-sub" data-i18n="send.step3.sub" data-ship="canada">Have one last look before paying. After checkout, your letter is printed in black & white by default (colour available) and mailed from Canada within two business days.</p><p class="panel-sub" style="display:none" data-i18n="send.step3.sub.local" data-ship="local">Have one last look before paying. After checkout, your letter is printed in black &amp; white by default (colour available) and mailed within two business days, printed and posted inside the destination country.</p>
+    <p class="panel-sub" data-i18n="send.step3.sub" data-ship="canada">Have one last look before paying. After checkout, a person reviews your order, then your letter is printed in black & white by default (colour available) and mailed from Canada within two business days.</p><p class="panel-sub" style="display:none" data-i18n="send.step3.sub.local" data-ship="local">Have one last look before paying. After checkout, your letter is printed in black &amp; white by default (colour available) and mailed within two business days, printed and posted inside the destination country.</p>
 
     <div class="preview-envelope">
       <div class="preview-stamp">
@@ -896,8 +896,8 @@ textarea.field-error { border-color: var(--red) !important; }
     <div class="next-steps">
       <h3 data-i18n="send.next.title">What happens after you pay</h3>
       <ol>
-        <li><span class="n">1</span><span><strong data-i18n="send.next.1.t">Confirmation email</strong><span class="d" data-i18n="send.next.1.d">Right after payment you get an email with your order number and a link to track your letter.</span></span></li>
-        <li><span class="n">2</span><span><strong data-i18n="send.next.2.t">Printed and mailed</strong><span class="d" data-i18n="send.next.2.d" data-ship="canada">Within two business days we print, seal and mail it from inside Canada, and email you when it's in the post.</span><span class="d" style="display:none" data-i18n="send.next.2.d.local" data-ship="local">Within two business days we print, seal and mail it inside the destination country, and email you when it's in the post.</span></span></li>
+        <li><span class="n">1</span><span><strong data-i18n="send.next.1.t">Confirmation email</strong><span class="d" data-i18n="send.next.1.d">Right after payment you get an email with your order number and a link to check your order status.</span></span></li>
+        <li><span class="n">2</span><span><strong data-i18n="send.next.2.t">Printed and mailed</strong><span class="d" data-i18n="send.next.2.d" data-ship="canada">After a person reviews it, we print, seal and mail it from inside Canada within two business days, and email you when it's handed to Canada Post.</span><span class="d" style="display:none" data-i18n="send.next.2.d.local" data-ship="local">Within two business days we print, seal and mail it inside the destination country, and email you when it's in the post.</span></span></li>
         <li><span class="n">3</span><span><strong data-i18n="send.next.3.t">Delivered</strong><span class="d" data-i18n="send.next.3.d">Typically up to 2 weeks within Canada and up to 4 weeks internationally.</span></span></li>
       </ol>
     </div>
@@ -909,7 +909,7 @@ textarea.field-error { border-color: var(--red) !important; }
 
     <div class="privacy-note">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--red);flex-shrink:0;margin-top:3px"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-      <p>Every order is reviewed by a person before it's printed, and if a verified letter hasn't arrived after 2 weeks, we reprint and resend it free. Questions before you pay, or card not going through? <a href="mailto:support@letterhome.ca" style="color:var(--red)">support@letterhome.ca</a>, replies within one business day.</p>
+      <p>Every order is reviewed by a person before it's printed, and if a verified letter hasn't arrived after 2 weeks, we reprint and resend it once for free (<a href="/refunds" style="color:var(--red)">conditions apply</a>). Questions before you pay, or card not going through? <a href="mailto:support@letterhome.ca" style="color:var(--red)">support@letterhome.ca</a>, replies within one business day.</p>
     </div>
 
     <div id="discount-section" style="margin-bottom:20px">
@@ -923,7 +923,7 @@ textarea.field-error { border-color: var(--red) !important; }
     <div style="display:flex;gap:20px;margin-bottom:20px;flex-wrap:wrap">
       <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-muted);font-family:'DM Mono',monospace">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--red);flex-shrink:0"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-        <span>Free reprint if not delivered</span>
+        <span>Free reprint if it doesn't arrive (<a href="/refunds" style="color:inherit">conditions apply</a>)</span>
       </div>
       <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-muted);font-family:'DM Mono',monospace">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--red);flex-shrink:0"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -1882,7 +1882,7 @@ function fillSavedRecipient(sel) {
   } catch(e) {}
 }
 </script>
-<script src="/lang.js?v=30" defer></script>
+<script src="/lang.js?v=31" defer></script>
 <script type="module">
   import * as pdfjsLib from '/vendor/pdfjs/pdf.min.mjs';
   pdfjsLib.GlobalWorkerOptions.workerSrc = '/vendor/pdfjs/pdf.worker.min.mjs';
