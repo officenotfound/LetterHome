@@ -6,15 +6,42 @@ const path = require('node:path');
 const os = require('node:os');
 const { execFile } = require('node:child_process');
 const { PDFDocument, StandardFonts, rgb, degrees } = require('pdf-lib');
+const fontkit = require('@pdf-lib/fontkit');
 const { makeDestinations, destinationOf, pageSizeOf, ADDRESS_CLEARANCE_IN, MARGIN_IN } = require('./destinations');
 
 const BASE_URL = 'https://api.postgrid.com/print-mail/v1';
 const IN = 72;                                // points per inch
 const MARGIN = 72;                            // 1 in text margin for typed letters
 const ADDRESS_CLEARANCE = ADDRESS_CLEARANCE_IN * IN;   // blank top of page 1 for the address zone (top_first_page)
+// Letter text: Noto Serif (SIL OFL, assets/fonts/OFL.txt) covers Latin, Greek, Cyrillic and common symbols.
+const TEXT_FONT_PATH = path.join(__dirname, 'assets', 'fonts', 'NotoSerif-Regular.ttf');
+// Emoji: Twemoji colour images (CC-BY 4.0), fetched once from jsDelivr and cached on disk.
+const TWEMOJI_URL = 'https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/72x72/';
+const EMOJI_CACHE = path.join(__dirname, '.cache', 'emoji');
 const FONT_SIZE = 11;
 const LEADING = 15;
 const MAX_SHEETS = 5;                         // PostGrid: max 5 sheets per standard envelope
+const EMOJI_RE = /\p{Extended_Pictographic}|\p{Regional_Indicator}|\u20E3/u;
+const segmenter = new Intl.Segmenter('en', { granularity: 'grapheme' });
+
+// Twemoji file name for an emoji grapheme: lowercase hex code points joined by "-",
+// dropping U+FE0F unless the sequence contains a zero-width joiner (Twemoji's own rule).
+function twemojiName(g) {
+  const cps = [...g].map(c => c.codePointAt(0).toString(16));
+  return (g.includes('\u200d') ? cps : cps.filter(c => c !== 'fe0f')).join('-');
+}
+
+async function fetchTwemoji(name) {
+  const file = path.join(EMOJI_CACHE, name + '.png');
+  try { return fs.readFileSync(file); } catch {}
+  try {
+    const res = await fetch(TWEMOJI_URL + name + '.png', { signal: AbortSignal.timeout(10000) });
+    if (!res.ok) return null;
+    const buf = Buffer.from(await res.arrayBuffer());
+    try { fs.mkdirSync(EMOJI_CACHE, { recursive: true }); fs.writeFileSync(file, buf); } catch {}
+    return buf;
+  } catch { return null; }
+}
 const FALLBACK_FROM = {
   name: 'Letterhome', street: '1515 Discovery St', city: 'Vancouver',
   province: 'BC', postal: 'V6R 4K5', country: 'CA',
@@ -53,7 +80,7 @@ function libreOfficeConvert(file, name) {
   });
 }
 
-function createPostGrid({ db, getSetting, orderDirPath, fetchImpl, convertWord = libreOfficeConvert, destinations }) {
+function createPostGrid({ db, getSetting, orderDirPath, fetchImpl, convertWord = libreOfficeConvert, destinations, emojiImage = fetchTwemoji }) {
   const doFetch = (...a) => (fetchImpl || fetch)(...a);
   const dest = destinations || makeDestinations(getSetting);
 
@@ -86,37 +113,60 @@ function createPostGrid({ db, getSetting, orderDirPath, fetchImpl, convertWord =
   }
 
   // ---- PDF -----------------------------------------------------------------
-  function toWinAnsi(font, text, warnings) {
-    let out = '';
-    for (const ch of text.normalize('NFC').replace(/\r\n?/g, '\n')) {
-      if (ch === '\n' || ch === '\t') { out += ch === '\t' ? '    ' : ch; continue; }
-      try { font.encodeText(ch); out += ch; } catch {
-        const map = { '‘': "'", '’': "'", '“': '"', '”': '"', '–': '-', '—': '-', '…': '...', ' ': ' ' };
-        if (map[ch]) out += map[ch];
-        else { out += '?'; warnings.add('The text has characters outside the Latin alphabet (for example Cyrillic, CJK or emoji) that our printer font cannot print.'); }
+  // Splits text into words made of runs: { text } for the font, { emoji } for an image.
+  // Characters the font cannot draw (e.g. CJK, Arabic) are reported so the order goes to the manual queue.
+  function tokenize(text, charset, warnings) {
+    const paras = [];
+    for (const para of text.normalize('NFC').replace(/\r\n?/g, '\n').replace(/\t/g, '    ').split('\n')) {
+      const words = [];
+      let word = [], run = '';
+      const flushRun = () => { if (run) { word.push({ text: run }); run = ''; } };
+      const flushWord = () => { flushRun(); if (word.length) words.push(word); word = []; };
+      for (const { segment: g } of segmenter.segment(para)) {
+        if (/^\s+$/u.test(g)) { flushWord(); continue; }
+        if (EMOJI_RE.test(g)) { flushRun(); word.push({ emoji: twemojiName(g) }); continue; }
+        let ok = '';
+        for (const ch of g) {
+          const cp = ch.codePointAt(0);
+          if (cp === 0xFE0F || cp === 0xFE0E || cp === 0x200D) continue;     // stray variation selectors / joiners
+          if (charset.has(cp)) ok += ch;
+          else { ok += '?'; warnings.add('The text has characters our printer font cannot print (for example Chinese, Japanese, Korean, Arabic or Hebrew).'); }
+        }
+        run += ok;
       }
+      flushWord();
+      paras.push(words);
     }
-    return out;
+    return paras;
   }
 
-  function wrapLines(font, text, maxWidth) {
-    const fits = t => font.widthOfTextAtSize(t, FONT_SIZE) <= maxWidth;
+  // Lays out tokenized paragraphs into lines no wider than maxWidth.
+  function layoutLines(paras, font, maxWidth) {
+    const EM = FONT_SIZE * 1.2;
+    const runW = r => r.emoji ? EM : font.widthOfTextAtSize(r.text, FONT_SIZE);
+    const wordW = w => w.reduce((s, r) => s + runW(r), 0);
+    const space = font.widthOfTextAtSize(' ', FONT_SIZE);
     const lines = [];
-    for (const para of text.split('\n')) {
-      if (!para.trim()) { lines.push(''); continue; }
-      let line = '';
-      for (const word of para.split(/\s+/).filter(Boolean)) {
-        const t = line ? line + ' ' + word : word;
-        if (fits(t)) { line = t; continue; }
-        if (line) lines.push(line);
-        // a single word longer than the line: hard-split it
-        let w = word;
-        while (!fits(w)) {
-          let n = w.length;
-          while (n > 1 && !fits(w.slice(0, n))) n--;
-          lines.push(w.slice(0, n)); w = w.slice(n);
+    for (const words of paras) {
+      if (!words.length) { lines.push([]); continue; }
+      let line = [], width = 0;
+      for (let w of words) {
+        const ww = wordW(w);
+        if (line.length && width + space + ww <= maxWidth) { line.push(w); width += space + ww; continue; }
+        if (line.length) lines.push(line);
+        line = []; width = 0;
+        if (ww <= maxWidth) { line = [w]; width = ww; continue; }
+        // a single word wider than the line: break it between characters
+        let piece = [], pw = 0;
+        for (const r of w) {
+          const parts = r.emoji ? [r] : [...r.text].map(c => ({ text: c }));
+          for (const part of parts) {
+            const cw = runW(part);
+            if (pw + cw > maxWidth && piece.length) { lines.push([piece]); piece = []; pw = 0; }
+            piece.push(part); pw += cw;
+          }
         }
-        line = w;
+        line = [piece]; width = pw;
       }
       lines.push(line);
     }
@@ -133,7 +183,8 @@ function createPostGrid({ db, getSetting, orderDirPath, fetchImpl, convertWord =
     const SAFE = { x: MARGIN_IN * IN, y: (reserve ? reserve[1] : MARGIN_IN) * IN };
     SAFE.w = PAGE.w - 2 * SAFE.x; SAFE.h = PAGE.h - SAFE.y - MARGIN_IN * IN;
     const doc = await PDFDocument.create();
-    const font = await doc.embedFont(StandardFonts.TimesRoman);
+    doc.registerFontkit(fontkit);
+    const font = await doc.embedFont(fs.readFileSync(TEXT_FONT_PATH), { subset: true });
 
     let attachments = [];
     try { attachments = JSON.parse(order.attachment_info || '[]'); } catch {}
@@ -156,12 +207,35 @@ function createPostGrid({ db, getSetting, orderDirPath, fetchImpl, convertWord =
 
     const hasText = textParts.some(t => t.trim());
     if (hasText) {
-      const lines = wrapLines(font, toWinAnsi(font, textParts.join('\n\n'), warnings), PAGE.w - 2 * MARGIN);
+      const charset = new Set(font.getCharacterSet());
+      const paras = tokenize(textParts.join('\n\n'), charset, warnings);
+      // Fetch each distinct emoji image once; an emoji we cannot get sends the order to the manual queue.
+      const images = new Map();
+      for (const name of new Set(paras.flat(2).filter(r => r.emoji).map(r => r.emoji))) {
+        const png = await emojiImage(name);
+        if (png) { try { images.set(name, await doc.embedPng(png)); continue; } catch {} }
+        warnings.add(`An emoji in the letter could not be loaded for printing (${name}).`);
+      }
+      const lines = layoutLines(paras, font, PAGE.w - 2 * MARGIN);
+      const EM = FONT_SIZE * 1.2, space = font.widthOfTextAtSize(' ', FONT_SIZE);
       let page = doc.addPage([PAGE.w, PAGE.h]);
       let y = PAGE.h - ADDRESS_CLEARANCE;
       for (const line of lines) {
         if (y < MARGIN) { page = doc.addPage([PAGE.w, PAGE.h]); y = PAGE.h - MARGIN; }
-        if (line) page.drawText(line, { x: MARGIN, y, size: FONT_SIZE, font, color: rgb(0, 0, 0) });
+        let x = MARGIN;
+        line.forEach((word, wi) => {
+          if (wi) x += space;
+          for (const r of word) {
+            if (r.emoji) {
+              const img = images.get(r.emoji);
+              if (img) page.drawImage(img, { x, y: y - FONT_SIZE * 0.22, width: EM, height: EM });
+              x += EM;
+            } else {
+              page.drawText(r.text, { x, y, size: FONT_SIZE, font, color: rgb(0, 0, 0) });
+              x += font.widthOfTextAtSize(r.text, FONT_SIZE);
+            }
+          }
+        });
         y -= LEADING;
       }
     }

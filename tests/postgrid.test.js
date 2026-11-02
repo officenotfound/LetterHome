@@ -34,7 +34,11 @@ const fakeFetch = async (url, opts) => {
   return body({ error: { type: 'x', message: 'nope' } }, 404);
 };
 const settings = {};
-const pg = createPostGrid({ db, getSetting: (k, f) => settings[k] ?? f, orderDirPath: () => os.tmpdir(), fetchImpl: fakeFetch });
+// 1x1 PNG standing in for Twemoji images, so tests never touch the network.
+const PNG_1PX = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64');
+const emojiAsked = [];
+const fakeEmoji = async name => { emojiAsked.push(name); return name === 'missing' ? null : PNG_1PX; };
+const pg = createPostGrid({ db, getSetting: (k, f) => settings[k] ?? f, orderDirPath: () => os.tmpdir(), fetchImpl: fakeFetch, emojiImage: fakeEmoji });
 
 function seed(o = {}) {
   const r = db.prepare(`INSERT INTO orders (customer_email, recipient_name, recipient_street, recipient_city, recipient_province, recipient_postal,
@@ -144,7 +148,9 @@ test('rotated source pages stay Letter-size; non-Latin text is refused instead o
   const b = await pg.buildLetterPdf(seed({ body: '', attach: JSON.stringify([{ path: f, originalName: 'r.pdf' }]) }));
   const doc = await PDFDocument.load(b.pdf);
   assert.deepEqual([doc.getPage(0).getWidth(), doc.getPage(0).getHeight()], [612, 792]);
-  await assert.rejects(pg.submitOrder(seed({ body: 'Привет 你好' })), e => e.manual && /Latin alphabet/.test(e.message));
+  await assert.rejects(pg.submitOrder(seed({ body: 'Привет 你好' })), e => e.manual && /cannot print/.test(e.message));
+  const cyr = await pg.buildLetterPdf(seed({ body: 'Привет, Ελλάδα, cœur ♥ — “quotes”' }));
+  assert.deepEqual(cyr.warnings, []);                     // Cyrillic, Greek and symbols print with Noto Serif
 });
 
 test('a recipient address that fails verification goes to the manual queue instead of being mailed', async () => {
@@ -242,4 +248,17 @@ test('a TEST-mode letter on a real order never changes its status or reports it 
     assert.equal(row.postgrid_letter_id, null);
     assert.equal(pg.eligibility(row), null);              // ready to send for real
   } finally { liveLetters = true; letterStatus = 'ready'; }
+});
+
+test('emojis print as colour images (skin tones, variation selectors, ZWJ sequences) and wrap like text', async () => {
+  emojiAsked.length = 0;
+  const b = await pg.buildLetterPdf(seed({ body: 'Mon cœur ♥️ Reste prêt de moi 🫶🙏🏽🫶❤️❤️❤️\nTon coco\n🩵 👩‍❤️‍👨' }));
+  assert.deepEqual(b.warnings, []);
+  assert.deepEqual([...new Set(emojiAsked)].sort(), ['1f469-200d-2764-fe0f-200d-1f468', '1f64f-1f3fd', '1fa75', '1faf6', '2665', '2764'].sort());
+  const doc = await PDFDocument.load(b.pdf);
+  assert.equal(doc.getPageCount(), 1);
+  // an emoji image that cannot be fetched sends the order to the manual queue instead of printing a gap
+  const pgMissing = createPostGrid({ db, getSetting: (k, f) => f, orderDirPath: () => os.tmpdir(), fetchImpl: fakeFetch, emojiImage: async () => null });
+  const m = await pgMissing.buildLetterPdf(seed({ body: 'Hi ❤️' }));
+  assert.match(m.warnings.join(' '), /emoji/);
 });

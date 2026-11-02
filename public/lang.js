@@ -473,6 +473,8 @@
       'terms.s8.p': 'Letterhome\'s liability is limited to the amount you paid for the order in question. We are not liable for consequential damages, missed deadlines, or losses arising from postal delays, lost mail or incorrect addresses. For time-sensitive legal documents, we recommend asking us about options before placing your order.',
       'terms.s9.h2': 'Changes to these terms',
       'terms.s9.p': 'We may update these terms from time to time. Material changes will be noted on this page with an updated date. Continued use of the Service after changes constitutes acceptance.',
+      'terms.credits.h2': 'Credits',
+      'terms.credits.p': 'Emoji in printed letters use <a href="https://github.com/jdecked/twemoji">Twemoji</a> graphics, licensed under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>. Letter text is set in Noto Serif, licensed under the SIL Open Font License.',
       'terms.s10.h2': 'Contact',
       'terms.s10.p': 'Questions? Email <a href="mailto:support@letterhome.ca">support@letterhome.ca</a>.',
       // REFUNDS
@@ -2456,6 +2458,8 @@
       'terms.s8.p': 'La responsabilité de Letterhome est limitée au montant que vous avez payé pour la commande en question. Nous ne sommes pas responsables des dommages indirects, des délais manqués ou des pertes résultant de retards postaux, de courrier perdu ou d\'adresses incorrectes. Pour les documents juridiques urgents, nous vous recommandons de nous demander quelles options existent avant de passer votre commande.',
       'terms.s9.h2': 'Modifications des présentes conditions',
       'terms.s9.p': 'Nous pouvons mettre à jour ces conditions de temps à autre. Les modifications importantes seront signalées sur cette page avec une date de mise à jour. L\'utilisation continue du Service après les modifications vaut acceptation.',
+      'terms.credits.h2': 'Crédits',
+      'terms.credits.p': 'Les émojis des lettres imprimées utilisent les graphismes <a href="https://github.com/jdecked/twemoji">Twemoji</a>, sous licence <a href="https://creativecommons.org/licenses/by/4.0/deed.fr">CC BY 4.0</a>. Le texte des lettres est composé en Noto Serif, sous licence SIL Open Font License.',
       'terms.s10.h2': 'Nous joindre',
       'terms.s10.p': 'Des questions ? Écrivez-nous à <a href="mailto:support@letterhome.ca">support@letterhome.ca</a>.',
       // REFUNDS
