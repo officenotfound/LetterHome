@@ -602,11 +602,13 @@ section { position: relative; z-index: 2; }
 }
 .pricing-grid .price-card { display: flex; flex-direction: column; padding: 38px 26px 30px; }
 .pricing-grid .price-card .price-includes { flex: 1; }
-/* UK and Australia (shown only when printed locally) take a second row of two */
+/* One row on desktop: 3 cards, or 5 once UK and Australia are printed locally (hidden cards take no column) */
 @media (min-width: 1001px) {
-  .pricing-grid { grid-template-columns: repeat(6, 1fr); }
-  .pricing-grid .price-card { grid-column: span 2; }
-  .pricing-grid .price-card.local { grid-column: span 3; }
+  .pricing-grid { grid-auto-flow: column; grid-template-columns: none; grid-auto-columns: minmax(0, 1fr); }
+  .pricing-grid:has(.price-card.local:not([hidden])) { max-width: 1240px; gap: 14px; }
+  .pricing-grid:has(.price-card.local:not([hidden])) .price-card { padding: 30px 16px 22px; }
+  .pricing-grid:has(.price-card.local:not([hidden])) .price-card h3 { font-size: 22px; }
+  .pricing-grid:has(.price-card.local:not([hidden])) .price-card .price-includes li { font-size: 13px; }
 }
 @media (max-width: 1000px) {
   .pricing-grid { grid-template-columns: 1fr; max-width: 520px; }
@@ -1271,25 +1273,10 @@ footer {
         <a href="/send" class="btn btn-outline btn-large" style="width:100%;text-align:center;" data-i18n="pricing.usa.btn">Send to the United States →</a>
       </div>
 
-      <div class="price-card">
-        <span class="price-tag" data-i18n="pricing.intl.tag">Anywhere else</span>
-        <h3 data-i18n="pricing.intl.h3">International</h3>
-        <p class="price-sub" data-i18n="pricing.intl.sub">All other countries (160+)</p>
-        <div class="price">$20<small>CAD</small></div>
-        <div class="price-meta" data-i18n="pricing.intl.meta">Typically 2–4 weeks</div>
-        <ul class="price-includes">
-          <li data-i18n="pricing.intl.li1">2 pages included, then $0.45 per extra page ($0.55 in colour)</li>
-          <li data-i18n="pricing.intl.li2">Black &amp; white by default (colour +$1), single‑sided</li>
-          <li data-i18n="pricing.intl.li3">Envelope and international postage</li>
-          <li data-i18n="pricing.intl.li4">Attach up to 5 PDF or Word files</li>
-        </ul>
-        <a href="/send" class="btn btn-outline btn-large" style="width:100%;text-align:center;" data-i18n="pricing.intl.btn">Send internationally →</a>
-      </div>
-
       <div class="price-card local" data-dest="GB" hidden>
         <span class="price-tag" data-i18n="pricing.uk.tag">To the United Kingdom</span>
         <h3 data-i18n="pricing.uk.h3">United Kingdom</h3>
-        <p class="price-sub" data-i18n="pricing.uk.sub">England, Scotland, Wales and Northern Ireland</p>
+        <p class="price-sub" data-i18n="pricing.uk.sub">To any UK address</p>
         <div class="price"><span class="amt">$9</span><small>CAD</small></div>
         <div class="price-meta" data-i18n="pricing.uk.meta">Printed and mailed inside the UK</div>
         <ul class="price-includes">
@@ -1312,6 +1299,21 @@ footer {
           <li data-i18n="pricing.au.li3">Envelope and Australian postage</li>
         </ul>
         <a href="/send" class="btn btn-outline btn-large" style="width:100%;text-align:center;" data-i18n="pricing.au.btn">Send to Australia →</a>
+      </div>
+
+      <div class="price-card">
+        <span class="price-tag" data-i18n="pricing.intl.tag">Anywhere else</span>
+        <h3 data-i18n="pricing.intl.h3">International</h3>
+        <p class="price-sub" data-i18n="pricing.intl.sub">All other countries (160+)</p>
+        <div class="price">$20<small>CAD</small></div>
+        <div class="price-meta" data-i18n="pricing.intl.meta">Typically 2–4 weeks</div>
+        <ul class="price-includes">
+          <li data-i18n="pricing.intl.li1">2 pages included, then $0.45 per extra page ($0.55 in colour)</li>
+          <li data-i18n="pricing.intl.li2">Black &amp; white by default (colour +$1), single‑sided</li>
+          <li data-i18n="pricing.intl.li3">Envelope and international postage</li>
+          <li data-i18n="pricing.intl.li4">Attach up to 5 PDF or Word files</li>
+        </ul>
+        <a href="/send" class="btn btn-outline btn-large" style="width:100%;text-align:center;" data-i18n="pricing.intl.btn">Send internationally →</a>
       </div>
     </div>
 
