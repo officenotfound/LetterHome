@@ -72,6 +72,12 @@ try { db.exec(`ALTER TABLE orders ADD COLUMN recovery_sent_at DATETIME`); } catc
 try { db.exec(`ALTER TABLE orders ADD COLUMN thankyou_sent_at DATETIME`); } catch {}
 try { db.exec(`ALTER TABLE orders ADD COLUMN actual_cost_cents INTEGER`); } catch {}
 try { db.exec(`ALTER TABLE orders ADD COLUMN sla_alert_sent_at DATETIME`);} catch {}
+try { db.exec(`ALTER TABLE orders ADD COLUMN postgrid_letter_id TEXT`); } catch {}
+try { db.exec(`ALTER TABLE orders ADD COLUMN postgrid_status TEXT`); } catch {}
+try { db.exec(`ALTER TABLE orders ADD COLUMN postgrid_url TEXT`); } catch {}
+try { db.exec(`ALTER TABLE orders ADD COLUMN postgrid_error TEXT`); } catch {}
+try { db.exec(`ALTER TABLE orders ADD COLUMN postgrid_submitted_at DATETIME`); } catch {}
+try { db.exec(`ALTER TABLE orders ADD COLUMN postgrid_mode TEXT`); } catch {}
 try { db.exec(`ALTER TABLE orders ADD COLUMN discount_code TEXT`);     } catch {}
 try { db.exec(`ALTER TABLE orders ADD COLUMN discount_cents INTEGER`); } catch {}
 try { db.exec(`ALTER TABLE orders ADD COLUMN page_count INTEGER`);            } catch {}

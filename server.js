@@ -437,6 +437,65 @@ function orderDirPath(id, createdAt) {
   return path.join(__dirname, 'orders', `${date}_${String(id).padStart(5, '0')}`);
 }
 
+// ---- PostGrid fulfilment (off until POSTGRID_API_KEY is set) -----------------
+const { createPostGrid } = require('./postgrid');
+const postgrid = createPostGrid({ db, getSetting, orderDirPath });
+
+function sendMailedNotification(order) {
+  if (!order?.customer_email) return;
+  const deliveryText = order.estimated_delivery || (order.destination_country === 'CA' ? 'within 2 weeks' : 'within 4 weeks');
+  const toAddr = [
+    order.recipient_name, order.recipient_street,
+    `${order.recipient_city || ''} ${order.recipient_province || ''} ${order.recipient_postal || ''}`.trim(),
+    order.destination_country,
+  ].filter(Boolean).join('\n');
+  sendMail({
+    from:    process.env.EMAIL_FROM,
+    to:      order.customer_email,
+    bcc:     'letterhome.ca+d4739788a2@invite.trustpilot.com',
+    subject: `Your letter to ${order.recipient_name} has been mailed: order #${order.id}`,
+    html:    buildMailedEmail(order, toAddr, deliveryText),
+    text:    buildMailedEmailText(order, toAddr, deliveryText),
+  }, 'mailed_notification', order.id).catch(console.error);
+}
+
+// Submits one paid order. Never throws: failures are recorded on the order
+// ("MANUAL:" = needs a human, "RETRY:" = transient, the sweep tries again).
+async function postgridSubmit(orderId, opts) {
+  const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(orderId);
+  if (!order) return { ok: false, error: 'Order not found' };
+  try {
+    const r = await postgrid.submitOrder(order, opts);
+    return { ok: true, letter_id: r.letter.id, warnings: r.warnings };
+  } catch (e) {
+    const manual = !!e.manual || (e.status >= 400 && e.status < 500 && e.status !== 429);
+    db.prepare('UPDATE orders SET postgrid_error = ? WHERE id = ?').run(`${manual ? 'MANUAL' : 'RETRY'}: ${e.message}`.slice(0, 500), orderId);
+    if (manual && e.message && !/Scheduled for/.test(e.message)) sendErrorAlert(`Order #${orderId} needs manual fulfilment`, e.message);
+    return { ok: false, error: e.message, manual };
+  }
+}
+
+async function postgridSweep() {
+  if (!postgrid.isConfigured()) return;
+  try {
+    if (postgrid.autoSubmit()) {
+      const today = new Date().toISOString().slice(0, 10);
+      const due = db.prepare(`SELECT id FROM orders WHERE status = 'paid' AND postgrid_letter_id IS NULL AND deleted_at IS NULL
+        AND (postgrid_error IS NULL OR postgrid_error LIKE 'RETRY:%' OR postgrid_error LIKE 'MANUAL: Scheduled for%')
+        AND (scheduled_date IS NULL OR scheduled_date <= ?) AND paid_at > datetime('now','-3 days') LIMIT 20`).all(today);
+      for (const o of due) await postgridSubmit(o.id);
+    }
+    const live = db.prepare(`SELECT * FROM orders WHERE postgrid_letter_id IS NOT NULL AND deleted_at IS NULL
+      AND COALESCE(postgrid_status,'') NOT IN ('completed','cancelled') LIMIT 100`).all();
+    for (const o of live) {
+      try {
+        const r = await postgrid.refreshOrder(o);
+        if (r.mailed) sendMailedNotification(db.prepare('SELECT * FROM orders WHERE id = ?').get(o.id));
+      } catch (e) { console.error(`[postgrid] refresh #${o.id} failed:`, e.message); }
+    }
+  } catch (e) { console.error('[postgrid] sweep failed:', e.message); }
+}
+
 function safeFilePath(dir, originalName) {
   // path.basename strips any directory components (e.g. ../../etc/passwd → passwd)
   const safe = path.basename(originalName).replace(/[\x00-\x1f\x7f]/g, '');
@@ -1703,6 +1762,67 @@ app.post('/api/admin/orders/:id/status', requireAdmin, async (req, res) => {
   res.json({ ok: true });
 });
 
+app.get('/api/admin/postgrid/status', requireAdmin, (req, res) => {
+  res.json({
+    configured: postgrid.isConfigured(),
+    mode: postgrid.mode(),
+    auto_submit: getSetting('postgrid_auto_submit', 'false') === 'true',
+    countries: postgrid.countries(),
+    in_flight: db.prepare("SELECT COUNT(*) n FROM orders WHERE postgrid_letter_id IS NOT NULL AND COALESCE(postgrid_status,'') NOT IN ('completed','cancelled')").get().n,
+    needs_manual: db.prepare("SELECT COUNT(*) n FROM orders WHERE status = 'paid' AND postgrid_error LIKE 'MANUAL:%' AND deleted_at IS NULL").get().n,
+  });
+});
+
+app.post('/api/admin/orders/:id/postgrid/submit', requireAdmin, async (req, res) => {
+  const id = Number(req.params.id);
+  if (!postgrid.isConfigured()) return res.status(400).json({ error: 'PostGrid is not configured.' });
+  const r = await postgridSubmit(id, { force: true });
+  logAudit(req, 'order.postgrid_submit', 'order', id, { ok: r.ok, error: r.error, letter_id: r.letter_id });
+  if (!r.ok) return res.status(r.manual ? 422 : 502).json({ error: r.error });
+  res.json(r);
+});
+
+app.post('/api/admin/orders/:id/postgrid/refresh', requireAdmin, async (req, res) => {
+  const id = Number(req.params.id);
+  const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(id);
+  if (!order) return res.status(404).json({ error: 'Order not found' });
+  try {
+    const r = await postgrid.refreshOrder(order);
+    if (r.mailed) sendMailedNotification(db.prepare('SELECT * FROM orders WHERE id = ?').get(id));
+    res.json({ ok: true, ...r });
+  } catch (e) { res.status(502).json({ error: e.message }); }
+});
+
+app.post('/api/admin/orders/:id/postgrid/cancel', requireAdmin, async (req, res) => {
+  const id = Number(req.params.id);
+  const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(id);
+  if (!order) return res.status(404).json({ error: 'Order not found' });
+  try {
+    await postgrid.cancelOrder(order);
+    logAudit(req, 'order.postgrid_cancel', 'order', id, { letter_id: order.postgrid_letter_id });
+    res.json({ ok: true });
+  } catch (e) { res.status(502).json({ error: e.message }); }
+});
+
+app.post('/api/admin/orders/:id/postgrid/progress', requireAdmin, async (req, res) => {
+  const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(Number(req.params.id));
+  if (!order) return res.status(404).json({ error: 'Order not found' });
+  try { res.json({ ok: true, ...(await postgrid.progressTestLetter(order)) }); }
+  catch (e) { res.status(502).json({ error: e.message }); }
+});
+
+app.get('/api/admin/orders/:id/postgrid/preview', requireAdmin, async (req, res) => {
+  const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(Number(req.params.id));
+  if (!order) return res.status(404).json({ error: 'Order not found' });
+  try {
+    const b = await postgrid.buildLetterPdf(order);
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('X-Letter-Sheets', String(b.sheets));
+    res.setHeader('X-Letter-Unsupported', encodeURIComponent(b.unsupported.join(',')));
+    res.send(b.pdf);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 app.post('/api/admin/orders/:id/submit-to-printer', requireAdmin, (req, res) => {
   const { printer_ref } = req.body;
   if (!printer_ref?.trim()) return res.status(400).json({ error: 'Printer reference number required' });
@@ -2557,6 +2677,7 @@ app.get('/api/admin/settings', requireAdmin, (req, res) => {
 const ALLOWED_SETTING_KEYS = new Set([
   'service_paused', 'announcement', 'price_domestic_cents', 'price_usa_cents', 'price_international_cents',
   'daily_order_cap', 'blocked_countries', 'away_mode', 'away_message',
+  'postgrid_auto_submit', 'postgrid_countries',
 ]);
 
 app.post('/api/admin/settings', requireAdmin, (req, res) => {
@@ -3083,6 +3204,8 @@ async function fulfillOrder(sessionId) {
       order.sender_country || null,
     );
   } catch (e) { console.error('[fulfillOrder] customer upsert failed:', e.message); }
+
+  if (postgrid.autoSubmit()) await postgridSubmit(order.id);
 
 }
 
@@ -3896,9 +4019,10 @@ async function thankYouCouponJob() {
 }
 
 cron.schedule('15 * * * *', () => { thankYouCouponJob(); });
+cron.schedule('*/15 * * * *', () => { postgridSweep(); });
 
 const PORT = process.env.PORT || 3000;
 if (!process.env.TEST_MODE) {
   app.listen(PORT, () => console.log(`Letterhome running on port ${PORT}`));
 }
-module.exports = { app, db, thankYouCouponJob };
+module.exports = { app, db, thankYouCouponJob, postgrid, postgridSubmit, postgridSweep };
