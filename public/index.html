@@ -106,7 +106,7 @@
           {
             "@type": "Offer",
             "name": "International letter, 160+ other countries",
-            "price": "20",
+            "price": "15",
             "priceCurrency": "CAD",
             "description": "2 pages included (then $0.45 per extra page ($0.55 in colour)), envelope, Canadian postage, delivered internationally"
           }
@@ -138,7 +138,7 @@
           "name": "What does it cost to mail to Canada, the United States, or elsewhere?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Two prices: $6 CAD for letters to an address in Canada or the United States, and $20 CAD for letters to any of 160+ other destinations. Every price covers 2 pages of black & white printing by default (colour +$1; extra pages $0.45 each, $0.55 in colour) on letter-size paper, the envelope, postage, and the trip to the post office."
+            "text": "Two prices: $6 CAD for letters to an address in Canada or the United States, and $15 CAD for letters to any of 160+ other destinations. Every price covers 2 pages of black & white printing by default (colour +$1; extra pages $0.45 each, $0.55 in colour) on letter-size paper, the envelope, postage, and the trip to the post office."
           }
         },
         {
@@ -1307,7 +1307,7 @@ footer {
         </div>
         <div class="rate-row">
           <div class="rate-dest"><div class="rate-name"><svg class="flag globe" viewBox="0 0 30 20" aria-hidden="true"><rect width="30" height="20" fill="var(--paper, #faf6ec)"/><g fill="none" stroke="currentColor" stroke-width="1.1"><circle cx="15" cy="10" r="7"/><path d="M8 10h14M15 3c-3 3.5-3 10.5 0 14M15 3c3 3.5 3 10.5 0 14"/></g></svg><h3 data-i18n="rate.intl.name">Everywhere else</h3></div><p><span data-i18n="rate.intl.sub">160+ countries</span> · <span data-i18n="rate.intl.meta">Typically 2–4 weeks</span></p></div>
-          <div class="rate-price"><span class="amt">$20</span> <small>CAD</small></div>
+          <div class="rate-price"><span class="amt">$15</span> <small>CAD</small></div>
           <a href="/send" class="rate-go" data-i18n="rate.intl.btn">Send abroad →</a>
         </div>
       </div>
@@ -1491,7 +1491,7 @@ footer {
 
       <details class="faq-item">
         <summary data-i18n="faq.q3">What does it cost to mail to Canada, the United States, or elsewhere?</summary>
-        <p data-i18n="faq.a3">Two prices: $6 CAD for letters to an address in Canada or the United States, and $20 CAD for letters to any of 160+ other destinations. Every price covers 2 pages of black & white printing by default (colour +$1; extra pages $0.45 each, $0.55 in colour) on letter-size paper, the envelope, postage, and the trip to the post office.</p>
+        <p data-i18n="faq.a3">Two prices: $6 CAD for letters to an address in Canada or the United States, and $15 CAD for letters to any of 160+ other destinations. Every price covers 2 pages of black & white printing by default (colour +$1; extra pages $0.45 each, $0.55 in colour) on letter-size paper, the envelope, postage, and the trip to the post office.</p>
       </details>
 
       <details class="faq-item">
@@ -1776,7 +1776,7 @@ window.addEventListener('load', async function personalizeTicker(){
 </script>
 
 <script src="/theme.js?v=3" defer></script>
-<script src="/lang.js?v=41" defer></script>
+<script src="/lang.js?v=42" defer></script>
 <script>
 (async () => {
   try {
@@ -1787,7 +1787,7 @@ window.addEventListener('load', async function personalizeTicker(){
       bar.textContent = cfg.announcement;
       document.body.insertBefore(bar, document.body.firstChild);
     }
-    // UK/Australia cards appear only when that country is printed locally (otherwise the $20 international price applies)
+    // UK/Australia cards appear only when that country is printed locally (otherwise the $15 international price applies)
     document.querySelectorAll('.rate-row[data-dest]').forEach(card => {
       const d = cfg.destinations && cfg.destinations[card.dataset.dest];
       if (!d || !d.local) return;

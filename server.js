@@ -326,7 +326,7 @@ async function sendMail(opts, type = 'general', orderId = null) {
   } catch (e) { console.error('[email_log]', e.message); }
 }
 
-// Base send price ($6 Canada / $7 United States / $20 elsewhere) is configurable via settings.
+// Base send price ($6 Canada / $6 United States / $15 elsewhere) is configurable via settings.
 // Optional-extra pricing (cents).
 const FREE_PAGES              = 2;
 const EXTRA_PAGE_CENTS        = 45;
@@ -970,7 +970,7 @@ app.get('/api/site-config', (req, res) => {
     announcement:              getSetting('announcement', ''),
     price_domestic_cents:      parseInt(getSetting('price_domestic_cents',      '600')) || 600,
     price_usa_cents:           getBasePriceCents('US'),
-    price_international_cents: parseInt(getSetting('price_international_cents', '2000')) || 2000,
+    price_international_cents: parseInt(getSetting('price_international_cents', '1500')) || 1500,
     blocked_countries:         JSON.parse(getSetting('blocked_countries', '[]') || '[]'),
     ...destinations.publicConfig(),     // per-destination price, local printing and extra mail services
   });

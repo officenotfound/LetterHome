@@ -187,8 +187,8 @@ test('pricing: rest-of-world base plus colour and free scheduling; retired large
   const row = db.prepare(
     "SELECT * FROM orders WHERE customer_email = 'pricing@example.com' ORDER BY id DESC LIMIT 1"
   ).get();
-  // $20 rest-of-world + $1 colour + $0 scheduling; a posted large_envelope flag no longer charges
-  assert.equal(row.price_cents, 2100);
+  // $15 rest-of-world + $1 colour + $0 scheduling; a posted large_envelope flag no longer charges
+  assert.equal(row.price_cents, 1600);
   assert.equal(row.large_envelope, 0);
   assert.equal(row.schedule_for_later, 1);
 });
@@ -198,7 +198,7 @@ test('pricing: Canada and United States $6, UK/AU sold as international until th
     'r-email': email, 'r-name': 'Tier Test', 'r-street': '1 Main St', 'r-city': 'Town',
     'r-postal': '12345', 'r-country': country, 'letter-body': 'Hi there.', 'letter-type': 'standard',
   }).toString();
-  for (const [email, country, cents] of [['tier-us@example.com','US',600],['tier-ca@example.com','CA',600],['tier-de@example.com','DE',2000],['tier-gb@example.com','GB',2000]]) {
+  for (const [email, country, cents] of [['tier-us@example.com','US',600],['tier-ca@example.com','CA',600],['tier-de@example.com','DE',1500],['tier-gb@example.com','GB',1500]]) {
     const res = await fetch(`${base}/api/create-order`, {
       method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: mk(email, country),
     });
@@ -208,11 +208,11 @@ test('pricing: Canada and United States $6, UK/AU sold as international until th
   }
   const cfg = await (await fetch(`${base}/api/site-config`)).json();
   assert.equal(cfg.price_usa_cents, 600);
-  assert.equal(cfg.destinations.GB.price_cents, 2000);
+  assert.equal(cfg.destinations.GB.price_cents, 1500);
   assert.equal(cfg.destinations.GB.local, false);
   assert.deepEqual(cfg.destinations.CA.services, {});
   assert.equal(cfg.price_domestic_cents, 600);
-  assert.equal(cfg.price_international_cents, 2000);
+  assert.equal(cfg.price_international_cents, 1500);
 });
 
 test('discount codes apply to base plus add-ons, matching what checkout displays', async () => {
@@ -720,7 +720,7 @@ test('destinations and services follow the admin switches: local UK price, Canad
     const cfg = await (await fetch(`${base}/api/site-config`)).json();
     assert.equal(cfg.destinations.GB.price_cents, 900);
     assert.equal(cfg.destinations.GB.local, true);
-    assert.equal(cfg.destinations.AU.price_cents, 2000);           // network not enabled: international price
+    assert.equal(cfg.destinations.AU.price_cents, 1500);           // network not enabled: international price
     assert.equal(cfg.destinations.CA.services.registered.cents, 6200);
     assert.equal(cfg.destinations.US.services.certified.cents, 1700);
     assert.equal(cfg.destinations.US.services.express, undefined);

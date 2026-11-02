@@ -42,7 +42,7 @@ const DESTINATIONS = {
   },
 };
 
-const INTERNATIONAL = { priceKey: 'price_international_cents', defaultPrice: 2000 };
+const INTERNATIONAL = { priceKey: 'price_international_cents', defaultPrice: 1500 };
 const SERVICE_NAMES = { registered: 'Registered mail', certified: 'Certified mail', express: 'Express delivery' };
 // Content on page 1 starts below every country's address zone (lowest zone ends at 3.39 in) and the first fold.
 const ADDRESS_CLEARANCE_IN = 4;
