@@ -1768,13 +1768,12 @@ app.get('/api/admin/stats', requireAdmin, (req, res) => {
 
 app.get('/api/admin/orders', requireAdmin, (req, res) => {
   const { status } = req.query;
-  // "Needs you": paid orders that PostGrid has not taken (refused, failing, or not picked up within 30 minutes).
+  // "Needs you": paid orders not yet sent to PostGrid for real (waiting for approval, refused, or only a test letter).
   if (status === 'needs_you') {
     return res.json(db.prepare(`SELECT id, stripe_session_id, customer_email, recipient_name, recipient_street, recipient_city, recipient_province, recipient_postal,
         destination_country, letter_type, attachment_info, price_cents, status, status_token, created_at, recovery_sent_at, postgrid_error, postgrid_mode
       FROM orders WHERE status = 'paid' AND deleted_at IS NULL
-        AND ((postgrid_letter_id IS NULL AND (postgrid_error IS NOT NULL OR paid_at IS NULL OR paid_at < datetime('now', '-30 minutes')))
-             OR postgrid_mode = 'test')
+        AND (postgrid_letter_id IS NULL OR postgrid_mode = 'test')      -- every paid order waits for the owner's approval
       ORDER BY created_at`).all().map(o => o.postgrid_mode === 'test' && !o.postgrid_error ? { ...o, postgrid_error: 'Only a TEST letter exists (not mailed). Clear it and send for real.' } : o));
   }
   const rows = status
@@ -1878,8 +1877,7 @@ app.get('/api/admin/postgrid/status', requireAdmin, (req, res) => {
     countries: postgrid.countries(),
     in_flight: db.prepare("SELECT COUNT(*) n FROM orders WHERE postgrid_letter_id IS NOT NULL AND COALESCE(postgrid_status,'') NOT IN ('completed','cancelled')").get().n,
     needs_manual: db.prepare(`SELECT COUNT(*) n FROM orders WHERE status = 'paid' AND deleted_at IS NULL
-      AND ((postgrid_letter_id IS NULL AND (postgrid_error IS NOT NULL OR paid_at IS NULL OR paid_at < datetime('now', '-30 minutes')))
-           OR postgrid_mode = 'test')`).get().n,
+      AND (postgrid_letter_id IS NULL OR postgrid_mode = 'test')`).get().n,
   });
 });
 

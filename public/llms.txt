@@ -1,8 +1,8 @@
 # Letterhome
 
-> Letterhome is a Canadian letter and document mailing service. Customers anywhere in the world upload a PDF or Word document online, and Letterhome prints it in black & white by default (colour available for an extra fee), seals it in an envelope, and mails it from inside Canada via Canada Post Lettermail, with a real Canadian mailing date. No Canadian address, printer, stamps, or post office visit required. From $6 CAD per letter.
+> Letterhome is a Canadian letter and document mailing service. Customers anywhere in the world upload a PDF or Word document online, and Letterhome prints it in black & white by default (colour available for an extra fee), seals it in an envelope, and mails it from inside Canada via Canada Post Lettermail. No Canadian address, printer, stamps, or post office visit required. From $6 CAD per letter.
 
-Letterhome is used by Canadians living abroad, immigrants sending documents to Canadian government offices (IRCC, CRA), expats sending letters to family, and anyone who needs a letter to arrive with a Canadian mailing date.
+Letterhome is used by Canadians living abroad, immigrants sending documents to Canadian government offices (IRCC, CRA), expats sending letters to family, and anyone who needs a letter mailed from inside Canada.
 
 ## Pricing
 
@@ -10,7 +10,7 @@ Letterhome is used by Canadians living abroad, immigrants sending documents to C
 - $6 CAD: letters to the United States
 - $20 CAD: letters to any other international destination (160+ countries)
 
-All prices include the first 2 pages printed in black & white, plus the envelope, postage, and delivery. You can attach up to 5 files (10 MB each). Optional add-ons, all shown before checkout: colour printing $1, each extra page after the first 2 $0.45 ($0.55 in colour), large envelope $3, scheduled sending free. No account required. Pay once per order.
+All prices include the first 2 pages printed in black & white, plus the envelope, postage, and delivery. You can attach up to 5 files (10 MB each). Optional add-ons, all shown before checkout: colour printing $1, each extra page after the first 2 $0.45 ($0.55 in colour), scheduled sending free. Each letter can be up to 5 printed pages (4 if only a PDF is uploaded). No account required. Pay once per order.
 
 ## How it works
 

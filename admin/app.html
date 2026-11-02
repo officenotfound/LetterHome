@@ -748,7 +748,7 @@ function renderOrdersTable() {
       <td><input type="checkbox" class="order-cb" value="${o.id}" onchange="updateBulkBar()"></td>
       <td><button class="link" onclick="go('/admin/orders/${o.id}')">#${o.id}</button></td>
       <td>${fmtDateTime(o.created_at)}</td>
-      <td>${esc(o.recipient_name)}${o.postgrid_error !== undefined ? `<div style="font-size:12px;color:#b42318;margin-top:3px;max-width:360px;line-height:1.4">${esc((o.postgrid_error || 'Not picked up by PostGrid (auto-send off, or PostGrid not configured)').replace(/^(MANUAL|RETRY): /, ''))}</div>` : ''}</td>
+      <td>${esc(o.recipient_name)}${o.postgrid_error !== undefined ? `<div style="font-size:12px;color:#b42318;margin-top:3px;max-width:360px;line-height:1.4">${esc((o.postgrid_error || 'Waiting for your approval: check the letter, then Send via PostGrid').replace(/^(MANUAL|RETRY): /, ''))}</div>` : ''}</td>
       <td>${esc(o.recipient_city||'')}${o.recipient_city&&o.destination_country?', ':''}${o.destination_country||''}</td>
       <td>${statusBadge(o.status)}</td>
       <td>${timeLeftHTML(o.created_at, o.status)}</td>
@@ -2360,7 +2360,7 @@ async function renderPostgridSettings(settings) {
   box.innerHTML = `
     <div style="font-size:13px;color:#444;margin-bottom:6px">API: ${modeTxt}</div>
     <div style="font-size:13px;color:#6b6b6b;margin-bottom:14px">${st.in_flight ?? 0} letters in flight · ${st.needs_manual ? `<button class="link" style="color:#b42318" onclick="orderFilter='needs_you'; go('/admin/orders')">${st.needs_manual} paid orders need you →</button>` : '0 paid orders need you'}</div>
-    ${chk('pg-auto', auto, 'Send paid orders to PostGrid automatically', 'Every 15 minutes, and right after payment. Orders PostGrid can\'t handle go to the manual queue with an email alert.')}
+    <div style="font-size:13px;color:#444;background:#f7f7f7;border:1px solid #ececec;padding:10px 12px;margin-bottom:6px;line-height:1.5">Every paid order waits for your approval: open it, check the letter, then click <strong>Send via PostGrid</strong>. Nothing is sent automatically. Orders waiting are under Orders → ⚠ Needs you.</div>
     <div style="font-size:12px;font-weight:600;color:#111;margin:14px 0 4px;letter-spacing:.04em;text-transform:uppercase">Delivery networks enabled on your PostGrid account</div>
     <div style="font-size:12px;color:#6b6b6b;margin-bottom:6px">Tick a country only after PostGrid has enabled that network. UK and Australia sell at their local price only when ticked; otherwise they are sold as international mail.</div>
     ${PG_DESTS.map(([cc, name]) => chk('pg-dest-' + cc, live.includes(cc), name)).join('')}
@@ -2381,7 +2381,7 @@ async function savePostgridSettings() {
   const live = PG_DESTS.map(([cc]) => cc).filter(cc => document.getElementById('pg-dest-' + cc)?.checked);
   const svc = PG_SERVICES.map(([k]) => k).filter(k => document.getElementById('pg-svc-' + k.replace(':','-'))?.checked);
   const body = {
-    postgrid_auto_submit: document.getElementById('pg-auto')?.checked ? 'true' : 'false',
+    postgrid_auto_submit: 'false',   // owner approves every order by hand
     postgrid_countries: live.join(','),
     services_enabled: JSON.stringify(svc),
     price_uk_cents: String(parseInt(document.getElementById('pg-price-uk')?.value) || 900),

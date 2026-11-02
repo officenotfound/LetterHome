@@ -8,7 +8,7 @@ const pages = [
     country: 'the United States',
     countryShort: 'USA',
     title: 'Send Mail to Canada from the United States | Letterhome',
-    description: 'Send a real letter or document to Canada from anywhere in the US. We print, stamp with Canadian postage, and mail it via Canada Post. From $6 CAD.',
+    description: 'Send a real letter or document to Canada from anywhere in the US. We print it, apply Canadian postage, and mail it via Canada Post. From $6 CAD.',
     canonical: 'https://letterhome.ca/from-usa',
     eyebrow: 'Mailing from the US',
     h1: 'Send mail to Canada from the United States',
@@ -17,7 +17,7 @@ const pages = [
       'Canadians living in the US sending letters or cards home',
       'Americans mailing documents to Canadian recipients',
       'Expats sending immigration paperwork or legal documents to a Canadian address',
-      'Anyone who needs a letter to arrive with a Canadian postmark',
+      'Anyone who needs a letter mailed from inside Canada',
     ],
     faq: [
       {
@@ -52,7 +52,7 @@ const pages = [
       'Canadians living in the UK keeping in touch with family back home',
       'UK residents mailing letters or documents to Canadian addresses',
       'People sending immigration forms, legal correspondence, or official documents to Canada',
-      'Anyone who needs their letter to arrive with a real Canadian stamp',
+      'Anyone who needs their letter mailed inside Canada with Canadian postage',
     ],
     faq: [
       {
@@ -157,7 +157,7 @@ const pages = [
       'Canadians living or studying in France sending letters home',
       'French residents with family, business, or legal contacts in Canada',
       'Francophones sending documents to Quebec or other Canadian provinces',
-      'Anyone who needs a letter to arrive with a Canadian stamp',
+      'Anyone who needs a letter mailed inside Canada with Canadian postage',
     ],
     faq: [
       {

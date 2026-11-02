@@ -814,15 +814,6 @@ textarea.field-error { border-color: var(--red) !important; }
         </span>
       </label>
 
-
-      <label style="display:flex;align-items:flex-start;gap:10px;padding:12px;border:1.5px solid rgba(42,42,42,0.15);border-radius:2px;margin-bottom:10px;cursor:pointer">
-        <input type="checkbox" id="opt-large-envelope" style="margin-top:3px" onchange="updatePricing()">
-        <span>
-          <span style="display:block;font-weight:600"><span data-i18n="send.options.largeenvelope.title">Large envelope</span> <span style="color:var(--red);font-weight:500" id="opt-large-envelope-price">+$3</span></span>
-          <span style="display:block;font-size:12px;color:var(--ink-muted)" data-i18n="send.options.largeenvelope.sub">For bulkier letters that don't fit in a standard window envelope, ships flat instead of folded.</span>
-        </span>
-      </label>
-
       <div id="mail-service-wrap" style="display:none;margin-bottom:10px">
         <label style="margin-bottom:8px" data-i18n="send.svc.label">Mail service for this destination (optional)</label>
         <div id="mail-service-list"></div>
@@ -906,7 +897,7 @@ textarea.field-error { border-color: var(--red) !important; }
       <h3 data-i18n="send.next.title">What happens after you pay</h3>
       <ol>
         <li><span class="n">1</span><span><strong data-i18n="send.next.1.t">Confirmation email</strong><span class="d" data-i18n="send.next.1.d">Right after payment you get an email with your order number and a link to track your letter.</span></span></li>
-        <li><span class="n">2</span><span><strong data-i18n="send.next.2.t">Printed and mailed</strong><span class="d" data-i18n="send.next.2.d" data-ship="canada">Within two business days we print, seal, stamp and mail it from inside Canada, and email you when it's in the post.</span><span class="d" style="display:none" data-i18n="send.next.2.d.local" data-ship="local">Within two business days we print, seal, stamp and mail it inside the destination country, and email you when it's in the post.</span></span></li>
+        <li><span class="n">2</span><span><strong data-i18n="send.next.2.t">Printed and mailed</strong><span class="d" data-i18n="send.next.2.d" data-ship="canada">Within two business days we print, seal and mail it from inside Canada, and email you when it's in the post.</span><span class="d" style="display:none" data-i18n="send.next.2.d.local" data-ship="local">Within two business days we print, seal and mail it inside the destination country, and email you when it's in the post.</span></span></li>
         <li><span class="n">3</span><span><strong data-i18n="send.next.3.t">Delivered</strong><span class="d" data-i18n="send.next.3.d">Typically up to 2 weeks within Canada and up to 4 weeks internationally.</span></span></li>
       </ol>
     </div>
@@ -918,7 +909,7 @@ textarea.field-error { border-color: var(--red) !important; }
 
     <div class="privacy-note">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--red);flex-shrink:0;margin-top:3px"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-      <p>Every order is prepared and mailed by a person, and if a verified letter hasn't arrived after 2 weeks, we reprint and resend it free. Questions before you pay, or card not going through? <a href="mailto:support@letterhome.ca" style="color:var(--red)">support@letterhome.ca</a>, replies within one business day.</p>
+      <p>Every order is reviewed by a person before it's printed, and if a verified letter hasn't arrived after 2 weeks, we reprint and resend it free. Questions before you pay, or card not going through? <a href="mailto:support@letterhome.ca" style="color:var(--red)">support@letterhome.ca</a>, replies within one business day.</p>
     </div>
 
     <div id="discount-section" style="margin-bottom:20px">
@@ -1891,7 +1882,7 @@ function fillSavedRecipient(sel) {
   } catch(e) {}
 }
 </script>
-<script src="/lang.js?v=29" defer></script>
+<script src="/lang.js?v=30" defer></script>
 <script type="module">
   import * as pdfjsLib from '/vendor/pdfjs/pdf.min.mjs';
   pdfjsLib.GlobalWorkerOptions.workerSrc = '/vendor/pdfjs/pdf.worker.min.mjs';
