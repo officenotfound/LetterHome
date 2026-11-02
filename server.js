@@ -332,8 +332,6 @@ const FREE_PAGES              = 2;
 const EXTRA_PAGE_CENTS        = 45;
 const EXTRA_PAGE_COLOUR_CENTS = 55;   // colour pages cost more to print
 const COLOUR_PRINTING_CENTS   = 100;
-const REGISTERED_MAIL_CENTS   = 2500;
-const REGISTERED_MAIL_ENABLED = false;   // paused until the carrier cost is confirmed
 const SCHEDULE_LATER_CENTS    = 0;
 const LARGE_ENVELOPE_CENTS    = 300;
 
@@ -438,8 +436,10 @@ function orderDirPath(id, createdAt) {
 }
 
 // ---- PostGrid fulfilment (off until POSTGRID_API_KEY is set) -----------------
-const { createPostGrid } = require('./postgrid');
-const postgrid = createPostGrid({ db, getSetting, orderDirPath });
+const { createPostGrid, MAX_SHEETS } = require('./postgrid');
+const { makeDestinations, SERVICE_NAMES } = require('./destinations');
+const destinations = makeDestinations(getSetting);
+const postgrid = createPostGrid({ db, getSetting, orderDirPath, destinations });
 
 function sendMailedNotification(order) {
   if (!order?.customer_email) return;
@@ -904,9 +904,7 @@ app.get('/ga.js', (req, res) => {
 
 // Base send price by destination: Canada, United States, rest of world.
 function getBasePriceCents(country) {
-  if (country === 'CA') return parseInt(getSetting('price_domestic_cents', '600')) || 600;
-  if (country === 'US') return parseInt(getSetting('price_usa_cents', '700')) || 700;
-  return parseInt(getSetting('price_international_cents', '2000')) || 2000;
+  return destinations.priceFor(country);
 }
 
 app.get('/api/site-config', (req, res) => {
@@ -914,9 +912,10 @@ app.get('/api/site-config', (req, res) => {
     orders_open:               getSetting('service_paused', 'false') !== 'true',
     announcement:              getSetting('announcement', ''),
     price_domestic_cents:      parseInt(getSetting('price_domestic_cents',      '600')) || 600,
-    price_usa_cents:           parseInt(getSetting('price_usa_cents',           '700')) || 700,
+    price_usa_cents:           getBasePriceCents('US'),
     price_international_cents: parseInt(getSetting('price_international_cents', '2000')) || 2000,
     blocked_countries:         JSON.parse(getSetting('blocked_countries', '[]') || '[]'),
+    ...destinations.publicConfig(),     // per-destination price, local printing and extra mail services
   });
 });
 
@@ -1089,6 +1088,68 @@ function requireCustomer(req, res, next) {
   res.status(401).json({ error: 'Not logged in.' });
 }
 
+
+// Counts the pages/sheets a letter will really print, using the same builder that produces the mailed PDF.
+// Returns { pages, sheets, placement, tooLong, message } or null if the count could not be made.
+let _convSlots = 2;                                        // LibreOffice is heavy: at most 2 conversions at once
+async function analyseLetter(bodyText, files) {
+  while (_convSlots <= 0) await new Promise(r => setTimeout(r, 100));
+  _convSlots--;
+  try {
+    const att = (files || []).map(f => ({ path: f.path, originalName: f.originalname, mimeType: f.mimetype }));
+    const b = await postgrid.buildLetterPdf({ letter_body: bodyText || '', attachment_info: JSON.stringify(att) });
+    const pages = b.pages + b.unsupported.length;          // a file we could not convert counts as at least 1 page
+    const sheets = b.sheets + b.unsupported.length;
+    const tooLong = sheets > MAX_SHEETS;
+    const maxPages = b.placement === 'insert_blank_page' ? MAX_SHEETS - 1 : MAX_SHEETS;
+    return { pages, sheets, placement: b.placement, maxPages, tooLong,
+      message: tooLong ? `This letter is ${pages} pages and the most we can mail in one envelope is ${maxPages}` +
+        (b.placement === 'insert_blank_page' ? ' (an uploaded PDF uses one extra sheet for the address page)' : '') +
+        '. Please shorten it or split it into two letters.' : null };
+  } catch (e) {
+    console.error('[analyseLetter] failed:', e.message);
+    return null;
+  } finally { _convSlots++; }
+}
+
+const pageCheckLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, max: 40, skip: () => process.env.NODE_ENV === 'test',
+  standardHeaders: true, legacyHeaders: false,
+  handler: (req, res) => res.status(429).json({ error: 'Too many page checks. Please try again later.' }),
+});
+
+app.post('/api/letter-pages', pageCheckLimiter, uploadAttachments, async (req, res) => {
+  try {
+    const r = await analyseLetter(req.body?.['letter-body'] || '', req.files || []);
+    if (!r) return res.json({ ok: false });
+    res.json({ ok: true, pages: r.pages, max_pages: r.maxPages, too_long: r.tooLong, message: r.message });
+  } finally { for (const f of (req.files || [])) { try { fs.unlinkSync(f.path); } catch {} } }
+});
+
+
+// Customer-facing preview of exactly what will be printed (same builder as fulfilment) with the address block placed.
+app.post('/api/letter-preview', pageCheckLimiter, uploadAttachments, async (req, res) => {
+  const b = req.body || {};
+  try {
+    const att = (req.files || []).map(f => ({ path: f.path, originalName: f.originalname, mimeType: f.mimetype }));
+    const order = {
+      letter_body: b['letter-body'] || '', attachment_info: JSON.stringify(att),
+      recipient_name: b['r-name'], recipient_street: b['r-street'], recipient_city: b['r-city'],
+      recipient_province: b['r-province'], recipient_postal: b['r-postal'], destination_country: b['r-country'] || 'CA',
+      skip_return: b['skip-return'] ? 1 : 0, sender_name: b['s-name'], sender_street: b['s-street'],
+      sender_city: b['s-city'], sender_province: b['s-province'], sender_postal: b['s-postal'], sender_country: b['s-country'],
+    };
+    const r = await postgrid.buildPreviewPdf(order);
+    if (r.unsupported.length) return res.status(422).json({ error: `We could not read ${r.unsupported.join(', ')} for the preview. It will still be handled by hand.` });
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Cache-Control', 'no-store');
+    res.send(r.pdf);
+  } catch (e) {
+    console.error('[letter-preview] failed:', e.message);
+    res.status(500).json({ error: 'Preview unavailable.' });
+  } finally { for (const f of (req.files || [])) { try { fs.unlinkSync(f.path); } catch {} } }
+});
+
 app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) => {
   if (getSetting('service_paused', 'false') === 'true')
     return res.status(503).json({ error: 'Orders are currently paused. Please check back soon.' });
@@ -1128,12 +1189,19 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
   const isDomestic = b['r-country'] === 'CA';
   const basePriceCents = getBasePriceCents(b['r-country']);
 
-  const registeredMail    = b['registered_mail']    === '1' || b['registered_mail']    === 'true';
-  if (registeredMail && !REGISTERED_MAIL_ENABLED) {
-    return res.status(400).json({ error: 'Registered mail is temporarily unavailable. Please remove it and continue, or email support@letterhome.ca.' });
+  // Optional mail service (registered / certified / express), only if offered for this destination right now.
+  let mailService = String(b['mail_service'] || '').trim().toLowerCase() || null;
+  if (!mailService && (b['registered_mail'] === '1' || b['registered_mail'] === 'true')) mailService = 'registered';
+  const offered = destinations.servicesFor(b['r-country']);
+  if (mailService && !offered[mailService]) {
+    return res.status(400).json({ error: `${SERVICE_NAMES[mailService] || 'That mail service'} is not available for this destination. Please remove it and continue, or email support@letterhome.ca.` });
   }
+  const serviceCents   = mailService ? offered[mailService].cents : 0;
+  const registeredMail = mailService === 'registered';
 
-  const pageCount = await countAttachmentPages(req.files || []);
+  const analysis = await analyseLetter(b['letter-body'], req.files || []);
+  if (analysis?.tooLong) return res.status(400).json({ error: analysis.message });
+  const pageCount = analysis ? analysis.pages : await countAttachmentPages(req.files || []);
   const colourPrinting    = b['colour_printing']    === '1' || b['colour_printing']    === 'true';
   const extraPageCents = Math.max(0, pageCount - FREE_PAGES) * (colourPrinting ? EXTRA_PAGE_COLOUR_CENTS : EXTRA_PAGE_CENTS);
   const largeEnvelope     = b['large_envelope']     === '1' || b['large_envelope']     === 'true';
@@ -1141,7 +1209,7 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
   const scheduledDate     = scheduleForLater ? (b['scheduled_date'] || null) : null;
   const addonCents = extraPageCents
     + (colourPrinting   ? COLOUR_PRINTING_CENTS : 0)
-    + (registeredMail   ? REGISTERED_MAIL_CENTS : 0)
+    + serviceCents
     + (largeEnvelope    ? LARGE_ENVELOPE_CENTS  : 0)
     + (scheduleForLater ? SCHEDULE_LATER_CENTS  : 0);
 
@@ -1180,8 +1248,9 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
       recipient_name, recipient_street, recipient_city, recipient_province, recipient_postal,
       destination_country, letter_type, letter_body, attachment_info, price_cents, customer_ip,
       status_token, discount_code, discount_cents,
-      page_count, extra_page_cents, colour_printing, registered_mail, large_envelope, schedule_for_later, scheduled_date
-    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+      page_count, extra_page_cents, colour_printing, registered_mail, large_envelope, schedule_for_later, scheduled_date,
+      certified_mail, express_mail, mail_service_cents
+    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
   `).run(
     rEmail, b['skip-return'] ? 1 : 0,
     b['s-name']     || null, b['s-street']   || null, b['s-city']  || null,
@@ -1202,7 +1271,10 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
     registeredMail   ? 1 : 0,
     largeEnvelope    ? 1 : 0,
     scheduleForLater ? 1 : 0,
-    scheduledDate
+    scheduledDate,
+    mailService === 'certified' ? 1 : 0,
+    mailService === 'express'   ? 1 : 0,
+    serviceCents || null
   );
   if (appliedCode) {
   }
@@ -1252,7 +1324,7 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
   const extras = [];
   if (extraPageCents)  extras.push(`${pageCount - FREE_PAGES} extra page(s)`);
   if (colourPrinting)  extras.push('colour printing');
-  if (registeredMail)  extras.push('registered mail');
+  if (mailService)     extras.push(SERVICE_NAMES[mailService].toLowerCase());
   if (largeEnvelope)   extras.push('large envelope');
   if (scheduleForLater) extras.push('scheduled delivery');
   const extrasNote = extras.length ? ` + ${extras.join(', ')}` : '';
@@ -1306,7 +1378,8 @@ app.get('/resume/:token', trackLimiter, async (req, res) => {
   const order = db.prepare('SELECT * FROM orders WHERE status_token = ? AND deleted_at IS NULL').get(req.params.token);
   if (!order) return res.redirect('/send');
   if (order.status !== 'awaiting_payment') return res.redirect(`/status/${order.status_token}`);
-  if (order.registered_mail && !REGISTERED_MAIL_ENABLED) return res.redirect('/send');
+  const svc = postgrid.serviceOf(order);
+  if (svc && !destinations.servicesFor(order.destination_country)[svc]) return res.redirect('/send');
   try {
     if (order.stripe_session_id) {
       const old = await stripe.checkout.sessions.retrieve(order.stripe_session_id);
@@ -1317,6 +1390,8 @@ app.get('/resume/:token', trackLimiter, async (req, res) => {
     if (order.extra_page_cents > 0) extras.push(`${(order.page_count || 0) - FREE_PAGES} extra page(s)`);
     if (order.colour_printing)   extras.push('colour printing');
     if (order.registered_mail)   extras.push('registered mail');
+    if (order.certified_mail)    extras.push('certified mail');
+    if (order.express_mail)      extras.push('express delivery');
     if (order.large_envelope)    extras.push('large envelope');
     if (order.schedule_for_later) extras.push('scheduled delivery');
     const extrasNote = extras.length ? ` + ${extras.join(', ')}` : '';
@@ -1587,8 +1662,10 @@ app.post('/api/admin/email-opens', requireAdmin, (req, res) => {
 // Used only until an order has actual_cost_cents. International is a placeholder pending a PostGrid quote.
 const COST_DOMESTIC      = 325;     // PostGrid Canada $2.32 USD
 const COST_USA           = 160;     // PostGrid USA $1.16 USD
+const COST_UK            = 420;     // PostGrid UK $2.81 + page (currency to confirm)
+const COST_AU            = 390;     // PostGrid AU $2.56 + page (currency to confirm)
 const COST_INTERNATIONAL = 1200;    // placeholder
-const estCostCents = c => c === 'CA' ? COST_DOMESTIC : c === 'US' ? COST_USA : COST_INTERNATIONAL;
+const estCostCents = c => ({ CA: COST_DOMESTIC, US: COST_USA, GB: COST_UK, AU: COST_AU })[c] ?? COST_INTERNATIONAL;
 const STRIPE_PCT         = 0.029;   // 2.9% Canadian card rate
 const STRIPE_FIXED       = 30;      // $0.30 per transaction
 
@@ -1682,13 +1759,13 @@ app.get('/api/admin/orders/csv', requireAdmin, (req, res) => {
     SELECT id, created_at, status, customer_email,
            recipient_name, recipient_street, recipient_city, recipient_province, recipient_postal, destination_country,
            sender_name, sender_country, price_cents, printer_ref,
-           page_count, colour_printing, registered_mail, large_envelope, schedule_for_later, scheduled_date
+           page_count, colour_printing, registered_mail, certified_mail, express_mail, large_envelope, schedule_for_later, scheduled_date
     FROM orders WHERE deleted_at IS NULL ORDER BY created_at DESC
   `).all();
   const cols = ['id','created_at','status','customer_email','recipient_name','recipient_street',
                 'recipient_city','recipient_province','recipient_postal','destination_country',
                 'sender_name','sender_country','price_cents','printer_ref',
-                'page_count','colour_printing','registered_mail','large_envelope','schedule_for_later','scheduled_date'];
+                'page_count','colour_printing','registered_mail','certified_mail','express_mail','large_envelope','schedule_for_later','scheduled_date'];
   const rows = orders.map(o => cols.map(c => `"${String(o[c]??'').replace(/"/g,'""')}"`).join(','));
   res.setHeader('Content-Type', 'text/csv; charset=utf-8');
   res.setHeader('Content-Disposition', `attachment; filename="orders-${new Date().toISOString().slice(0,10)}.csv"`);
@@ -1726,7 +1803,9 @@ app.get('/api/admin/orders/:id', requireAdmin, (req, res) => {
   if (!order) return res.status(404).json({ error: 'Not found' });
   const dir   = orderDirPath(order.id, order.created_at);
   const files = fs.existsSync(dir) ? fs.readdirSync(dir) : [];
-  res.json({ ...order, files });
+  res.json({ ...order, files,
+    postgrid_configured: postgrid.isConfigured(), postgrid_api_mode: postgrid.mode(),
+    postgrid_eligibility: order.postgrid_letter_id ? null : postgrid.eligibility(order) });
 });
 
 app.post('/api/admin/orders/:id/status', requireAdmin, async (req, res) => {
@@ -2677,7 +2756,9 @@ app.get('/api/admin/settings', requireAdmin, (req, res) => {
 const ALLOWED_SETTING_KEYS = new Set([
   'service_paused', 'announcement', 'price_domestic_cents', 'price_usa_cents', 'price_international_cents',
   'daily_order_cap', 'blocked_countries', 'away_mode', 'away_message',
-  'postgrid_auto_submit', 'postgrid_countries',
+  'postgrid_auto_submit', 'postgrid_countries', 'services_enabled',
+  'price_uk_cents', 'price_au_cents',
+  'svc_ca_registered_cents', 'svc_ca_express_cents', 'svc_us_certified_cents', 'svc_us_express_cents',
 ]);
 
 app.post('/api/admin/settings', requireAdmin, (req, res) => {
@@ -2830,10 +2911,12 @@ body{font-family:Georgia,serif;color:#111;padding:40px;max-width:800px;margin:0 
   <div class="letter-body">${esc(letterBody) || '<em>(no letter body, see attachments)</em>'}</div>
 </div>
 ${attachments.length ? `<div class="attachments"><strong>${attachments.length} attached file${attachments.length > 1 ? 's' : ''}:</strong> ${attachments.map(esc).join(' · ')}</div>` : ''}
-${(order.page_count != null || order.colour_printing || order.registered_mail || order.large_envelope || order.schedule_for_later) ? `<div class="attachments" style="background:#fff8e1;border-color:#e6b800"><strong>Paid extras, select these at the provider:</strong> ${[
+${(order.page_count != null || order.colour_printing || order.registered_mail || order.certified_mail || order.express_mail || order.large_envelope || order.schedule_for_later) ? `<div class="attachments" style="background:#fff8e1;border-color:#e6b800"><strong>Paid extras, select these at the provider:</strong> ${[
   order.page_count != null ? `${order.page_count} page(s) total` : null,
   order.colour_printing   ? 'Colour printing' : null,
   order.registered_mail   ? 'Registered mail' : null,
+  order.certified_mail    ? 'Certified mail' : null,
+  order.express_mail      ? 'Express delivery' : null,
   order.large_envelope    ? 'Large envelope' : null,
   order.schedule_for_later ? `Scheduled for ${esc(order.scheduled_date || 'later')}` : null,
 ].filter(Boolean).join(' · ')}</div>` : ''}

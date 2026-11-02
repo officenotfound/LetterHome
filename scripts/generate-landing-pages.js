@@ -26,7 +26,7 @@ const pages = [
       },
       {
         q: 'How long does delivery from the US take?',
-        a: 'We print and mail within one business day of payment. After that, Canada Post standard lettermail typically delivers within Canada in up to 2 weeks.',
+        a: 'We print and mail within two business days of payment. After that, Canada Post standard lettermail typically delivers within Canada in up to 2 weeks.',
       },
       {
         q: 'Can I send a PDF or Word document?',
@@ -61,7 +61,7 @@ const pages = [
       },
       {
         q: 'How long does delivery take to Canada from the UK?',
-        a: 'We print and post within one business day of payment. The letter goes out via Canada Post standard lettermail, which typically delivers within Canada in up to 2 weeks.',
+        a: 'We print and post within two business days of payment. The letter goes out via Canada Post standard lettermail, which typically delivers within Canada in up to 2 weeks.',
       },
       {
         q: 'Can I send documents like PDFs?',
@@ -82,7 +82,7 @@ const pages = [
     canonical: 'https://letterhome.ca/from-australia',
     eyebrow: 'Mailing from Australia',
     h1: 'Send mail to Canada from Australia',
-    lede: 'In Australia and need to mail something to Canada? Skip the international postage search. Write your letter online, and we\'ll print it and post it from inside Canada — within one business day.',
+    lede: 'In Australia and need to mail something to Canada? Skip the international postage search. Write your letter online, and we\'ll print it and post it from inside Canada — within two business days.',
     who: [
       'Canadians on working holiday visas or living permanently in Australia',
       'Australian residents sending documents or letters to Canadian contacts',
@@ -96,7 +96,7 @@ const pages = [
       },
       {
         q: 'How long does delivery take?',
-        a: 'We print and mail within one business day of payment. Canada Post standard lettermail then delivers within Canada in up to 2 weeks.',
+        a: 'We print and mail within two business days of payment. Canada Post standard lettermail then delivers within Canada in up to 2 weeks.',
       },
       {
         q: 'Can I attach documents?',
@@ -170,7 +170,7 @@ const pages = [
       },
       {
         q: 'How long does delivery take?',
-        a: 'We mail within one business day of payment. Canada Post standard lettermail then delivers within Canada in up to 2 weeks.',
+        a: 'We mail within two business days of payment. Canada Post standard lettermail then delivers within Canada in up to 2 weeks.',
       },
       {
         q: 'Can I send documents like PDFs?',
@@ -187,7 +187,7 @@ const pages = [
     canonical: 'https://letterhome.ca/send-documents-to-canada',
     eyebrow: 'Document mailing to Canada',
     h1: 'Send documents to Canada from anywhere in the world',
-    lede: 'Need to get a signed contract, immigration form, government letter, or tax document to a Canadian address? Attach your files and we\'ll print them in full colour and mail them via Canada Post within one business day.',
+    lede: 'Need to get a signed contract, immigration form, government letter, or tax document to a Canadian address? Attach your files and we\'ll print them in full colour and mail them via Canada Post within two business days.',
     who: [
       'People submitting immigration paperwork to IRCC or provincial offices',
       'Individuals sending signed legal documents or contracts to Canadian addresses',

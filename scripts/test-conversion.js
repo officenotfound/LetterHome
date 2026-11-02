@@ -28,8 +28,9 @@ const pg = createPostGrid({ db: null, getSetting: (k, f) => f, orderDirPath: () 
       fs.writeFileSync(dest, b.pdf);
       const ok = !b.unsupported.length && !b.warnings.length && sizes.length === 1 && sizes[0] === '612x792' && b.sheets <= 5;
       if (!ok) bad++;
+      const why = [b.sheets > 5 && `too long: ${b.sheets} sheets (max 5), would go to the manual queue`, sizes.length !== 1 || sizes[0] !== '612x792' ? 'page sizes are not all Letter' : ''].filter(Boolean).join('; ');
       console.log(`${ok ? 'OK  ' : 'FAIL'} ${path.basename(abs)} -> ${path.relative('.', dest)}  pages=${b.pages} sheets=${b.sheets} sizes=${sizes.join(',')}` +
-        (b.unsupported.length ? `  UNSUPPORTED=${b.unsupported.join(',')}` : '') + (b.warnings.length ? `  WARN=${b.warnings.join(' ')}` : ''));
+        (why ? `  [${why}]` : '') + (b.unsupported.length ? `  UNSUPPORTED=${b.unsupported.join(',')}` : '') + (b.warnings.length ? `  WARN=${b.warnings.join(' ')}` : ''));
     } catch (e) { bad++; console.log(`FAIL ${path.basename(abs)}: ${e.message}`); }
   }
   process.exit(bad ? 1 : 0);

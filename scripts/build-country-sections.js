@@ -122,7 +122,7 @@ ${factList(j).map(i => `    <li>${i}</li>`).join('\n')}
     [`How do I send a letter from ${h.name} to Canada without posting it?`, `Upload your document at letterhome.ca/send, enter the Canadian recipient's address and pay online. Letterhome prints it and mails it from inside Canada via Canada Post, so you never need a printer, stamps or a post office.`],
     [`How much does Letterhome cost for a letter to a Canadian address?`, `$6 CAD for a Canadian address, with 2 pages in black and white, the envelope and Canadian postage included. Colour is +$1 and extra pages are $0.45 each ($0.55 in colour).`],
     [`Do I need a Canadian address or bank account?`, `No. You only need the recipient's Canadian address. You can pay online by card from anywhere.`],
-    [`How long does delivery take?`, `Letters are printed and mailed within one business day of payment, then delivered by Canada Post standard lettermail, typically within up to 2 weeks.`],
+    [`How long does delivery take?`, `Letters are printed and mailed within two business days of payment, then delivered by Canada Post standard lettermail, typically within up to 2 weeks.`],
   ];
   const ld = {
     '@context': 'https://schema.org',
@@ -195,7 +195,7 @@ ${sections}
   <ol>
     <li><strong>Upload</strong> your letter or document (PDF, Word or image, up to 5 files) at <a href="/send">letterhome.ca/send</a>. Documents can be in any language; we print exactly what you upload.</li>
     <li><strong>Enter the Canadian address</strong> of the recipient and pay online by card. No account is needed.</li>
-    <li><strong>We print and mail it in Canada</strong> within one business day. It is delivered by Canada Post as ordinary lettermail, so there is no international routing or customs step for the letter.</li>
+    <li><strong>We print and mail it in Canada</strong> within two business days. It is delivered by Canada Post as ordinary lettermail, so there is no international routing or customs step for the letter.</li>
   </ol>
   <p>This suits family letters, immigration and tax paperwork, bank and university documents, and legal notices that must reach a Canadian address on paper. For tracked or signature delivery, registered mail is available as an add-on.</p>
 

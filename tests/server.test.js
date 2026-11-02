@@ -193,12 +193,12 @@ test('pricing: rest-of-world base plus colour, large envelope and free schedulin
   assert.equal(row.schedule_for_later, 1);
 });
 
-test('pricing: Canada $6, United States $7, everywhere else $20', async () => {
+test('pricing: Canada and United States $6, UK/AU sold as international until their network is enabled, everywhere else $20', async () => {
   const mk = (email, country) => new URLSearchParams({
     'r-email': email, 'r-name': 'Tier Test', 'r-street': '1 Main St', 'r-city': 'Town',
     'r-postal': '12345', 'r-country': country, 'letter-body': 'Hi there.', 'letter-type': 'standard',
   }).toString();
-  for (const [email, country, cents] of [['tier-us@example.com','US',700],['tier-ca@example.com','CA',600],['tier-de@example.com','DE',2000]]) {
+  for (const [email, country, cents] of [['tier-us@example.com','US',600],['tier-ca@example.com','CA',600],['tier-de@example.com','DE',2000],['tier-gb@example.com','GB',2000]]) {
     const res = await fetch(`${base}/api/create-order`, {
       method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: mk(email, country),
     });
@@ -207,7 +207,10 @@ test('pricing: Canada $6, United States $7, everywhere else $20', async () => {
     assert.equal(row.price_cents, cents, `${country} should cost ${cents}`);
   }
   const cfg = await (await fetch(`${base}/api/site-config`)).json();
-  assert.equal(cfg.price_usa_cents, 700);
+  assert.equal(cfg.price_usa_cents, 600);
+  assert.equal(cfg.destinations.GB.price_cents, 2000);
+  assert.equal(cfg.destinations.GB.local, false);
+  assert.deepEqual(cfg.destinations.CA.services, {});
   assert.equal(cfg.price_domestic_cents, 600);
   assert.equal(cfg.price_international_cents, 2000);
 });
@@ -267,13 +270,13 @@ test('funnel endpoint records only known steps, anonymously', async () => {
 test('extra pages: $0.45 each in B&W, $0.55 each in colour, counted from an uploaded PDF', async () => {
   const { PDFDocument } = require('pdf-lib');
   const pdf = await PDFDocument.create();
-  for (let i = 0; i < 4; i++) pdf.addPage();
+  for (let i = 0; i < 3; i++) pdf.addPage();   // 3 PDF pages + the typed note = 4 printed pages
   const bytes = await pdf.save();
   const send = async (email, extra) => {
     const fd = new FormData();
     Object.entries({ 'r-email': email, 'r-name': 'Page Test', 'r-street': '1 Main St', 'r-city': 'Toronto', 'r-province': 'ON',
       'r-postal': 'M5V 1A1', 'r-country': 'CA', 'letter-body': 'See attached.', 'letter-type': 'standard', ...extra }).forEach(([k, v]) => fd.append(k, v));
-    fd.append('attachments', new Blob([bytes], { type: 'application/pdf' }), 'four-pages.pdf');
+    fd.append('attachments', new Blob([bytes], { type: 'application/pdf' }), 'three-pages.pdf');
     const res = await fetch(`${base}/api/create-order`, { method: 'POST', body: fd });
     assert.equal(res.status, 200, await res.clone().text());
     return db.prepare('SELECT price_cents, page_count, extra_page_cents FROM orders WHERE customer_email = ? ORDER BY id DESC LIMIT 1').get(email);
@@ -654,7 +657,7 @@ test('thank-you coupon: one single-use 15% code per customer, 7 days after payme
   }
 });
 
-test('registered mail is paused: checkout rejects it, and the send page no longer offers it', async () => {
+test('a mail service that is not switched on is rejected, and the send page has no hard-coded registered checkbox', async () => {
   const res = await fetch(`${base}/api/create-order`, {
     method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({ 'r-email': 'reg@example.com', 'r-name': 'Reg Test', 'r-street': '1 Main St', 'r-city': 'Town',
@@ -671,5 +674,71 @@ test('bulk mailing page is served and lists the volume tiers', async () => {
   assert.equal(res.status, 200);
   const html = await res.text();
   assert.ok(html.includes('rel="canonical" href="https://letterhome.ca/bulk-mailing"'));
-  for (const price of ['$5.50', '$5.00', '$4.75', '$6.50', '$6.00', '$5.50']) assert.ok(html.includes(price), price);
+  for (const price of ['$5.50', '$5.00', '$4.75']) assert.ok(html.includes(price), price);
+  assert.ok(!html.includes('$6.50'), 'US tiers match Canada');
+});
+
+test('page count comes from the real letter builder: typed text is counted and a too-long letter is refused', async () => {
+  const post = (body) => fetch(`${base}/api/create-order`, {
+    method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ 'r-email': 'pg@example.com', 'r-name': 'Pg Test', 'r-street': '1 Main St', 'r-city': 'Town',
+      'r-postal': 'M5V 1A1', 'r-country': 'CA', 'letter-type': 'standard', 'letter-body': body }).toString(),
+  });
+  const ok = await post('Hello there.');
+  assert.equal(ok.status, 200);
+  const longBody = Array.from({ length: 400 }, (_, i) => `Line ${i} of a very long letter that keeps going.`).join('\n');
+  const bad = await post(longBody);
+  assert.equal(bad.status, 400);
+  assert.match((await bad.json()).error, /most we can mail in one envelope is 5/);
+  const fd = new FormData(); fd.append('letter-body', longBody);
+  const chk = await (await fetch(`${base}/api/letter-pages`, { method: 'POST', body: fd })).json();
+  assert.equal(chk.ok, true); assert.equal(chk.too_long, true); assert.ok(chk.pages > 5);
+  const fd2 = new FormData(); fd2.append('letter-body', 'Short note.');
+  const chk2 = await (await fetch(`${base}/api/letter-pages`, { method: 'POST', body: fd2 })).json();
+  assert.equal(chk2.pages, 1); assert.equal(chk2.too_long, false);
+});
+
+test('letter preview returns the print PDF with the address block, as one Letter page for a short note', async () => {
+  const { PDFDocument } = require('pdf-lib');
+  const fd = new FormData();
+  Object.entries({ 'letter-body': 'Hello.', 'r-name': 'Ada Lovelace', 'r-street': '1 Main St', 'r-city': 'Toronto', 'r-province': 'ON', 'r-postal': 'M5V 1A1', 'r-country': 'CA' })
+    .forEach(([k, v]) => fd.append(k, v));
+  const res = await fetch(`${base}/api/letter-preview`, { method: 'POST', body: fd });
+  assert.equal(res.status, 200);
+  assert.equal(res.headers.get('content-type'), 'application/pdf');
+  const doc = await PDFDocument.load(Buffer.from(await res.arrayBuffer()));
+  assert.equal(doc.getPageCount(), 1);
+  assert.deepEqual([doc.getPage(0).getWidth(), doc.getPage(0).getHeight()], [612, 792]);
+});
+
+test('destinations and services follow the admin switches: local UK price, Canada registered add-on, US certified', async () => {
+  const set = (k, v) => db.prepare("INSERT INTO settings (key,value,updated_at) VALUES (?,?,CURRENT_TIMESTAMP) ON CONFLICT(key) DO UPDATE SET value=excluded.value").run(k, v);
+  const clear = () => db.prepare("DELETE FROM settings WHERE key IN ('postgrid_countries','services_enabled')").run();
+  try {
+    set('postgrid_countries', 'CA,US,GB');
+    set('services_enabled', JSON.stringify(['CA:registered', 'US:certified']));
+    const cfg = await (await fetch(`${base}/api/site-config`)).json();
+    assert.equal(cfg.destinations.GB.price_cents, 900);
+    assert.equal(cfg.destinations.GB.local, true);
+    assert.equal(cfg.destinations.AU.price_cents, 2000);           // network not enabled: international price
+    assert.equal(cfg.destinations.CA.services.registered.cents, 6200);
+    assert.equal(cfg.destinations.US.services.certified.cents, 1700);
+    assert.equal(cfg.destinations.US.services.express, undefined);
+    const order = async (email, country, extra) => {
+      const res = await fetch(`${base}/api/create-order`, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ 'r-email': email, 'r-name': 'Svc Test', 'r-street': '1 Main St', 'r-city': 'Town', 'r-postal': '12345',
+          'r-country': country, 'letter-body': 'Hello.', 'letter-type': 'standard', ...extra }).toString() });
+      return { res, row: db.prepare('SELECT * FROM orders WHERE customer_email = ? ORDER BY id DESC LIMIT 1').get(email) };
+    };
+    let r = await order('svc-gb@example.com', 'GB', {});
+    assert.equal(r.res.status, 200); assert.equal(r.row.price_cents, 900);
+    r = await order('svc-ca@example.com', 'CA', { mail_service: 'registered' });
+    assert.equal(r.res.status, 200); assert.equal(r.row.price_cents, 600 + 6200); assert.equal(r.row.registered_mail, 1);
+    r = await order('svc-us@example.com', 'US', { mail_service: 'certified' });
+    assert.equal(r.res.status, 200); assert.equal(r.row.price_cents, 600 + 1700); assert.equal(r.row.certified_mail, 1);
+    r = await order('svc-us2@example.com', 'US', { mail_service: 'express' });
+    assert.equal(r.res.status, 400);                               // not switched on
+    r = await order('svc-gb2@example.com', 'GB', { mail_service: 'certified' });
+    assert.equal(r.res.status, 400);                               // not offered for the UK
+  } finally { clear(); }
 });

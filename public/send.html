@@ -8,7 +8,7 @@
 <script src="/ga.js" defer></script>
 <script src="/cookie-consent.js?v=2" defer></script>
 <title>Send a Letter from Canada | Letterhome</title>
-<meta name="description" content="Send a real letter or document from Canada. We print, seal and mail it via Canada Post. $6 CAD Canada, $7 United States, $20 elsewhere. No account needed.">
+<meta name="description" content="Send a real letter or document from Canada. We print, seal and mail it via Canada Post. $6 CAD to Canada or the United States, $20 elsewhere. No account needed.">
 <link rel="canonical" href="https://letterhome.ca/send">
 <link rel="icon" type="image/png" href="/favicon.png">
 <link rel="manifest" href="/manifest.json">
@@ -19,14 +19,14 @@
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:title" content="Send a Letter from Canada | Letterhome">
-<meta property="og:description" content="Send a real letter or document from Canada. We print it in black & white by default (colour available), seal it, and mail it via Canada Post. Canada $6 CAD · United States $7 CAD · Elsewhere $20 CAD.">
+<meta property="og:description" content="Send a real letter or document from Canada. We print it in black & white by default (colour available), seal it, and mail it via Canada Post. Canada and United States $6 CAD · Elsewhere $20 CAD.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://letterhome.ca/send">
 <meta property="og:site_name" content="Letterhome">
 <meta property="og:locale" content="en_CA">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Send a Letter from Canada | Letterhome">
-<meta name="twitter:description" content="Send a real letter or document from Canada. We print it in black & white by default (colour available), seal it, and mail it via Canada Post. Canada $6 CAD · United States $7 CAD · Elsewhere $20 CAD.">
+<meta name="twitter:description" content="Send a real letter or document from Canada. We print it in black & white by default (colour available), seal it, and mail it via Canada Post. Canada and United States $6 CAD · Elsewhere $20 CAD.">
 <meta name="twitter:image" content="https://letterhome.ca/og-image.jpg?v=4">
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://letterhome.ca/"},{"@type":"ListItem","position":2,"name":"Send a Letter","item":"https://letterhome.ca/send"}]}
@@ -361,6 +361,32 @@ textarea { resize: vertical; min-height: 260px; line-height: 1.6; }
 .check-row input[type="checkbox"]:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
 .check-row label { font-family: 'Source Serif 4', Georgia, serif; font-size: 13px; color: var(--ink-muted); text-transform: none; letter-spacing: 0; font-weight: 400; cursor: pointer; line-height: 1.55; }
 
+
+/* Mail-service radios: same look as the site's custom checkboxes, but round */
+#mail-service-list input[type="radio"] {
+  appearance: none; -webkit-appearance: none; width: 18px; height: 18px; min-width: 18px; flex: 0 0 18px; padding: 0;
+  margin: 3px 0 0; border: 1.5px solid var(--ink); border-radius: 50%; background: transparent; box-shadow: none; cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+#mail-service-list input[type="radio"]:hover:not(:checked) { border-color: var(--red); }
+#mail-service-list input[type="radio"]:checked { border-color: var(--red); box-shadow: inset 0 0 0 4px var(--paper), inset 0 0 0 9px var(--red); }
+#mail-service-list input[type="radio"]:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
+/* Real print preview (step 3) */
+.real-preview { margin: 22px 0 24px; }
+.real-preview-head { display:flex; justify-content:space-between; align-items:baseline; gap:12px; flex-wrap:wrap; margin-bottom:10px; }
+.real-preview-label { font-family:'DM Mono',monospace; font-size:12px; letter-spacing:0.08em; text-transform:uppercase; color:var(--ink); font-weight:600; }
+.real-preview-sub { font-family:'DM Mono',monospace; font-size:11px; color:var(--ink-muted); }
+.real-preview-stage { background: rgba(42,42,42,0.04); border:1px dashed var(--line); padding:20px 14px; display:flex; flex-direction:column; align-items:center; gap:22px; }
+.real-sheet { width:100%; max-width:540px; }
+.real-sheet canvas { display:block; width:100%; height:auto; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,0.12), 0 8px 24px rgba(0,0,0,0.10); }
+.real-sheet-cap { font-family:'DM Mono',monospace; font-size:11px; color:var(--ink-faint); margin-top:8px; text-align:center; letter-spacing:0.04em; }
+.real-sheet canvas { cursor: zoom-in; }
+.real-zoom { position:fixed; inset:0; z-index:9999; background:rgba(17,17,17,0.82); overflow:auto; -webkit-overflow-scrolling:touch; padding:60px 12px 24px; display:block; }
+.real-zoom canvas { display:block; margin:0 auto; width:max(640px, min(900px, 100%)); height:auto; background:#fff; box-shadow:0 8px 40px rgba(0,0,0,0.5); }
+.real-zoom-close { position:fixed; top:10px; right:12px; z-index:10000; font-family:'DM Mono',monospace; font-size:12px; letter-spacing:0.08em; text-transform:uppercase; background:var(--paper); color:var(--ink); border:2px dashed var(--ink); padding:10px 16px; cursor:pointer; min-height:44px; }
+.real-preview-note { font-family:'DM Mono',monospace; font-size:11px; color:var(--ink-faint); margin-top:8px; }
+.real-preview-loading { font-family:'DM Mono',monospace; font-size:12px; color:var(--ink-muted); padding:30px 0; }
+
 /* Account banner, override inline styles: softer border, paper background for contrast on open layout */
 #account-banner > div {
   border-left-width: 1px !important;
@@ -489,7 +515,7 @@ textarea.field-error { border-color: var(--red) !important; }
 
   <div class="total-bar" id="total-bar" role="status">
     <span><strong id="total-bar-amt">$6 CAD</strong><span data-i18n="send.totalbar.to">to send this letter</span></span>
-    <span class="tb-sub" data-i18n="send.totalbar.sub">Printing, envelope and postage included · mailed within 1 business day · free reprint if not delivered</span>
+    <span class="tb-sub" data-i18n="send.totalbar.sub">Printing, envelope and postage included · mailed within 2 business days · free reprint if not delivered</span>
   </div>
 
   <!-- STEP 1: ADDRESSES -->
@@ -682,7 +708,7 @@ textarea.field-error { border-color: var(--red) !important; }
             <option value="UA">Ukraine, $20 CAD</option>
             <option value="AE">United Arab Emirates, $20 CAD</option>
             <option value="GB">United Kingdom, $20 CAD</option>
-            <option value="US">United States, $7 CAD</option>
+            <option value="US">United States, $6 CAD</option>
             <option value="UY">Uruguay, $20 CAD</option>
             <option value="UZ">Uzbekistan, $20 CAD</option>
             <option value="VU">Vanuatu, $20 CAD</option>
@@ -691,7 +717,7 @@ textarea.field-error { border-color: var(--red) !important; }
             <option value="VN">Vietnam, $20 CAD</option>
             <option value="ZM">Zambia, $20 CAD</option>
         </select>
-        <span class="field-note" data-i18n="send.dest.note">Canada $6 · United States $7 · Everywhere else $20, all prices CAD</span>
+        <span class="field-note" data-i18n="send.dest.note">Canada and United States $6 · Everywhere else $20, all prices CAD</span>
       </div>
     </div>
 
@@ -796,6 +822,11 @@ textarea.field-error { border-color: var(--red) !important; }
         </span>
       </label>
 
+      <div id="mail-service-wrap" style="display:none;margin-bottom:10px">
+        <label style="margin-bottom:8px" data-i18n="send.svc.label">Mail service for this destination (optional)</label>
+        <div id="mail-service-list"></div>
+      </div>
+
       <label style="display:flex;align-items:flex-start;gap:10px;padding:12px;border:1.5px solid rgba(42,42,42,0.15);border-radius:2px;margin-bottom:6px;cursor:pointer">
         <input type="checkbox" id="opt-schedule" style="margin-top:3px" onchange="toggleSchedule(this)">
         <span>
@@ -818,7 +849,7 @@ textarea.field-error { border-color: var(--red) !important; }
   <div class="panel" id="panel-3">
     <div class="eyebrow" data-i18n="send.step3.eyebrow">Step Three</div>
     <h2 class="panel-title serif" data-i18n="send.step3.title">Review your order.</h2>
-    <p class="panel-sub" data-i18n="send.step3.sub">Have one last look before paying. After checkout, your letter is printed in black & white by default (colour available) and mailed from Canada within one business day.</p>
+    <p class="panel-sub" data-i18n="send.step3.sub">Have one last look before paying. After checkout, your letter is printed in black & white by default (colour available) and mailed from Canada within two business days.</p>
 
     <div class="preview-envelope">
       <div class="preview-stamp">
@@ -833,6 +864,15 @@ textarea.field-error { border-color: var(--red) !important; }
         <div class="preview-to-label" data-i18n="send.preview.to">Deliver to</div>
         <div id="preview-to-text">...</div>
       </div>
+    </div>
+
+    <div class="real-preview" id="real-preview" style="display:none">
+      <div class="real-preview-head">
+        <span class="real-preview-label" data-i18n="send.rp.label">Exactly what we'll mail</span>
+        <span class="real-preview-sub" id="real-preview-count"></span>
+      </div>
+      <div class="real-preview-stage" id="real-preview-stage"></div>
+      <p class="real-preview-note" data-i18n="send.rp.note">This is the page we print and fold into the envelope. Your recipient's address sits in the envelope window at the top of the first page. Tap a sheet to zoom in.</p>
     </div>
 
     <div class="preview-letter-box">
@@ -865,7 +905,7 @@ textarea.field-error { border-color: var(--red) !important; }
       <h3 data-i18n="send.next.title">What happens after you pay</h3>
       <ol>
         <li><span class="n">1</span><span><strong data-i18n="send.next.1.t">Confirmation email</strong><span class="d" data-i18n="send.next.1.d">Right after payment you get an email with your order number and a link to track your letter.</span></span></li>
-        <li><span class="n">2</span><span><strong data-i18n="send.next.2.t">Printed and mailed</strong><span class="d" data-i18n="send.next.2.d">Within one business day we print, seal, stamp and mail it from inside Canada, and email you when it's in the post.</span></span></li>
+        <li><span class="n">2</span><span><strong data-i18n="send.next.2.t">Printed and mailed</strong><span class="d" data-i18n="send.next.2.d">Within two business days we print, seal, stamp and mail it from inside Canada, and email you when it's in the post.</span></span></li>
         <li><span class="n">3</span><span><strong data-i18n="send.next.3.t">Delivered</strong><span class="d" data-i18n="send.next.3.d">Typically up to 2 weeks within Canada and up to 4 weeks internationally.</span></span></li>
       </ol>
     </div>
@@ -895,7 +935,7 @@ textarea.field-error { border-color: var(--red) !important; }
       </div>
       <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-muted);font-family:'DM Mono',monospace">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--red);flex-shrink:0"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        <span>Mailed within 1 business day</span>
+        <span>Mailed within 2 business days</span>
       </div>
       <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-muted);font-family:'DM Mono',monospace">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--red);flex-shrink:0"><rect x="4" y="4" width="16" height="16" rx="2"/><line x1="4" y1="9" x2="20" y2="9"/></svg>
@@ -951,6 +991,7 @@ function goTo(step) {
   if (step === 3) buildPreview();
   if (step === 2) track('step2');
   if (step === 3) track('step3');
+  if (step === 3 && window.LH_renderRealPreview) window.LH_renderRealPreview();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -983,8 +1024,41 @@ function toggleReturn(cb) {
 
 let _appliedDiscount = null;
 let _priceDomCents  = 600;
-let _priceUsaCents  = 700;
+let _priceUsaCents  = 600;
 let _priceIntlCents = 2000;
+let _destCfg = null;          // per-destination price, local printing and services from /api/site-config
+let _svcDest = null;          // destination the service list was last drawn for
+
+// Draws the optional mail services (registered / certified / express) offered for the chosen destination.
+function renderMailServices(dest) {
+  const wrap = document.getElementById('mail-service-wrap'), list = document.getElementById('mail-service-list');
+  if (!wrap || !list) return;
+  const services = (_destCfg && _destCfg[dest] && _destCfg[dest].services) || {};
+  const keys = Object.keys(services);
+  if (dest === _svcDest && list.childElementCount === keys.length + (keys.length ? 1 : 0)) return;
+  _svcDest = dest;
+  list.innerHTML = '';
+  wrap.style.display = keys.length ? 'block' : 'none';
+  if (!keys.length) return;
+  const row = (value, title, price, sub) => {
+    const lab = document.createElement('label');
+    lab.style.cssText = 'display:flex;align-items:flex-start;gap:10px;padding:12px;border:1.5px solid rgba(42,42,42,0.15);border-radius:2px;margin-bottom:8px;cursor:pointer';
+    const inp = document.createElement('input');
+    inp.type = 'radio'; inp.name = 'mail_service'; inp.value = value; inp.style.marginTop = '3px'; inp.checked = !value;
+    inp.addEventListener('change', updatePricing);
+    const txt = document.createElement('span');
+    const t = document.createElement('span'); t.style.cssText = 'display:block;font-weight:600'; t.textContent = title + ' ';
+    if (price) { const pr = document.createElement('span'); pr.style.cssText = 'color:var(--red);font-weight:500'; pr.textContent = price; t.appendChild(pr); }
+    const s = document.createElement('span'); s.style.cssText = 'display:block;font-size:12px;color:var(--ink-muted)'; s.textContent = sub;
+    txt.append(t, s); lab.append(inp, txt); list.appendChild(lab);
+  };
+  row('', LH_T('send.svc.standard'), '', LH_T('send.svc.standard.sub'));
+  keys.forEach(k => row(k, LH_T('send.svc.' + k), '+$' + (services[k].cents / 100).toFixed(services[k].cents % 100 ? 2 : 0), LH_T('send.svc.' + k + '.sub')));
+}
+function selectedMailService() {
+  const el = document.querySelector('input[name="mail_service"]:checked');
+  return el ? el.value : '';
+}
 var estimatedPageCount = 0;
 
 // Mirrors the server-side constants in server.js (countAttachmentPages / addon pricing).
@@ -1006,6 +1080,9 @@ function computeAddonCents() {
   let cents = extraPages * (isColour ? EXTRA_PAGE_COLOUR_CENTS : EXTRA_PAGE_CENTS);
   if (document.getElementById('opt-colour')?.checked)        cents += COLOUR_PRINTING_CENTS;
   if (document.getElementById('opt-large-envelope')?.checked) cents += LARGE_ENVELOPE_CENTS;
+  const svc = selectedMailService();
+  const svcCfg = svc && _destCfg && _destCfg[document.getElementById('r-country').value]?.services?.[svc];
+  if (svcCfg) cents += svcCfg.cents;
   if (document.getElementById('opt-schedule')?.checked)      cents += SCHEDULE_LATER_CENTS;
   return cents;
 }
@@ -1013,7 +1090,10 @@ function computeAddonCents() {
 function updatePricing() {
   const isDomestic = document.getElementById('r-country').value === 'CA';
   const dest = document.getElementById('r-country').value;
-  const basePrice = isDomestic ? _priceDomCents : (dest === 'US' ? _priceUsaCents : _priceIntlCents);
+  renderMailServices(dest);
+  const basePrice = (_destCfg && _destCfg[dest]) ? _destCfg[dest].price_cents
+    : (isDomestic ? _priceDomCents : (dest === 'US' ? _priceUsaCents : _priceIntlCents));
+  const isLocal = !isDomestic && !!(_destCfg && _destCfg[dest] && _destCfg[dest].local);
   const addonCents = computeAddonCents();
   let discount = 0;
   if (_appliedDiscount) {
@@ -1026,9 +1106,10 @@ function updatePricing() {
   document.getElementById('preview-price').textContent   = priceStr;
   const _tb = document.getElementById('total-bar-amt'); if (_tb) _tb.textContent = priceStr + ' CAD';
   document.getElementById('summary-total').textContent   = priceStr + ' CAD';
-  document.getElementById('summary-dest').textContent    = isDomestic ? LH_T('send.dom.dest') : LH_T('send.intl.dest');
-  const deliveryBase = isDomestic ? LH_T('send.dom.delivery') : LH_T('send.intl.delivery');
-  const estDate = isDomestic ? estDeliveryDate(14) : estDeliveryDate(28);
+  document.getElementById('summary-dest').textContent    = isDomestic ? LH_T('send.dom.dest')
+    : isLocal ? _destCfg[dest].name + ' ' + LH_T('send.local.dest') : LH_T('send.intl.dest');
+  const deliveryBase = (isDomestic || isLocal) ? LH_T('send.dom.delivery') : LH_T('send.intl.delivery');
+  const estDate = (isDomestic || isLocal) ? estDeliveryDate(14) : estDeliveryDate(28);
   document.getElementById('summary-delivery').textContent = deliveryBase + ', est. ' + estDate;
 
   const includesEl = document.getElementById('summary-includes');
@@ -1042,8 +1123,9 @@ function updatePricing() {
   const note = document.getElementById('page-estimate-note');
   if (note) {
     const extraPages = Math.max(0, estimatedPageCount - FREE_PAGES);
-    note.textContent = estimatedPageCount
-      ? `Estimated ${estimatedPageCount} page(s) from your attachments` +
+    note.style.color = window.letterTooLong ? '#b42318' : '';
+    note.textContent = window.letterTooLong ? window.letterTooLong : estimatedPageCount
+      ? `${estimatedPageCount} page(s)` +
         (extraPages ? ` · +$${(extraPages * (document.getElementById('opt-colour')?.checked ? EXTRA_PAGE_COLOUR_CENTS : EXTRA_PAGE_CENTS) / 100).toFixed(2)} for ${extraPages} page(s) beyond the first ${FREE_PAGES} free` : '')
       : '';
   }
@@ -1069,6 +1151,7 @@ function updatePreview() {
   const body = document.getElementById('letter-body').value;
   const el = document.getElementById('preview-body-text');
   if (el) el.textContent = body || LH_T('send.preview.empty');
+  if (window.LH_updatePageEstimate) window.LH_updatePageEstimate();
   const wordCount = body.trim() ? body.trim().split(/\s+/).length : 0;
   const wc = document.getElementById('word-count');
   if (wc) wc.textContent = wordCount + ' ' + LH_T(wordCount !== 1 ? 'send.word.plural' : 'send.word.singular');
@@ -1346,6 +1429,7 @@ function validateStep(step) {
       missing.push(LH_T('send.val.letter'));
       markError('letter-body');
     }
+    if (window.letterTooLong && !missing.length) { showValidationBanner(window.letterTooLong, true); return false; }
   } else if (step === 3) {
     if (!document.getElementById('agree-terms').checked) {
       missing.push(LH_T('send.val.terms'));
@@ -1483,6 +1567,7 @@ async function submitOrder() {
   form.append('r-province', getRecipientProvince());
   form.append('colour_printing',    document.getElementById('opt-colour')?.checked ? '1' : '');
   form.append('large_envelope',     document.getElementById('opt-large-envelope')?.checked ? '1' : '');
+  form.append('mail_service',       selectedMailService());
   form.append('schedule_for_later', document.getElementById('opt-schedule')?.checked ? '1' : '');
   if (document.getElementById('opt-schedule')?.checked) {
     form.append('scheduled_date', document.getElementById('opt-schedule-date')?.value || '');
@@ -1491,6 +1576,12 @@ async function submitOrder() {
   if (appliedCode) form.append('discount_code', appliedCode);
   uploadedFiles.filter(Boolean).forEach(f => form.append('attachments', f));
 
+  if (window.letterTooLong) {
+    btn.disabled = false;
+    btn.textContent = LH_T('send.btn.pay');
+    showValidationBanner(window.letterTooLong);
+    return;
+  }
   track('pay_click');
   try {
     const res  = await fetch('/api/create-order', { method: 'POST', body: form });
@@ -1505,7 +1596,7 @@ async function submitOrder() {
   } catch (err) {
     btn.disabled = false;
     btn.textContent = LH_T('send.btn.pay');
-    showValidationBanner(LH_T('send.err.submit'));
+    showValidationBanner(/pages|envelope|sheet/i.test(err.message || '') ? err.message : LH_T('send.err.submit'));
   }
 }
 
@@ -1566,6 +1657,15 @@ async function applyDiscountCode() {
     if (cfg.price_domestic_cents)      _priceDomCents  = cfg.price_domestic_cents;
     if (cfg.price_usa_cents)           _priceUsaCents  = cfg.price_usa_cents;
     if (cfg.price_international_cents) _priceIntlCents = cfg.price_international_cents;
+    if (cfg.destinations) {
+      _destCfg = cfg.destinations;
+      // Keep the recipient dropdown's price labels in step with the live per-destination prices.
+      Object.entries(cfg.destinations).forEach(([cc, d]) => {
+        document.querySelectorAll(`#r-country option[value="${cc}"]`).forEach(opt => {
+          opt.textContent = opt.textContent.replace(/\$\d+(?:\.\d+)? CAD/, '$' + (d.price_cents / 100).toFixed(d.price_cents % 100 ? 2 : 0) + ' CAD');
+        });
+      });
+    }
     updatePricing();
 
     // Remove blocked countries from the dropdown
@@ -1771,7 +1871,7 @@ function fillSavedRecipient(sel) {
   } catch(e) {}
 }
 </script>
-<script src="/lang.js?v=25" defer></script>
+<script src="/lang.js?v=27" defer></script>
 <script type="module">
   import * as pdfjsLib from '/vendor/pdfjs/pdf.min.mjs';
   pdfjsLib.GlobalWorkerOptions.workerSrc = '/vendor/pdfjs/pdf.worker.min.mjs';
@@ -1799,7 +1899,7 @@ function fillSavedRecipient(sel) {
     if (pdfDoc && pdfPageNum < pdfDoc.numPages) { pdfPageNum++; renderPage(pdfPageNum); }
   };
 
-  window.LH_updatePageEstimate = async function() {
+  async function localPageEstimate() {
     const files = (window.uploadedFiles || []).filter(Boolean);
     let total = 0;
     for (const f of files) {
@@ -1811,10 +1911,82 @@ function fillSavedRecipient(sel) {
           continue;
         } catch (e) { /* fall through to flat 1-page estimate below */ }
       }
-      total += 1; // non-PDF (or unparseable) files: estimate 1 page, matches server-side fallback
+      total += 1; // Word/TXT or unparseable: rough 1-page estimate, used only if the server count is unavailable
     }
-    window.estimatedPageCount = total;
+    return total;
+  }
+
+  // The server counts the pages that will really print (Word files converted, typed text laid out) and enforces the envelope limit.
+  let _pcTimer = null, _pcSeq = 0;
+  async function runPageCheck() {
+    const seq = ++_pcSeq;
+    const files = (window.uploadedFiles || []).filter(Boolean);
+    const body = document.getElementById('letter-body')?.value || '';
+    if (!files.length && !body.trim()) { window.estimatedPageCount = 0; window.letterTooLong = null; if (window.updatePricing) window.updatePricing(); return; }
+    const form = new FormData();
+    form.append('letter-body', body);
+    files.forEach(f => form.append('attachments', f));
+    let est = null, tooLong = null;
+    try {
+      const r = await fetch('/api/letter-pages', { method: 'POST', body: form });
+      const d = await r.json();
+      if (d && d.ok) { est = d.pages; tooLong = d.too_long ? d.message : null; }
+    } catch (e) { /* fall back below */ }
+    if (seq !== _pcSeq) return;                 // a newer check superseded this one
+    if (est === null) est = await localPageEstimate();
+    window.estimatedPageCount = est;
+    window.letterTooLong = tooLong;
     if (window.updatePricing) window.updatePricing();
+  }
+  window.LH_updatePageEstimate = function() { clearTimeout(_pcTimer); _pcTimer = setTimeout(runPageCheck, 700); };
+
+  // Draws every sheet of the server-built print PDF as it will be mailed.
+  window.LH_renderRealPreview = async function() {
+    const box = document.getElementById('real-preview'), stage = document.getElementById('real-preview-stage');
+    if (!box || !stage) return;
+    const oldBoxes = [document.querySelector('.preview-letter-box'), document.getElementById('attachment-preview-box')];
+    const showOld = on => oldBoxes.forEach(el => { if (el) el.dataset.hold = on ? '' : '1'; if (el) el.style.display = on ? '' : 'none'; });
+    box.style.display = 'block';
+    stage.innerHTML = '<div class="real-preview-loading">Preparing your preview…</div>';
+    const form = new FormData();
+    ['letter-body','r-name','r-street','r-city','r-postal','r-country','skip-return','s-name','s-street','s-city','s-province','s-postal','s-country'].forEach(id => {
+      const el = document.getElementById(id); if (el) form.append(id, el.type === 'checkbox' ? (el.checked ? '1' : '') : el.value);
+    });
+    form.append('r-province', (window.getRecipientProvince && window.getRecipientProvince()) || '');
+    (window.uploadedFiles || []).filter(Boolean).forEach(f => form.append('attachments', f));
+    try {
+      const r = await fetch('/api/letter-preview', { method: 'POST', body: form });
+      if (!r.ok) throw new Error('preview');
+      const doc = await pdfjsLib.getDocument({ data: await r.arrayBuffer() }).promise;
+      stage.innerHTML = '';
+      for (let i = 1; i <= doc.numPages; i++) {
+        const page = await doc.getPage(i);
+        const vp = page.getViewport({ scale: 1.6 });
+        const canvas = document.createElement('canvas');
+        canvas.width = vp.width; canvas.height = vp.height;
+        await page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
+        const sheet = document.createElement('div'); sheet.className = 'real-sheet';
+        const cap = document.createElement('div'); cap.className = 'real-sheet-cap'; cap.textContent = 'Sheet ' + i + ' of ' + doc.numPages;
+        canvas.setAttribute('role', 'button'); canvas.setAttribute('aria-label', 'Zoom sheet ' + i);
+        canvas.addEventListener('click', () => {
+          const ov = document.createElement('div'); ov.className = 'real-zoom';
+          const big = document.createElement('canvas'); big.width = canvas.width; big.height = canvas.height;
+          big.getContext('2d').drawImage(canvas, 0, 0);
+          const close = document.createElement('button'); close.type = 'button'; close.className = 'real-zoom-close'; close.textContent = 'Close';
+          const done = () => { ov.remove(); close.remove(); document.removeEventListener('keydown', onKey); };
+          const onKey = ev => { if (ev.key === 'Escape') done(); };
+          ov.addEventListener('click', ev => { if (ev.target === ov) done(); });
+          close.addEventListener('click', done); document.addEventListener('keydown', onKey);
+          ov.appendChild(big); document.body.append(ov, close);
+        });
+        sheet.append(canvas, cap); stage.appendChild(sheet);
+      }
+      document.getElementById('real-preview-count').textContent = doc.numPages + (doc.numPages === 1 ? ' sheet' : ' sheets') + ' · US Letter';
+      showOld(false);
+    } catch (e) {
+      box.style.display = 'none';      // fall back to the simple text preview below
+      showOld(true);
+    }
   };
 
   window.LH_renderAttachmentPreview = async function() {

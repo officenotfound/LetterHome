@@ -959,7 +959,7 @@ async function showOrder(id) {
         <div class="detail-row"><span class="detail-label">Type</span><span class="detail-value">${esc(o.letter_type||'standard')}</span></div>
         <div class="detail-row"><span class="detail-label">Price</span><span class="detail-value">${fmtCAD(o.price_cents)}</span></div>
         ${o.page_count != null ? `<div class="detail-row"><span class="detail-label">Pages</span><span class="detail-value">${o.page_count}${o.extra_page_cents ? ' (' + fmtCAD(o.extra_page_cents) + ' overage)' : ''}</span></div>` : ''}
-        ${(o.colour_printing || o.registered_mail || o.large_envelope || o.schedule_for_later) ? `<div class="detail-row"><span class="detail-label">Extras</span><span class="detail-value">${[o.colour_printing && 'Colour printing', o.registered_mail && 'Registered mail', o.large_envelope && 'Large envelope', o.schedule_for_later && ('Scheduled' + (o.scheduled_date ? ' for ' + esc(o.scheduled_date) : ''))].filter(Boolean).join(', ')}</span></div>` : ''}
+        ${(o.colour_printing || o.registered_mail || o.certified_mail || o.express_mail || o.large_envelope || o.schedule_for_later) ? `<div class="detail-row"><span class="detail-label">Extras</span><span class="detail-value">${[o.colour_printing && 'Colour printing', o.registered_mail && 'Registered mail', o.certified_mail && 'Certified mail', o.express_mail && 'Express delivery', o.large_envelope && 'Large envelope', o.schedule_for_later && ('Scheduled' + (o.scheduled_date ? ' for ' + esc(o.scheduled_date) : ''))].filter(Boolean).join(', ')}</span></div>` : ''}
         ${o.actual_cost_cents != null ? `<div class="detail-row"><span class="detail-label">Actual Cost</span><span class="detail-value">${fmtCAD(o.actual_cost_cents)}</span></div>` : ''}
         ${o.printer_ref ? `<div class="detail-row"><span class="detail-label">Printer Ref</span><span class="detail-value" style="font-family:monospace;font-size:13px">${esc(o.printer_ref)}</span></div>` : ''}
         ${o.estimated_delivery ? `<div class="detail-row"><span class="detail-label">Est. Delivery</span><span class="detail-value">${esc(o.estimated_delivery)}</span></div>` : ''}
@@ -976,6 +976,7 @@ async function showOrder(id) {
       </div>
       ${fulfillmentCard(o, statusOpts)}
     </div>
+    ${postgridCard(o)}
     ${o.letter_body ? `
     <div class="card" style="margin-bottom:24px">
       <div class="card-header"><div class="card-title">Letter Content</div></div>
@@ -1177,6 +1178,63 @@ function fulfillmentCard(o, statusOpts) {
     </div>
     <div id="status-msg" style="font-size:12px;color:#16a34a;margin-top:10px;display:none">✓ Status updated</div>
   </div>`;
+}
+
+// ---- PostGrid -------------------------------------------------------------
+// Like post(), but returns the server's error message instead of null so it can be shown.
+async function pgCall(url, method = 'POST') {
+  try {
+    const headers = { 'Content-Type': 'application/json' };
+    if (_csrfToken) headers['X-CSRF-Token'] = _csrfToken;
+    const r = await fetch(url, { method, headers, body: method === 'GET' ? undefined : '{}' });
+    if (r.status === 401) { window.location.href = '/admin/login'; return { ok: false }; }
+    const data = await r.json().catch(() => ({}));
+    return r.ok ? { ok: true, ...data } : { ok: false, error: data.error || ('HTTP ' + r.status) };
+  } catch (e) { return { ok: false, error: e.message }; }
+}
+
+function postgridCard(o) {
+  if (!o.postgrid_configured) return '';
+  const row = (k, v) => `<div class="detail-row"><span class="detail-label">${k}</span><span class="detail-value">${v}</span></div>`;
+  const err = o.postgrid_error ? `<div style="background:#fef2f2;border:1px solid #fecaca;color:#991b1b;padding:10px 12px;font-size:13px;margin:10px 0;line-height:1.5">${esc(o.postgrid_error)}</div>` : '';
+  const modeBadge = m => m === 'live' ? '<span class="badge badge-green">LIVE</span>' : '<span class="badge badge-amber">TEST</span>';
+  let body;
+  if (o.postgrid_letter_id) {
+    const canCancel = o.postgrid_status === 'ready';
+    body = row('Letter', `<span style="font-family:monospace;font-size:12px">${esc(o.postgrid_letter_id)}</span> ${modeBadge(o.postgrid_mode)}`)
+      + row('PostGrid status', esc(o.postgrid_status || '—'))
+      + row('Submitted', o.postgrid_submitted_at ? fmtDateTime(o.postgrid_submitted_at) : '—')
+      + err
+      + `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+          ${o.postgrid_url ? `<a class="btn btn-outline btn-sm" href="${esc(o.postgrid_url)}" target="_blank" rel="noopener">PostGrid preview</a>` : ''}
+          <button class="btn btn-outline btn-sm" onclick="pgAction(${o.id},'refresh')">Refresh status</button>
+          ${canCancel ? `<button class="btn btn-outline btn-sm" style="color:#b42318;border-color:#b42318" onclick="pgAction(${o.id},'cancel')">Cancel letter</button>` : ''}
+          ${o.postgrid_mode === 'test' && !['completed','cancelled'].includes(o.postgrid_status) ? `<button class="btn btn-outline btn-sm" onclick="pgAction(${o.id},'progress')">Advance test letter</button>` : ''}
+        </div>`;
+  } else {
+    const why = o.postgrid_eligibility;
+    body = row('Mode', modeBadge(o.postgrid_api_mode))
+      + (why ? `<p style="font-size:13px;color:#6b6b6b;margin:8px 0;line-height:1.5">${esc(why)}</p>` : `<p style="font-size:13px;color:#16a34a;margin:8px 0">Ready to send through PostGrid.</p>`)
+      + err
+      + `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+          <a class="btn btn-outline btn-sm" href="/api/admin/orders/${o.id}/postgrid/preview" target="_blank" rel="noopener">Preview print PDF</a>
+          ${o.status === 'paid' ? `<button class="btn btn-primary btn-sm" onclick="pgAction(${o.id},'submit')">Send via PostGrid</button>` : ''}
+        </div>`;
+  }
+  return `<div class="card" style="margin-bottom:24px">
+    <div class="card-header"><div class="card-title">PostGrid</div></div>
+    <div style="padding:16px 20px">${body}<div id="pg-msg" style="font-size:12px;margin-top:10px"></div></div>
+  </div>`;
+}
+
+async function pgAction(id, action) {
+  const labels = { submit: 'Send this letter through PostGrid now?', cancel: 'Cancel this letter at PostGrid? It returns to the manual queue.' };
+  if (labels[action] && !confirm(labels[action])) return;
+  const msg = document.getElementById('pg-msg');
+  if (msg) { msg.style.color = '#6b6b6b'; msg.textContent = 'Working…'; }
+  const r = await pgCall(`/api/admin/orders/${id}/postgrid/${action}`);
+  if (!r.ok) { if (msg) { msg.style.color = '#b42318'; msg.textContent = r.error || 'Failed'; } return; }
+  showOrder(id);
 }
 
 async function submitToPrinter(id) {
@@ -2282,6 +2340,56 @@ function clearAuditFilter() {
   showAuditLog();
 }
 
+const PG_DESTS = [['CA','Canada'],['US','United States'],['GB','United Kingdom'],['AU','Australia']];
+const PG_SERVICES = [['CA:registered','Canada registered mail','svc_ca_registered_cents',6200],['CA:express','Canada express','svc_ca_express_cents',8600],
+                     ['US:certified','US certified mail','svc_us_certified_cents',1700],['US:express','US express','svc_us_express_cents',4700]];
+async function renderPostgridSettings(settings) {
+  const box = document.getElementById('pg-settings-body');
+  if (!box) return;
+  const st = await api('/api/admin/postgrid/status') || {};
+  const live = (settings['postgrid_countries'] || 'CA').split(',').map(s => s.trim().toUpperCase());
+  let svcOn = []; try { svcOn = JSON.parse(settings['services_enabled'] || '[]'); } catch {}
+  const auto = settings['postgrid_auto_submit'] === 'true';
+  const modeTxt = !st.configured ? '<span class="badge badge-gray">NOT CONFIGURED</span> add POSTGRID_API_KEY to the server .env'
+    : st.mode === 'live' ? '<span class="badge badge-green">LIVE</span> letters are really mailed' : '<span class="badge badge-amber">TEST</span> nothing is mailed';
+  const chk = (id, on, label, sub) => `<label style="display:flex;gap:10px;align-items:flex-start;padding:8px 0;cursor:pointer"><input type="checkbox" id="${id}" ${on ? 'checked' : ''} style="margin-top:3px"><span><span style="font-size:14px;font-weight:600;color:#111">${label}</span>${sub ? `<span style="display:block;font-size:12px;color:#6b6b6b">${sub}</span>` : ''}</span></label>`;
+  const cents = (key, def) => settings[key] || String(def);
+  box.innerHTML = `
+    <div style="font-size:13px;color:#444;margin-bottom:6px">API: ${modeTxt}</div>
+    <div style="font-size:13px;color:#6b6b6b;margin-bottom:14px">${st.in_flight ?? 0} letters in flight · ${st.needs_manual ?? 0} paid orders need manual fulfilment</div>
+    ${chk('pg-auto', auto, 'Send paid orders to PostGrid automatically', 'Every 15 minutes, and right after payment. Orders PostGrid can\'t handle go to the manual queue with an email alert.')}
+    <div style="font-size:12px;font-weight:600;color:#111;margin:14px 0 4px;letter-spacing:.04em;text-transform:uppercase">Delivery networks enabled on your PostGrid account</div>
+    <div style="font-size:12px;color:#6b6b6b;margin-bottom:6px">Tick a country only after PostGrid has enabled that network. UK and Australia sell at their local price only when ticked; otherwise they are sold as international mail.</div>
+    ${PG_DESTS.map(([cc, name]) => chk('pg-dest-' + cc, live.includes(cc), name)).join('')}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0">
+      <div class="field"><label>UK price (CAD cents)</label><input id="pg-price-uk" type="number" min="50" step="50" value="${cents('price_uk_cents', 900)}"></div>
+      <div class="field"><label>Australia price (CAD cents)</label><input id="pg-price-au" type="number" min="50" step="50" value="${cents('price_au_cents', 900)}"></div>
+    </div>
+    <div style="font-size:12px;font-weight:600;color:#111;margin:14px 0 4px;letter-spacing:.04em;text-transform:uppercase">Extra mail services</div>
+    <div style="font-size:12px;color:#6b6b6b;margin-bottom:6px">Offered at checkout only when ticked and the country's network is enabled. Test each one with the test key before turning it on.</div>
+    ${PG_SERVICES.map(([key, name, pkey, def]) => `<div style="display:flex;align-items:center;gap:12px;justify-content:space-between">${chk('pg-svc-' + key.replace(':','-'), svcOn.includes(key), name)}<input id="pg-svcprice-${key.replace(':','-')}" type="number" min="0" step="100" value="${cents(pkey, def)}" style="width:110px" title="CAD cents"></div>`).join('')}
+    <div style="display:flex;align-items:center;gap:12px;margin-top:14px">
+      <button class="btn btn-primary" onclick="savePostgridSettings()">Save PostGrid settings</button>
+      <span id="pg-settings-msg" style="font-size:12px"></span>
+    </div>`;
+}
+
+async function savePostgridSettings() {
+  const live = PG_DESTS.map(([cc]) => cc).filter(cc => document.getElementById('pg-dest-' + cc)?.checked);
+  const svc = PG_SERVICES.map(([k]) => k).filter(k => document.getElementById('pg-svc-' + k.replace(':','-'))?.checked);
+  const body = {
+    postgrid_auto_submit: document.getElementById('pg-auto')?.checked ? 'true' : 'false',
+    postgrid_countries: live.join(','),
+    services_enabled: JSON.stringify(svc),
+    price_uk_cents: String(parseInt(document.getElementById('pg-price-uk')?.value) || 900),
+    price_au_cents: String(parseInt(document.getElementById('pg-price-au')?.value) || 900),
+  };
+  PG_SERVICES.forEach(([k, , pkey, def]) => { body[pkey] = String(parseInt(document.getElementById('pg-svcprice-' + k.replace(':','-'))?.value) || def); });
+  const r = await post('/api/admin/settings/batch', body);
+  const msg = document.getElementById('pg-settings-msg');
+  if (msg) { msg.style.color = r?.ok ? '#16a34a' : '#b42318'; msg.textContent = r?.ok ? '✓ Saved' : 'Could not save'; }
+}
+
 async function showSettings() {
   setTitle('Settings');
   const [settings, backupData] = await Promise.all([
@@ -2295,7 +2403,7 @@ async function showSettings() {
   const paused       = settings['service_paused'] === 'true';
   const announcement = settings['announcement'] || '';
   const priceDom     = settings['price_domestic_cents']      || '600';
-  const priceUsa     = settings['price_usa_cents']           || '700';
+  const priceUsa     = settings['price_usa_cents']           || '600';
   const priceIntl    = settings['price_international_cents'] || '2000';
   const dailyCap     = settings['daily_order_cap']           || '0';
   const blockedRaw   = settings['blocked_countries']         || '[]';
@@ -2376,6 +2484,11 @@ async function showSettings() {
       </div>
     </div>
 
+    <div class="card" style="max-width:640px;margin-bottom:20px" id="pg-settings-card">
+      <div class="card-header"><div class="card-title">PostGrid fulfilment &amp; destinations</div></div>
+      <div style="padding:20px" id="pg-settings-body"><div class="empty" style="padding:8px 0">Loading…</div></div>
+    </div>
+
     <div class="card" style="max-width:640px;margin-bottom:20px">
       <div class="card-header"><div class="card-title">Away Auto-Reply</div></div>
       <div style="padding:20px">
@@ -2445,6 +2558,7 @@ async function showSettings() {
     </div>`);
 
   window._blockedCountries = [...blocked];
+  renderPostgridSettings(settings);
 }
 
 function addBlockedCountry() {
@@ -2479,7 +2593,7 @@ function renderBlockedChips() {
 async function saveAllSettings() {
   const announcement = document.getElementById('setting-announcement')?.value || '';
   const priceDom     = parseInt(document.getElementById('setting-price-dom')?.value) || 600;
-  const priceUsa     = parseInt(document.getElementById('setting-price-usa')?.value) || 700;
+  const priceUsa     = parseInt(document.getElementById('setting-price-usa')?.value) || 600;
   const priceIntl    = parseInt(document.getElementById('setting-price-intl')?.value) || 2000;
   const dailyCap     = parseInt(document.getElementById('setting-daily-cap')?.value) || 0;
   const blocked      = JSON.stringify(window._blockedCountries || []);
