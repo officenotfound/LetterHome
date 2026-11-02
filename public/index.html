@@ -832,6 +832,19 @@ section { position: relative; z-index: 2; }
   line-height: 1.6;
 }
 
+/* ========== TRUST ========== */
+#trust > .section-inner { padding-top: 48px; padding-bottom: 48px; }
+.trust-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; margin-top: 32px; border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
+.trust-item { padding: 28px 26px 26px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.trust-ico { color: var(--red); display: block; margin-bottom: 16px; }
+.trust-tag { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-muted); margin-bottom: 8px; }
+.trust-item h3 { font-family: 'DM Serif Display', serif; font-size: 22px; font-weight: 400; line-height: 1.2; letter-spacing: -0.01em; margin-bottom: 8px; }
+.trust-item p { font-size: 14.5px; color: var(--ink-muted); line-height: 1.6; }
+.trust-more { margin-top: 22px; font-size: 14.5px; text-align: center; }
+.trust-more a { color: var(--red); }
+@media (max-width: 1000px) { .trust-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 600px)  { .trust-grid { grid-template-columns: minmax(0, 1fr); } .trust-item { padding: 22px 18px; } }
+
 /* ========== STORY BAND ========== */
 .story {
   background: transparent;
@@ -1329,11 +1342,60 @@ footer {
         <li><span data-i18n="pricing.extras.l4">Schedule for a future date</span><strong>Free</strong></li>
       </ul>
       <p class="extras-note" data-i18n="pricing.extras.note">Every extra is shown before you pay. No subscriptions, no hidden fees.</p>
-      <p class="extras-note"><span data-i18n="pricing.trust">Every order is checked by a person before printing. Payments are handled by Stripe (PCI DSS Level 1). Letters are printed by a print partner with a SOC 2 Type II report.</span> <a href="/privacy#partners" data-i18n="pricing.trust.link">How we protect your letter →</a></p>
       <p class="extras-note"><a href="/bulk-mailing" data-i18n="pricing.bulk.link">Sending 10 or more letters? See bulk pricing →</a></p>
     </div>
   </div>
 </div>
+
+<!-- TRUST -->
+<section id="trust">
+  <div class="section-inner">
+    <div class="section-head">
+      <div class="eyebrow" data-i18n="trust.eyebrow">Safety &amp; privacy</div>
+      <h2 data-i18n="trust.h2">Your letter is in careful hands.</h2>
+      <p data-i18n="trust.sub">People send us tax forms, legal letters and personal documents. Here is how we keep them safe from upload to mailbox.</p>
+    </div>
+    <div class="trust-grid">
+      <div class="trust-item">
+        <svg class="trust-ico" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c.8-3.6 3.6-5.5 7-5.5s6.2 1.9 7 5.5"/></svg>
+        <div class="trust-tag" data-i18n="trust.review.tag">Human review</div>
+        <h3 data-i18n="trust.review.h3">Checked by a person</h3>
+        <p data-i18n="trust.review.p">Every order is looked over before anything is printed. Nothing goes to the printer automatically.</p>
+      </div>
+      <div class="trust-item">
+        <svg class="trust-ico" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="1.5"/><path d="M3 10h18M7 15h3"/></svg>
+        <div class="trust-tag" data-i18n="trust.pay.tag">PCI DSS Level 1</div>
+        <h3 data-i18n="trust.pay.h3">Your card never touches us</h3>
+        <p data-i18n="trust.pay.p">Payments are handled by Stripe, a PCI DSS Level 1 certified provider. We never see or store your card number.</p>
+      </div>
+      <div class="trust-item">
+        <svg class="trust-ico" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 9V3h10v6"/><rect x="3" y="9" width="18" height="8" rx="1.5"/><path d="M7 14h10v7H7z"/></svg>
+        <div class="trust-tag" data-i18n="trust.print.tag">SOC 2 Type II</div>
+        <h3 data-i18n="trust.print.h3">An audited print partner</h3>
+        <p data-i18n="trust.print.p">Letters are printed and mailed by a partner with a SOC 2 Type II report, PCI DSS 3.2.1 certification and HIPAA-aligned processes.</p>
+      </div>
+      <div class="trust-item">
+        <svg class="trust-ico" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="1.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+        <div class="trust-tag" data-i18n="trust.enc.tag">HTTPS</div>
+        <h3 data-i18n="trust.enc.h3">Encrypted in transit</h3>
+        <p data-i18n="trust.enc.p">Your files travel over an encrypted connection from your browser to us, and from us to the printer.</p>
+      </div>
+      <div class="trust-item">
+        <svg class="trust-ico" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>
+        <div class="trust-tag" data-i18n="trust.del.tag">7 days</div>
+        <h3 data-i18n="trust.del.h3">Deleted after mailing</h3>
+        <p data-i18n="trust.del.p">Your letter and attachments are deleted from our systems within 7 days of mailing.</p>
+      </div>
+      <div class="trust-item">
+        <svg class="trust-ico" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7L4 8.5"/><path d="M4 4v4.5h4.5"/></svg>
+        <div class="trust-tag" data-i18n="trust.refund.tag">Full refund</div>
+        <h3 data-i18n="trust.refund.h3">Your money back before printing</h3>
+        <p data-i18n="trust.refund.p">Cancel any time before your letter goes to the printer for a full refund. If we make a mistake, we reprint it free.</p>
+      </div>
+    </div>
+    <p class="trust-more"><a href="/privacy#partners" data-i18n="trust.more">Read our privacy policy →</a></p>
+  </div>
+</section>
 
 <!-- USE CASES -->
 <section id="usecases">
@@ -1724,7 +1786,7 @@ window.addEventListener('load', async function personalizeTicker(){
 </script>
 
 <script src="/theme.js?v=2" defer></script>
-<script src="/lang.js?v=34" defer></script>
+<script src="/lang.js?v=35" defer></script>
 <script>
 (async () => {
   try {
