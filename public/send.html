@@ -1832,6 +1832,7 @@ async function doInlineRegister() {
   btn.disabled = true; btn.textContent = LH_T('send.acct.creating');
   const r = await fetch('/api/account/register', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email, password }) }).then(r => r.json()).catch(() => ({ error: LH_T('send.acct.err.net') }));
   btn.disabled = false; btn.textContent = LH_T('send.acct.create.arrow');
+  if (r.ok && r.verify) { errEl.textContent = LH_T('account.verify.sent'); errEl.style.color = 'inherit'; errEl.style.display = 'block'; return; }
   if (r.ok) { window.location.reload(); return; }
   errEl.textContent = r.error || LH_T('send.acct.err.create');
   errEl.style.display = 'block';
@@ -1882,7 +1883,7 @@ function fillSavedRecipient(sel) {
   } catch(e) {}
 }
 </script>
-<script src="/lang.js?v=37" defer></script>
+<script src="/lang.js?v=38" defer></script>
 <script type="module">
   import * as pdfjsLib from '/vendor/pdfjs/pdf.min.mjs';
   pdfjsLib.GlobalWorkerOptions.workerSrc = '/vendor/pdfjs/pdf.worker.min.mjs';

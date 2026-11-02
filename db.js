@@ -118,6 +118,12 @@ try { db.exec(`ALTER TABLE customers ADD COLUMN sender_country TEXT`); } catch {
 try { db.exec(`ALTER TABLE customers ADD COLUMN password_hash TEXT`);         } catch {}
 try { db.exec(`ALTER TABLE customers ADD COLUMN account_created_at DATETIME`);} catch {}
 try { db.exec(`ALTER TABLE customers ADD COLUMN unsubscribed_at DATETIME`);   } catch {}
+// Accounts must prove they own the email before they can see its orders. Accounts made
+// before this column existed are treated as verified (only on the run that adds it).
+try {
+  db.exec(`ALTER TABLE customers ADD COLUMN email_verified_at DATETIME`);
+  db.exec(`UPDATE customers SET email_verified_at = COALESCE(account_created_at, CURRENT_TIMESTAMP) WHERE password_hash IS NOT NULL`);
+} catch {}
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS funnel_events (

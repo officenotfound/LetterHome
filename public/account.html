@@ -96,7 +96,7 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:40px 36px;marg
 <script src="/footer.js?v=4" defer></script>
 
 <script src="/theme.js?v=2" defer></script>
-<script src="/lang.js?v=37"></script>
+<script src="/lang.js?v=38"></script>
 <script>
 const app = document.getElementById('app');
 const path = window.location.pathname;
@@ -167,7 +167,7 @@ function updateStrength(inputId, barId, labelId) {
 }
 
 (async () => {
-  if (path === '/account/login')    { renderLogin();    return; }
+  if (path === '/account/login')    { renderLogin(); if (new URLSearchParams(location.search).get('verify') === 'expired') showErr('login-err', LH_T('account.verify.expired')); return; }
   if (path === '/account/register') { renderRegister(); return; }
   if (path === '/account/forgot')   { renderForgot();   return; }
   if (path === '/account/reset')    { renderReset();    return; }
@@ -343,6 +343,7 @@ async function doRegister() {
   btn.disabled = true; btn.textContent = LH_T('send.acct.creating');
   const r = await post('/api/account/register', { email, password });
   btn.disabled = false; btn.textContent = LH_T('send.acct.create.arrow');
+  if (r.ok && r.verify) { document.getElementById('reg-err').style.color = 'var(--ink)'; showErr('reg-err', LH_T('account.verify.sent')); return; }
   if (r.ok) { window.location.replace('/account'); return; }
   showErr('reg-err', r.error || LH_T('send.acct.err.create'));
 }

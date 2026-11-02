@@ -225,20 +225,20 @@ async function isPasswordBreached(password) {
 
 // Password reset tokens bind to the current password_hash so they invalidate
 // the moment the password changes.
-function passwordResetToken(email, currentHash) {
+function passwordResetToken(email, currentHash, purpose = 'reset') {
   const ts = Date.now();
   const key = process.env.SESSION_SECRET || randomBytes(32).toString('hex');
-  const data = `${String(email).toLowerCase()}.${ts}.${currentHash || ''}.reset`;
+  const data = `${String(email).toLowerCase()}.${ts}.${currentHash || ''}.${purpose}`;
   const hmac = createHmac('sha256', key).update(data).digest('hex');
   return `${ts}.${hmac}`;
 }
-function verifyPasswordResetToken(email, currentHash, token, maxAgeMs = 30 * 60 * 1000) {
+function verifyPasswordResetToken(email, currentHash, token, maxAgeMs = 30 * 60 * 1000, purpose = 'reset') {
   const [tsStr, hmac] = String(token || '').split('.');
   const ts = Number(tsStr);
   if (!ts || !hmac) return false;
   if (Date.now() - ts > maxAgeMs) return false;
   const key = process.env.SESSION_SECRET || randomBytes(32).toString('hex');
-  const data = `${String(email).toLowerCase()}.${ts}.${currentHash || ''}.reset`;
+  const data = `${String(email).toLowerCase()}.${ts}.${currentHash || ''}.${purpose}`;
   const expected = createHmac('sha256', key).update(data).digest('hex');
   try { return timingSafeEqual(Buffer.from(hmac, 'hex'), Buffer.from(expected, 'hex')); }
   catch { return false; }
@@ -850,7 +850,8 @@ Object.entries(REGION_REDIRECTS).forEach(([from, to]) =>
   )
 );
 app.get('/account', (req, res) => res.sendFile(path.join(__dirname, 'public', 'account.html')));
-app.get('/account/:page', (req, res) => res.sendFile(path.join(__dirname, 'public', 'account.html')));
+app.get('/account/:page', (req, res, next) => req.params.page === 'verify' ? next()   // email confirmation link, handled below
+  : res.sendFile(path.join(__dirname, 'public', 'account.html')));
 
 app.get('/faq', (req, res) => res.redirect('/#faq'));
 
@@ -3059,8 +3060,8 @@ app.post('/api/account/register', accountLimiter, async (req, res) => {
       return res.status(400).json({ error: "This password has appeared in known data breaches. Please choose a different one. Your security matters." });
     }
 
-    const existing = db.prepare('SELECT email, password_hash FROM customers WHERE email = ?').get(email);
-    if (existing?.password_hash) {
+    const existing = db.prepare('SELECT email, password_hash, email_verified_at FROM customers WHERE email = ?').get(email);
+    if (existing?.password_hash && existing.email_verified_at) {
       // Don't reveal that the email is taken. Notify the rightful owner instead
       // and return the same shape we'd return on a successful new registration.
       sendMail({
@@ -3072,28 +3073,49 @@ app.post('/api/account/register', accountLimiter, async (req, res) => {
                  `If this was you:\n  • Sign in: ${process.env.BASE_URL}/account/login\n  • Forgot your password? ${process.env.BASE_URL}/account/forgot\n\n` +
                  `If this wasn't you, no action is needed. Your account is safe.\n\nLetterhome`,
       }, 'register_collision').catch(() => {});
-      return res.json({ ok: true });
+      return res.json({ ok: true, verify: true });
     }
 
+    // The account only opens once the owner clicks the link we email, so nobody can
+    // register someone else's email and see that person's orders.
     const hash = await bcrypt.hash(password, 12);
     if (existing) {
-      db.prepare('UPDATE customers SET password_hash = ?, account_created_at = CURRENT_TIMESTAMP, deleted_at = NULL WHERE email = ?').run(hash, email);
+      db.prepare('UPDATE customers SET password_hash = ?, account_created_at = CURRENT_TIMESTAMP, email_verified_at = NULL, deleted_at = NULL WHERE email = ?').run(hash, email);
     } else {
       db.prepare('INSERT INTO customers (email, password_hash, account_created_at) VALUES (?,?,CURRENT_TIMESTAMP)').run(email, hash);
     }
-
-    req.session.regenerate(err => {
-      if (err) return res.status(500).json({ error: 'Session error.' });
-      req.session.customer = { email };
-      req.session.save(err2 => {
-        if (err2) return res.status(500).json({ error: 'Session error.' });
-        res.json({ ok: true });
-      });
-    });
+    sendVerifyEmail(email, hash);
+    res.json({ ok: true, verify: true });
   } catch (e) {
     console.error('[account/register]', e.message);
     res.status(500).json({ error: 'Could not create account. Please try again.' });
   }
+});
+
+const VERIFY_MAX_AGE_MS = 48 * 60 * 60 * 1000;
+function sendVerifyEmail(email, hash) {
+  const token = passwordResetToken(email, hash, 'verify');
+  const link  = `${process.env.BASE_URL}/account/verify?email=${encodeURIComponent(email)}&token=${encodeURIComponent(token)}`;
+  sendMail({
+    from:    process.env.EMAIL_FROM,
+    to:      email,
+    subject: 'Confirm your Letterhome account',
+    text:    `Hi,\n\nClick the link below within 48 hours to confirm your email and open your Letterhome account:\n\n${link}\n\n` +
+             `If you didn't create an account, ignore this email and nothing will happen.\n\nLetterhome`,
+  }, 'account_verify').catch(() => {});
+}
+
+app.get('/account/verify', accountLimiter, (req, res) => {
+  const email = String(req.query.email || '').trim().toLowerCase();
+  const customer = db.prepare('SELECT email, password_hash, email_verified_at FROM customers WHERE email = ? AND deleted_at IS NULL').get(email);
+  if (!customer?.password_hash || !verifyPasswordResetToken(email, customer.password_hash, req.query.token, VERIFY_MAX_AGE_MS, 'verify'))
+    return res.redirect('/account/login?verify=expired');
+  if (!customer.email_verified_at) db.prepare('UPDATE customers SET email_verified_at = CURRENT_TIMESTAMP WHERE email = ?').run(email);
+  req.session.regenerate(err => {
+    if (err) return res.redirect('/account/login');
+    req.session.customer = { email };
+    req.session.save(() => res.redirect('/account'));
+  });
 });
 
 app.post('/api/account/login', accountLimiter, async (req, res) => {
@@ -3107,6 +3129,10 @@ app.post('/api/account/login', accountLimiter, async (req, res) => {
     const hash = customer?.password_hash || '$2a$12$invalidhashpaddingtopreventiumenumeration000000000000000';
     const match = await bcrypt.compare(password, hash);
     if (!customer?.password_hash || !match) return res.status(401).json({ error: 'Invalid email or password.' });
+    if (!customer.email_verified_at) {
+      sendVerifyEmail(customer.email, customer.password_hash);
+      return res.status(403).json({ error: 'Please confirm your email first. We just sent you a new confirmation link.', verify: true });
+    }
 
     req.session.regenerate(err => {
       if (err) return res.status(500).json({ error: 'Session error.' });
@@ -3172,7 +3198,7 @@ app.post('/api/account/reset-password', accountLimiter, async (req, res) => {
     }
 
     const hash = await bcrypt.hash(password, 12);
-    db.prepare('UPDATE customers SET password_hash = ? WHERE email = ?').run(hash, email);
+    db.prepare('UPDATE customers SET password_hash = ?, email_verified_at = COALESCE(email_verified_at, CURRENT_TIMESTAMP) WHERE email = ?').run(hash, email);
     sendMail({
       from:    process.env.EMAIL_FROM,
       to:      email,
