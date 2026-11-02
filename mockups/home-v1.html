@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LetterHome — Mockup v1</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#14213d;--body:#3d4558;--muted:#6b7385;--line:#e3e6ec;--bg:#ffffff;--soft:#f6f7f9;--brand:#b3261e;--brand-ink:#8f1d17;--ok:#1f7a4d}
+*{box-sizing:border-box;margin:0}
+body{font-family:Inter,system-ui,sans-serif;color:var(--body);background:var(--bg);line-height:1.6;font-size:16px}
+.wrap{max-width:1120px;margin:0 auto;padding:0 20px}
+h1,h2,h3{color:var(--ink);font-family:"Source Serif 4",Georgia,serif;font-weight:600;line-height:1.15}
+a{color:inherit}
+.banner{background:#fff8e1;border-bottom:1px solid #f0dc9a;font-size:13px;text-align:center;padding:8px}
+header{border-bottom:1px solid var(--line)}
+header .wrap{display:flex;align-items:center;justify-content:space-between;height:68px}
+.logo{font-weight:700;color:var(--ink);font-size:19px;display:flex;gap:10px;align-items:center;text-decoration:none}
+.logo i{width:28px;height:20px;border:2px solid var(--brand);border-radius:3px;position:relative;display:inline-block}
+.logo i:after{content:"";position:absolute;inset:2px 3px auto;height:8px;border-left:2px solid var(--brand);border-bottom:2px solid var(--brand);transform:skewY(30deg) rotate(-45deg) scale(.7);transform-origin:left}
+nav{display:flex;gap:28px;font-size:15px;align-items:center}
+nav a{text-decoration:none;color:var(--body)}
+.btn{display:inline-block;background:var(--brand);color:#fff!important;padding:12px 22px;border-radius:8px;font-weight:600;text-decoration:none;font-size:15px}
+.btn:hover{background:var(--brand-ink)}
+.btn.ghost{background:transparent;color:var(--ink)!important;border:1px solid var(--line)}
+.hero{padding:80px 0 64px;display:grid;grid-template-columns:1.1fr .9fr;gap:56px;align-items:center}
+.eyebrow{font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--brand)}
+.hero h1{font-size:52px;margin:14px 0 18px}
+.hero p.lead{font-size:19px;max-width:520px}
+.cta-row{display:flex;gap:12px;margin:28px 0 22px;flex-wrap:wrap}
+.trust{display:flex;gap:22px;flex-wrap:wrap;font-size:14px;color:var(--muted)}
+.trust span:before{content:"✓ ";color:var(--ok);font-weight:700}
+.letter{background:var(--soft);border:1px solid var(--line);border-radius:14px;padding:28px}
+.paper{background:#fff;border-radius:6px;box-shadow:0 10px 30px rgba(20,33,61,.12);padding:26px 28px;font-family:"Source Serif 4",serif;font-size:14px;color:#333}
+.paper .addr{font-family:Inter;font-size:12px;color:var(--muted);border:1px dashed var(--line);padding:8px 10px;border-radius:4px;margin-bottom:18px;width:60%}
+.paper .ln{height:8px;background:#eceef2;border-radius:4px;margin:9px 0}
+.status{margin-top:16px;display:flex;justify-content:space-between;font-size:13px;color:var(--ink);font-weight:500}
+.status b{color:var(--ok)}
+section{padding:72px 0;border-top:1px solid var(--line)}
+section.alt{background:var(--soft)}
+.sh{max-width:620px;margin-bottom:40px}
+.sh h2{font-size:36px;margin-bottom:10px}
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+.step{background:#fff;border:1px solid var(--line);border-radius:12px;padding:22px}
+.step .n{width:30px;height:30px;border-radius:50%;background:var(--ink);color:#fff;display:grid;place-items:center;font-weight:600;font-size:14px;margin-bottom:14px}
+.step h3{font-family:Inter;font-size:16px;margin-bottom:6px}
+.step p{font-size:14px;color:var(--muted)}
+.prices{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.price{background:#fff;border:1px solid var(--line);border-radius:12px;padding:26px}
+.price.main{border:2px solid var(--ink)}
+.price .to{font-weight:600;color:var(--ink)}
+.price .amt{font-size:40px;font-weight:700;color:var(--ink);margin:6px 0}
+.price .amt small{font-size:15px;font-weight:500;color:var(--muted)}
+.price ul{padding:0;list-style:none;font-size:14px}
+.price li{padding:6px 0;border-top:1px solid var(--line)}
+.note{font-size:13px;color:var(--muted);margin-top:16px}
+.promise{display:grid;grid-template-columns:repeat(3,1fr);gap:28px}
+.promise h3{font-family:Inter;font-size:17px;margin-bottom:6px}
+.promise p{font-size:15px}
+.final{text-align:center}
+.final h2{font-size:38px;margin-bottom:12px}
+footer{border-top:1px solid var(--line);padding:32px 0;font-size:14px;color:var(--muted)}
+footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px}
+@media(max-width:860px){.hero{grid-template-columns:1fr;padding:48px 0}.hero h1{font-size:38px}.steps{grid-template-columns:1fr 1fr}.prices,.promise{grid-template-columns:1fr}nav a:not(.btn){display:none}}
+@media(max-width:520px){.steps{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="banner">Design mockup v1 — not live. Prices are real; wording is draft.</div>
+<header><div class="wrap">
+  <a class="logo" href="#"><i></i>LetterHome</a>
+  <nav><a href="#how">How it works</a><a href="#pricing">Pricing</a><a href="#">FAQ</a><a href="#">Sign in</a><a class="btn" href="#">Send a letter</a></nav>
+</div></header>
+
+<div class="wrap hero">
+  <div>
+    <div class="eyebrow">Print &amp; mail service · Canada</div>
+    <h1>Send a real letter in Canada, from anywhere.</h1>
+    <p class="lead">Upload a document or type your letter. We print it, put it in an envelope and mail it with Canada Post. You never need a printer or a stamp.</p>
+    <div class="cta-row"><a class="btn" href="#">Send a letter — $6</a><a class="btn ghost" href="#how">See how it works</a></div>
+    <div class="trust"><span>A person checks every order</span><span>Full refund until it's printed</span><span>Secure payment by Stripe</span></div>
+  </div>
+  <div class="letter">
+    <div class="paper">
+      <div class="addr">To: Service Canada<br>Ottawa ON</div>
+      <div class="ln" style="width:40%"></div><div class="ln"></div><div class="ln"></div><div class="ln" style="width:85%"></div><div class="ln"></div><div class="ln" style="width:60%"></div>
+    </div>
+    <div class="status"><span>Order #1042</span><b>● Mailed</b></div>
+  </div>
+</div>
+
+<section id="how" class="alt"><div class="wrap">
+  <div class="sh"><h2>How it works</h2><p>Four steps. Most letters are mailed within one business day of approval.</p></div>
+  <div class="steps">
+    <div class="step"><div class="n">1</div><h3>Write or upload</h3><p>Type your letter, or upload a PDF or Word file (up to 5 pages).</p></div>
+    <div class="step"><div class="n">2</div><h3>Add the address</h3><p>Enter who it's going to. You'll see a preview of the finished letter.</p></div>
+    <div class="step"><div class="n">3</div><h3>We review it</h3><p>A person checks your order before anything is printed.</p></div>
+    <div class="step"><div class="n">4</div><h3>Printed and mailed</h3><p>Printed in Canada and mailed with Canada Post. We email you at each step.</p></div>
+  </div>
+</div></section>
+
+<section id="pricing"><div class="wrap">
+  <div class="sh"><h2>Simple, flat pricing</h2><p>Prices in Canadian dollars. Printing, envelope and postage included.</p></div>
+  <div class="prices">
+    <div class="price main"><div class="to">Within Canada</div><div class="amt">$6 <small>/ letter</small></div><ul><li>Up to 5 pages, black &amp; white</li><li>Canada Post standard mail</li><li>Email updates</li></ul></div>
+    <div class="price"><div class="to">To the United States</div><div class="amt">$6 <small>/ letter</small></div><ul><li>Up to 5 pages</li><li>Standard mail</li><li>Email updates</li></ul></div>
+    <div class="price"><div class="to">Everywhere else</div><div class="amt">$20 <small>/ letter</small></div><ul><li>Up to 5 pages</li><li>International mail</li><li>Email updates</li></ul></div>
+  </div>
+  <p class="note">Free reprint if a letter goes missing: within 30 days in Canada, 60 days elsewhere. Always free if the mistake is ours.</p>
+</div></section>
+
+<section class="alt"><div class="wrap">
+  <div class="sh"><h2>Why people trust LetterHome</h2></div>
+  <div class="promise">
+    <div><h3>Reviewed by a person</h3><p>Every letter is checked before it's printed. Nothing goes out automatically.</p></div>
+    <div><h3>Refund before printing</h3><p>Changed your mind? Cancel any time before your letter is sent to the printer for a full refund.</p></div>
+    <div><h3>Your letter stays private</h3><p>Files are used only to print your letter. Payments are handled by Stripe; we never see your card.</p></div>
+  </div>
+</div></section>
+
+<section><div class="wrap final">
+  <h2>Ready to send your letter?</h2>
+  <p style="margin-bottom:24px">It takes about five minutes.</p>
+  <a class="btn" href="#">Send a letter — $6</a>
+</div></section>
+
+<footer><div class="wrap"><span>© 2026 LetterHome · Vancouver, BC</span><span>Terms · Privacy · Refunds · Contact · Français</span></div></footer>
+</body>
+</html>

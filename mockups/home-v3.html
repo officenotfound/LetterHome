@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LetterHome — Mockup v3</title>
+<link href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;600;700&family=Atkinson+Hyperlegible:wght@400;700&family=Courier+Prime&display=swap" rel="stylesheet">
+<style>
+/* Layout: the page reads like a well-made postal form — labelled fields, a receipt, a real envelope. Red only where Canada Post would put it. */
+:root{
+  --paper:#ffffff; --ground:#f3f3f1; --ink:#1d1f22; --body:#45484d; --rule:#cfd0cc; --red:#c8102e;
+  --display:"Familjen Grotesk",Arial,sans-serif; --text:"Atkinson Hyperlegible",Arial,sans-serif; --type:"Courier Prime","Courier New",monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--paper);color:var(--body);font:17px/1.6 var(--text)}
+.w{max-width:1080px;margin:0 auto;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--display);color:var(--ink);text-wrap:balance;letter-spacing:-.01em}
+a{color:var(--ink)}
+.mock{background:var(--ink);color:#fff;font-size:12px;text-align:center;padding-block:5px}
+
+header{border-bottom:1px solid var(--rule)}
+header .w{display:flex;align-items:center;justify-content:space-between;padding-block:18px;gap:16px}
+.logo{font-family:var(--display);font-weight:700;font-size:21px;color:var(--ink);text-decoration:none;display:flex;align-items:center;gap:10px}
+.logo svg{flex:none}
+nav{display:flex;gap:26px;align-items:center;font-size:15px}
+nav a{text-decoration:none}
+nav a:hover{text-decoration:underline}
+.lang{color:var(--body)}
+.btn{display:inline-block;background:var(--red);color:#fff;font-family:var(--display);font-weight:600;font-size:16px;padding:13px 22px;border-radius:2px;text-decoration:none}
+.btn:hover{background:#a00d25}
+.btn:focus-visible,a:focus-visible{outline:3px solid #2a6ebb;outline-offset:2px}
+
+/* hero */
+.hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:56px;padding-block:72px 64px;align-items:center}
+.hero h1{font-size:clamp(36px,5vw,54px);line-height:1.05;font-weight:700}
+.hero p{margin-top:20px;max-width:30em;font-size:18px}
+.go{display:flex;gap:20px;align-items:center;margin-top:30px;flex-wrap:wrap}
+.go small{font-size:15px}
+
+/* the envelope: a #10 double-window, drawn to scale (9.5 x 4.125 in) */
+.envelope{position:relative;width:100%;aspect-ratio:9.5/4.125;max-width:100%;background:#fbfbf8;border:1px solid var(--rule);box-shadow:0 1px 0 var(--rule),0 18px 40px -24px rgba(29,31,34,.35)}
+.win{position:absolute;border:1px solid #dcdcd6;background:#fff;border-radius:3px;padding:2.2% 3%;font:clamp(9px,1.25vw,13.5px)/1.45 var(--type);color:var(--ink);overflow:hidden}
+.win.from{left:3.9%;top:8%;width:38%;height:28%;color:#666}
+.win.to{left:9.2%;top:46%;width:46%;height:34%}
+.ind{position:absolute;right:4%;top:9%;width:15%;aspect-ratio:1;border:1.5px solid var(--ink);display:grid;place-items:center;text-align:center;font:600 clamp(7px,.9vw,10px)/1.25 var(--display);color:var(--ink);letter-spacing:.04em}
+.ind b{display:block;color:var(--red);font-size:1.25em}
+.cap{display:flex;justify-content:space-between;font-size:13px;margin-top:10px;color:var(--body)}
+
+/* receipt */
+.band{background:var(--ground);border-block:1px solid var(--rule)}
+.price{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,380px);gap:56px;padding-block:64px;align-items:start}
+.price h2{font-size:32px;line-height:1.15}
+.price p{margin-top:14px;max-width:32em}
+.dest{margin-top:26px;border-top:1px solid var(--rule)}
+.dest div{display:flex;justify-content:space-between;padding-block:12px;border-bottom:1px solid var(--rule);font-variant-numeric:tabular-nums}
+.dest b{color:var(--ink)}
+.receipt{background:var(--paper);border:1px solid var(--rule);padding:26px 26px 22px;font:15px/1.5 var(--type);color:var(--ink)}
+.receipt .t{font-family:var(--display);font-weight:600;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--body);margin-bottom:14px}
+.receipt .r{display:flex;justify-content:space-between;padding-block:5px}
+.receipt .r.tot{border-top:1px dashed var(--ink);margin-top:10px;padding-top:12px;font-weight:700;font-size:17px}
+.receipt .r span:last-child{font-variant-numeric:tabular-nums}
+.receipt .muted{color:#777}
+
+/* process */
+.how{padding-block:72px}
+.how h2,.rules h2{font-size:32px}
+ol.steps{list-style:none;margin-top:30px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:28px;counter-reset:s}
+ol.steps li{counter-increment:s;border-top:3px solid var(--ink);padding-top:14px}
+ol.steps li:before{content:"Step " counter(s);font:600 13px var(--display);letter-spacing:.06em;text-transform:uppercase;color:var(--red)}
+ol.steps h3{font-size:19px;margin-block:6px}
+ol.steps p{font-size:15.5px}
+
+/* the rules */
+.rules{padding-block:72px;border-top:1px solid var(--rule)}
+.rules dl{margin-top:28px;display:grid;grid-template-columns:220px minmax(0,1fr);border-top:1px solid var(--rule)}
+.rules dt,.rules dd{padding-block:18px;border-bottom:1px solid var(--rule)}
+.rules dt{font-family:var(--display);font-weight:600;color:var(--ink);font-size:17px}
+.rules dd{max-width:38em}
+
+.end{background:var(--ink);color:#d9dad7}
+.end .w{display:flex;justify-content:space-between;align-items:center;gap:24px;padding-block:44px;flex-wrap:wrap}
+.end h2{color:#fff;font-size:28px}
+footer{font-size:14px;padding-block:30px}
+footer .w{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+footer nav{gap:18px;font-size:14px}
+
+@media (max-width:860px){
+  .hero,.price{grid-template-columns:minmax(0,1fr);gap:36px}
+  .hero{padding-block:44px}
+  ol.steps{grid-template-columns:repeat(2,minmax(0,1fr))}
+  nav a.hide{display:none}
+}
+@media (max-width:520px){
+  ol.steps{grid-template-columns:minmax(0,1fr)}
+  .rules dl{grid-template-columns:minmax(0,1fr)}
+  .rules dt{border-bottom:0;padding-bottom:0}
+  nav .lang{display:none}
+}
+</style>
+</head>
+<body>
+<div class="mock">Design mockup v3 · not live</div>
+
+<header><div class="w">
+  <a class="logo" href="#"><svg width="30" height="20" viewBox="0 0 30 20" aria-hidden="true"><rect x=".75" y=".75" width="28.5" height="18.5" fill="none" stroke="#1d1f22" stroke-width="1.5"/><rect x="4" y="11" width="13" height="5" fill="none" stroke="#1d1f22" stroke-width="1.2"/><rect x="22" y="3.5" width="5" height="6" fill="#c8102e"/></svg>LetterHome</a>
+  <nav><a class="hide" href="#how">How it works</a><a class="hide" href="#price">Prices</a><a class="lang" href="#">Français</a><a href="#">Sign in</a></nav>
+</div></header>
+
+<main>
+<div class="w hero">
+  <div>
+    <h1>Send a paper letter in Canada from your browser.</h1>
+    <p>Upload a PDF or Word file, or type it here. We print it, fold it into a windowed envelope and mail it with Canada Post. You never touch a printer or a stamp.</p>
+    <div class="go"><a class="btn" href="#">Start a letter</a><small>$6 within Canada, postage included</small></div>
+  </div>
+  <figure>
+    <div class="envelope" role="img" aria-label="A #10 windowed envelope addressed to Service Canada in Ottawa">
+      <div class="win from">J. MARTIN<br>c/o LETTERHOME<br>VANCOUVER BC</div>
+      <div class="win to">SERVICE CANADA<br>PO BOX 2013 STN MAIN<br>OTTAWA ON&nbsp; K1A 0J9</div>
+      <div class="ind">POSTAGE<br>PAID<b>CANADA</b></div>
+    </div>
+    <figcaption class="cap"><span>#10 double-window envelope, as mailed</span><span>Addresses printed from your order</span></figcaption>
+  </figure>
+</div>
+
+<div class="band" id="price"><div class="w price">
+  <div>
+    <h2>One price per letter. Postage is in it.</h2>
+    <p>Up to 5 pages, printed in black on standard letter paper. Prices are in Canadian dollars and taxes are shown at checkout.</p>
+    <div class="dest">
+      <div><span>Anywhere in Canada</span><b>$6.00</b></div>
+      <div><span>United States</span><b>$6.00</b></div>
+      <div><span>Any other country</span><b>$20.00</b></div>
+    </div>
+  </div>
+  <div class="receipt" aria-label="Example order">
+    <div class="t">Example order</div>
+    <div class="r"><span>Letter, 2 pages</span><span>incl.</span></div>
+    <div class="r"><span>#10 envelope</span><span>incl.</span></div>
+    <div class="r"><span>Canada Post postage</span><span>incl.</span></div>
+    <div class="r muted"><span>To: Ottawa ON K1A 0J9</span><span></span></div>
+    <div class="r tot"><span>Total</span><span>$6.00 CAD</span></div>
+  </div>
+</div></div>
+
+<section class="w how" id="how">
+  <h2>What happens after you pay</h2>
+  <ol class="steps">
+    <li><h3>You send the file</h3><p>Type it or upload a PDF or Word file, add the address, and check the preview.</p></li>
+    <li><h3>We read it</h3><p>A person looks over every order before anything is printed.</p></li>
+    <li><h3>It's printed</h3><p>Printed, folded and sealed in a windowed envelope.</p></li>
+    <li><h3>It's mailed</h3><p>Handed to the post. We email you when it goes out.</p></li>
+  </ol>
+</section>
+
+<section class="w rules">
+  <h2>The fine print, up front</h2>
+  <dl>
+    <dt>Refunds</dt><dd>Cancel any time before your letter goes to the printer and you get your money back in full.</dd>
+    <dt>Reprints</dt><dd>If your letter doesn't arrive, we reprint it free within 30 days in Canada and 60 days elsewhere. If the mistake is ours, we reprint it no matter what.</dd>
+    <dt>What we won't mail</dt><dd>Threats, harassment and anything illegal. Orders like that are refunded and not printed.</dd>
+    <dt>What we don't offer</dt><dd>Tracking numbers, signatures or proof of mailing. For legal deadlines, use registered mail at a post office.</dd>
+    <dt>Your file</dt><dd>Used only to print your letter. Card payments go through Stripe and we never see your card number.</dd>
+  </dl>
+</section>
+</main>
+
+<div class="end"><div class="w">
+  <h2>Have a letter ready?</h2>
+  <a class="btn" href="#">Start a letter</a>
+</div></div>
+
+<footer><div class="w">
+  <span>LetterHome, Vancouver BC. Not affiliated with Canada Post.</span>
+  <nav><a href="#">Help</a><a href="#">Terms</a><a href="#">Privacy</a><a href="#">Contact</a></nav>
+</div></footer>
+</body>
+</html>

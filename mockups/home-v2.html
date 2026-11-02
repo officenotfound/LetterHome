@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LetterHome — Mockup v2</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{--red:#d52b1e;--red-d:#a8180e;--ink:#1b1d21;--char:#2d3036;--body:#4a4f58;--muted:#7a808a;--line:#dfe1e5;--soft:#f4f4f2;--white:#fff}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Archivo,system-ui,sans-serif;color:var(--body);background:var(--white);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1200px;margin:0 auto;padding:0 24px}
+h1,h2,h3{color:var(--ink);letter-spacing:-.02em;line-height:1.08}
+.mono{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+.mock{background:var(--ink);color:#fff;text-align:center;font-size:12px;padding:6px}
+
+/* top stripe like official sites */
+.gov{background:var(--soft);border-bottom:1px solid var(--line);font-size:13px}
+.gov .wrap{display:flex;justify-content:space-between;height:38px;align-items:center}
+.gov a{color:var(--char);text-decoration:none}
+header{background:#fff;border-bottom:4px solid var(--red)}
+header .wrap{display:flex;align-items:center;justify-content:space-between;height:76px}
+.brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--ink);font-weight:800;font-size:22px;letter-spacing:-.02em}
+.flagmark{display:flex;height:26px}
+.flagmark span{width:9px;background:var(--red)}
+.flagmark b{width:22px;display:grid;place-items:center;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+nav{display:flex;align-items:center;gap:30px;font-weight:500;font-size:15px}
+nav a{color:var(--char);text-decoration:none}
+nav a:hover{color:var(--red)}
+.btn{display:inline-flex;align-items:center;gap:10px;background:var(--red);color:#fff!important;font-weight:700;padding:14px 24px;border-radius:4px;text-decoration:none;font-size:15px;transition:background .15s}
+.btn:hover{background:var(--red-d)}
+.btn.line{background:#fff;color:var(--ink)!important;box-shadow:inset 0 0 0 2px var(--ink)}
+.btn.line:hover{background:var(--ink);color:#fff!important}
+
+/* hero */
+.hero{display:grid;grid-template-columns:1.05fr .95fr;gap:64px;align-items:center;padding:84px 0 72px}
+.hero .mono{color:var(--red);display:flex;align-items:center;gap:10px}
+.hero .mono:before{content:"";width:28px;height:2px;background:var(--red)}
+.hero h1{font-size:64px;font-weight:800;margin:20px 0 22px}
+.hero h1 em{font-style:normal;color:var(--red)}
+.hero .lead{font-size:19px;color:var(--char);max-width:540px}
+.ctas{display:flex;gap:14px;margin:34px 0 30px;flex-wrap:wrap}
+.checks{display:grid;grid-template-columns:1fr 1fr;gap:10px 24px;max-width:520px;font-size:14.5px;color:var(--char)}
+.checks div{display:flex;gap:9px;align-items:flex-start}
+.checks svg{flex:none;margin-top:3px}
+
+/* envelope art */
+.art{position:relative;height:440px}
+.env{position:absolute;background:#fff;border:1px solid var(--line);box-shadow:0 30px 60px -20px rgba(27,29,33,.25),0 2px 6px rgba(27,29,33,.06);border-radius:3px}
+.env.back{width:400px;height:220px;right:0;top:20px;transform:rotate(4deg);background:#fbfaf7}
+.env.front{width:440px;height:240px;left:0;top:150px;transform:rotate(-3deg);padding:26px 30px}
+.airmail{position:absolute;inset:0;border:7px solid transparent;border-image:repeating-linear-gradient(45deg,var(--red) 0 12px,#fff 12px 24px,#1b1d21 24px 36px,#fff 36px 48px) 7;border-radius:3px;pointer-events:none;opacity:.9}
+.stamp{position:absolute;top:22px;right:26px;width:70px;height:84px;background:#fff;padding:5px;
+  border:2px dotted #c9c9c9;box-shadow:0 1px 3px rgba(0,0,0,.15)}
+.stamp div{background:var(--red);height:100%;display:grid;place-items:center;color:#fff;font-weight:800;font-size:13px}
+.postmark{position:absolute;top:30px;right:78px;width:92px;height:92px;border:2px solid rgba(27,29,33,.55);border-radius:50%;display:grid;place-items:center;text-align:center;font-family:"IBM Plex Mono";font-size:9px;color:rgba(27,29,33,.7);transform:rotate(-14deg);line-height:1.3}
+.postmark:after{content:"";position:absolute;left:80px;top:28px;width:110px;height:34px;background:repeating-linear-gradient(transparent 0 6px,rgba(27,29,33,.5) 6px 8px)}
+.from{font-size:11px;color:var(--muted);line-height:1.5}
+.to{position:absolute;left:150px;top:120px;font-size:14px;color:var(--ink);line-height:1.55;font-weight:500}
+.to small{display:block;font-family:"IBM Plex Mono";font-size:11px;color:var(--muted);letter-spacing:.06em}
+.tag{position:absolute;right:-6px;bottom:6px;background:var(--ink);color:#fff;padding:12px 16px;border-radius:4px;font-size:13px;display:flex;gap:10px;align-items:center;box-shadow:0 14px 30px -10px rgba(0,0,0,.4)}
+.tag i{width:8px;height:8px;border-radius:50%;background:#3ccf7a;box-shadow:0 0 0 4px rgba(60,207,122,.2)}
+
+/* facts bar */
+.facts{background:var(--ink);color:#fff}
+.facts .wrap{display:grid;grid-template-columns:repeat(4,1fr)}
+.fact{padding:28px 24px;border-left:1px solid rgba(255,255,255,.12)}
+.fact:first-child{border-left:0;padding-left:0}
+.fact b{display:block;font-size:30px;font-weight:800;letter-spacing:-.02em}
+.fact span{font-size:14px;color:#b9bdc4}
+
+section{padding:96px 0}
+.head{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:end;margin-bottom:52px}
+.head .mono{color:var(--red);margin-bottom:14px}
+.head h2{font-size:44px;font-weight:800}
+.head p{font-size:17px;color:var(--char)}
+
+/* steps */
+.steps{display:grid;grid-template-columns:repeat(4,1fr);border-top:2px solid var(--ink)}
+.step{padding:28px 28px 8px 0;margin-right:28px;position:relative}
+.step .num{font-family:"IBM Plex Mono";color:var(--red);font-size:13px;margin-bottom:22px;display:block}
+.step h3{font-size:20px;font-weight:700;margin-bottom:10px}
+.step p{font-size:15px}
+.step:before{content:"";position:absolute;top:-6px;left:0;width:10px;height:10px;background:var(--red)}
+
+/* pricing table */
+.pricing{background:var(--soft);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line)}
+th,td{text-align:left;padding:22px 26px;border-bottom:1px solid var(--line)}
+th{font-family:"IBM Plex Mono";font-weight:500;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);background:#fafaf9}
+td.dest{font-weight:700;color:var(--ink);font-size:17px}
+td.dest small{display:block;font-weight:400;color:var(--muted);font-size:14px}
+td.amt{font-size:28px;font-weight:800;color:var(--ink);letter-spacing:-.02em;white-space:nowrap}
+td.amt small{font-size:14px;color:var(--muted);font-weight:500}
+tr.hl td{background:#fff7f6}
+tr.hl td.dest:before{content:"MOST POPULAR";display:inline-block;font-family:"IBM Plex Mono";font-size:10px;background:var(--red);color:#fff;padding:3px 7px;border-radius:2px;margin-bottom:8px;letter-spacing:.08em}
+.incl{display:flex;gap:28px;flex-wrap:wrap;margin-top:22px;font-size:14.5px;color:var(--char)}
+.incl span:before{content:"✓";color:var(--red);font-weight:800;margin-right:8px}
+
+/* guarantees */
+.guar{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border:1px solid var(--line)}
+.g{padding:36px 32px;border-left:1px solid var(--line)}
+.g:first-child{border-left:0}
+.g .ico{width:46px;height:46px;border:2px solid var(--red);display:grid;place-items:center;margin-bottom:22px;color:var(--red)}
+.g h3{font-size:20px;margin-bottom:10px}
+
+/* final */
+.final{background:var(--red);color:#fff;padding:72px 0;position:relative;overflow:hidden}
+.final .wrap{display:flex;justify-content:space-between;align-items:center;gap:32px;flex-wrap:wrap;position:relative}
+.final h2{color:#fff;font-size:42px;font-weight:800;max-width:620px}
+.final p{color:#ffe1de;margin-top:10px;font-size:17px}
+.final .btn{background:#fff;color:var(--red)!important;font-size:16px;padding:18px 30px}
+.final svg.leaf{position:absolute;right:-60px;top:-80px;width:420px;opacity:.08}
+
+footer{background:var(--ink);color:#b9bdc4;padding:56px 0 32px;font-size:14px}
+.fgrid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:32px;padding-bottom:36px;border-bottom:1px solid rgba(255,255,255,.12)}
+footer h4{color:#fff;font-size:14px;margin-bottom:14px}
+footer a{display:block;color:#b9bdc4;text-decoration:none;margin:6px 0}
+footer .brand{color:#fff;margin-bottom:14px}
+.fbot{display:flex;justify-content:space-between;padding-top:24px;font-size:13px;flex-wrap:wrap;gap:10px}
+
+@media(max-width:980px){
+  .hero{grid-template-columns:1fr;padding:48px 0}.hero h1{font-size:44px}
+  .art{height:360px;transform:scale(.8);transform-origin:left top;margin-bottom:-60px}
+  .facts .wrap{grid-template-columns:1fr 1fr}.fact:nth-child(3){border-left:0;padding-left:0}
+  .head{grid-template-columns:1fr}.head h2{font-size:34px}
+  .steps{grid-template-columns:1fr 1fr;row-gap:24px}
+  .guar{grid-template-columns:1fr}.g{border-left:0;border-top:1px solid var(--line)}.g:first-child{border-top:0}
+  .fgrid{grid-template-columns:1fr 1fr}
+  nav a:not(.btn){display:none}.gov .wrap span:first-child{display:none}
+  th:nth-child(3),td:nth-child(3){display:none}th,td{padding:16px}
+}
+@media(max-width:560px){
+  .hero h1{font-size:36px}.checks{grid-template-columns:1fr}
+  .art{transform:scale(.68);height:300px;margin-bottom:-90px}
+  .steps{grid-template-columns:1fr}.final h2{font-size:30px}
+  section{padding:64px 0}
+}
+</style>
+</head>
+<body>
+<div class="mock">Design mockup v2 · Canadian official direction · not live</div>
+
+<div class="gov"><div class="wrap">
+  <span>Canadian print-and-mail service · Vancouver, British Columbia</span>
+  <span><a href="#">Français</a> &nbsp;·&nbsp; <a href="#">Sign in</a></span>
+</div></div>
+
+<header><div class="wrap">
+  <a class="brand" href="#"><span class="flagmark"><span></span><b><svg width="14" height="14" viewBox="0 0 24 24"><path fill="#d52b1e" d="M12 1l2 4 2-1-1 6 3-3 1 2 4-1-1 4 2 1-6 5 1 2-6-1v5h-2v-5l-6 1 1-2-6-5 2-1-1-4 4 1 1-2 3 3-1-6 2 1z"/></svg></b><span></span></span>LetterHome</a>
+  <nav><a href="#how">How it works</a><a href="#pricing">Pricing</a><a href="#">Help</a><a class="btn" href="#">Send a letter</a></nav>
+</div></header>
+
+<div class="wrap hero">
+  <div>
+    <div class="mono">Print · Envelope · Postage — done for you</div>
+    <h1>Mail a letter in Canada <em>without leaving home.</em></h1>
+    <p class="lead">Upload your document or type your letter online. We print it, seal it and hand it to Canada Post. Built for people abroad, busy professionals, and anyone without a printer.</p>
+    <div class="ctas">
+      <a class="btn" href="#">Start your letter <span>→</span></a>
+      <a class="btn line" href="#pricing">From $6 CAD</a>
+    </div>
+    <div class="checks">
+      <div><svg width="16" height="16" viewBox="0 0 16 16"><path d="M2 8l4 4 8-8" stroke="#d52b1e" stroke-width="2.4" fill="none"/></svg>Every order reviewed by a person</div>
+      <div><svg width="16" height="16" viewBox="0 0 16 16"><path d="M2 8l4 4 8-8" stroke="#d52b1e" stroke-width="2.4" fill="none"/></svg>Full refund until it's printed</div>
+      <div><svg width="16" height="16" viewBox="0 0 16 16"><path d="M2 8l4 4 8-8" stroke="#d52b1e" stroke-width="2.4" fill="none"/></svg>Secure checkout by Stripe</div>
+      <div><svg width="16" height="16" viewBox="0 0 16 16"><path d="M2 8l4 4 8-8" stroke="#d52b1e" stroke-width="2.4" fill="none"/></svg>English &amp; French</div>
+    </div>
+  </div>
+
+  <div class="art" aria-hidden="true">
+    <div class="env back"><div class="airmail"></div></div>
+    <div class="env front">
+      <div class="from">LetterHome<br>On behalf of J. Martin<br>Vancouver BC</div>
+      <div class="postmark">CANADA<br>POSTE · POST<br>2026 11 02</div>
+      <div class="stamp"><div>CANADA</div></div>
+      <div class="to"><small>To</small>Service Canada<br>PO Box 2013 STN Main<br>Ottawa ON&nbsp; K1A 0J9</div>
+    </div>
+    <div class="tag"><i></i>Order #1042 · Mailed</div>
+  </div>
+</div>
+
+<div class="facts"><div class="wrap">
+  <div class="fact"><b>$6</b><span>per letter within Canada, all-in</span></div>
+  <div class="fact"><b>5 min</b><span>to write, upload and pay</span></div>
+  <div class="fact"><b>100%</b><span>of orders checked by a person</span></div>
+  <div class="fact"><b>EN / FR</b><span>fully bilingual service</span></div>
+</div></div>
+
+<section id="how"><div class="wrap">
+  <div class="head">
+    <div><div class="mono">How it works</div><h2>From your screen to a Canadian mailbox.</h2></div>
+    <p>No account needed. You'll see exactly what will be printed before you pay, and we email you as your letter moves along.</p>
+  </div>
+  <div class="steps">
+    <div class="step"><span class="num">01</span><h3>Write or upload</h3><p>Type your letter or upload a PDF or Word file, up to 5 pages.</p></div>
+    <div class="step"><span class="num">02</span><h3>Address &amp; preview</h3><p>Add the recipient and check a true-to-print preview.</p></div>
+    <div class="step"><span class="num">03</span><h3>Reviewed</h3><p>A person checks every order before it goes to print.</p></div>
+    <div class="step"><span class="num">04</span><h3>Printed &amp; mailed</h3><p>Printed, sealed in a windowed envelope and mailed.</p></div>
+  </div>
+</div></section>
+
+<section id="pricing" class="pricing"><div class="wrap">
+  <div class="head">
+    <div><div class="mono">Pricing</div><h2>One flat price. Postage included.</h2></div>
+    <p>Prices in Canadian dollars. No subscriptions, no hidden fees. Up to 5 pages per letter.</p>
+  </div>
+  <table>
+    <thead><tr><th>Sending to</th><th>Price</th><th>Delivery</th></tr></thead>
+    <tbody>
+      <tr class="hl"><td class="dest">Anywhere in Canada<small>Most common for government, banks and family</small></td><td class="amt">$6 <small>CAD</small></td><td>Canada Post standard letter mail</td></tr>
+      <tr><td class="dest">United States<small>All 50 states</small></td><td class="amt">$6 <small>CAD</small></td><td>Standard mail</td></tr>
+      <tr><td class="dest">Rest of the world<small>Any other country</small></td><td class="amt">$20 <small>CAD</small></td><td>International mail</td></tr>
+    </tbody>
+  </table>
+  <div class="incl"><span>Printing</span><span>Envelope</span><span>Postage</span><span>Email updates</span><span>Free reprint if we make a mistake</span></div>
+</div></section>
+
+<section><div class="wrap">
+  <div class="head">
+    <div><div class="mono">Our commitments</div><h2>Handled with care, start to finish.</h2></div>
+    <p>Sending something important? Here's what you can count on.</p>
+  </div>
+  <div class="guar">
+    <div class="g"><div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></div><h3>A real person checks it</h3><p>Nothing is printed automatically. Every order is reviewed before it goes out.</p></div>
+    <div class="g"><div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg></div><h3>Refund before printing</h3><p>Cancel any time before your letter goes to the printer and get your money back in full.</p></div>
+    <div class="g"><div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="11" rx="1"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div><h3>Private and secure</h3><p>Your file is only used to print your letter. Card payments are handled by Stripe.</p></div>
+  </div>
+</div></section>
+
+<div class="final">
+  <svg class="leaf" viewBox="0 0 24 24"><path fill="#fff" d="M12 1l2 4 2-1-1 6 3-3 1 2 4-1-1 4 2 1-6 5 1 2-6-1v5h-2v-5l-6 1 1-2-6-5 2-1-1-4 4 1 1-2 3 3-1-6 2 1z"/></svg>
+  <div class="wrap">
+    <div><h2>Your letter could be on its way today.</h2><p>Takes about five minutes. $6 within Canada.</p></div>
+    <a class="btn" href="#">Start your letter →</a>
+  </div>
+</div>
+
+<footer><div class="wrap">
+  <div class="fgrid">
+    <div><a class="brand" href="#"><span class="flagmark"><span></span><b style="background:#fff"></b><span></span></span>LetterHome</a><p>Online print-and-mail service based in Vancouver, BC. Not affiliated with Canada Post or the Government of Canada.</p></div>
+    <div><h4>Service</h4><a href="#">Send a letter</a><a href="#">Pricing</a><a href="#">For professionals</a><a href="#">Bulk mailing</a></div>
+    <div><h4>Help</h4><a href="#">FAQ</a><a href="#">Contact</a><a href="#">Track an order</a></div>
+    <div><h4>Legal</h4><a href="#">Terms</a><a href="#">Privacy</a><a href="#">Refunds</a></div>
+  </div>
+  <div class="fbot"><span>© 2026 LetterHome</span><span>English · Français</span></div>
+</div></footer>
+</body>
+</html>
