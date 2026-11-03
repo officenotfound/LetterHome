@@ -389,7 +389,7 @@ const MAGIC_BYTES = {
 function checkMagicBytes(filePath, mimetype) {
   const fd = fs.openSync(filePath, 'r');
   const buf = Buffer.alloc(8);
-  fs.readSync(fd, buf, 0, 8, 0);
+  const n = fs.readSync(fd, buf, 0, 8, 0);
   fs.closeSync(fd);
   if (mimetype === 'application/pdf') {
     return buf.slice(0, 4).equals(MAGIC_BYTES.pdf.bytes);
@@ -402,7 +402,7 @@ function checkMagicBytes(filePath, mimetype) {
   }
   if (mimetype === 'text/plain') {
     // Reject if file contains null bytes (binary content disguised as text).
-    return !buf.includes(0x00);
+    return !buf.subarray(0, n).includes(0x00);
   }
   return false;
 }
@@ -1281,7 +1281,10 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
       SELECT * FROM discount_codes
       WHERE code = ? AND active = 1
         AND (expires_at IS NULL OR expires_at > CURRENT_TIMESTAMP)
-        AND (max_uses IS NULL OR uses_count < max_uses)
+        AND (max_uses IS NULL OR uses_count + (
+              SELECT COUNT(*) FROM orders
+              WHERE discount_code = discount_codes.code AND status = 'awaiting_payment'
+                AND created_at > datetime('now', '-1 day')) < max_uses)
     `).get(rawCode);
     if (dc) {
       discountCents = dc.discount_pct
@@ -4025,6 +4028,11 @@ function sendThrottledErrorAlert(key, subject, body) {
 }
 
 app.use((err, req, res, next) => {
+  // Bad client input (malformed JSON, oversized body) is the visitor's problem, not an outage: answer 4xx, no alert email.
+  const clientStatus = err.status || err.statusCode;
+  if (clientStatus >= 400 && clientStatus < 500) {
+    return res.status(clientStatus).json({ error: clientStatus === 413 ? 'That request is too large.' : 'That request could not be read.' });
+  }
   const detail = [
     `Method: ${req.method} ${req.originalUrl}`,
     `IP: ${req.ip}`,
