@@ -497,13 +497,17 @@ p, li, summary { text-wrap: pretty; }
   @view-transition { navigation: none; }
 }
 
-/* Phones: slim footer. Keep the copyright line, social icons, privacy/terms and the maker credit. */
+/* Phones: slim footer. Keep the copyright line, privacy/terms (centred), the maker credit (right), and social icons on pages without them elsewhere. */
 @media (max-width: 700px) {
   .ft-extra, .ft-bn { display: none !important; }
   footer { padding-top: 12px !important; padding-bottom: 12px !important; }
-  .footer-bottom { row-gap: 6px !important; justify-content: flex-start !important; }
-  .footer-bottom-links { gap: 18px !important; align-items: center; flex: 1 1 auto !important; }
-  .footer-bottom-links a[href*="jeffbuilds"] { margin-left: auto !important; }
+  .footer-bottom { display: grid !important; grid-template-columns: 1fr auto 1fr; align-items: center; row-gap: 8px !important; column-gap: 8px !important; }
+  .footer-bottom-links { display: contents !important; }
+  .footer-bottom > div:first-child { justify-self: start; }
+  .footer-bottom, .footer-bottom a { letter-spacing: 0.02em !important; white-space: nowrap; }
+  .ft-legal { display: inline-flex; gap: 14px; justify-self: center; }
+  .footer-bottom-links a[href*="jeffbuilds"] { justify-self: end; }
+  .footer-social { grid-column: 1 / -1; grid-row: 2; justify-self: center; }
   .footer-bottom-links a { padding: 0 !important; min-height: 0 !important; }
   /* keep a 44px touch area without adding layout height */
   .footer-bottom-links a, .footer-social a { position: relative; }

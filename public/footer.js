@@ -26,8 +26,8 @@
           '<a class="ft-extra" href="/contact" data-i18n="nav.contact">Contact</a>' +
           '<a class="ft-extra" href="/track" data-i18n="nav.track">Track an order</a>' +
           '<a class="ft-extra" href="https://ca.trustpilot.com/review/letterhome.ca" target="_blank" rel="noopener">Reviews</a>' +
-          '<a href="/privacy" data-i18n="footer.privacy">Privacy</a>' +
-          '<a href="/terms" data-i18n="footer.terms">Terms</a>' +
+          '<span class="ft-legal"><a href="/privacy" data-i18n="footer.privacy">Privacy</a>' +
+          '<a href="/terms" data-i18n="footer.terms">Terms</a></span>' +
           '<a href="https://jeffbuilds.ca" target="_blank" rel="noopener" style="opacity:0.6">Jeffbuilds</a>' +
         '</div>' +
       '</div>' +
