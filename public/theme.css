@@ -502,7 +502,8 @@ p, li, summary { text-wrap: pretty; }
   .ft-extra, .ft-bn { display: none !important; }
   footer { padding-top: 12px !important; padding-bottom: 12px !important; }
   .footer-bottom { row-gap: 6px !important; justify-content: flex-start !important; }
-  .footer-bottom-links { gap: 18px !important; align-items: center; }
+  .footer-bottom-links { gap: 18px !important; align-items: center; flex: 1 1 auto !important; }
+  .footer-bottom-links a[href*="jeffbuilds"] { margin-left: auto !important; }
   .footer-bottom-links a { padding: 0 !important; min-height: 0 !important; }
   /* keep a 44px touch area without adding layout height */
   .footer-bottom-links a, .footer-social a { position: relative; }
