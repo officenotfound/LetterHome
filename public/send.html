@@ -470,15 +470,15 @@ textarea.field-error { border-color: var(--red) !important; }
 }
 .validation-banner::before { content: '!  '; color: var(--red); font-weight: 600; }
 </style>
-<script>(function(){try{var t=localStorage.getItem('lh-theme');if(t!=='dark'&&t!=='light')t=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+<script>(function(){try{var m=window.matchMedia('(prefers-color-scheme: dark)'),s=function(){document.documentElement.setAttribute('data-theme',m.matches?'dark':'light');};s();if(m.addEventListener)m.addEventListener('change',s);}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
 
-<link rel="stylesheet" href="/theme.css?v=11">
+<link rel="stylesheet" href="/theme.css?v=13">
 </head>
 <body>
 <a href="#main-content" class="skip-link" style="position:absolute;left:-9999px;top:4px;z-index:9999;background:#a8472d;color:#faf6ec;padding:8px 16px;font-size:14px;font-family:Georgia,serif;text-decoration:none;border-radius:2px" onfocus="this.style.left='4px'" onblur="this.style.left='-9999px'">Skip to main content</a>
 
 <div id="site-header"></div>
-<script src="/header.js?v=7"></script>
+<script src="/header.js?v=8"></script>
 
 <!-- PROGRESS -->
 <div class="progress-wrap" id="main-content" role="group" aria-label="Order form step 1 of 3">
@@ -1652,7 +1652,7 @@ async function applyDiscountCode() {
 }
 </script>
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAiIGcMPkpPt9z4ugv87vtRm1REGCowz3w&libraries=places&callback=initAutocomplete&loading=async"></script>
-<script src="/theme.js?v=3" defer></script>
+<script src="/theme.js?v=4" defer></script>
 <script>
 (async () => {
   // lang.js is deferred; wait for its LH_T before building any translated UI (max 5 s).

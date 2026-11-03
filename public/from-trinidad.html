@@ -152,7 +152,7 @@
 }
 </script>
 <link rel="stylesheet" href="/fonts.css?v=1">
-<link rel="stylesheet" href="/theme.css?v=11">
+<link rel="stylesheet" href="/theme.css?v=13">
 <style>
 :root{--kraft:#f1ebde;--kraft-deep:#e1d6bd;--paper:#faf6ec;--ink:#2a2a2a;--ink-soft:#3a3835;--ink-muted:#6b6258;--ink-faint:#968b7d;--red:#a8472d;--red-deep:#7d3220;--line:rgba(42,42,42,0.14);--shadow-card:0 2px 6px rgba(42,42,42,0.06),0 14px 40px rgba(42,42,42,0.1)}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -200,12 +200,12 @@ h2{font-family:'DM Serif Display',serif;font-size:24px;letter-spacing:-0.01em;ma
 [data-theme=dark] .faq-item{border-color:rgba(240,230,211,0.1)}
 [data-theme=dark] .answer-capsule{background:#1a2a1a;border-color:#4a9a4a;color:#e0f0e0}
 </style>
-<script>(function(){try{var t=localStorage.getItem('lh-theme');if(t!=='dark'&&t!=='light')t=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+<script>(function(){try{var m=window.matchMedia('(prefers-color-scheme: dark)'),s=function(){document.documentElement.setAttribute('data-theme',m.matches?'dark':'light');};s();if(m.addEventListener)m.addEventListener('change',s);}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
 </head>
 <body>
 <a href="#main-content" class="skip-link" style="position:absolute;left:-9999px;top:4px;z-index:9999;background:#a8472d;color:#faf6ec;padding:8px 16px;font-size:14px;font-family:Georgia,serif;text-decoration:none;border-radius:2px" onfocus="this.style.left='4px'" onblur="this.style.left='-9999px'">Skip to main content</a>
 <div id="site-header"></div>
-<script src="/header.js?v=7"></script>
+<script src="/header.js?v=8"></script>
 <div class="page" id="main-content">
   <div class="eyebrow" data-i18n="from.trinidad.eyebrow">Mailing from Trinidad & Tobago</div>
   <h1 data-i18n="from.trinidad.h1">Send mail to Canada from Trinidad and Tobago</h1>
@@ -293,7 +293,7 @@ h2{font-family:'DM Serif Display',serif;font-size:24px;letter-spacing:-0.01em;ma
 </div>
 <footer id="site-footer"></footer>
 <script src="/footer.js?v=4" defer></script>
-<script src="/theme.js?v=3" defer></script>
+<script src="/theme.js?v=4" defer></script>
 <script src="/lang.js?v=42" defer></script>
 <script>
   function toggle(i){const btn=document.querySelectorAll('.faq-q')[i];const ans=document.getElementById('a'+i);const open=btn.getAttribute('aria-expanded')==='true';btn.setAttribute('aria-expanded',!open);ans.hidden=open;}
