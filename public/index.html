@@ -1212,6 +1212,13 @@ section, .pricing-wrap { scroll-margin-top: 72px; }
 @media (prefers-reduced-motion: no-preference) { .v4-copy, .v4-visual { animation: fadeUp 0.6s ease-out both; } .v4-visual { animation-delay: 0.1s; } }
 .story-quote { padding-top: 56px !important; font-weight: 400 !important; }
 .founder-intro { font-style: normal !important; font-weight: 500; }
+/* flow: matching heading scale, alternating surfaces, quicker reveals */
+.story-text h2 { font-size: clamp(28px, 3.4vw, 40px) !important; line-height: 1.1 !important; margin-bottom: 16px !important; }
+#pricing, #usecases { border-top: 1px solid var(--line); }
+#trust, .story { background: var(--kraft-light); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.story-text .eyebrow { margin-bottom: 8px; }
+.story-quote { background: var(--paper) !important; }
+[data-theme="dark"] #trust, [data-theme="dark"] .story { background: var(--kraft-light); }
 @media (max-width: 700px) {
   .section-inner { padding: 32px 20px !important; }
   .section-head { margin-bottom: 20px !important; }
@@ -1310,6 +1317,52 @@ section, .pricing-wrap { scroll-margin-top: 72px; }
   </div>
 </section>
 
+<!-- USE CASES -->
+<section id="usecases">
+  <div class="section-inner">
+    <div class="section-head">
+      <div class="eyebrow" data-i18n="usecases.eyebrow">What people use it for</div>
+      <h2 data-i18n="usecases.h2">Anything that has to arrive on paper.</h2>
+      <p data-i18n="usecases.sub">Most of what we mail falls into one of these categories. All of it is printed in black & white by default (colour available).</p>
+    </div>
+
+    <div class="usecases-grid">
+      <div class="usecase">
+        <div class="usecase-num">01</div>
+        <div>
+          <h3 data-i18n="usecases.01.h3">Tax &amp; government forms</h3>
+          <p data-i18n="usecases.01.p">CRA paperwork, Service Canada forms, anything that needs to arrive as a physical piece of paper mailed from Canada. Works wherever you are.</p>
+        </div>
+      </div>
+
+      <div class="usecase">
+        <div class="usecase-num">02</div>
+        <div>
+          <h3 data-i18n="usecases.02.h3">Letters home</h3>
+          <p data-i18n="usecases.02.p">Birthdays, anniversaries, sympathy notes, a printed photo with a long letter for the family back home. Useful when an email won't carry the same weight.</p>
+        </div>
+      </div>
+
+      <div class="usecase">
+        <div class="usecase-num">03</div>
+        <div>
+          <h3 data-i18n="usecases.03.h3">Legal correspondence</h3>
+          <p data-i18n="usecases.03.p">Demand letters, formal notices, immigration paperwork, real-estate documents, estate matters. Mailed from a Canadian address, with an order record we can produce on request.</p>
+        </div>
+      </div>
+
+      <div class="usecase">
+        <div class="usecase-num">04</div>
+        <div>
+          <h3 data-i18n="usecases.04.h3">Business mail</h3>
+          <p data-i18n="usecases.04.p">Invoices, contracts, signed agreements, year-end statements that customers still expect by post. For Canadian businesses, and for businesses outside Canada that need to reach Canadian customers.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
 <!-- PRICING -->
 <div class="pricing-wrap" id="pricing">
   <div class="section-inner">
@@ -1391,52 +1444,6 @@ section, .pricing-wrap { scroll-margin-top: 72px; }
   </div>
 </section>
 
-<!-- USE CASES -->
-<section id="usecases">
-  <div class="section-inner">
-    <div class="section-head">
-      <div class="eyebrow" data-i18n="usecases.eyebrow">What people use it for</div>
-      <h2 data-i18n="usecases.h2">Anything that has to arrive on paper.</h2>
-      <p data-i18n="usecases.sub">Most of what we mail falls into one of these categories. All of it is printed in black & white by default (colour available).</p>
-    </div>
-
-    <div class="usecases-grid">
-      <div class="usecase">
-        <div class="usecase-num">01</div>
-        <div>
-          <h3 data-i18n="usecases.01.h3">Tax &amp; government forms</h3>
-          <p data-i18n="usecases.01.p">CRA paperwork, Service Canada forms, anything that needs to arrive as a physical piece of paper mailed from Canada. Works wherever you are.</p>
-        </div>
-      </div>
-
-      <div class="usecase">
-        <div class="usecase-num">02</div>
-        <div>
-          <h3 data-i18n="usecases.02.h3">Letters home</h3>
-          <p data-i18n="usecases.02.p">Birthdays, anniversaries, sympathy notes, a printed photo with a long letter for the family back home. Useful when an email won't carry the same weight.</p>
-        </div>
-      </div>
-
-      <div class="usecase">
-        <div class="usecase-num">03</div>
-        <div>
-          <h3 data-i18n="usecases.03.h3">Legal correspondence</h3>
-          <p data-i18n="usecases.03.p">Demand letters, formal notices, immigration paperwork, real-estate documents, estate matters. Mailed from a Canadian address, with an order record we can produce on request.</p>
-        </div>
-      </div>
-
-      <div class="usecase">
-        <div class="usecase-num">04</div>
-        <div>
-          <h3 data-i18n="usecases.04.h3">Business mail</h3>
-          <p data-i18n="usecases.04.p">Invoices, contracts, signed agreements, year-end statements that customers still expect by post. For Canadian businesses, and for businesses outside Canada that need to reach Canadian customers.</p>
-        </div>
-      </div>
-
-    </div>
-  </div>
-</section>
-
 <!-- STORY BAND -->
 <section class="story">
   <div class="story-inner">
@@ -1459,7 +1466,7 @@ section, .pricing-wrap { scroll-margin-top: 72px; }
   <div class="section-inner">
     <div class="section-head">
       <div class="eyebrow">Helpful guides</div>
-      <h2>Answers before you send.</h2>
+      <h2>Guides for sending to Canada.</h2>
     </div>
     <ul class="guide-links">
       <li><a href="/how-much-does-it-cost-to-mail-a-letter-to-canada">How much does it cost to mail a letter in Canada? (2026)</a></li>
@@ -1535,21 +1542,25 @@ section, .pricing-wrap { scroll-margin-top: 72px; }
 <script src="/footer.js?v=4" defer></script>
 
 <script>
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.style.opacity = '1';
-        entry.target.style.transform = 'translateY(0)';
-      }
-    });
-  }, { threshold: 0.1 });
+  // Fade sections in just before they scroll into view; skipped for reduced-motion users.
+  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches && 'IntersectionObserver' in window) {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.style.opacity = '1';
+          entry.target.style.transform = 'translateY(0)';
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0, rootMargin: '0px 0px 160px 0px' });
 
-  document.querySelectorAll('.step, .price-card, .usecase, .faq-item').forEach(el => {
-    el.style.opacity = '0';
-    el.style.transform = 'translateY(20px)';
-    el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-    observer.observe(el);
-  });
+    document.querySelectorAll('.step, .usecase, .faq-item').forEach(el => {
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(12px)';
+      el.style.transition = 'opacity 0.35s ease, transform 0.35s ease';
+      observer.observe(el);
+    });
+  }
 </script>
 
 <script src="/theme.js?v=4" defer></script>
