@@ -1229,6 +1229,25 @@ section, .pricing-wrap { scroll-margin-top: 72px; }
   .m-cta .btn { flex: 1; text-align: center; padding: 14px 16px; }
   body { padding-bottom: 72px; }
 }
+/* Phones: guide links fold into one tappable row; desktop stays fully open */
+.fold > summary { list-style: none; cursor: default; }
+.fold > summary::-webkit-details-marker { display: none; }
+.fold-compact, .fold-icon { display: none; }
+@media (max-width: 700px) {
+  #guides-strip .section-inner { padding-top: 0 !important; padding-bottom: 0 !important; }
+  .fold { border-top: 1px solid var(--line); }
+  .fold > summary { cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 64px; padding: 14px 20px; }
+  .fold > summary:focus-visible { outline: 2px solid var(--red); outline-offset: -2px; }
+  .fold-head { display: none; }
+  .fold-compact { display: flex; align-items: baseline; gap: 10px; flex: 1; min-width: 0; }
+  .fold-title { font-family: 'DM Serif Display', serif; font-size: 21px; line-height: 1.2; }
+  .fold-count { font-size: 13px; color: var(--ink-muted); white-space: nowrap; }
+  .fold-icon { display: block; position: relative; width: 18px; height: 18px; flex: none; }
+  .fold-icon::before, .fold-icon::after { content: ''; position: absolute; left: 0; right: 0; top: 8px; height: 2px; background: var(--red); transition: transform .2s ease; }
+  .fold-icon::after { transform: rotate(90deg); }
+  .fold[open] .fold-icon::after { transform: rotate(0); }
+  .fold-body { padding: 4px 20px 24px; }
+}
 @media (max-width: 700px) {
   .section-inner { padding: 32px 20px !important; }
   .section-head { margin-bottom: 20px !important; }
@@ -1497,10 +1516,12 @@ section, .pricing-wrap { scroll-margin-top: 72px; }
 <!-- GUIDES -->
 <section id="guides-strip">
   <div class="section-inner">
-    <div class="section-head">
+    <details class="fold" open>
+      <summary class="fold-sum"><span class="fold-head"><div class="section-head">
       <div class="eyebrow">Helpful guides</div>
       <h2>Guides for sending to Canada.</h2>
-    </div>
+    </div></span><span class="fold-compact"><span class="fold-title">Guides for sending to Canada.</span><span class="fold-count">8 guides</span></span><span class="fold-icon" aria-hidden="true"></span></summary>
+      <div class="fold-body">
     <ul class="guide-links">
       <li><a href="/how-much-does-it-cost-to-mail-a-letter-to-canada">How much does it cost to mail a letter in Canada? (2026)</a></li>
       <li><a href="/how-long-does-it-take-to-mail-a-letter-to-canada">How long does a letter take to mail in Canada?</a></li>
@@ -1511,6 +1532,8 @@ section, .pricing-wrap { scroll-margin-top: 72px; }
       <li><a href="/send-a-christmas-letter-to-canada">Send a holiday letter to Canada (2026 order-by dates)</a></li>
       <li><a href="/guides">Browse all mailing guides →</a></li>
     </ul>
+  </div>
+    </details>
   </div>
 </section>
 
@@ -1614,6 +1637,17 @@ section, .pricing-wrap { scroll-margin-top: 72px; }
 })();
 </script>
 
+<script>
+// Guides fold: collapsed on phones, always open (and non-interactive) on larger screens.
+(function () {
+  var mq = window.matchMedia('(max-width: 700px)');
+  var folds = document.querySelectorAll('.fold');
+  function sync() { folds.forEach(function (d) { if (mq.matches) d.removeAttribute('open'); else d.setAttribute('open', ''); }); }
+  sync();
+  if (mq.addEventListener) mq.addEventListener('change', sync);
+  folds.forEach(function (d) { d.querySelector('summary').addEventListener('click', function (e) { if (!mq.matches) e.preventDefault(); }); });
+})();
+</script>
 <script src="/theme.js?v=4" defer></script>
 <script src="/lang.js?v=44" defer></script>
 <script>
