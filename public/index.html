@@ -1144,7 +1144,7 @@ footer {
 </style>
 <script>(function(){try{var m=window.matchMedia('(prefers-color-scheme: dark)'),s=function(){document.documentElement.setAttribute('data-theme',m.matches?'dark':'light');};s();if(m.addEventListener)m.addEventListener('change',s);}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
 
-<link rel="stylesheet" href="/theme.css?v=17">
+<link rel="stylesheet" href="/theme.css?v=18">
 <style>
 /* Home page polish: quiet labels, split hero, four-point trust grid */
 /* eyebrows: sentence case, no rules */
@@ -1227,7 +1227,6 @@ section, .pricing-wrap { scroll-margin-top: 72px; }
     transform: translateY(110%); transition: transform 0.25s ease; }
   .m-cta.show { transform: translateY(0); }
   .m-cta .btn { flex: 1; text-align: center; padding: 14px 16px; }
-  body { padding-bottom: 72px; }
 }
 /* Phones: guide links fold into one tappable row; desktop stays fully open */
 .fold > summary { list-style: none; cursor: default; }
@@ -1273,6 +1272,8 @@ section, .pricing-wrap { scroll-margin-top: 72px; }
   .story-quote { padding: 36px 18px 18px !important; font-size: 17px !important; }
   .story-inner { gap: 24px !important; }
   /* shorter phone layout: smaller step badges, tighter reading rhythm */
+  /* social icons already sit in the closing call to action on this page */
+  footer .footer-social { display: none !important; }
   .step-num-mark { width: 36px; height: 36px; font-size: 18px; }
   .step-num { margin-bottom: 6px !important; }
   .step p, .usecase p, .trust-item p, .faq-item p, .story-text p { line-height: 1.55 !important; }
@@ -1595,7 +1596,7 @@ section, .pricing-wrap { scroll-margin-top: 72px; }
 
 <!-- FOOTER -->
 <footer id="site-footer"></footer>
-<script src="/footer.js?v=4" defer></script>
+<script src="/footer.js?v=5" defer></script>
 
 <script>
   // Fade sections in just before they scroll into view; skipped for reduced-motion users.

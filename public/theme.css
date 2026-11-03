@@ -496,3 +496,15 @@ p, li, summary { text-wrap: pretty; }
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
   @view-transition { navigation: none; }
 }
+
+/* Phones: slim footer. Keep the copyright line, social icons, privacy/terms and the maker credit. */
+@media (max-width: 700px) {
+  .ft-extra, .ft-bn { display: none !important; }
+  footer { padding-top: 12px !important; padding-bottom: 12px !important; }
+  .footer-bottom { row-gap: 6px !important; justify-content: flex-start !important; }
+  .footer-bottom-links { gap: 18px !important; align-items: center; }
+  .footer-bottom-links a { padding: 0 !important; min-height: 0 !important; }
+  /* keep a 44px touch area without adding layout height */
+  .footer-bottom-links a, .footer-social a { position: relative; }
+  .footer-bottom-links a::after, .footer-social a::after { content: ''; position: absolute; inset: -14px -6px; }
+}
