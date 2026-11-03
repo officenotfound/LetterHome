@@ -463,3 +463,8 @@ footer { background: #3d2c1a !important; border-top: 5px solid; border-image: re
 [data-theme="dark"] .cta-strip a { color: var(--ink) !important; }
 [data-theme="dark"] pre { background: #231d18 !important; color: var(--ink) !important; }
 [data-theme="dark"] .submit-btn, [data-theme="dark"] .preview-stamp, [data-theme="dark"] .preview-stamp strong { color: #fffaf2 !important; }
+
+/* Wide data tables scroll inside themselves on phones instead of widening the page */
+@media (max-width: 640px) {
+  table.data, .comparison-table, .tier-table { display: block; max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+}
