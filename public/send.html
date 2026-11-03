@@ -717,7 +717,7 @@ textarea.field-error { border-color: var(--red) !important; }
             <option value="VN">Vietnam, $15 CAD</option>
             <option value="ZM">Zambia, $15 CAD</option>
         </select>
-        <span class="field-note" data-i18n="send.dest.note">Canada and United States $6 · Everywhere else $20, all prices CAD</span>
+        <span class="field-note" data-i18n="send.dest.note">Canada and United States $6 · Everywhere else $15, all prices CAD</span>
         <span class="field-note" id="dest-note-local" style="display:none"><span data-i18n="send.dest.local">Printed and mailed locally:</span> <span id="dest-note-local-list"></span></span>
       </div>
     </div>
@@ -1887,7 +1887,7 @@ function fillSavedRecipient(sel) {
   } catch(e) {}
 }
 </script>
-<script src="/lang.js?v=42" defer></script>
+<script src="/lang.js?v=43" defer></script>
 <script type="module">
   import * as pdfjsLib from '/vendor/pdfjs/pdf.min.mjs';
   pdfjsLib.GlobalWorkerOptions.workerSrc = '/vendor/pdfjs/pdf.worker.min.mjs';
