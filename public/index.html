@@ -1141,55 +1141,58 @@ footer {
   .footer-grid { grid-template-columns: 1fr; gap: 24px; }
   .footer-bottom { flex-direction: column; text-align: center; gap: 12px; }
 }
-
-.ticker {
-  background: #3d2c1a;
-  color: var(--paper);
-  padding: 16px 0;
-  overflow: hidden;
-  position: relative;
-  z-index: 2;
-  border-top: 1px solid #3d2c1a;
-  border-bottom: 1px solid #3d2c1a;
-}
-.ticker-track {
-  display: flex;
-  gap: 48px;
-  white-space: nowrap;
-  animation: tickerScroll 28s linear infinite;
-  font-family: 'DM Serif Display', serif;
-  font-style: italic;
-  font-size: 18px;
-  will-change: transform;
-}
-.ticker-track span {
-  display: inline-flex;
-  align-items: center;
-  gap: 48px;
-}
-.ticker-track span::after {
-  content: '/';
-  color: var(--red);
-  font-style: normal;
-  font-size: 14px;
-  font-family: 'DM Mono', ui-monospace, monospace;
-}
-@keyframes tickerScroll {
-  from { transform: translateX(0); }
-  to   { transform: translateX(-50%); }
-}
-@media (max-width: 768px) {
-  .ticker-track { font-size: 15px; gap: 32px; animation-duration: 18s; }
-  .ticker-track span { gap: 32px; }
-}
-@media (max-width: 480px) {
-  .ticker-track { font-size: 13px; gap: 24px; animation-duration: 15s; }
-  .ticker-track span { gap: 24px; }
-}
 </style>
 <script>(function(){try{var m=window.matchMedia('(prefers-color-scheme: dark)'),s=function(){document.documentElement.setAttribute('data-theme',m.matches?'dark':'light');};s();if(m.addEventListener)m.addEventListener('change',s);}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
 
 <link rel="stylesheet" href="/theme.css?v=14">
+<style>
+/* Home page polish: quiet labels, split hero, four-point trust grid */
+/* eyebrows: sentence case, no rules */
+.eyebrow, .trust-tag, .hero-meta, .step-num, .step-num span:not(.step-num-mark) { text-transform: none !important; letter-spacing: 0.01em !important; }
+.eyebrow { font-family: 'Source Serif 4', Georgia, serif !important; font-size: 15px !important; color: var(--ink-muted) !important; gap: 0 !important; }
+.eyebrow::before, .eyebrow::after { display: none !important; }
+.step-num { font-size: 14px !important; }
+/* italics: one place only (the headline accent) */
+em, i, .step-num-mark, .story-quote, .ticker-track span, .story-text h2 em { font-style: normal !important; }
+h1 em { font-style: italic !important; }
+.story-text h2 em { color: var(--red); }
+/* spacing: 4px scale, tighter rhythm */
+section, .pricing-wrap { scroll-margin-top: 72px; }
+#how, #trust, #usecases, .story, #guides-strip, #faq { padding-top: 80px !important; padding-bottom: 80px !important; }
+.section-head { margin-bottom: 40px !important; }
+.section-head p { max-width: 560px; margin-left: auto; margin-right: auto; }
+/* hero */
+.hero { padding: 64px 36px 72px !important; }
+.v4-hero { max-width: 1120px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr); gap: 64px; align-items: center; }
+.v4-kicker { font-size: 15px; color: var(--ink-muted); margin: 0 0 16px; }
+.v4-copy h1 { font-size: clamp(40px, 5vw, 64px); line-height: 1.04; text-align: left; margin: 0 0 24px; }
+.v4-lede { font-size: 18px; line-height: 1.55; color: var(--ink-muted); max-width: 480px; margin: 0 0 32px; }
+.v4-fine { font-size: 14px; color: var(--ink-muted); margin: 16px 0 0; }
+.v4-visual { display: flex; justify-content: center; }
+.v4-letter { position: relative; width: 100%; max-width: 440px; }
+.v4-env { position: relative; background: #fbf7ec; border: 1px solid rgba(0,0,0,0.12); border-radius: 2px; aspect-ratio: 1.5; padding: 20px 24px; box-shadow: 0 1px 2px rgba(0,0,0,0.06), 0 16px 32px -12px rgba(0,0,0,0.18); transform: rotate(-2deg); color: #2b2622; font-family: 'DM Mono', monospace; font-size: 11.5px; line-height: 1.55; }
+.v4-env::before { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(135deg, #c8483f 0 14px, transparent 14px 20px, #2f5d8a 20px 34px, transparent 34px 40px); height: 6px; top: 0; bottom: auto; opacity: 0.85; }
+.v4-from { opacity: 0.8; }
+.v4-to { position: absolute; left: 24%; bottom: 22%; font-size: 13px; line-height: 1.6; }
+.v4-stamp { position: absolute; right: 20px; top: 26px; width: 52px; height: 62px; border: 1.5px solid var(--red); color: var(--red); display: flex; align-items: center; justify-content: center; background: rgba(230,57,70,0.06); }
+.v4-postmark { position: absolute; right: 56px; top: 34px; width: 74px; height: 74px; border: 1.5px solid rgba(43,38,34,0.55); border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; transform: rotate(-10deg); font-size: 8px; letter-spacing: 0.06em; text-transform: uppercase; line-height: 1.25; color: rgba(43,38,34,0.7); }
+.v4-postmark b { font-family: 'DM Serif Display', serif; font-size: 15px; letter-spacing: 0; text-transform: none; font-weight: 400; }
+.v4-sheet { position: absolute; left: 36px; right: 36px; bottom: -22px; height: 40px; background: #fffdf8; border: 1px solid rgba(0,0,0,0.1); border-top: none; z-index: -1; transform: rotate(1.5deg); }
+.v4-sheet i { display: none; }
+/* trust: four plain points, no tags or icons */
+.trust-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; max-width: 880px; margin-left: auto; margin-right: auto; }
+.trust-item { padding: 32px 32px 28px !important; }
+.trust-item h3 { font-size: 22px !important; }
+.trust-item p { font-size: 15px !important; }
+@media (max-width: 900px) { .v4-hero { grid-template-columns: 1fr; gap: 48px; } .v4-copy h1 { font-size: 40px; } .trust-grid { grid-template-columns: 1fr !important; } }
+[data-theme="dark"] .v4-env { background: #231e19; color: #efe6d4; border-color: rgba(255,255,255,0.12); }
+[data-theme="dark"] .v4-postmark { border-color: rgba(239,230,212,0.5); color: rgba(239,230,212,0.7); }
+[data-theme="dark"] .v4-sheet { background: #2a241e; border-color: rgba(255,255,255,0.08); }
+[data-theme="dark"] .v4-stamp { background: rgba(255,77,94,0.1); }
+@media (prefers-reduced-motion: no-preference) { .v4-copy, .v4-visual { animation: fadeUp 0.6s ease-out both; } .v4-visual { animation-delay: 0.1s; } }
+.story-quote { padding-top: 56px !important; font-weight: 400 !important; }
+.founder-intro { font-style: normal !important; font-weight: 500; }
+</style>
 </head>
 <body>
 <a href="#main-content" class="skip-link" style="position:absolute;left:-9999px;top:4px;z-index:9999;background:#a8472d;color:#faf6ec;padding:8px 16px;font-size:14px;font-family:Georgia,serif;text-decoration:none;border-radius:2px" onfocus="this.style.left='4px'" onblur="this.style.left='-9999px'">Skip to main content</a>
@@ -1200,43 +1203,29 @@ footer {
 
 <!-- HERO -->
 <section class="hero" id="main-content">
-  <div class="hero-grid">
-    <div>
-      <div class="eyebrow" data-i18n="index.eyebrow">Mail from Canada</div>
+  <div class="v4-hero">
+    <div class="v4-copy">
+      <p class="v4-kicker" data-i18n="index.eyebrow">Mail from Canada</p>
       <h1 data-i18n-html="index.h1">Letters from Canada, without the trip to <em>Canada Post</em>.</h1>
-      <p class="hero-lede" data-i18n="index.lede">Type it, attach what you need, and we'll print it, pay the postage, and post it from inside Canada. A real letter in the Canadian mail, without you ever having to find a parking spot at the post office.</p>
-      <div class="hero-cta">
-        <a href="/send" class="btn btn-red btn-large" data-i18n="index.cta">Send a letter</a>
-      </div>
-      <div class="hero-meta">
-        <span data-i18n="index.meta1">From $6 CAD</span>
-        <span data-i18n="index.meta2">Mailed within two business days</span>
-        <span data-i18n="index.meta3">Domestic &amp; international</span>
+      <p class="v4-lede" data-i18n="index.lede">Type it, attach what you need, and we'll print it, pay the postage, and post it from inside Canada. A real letter in the Canadian mail, without you ever having to find a parking spot at the post office.</p>
+      <a href="/send" class="btn btn-red btn-large" data-i18n="index.cta">Send a letter</a>
+      <p class="v4-fine"><span data-i18n="index.meta1">From $6 CAD</span>. <span data-i18n="index.meta2">Mailed within two business days</span>.</p>
+    </div>
+    <div class="v4-visual" aria-hidden="true">
+      <div class="v4-letter">
+        <div class="v4-env">
+          <div class="v4-from">Alex Moreno<br>Calle 12 #4-31<br>Bogotá, Colombia</div>
+          <div class="v4-stamp"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="1"/><path d="M7 15l3-4 2 3 2-2 3 3"/></svg></div>
+          <div class="v4-to">Dana Whitfield<br>218 Maple Avenue, Unit 4<br>Halifax NS&nbsp;&nbsp;B3H 1A7<br>CANADA</div>
+          <div class="v4-postmark"><span data-i18n="index.postmark.a">Mailed from</span><b data-i18n="index.postmark.b">Canada</b><span>2026</span></div>
+        </div>
+        <div class="v4-sheet"></div>
       </div>
     </div>
-
   </div>
 </section>
 
-<!-- TICKER (personalized via IP geolocation, see script at bottom of page) -->
-<div class="ticker">
-  <div class="ticker-track">
-    <span data-i18n="ticker.1">Letters from Berlin to Halifax</span>
-    <span data-i18n="ticker.2">Tax forms from Tokyo to the CRA</span>
-    <span data-i18n="ticker.3">A signed contract from Auckland to Vancouver</span>
-    <span data-i18n="ticker.4">A letter home from São Paulo to Toronto</span>
-    <span data-i18n="ticker.5">Visa documents from Manila to Ottawa</span>
-    <span data-i18n="ticker.6">A family letter from Lagos to Calgary</span>
-    <span data-i18n="ticker.7">Legal papers from Dublin to Montreal</span>
-    <span data-i18n="ticker.1">Letters from Berlin to Halifax</span>
-    <span data-i18n="ticker.2">Tax forms from Tokyo to the CRA</span>
-    <span data-i18n="ticker.3">A signed contract from Auckland to Vancouver</span>
-    <span data-i18n="ticker.4">A letter home from São Paulo to Toronto</span>
-    <span data-i18n="ticker.5">Visa documents from Manila to Ottawa</span>
-    <span data-i18n="ticker.6">A family letter from Lagos to Calgary</span>
-    <span data-i18n="ticker.7">Legal papers from Dublin to Montreal</span>
-  </div>
-</div>
+
 
 <!-- HOW IT WORKS -->
 <section id="how">
@@ -1348,42 +1337,10 @@ footer {
       <p data-i18n="trust.sub">People send us tax forms, legal letters and personal documents. Here is how we keep them safe from upload to mailbox.</p>
     </div>
     <div class="trust-grid">
-      <div class="trust-item">
-        <svg class="trust-ico" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c.8-3.6 3.6-5.5 7-5.5s6.2 1.9 7 5.5"/></svg>
-        <div class="trust-tag" data-i18n="trust.review.tag">Human review</div>
-        <h3 data-i18n="trust.review.h3">Checked by a person</h3>
-        <p data-i18n="trust.review.p">Every order is looked over before anything is printed. Nothing goes to the printer automatically.</p>
-      </div>
-      <div class="trust-item">
-        <svg class="trust-ico" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="1.5"/><path d="M3 10h18M7 15h3"/></svg>
-        <div class="trust-tag" data-i18n="trust.pay.tag">PCI DSS Level 1</div>
-        <h3 data-i18n="trust.pay.h3">Your card never touches us</h3>
-        <p data-i18n="trust.pay.p">Payments are handled by Stripe, a PCI DSS Level 1 certified provider. We never see or store your card number.</p>
-      </div>
-      <div class="trust-item">
-        <svg class="trust-ico" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 9V3h10v6"/><rect x="3" y="9" width="18" height="8" rx="1.5"/><path d="M7 14h10v7H7z"/></svg>
-        <div class="trust-tag" data-i18n="trust.print.tag">SOC 2 Type II</div>
-        <h3 data-i18n="trust.print.h3">Audited printing and mailing</h3>
-        <p data-i18n="trust.print.p">Letters are printed and mailed in facilities covered by a SOC 2 Type II report and PCI DSS 3.2.1 certification, with HIPAA-aligned handling.</p>
-      </div>
-      <div class="trust-item">
-        <svg class="trust-ico" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="1.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
-        <div class="trust-tag" data-i18n="trust.enc.tag">HTTPS</div>
-        <h3 data-i18n="trust.enc.h3">Encrypted in transit</h3>
-        <p data-i18n="trust.enc.p">Your files travel over an encrypted connection from your browser all the way to the printing press.</p>
-      </div>
-      <div class="trust-item">
-        <svg class="trust-ico" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>
-        <div class="trust-tag" data-i18n="trust.del.tag">PIPEDA</div>
-        <h3 data-i18n="trust.del.h3">Your data, on request</h3>
-        <p data-i18n="trust.del.p">Ask us to see, correct or delete your personal information at any time. We reply within 30 days, as Canadian privacy law requires.</p>
-      </div>
-      <div class="trust-item">
-        <svg class="trust-ico" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7L4 8.5"/><path d="M4 4v4.5h4.5"/></svg>
-        <div class="trust-tag" data-i18n="trust.refund.tag">Full refund</div>
-        <h3 data-i18n="trust.refund.h3">Your money back before printing</h3>
-        <p data-i18n="trust.refund.p">Cancel any time before your letter goes to the printer for a full refund. If we make a mistake, we reprint it free.</p>
-      </div>
+      <div class="trust-item"><h3 data-i18n="trust.v4.h1">A person checks every order</h3><p data-i18n="trust.review.p">Every order is looked over before anything is printed. Nothing goes to the printer automatically.</p></div>
+      <div class="trust-item"><h3 data-i18n="trust.pay.h3">Your card never touches us</h3><p data-i18n="trust.pay.p">Payments are handled by Stripe, a PCI DSS Level 1 certified provider. We never see or store your card number.</p></div>
+      <div class="trust-item"><h3 data-i18n="trust.v4.h3">Encrypted, then printed in audited facilities</h3><p data-i18n="trust.v4.p3">Your files travel over an encrypted connection to the printer, in facilities covered by a SOC 2 Type II report and PCI DSS 3.2.1 certification.</p></div>
+      <div class="trust-item"><h3 data-i18n="trust.v4.h4">Your data and your money</h3><p data-i18n="trust.v4.p4">Ask us to see, correct or delete your information at any time. Cancel before printing for a full refund; if we make a mistake, we reprint it free.</p></div>
     </div>
     <p class="trust-more"><a href="/privacy#data-handling" data-i18n="trust.more">Read our privacy policy →</a></p>
   </div>
@@ -1550,235 +1507,8 @@ footer {
   });
 </script>
 
-<script>
-// Personalize ticker: detect visitor's country, show top 5 cities mailing to Canada
-window.addEventListener('load', async function personalizeTicker(){
-  const CA_CITIES = [
-    'Toronto','Vancouver','Montreal','Calgary','Ottawa','Edmonton',
-    'Winnipeg','Halifax','Saskatoon','Regina','Québec City','Victoria',
-    'Kelowna','Kamloops','Kitchener','Hamilton','London','Windsor',
-    'Barrie','Thunder Bay','Sudbury','Kingston','Fredericton','Moncton',
-    'Saint John','Charlottetown','St. John\'s','Corner Brook','Whitehorse',
-    'Yellowknife','Iqaluit','Sherbrooke','Trois-Rivières','Saguenay',
-    'Gatineau','Red Deer','Lethbridge','Fort McMurray','Prince George',
-    'Nanaimo','Abbotsford','Brandon','Prince Albert','Moose Jaw',
-    'Truro','Sydney','Gander','Brampton','Mississauga','Oshawa',
-    'St. Catharines','Niagara Falls','Peterborough','Sault Ste. Marie',
-    'Chilliwack','Vernon','Cranbrook','Medicine Hat','Grande Prairie',
-    'Lethbridge','Summerside','New Glasgow','Miramichi','Bathurst',
-    'Grand Falls-Windsor','Joliette','Drummondville','Saint-Hyacinthe',
-    'Rimouski','Rouyn-Noranda','Sept-Îles','Timmins','North Bay',
-    'Kenora','Portage la Prairie','Thompson','Flin Flon','Dawson City',
-    'Inuvik','Watson Lake','Hay River','Fort Smith','Rankin Inlet'
-  ];
-  const COUNTRY_CITIES = {
-    AL: ['Tirana','Durrës','Vlorë','Shkodër','Fier'],
-    DZ: ['Algiers','Oran','Constantine','Annaba','Batna'],
-    AD: ['Andorra la Vella','Escaldes-Engordany','Encamp','Sant Julià de Lòria','La Massana'],
-    AO: ['Luanda','Huambo','Lobito','Benguela','Lubango'],
-    AG: ['St. John\'s','All Saints','Liberta','Potters Village','Parham'],
-    AR: ['Buenos Aires','Córdoba','Rosario','Mendoza','Tucumán'],
-    AM: ['Yerevan','Gyumri','Vanadzor','Vagharshapat','Abovyan'],
-    AU: ['Sydney','Melbourne','Brisbane','Perth','Adelaide'],
-    AT: ['Vienna','Salzburg','Innsbruck','Graz','Linz'],
-    AZ: ['Baku','Ganja','Sumqayit','Lankaran','Mingachevir'],
-    BS: ['Nassau','Freeport','Marsh Harbour','Andros Town','Dunmore Town'],
-    BH: ['Manama','Riffa','Muharraq','Hamad Town','A\'ali'],
-    BD: ['Dhaka','Chittagong','Khulna','Sylhet','Rajshahi'],
-    BB: ['Bridgetown','Speightstown','Oistins','Bathsheba','Holetown'],
-    BE: ['Brussels','Antwerp','Ghent','Bruges','Liège'],
-    BZ: ['Belmopan','Belize City','San Ignacio','Orange Walk','Dangriga'],
-    BJ: ['Cotonou','Porto-Novo','Parakou','Abomey-Calavi','Bohicon'],
-    BT: ['Thimphu','Paro','Punakha','Wangdue Phodrang','Trongsa'],
-    BO: ['La Paz','Santa Cruz','Cochabamba','Sucre','Oruro'],
-    BA: ['Sarajevo','Banja Luka','Mostar','Tuzla','Zenica'],
-    BW: ['Gaborone','Francistown','Molepolole','Maun','Kanye'],
-    BR: ['São Paulo','Rio de Janeiro','Brasília','Salvador','Belo Horizonte'],
-    BN: ['Bandar Seri Begawan','Kuala Belait','Seria','Tutong','Bangar'],
-    BG: ['Sofia','Plovdiv','Varna','Burgas','Ruse'],
-    BI: ['Bujumbura','Gitega','Muyinga','Ruyigi','Ngozi'],
-    KH: ['Phnom Penh','Siem Reap','Battambang','Sihanoukville','Kampong Cham'],
-    CM: ['Yaoundé','Douala','Garoua','Bamenda','Maroua'],
-    CV: ['Praia','Mindelo','Santa Maria','Assomada','Pedra Badejo'],
-    TD: ['N\'Djamena','Moundou','Sarh','Abéché','Kélo'],
-    CL: ['Santiago','Valparaíso','Concepción','Antofagasta','Temuco'],
-    CN: ['Beijing','Shanghai','Shenzhen','Guangzhou','Chengdu'],
-    CO: ['Bogotá','Medellín','Cali','Cartagena','Barranquilla'],
-    KM: ['Moroni','Mutsamudu','Fomboni','Domoni','Tsimbeo'],
-    CG: ['Brazzaville','Pointe-Noire','Dolisie','Nkayi','Impfondo'],
-    CD: ['Kinshasa','Lubumbashi','Mbuji-Mayi','Kisangani','Kananga'],
-    CR: ['San José','Alajuela','Cartago','Heredia','Liberia'],
-    HR: ['Zagreb','Split','Dubrovnik','Rijeka','Osijek'],
-    CU: ['Havana','Santiago de Cuba','Camagüey','Holguín','Guantánamo'],
-    CY: ['Nicosia','Limassol','Larnaca','Paphos','Famagusta'],
-    CZ: ['Prague','Brno','Ostrava','Plzeň','Liberec'],
-    DK: ['Copenhagen','Aarhus','Odense','Aalborg','Esbjerg'],
-    DJ: ['Djibouti','Ali Sabieh','Dikhil','Tadjoura','Obock'],
-    DM: ['Roseau','Portsmouth','Marigot','Castle Bruce','Grand Bay'],
-    DO: ['Santo Domingo','Santiago','La Romana','San Pedro de Macorís','La Vega'],
-    EC: ['Quito','Guayaquil','Cuenca','Santo Domingo','Machala'],
-    EG: ['Cairo','Alexandria','Giza','Luxor','Port Said'],
-    SV: ['San Salvador','Santa Ana','San Miguel','Soyapango','Santa Tecla'],
-    GQ: ['Malabo','Bata','Ebebiyín','Mongomo','Evinayong'],
-    EE: ['Tallinn','Tartu','Narva','Pärnu','Kohtla-Järve'],
-    SZ: ['Mbabane','Manzini','Lobamba','Malkerns','Nhlangano'],
-    ET: ['Addis Ababa','Dire Dawa','Mekelle','Adama','Gondar'],
-    FJ: ['Suva','Nadi','Lautoka','Labasa','Savusavu'],
-    FI: ['Helsinki','Tampere','Turku','Oulu','Espoo'],
-    FR: ['Paris','Lyon','Marseille','Toulouse','Nice'],
-    GA: ['Libreville','Port-Gentil','Franceville','Oyem','Moanda'],
-    GM: ['Banjul','Serekunda','Brikama','Bakau','Farafenni'],
-    GE: ['Tbilisi','Batumi','Kutaisi','Rustavi','Gori'],
-    DE: ['Berlin','Munich','Hamburg','Frankfurt','Cologne'],
-    GH: ['Accra','Kumasi','Tamale','Takoradi','Cape Coast'],
-    GR: ['Athens','Thessaloniki','Patras','Larissa','Heraklion'],
-    GD: ['St. George\'s','Gouyave','Grenville','Victoria','Sauteurs'],
-    GT: ['Guatemala City','Quetzaltenango','Antigua','Escuintla','Cobán'],
-    GN: ['Conakry','Labé','N\'Zérékoré','Kankan','Kindia'],
-    GW: ['Bissau','Bafatá','Gabú','Bissorã','Cacheu'],
-    GY: ['Georgetown','Linden','New Amsterdam','Anna Regina','Bartica'],
-    HN: ['Tegucigalpa','San Pedro Sula','La Ceiba','Choluteca','El Progreso'],
-    HU: ['Budapest','Debrecen','Szeged','Pécs','Győr'],
-    IS: ['Reykjavík','Akureyri','Hafnarfjörður','Kópavogur','Selfoss'],
-    IN: ['Mumbai','Delhi','Bangalore','Chennai','Hyderabad'],
-    ID: ['Jakarta','Surabaya','Bandung','Medan','Bali'],
-    IE: ['Dublin','Cork','Galway','Limerick','Waterford'],
-    IL: ['Tel Aviv','Jerusalem','Haifa','Rishon LeZion','Petah Tikva'],
-    IT: ['Rome','Milan','Florence','Naples','Venice'],
-    JM: ['Kingston','Montego Bay','Portmore','Spanish Town','Ocho Rios'],
-    JP: ['Tokyo','Osaka','Kyoto','Yokohama','Fukuoka'],
-    JO: ['Amman','Zarqa','Irbid','Aqaba','Russeifa'],
-    KZ: ['Astana','Almaty','Shymkent','Karaganda','Aktobe'],
-    KE: ['Nairobi','Mombasa','Kisumu','Nakuru','Eldoret'],
-    KI: ['Tarawa','Betio','Bikenibeu','Bairiki','Abaiang'],
-    KW: ['Kuwait City','Hawalli','Salmiya','Farwaniya','Ahmadi'],
-    KG: ['Bishkek','Osh','Jalal-Abad','Karakol','Tokmok'],
-    LA: ['Vientiane','Luang Prabang','Savannakhet','Pakse','Thakhek'],
-    LV: ['Riga','Daugavpils','Liepāja','Jelgava','Jūrmala'],
-    LB: ['Beirut','Tripoli','Sidon','Tyre','Nabatieh'],
-    LS: ['Maseru','Teyateyaneng','Mafeteng','Hlotse','Mohale\'s Hoek'],
-    LR: ['Monrovia','Gbarnga','Buchanan','Kakata','Voinjama'],
-    LI: ['Vaduz','Schaan','Triesen','Balzers','Eschen'],
-    LT: ['Vilnius','Kaunas','Klaipėda','Šiauliai','Panevėžys'],
-    LU: ['Luxembourg City','Esch-sur-Alzette','Differdange','Dudelange','Bettembourg'],
-    MG: ['Antananarivo','Toamasina','Antsirabe','Fianarantsoa','Mahajanga'],
-    MW: ['Lilongwe','Blantyre','Mzuzu','Zomba','Kasungu'],
-    MY: ['Kuala Lumpur','Penang','Johor Bahru','Ipoh','Shah Alam'],
-    MV: ['Malé','Addu City','Fuvahmulah','Kulhudhuffushi','Thinadhoo'],
-    MT: ['Valletta','Sliema','Birkirkara','Mosta','Qormi'],
-    MH: ['Majuro','Ebeye','Wotje','Jabor','Delap'],
-    MR: ['Nouakchott','Nouadhibou','Rosso','Kaédi','Kiffa'],
-    MU: ['Port Louis','Beau Bassin-Rose Hill','Vacoas-Phoenix','Curepipe','Quatre Bornes'],
-    MX: ['Mexico City','Guadalajara','Monterrey','Puebla','Tijuana'],
-    FM: ['Palikir','Weno','Tofol','Colonia','Lelu'],
-    MD: ['Chișinău','Tiraspol','Bălți','Cahul','Ungheni'],
-    MC: ['Monaco','Monte Carlo','La Condamine','Fontvieille','Moneghetti'],
-    MN: ['Ulaanbaatar','Erdenet','Darkhan','Choibalsan','Ölgii'],
-    ME: ['Podgorica','Nikšić','Pljevlja','Bar','Herceg Novi'],
-    MA: ['Casablanca','Rabat','Marrakech','Fez','Tangier'],
-    MZ: ['Maputo','Beira','Nampula','Quelimane','Chimoio'],
-    NA: ['Windhoek','Swakopmund','Walvis Bay','Rundu','Oshakati'],
-    NR: ['Yaren','Anabar','Anibare','Baiti','Boe'],
-    NP: ['Kathmandu','Pokhara','Lalitpur','Birgunj','Biratnagar'],
-    NL: ['Amsterdam','Rotterdam','The Hague','Utrecht','Eindhoven'],
-    NZ: ['Auckland','Wellington','Christchurch','Hamilton','Tauranga'],
-    NI: ['Managua','León','Granada','Masaya','Estelí'],
-    NE: ['Niamey','Zinder','Maradi','Agadez','Tahoua'],
-    NG: ['Lagos','Abuja','Ibadan','Kano','Port Harcourt'],
-    MK: ['Skopje','Bitola','Kumanovo','Tetovo','Ohrid'],
-    NO: ['Oslo','Bergen','Trondheim','Stavanger','Tromsø'],
-    OM: ['Muscat','Salalah','Sohar','Nizwa','Sur'],
-    PK: ['Karachi','Lahore','Islamabad','Faisalabad','Rawalpindi'],
-    PW: ['Ngerulmud','Koror','Airai','Meyungs','Melekeok'],
-    PS: ['Ramallah','Gaza','Bethlehem','Hebron','Nablus'],
-    PA: ['Panama City','Colón','David','Santiago','Chitré'],
-    PG: ['Port Moresby','Lae','Madang','Mount Hagen','Goroka'],
-    PY: ['Asunción','Ciudad del Este','Encarnación','San Lorenzo','Luque'],
-    PE: ['Lima','Cusco','Arequipa','Trujillo','Chiclayo'],
-    PH: ['Manila','Cebu','Davao','Quezon City','Zamboanga'],
-    PL: ['Warsaw','Kraków','Gdańsk','Wrocław','Poznań'],
-    PT: ['Lisbon','Porto','Coimbra','Braga','Setúbal'],
-    QA: ['Doha','Al Wakrah','Al Khor','Umm Salal','Mesaieed'],
-    RO: ['Bucharest','Cluj-Napoca','Timișoara','Iași','Constanța'],
-    RW: ['Kigali','Huye','Musanze','Rubavu','Muhanga'],
-    KN: ['Basseterre','Charlestown','Sandy Point','Cayon','Dieppe Bay'],
-    LC: ['Castries','Vieux Fort','Soufrière','Gros Islet','Micoud'],
-    VC: ['Kingstown','Georgetown','Chateaubelair','Layou','Barrouallie'],
-    WS: ['Apia','Vaitele','Faleolo','Salelologa','Mulifanua'],
-    SM: ['San Marino','Serravalle','Borgo Maggiore','Domagnano','Fiorentino'],
-    ST: ['São Tomé','Santo António','Neves','Trindade','Guadalupe'],
-    SA: ['Riyadh','Jeddah','Mecca','Medina','Dammam'],
-    SN: ['Dakar','Thiès','Touba','Kaolack','Ziguinchor'],
-    RS: ['Belgrade','Novi Sad','Niš','Kragujevac','Subotica'],
-    SC: ['Victoria','Anse Boileau','Beau Vallon','Takamaka','Grand Anse'],
-    SL: ['Freetown','Bo','Kenema','Makeni','Koidu'],
-    SG: ['Singapore','Jurong East','Tampines','Woodlands','Bedok'],
-    SK: ['Bratislava','Košice','Prešov','Žilina','Banská Bystrica'],
-    SI: ['Ljubljana','Maribor','Celje','Kranj','Velenje'],
-    SB: ['Honiara','Auki','Gizo','Buala','Tulagi'],
-    ZA: ['Cape Town','Johannesburg','Durban','Pretoria','East London'],
-    KR: ['Seoul','Busan','Incheon','Daegu','Gwangju'],
-    ES: ['Madrid','Barcelona','Valencia','Seville','Bilbao'],
-    LK: ['Colombo','Kandy','Galle','Jaffna','Trincomalee'],
-    SR: ['Paramaribo','Lelydorp','Nieuw Nickerie','Paranam','Moengo'],
-    SE: ['Stockholm','Gothenburg','Malmö','Uppsala','Västerås'],
-    CH: ['Zürich','Geneva','Basel','Bern','Lausanne'],
-    TW: ['Taipei','Kaohsiung','Taichung','Tainan','Keelung'],
-    TJ: ['Dushanbe','Khujand','Kulob','Qurghonteppa','Istaravshan'],
-    TZ: ['Dar es Salaam','Dodoma','Mwanza','Arusha','Zanzibar'],
-    TH: ['Bangkok','Chiang Mai','Phuket','Pattaya','Chiang Rai'],
-    TL: ['Dili','Baucau','Maliana','Suai','Liquiçá'],
-    TG: ['Lomé','Sokodé','Kara','Kpalimé','Atakpamé'],
-    TO: ['Nuku\'alofa','Neiafu','Haveluloto','Pangai','Ohonua'],
-    TT: ['Port of Spain','San Fernando','Arima','Chaguanas','Point Fortin'],
-    TN: ['Tunis','Sfax','Sousse','Ettadhamen','Kairouan'],
-    TR: ['Istanbul','Ankara','İzmir','Antalya','Bursa'],
-    TM: ['Ashgabat','Türkmenabat','Mary','Türkmenbaşy','Balkanabat'],
-    TV: ['Funafuti','Fongafale','Asau','Tanrake','Savave'],
-    UG: ['Kampala','Entebbe','Jinja','Gulu','Mbarara'],
-    UA: ['Kyiv','Lviv','Odesa','Kharkiv','Dnipro'],
-    AE: ['Dubai','Abu Dhabi','Sharjah','Ajman','Ras Al Khaimah'],
-    GB: ['London','Manchester','Edinburgh','Glasgow','Birmingham'],
-    US: ['New York','Los Angeles','Chicago','San Francisco','Boston'],
-    UY: ['Montevideo','Salto','Ciudad de la Costa','Canelones','Maldonado'],
-    UZ: ['Tashkent','Samarkand','Bukhara','Namangan','Andijan'],
-    VU: ['Port Vila','Luganville','Norsup','Isangel','Sola'],
-    VA: ['Vatican City','Borgo Pio','Prati','Castel Gandolfo','Leonine City'],
-    VE: ['Caracas','Maracaibo','Valencia','Barquisimeto','Maracay'],
-    VN: ['Hanoi','Ho Chi Minh City','Da Nang','Hải Phòng','Huế'],
-    HK: ['Hong Kong','Kowloon','Mong Kok','Sha Tin','Tuen Mun'],
-    ZM: ['Lusaka','Ndola','Kitwe','Livingstone','Kabwe'],
-    ZW: ['Harare','Bulawayo','Mutare','Gweru','Kwekwe'],
-  };
-
-  let cc = null;
-
-  try {
-    const r = await fetch('/api/visitor-country', { credentials: 'same-origin' });
-    if (r.ok) {
-      const d = await r.json();
-      if (d && d.country_code) cc = d.country_code;
-    }
-  } catch {}
-
-  if (!cc || cc === 'CA') return;
-  const cities = (COUNTRY_CITIES[cc] || []).slice(0, 5);
-  if (!cities.length) return;
-
-  const t = (k, en) => (typeof LH_T === 'function' ? LH_T(k) : null) || en;
-  const types = [t('ticker.type.letters','Letters'),t('ticker.type.docs','Documents'),t('ticker.type.tax','Tax forms'),t('ticker.type.bday','A letter home'),t('ticker.type.legal','Legal papers')];
-  const from = t('ticker.from','from'), to = t('ticker.to','to');
-  const caShuffled = CA_CITIES.slice().sort(() => Math.random() - 0.5);
-  const items = cities.map((city, i) => `${types[i]} ${from} ${city} ${to} ${caShuffled[i]}`);
-
-  const track = document.querySelector('.ticker-track');
-  if (!track) return;
-  track.innerHTML = [...items, ...items].map(t => `<span>${t}</span>`).join('');
-});
-</script>
-
 <script src="/theme.js?v=4" defer></script>
-<script src="/lang.js?v=43" defer></script>
+<script src="/lang.js?v=44" defer></script>
 <script>
 (async () => {
   try {
