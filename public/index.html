@@ -6,7 +6,7 @@
 <link rel="dns-prefetch" href="https://www.googletagmanager.com">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="/ga.js" defer></script>
-<script src="/cookie-consent.js?v=3" defer></script>
+<script src="/cookie-consent.js?v=4" defer></script>
 <title>Mail a Letter Online from Anywhere | From $6 CAD | Letterhome</title>
 <meta name="description" content="Letterhome is an online letter mailing service: upload your letter or PDF and we print and mail it from Canada via Canada Post within two business days. From $6 CAD.">
 <meta name="keywords" content="send mail to canada, canadian expat mail service, mail letters from abroad, send documents to canada from overseas, mail from canada internationally, send a letter online canada">
@@ -1253,6 +1253,29 @@ section, .pricing-wrap { scroll-margin-top: 72px; }
   .extras { padding: 18px 16px !important; }
   .story-quote { padding: 36px 18px 18px !important; font-size: 17px !important; }
   .story-inner { gap: 24px !important; }
+  /* shorter phone layout: smaller step badges, tighter reading rhythm */
+  .step-num-mark { width: 36px; height: 36px; font-size: 18px; }
+  .step-num { margin-bottom: 6px !important; }
+  .step p, .usecase p, .trust-item p, .faq-item p, .story-text p { line-height: 1.55 !important; }
+  .usecase p, .trust-item p { font-size: 14.5px !important; }
+  .story-text p { font-size: 16px !important; margin-bottom: 12px !important; }
+  .founder-intro { font-size: 16px !important; }
+  .faq-item p { font-size: 15px !important; }
+  .rate-includes li { padding: 6px 0 6px 22px !important; font-size: 14.5px !important; }
+  .rate-includes h3 { margin-bottom: 8px !important; }
+  .rate-includes ul { margin-bottom: 14px !important; }
+  .rate-includes .btn { padding-top: 14px !important; padding-bottom: 14px !important; }
+  .extras h3 { margin-bottom: 8px !important; }
+  .extras-list li { padding: 8px 0 !important; }
+  .guide-links { gap: 0 !important; }
+  .guide-links a { padding: 10px 0 !important; font-size: 15px !important; }
+  .usecase h3 { margin-bottom: 4px !important; }
+  /* price rows: whole row is the tap target, arrow replaces the link text (text stays for screen readers) */
+  .rate-row { position: relative; grid-template-columns: minmax(0, 1fr) auto auto !important; align-items: center; }
+  .rate-go { grid-column: auto !important; justify-self: end; font-size: 0 !important; border: 0 !important; padding: 0 !important; margin: 0 !important; width: 24px; }
+  .rate-go::before { content: '\2192'; font-size: 22px; line-height: 1; color: var(--ink-muted); }
+  .rate-row.featured .rate-go::before { color: var(--red); }
+  .rate-go::after { content: ''; position: absolute; inset: 0; }
 }
 </style>
 </head>

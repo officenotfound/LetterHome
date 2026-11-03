@@ -24,15 +24,15 @@
       'z-index:9999',
       'background:#2a2a2a',
       'color:rgba(250,246,236,0.85)',
-      'padding:' + (small ? '12px 16px' : '20px 36px'),
+      'padding:' + (small ? '10px 14px calc(10px + env(safe-area-inset-bottom))' : '20px 36px'),
       'display:flex',
       'align-items:center',
       'justify-content:space-between',
-      'gap:' + (small ? '10px' : '16px'),
+      'gap:' + (small ? '8px' : '16px'),
       'flex-wrap:wrap',
       'font-family:inherit',
-      'font-size:' + (small ? '12.5px' : '14px'),
-      'line-height:' + (small ? '1.4' : '1.5'),
+      'font-size:' + (small ? '12px' : '14px'),
+      'line-height:' + (small ? '1.35' : '1.5'),
       'box-shadow:0 -2px 16px rgba(0,0,0,0.2)',
     ].join(';');
 
@@ -45,11 +45,11 @@
 
     var decline = document.createElement('button');
     decline.textContent = 'Decline';
-    decline.style.cssText = 'background:transparent;color:rgba(250,246,236,0.7);border:1px solid rgba(250,246,236,0.3);padding:' + (small ? '13px 12px' : '11px 20px') + ';cursor:pointer;font-family:inherit;font-size:13px;letter-spacing:0.04em;text-transform:uppercase' + (small ? ';flex:1' : '');
+    decline.style.cssText = 'background:transparent;color:rgba(250,246,236,0.7);border:1px solid rgba(250,246,236,0.3);padding:' + (small ? '11px 12px' : '11px 20px') + ';cursor:pointer;font-family:inherit;font-size:' + (small ? '12px' : '13px') + ';letter-spacing:0.04em;text-transform:uppercase' + (small ? ';flex:1' : '');
 
     var accept = document.createElement('button');
     accept.textContent = 'Accept';
-    accept.style.cssText = 'background:#a8472d;color:#faf6ec;border:none;padding:' + (small ? '13px 12px' : '11px 20px') + ';cursor:pointer;font-family:inherit;font-size:13px;letter-spacing:0.04em;text-transform:uppercase' + (small ? ';flex:1' : '');
+    accept.style.cssText = 'background:#a8472d;color:#faf6ec;border:none;padding:' + (small ? '11px 12px' : '11px 20px') + ';cursor:pointer;font-family:inherit;font-size:' + (small ? '12px' : '13px') + ';letter-spacing:0.04em;text-transform:uppercase' + (small ? ';flex:1' : '');
 
     decline.addEventListener('click', function () {
       try { localStorage.setItem(KEY, 'no'); } catch (e) {}
