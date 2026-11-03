@@ -19,17 +19,14 @@
   mount.outerHTML =
     '<footer>' +
       '<div class="footer-bottom">' +
-        '<div>© 2026 Letterhome<span class="ft-bn">. Registered Canadian business, BN 787294073.</span></div>' +
-        '<div class="footer-bottom-links">' + social +
-          '<a class="ft-extra" href="/guides">Guides</a>' +
-          '<a class="ft-extra" href="/about">About</a>' +
-          '<a class="ft-extra" href="/contact" data-i18n="nav.contact">Contact</a>' +
-          '<a class="ft-extra" href="/track" data-i18n="nav.track">Track an order</a>' +
-          '<a class="ft-extra" href="https://ca.trustpilot.com/review/letterhome.ca" target="_blank" rel="noopener">Reviews</a>' +
-          '<span class="ft-legal"><a href="/privacy" data-i18n="footer.privacy">Privacy</a>' +
-          '<a href="/terms" data-i18n="footer.terms">Terms</a></span>' +
-          '<a href="https://jeffbuilds.ca" target="_blank" rel="noopener" style="opacity:0.6">Jeffbuilds</a>' +
-        '</div>' +
+        '<div class="ft-copy">© 2026 Letterhome</div>' +
+        '<span class="ft-legal">' +
+          '<a href="/privacy" data-i18n="footer.privacy">Privacy</a>' +
+          '<a href="/terms" data-i18n="footer.terms">Terms</a>' +
+        '</span>' +
+        '<span class="ft-right">' + social +
+          '<a href="https://jeffbuilds.ca" target="_blank" rel="noopener" class="ft-credit">Jeffbuilds</a>' +
+        '</span>' +
       '</div>' +
     '</footer>';
 })();

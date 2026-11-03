@@ -497,19 +497,20 @@ p, li, summary { text-wrap: pretty; }
   @view-transition { navigation: none; }
 }
 
-/* Phones: slim footer. Keep the copyright line, privacy/terms (centred), the maker credit (right), and social icons on pages without them elsewhere. */
+/* Minimal footer (all sizes): copyright left, privacy + terms centred, credit (and social icons where the page has none elsewhere) right. */
+footer { height: auto !important; padding: 14px 24px !important; }
+footer .footer-bottom { display: grid !important; grid-template-columns: 1fr auto 1fr !important; align-items: center !important; column-gap: 16px !important; row-gap: 8px !important; max-width: 1280px; margin: 0 auto; font-size: 11px !important; letter-spacing: 0.04em !important; white-space: nowrap !important; flex-wrap: nowrap !important; }
+footer .footer-bottom > .ft-copy { justify-self: start; overflow: visible !important; white-space: nowrap !important; text-overflow: clip !important; }
+footer .ft-legal { display: inline-flex; gap: 20px; justify-self: center; }
+footer .ft-right { display: inline-flex; align-items: center; gap: 20px; justify-self: end; }
+footer .footer-bottom a { padding: 0 !important; min-height: 0 !important; display: inline-flex !important; align-items: center; position: relative; letter-spacing: inherit !important; }
+footer .footer-bottom a::after { content: ''; position: absolute; inset: -14px -8px; }
+footer .ft-credit { opacity: 0.6; }
 @media (max-width: 700px) {
-  .ft-extra, .ft-bn { display: none !important; }
-  footer { padding-top: 12px !important; padding-bottom: 12px !important; }
-  .footer-bottom { display: grid !important; grid-template-columns: 1fr auto 1fr; align-items: center; row-gap: 8px !important; column-gap: 8px !important; }
-  .footer-bottom-links { display: contents !important; }
-  .footer-bottom > div:first-child { justify-self: start; }
-  .footer-bottom, .footer-bottom a { letter-spacing: 0.02em !important; white-space: nowrap; }
-  .ft-legal { display: inline-flex; gap: 14px; justify-self: center; }
-  .footer-bottom-links a[href*="jeffbuilds"] { justify-self: end; }
-  .footer-social { grid-column: 1 / -1; grid-row: 2; justify-self: center; }
-  .footer-bottom-links a { padding: 0 !important; min-height: 0 !important; }
-  /* keep a 44px touch area without adding layout height */
-  .footer-bottom-links a, .footer-social a { position: relative; }
-  .footer-bottom-links a::after, .footer-social a::after { content: ''; position: absolute; inset: -14px -6px; }
+  footer { padding: 12px 18px !important; }
+  footer .footer-bottom { letter-spacing: 0.02em !important; column-gap: 8px !important; }
+  footer .ft-legal { gap: 14px; }
+  footer .ft-right { display: contents; }
+  footer .ft-credit { justify-self: end; }
+  footer .footer-social { grid-column: 1 / -1; grid-row: 2; justify-self: center; }
 }
