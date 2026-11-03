@@ -468,3 +468,31 @@ footer { background: #3d2c1a !important; border-top: 5px solid; border-image: re
 @media (max-width: 640px) {
   table.data, .comparison-table, .tier-table { display: block; max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
 }
+
+/* ── 2026 polish layer ─────────────────────────────────────────────────────── */
+/* Balanced headlines and no orphaned last words in paragraphs. */
+h1, h2, h3, .section-head p, .hero-lede { text-wrap: balance; }
+p, li, summary { text-wrap: pretty; }
+
+/* Smooth cross-page fades in browsers that support cross-document view transitions. */
+@view-transition { navigation: auto; }
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: 0.18s; }
+
+/* Touch screens: comfortable tap targets for small links and controls (44px guideline). */
+@media (pointer: coarse) {
+  footer a { display: inline-flex !important; align-items: center; min-height: 44px; min-width: 24px; padding-top: 0 !important; padding-bottom: 0 !important; }
+  /* Bigger hit area without adding layout height. */
+  .rate-go, .extras-note a, .trust-more a, .cta-band a:not(.btn) { padding-block: 12px; margin-block: -12px; }
+  .cta-band a:not(.btn) { padding-inline: 10px; margin-inline: -4px; }
+  .lang-toggle { width: 44px; height: 44px; }
+  .faq-item summary { min-height: 44px; }
+  .check-row, .check-row label { min-height: 44px; }
+  .check-row input[type="checkbox"], #mail-service-list input[type="radio"] { width: 22px; height: 22px; }
+}
+
+/* Respect the system "reduce motion" setting everywhere. */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto !important; }
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+  @view-transition { navigation: none; }
+}

@@ -6,7 +6,7 @@
 <link rel="dns-prefetch" href="https://www.googletagmanager.com">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="/ga.js" defer></script>
-<script src="/cookie-consent.js?v=2" defer></script>
+<script src="/cookie-consent.js?v=3" defer></script>
 <title>Mail a Letter Online from Anywhere | From $6 CAD | Letterhome</title>
 <meta name="description" content="Letterhome is an online letter mailing service: upload your letter or PDF and we print and mail it from Canada via Canada Post within two business days. From $6 CAD.">
 <meta name="keywords" content="send mail to canada, canadian expat mail service, mail letters from abroad, send documents to canada from overseas, mail from canada internationally, send a letter online canada">
@@ -15,8 +15,8 @@
 <link rel="icon" type="image/png" href="/favicon.png">
 <link rel="manifest" href="/manifest.json">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<meta name="theme-color" content="#f1ebde" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#1a1410" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#faf8f2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0a0a0a" media="(prefers-color-scheme: dark)">
 <meta property="og:title" content="Letterhome: Letters and documents mailed from Canada">
 <meta property="og:image" content="https://letterhome.ca/og-image.jpg?v=4">
 <meta property="og:image:width" content="1200">
@@ -1144,7 +1144,7 @@ footer {
 </style>
 <script>(function(){try{var m=window.matchMedia('(prefers-color-scheme: dark)'),s=function(){document.documentElement.setAttribute('data-theme',m.matches?'dark':'light');};s();if(m.addEventListener)m.addEventListener('change',s);}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
 
-<link rel="stylesheet" href="/theme.css?v=14">
+<link rel="stylesheet" href="/theme.css?v=17">
 <style>
 /* Home page polish: quiet labels, split hero, four-point trust grid */
 /* eyebrows: sentence case, no rules */
@@ -1219,6 +1219,16 @@ section, .pricing-wrap { scroll-margin-top: 72px; }
 .story-text .eyebrow { margin-bottom: 8px; }
 .story-quote { background: var(--paper) !important; }
 [data-theme="dark"] #trust, [data-theme="dark"] .story { background: var(--kraft-light); }
+/* Mobile: persistent call to action once the hero button scrolls away */
+.m-cta { display: none; }
+@media (max-width: 700px) {
+  .m-cta { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 90; align-items: center; justify-content: center; gap: 10px;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); background: var(--kraft); border-top: 1px solid var(--line);
+    transform: translateY(110%); transition: transform 0.25s ease; }
+  .m-cta.show { transform: translateY(0); }
+  .m-cta .btn { flex: 1; text-align: center; padding: 14px 16px; }
+  body { padding-bottom: 72px; }
+}
 @media (max-width: 700px) {
   .section-inner { padding: 32px 20px !important; }
   .section-head { margin-bottom: 20px !important; }
@@ -1561,6 +1571,24 @@ section, .pricing-wrap { scroll-margin-top: 72px; }
       observer.observe(el);
     });
   }
+</script>
+
+<!-- Mobile call to action -->
+<div class="m-cta" id="m-cta" aria-hidden="true"><a href="/send" class="btn btn-red" tabindex="-1"><span data-i18n="index.cta">Send a letter</span> &middot; <span data-i18n="index.meta1">From $6 CAD</span></a></div>
+<script>
+(function () {
+  var bar = document.getElementById('m-cta'), hero = document.querySelector('.v4-copy .btn'), end = document.querySelector('.cta-band');
+  if (!bar || !hero || !('IntersectionObserver' in window)) return;
+  var heroVisible = true, endVisible = false;
+  function update() {
+    var show = !heroVisible && !endVisible;
+    bar.classList.toggle('show', show);
+    bar.setAttribute('aria-hidden', show ? 'false' : 'true');
+    bar.querySelector('a').tabIndex = show ? 0 : -1;
+  }
+  new IntersectionObserver(function (e) { heroVisible = e[0].isIntersecting; update(); }).observe(hero);
+  if (end) new IntersectionObserver(function (e) { endVisible = e[0].isIntersecting; update(); }, { rootMargin: '0px 0px 80px 0px' }).observe(end);
+})();
 </script>
 
 <script src="/theme.js?v=4" defer></script>
