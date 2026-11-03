@@ -45,6 +45,20 @@ Allow: /
 User-agent: DuckAssistBot
 Allow: /
 
+# ChatGPT / Claude live-answer fetchers and search indexers. Named groups do
+# not inherit the * rules, so the private paths are repeated.
+User-agent: ChatGPT-User
+User-agent: Claude-SearchBot
+User-agent: Claude-User
+User-agent: Bravebot
+User-agent: DuckDuckBot
+User-agent: Applebot
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /order-success
+Disallow: /resume/
+
 # ---------------------------------------------------------------------------
 # AI TRAINING crawlers, explicitly opted out.
 # Mirrors the ai-train=no signal above and our Cloudflare "block AI training
