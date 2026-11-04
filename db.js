@@ -90,6 +90,16 @@ try { db.exec(`ALTER TABLE orders ADD COLUMN mail_service_cents INTEGER`);      
 try { db.exec(`ALTER TABLE orders ADD COLUMN printer_email_sent_at DATETIME`);   } catch {}
 try { db.exec(`ALTER TABLE orders ADD COLUMN large_envelope INTEGER DEFAULT 0`);   } catch {}
 try { db.exec(`ALTER TABLE orders ADD COLUMN paid_at DATETIME`); } catch {}
+try { db.exec(`ALTER TABLE orders ADD COLUMN mailed_at DATETIME`); } catch {}
+// Orders reach 'mailed' from several places (admin, bulk update, PostGrid sweep),
+// so the date is stamped here rather than at each one.
+try {
+  db.exec(`CREATE TRIGGER IF NOT EXISTS orders_stamp_mailed_at AFTER UPDATE OF status ON orders
+    WHEN NEW.status IN ('mailed','delivered') AND NEW.mailed_at IS NULL
+    BEGIN UPDATE orders SET mailed_at = CURRENT_TIMESTAMP WHERE id = NEW.id; END`);
+  db.exec(`UPDATE orders SET mailed_at = COALESCE(postgrid_submitted_at, paid_at, created_at)
+    WHERE status IN ('mailed','delivered') AND mailed_at IS NULL`);
+} catch (e) { console.error('[init] mailed_at:', e.message); }
 try { db.exec(`ALTER TABLE orders ADD COLUMN schedule_for_later INTEGER DEFAULT 0`); } catch {}
 try { db.exec(`ALTER TABLE orders ADD COLUMN scheduled_date TEXT`);           } catch {}
 try {

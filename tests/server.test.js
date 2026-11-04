@@ -611,20 +611,22 @@ test('the retired mailing address never appears in served pages, scripts or serv
   }
 });
 
-test('thank-you coupon: one single-use 15% code per customer, 7 days after payment, skips unsubscribed and old orders', async () => {
+test('thank-you coupon: one single-use 15% code per customer, 14 days after mailing, skips unmailed, unsubscribed and old orders', async () => {
   process.env.SMTP_HOST = 'smtp.test';
   try {
-    const mk = (email, paidAgo, status = 'paid') => {
+    const mk = (email, mailedAgo, status = 'mailed') => {
       const sid = seedOrder({ email, status });
-      db.prepare("UPDATE orders SET paid_at = datetime('now', ?) WHERE stripe_session_id = ?").run(paidAgo, sid);
+      db.prepare("UPDATE orders SET paid_at = datetime('now', '-30 days'), mailed_at = datetime('now', ?) WHERE stripe_session_id = ?").run(mailedAgo, sid);
       return db.prepare('SELECT id FROM orders WHERE stripe_session_id = ?').get(sid).id;
     };
-    const fresh   = mk('fresh@example.com',   '-2 days');
-    const due     = mk('due@example.com',     '-8 days');
-    const dup     = mk('due@example.com',     '-9 days');
+    const fresh   = mk('fresh@example.com',   '-10 days');
+    const due     = mk('due@example.com',     '-15 days');
+    const dup     = mk('due@example.com',     '-16 days');
     const old     = mk('old@example.com',     '-90 days');
-    const unsub   = mk('unsub@example.com',   '-8 days');
-    const refund  = mk('refund@example.com',  '-8 days', 'refunded');
+    const unsub   = mk('unsub@example.com',   '-15 days');
+    const refund  = mk('refund@example.com',  '-15 days', 'refunded');
+    const unmailed = mk('unmailed@example.com', '-15 days', 'paid');
+    db.prepare('UPDATE orders SET mailed_at = NULL WHERE id = ?').run(unmailed);
     db.prepare("INSERT OR REPLACE INTO customers (email, unsubscribed_at) VALUES ('unsub@example.com', CURRENT_TIMESTAMP)").run();
 
     sentMail.length = 0;
@@ -649,12 +651,24 @@ test('thank-you coupon: one single-use 15% code per customer, 7 days after payme
 
     const r2 = await thankYouCouponJob();          // nothing left to send
     assert.equal(r2.sent, 0);
-    for (const id of [fresh, dup, old, unsub, refund]) {
+    for (const id of [fresh, dup, old, unsub, refund, unmailed]) {
       assert.equal(db.prepare('SELECT thankyou_sent_at FROM orders WHERE id = ?').get(id).thankyou_sent_at, null);
     }
   } finally {
     delete process.env.SMTP_HOST;
   }
+});
+
+test('mailed_at is stamped once, the first time an order reaches mailed', () => {
+  const sid = seedOrder({ email: 'stamp@example.com', status: 'paid' });
+  const { id } = db.prepare('SELECT id FROM orders WHERE stripe_session_id = ?').get(sid);
+  const mailedAt = () => db.prepare('SELECT mailed_at FROM orders WHERE id = ?').get(id).mailed_at;
+  assert.equal(mailedAt(), null);
+  db.prepare("UPDATE orders SET status = 'mailed' WHERE id = ?").run(id);
+  assert.ok(mailedAt());
+  db.prepare("UPDATE orders SET mailed_at = '2026-01-01 00:00:00' WHERE id = ?").run(id);
+  db.prepare("UPDATE orders SET status = 'delivered' WHERE id = ?").run(id);
+  assert.equal(mailedAt(), '2026-01-01 00:00:00');
 });
 
 test('a mail service that is not switched on is rejected, and the send page has no hard-coded registered checkbox', async () => {

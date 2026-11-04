@@ -309,7 +309,7 @@ async function init() {
   window.addEventListener('popstate', () => route());
   startCountdownTicker();
   startNotifications();
-  api('/api/admin/contacts/unread').then(d => { if (d) updateContactsBadge(d.unread); });
+  api('/api/admin/contacts/unread', { background: true }).then(d => { if (d) updateContactsBadge(d.unread); });
   route();
 }
 
@@ -318,9 +318,21 @@ function go(path) {
   route();
 }
 
-function route() {
+// Bumped on every navigation, so a slow section can't render over a newer one.
+let _navId = 0;
+
+async function route() {
+  const nav = ++_navId;
   const p = window.location.pathname;
   setActiveNav(p);
+  setMain('<div class="empty" id="route-loading">Loading…</div>');
+  try { await renderRoute(p); } catch (e) { console.error(e); }
+  if (nav === _navId && document.getElementById('route-loading')) {
+    setMain('<div class="empty">Could not load this section. Reload the page to try again.</div>');
+  }
+}
+
+function renderRoute(p) {
   if (p === '/admin' || p === '/admin/')           return showDashboard();
   if (p === '/admin/orders')                        return showOrders();
   if (p.match(/^\/admin\/orders\/\d+$/))            return showOrder(p.split('/').pop());
@@ -340,11 +352,11 @@ function route() {
   if (p === '/admin/settings')                      return showSettings();
   if (p === '/admin/audit-log')                     return showAuditLog();
   if (p === '/admin/codes')                         return showCodes();
-  showDashboard();
+  return showDashboard();
 }
 
 function setActiveNav(p) {
-  ['dashboard','orders','customers','accounts','broadcast','insights','visitors','stripe','contacts','templates','settings','audit','trash'].forEach(k => document.getElementById('nav-'+k)?.classList.remove('active'));
+  ['dashboard','orders','customers','accounts','broadcast','outreach','insights','visitors','stripe','contacts','templates','settings','audit','codes','trash'].forEach(k => document.getElementById('nav-'+k)?.classList.remove('active'));
   if (p.startsWith('/admin/orders'))          document.getElementById('nav-orders')?.classList.add('active');
   else if (p.startsWith('/admin/accounts'))   document.getElementById('nav-accounts')?.classList.add('active');
   else if (p.startsWith('/admin/customers'))  document.getElementById('nav-customers')?.classList.add('active');
@@ -367,12 +379,16 @@ function setMain(html) { document.getElementById('main').innerHTML = html; }
 
 let _csrfToken = null;
 async function api(url, opts = {}) {
+  const nav = _navId;
   try {
     const headers = { 'Content-Type': 'application/json', ...(opts.headers || {}) };
     if (_csrfToken && opts.method && opts.method !== 'GET') headers['X-CSRF-Token'] = _csrfToken;
     const r = await fetch(url, { ...opts, headers });
     if (r.status === 401) { window.location.href = '/admin/login'; return null; }
-    return r.ok ? r.json() : null;
+    const data = r.ok ? await r.json() : null;
+    // The user has moved on: never resolve, so the old section stops here.
+    if (nav !== _navId && !opts.background && (!opts.method || opts.method === 'GET')) return new Promise(() => {});
+    return data;
   } catch { return null; }
 }
 
@@ -1099,7 +1115,7 @@ function markNotifsRead() {
 
 async function pollNotifications() {
   const seen = readSeen();
-  const d = await api('/api/admin/notifications' + (seen ? `?since=${encodeURIComponent(seen)}` : ''));
+  const d = await api('/api/admin/notifications' + (seen ? `?since=${encodeURIComponent(seen)}` : ''), { background: true });
   if (!d) return;
   _notifSince = d.now;
   if (!seen) { writeSeen(d.now); } // first ever visit: start counting from now, not the whole history
@@ -2715,8 +2731,9 @@ function fmtBytes(bytes) {
 async function showCodes() {
   setTitle('Discount Codes');
   const codes = await api('/api/admin/discount-codes');
+  if (!codes) { setMain('<div class="empty">Could not load discount codes.</div>'); return; }
   const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  setContent(`
+  setMain(`
     <div class="card" style="margin-bottom:24px">
       <div class="card-header"><span class="card-title">Create Discount Code</span></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:20px">

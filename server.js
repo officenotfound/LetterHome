@@ -4149,9 +4149,9 @@ cron.schedule('0 * * * *', () => {
   abandonedOrderRecovery();
 });
 
-// ── Thank-you coupon: one single-use 15% code, emailed 7 days after a paid order ──
+// ── Thank-you coupon: one single-use 15% code, emailed 14 days after an order is mailed ──
 const THANKYOU_PCT = 15;
-const THANKYOU_DELAY_DAYS = 7;
+const THANKYOU_DELAY_DAYS = 14;
 const THANKYOU_VALID_DAYS = 30;
 
 function newThankYouCode() {
@@ -4193,7 +4193,7 @@ function buildThankYouEmail(order, code, expiresOn) {
   };
 }
 
-// One email per customer, ever. Only orders paid (paid_at is set) 7 to 30 days ago,
+// One email per customer, ever. Only orders mailed 14 to 37 days ago,
 // so old orders from before this feature never get a surprise email.
 let thankYouRunning = false;
 async function thankYouCouponJob() {
@@ -4203,10 +4203,10 @@ async function thankYouCouponJob() {
   try {
     const due = db.prepare(`
       SELECT * FROM orders
-      WHERE status IN ('paid','submitted_to_printer','printing','mailed','delivered')
+      WHERE status IN ('mailed','delivered')
         AND paid_at IS NOT NULL
-        AND paid_at <= datetime('now', ?)
-        AND paid_at >  datetime('now', ?)
+        AND mailed_at <= datetime('now', ?)
+        AND mailed_at >  datetime('now', ?)
         AND thankyou_sent_at IS NULL
         AND deleted_at IS NULL
         AND customer_email LIKE '%_@_%.__%'
@@ -4219,7 +4219,7 @@ async function thankYouCouponJob() {
           WHERE lower(o2.customer_email) = lower(orders.customer_email) AND o2.thankyou_sent_at IS NOT NULL
         )
       GROUP BY lower(customer_email)
-      ORDER BY paid_at
+      ORDER BY mailed_at
       LIMIT 50
     `).all(`-${THANKYOU_DELAY_DAYS} days`, `-${THANKYOU_DELAY_DAYS + 23} days`);
     for (const order of due) {
