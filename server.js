@@ -519,8 +519,12 @@ async function postgridSweep() {
     }
     for (const o of db.prepare(`SELECT id FROM orders WHERE postgrid_mode = 'live' AND printer_email_sent_at IS NULL
         AND status IN ('submitted_to_printer', 'printing') AND deleted_at IS NULL`).all()) sendAtPrinterEmail(o.id);
+    // PostGrid only adds a tracking number after processed_for_delivery, so tracked letters stay in the sweep until it arrives.
     const live = db.prepare(`SELECT * FROM orders WHERE postgrid_letter_id IS NOT NULL AND deleted_at IS NULL
-      AND COALESCE(postgrid_status,'') NOT IN ('completed','cancelled') LIMIT 100`).all();
+      AND (COALESCE(postgrid_status,'') NOT IN ('completed','cancelled')
+        OR (postgrid_status = 'completed' AND postgrid_mode = 'live' AND postgrid_tracking_number IS NULL
+            AND (registered_mail = 1 OR certified_mail = 1 OR express_mail = 1)
+            AND postgrid_submitted_at > datetime('now', '-30 days'))) LIMIT 100`).all();
     for (const o of live) {
       try {
         const r = await postgrid.refreshOrder(o);
@@ -2970,7 +2974,7 @@ body{font-family:Georgia,serif;color:#111;padding:40px;max-width:800px;margin:0 
 </div>
 <div class="head">
   <div class="title">Letterhome · Order #${order.id}</div>
-  <div class="meta">${new Date(order.created_at).toLocaleString('en-CA')}</div>
+  <div class="meta">${order.created_at} UTC</div>
 </div>
 <div class="addr-block">
   <div class="addr-card">
@@ -3597,6 +3601,10 @@ function buildStatusPage(order) {
     ? `Dropped off with ${mailFacts(order).carrier}. Estimated arrival: ${deliveryLine}`
     : 'Once mailed, your estimated delivery will appear here.';
 
+  const trackingLine = order.postgrid_tracking_number
+    ? `Tracking number: ${esc(order.postgrid_tracking_number)}. Use it on the ${mailFacts(order).carrier} website to follow your letter.`
+    : 'Your tracking number will appear here once it is available.';
+
   return `<!DOCTYPE html>
 <html lang="en-CA">
 <head>
@@ -3643,7 +3651,7 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:48px 36px 32px
     ${stepHTML(0, 'Order Received', `Payment confirmed &nbsp;·&nbsp; Order #${esc(String(order.id))}`)}
     ${stepHTML(1, 'Being Prepared', 'Your letter has been submitted for printing.')}
     <div style="border-bottom:none">${stepHTML(2, stageIndex >= 3 ? 'Mailed' : 'On Its Way', step3Desc)}</div>
-    ${tracked ? `<div style="border-bottom:none">${stepHTML(3, 'Delivered', stageIndex >= 4 ? 'Your letter has been delivered.' : 'We will update this once your letter is delivered.')}</div>` : ''}
+    ${tracked ? `<div style="border-bottom:none">${stepHTML(3, 'Delivered', stageIndex >= 4 ? 'Your letter has been delivered.' : trackingLine)}</div>` : ''}
   </div>
   ${stageIndex >= 2 && order.estimated_delivery ? `
   <div style="background:#2a2a2a;color:#faf6ec;padding:24px;border-radius:4px;margin-bottom:32px">

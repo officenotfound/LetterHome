@@ -491,8 +491,9 @@ function createPostGrid({ db, getSetting, orderDirPath, fetchImpl, convertWord =
     // never move an order backwards from mailed/delivered
     if (order.status === 'delivered' || (order.status === 'mailed' && next !== 'mailed')) next = order.status;
     db.prepare(`UPDATE orders SET postgrid_status = ?, postgrid_url = COALESCE(?, postgrid_url),
+                postgrid_tracking_number = COALESCE(?, postgrid_tracking_number),
                 postgrid_error = ?, status = COALESCE(?, status) WHERE id = ?`)
-      .run(st, letter.url || null, st === 'cancelled' ? 'Cancelled at PostGrid; needs manual fulfilment.' : null, next || null, order.id);
+      .run(st, letter.url || null, letter.trackingNumber || null, st === 'cancelled' ? 'Cancelled at PostGrid; needs manual fulfilment.' : null, next || null, order.id);
     return { changed: st !== order.postgrid_status || next !== order.status, status: st, mailed: mailedNow };
   }
 

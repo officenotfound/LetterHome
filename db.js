@@ -78,6 +78,7 @@ try { db.exec(`ALTER TABLE orders ADD COLUMN postgrid_url TEXT`); } catch {}
 try { db.exec(`ALTER TABLE orders ADD COLUMN postgrid_error TEXT`); } catch {}
 try { db.exec(`ALTER TABLE orders ADD COLUMN postgrid_submitted_at DATETIME`); } catch {}
 try { db.exec(`ALTER TABLE orders ADD COLUMN postgrid_mode TEXT`); } catch {}
+try { db.exec(`ALTER TABLE orders ADD COLUMN postgrid_tracking_number TEXT`); } catch {}
 try { db.exec(`ALTER TABLE orders ADD COLUMN discount_code TEXT`);     } catch {}
 try { db.exec(`ALTER TABLE orders ADD COLUMN discount_cents INTEGER`); } catch {}
 try { db.exec(`ALTER TABLE orders ADD COLUMN page_count INTEGER`);            } catch {}

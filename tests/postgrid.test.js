@@ -23,13 +23,14 @@ let letterStatus = 'ready';
 let existingLetters = [];
 let liveLetters = true;   // most tests simulate live letters; one test covers test-mode isolation
 let recipientStatus = 'verified';
+let trackingNumber;
 const fakeFetch = async (url, opts) => {
   calls.push({ url, opts });
   const body = (o, status = 200) => ({ ok: status < 400, status, json: async () => o });
   if (url.endsWith('/contacts')) return body({ id: 'contact_' + calls.length, addressStatus: recipientStatus, addressErrors: recipientStatus === 'failed' ? 'generic: Unable to find a match for this address' : undefined });
   if (url.includes('/letters?') && opts.method === 'GET') return body({ object: 'list', data: existingLetters, totalCount: existingLetters.length });
   if (url.endsWith('/letters') && opts.method === 'POST') return body({ id: 'letter_1', live: liveLetters, status: 'ready', url: 'https://pg/preview.pdf' });
-  if (/\/letters\/letter_1$/.test(url) && opts.method === 'GET') return body({ id: 'letter_1', live: liveLetters, status: letterStatus, url: 'https://pg/p.pdf' });
+  if (/\/letters\/letter_1$/.test(url) && opts.method === 'GET') return body({ id: 'letter_1', live: liveLetters, status: letterStatus, url: 'https://pg/p.pdf', trackingNumber });
   if (/\/letters\/letter_1$/.test(url) && opts.method === 'DELETE') return body({ id: 'letter_1', status: 'cancelled' });
   return body({ error: { type: 'x', message: 'nope' } }, 404);
 };
@@ -105,6 +106,21 @@ test('refresh maps PostGrid statuses; completed means mailed; cancelled returns 
   letterStatus = 'completed';
   r = await pg.refreshOrder(db.prepare('SELECT * FROM orders WHERE id = ?').get(o.id));
   assert.equal(r.mailed, false);             // no duplicate "mailed" email
+  letterStatus = 'ready';
+});
+
+test('refresh stores the tracking number PostGrid adds after processed_for_delivery, and keeps it', async () => {
+  const o = seed(); await pg.submitOrder(o);
+  const tracking = () => db.prepare('SELECT postgrid_tracking_number t FROM orders WHERE id = ?').get(o.id).t;
+  letterStatus = 'processed_for_delivery';
+  await pg.refreshOrder(db.prepare('SELECT * FROM orders WHERE id = ?').get(o.id));
+  assert.equal(tracking(), null);
+  trackingNumber = 'RN123456789CA';
+  await pg.refreshOrder(db.prepare('SELECT * FROM orders WHERE id = ?').get(o.id));
+  assert.equal(tracking(), 'RN123456789CA');
+  trackingNumber = undefined;
+  await pg.refreshOrder(db.prepare('SELECT * FROM orders WHERE id = ?').get(o.id));
+  assert.equal(tracking(), 'RN123456789CA');
   letterStatus = 'ready';
 });
 

@@ -414,14 +414,22 @@ function statusBadge(s) {
   return `<span class="badge ${cls}">${label}</span>`;
 }
 
+// SQLite stores UTC as "YYYY-MM-DD HH:MM:SS" with no zone, which browsers would read as local time.
+function parseDbDate(d) {
+  if (typeof d !== 'string') return new Date(d);
+  if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/.test(d)) return new Date(d.replace(' ', 'T') + 'Z');
+  if (/^\d{4}-\d{2}-\d{2}$/.test(d)) return new Date(d + 'T00:00:00');   // calendar date, no time to shift
+  return new Date(d);
+}
+
 function fmtDate(d) {
   if (!d) return '—';
-  return new Date(d).toLocaleDateString('en-CA', { year:'numeric', month:'short', day:'numeric' });
+  return parseDbDate(d).toLocaleDateString('en-CA', { year:'numeric', month:'short', day:'numeric' });
 }
 
 function fmtDateTime(d) {
   if (!d) return '—';
-  return new Date(d).toLocaleString('en-CA', {
+  return parseDbDate(d).toLocaleString('en-CA', {
     month:'short', day:'numeric', year:'numeric',
     hour:'numeric', minute:'2-digit'
   });
@@ -437,7 +445,7 @@ function timeLeftHTML(createdAt, status) {
   if (status === 'awaiting_payment')
     return `<span data-countdown-created="${createdAt}" data-countdown-status="${status}" style="color:#9a9a9a;font-size:12px">—</span>`;
 
-  const deadline  = new Date(createdAt).getTime() + 24 * 3600000;
+  const deadline  = parseDbDate(createdAt).getTime() + 24 * 3600000;
   const remaining = deadline - Date.now();
   const h = Math.floor(Math.abs(remaining) / 3600000);
   const m = Math.floor((Math.abs(remaining) % 3600000) / 60000);
@@ -452,7 +460,7 @@ function timeLeftHTML(createdAt, status) {
 
 function slaBanner(createdAt, status) {
   if (status === 'mailed' || status === 'delivered' || status === 'awaiting_payment') return '';
-  const deadline  = new Date(createdAt).getTime() + 24 * 3600000;
+  const deadline  = parseDbDate(createdAt).getTime() + 24 * 3600000;
   const remaining = deadline - Date.now();
   const h = Math.floor(Math.abs(remaining) / 3600000);
   const m = Math.floor((Math.abs(remaining) % 3600000) / 60000);
@@ -1121,9 +1129,9 @@ async function pollNotifications() {
   if (!seen) { writeSeen(d.now); } // first ever visit: start counting from now, not the whole history
   const items = [];
   (seen ? d.orders : []).forEach(o => items.push({ key: 'o' + o.id, path: `/admin/orders/${o.id}`,
-    html: `<strong>New order #${o.id}</strong> · $${(o.price_cents / 100).toFixed(2)} CAD<br>${esc(o.recipient_name || '')} (${esc(o.destination_country || '')})`, when: o.paid_at + ' UTC' }));
+    html: `<strong>New order #${o.id}</strong> · $${(o.price_cents / 100).toFixed(2)} CAD<br>${esc(o.recipient_name || '')} (${esc(o.destination_country || '')})`, when: fmtDateTime(o.paid_at) }));
   (seen ? d.contacts : []).forEach(c => items.push({ key: 'c' + c.id, path: '/admin/contacts',
-    html: `<strong>Message from ${esc(c.name)}</strong><br>${esc(c.preview)}`, when: c.created_at + ' UTC' }));
+    html: `<strong>Message from ${esc(c.name)}</strong><br>${esc(c.preview)}`, when: fmtDateTime(c.created_at) }));
   const known = new Set(_notifItems.map(i => i.key));
   const fresh = items.filter(i => !known.has(i.key));
   _notifItems = items;
@@ -1241,6 +1249,7 @@ function postgridCard(o) {
     const canCancel = o.postgrid_status === 'ready';
     body = row('Letter', `<span style="font-family:monospace;font-size:12px">${esc(o.postgrid_letter_id)}</span> ${modeBadge(o.postgrid_mode)}`)
       + row('PostGrid status', esc(o.postgrid_status || '—'))
+      + (o.postgrid_tracking_number ? row('Tracking number', esc(o.postgrid_tracking_number)) : '')
       + row('Submitted', o.postgrid_submitted_at ? fmtDateTime(o.postgrid_submitted_at) : '—')
       + err
       + `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
@@ -2006,7 +2015,7 @@ async function showInsights() {
 
   const seg = stats.segments || {};
   const cutoff = new Date(Date.now() - 60 * 86400 * 1000);
-  const inactive = (customers||[]).filter(c => c.last_order && new Date(c.last_order) < cutoff)
+  const inactive = (customers||[]).filter(c => c.last_order && parseDbDate(c.last_order) < cutoff)
     .sort((a,b) => new Date(a.last_order) - new Date(b.last_order));
 
   const geoFromRows = (geoData?.from||[]).map(r => `<tr><td>${esc(r.country||'—')}</td><td>${r.orders}</td></tr>`).join('');
@@ -2781,7 +2790,7 @@ async function showCodes() {
             <td style="color:#9a9a9a;font-size:12px">${esc(c.description||'')}</td>
             <td style="font-size:12px">${c.discount_pct ? c.discount_pct+'%' : '$'+(c.discount_cents/100).toFixed(2)+' off'}</td>
             <td style="font-size:12px">${c.uses_count}${c.max_uses ? ' / '+c.max_uses : ''}</td>
-            <td style="font-size:12px">${c.expires_at ? c.expires_at.slice(0,10) : '—'}</td>
+            <td style="font-size:12px">${fmtDate(c.expires_at)}</td>
             <td><span style="font-size:11px;padding:2px 8px;border-radius:2px;background:${c.active?'#d1fae5':'#fee2e2'};color:${c.active?'#065f46':'#991b1b'}">${c.active?'Yes':'No'}</span></td>
             <td style="display:flex;gap:8px">
               <button onclick="toggleCode(${c.id},${c.active?0:1})" style="font-size:11px;padding:4px 10px;border:1px solid #e0e0e0;background:transparent;cursor:pointer;border-radius:2px">${c.active?'Disable':'Enable'}</button>

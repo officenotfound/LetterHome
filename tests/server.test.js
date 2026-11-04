@@ -455,6 +455,13 @@ test('status page: mailed is the final step, and only tracked orders show Delive
   assert.match(tracked, />Delivered</);
   assert.ok(tracked.includes('◉'));
 
+  assert.match(tracked, /tracking number will appear/);
+
+  const sid = seedOrder({ email: 'steps@example.com', status: 'mailed' });
+  db.prepare("UPDATE orders SET registered_mail = 1, postgrid_tracking_number = 'RN123456789CA' WHERE stripe_session_id = ?").run(sid);
+  const { status_token } = db.prepare('SELECT status_token FROM orders WHERE stripe_session_id = ?').get(sid);
+  assert.match(await (await fetch(`${base}/status/${status_token}`)).text(), /Tracking number: RN123456789CA/);
+
   assert.equal(ticks(await page('delivered', 'registered_mail')), 4);
 });
 
