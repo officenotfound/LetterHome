@@ -3571,7 +3571,9 @@ function buildMailedEmailText(o, toAddr, deliveryText) {
 
 function buildStatusPage(order) {
   const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  const stageIndex = { paid: 0, submitted_to_printer: 1, printing: 1, mailed: 2, delivered: 2 }[order.status] ?? 0;
+  // Mailed is the final step: only tracked services can ever report a delivery.
+  const tracked    = !!(order.registered_mail || order.certified_mail || order.express_mail);
+  const stageIndex = { paid: 0, submitted_to_printer: 1, printing: 1, mailed: 3, delivered: tracked ? 4 : 3 }[order.status] ?? 0;
 
   function stepHTML(index, label, desc) {
     const done    = stageIndex > index;
@@ -3640,7 +3642,8 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:48px 36px 32px
   <div style="margin-bottom:40px">
     ${stepHTML(0, 'Order Received', `Payment confirmed &nbsp;·&nbsp; Order #${esc(String(order.id))}`)}
     ${stepHTML(1, 'Being Prepared', 'Your letter has been submitted for printing.')}
-    <div style="border-bottom:none">${stepHTML(2, 'On Its Way', step3Desc)}</div>
+    <div style="border-bottom:none">${stepHTML(2, stageIndex >= 3 ? 'Mailed' : 'On Its Way', step3Desc)}</div>
+    ${tracked ? `<div style="border-bottom:none">${stepHTML(3, 'Delivered', stageIndex >= 4 ? 'Your letter has been delivered.' : 'We will update this once your letter is delivered.')}</div>` : ''}
   </div>
   ${stageIndex >= 2 && order.estimated_delivery ? `
   <div style="background:#2a2a2a;color:#faf6ec;padding:24px;border-radius:4px;margin-bottom:32px">

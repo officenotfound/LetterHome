@@ -431,6 +431,33 @@ test('GET /status/:token returns status page HTML for a paid order', async () =>
   assert.ok(html.includes('<!DOCTYPE html'), 'not an HTML response');
 });
 
+test('status page: mailed is the final step, and only tracked orders show Delivered', async () => {
+  const page = async (status, extra) => {
+    const sid = seedOrder({ email: 'steps@example.com', status });
+    if (extra) db.prepare(`UPDATE orders SET ${extra} = 1 WHERE stripe_session_id = ?`).run(sid);
+    const { status_token } = db.prepare('SELECT status_token FROM orders WHERE stripe_session_id = ?').get(sid);
+    return (await fetch(`${base}/status/${status_token}`)).text();
+  };
+  const ticks = html => (html.match(/✓/g) || []).length;
+
+  const mailed = await page('mailed');
+  assert.match(mailed, />Mailed</);
+  assert.equal(ticks(mailed), 3);
+  assert.ok(!mailed.includes('◉'));
+  assert.ok(!mailed.includes('>Delivered<'));
+
+  const printing = await page('printing');
+  assert.match(printing, />On Its Way</);
+  assert.ok(!printing.includes('>Mailed<'));
+
+  const tracked = await page('mailed', 'registered_mail');
+  assert.equal(ticks(tracked), 3);
+  assert.match(tracked, />Delivered</);
+  assert.ok(tracked.includes('◉'));
+
+  assert.equal(ticks(await page('delivered', 'registered_mail')), 4);
+});
+
 test('GET /status/:token returns 404 for an awaiting_payment order', async () => {
   const sessionId = seedOrder({ status: 'awaiting_payment' });
   const row = db.prepare('SELECT status_token FROM orders WHERE stripe_session_id = ?').get(sessionId);
