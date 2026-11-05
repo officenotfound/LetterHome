@@ -381,6 +381,12 @@
     <priority>0.5</priority>
   </url>
   <url>
+    <loc>https://letterhome.ca/accessibility</loc>
+    <lastmod>2026-11-05</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
     <loc>https://letterhome.ca/refunds</loc>
     <lastmod>2026-11-02</lastmod>
     <changefreq>yearly</changefreq>

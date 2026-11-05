@@ -24,6 +24,7 @@
         '<span class="ft-legal">' +
           '<a href="/privacy" data-i18n="footer.privacy">Privacy</a>' +
           '<a href="/terms" data-i18n="footer.terms">Terms</a>' +
+          '<a href="/accessibility" data-i18n="footer.accessibility">Accessibility</a>' +
         '</span>' +
         '<span class="ft-right">' + social +
           '<a href="https://jeffbuilds.ca" target="_blank" rel="noopener" class="ft-credit">Jeffbuilds</a>' +

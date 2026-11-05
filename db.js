@@ -64,6 +64,8 @@ db.exec(`
 `);
 
 try { db.exec(`ALTER TABLE orders ADD COLUMN deleted_at DATETIME`);       } catch {}
+try { db.exec(`ALTER TABLE orders ADD COLUMN content_flags TEXT`);        } catch {}   // JSON: categories and counts only, never the matched text
+try { db.exec(`ALTER TABLE orders ADD COLUMN content_cleared_at DATETIME`); } catch {}   // set when the owner marks a flagged order safe
 try { db.exec(`ALTER TABLE orders ADD COLUMN customer_ip TEXT`);          } catch {}
 try { db.exec(`ALTER TABLE orders ADD COLUMN printer_ref TEXT`);          } catch {}
 try { db.exec(`ALTER TABLE orders ADD COLUMN estimated_delivery TEXT`);   } catch {}
@@ -215,7 +217,7 @@ The typical delivery windows are:
   • Within Canada: within 2 weeks
   • International: within 4 weeks
 
-If you're still within that window, it's most likely on its way. If the full window has passed and nothing has arrived, please reply and we'll arrange a resend at no charge.
+If you're still within that window, it's most likely on its way. If the full window has passed and nothing has arrived, please reply with your order number and we'll look into it. We can't offer a resend or refund for a letter that has been mailed, since standard mail has no tracking.
 
 Thanks for your patience,
 Letterhome`,
@@ -228,27 +230,10 @@ Letterhome`,
 
 Thanks for getting in touch. Canada Post is currently experiencing delays in some regions, which can push delivery past the usual window. We're sorry for the inconvenience.
 
-We'd ask you to allow a few extra days before considering the letter lost. If it hasn't arrived within [X weeks from mailing date], please reply and we'll make it right with a resend.
+We'd ask you to allow a few extra days before considering the letter lost. If it hasn't arrived within [X weeks from mailing date], please reply with your order number and we'll look into it.
 
 We appreciate your patience.
 
-Letterhome`,
-  },
-  {
-    name:    'Non-delivery — goodwill resend',
-    subject: 'Re: Your Letterhome letter — resend arranged',
-    body:
-`Hi there,
-
-We're sorry your letter hasn't arrived. Since your delivery window has passed, we'd like to resend it at no additional charge.
-
-Could you confirm:
-  1. The full mailing address for the recipient is still the same
-  2. That it's possible the letter was missed (e.g. no one home, full mailbox)
-
-Once you confirm, we'll reprint and repost your letter right away.
-
-Apologies again for the trouble,
 Letterhome`,
   },
   {

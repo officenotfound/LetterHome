@@ -100,7 +100,7 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:48px 36px 32px
   </ul>
 
   <h2 data-i18n="privacy.s3.h2">Data retention</h2>
-  <p data-i18n="privacy.s3.p">We keep your letter and attachments only as long as needed to print and mail it, handle reprints and refunds, and answer questions about your order. We keep a basic order record, date, amount, and your email address, for the period required by Canadian tax and accounting regulations.</p>
+  <p data-i18n="privacy.s3.p">We keep your letter and attachments only as long as needed to print and mail it, handle refunds, and answer questions about your order. We keep a basic order record, date, amount, and your email address, for the period required by Canadian tax and accounting regulations.</p>
 
   <h2>Saved drafts on your device</h2>
 
@@ -110,10 +110,13 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:48px 36px 32px
 
 
   <h2 id="data-handling" data-i18n="privacy.s4.h2">Third-party services</h2>
-  <p data-i18n-html="privacy.s4.p">We use <strong>Stripe</strong> to process payments. Stripe is a PCI DSS Level 1 certified payment provider, and we never see or store your card number (<a href="https://stripe.com/privacy" target="_blank" rel="noopener">stripe.com/privacy</a>). Once we approve your order, your letter, attachments and addresses are sent over an encrypted HTTPS connection to the printing and mailing service provider that produces it. That service is covered by a SOC 2 Type II report and PCI DSS 3.2.1 certification, follows HIPAA guidelines, is designed to comply with PIPEDA and GDPR, and runs on Amazon Web Services. Your letter is delivered by the postal service of the destination country, such as Canada Post. Beyond these, no third parties have access to your order information.</p>
+  <p data-i18n-html="privacy.s4.p">We use <strong>Stripe</strong> to process payments. Stripe is a PCI DSS Level 1 certified payment provider, and we never see or store your card number (<a href="https://stripe.com/privacy" target="_blank" rel="noopener">stripe.com/privacy</a>). Once we approve your order, your letter, attachments and addresses are sent over an encrypted HTTPS connection to the printing and mailing service provider that produces it. That facility has a SOC 2 Type II report and PCI DSS 3.2.1 certification, supports HIPAA, PIPEDA and GDPR compliant handling, and runs on Amazon Web Services. Letterhome itself does not hold a HIPAA certification (HIPAA has none) or sign HIPAA business associate agreements. If your letter contains health information that the law requires you to protect, contact us before you send it. Your letter is delivered by the postal service of the destination country, such as Canada Post. Beyond these, no third parties have access to your order information.</p>
 
   <h2 data-i18n="privacy.s5.h2">Order review</h2>
-  <p data-i18n="privacy.s5.p">Each order is reviewed by a person before printing. The review checks for things that would stop the mail from going through, incomplete addresses, unreadable files, obvious abuse or illegal content. It isn't a content review of your message; we don't read, summarise or share what you wrote. If we find a delivery problem, we'll contact you before printing. If an order contains prohibited content, we'll cancel and refund it. You can ask us to delete your letter and personal information at any time.</p>
+  <p data-i18n="privacy.s5.p">Each order is checked by an automatic scan that runs on our own servers. It looks for a short list of warning words and patterns, and nothing is sent to any other service. If it flags an order, a person looks at that order before anything is printed. We do not otherwise read, summarise or share what you wrote. If we find a delivery problem, we will contact you before printing. If an order contains prohibited content, we will cancel and refund it. You can ask us to delete your letter and personal information at any time.</p>
+
+  <h2 data-i18n="privacy.s5b.h2">Content we will not send</h2>
+  <p data-i18n="privacy.s5b.p">We will not print or send any letter that contains dangerous, illegal, abusive, threatening or harassing content, or anything else that is against the law. If an order contains this kind of content, we will cancel it and refund your payment.</p>
 
   <h2 data-i18n="privacy.s6.h2">Your rights</h2>
   <p data-i18n-html="privacy.s6.p">You may request access to, correction of, or deletion of your personal information at any time by emailing <a href="mailto:support@letterhome.ca">support@letterhome.ca</a>. We will respond within 30 days.</p>

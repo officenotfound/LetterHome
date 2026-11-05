@@ -446,6 +446,7 @@ function orderDirPath(id, createdAt) {
 
 // ---- PostGrid fulfilment (off until POSTGRID_API_KEY is set) -----------------
 const { createPostGrid, MAX_SHEETS } = require('./postgrid');
+const contentscan = require('./contentscan');
 const { makeDestinations, SERVICE_NAMES } = require('./destinations');
 const destinations = makeDestinations(getSetting);
 const SantaLetter = require('./public/santa-letter.js');
@@ -508,11 +509,22 @@ function sendAtPrinterEmail(orderId) {
   });
 }
 
+// True while a content-scan hit has not been marked safe by the owner.
+function contentHeld(o) {
+  if (!o || !o.content_flags || o.content_cleared_at) return false;
+  try { return (JSON.parse(o.content_flags).hits || []).length > 0; } catch { return false; }
+}
+
 // Submits one paid order. Never throws: failures are recorded on the order
 // ("MANUAL:" = needs a human, "RETRY:" = transient, the sweep tries again).
 async function postgridSubmit(orderId, opts) {
   const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(orderId);
   if (!order) return { ok: false, error: 'Order not found' };
+  if (contentHeld(order)) {   // flagged by the local content scan: the owner must mark it safe first
+    const msg = 'MANUAL: Held for content review. Open the order, check the letter, then Mark safe or cancel and refund.';
+    db.prepare('UPDATE orders SET postgrid_error = ? WHERE id = ?').run(msg, orderId);
+    return { ok: false, error: msg.replace(/^MANUAL: /, ''), manual: true };
+  }
   try {
     const r = await postgrid.submitOrder(order, opts);
     if (r.letter.live) sendAtPrinterEmail(orderId);
@@ -797,7 +809,7 @@ Object.entries(REGION_REDIRECTS).forEach(([from, to]) =>
   app.get(from, (_req, res) => res.redirect(301, to))
 );
 
-['send', 'guides', 'privacy', 'terms', 'refunds', 'about', 'contact', 'track', 'order-success',
+['send', 'guides', 'privacy', 'terms', 'refunds', 'accessibility', 'about', 'contact', 'track', 'order-success',
  'from-uae', 'from-france',
  'from-hong-kong', 'from-india', 'from-philippines',
  'from-china', 'from-italy', 'from-germany', 'from-pakistan', 'send-documents-to-canada',
@@ -1533,6 +1545,12 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
   db.prepare('UPDATE orders SET attachment_info = ? WHERE id = ?')
     .run(JSON.stringify(movedFiles), orderId);
 
+  // Local content scan (no third party). A hit holds the order for review after payment; see postgridSubmit.
+  try {
+    const scan = contentscan.scanOrder({ body: b['letter-body'], files: movedFiles.map(f => ({ path: f.path, originalName: f.originalName })), extraTerms: getSetting('content_scan_terms') });
+    db.prepare('UPDATE orders SET content_flags = ? WHERE id = ?').run(JSON.stringify({ hits: scan.hits, notScanned: scan.notScanned }), orderId);
+  } catch (e) { console.error(`[contentscan] order #${orderId} failed:`, e.message); }
+
   const extras = [];
   if (extraPageCents)  extras.push(`${pageCount - FREE_PAGES} extra page(s)`);
   if (colourPrinting)  extras.push('colour printing');
@@ -1964,14 +1982,14 @@ app.get('/api/admin/orders', requireAdmin, (req, res) => {
   // "Needs you": paid orders not yet sent to PostGrid for real (waiting for approval, refused, or only a test letter).
   if (status === 'needs_you') {
     return res.json(db.prepare(`SELECT id, stripe_session_id, customer_email, recipient_name, recipient_street, recipient_city, recipient_province, recipient_postal,
-        destination_country, letter_type, attachment_info, price_cents, status, status_token, created_at, recovery_sent_at, postgrid_error, postgrid_mode
+        destination_country, letter_type, attachment_info, price_cents, status, status_token, created_at, recovery_sent_at, postgrid_error, postgrid_mode, content_flags, content_cleared_at
       FROM orders WHERE status = 'paid' AND deleted_at IS NULL
         AND (postgrid_letter_id IS NULL OR postgrid_mode = 'test')      -- every paid order waits for the owner's approval
       ORDER BY created_at`).all().map(o => o.postgrid_mode === 'test' && !o.postgrid_error ? { ...o, postgrid_error: 'Only a TEST letter exists (not mailed). Clear it and send for real.' } : o));
   }
   const rows = status
-    ? db.prepare("SELECT id, stripe_session_id, customer_email, recipient_name, recipient_street, recipient_city, recipient_province, recipient_postal, destination_country, letter_type, attachment_info, price_cents, status, status_token, created_at, recovery_sent_at FROM orders WHERE status = ? AND deleted_at IS NULL ORDER BY created_at DESC").all(status)
-    : db.prepare("SELECT id, stripe_session_id, customer_email, recipient_name, recipient_street, recipient_city, recipient_province, recipient_postal, destination_country, letter_type, attachment_info, price_cents, status, status_token, created_at, recovery_sent_at FROM orders WHERE deleted_at IS NULL ORDER BY created_at DESC").all();
+    ? db.prepare("SELECT id, stripe_session_id, customer_email, recipient_name, recipient_street, recipient_city, recipient_province, recipient_postal, destination_country, letter_type, attachment_info, price_cents, status, status_token, created_at, recovery_sent_at, content_flags, content_cleared_at FROM orders WHERE status = ? AND deleted_at IS NULL ORDER BY created_at DESC").all(status)
+    : db.prepare("SELECT id, stripe_session_id, customer_email, recipient_name, recipient_street, recipient_city, recipient_province, recipient_postal, destination_country, letter_type, attachment_info, price_cents, status, status_token, created_at, recovery_sent_at, content_flags, content_cleared_at FROM orders WHERE deleted_at IS NULL ORDER BY created_at DESC").all();
   res.json(rows);
 });
 
@@ -2071,6 +2089,15 @@ app.get('/api/admin/postgrid/status', requireAdmin, (req, res) => {
     needs_manual: db.prepare(`SELECT COUNT(*) n FROM orders WHERE status = 'paid' AND deleted_at IS NULL
       AND (postgrid_letter_id IS NULL OR postgrid_mode = 'test')`).get().n,
   });
+});
+
+app.post('/api/admin/orders/:id/content-clear', requireAdmin, (req, res) => {
+  const id = Number(req.params.id);
+  const o = db.prepare('SELECT * FROM orders WHERE id = ? AND deleted_at IS NULL').get(id);
+  if (!o) return res.status(404).json({ error: 'Order not found' });
+  db.prepare("UPDATE orders SET content_cleared_at = CURRENT_TIMESTAMP, postgrid_error = CASE WHEN postgrid_error LIKE 'MANUAL: Held for content review%' THEN NULL ELSE postgrid_error END WHERE id = ?").run(id);
+  logAudit(req, 'order.content_cleared', 'order', id, {});
+  res.json({ ok: true });
 });
 
 app.post('/api/admin/orders/:id/postgrid/submit', requireAdmin, async (req, res) => {
@@ -3516,6 +3543,16 @@ async function fulfillOrder(sessionId) {
     .filter(a => fs.existsSync(a.path))
     .map(a => ({ filename: a.originalName, path: a.path }));
 
+  if (contentHeld(order)) {
+    const cats = JSON.parse(order.content_flags).hits.map(h => h.label).join(', ');
+    db.prepare('UPDATE orders SET postgrid_error = ? WHERE id = ?').run('MANUAL: Held for content review. Open the order, check the letter, then Mark safe or cancel and refund.', order.id);
+    sendMail({
+      from: process.env.EMAIL_FROM, to: ADMIN_EMAIL || process.env.OPERATOR_EMAIL,
+      subject: `[Letterhome] FLAGGED order #${order.id} held for review: ${cats}`,
+      text: `Order #${order.id} was flagged by the automatic content check (${cats}).\n\nIt has NOT been sent to the printer and will not be until you open it in the admin and press "Mark safe".\nIf it should not go out, cancel and refund it from the same page.\n\nThe check is keyword-based and local, so it can flag innocent letters.`,
+    }, 'content_flag_alert', order.id).catch(err => console.error(`[email] content flag alert failed for #${order.id}:`, err.message));
+  }
+
   await sendMail({
     from:        process.env.EMAIL_FROM,
     to:          process.env.OPERATOR_EMAIL,
@@ -3867,7 +3904,7 @@ function buildRecoveryEmail(order) {
   const subject   = order.recipient_name ? `Your letter to ${order.recipient_name} is ready to mail` : 'Your letter is ready to mail';
   const unsub     = unsubscribeLink(order.customer_email);
   const facts     = mailFacts(order);
-  const benefits  = ['Printed and mailed within two business days', facts.carrier !== 'Canada Post' ? `Mailed locally with ${facts.carrier}` : 'Mailed inside Canada through Canada Post', 'Free reprint and resend if it doesn\'t arrive'];
+  const benefits  = ['Printed and mailed within two business days', facts.carrier !== 'Canada Post' ? `Mailed locally with ${facts.carrier}` : 'Mailed inside Canada through Canada Post'];
   return {
     from:    process.env.EMAIL_FROM,
     to:      order.customer_email,
@@ -4490,7 +4527,7 @@ function buildCartOfferEmail(order, code, pct, expiresOn) {
     'Printed, put in an envelope and mailed for you, with postage included',
     'Mailed within two business days of your order',
     facts.carrier !== 'Canada Post' ? `Mailed locally with ${facts.carrier}` : 'Mailed through Canada Post',
-    'Free reprint and resend if it doesn\'t arrive',
+    'Every order is checked by a person before it is printed',
     'Secure card payment through Stripe',
   ];
   const subject = order.recipient_name ? `${pct}% off to send your letter to ${order.recipient_name}` : `${pct}% off to send your letter`;

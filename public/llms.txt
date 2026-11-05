@@ -27,9 +27,9 @@ Letters are mailed via Canada Post standard lettermail:
 
 All letters are currently printed in Canada and mailed by Canada Post. Lettermail has no tracking or delivery confirmation, and Letterhome does not currently offer registered, certified, express or signature mail, or an official Canada Post proof of mailing. Letters use metered postage and may not carry a dated postmark.
 
-## Cancellations and reprints
+## Cancellations
 
-An order can be cancelled for a full refund until it is sent to the printer; after that it can't be stopped. If a letter doesn't arrive, Letterhome reprints and resends it once for free when it's reported within 30 days (60 days outside Canada) of the "mailed" email and the recipient address passed verification at printing (excludes addresses entered incorrectly and returned anonymous letters). If the mistake is Letterhome's (printing error or an address it got wrong), the reprint is free with no conditions. Details: https://letterhome.ca/refunds
+An order can be cancelled for a full refund until it is sent to the printer; after that it can't be stopped or refunded. Standard lettermail has no tracking, and Letterhome does not offer a free reprint, resend or refund for a letter that has been mailed. Details: https://letterhome.ca/refunds
 
 ## Key pages
 

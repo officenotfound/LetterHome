@@ -133,6 +133,7 @@ tr:hover td{background:#fafafa}
 .badge-gray{color:#6b6b6b;border-color:#9a9a9a}
 .badge-blue,.badge-amber,.badge-violet{color:#111111;border-color:#111111}
 .badge-green{color:#e63946;border-color:#e63946}
+.badge-red{color:#991b1b;border-color:#991b1b;background:#fef2f2}
 
 
 .form-row{display:flex;gap:16px;align-items:flex-end;margin-bottom:20px}
@@ -774,7 +775,7 @@ function renderOrdersTable() {
       <td><input type="checkbox" class="order-cb" value="${o.id}" onchange="updateBulkBar()"></td>
       <td><button class="link" onclick="go('/admin/orders/${o.id}')">#${o.id}</button></td>
       <td>${fmtDateTime(o.created_at)}</td>
-      <td>${esc(o.recipient_name)}${o.postgrid_error !== undefined ? `<div style="font-size:12px;color:#b42318;margin-top:3px;max-width:360px;line-height:1.4">${esc((o.postgrid_error || 'Waiting for your approval: check the letter, then Send via PostGrid').replace(/^(MANUAL|RETRY): /, ''))}</div>` : ''}</td>
+      <td>${esc(o.recipient_name)}${(() => { const f = contentFlags(o); return f && (f.hits || []).length && !o.content_cleared_at ? '<div><span class="badge badge-red" style="margin-top:3px">FLAGGED: ' + esc(f.hits.map(h => h.label).join(', ')) + '</span></div>' : ''; })()}${o.postgrid_error !== undefined ? `<div style="font-size:12px;color:#b42318;margin-top:3px;max-width:360px;line-height:1.4">${esc((o.postgrid_error || 'Waiting for your approval: check the letter, then Send via PostGrid').replace(/^(MANUAL|RETRY): /, ''))}</div>` : ''}</td>
       <td>${esc(o.recipient_city||'')}${o.recipient_city&&o.destination_country?', ':''}${o.destination_country||''}</td>
       <td>${statusBadge(o.status)}</td>
       <td>${timeLeftHTML(o.created_at, o.status)}</td>
@@ -1002,6 +1003,7 @@ async function showOrder(id) {
       </div>
       ${fulfillmentCard(o, statusOpts)}
     </div>
+    ${contentFlagCard(o)}
     ${postgridCard(o)}
     ${o.letter_body ? `
     <div class="card" style="margin-bottom:24px">
@@ -1240,6 +1242,27 @@ async function pgCall(url, method = 'POST') {
     const data = await r.json().catch(() => ({}));
     return r.ok ? { ok: true, ...data } : { ok: false, error: data.error || ('HTTP ' + r.status) };
   } catch (e) { return { ok: false, error: e.message }; }
+}
+
+function contentFlags(o) { try { return o.content_flags ? JSON.parse(o.content_flags) : null; } catch { return null; } }
+function contentFlagCard(o) {
+  const f = contentFlags(o); if (!f) return '';
+  const hits = f.hits || [], ns = f.notScanned || [];
+  if (!hits.length && !ns.length) return '';
+  const cleared = !!o.content_cleared_at;
+  const list = hits.map(h => `<li>${esc(h.label)} <span style="color:#6b6b6b">(${h.count} match${h.count === 1 ? '' : 'es'})</span></li>`).join('');
+  const nsHtml = ns.length ? `<div style="font-size:12px;color:#6b6b6b;margin-top:8px">Could not read the text of: ${ns.map(esc).join(', ')} (scanned or image-only files are not checked). Open them to check.</div>` : '';
+  if (!hits.length) return `<div class="card" style="margin:10px 0;padding:12px 14px;background:#fffbeb;border:1px solid #fde68a;font-size:13px"><b>Not fully scanned.</b>${nsHtml}</div>`;
+  const head = cleared ? `<b style="color:#166534">Flagged, marked safe ${esc(o.content_cleared_at)}</b>` : `<b style="color:#991b1b">Flagged by the automatic content check. Held: it will not go to the printer until you mark it safe.</b>`;
+  return `<div class="card" style="margin:10px 0;padding:14px;background:${cleared ? '#f0fdf4' : '#fef2f2'};border:1px solid ${cleared ? '#bbf7d0' : '#fecaca'};font-size:13px;line-height:1.5">
+    ${head}<ul style="margin:8px 0 0 18px;padding:0">${list}</ul>
+    <div style="font-size:12px;color:#6b6b6b;margin-top:8px">Keyword-based, run on this server only. It can flag innocent letters, so read it yourself.</div>${nsHtml}
+    ${cleared ? '' : `<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-sm" onclick="clearContentFlag(${o.id})">Mark safe, allow sending</button><span style="font-size:12px;color:#6b6b6b;align-self:center">To stop it instead, cancel and refund the order below.</span></div>`}
+  </div>`;
+}
+async function clearContentFlag(id) {
+  const r = await api('/api/admin/orders/' + id + '/content-clear', { method: 'POST', body: '{}' });
+  if (r) { showToast('Marked safe. You can now send it via PostGrid.'); showOrder(id); }
 }
 
 function postgridCard(o) {
