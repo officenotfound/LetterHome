@@ -318,7 +318,16 @@ const MAILING_ADDRESS = '1515 Discovery St, Vancouver, BC V6R 4K5, Canada';
 
 async function sendMail(opts, type = 'general', orderId = null) {
   if (!process.env.SMTP_HOST) return;
-  await transport.sendMail(opts);
+  try {
+    await transport.sendMail(opts);
+  } catch (e) {
+    try {
+      const toAddr = Array.isArray(opts.to) ? opts.to.join(', ') : (opts.to || '');
+      db.prepare("INSERT INTO email_log (to_email, subject, type, order_id, status, error) VALUES (?,?,?,?,'failed',?)")
+        .run(toAddr, opts.subject || '', type, orderId || null, String(e.message || e).slice(0, 300));
+    } catch {}
+    throw e;
+  }
   try {
     const toAddr = Array.isArray(opts.to) ? opts.to.join(', ') : (opts.to || '');
     db.prepare('INSERT INTO email_log (to_email, subject, type, order_id, body) VALUES (?,?,?,?,?)')
@@ -2289,6 +2298,33 @@ app.get('/api/admin/customers/:email', requireAdmin, (req, res) => {
     saved_recipients_count: db.prepare('SELECT COUNT(*) as n FROM saved_recipients WHERE customer_email = ?').get(email).n,
     orders, notes, tags,
   });
+});
+
+app.get('/api/admin/email-log', requireAdmin, (req, res) => {
+  const limit  = Math.min(200, Math.max(1, Number(req.query.limit) || 100));
+  const offset = Math.max(0, Number(req.query.offset) || 0);
+  const search = (req.query.search || '').toString().trim();
+  const type   = (req.query.type || '').toString().trim();
+  const status = (req.query.status || '').toString().trim();
+  const where = [], params = [];
+  if (search) {
+    const like = `%${search.replace(/[%_\\]/g, '\\$&')}%`;
+    where.push("(to_email LIKE ? ESCAPE '\\' OR subject LIKE ? ESCAPE '\\' OR CAST(order_id AS TEXT) = ?)");
+    params.push(like, like, search.replace(/^#/, ''));
+  }
+  if (type)   { where.push('type = ?');   params.push(type); }
+  if (status === 'failed') where.push("status = 'failed'");
+  else if (status === 'sent') where.push("(status IS NULL OR status = 'sent')");
+  const w = where.length ? 'WHERE ' + where.join(' AND ') : '';
+  const total = db.prepare(`SELECT COUNT(*) AS n FROM email_log ${w}`).get(...params).n;
+  const rows = db.prepare(`SELECT id, to_email, subject, type, order_id, status, error, created_at FROM email_log ${w} ORDER BY id DESC LIMIT ? OFFSET ?`).all(...params, limit, offset);
+  const types = db.prepare('SELECT type, COUNT(*) AS n FROM email_log GROUP BY type ORDER BY n DESC').all();
+  const stats = db.prepare(`SELECT
+      SUM(CASE WHEN created_at > datetime('now','-1 day') THEN 1 ELSE 0 END) AS day,
+      SUM(CASE WHEN created_at > datetime('now','-7 days') THEN 1 ELSE 0 END) AS week,
+      SUM(CASE WHEN status = 'failed' AND created_at > datetime('now','-7 days') THEN 1 ELSE 0 END) AS failed_week,
+      COUNT(*) AS total FROM email_log`).get();
+  res.json({ rows, total, types, stats: { day: stats.day || 0, week: stats.week || 0, failed_week: stats.failed_week || 0, total: stats.total || 0 } });
 });
 
 app.get('/api/admin/audit-log', requireAdmin, (req, res) => {

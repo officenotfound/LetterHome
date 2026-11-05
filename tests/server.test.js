@@ -497,7 +497,9 @@ test('POST /api/contact returns 400 for invalid email', async () => {
 
 // ── Admin surface (auth enforcement + powerful mutating routes) ───────────────
 
+let _adminSession = null;   // the login route allows 5 attempts per 15 minutes, so every test shares one session
 async function loginAdmin() {
+  if (_adminSession) return _adminSession;
   const form = new URLSearchParams({ username: 'testadmin', password: ADMIN_PW });
   const res = await fetch(`${base}/admin/login`, {
     method:   'POST',
@@ -513,7 +515,7 @@ async function loginAdmin() {
   // exercise the same path production traffic does.
   const meRes = await fetch(`${base}/api/admin/me`, { headers: { Cookie: sid } });
   const me = await meRes.json();
-  return { cookie: sid, csrfToken: me.csrfToken };
+  return (_adminSession = { cookie: sid, csrfToken: me.csrfToken });
 }
 
 test('GET /api/admin/me returns 401 without a session', async () => {
@@ -745,6 +747,23 @@ test('abandoned cart offer: one email after 24 hours with a code that applies on
     assert.equal((await cartOfferJob()).sent, 0);
     db.prepare("DELETE FROM settings WHERE key = 'cart_offer_enabled'").run();
   } finally { delete process.env.SMTP_HOST; }
+});
+
+test('admin email log: needs a login, lists sent and failed emails, filters by type, status and search', async () => {
+  assert.equal((await fetch(`${base}/api/admin/email-log`)).status, 401);
+  db.prepare("INSERT INTO email_log (to_email, subject, type, order_id) VALUES ('log-a@example.com', 'Hello A', 'cart_offer', 7)").run();
+  db.prepare("INSERT INTO email_log (to_email, subject, type, status, error) VALUES ('log-b@example.com', 'Hello B', 'recovery', 'failed', 'mailbox full')").run();
+  const { cookie } = await loginAdmin();
+  const get = async q => (await fetch(`${base}/api/admin/email-log${q}`, { headers: { Cookie: cookie } })).json();
+  const all = await get('');
+  assert.ok(all.total >= 2 && all.rows.length >= 2);
+  assert.ok(all.types.some(t => t.type === 'cart_offer'));
+  assert.ok(all.stats.failed_week >= 1);
+  const failed = await get('?status=failed&search=log-b');
+  assert.equal(failed.total, 1);
+  assert.equal(failed.rows[0].error, 'mailbox full');
+  assert.equal((await get('?type=cart_offer&search=log-a')).total, 1);
+  assert.equal((await get('?search=H_llo%20A')).total, 0);   // wildcard characters are matched literally
 });
 
 test('mailed_at is stamped once, the first time an order reaches mailed', () => {

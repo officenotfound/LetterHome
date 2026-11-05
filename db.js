@@ -345,6 +345,8 @@ try {
     order_id INTEGER,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   )`);
+  try { db.exec(`ALTER TABLE email_log ADD COLUMN status TEXT DEFAULT 'sent'`); } catch {}
+  try { db.exec(`ALTER TABLE email_log ADD COLUMN error TEXT`); } catch {}
   db.exec(`CREATE INDEX IF NOT EXISTS idx_email_log_to ON email_log(to_email)`);
   try { db.exec(`ALTER TABLE email_log ADD COLUMN body TEXT`); } catch {}
 } catch (e) { console.error('[init] email_log table:', e.message); }
