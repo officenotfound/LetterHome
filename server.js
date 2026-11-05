@@ -3538,10 +3538,7 @@ async function fulfillOrder(sessionId) {
     order.destination_country,
   ].filter(Boolean).join('\n');
 
-  const attachInfos = order.attachment_info ? JSON.parse(order.attachment_info) : [];
-  const emailAttachments = attachInfos
-    .filter(a => fs.existsSync(a.path))
-    .map(a => ({ filename: a.originalName, path: a.path }));
+  const attachCount = order.attachment_info ? JSON.parse(order.attachment_info).length : 0;
 
   if (contentHeld(order)) {
     const cats = JSON.parse(order.content_flags).hits.map(h => h.label).join(', ');
@@ -3557,9 +3554,8 @@ async function fulfillOrder(sessionId) {
     from:        process.env.EMAIL_FROM,
     to:          process.env.OPERATOR_EMAIL,
     subject:     `[Letterhome] Order #${order.id}: ${order.recipient_name}`,
-    html:        buildOperatorEmail(order, fromAddr, toAddr, amountCAD, emailAttachments.length),
-    text:        buildOperatorEmailText(order, fromAddr, toAddr, amountCAD, emailAttachments.length),
-    attachments: emailAttachments,
+    html:        buildOperatorEmail(order, fromAddr, toAddr, amountCAD, attachCount),
+    text:        buildOperatorEmailText(order, fromAddr, toAddr, amountCAD, attachCount),
   }, 'order_operator_notification', order.id).catch(err => {
     console.error(`[email] operator notification failed for order #${order.id}:`, err.message);
   });
@@ -3622,11 +3618,8 @@ function buildOperatorEmail(o, fromAddr, toAddr, amountCAD, attachCount) {
       TO<br><span style="white-space:pre-line">${esc(toAddr)}</span>
     </td></tr>
   </table>
-  <div style="background:#f7f2e6;padding:20px;border-left:4px solid #a8472d;margin-bottom:16px">
-    <p style="font-size:12px;text-transform:uppercase;letter-spacing:0.12em;color:#6b6258;margin:0 0 12px">Letter content</p>
-    <p style="white-space:pre-wrap;font-size:15px;line-height:1.7;margin:0">${esc(o.letter_body) || '<em>(no message body, see attachments)</em>'}</p>
-  </div>
-  ${attachCount > 0 ? `<p style="font-size:13px;color:#6b6258">${attachCount} attachment${attachCount > 1 ? 's' : ''} included in this email.</p>` : ''}
+  <p style="font-size:14px;line-height:1.6;margin:0 0 8px">The letter${attachCount > 0 ? ` and ${attachCount} attachment${attachCount > 1 ? 's' : ''}` : ''} stay on the server. Open the order in the admin to review and send it.</p>
+  <p style="font-size:14px;margin:0"><a href="${process.env.BASE_URL}/admin/orders/${o.id}" style="color:#a8472d">Open order #${o.id}</a></p>
 </div>`;
 }
 
@@ -3641,9 +3634,8 @@ function buildOperatorEmailText(o, fromAddr, toAddr, amountCAD, attachCount) {
     'TO',
     toAddr,
     '',
-    'LETTER CONTENT',
-    o.letter_body || '(no message body, see attachments)',
-    attachCount > 0 ? `\n${attachCount} attachment${attachCount > 1 ? 's' : ''} included.` : '',
+    `The letter${attachCount > 0 ? ` and ${attachCount} attachment${attachCount > 1 ? 's' : ''}` : ''} stay on the server. Open the order in the admin to review and send it:`,
+    `${process.env.BASE_URL}/admin/orders/${o.id}`,
   ].join('\n');
 }
 
