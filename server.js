@@ -809,7 +809,8 @@ Object.entries(REGION_REDIRECTS).forEach(([from, to]) =>
  'respond-to-debt-collection-letter', 'dispute-credit-report-error', 'resignation-letter-by-mail',
  'love-letters-and-personal-mail', 'mail-transcripts-and-student-documents',
  'mail-to-retirement-and-nursing-homes', 'schedule-a-letter-for-later', 'send-a-christmas-letter-to-canada',
- 'uk', 'santa-letter', 'send-a-letter-to-the-uk', 'monthly-letters', 'landlord-notices', 'postcards',
+ 'uk', 'us', 'au', 'nz', 'send-a-letter-online-in-the-usa', 'address-a-letter-to-canada-from-the-uk', 'aussies-in-canada-send-a-letter-home', 'kiwis-in-canada-send-a-letter-home',
+ 'send-a-letter-from-canada-to-the-us', 'send-a-letter-from-canada-to-australia', 'send-a-letter-from-canada-to-new-zealand', 'send-a-letter-from-the-us-to-the-uk', 'send-a-letter-from-the-us-to-australia', 'send-a-letter-from-the-us-to-new-zealand', 'send-a-letter-from-the-uk-to-the-us', 'send-a-letter-from-the-uk-to-australia', 'send-a-letter-from-the-uk-to-new-zealand', 'send-a-letter-from-australia-to-the-us', 'send-a-letter-from-australia-to-the-uk', 'send-a-letter-from-australia-to-new-zealand', 'send-a-letter-from-new-zealand-to-the-us', 'send-a-letter-from-new-zealand-to-the-uk', 'send-a-letter-from-new-zealand-to-australia', 'send-letters-between-countries', 'santa-letter', 'send-a-letter-to-the-uk', 'monthly-letters', 'landlord-notices', 'postcards',
  'letter-from-santa-canada', 'free-letter-from-santa-template', 'christmas-family-letter-template',
  'what-to-write-in-a-letter-to-a-grandparent', 'keep-in-touch-with-family-abroad-by-mail',
  'mailed-from-canada', 'non-resident-landlord', 'n12-notice',
@@ -867,6 +868,10 @@ Object.entries(REGION_REDIRECTS).forEach(([from, to]) =>
 app.get('/account', (req, res) => res.sendFile(path.join(__dirname, 'public', 'account.html')));
 app.get('/account/:page', (req, res, next) => req.params.page === 'verify' ? next()   // email confirmation link, handled below
   : res.sendFile(path.join(__dirname, 'public', 'account.html')));
+
+// Spanish versions of the US pages live under /us/es
+app.get('/us/es', (req, res) => res.sendFile(path.join(__dirname, 'public', 'us-es.html')));
+app.get('/us/es/:slug', (req, res, next) => /^[a-z0-9-]+$/.test(req.params.slug) && fs.existsSync(path.join(__dirname, 'public', `${req.params.slug}-es.html`)) ? res.sendFile(path.join(__dirname, 'public', `${req.params.slug}-es.html`)) : next());
 
 app.get('/faq', (req, res) => res.redirect('/#faq'));
 
@@ -975,24 +980,33 @@ function santaPriceCents() {
   return Number.isFinite(n) && n >= 500 ? n : 1200;
 }
 
-// ── Pound estimate for the UK pages ──────────────────────────────────────────
-// Display only: every order is charged in CAD. The rate refreshes weekly (see fxRefreshJob).
-const FX_FALLBACK_GBP_PER_CAD = 1 / 1.88;
+// ── Local-currency estimates for the country pages (UK, US, AU, NZ) ─────────
+// Display only: every order is charged in CAD. Rates refresh weekly (see fxRefreshJob).
 const FX_MAX_AGE_MS = 7 * 24 * 3600 * 1000;
-function gbpPerCad() {
-  const r = parseFloat(getSetting('fx_gbp_per_cad', ''));
-  return r > 0.3 && r < 0.9 ? r : FX_FALLBACK_GBP_PER_CAD;
+// Units of each currency per 1 CAD: fallback used until the first refresh, and the range a fetched rate must fall in.
+const FX_CURRENCIES = {
+  GBP: { fallback: 1 / 1.88, min: 0.3, max: 0.9 },
+  USD: { fallback: 0.71,     min: 0.5, max: 1.0 },
+  AUD: { fallback: 1.10,     min: 0.7, max: 1.6 },
+  NZD: { fallback: 1.22,     min: 0.8, max: 1.8 },
+};
+function fxRate(cur) {
+  const c = FX_CURRENCIES[cur];
+  const r = parseFloat(getSetting(cur === 'GBP' ? 'fx_gbp_per_cad' : `fx_${cur.toLowerCase()}_per_cad`, ''));
+  return r > c.min && r < c.max ? r : c.fallback;
 }
-// Rounds UP to the next 50p so a price never looks oddly precise: 5.36 shows as 5.50 and 5.60 as 6.
-function niceGbp(cents, rate = gbpPerCad()) {
-  const gbp = (cents / 100) * rate;
-  return Math.max(0.5, Math.ceil(gbp * 2 - 1e-9) / 2);
+function gbpPerCad() { return fxRate('GBP'); }
+// Rounds UP to the next half unit so a price never looks oddly precise: 5.36 shows as 5.50 and 5.60 as 6.
+function niceMoney(cents, rate) {
+  return Math.max(0.5, Math.ceil((cents / 100) * rate * 2 - 1e-9) / 2);
 }
+function niceGbp(cents, rate = gbpPerCad()) { return niceMoney(cents, rate); }
 const FX_SOURCES = [
-  { name: 'frankfurter', url: 'https://api.frankfurter.dev/v1/latest?base=CAD&symbols=GBP', pick: d => d?.rates?.GBP },
-  { name: 'er-api',      url: 'https://open.er-api.com/v6/latest/CAD',                     pick: d => d?.rates?.GBP },
+  { name: 'frankfurter', url: 'https://api.frankfurter.dev/v1/latest?base=CAD&symbols=GBP,USD,AUD,NZD', pick: (d, cur) => d?.rates?.[cur] },
+  { name: 'er-api',      url: 'https://open.er-api.com/v6/latest/CAD',                                  pick: (d, cur) => d?.rates?.[cur] },
 ];
-// Fetches GBP per CAD from a free source, with a second source as backup. A bad or missing answer keeps the old rate.
+// Fetches the rates from a free source, with a second source as backup. GBP must be valid for an update to count;
+// another currency that comes back missing or implausible keeps its previous rate.
 async function fxRefreshJob({ force = false, fetchImpl = fetch } = {}) {
   const last = Date.parse(getSetting('fx_updated_at', ''));
   if (!force && last && Date.now() - last < FX_MAX_AGE_MS) return { skipped: true };
@@ -1000,9 +1014,14 @@ async function fxRefreshJob({ force = false, fetchImpl = fetch } = {}) {
     try {
       const res = await fetchImpl(src.url, { signal: AbortSignal.timeout(10000) });
       if (!res.ok) throw new Error('HTTP ' + res.status);
-      const rate = Number(src.pick(await res.json()));
-      if (!(rate > 0.3 && rate < 0.9)) throw new Error('implausible rate ' + rate);
+      const data = await res.json();
+      const rate = Number(src.pick(data, 'GBP'));
+      if (!(rate > FX_CURRENCIES.GBP.min && rate < FX_CURRENCIES.GBP.max)) throw new Error('implausible rate ' + rate);
       setSetting('fx_gbp_per_cad', rate);
+      for (const cur of ['USD', 'AUD', 'NZD']) {
+        const r = Number(src.pick(data, cur));
+        if (r > FX_CURRENCIES[cur].min && r < FX_CURRENCIES[cur].max) setSetting(`fx_${cur.toLowerCase()}_per_cad`, r);
+      }
       setSetting('fx_updated_at', new Date().toISOString());
       setSetting('fx_source', src.name);
       console.log(`[fx] GBP per CAD ${rate} (${src.name})`);
@@ -1038,6 +1057,13 @@ app.get('/api/site-config', (req, res) => {
     gbp_per_cad:               gbpPerCad(),
     fx_updated_at:             getSetting('fx_updated_at', '') || null,
     gbp_display:               { domestic: niceGbp(priceDomestic), usa: niceGbp(priceUsa), international: niceGbp(priceIntl), gb: niceGbp(gbCents) },
+    // Estimates in each country's currency, rounded up to the next half unit. `local` is the price of a letter printed and mailed inside that country.
+    fx_display:                Object.fromEntries(Object.keys(FX_CURRENCIES).map(cur => {
+      const rate = fxRate(cur);
+      const centsFor = cc => pub.destinations?.[cc]?.price_cents || priceIntl;
+      return [cur, { domestic: niceMoney(priceDomestic, rate), usa: niceMoney(priceUsa, rate), international: niceMoney(priceIntl, rate),
+                     local: { US: niceMoney(centsFor('US'), rate), GB: niceMoney(centsFor('GB'), rate), AU: niceMoney(centsFor('AU'), rate) } }];
+    })),
     price_santa_cents:         santaPriceCents(),
     santa_enabled:             getSetting('santa_enabled', '1') !== '0',
     blocked_countries:         JSON.parse(getSetting('blocked_countries', '[]') || '[]'),

@@ -954,6 +954,68 @@ test('new pages: served, have schema, titles and canonicals, and are in the site
   }
 });
 
+test('country pages: own language, theme and canonical, no French toggle, listed in the sitemap, with hreflang on the US pair', async () => {
+  const pages = [
+    ['us', 'us', 'en-US'], ['us/es', 'us', 'es-US'], ['send-a-letter-online-in-the-usa', 'us', 'en-US'], ['us/es/send-a-letter-online-in-the-usa', 'us', 'es-US'],
+    ['uk', 'uk', 'en-GB'], ['send-a-letter-to-the-uk', 'uk', 'en-GB'], ['address-a-letter-to-canada-from-the-uk', 'uk', 'en-GB'],
+    ['au', 'au', 'en-AU'], ['aussies-in-canada-send-a-letter-home', 'au', 'en-AU'],
+    ['nz', 'nz', 'en-NZ'], ['kiwis-in-canada-send-a-letter-home', 'nz', 'en-NZ'],
+  ];
+  const sitemap = await (await fetch(`${base}/sitemap.xml`)).text();
+  for (const [slug, cc, lang] of pages) {
+    const res = await fetch(`${base}/${slug}`);
+    assert.equal(res.status, 200, slug);
+    const html = await res.text();
+    assert.ok(html.includes(`<link rel="canonical" href="https://letterhome.ca/${slug}">`), `${slug} canonical`);
+    assert.ok(html.includes(`<html data-en-only lang="${lang}" data-country="${cc}"`), `${slug} lang and country`);
+    assert.ok(html.includes(`<body class="c-${cc}">`), `${slug} theme class`);
+    assert.ok(html.includes('/country.js'), `${slug} loads the country logo script`);
+    const title = html.match(/<title>([^<]*)<\/title>/)[1];
+    assert.ok(title.length > 20 && title.length <= 60, `${slug} title length ${title.length}`);
+    const desc = html.match(/name="description" content="([^"]*)"/)[1];
+    assert.ok(desc.length >= 100 && desc.length <= 160, `${slug} description length ${desc.length}`);
+    for (const block of html.match(/<script type="application\/ld\+json">[\s\S]*?<\/script>/g) || []) JSON.parse(block.replace(/<\/?script[^>]*>/g, ''));
+    assert.ok(sitemap.includes(`https://letterhome.ca/${slug}</loc>`), `${slug} in sitemap`);
+    assert.ok(!html.includes('\u2014'), `${slug} has an em dash`);
+    if (cc === 'us') assert.ok(html.includes('hreflang="es-US"') || html.includes('data-alt='), `${slug} links its twin`);
+  }
+  // Spelling check: US pages say color, UK/AU/NZ say colour
+  assert.match(await (await fetch(`${base}/us`)).text(), /Color printing/);
+  for (const slug of ['uk', 'au', 'nz']) assert.match(await (await fetch(`${base}/${slug}`)).text(), /Colour printing/);
+  assert.equal((await fetch(`${base}/us/es/not-a-real-page`)).status, 404);
+});
+
+test('letters between countries: every route page is served with its own canonical and is in the sitemap', async () => {
+  const slugs = ['send-a-letter-from-canada-to-the-us', 'send-a-letter-from-canada-to-australia', 'send-a-letter-from-canada-to-new-zealand', 'send-a-letter-from-the-us-to-the-uk', 'send-a-letter-from-the-us-to-australia', 'send-a-letter-from-the-us-to-new-zealand', 'send-a-letter-from-the-uk-to-the-us', 'send-a-letter-from-the-uk-to-australia', 'send-a-letter-from-the-uk-to-new-zealand', 'send-a-letter-from-australia-to-the-us', 'send-a-letter-from-australia-to-the-uk', 'send-a-letter-from-australia-to-new-zealand', 'send-a-letter-from-new-zealand-to-the-us', 'send-a-letter-from-new-zealand-to-the-uk', 'send-a-letter-from-new-zealand-to-australia', 'send-letters-between-countries'];
+  const sitemap = await (await fetch(`${base}/sitemap.xml`)).text();
+  for (const slug of slugs) {
+    const res = await fetch(`${base}/${slug}`);
+    assert.equal(res.status, 200, slug);
+    const html = await res.text();
+    assert.ok(html.includes(`<link rel="canonical" href="https://letterhome.ca/${slug}">`), `${slug} canonical`);
+    const title = html.match(/<title>([^<]*)<\/title>/)[1];
+    assert.ok(title.length > 20 && title.length <= 60, `${slug} title length ${title.length}`);
+    const desc = html.match(/name="description" content="([^"]*)"/)[1];
+    assert.ok(desc.length >= 100 && desc.length <= 160, `${slug} description length ${desc.length}`);
+    for (const block of html.match(/<script type="application\/ld\+json">[\s\S]*?<\/script>/g) || []) JSON.parse(block.replace(/<\/?script[^>]*>/g, ''));
+    assert.ok(sitemap.includes(`https://letterhome.ca/${slug}</loc>`), `${slug} in sitemap`);
+    assert.ok(!html.includes('\u2014'), `${slug} has an em dash`);
+  }
+  // sender's spelling
+  assert.match(await (await fetch(`${base}/send-a-letter-from-the-us-to-australia`)).text(), /Color printing/);
+  assert.match(await (await fetch(`${base}/send-a-letter-from-australia-to-the-us`)).text(), /Colour printing/);
+});
+
+test('site-config: estimates in dollars, pounds, Australian and New Zealand dollars, all rounded up to the next half unit', async () => {
+  const c = await (await fetch(`${base}/api/site-config`)).json();
+  for (const cur of ['GBP', 'USD', 'AUD', 'NZD']) {
+    const f = c.fx_display[cur];
+    for (const v of [f.domestic, f.usa, f.international, f.local.US, f.local.GB, f.local.AU]) assert.equal((v * 2) % 1, 0, `${cur} ${v} is a multiple of 0.50`);
+    assert.ok(f.international > f.domestic, `${cur} international costs more than domestic`);
+  }
+  assert.deepEqual(c.fx_display.GBP.international, c.gbp_display.international);
+});
+
 test('Google review line: on the status page once mailed, in the mailed email, and never emailed to unsubscribed customers', async () => {
   const REVIEW = /Leave a review on Google/;
   const orderFor = (email, status) => {
