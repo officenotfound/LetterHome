@@ -152,7 +152,7 @@ html,body{background:var(--w-cream)!important}
 .story-quote cite.has-photo img{filter:brightness(1.18)}
 
 @media(min-width:561px){header .logo-stamp .stamp-svg{width:44px;height:53px}}
-@media(max-width:560px){header .logo-stamp .stamp-svg{width:25px;height:30px}}
+@media(max-width:560px){header }
 @media(max-width:360px){header .logo-stamp .stamp-svg{width:20px;height:24px}}
 
 
@@ -304,7 +304,7 @@ html,body{background:var(--w-cream)!important}
 .btn-large{background-color:var(--red)!important}
 .logo-stamp .stamp-svg{width:44px;height:53px}
 .nav-inner a.logo{margin-right:auto}
-@media(max-width:560px){.logo-stamp .stamp-svg{width:25px;height:30px}.nav-track{display:inline!important;font-size:14px}.nav-cta{display:none!important}.lang-toggle{padding:5px 6px!important}.logo-wordmark{font-size:30px!important}}
+@media(max-width:560px){.nav-track{display:inline!important;font-size:14px}.nav-cta{display:none!important}.lang-toggle{padding:5px 6px!important}}
 .v4-strip svg,.v4-proof svg{width:20px!important;height:20px!important;flex:none;fill:none;stroke:var(--airmail);stroke-width:1.6}
 #how .section-head,#usecases .section-head{text-align:left!important;margin-left:0!important;max-width:none!important}
 #how .section-head h2,#usecases .section-head h2{margin-left:0!important;text-align:left!important}

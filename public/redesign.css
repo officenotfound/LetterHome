@@ -99,3 +99,5 @@ body.c-au{--cp:#DC1928;--ca:#FFFFFF;--tint:#FBECEE}
 [data-theme="dark"] input,[data-theme="dark"] select,[data-theme="dark"] textarea{background:#23262d!important;color:#f1eadb!important;border-color:rgba(239,230,212,.25)!important}
 [data-theme="dark"] .rm-widget select,[data-theme="dark"] .rm-widget input{background:#fff!important;color:#1a1a1a!important}
 [data-theme="dark"] .letter-preview{color:#1a1a1a!important}
+@media(max-width:560px){.logo-wordmark{font-size:28px!important}.logo-stamp .stamp-svg{width:22px;height:26px}.logo-stamp{margin-right:6px}.nav-inner{gap:8px;padding-left:14px!important;padding-right:14px!important}.nav-right{gap:8px}.nav-track{font-size:13px!important}.nav-cta{padding:9px 8px!important;font-size:10.5px!important}.lang-toggle,.lang-link{padding:5px 6px!important;font-size:12px!important}}
+@media(max-width:360px){.logo-wordmark{font-size:24px!important}.logo-stamp .stamp-svg{width:18px;height:22px}}
