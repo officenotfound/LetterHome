@@ -40,6 +40,22 @@
     right.insertBefore(a, right.firstChild);
   }
 
+  // Every amount marked data-cad shows in this country's currency. Main prices round up to the next half
+  // unit, small extras to the next 5 cents. Display only; the exact amount is set at checkout.
+  var curs = { us: 'USD', uk: 'GBP', au: 'AUD' }, cur = curs[cc], marked = document.querySelectorAll('[data-cad]');
+  if (cur && marked.length) {
+    fetch('/api/site-config').then(function (r) { return r.json(); }).then(function (c) {
+      var rate = c.fx_display && c.fx_display[cur] && c.fx_display[cur].rate;
+      if (!rate) return;
+      marked.forEach(function (el) {
+        var cents = +el.getAttribute('data-cad'), x = cents / 100 * rate;
+        var v = cents >= 300 ? Math.max(0.5, Math.ceil(x * 2 - 1e-9) / 2) : Math.ceil(x * 20 - 1e-9) / 20;
+        var t = v % 1 ? v.toFixed(2) : v.toFixed(0);
+        el.textContent = cur === 'GBP' ? '\u00a3' + t : '$' + t + ' ' + cur;
+      });
+    }).catch(function () {});
+  }
+
   if ((root.lang || '').toLowerCase().indexOf('es') === 0) {
     var map = { how: 'Cómo funciona', pricing: 'Precios', contact: 'Contacto', track: 'Rastrear un pedido', send: 'Enviar una carta' };
     Object.keys(map).forEach(function (k) {

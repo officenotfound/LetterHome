@@ -1109,7 +1109,7 @@ app.get('/api/site-config', (req, res) => {
     fx_display:                Object.fromEntries(Object.keys(FX_CURRENCIES).map(cur => {
       const rate = fxRate(cur);
       const centsFor = cc => pub.destinations?.[cc]?.price_cents || priceIntl;
-      return [cur, { domestic: niceMoney(priceDomestic, rate), usa: niceMoney(priceUsa, rate), international: niceMoney(priceIntl, rate),
+      return [cur, { rate, domestic: niceMoney(priceDomestic, rate), usa: niceMoney(priceUsa, rate), international: niceMoney(priceIntl, rate),
                      local: { US: niceMoney(centsFor('US'), rate), GB: niceMoney(centsFor('GB'), rate), AU: niceMoney(centsFor('AU'), rate) } }];
     })),
     price_santa_cents:         santaPriceCents(),
