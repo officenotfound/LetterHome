@@ -75,7 +75,7 @@ require.cache[stripeResolvePath] = {
 const sentMail = [];
 require('nodemailer').createTransport = () => ({ sendMail: async (o) => { sentMail.push(o); return {}; } });
 
-const { app, db, thankYouCouponJob, sendAtPrinterEmail } = require('../server');
+const { app, db, thankYouCouponJob, sendAtPrinterEmail, sendMailedNotification } = require('../server');
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function webhookSig(payload) {
@@ -797,6 +797,37 @@ test('checkout stores the province code, not the dropdown label', async () => {
       'r-province': 'QC: Quebec', 'r-postal': 'G7X 9W7', 'r-country': 'CA', 'letter-body': 'Bonjour.', 'letter-type': 'standard' }).toString() });
   assert.equal(res.status, 200);
   assert.equal(db.prepare("SELECT recipient_province FROM orders WHERE customer_email = 'prov@example.com'").get().recipient_province, 'QC');
+});
+
+test('Google review line: on the status page once mailed, in the mailed email, and never emailed to unsubscribed customers', async () => {
+  const REVIEW = /Leave a review on Google/;
+  const orderFor = (email, status) => {
+    const sid = seedOrder({ email, status });
+    return db.prepare('SELECT id, status_token FROM orders WHERE stripe_session_id = ?').get(sid);
+  };
+  const statusPage = async token => (await fetch(`${base}/status/${token}`)).text();
+
+  assert.match(await statusPage(orderFor('review-page@example.com', 'mailed').status_token), REVIEW);
+  assert.doesNotMatch(await statusPage(orderFor('review-page@example.com', 'printing').status_token), REVIEW);
+
+  db.prepare('INSERT INTO customers (email, unsubscribed_at) VALUES (?, CURRENT_TIMESTAMP)').run('review-optout@example.com');
+  const markMailed = async email => {
+    const { id } = orderFor(email, 'mailed');
+    const before = sentMail.length;
+    sendMailedNotification(db.prepare('SELECT * FROM orders WHERE id = ?').get(id));
+    await new Promise(r => setTimeout(r, 50));
+    return sentMail.slice(before)[0];
+  };
+
+  process.env.SMTP_HOST = 'smtp.test';
+  try {
+    const normal = await markMailed('review-yes@example.com');
+    assert.match(normal.text, REVIEW);
+    assert.match(normal.html, REVIEW);
+    const optedOut = await markMailed('REVIEW-OPTOUT@example.com');
+    assert.doesNotMatch(optedOut.text, REVIEW);
+    assert.doesNotMatch(optedOut.html, REVIEW);
+  } finally { delete process.env.SMTP_HOST; }
 });
 
 test('"at the printer" email goes once to a live PostGrid order (like #17, sent before the feature), never to test letters', async () => {

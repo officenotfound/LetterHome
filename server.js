@@ -448,6 +448,14 @@ function mailFacts(order) {
 }
 const postgrid = createPostGrid({ db, getSetting, orderDirPath, destinations });
 
+// One quiet review line, the same for every customer. No reward is ever tied to it, and Google doesn't allow asking only happy customers.
+const GOOGLE_REVIEW_URL = 'https://g.page/r/CdJZFGPUQkL3EAE/review';
+const REVIEW_ASK = 'If you have a minute once it arrives, an honest review helps other people find us.';
+const REVIEW_LINK_TEXT = 'Leave a review on Google';
+function reviewAskAllowed(order) {
+  return !db.prepare('SELECT 1 FROM customers WHERE lower(email) = lower(?) AND unsubscribed_at IS NOT NULL').get(order?.customer_email || '');
+}
+
 function sendMailedNotification(order) {
   if (!order?.customer_email) return;
   const deliveryText = order.estimated_delivery || mailFacts(order).defaultDelivery;
@@ -3546,6 +3554,7 @@ function buildMailedEmail(o, toAddr, deliveryText) {
       <p style="margin:0 0 8px">Order #${o.id}</p>
       ${o.status_token ? `<p style="margin:0 0 8px">Track your letter: <a href="${process.env.BASE_URL}/status/${o.status_token}" style="color:#a8472d">${process.env.BASE_URL}/status/${o.status_token}</a></p>` : ''}
       <p style="margin:0">Thank you for trusting us with your letter.</p>
+      ${reviewAskAllowed(o) ? `<p style="margin:8px 0 0">${REVIEW_ASK} <a href="${GOOGLE_REVIEW_URL}" style="color:#a8472d">${REVIEW_LINK_TEXT}</a></p>` : ''}
       <p style="margin:12px 0 0;color:#968b7d;font-size:11px">Letterhome · ${MAILING_ADDRESS}</p>
     </div>
   </div>
@@ -3568,6 +3577,7 @@ function buildMailedEmailText(o, toAddr, deliveryText) {
     `Order #${o.id}`,
     o.status_token ? `Track your letter: ${process.env.BASE_URL}/status/${o.status_token}` : '',
     'Thank you for trusting us with your letter.',
+    ...(reviewAskAllowed(o) ? [`${REVIEW_ASK} ${REVIEW_LINK_TEXT}: ${GOOGLE_REVIEW_URL}`] : []),
     '',
     'Letterhome',
   ].filter(s => s !== undefined).join('\n');
@@ -3659,6 +3669,7 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:48px 36px 32px
     <div style="font-family:'DM Serif Display',serif;font-size:24px">${esc(order.estimated_delivery)}</div>
   </div>` : ''}
   <p style="font-size:13px;color:#6b6258;line-height:1.6">Questions about your letter? Email <a href="mailto:support@letterhome.ca" style="color:#a8472d">support@letterhome.ca</a> and include your order number.</p>
+  ${stageIndex >= 3 ? `<p style="font-size:13px;color:#6b6258;line-height:1.6;margin-top:10px">${REVIEW_ASK} <a href="${GOOGLE_REVIEW_URL}" target="_blank" rel="noopener" style="color:#a8472d">${REVIEW_LINK_TEXT}</a></p>` : ''}
 </div>
 <footer id="site-footer"></footer>
 <script src="/theme.js"></script>
@@ -4269,4 +4280,4 @@ const PORT = process.env.PORT || 3000;
 if (!process.env.TEST_MODE) {
   app.listen(PORT, () => console.log(`Letterhome running on port ${PORT}`));
 }
-module.exports = { app, db, thankYouCouponJob, postgrid, postgridSubmit, postgridSweep, sendAtPrinterEmail };
+module.exports = { app, db, thankYouCouponJob, postgrid, postgridSubmit, postgridSweep, sendAtPrinterEmail, sendMailedNotification };
