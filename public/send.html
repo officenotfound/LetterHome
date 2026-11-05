@@ -842,7 +842,7 @@ textarea.field-error { border-color: var(--red) !important; }
   <div class="panel" id="panel-3">
     <div class="eyebrow" data-i18n="send.step3.eyebrow">Step Three</div>
     <h2 class="panel-title serif" data-i18n="send.step3.title">Review your order.</h2>
-    <p class="panel-sub" data-i18n="send.step3.sub" data-ship="canada">Have one last look before paying. After checkout, a person reviews your order, then your letter is printed in black & white by default (colour available) and mailed from Canada within two business days.</p><p class="panel-sub" style="display:none" data-i18n="send.step3.sub.local" data-ship="local">Have one last look before paying. After checkout, your letter is printed in black &amp; white by default (colour available) and mailed within two business days, printed and posted inside the destination country.</p>
+    <p class="panel-sub" data-i18n="send.step3.sub" data-ship="canada">Have one last look before paying. After checkout, we verify the address, then your letter is printed in black & white by default (colour available) and mailed from Canada within two business days.</p><p class="panel-sub" style="display:none" data-i18n="send.step3.sub.local" data-ship="local">Have one last look before paying. After checkout, your letter is printed in black &amp; white by default (colour available) and mailed within two business days, printed and posted inside the destination country.</p>
 
     <div class="preview-envelope">
       <div class="preview-stamp">
@@ -898,7 +898,7 @@ textarea.field-error { border-color: var(--red) !important; }
       <h3 data-i18n="send.next.title">What happens after you pay</h3>
       <ol>
         <li><span class="n">1</span><span><strong data-i18n="send.next.1.t">Confirmation email</strong><span class="d" data-i18n="send.next.1.d">Right after payment you get an email with your order number and a link to check your order status.</span></span></li>
-        <li><span class="n">2</span><span><strong data-i18n="send.next.2.t">Printed and mailed</strong><span class="d" data-i18n="send.next.2.d" data-ship="canada">After a person reviews it, we print, seal and mail it from inside Canada within two business days, and email you when it's handed to Canada Post.</span><span class="d" style="display:none" data-i18n="send.next.2.d.local" data-ship="local">Within two business days we print, seal and mail it inside the destination country, and email you when it's in the post.</span></span></li>
+        <li><span class="n">2</span><span><strong data-i18n="send.next.2.t">Printed and mailed</strong><span class="d" data-i18n="send.next.2.d" data-ship="canada">After we verify the address, we print, seal and mail it from inside Canada within two business days, and email you when it's handed to Canada Post.</span><span class="d" style="display:none" data-i18n="send.next.2.d.local" data-ship="local">Within two business days we print, seal and mail it inside the destination country, and email you when it's in the post.</span></span></li>
         <li><span class="n">3</span><span><strong data-i18n="send.next.3.t">Delivered</strong><span class="d" data-i18n="send.next.3.d">Typically up to 2 weeks within Canada and up to 4 weeks internationally.</span></span></li>
       </ol>
     </div>
@@ -910,7 +910,7 @@ textarea.field-error { border-color: var(--red) !important; }
 
     <div class="privacy-note">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--red);flex-shrink:0;margin-top:3px"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-      <p>Every order is reviewed by a person before it's printed. Standard mail has no tracking (<a href="/refunds" style="color:var(--red)">see our refund policy</a>). Questions before you pay, or card not going through? <a href="mailto:support@letterhome.ca" style="color:var(--red)">support@letterhome.ca</a>, replies within one business day.</p>
+      <p>Every address is verified before printing. Standard mail has no tracking (<a href="/refunds" style="color:var(--red)">see our refund policy</a>). Questions before you pay, or card not going through? <a href="mailto:support@letterhome.ca" style="color:var(--red)">support@letterhome.ca</a>, replies within one business day.</p>
     </div>
 
     <div id="discount-section" style="margin-bottom:20px">
@@ -1907,7 +1907,7 @@ function fillSavedRecipient(sel) {
   } catch(e) {}
 }
 </script>
-<script src="/lang.js?v=48" defer></script>
+<script src="/lang.js?v=49" defer></script>
 <script type="module">
   import * as pdfjsLib from '/vendor/pdfjs/pdf.min.mjs';
   pdfjsLib.GlobalWorkerOptions.workerSrc = '/vendor/pdfjs/pdf.worker.min.mjs';

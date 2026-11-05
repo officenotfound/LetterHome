@@ -57,7 +57,7 @@
           "@type": "HowToStep",
           "position": 3,
           "name": "Pay with any card from any country",
-          "text": "Pay with any major credit or debit card. You're charged in Canadian dollars through Stripe; your bank handles the exchange rate."
+          "text": "Pay with any major credit or debit card. You pay in your own currency at checkout through Stripe."
         },
         {
           "@type": "HowToStep",
@@ -83,7 +83,7 @@
           "name": "Do I need a Canadian credit card to mail something to Canada?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "No. Any major credit or debit card from any country works. Payment is processed in Canadian dollars through Stripe and your bank converts the amount at its exchange rate."
+            "text": "No. Any major credit or debit card from any country works. You pay in your own currency at checkout through Stripe."
           }
         },
         {
@@ -234,7 +234,7 @@ p.body{font-size:16px;color:var(--ink-soft);margin-bottom:16px}
   <ul class="steps">
     <li><strong data-i18n="how-noaddress.step1.title">The recipient's Canadian address</strong><span data-i18n="how-noaddress.step1.body">Full name, street address, city, province, and postal code. That's it. No return address required.</span></li>
     <li><strong data-i18n="how-noaddress.step2.title">Your letter or documents</strong><span data-i18n="how-noaddress.step2.body">Type it directly in the order form, or attach up to 5 PDF or Word files (10 MB each). Printed in black & white by default (colour available).</span></li>
-    <li><strong data-i18n="how-noaddress.step3.title">A way to pay online</strong><span data-i18n="how-noaddress.step3.body">Any major credit or debit card from any country. Charged in Canadian dollars through Stripe, your bank handles the conversion.</span></li>
+    <li><strong data-i18n="how-noaddress.step3.title">A way to pay online</strong><span data-i18n="how-noaddress.step3.body">Any major credit or debit card from any country. You pay in your own currency at checkout through Stripe.</span></li>
   </ul>
 
   <div class="callout">
@@ -264,7 +264,7 @@ p.body{font-size:16px;color:var(--ink-soft);margin-bottom:16px}
     </div>
     <div class="faq-item">
       <button class="faq-q" onclick="toggle(1)" aria-expanded="false" aria-controls="a1"><span data-i18n="how-noaddress.faq.q2">Do I need a Canadian credit card?</span><svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
-      <div class="faq-a" id="a1" hidden data-i18n="how-noaddress.faq.a2">No. Any major credit or debit card from any country works. Payment is processed in Canadian dollars through Stripe. Your bank converts the amount at its exchange rate, there's no extra fee on our end.</div>
+      <div class="faq-a" id="a1" hidden data-i18n="how-noaddress.faq.a2">No. Any major credit or debit card from any country works. You pay in your own currency at checkout through Stripe.</div>
     </div>
     <div class="faq-item">
       <button class="faq-q" onclick="toggle(2)" aria-expanded="false" aria-controls="a2"><span data-i18n="how-noaddress.faq.q3">Do I need someone in Canada to mail it for me?</span><svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
@@ -301,7 +301,7 @@ p.body{font-size:16px;color:var(--ink-soft);margin-bottom:16px}
 <script src="/footer.js?v=9" defer></script>
 
 <script src="/theme.js?v=4" defer></script>
-<script src="/lang.js?v=48" defer></script>
+<script src="/lang.js?v=49" defer></script>
 <script>
   function toggle(i) {
     const btn = document.querySelectorAll('.faq-q')[i];

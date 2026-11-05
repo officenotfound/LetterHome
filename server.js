@@ -4537,11 +4537,11 @@ function buildCartOfferEmail(order, code, pct, expiresOn) {
   const toLine = [order.recipient_name, [order.recipient_city, order.destination_country].filter(Boolean).join(', ')].filter(Boolean).join(' · ');
   const facts  = mailFacts(order);
   const bullets = [
-    'A person checks every letter before it\'s printed',
+    'Every address is verified before printing',
     'Printed, put in an envelope and mailed for you, with postage included',
     'Mailed within two business days of your order',
     facts.carrier !== 'Canada Post' ? `Mailed locally with ${facts.carrier}` : 'Mailed through Canada Post',
-    'Every order is checked by a person before it is printed',
+    'Every address is verified before printing',
     'Secure card payment through Stripe',
   ];
   const subject = order.recipient_name ? `${pct}% off to send your letter to ${order.recipient_name}` : `${pct}% off to send your letter`;

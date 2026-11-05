@@ -60,7 +60,7 @@
           "@type": "HowToStep",
           "position": 3,
           "name": "Pay securely by card",
-          "text": "Pay with any major credit or debit card from any country. You're charged in Canadian dollars through Stripe; your bank handles conversion."
+          "text": "Pay with any major credit or debit card from any country. You pay in your own currency at checkout through Stripe."
         },
         {
           "@type": "HowToStep",
@@ -86,7 +86,7 @@
           "name": "Do I need a Canadian address or a Canadian credit card?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "No. You can order from any country with any major card. Payment is processed in Canadian dollars through Stripe and your bank converts at its exchange rate."
+            "text": "No. You can order from any country with any major card. You pay in your own currency at checkout through Stripe."
           }
         },
         {
@@ -242,7 +242,7 @@ footer a{color:var(--ink-muted);margin:0 8px}
     </div>
     <div class="faq-item">
       <button class="faq-q" onclick="toggle(1)" aria-expanded="false" aria-controls="a1"><span data-i18n="how-abroad.faq.q2">Do I need a Canadian address or a Canadian credit card?</span><svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
-      <div class="faq-a" id="a1" hidden data-i18n="how-abroad.faq.a2">No. You can order from any country with any major card. Payment is processed in Canadian dollars through Stripe and your bank converts at its exchange rate.</div>
+      <div class="faq-a" id="a1" hidden data-i18n="how-abroad.faq.a2">No. You can order from any country with any major card. You pay in your own currency at checkout through Stripe.</div>
     </div>
     <div class="faq-item">
       <button class="faq-q" onclick="toggle(2)" aria-expanded="false" aria-controls="a2"><span data-i18n="how-abroad.faq.q3">How long does delivery take?</span><svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
@@ -279,7 +279,7 @@ footer a{color:var(--ink-muted);margin:0 8px}
 <script src="/footer.js?v=9" defer></script>
 
 <script src="/theme.js?v=4" defer></script>
-<script src="/lang.js?v=48" defer></script>
+<script src="/lang.js?v=49" defer></script>
 <script>
   function toggle(i) {
     const btn = document.querySelectorAll('.faq-q')[i];
