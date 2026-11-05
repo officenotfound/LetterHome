@@ -74,3 +74,6 @@ body.c-uk .logo-accent,body.c-au .logo-accent{color:#ffd6d9!important}
 body[class*="c-"] .nav-track,body[class*="c-"] .lang-toggle,body[class*="c-"] .lang-link{color:#fff!important}
 body[class*="c-"] .nav-cta{background:#fff!important}
 body.c-us .nav-cta{color:#004B87!important}body.c-uk .nav-cta{color:#DA202A!important}body.c-au .nav-cta{color:#DC1928!important}
+body.c-us{--cp:#004B87;--ca:#E31837;--tint:#EAF1F8}
+body.c-uk{--cp:#DA202A;--ca:#FFD100;--tint:#FBEDEE}
+body.c-au{--cp:#DC1928;--ca:#FFFFFF;--tint:#FBECEE}
