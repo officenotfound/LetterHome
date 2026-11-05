@@ -847,7 +847,7 @@ textarea.field-error { border-color: var(--red) !important; }
     <div class="preview-envelope">
       <div class="preview-stamp">
         <strong id="preview-price">$6</strong>
-        CAD
+        <span id="preview-cur">CAD</span>
       </div>
       <div class="preview-from">
         <div class="preview-from-label" data-i18n="send.preview.from">Return address</div>
@@ -1022,7 +1022,16 @@ new MutationObserver(() => { _svcDest = null; if (typeof updatePricing === 'func
   .observe(document.documentElement, { attributes: true, attributeFilter: ['data-lang'] });
 
 // Draws the optional mail services (registered / certified / express) offered for the chosen destination.
+// Fixed-price orders from the US, UK and Australia pages: ?cur=USD|GBP|AUD, remembered for this visit.
+let _cur = null, _curCfg = null, _curRate = 1;
+function moneyLabel(cents) {
+  const t = '$' + (cents / 100).toFixed(cents % 100 ? 2 : 0);
+  if (!_curCfg) return t + ' CAD';
+  const v = (cents / 100).toFixed(cents % 100 ? 2 : 0);
+  return _curCfg.code === 'GBP' ? '£' + v : '$' + v + ' ' + _curCfg.code;
+}
 function renderMailServices(dest) {
+  if (_curCfg) dest = '';
   const wrap = document.getElementById('mail-service-wrap'), list = document.getElementById('mail-service-list');
   if (!wrap || !list) return;
   const services = (_destCfg && _destCfg[dest] && _destCfg[dest].services) || {};
@@ -1055,9 +1064,9 @@ var estimatedPageCount = 0;
 
 // Mirrors the server-side constants in server.js (countAttachmentPages / addon pricing).
 const FREE_PAGES            = 2;
-const EXTRA_PAGE_CENTS      = 45;
-const EXTRA_PAGE_COLOUR_CENTS = 55;
-const COLOUR_PRINTING_CENTS = 100;
+let EXTRA_PAGE_CENTS      = 45;
+let EXTRA_PAGE_COLOUR_CENTS = 55;
+let COLOUR_PRINTING_CENTS = 100;
 const LARGE_ENVELOPE_CENTS  = 300;
 const SCHEDULE_LATER_CENTS  = 0;
 
@@ -1083,13 +1092,13 @@ function updatePricing() {
   const isDomestic = document.getElementById('r-country').value === 'CA';
   const dest = document.getElementById('r-country').value;
   renderMailServices(dest);
-  const basePrice = (_destCfg && _destCfg[dest]) ? _destCfg[dest].price_cents
+  const basePrice = _curCfg ? (_curCfg.dest[dest] ?? _curCfg.other) : (_destCfg && _destCfg[dest]) ? _destCfg[dest].price_cents
     : (isDomestic ? _priceDomCents : (dest === 'US' ? _priceUsaCents : _priceIntlCents));
   const isLocal = !isDomestic && !!(_destCfg && _destCfg[dest] && _destCfg[dest].local);
   // Copy that says "from Canada" swaps for the local version when this letter is printed in its own country.
   document.querySelectorAll('[data-ship="canada"]').forEach(el => { el.style.display = isLocal ? 'none' : ''; });
   document.querySelectorAll('[data-ship="local"]').forEach(el => { el.style.display = isLocal ? '' : 'none'; });
-  const extraLocal = _destCfg ? Object.entries(_destCfg).filter(([cc, d]) => d.local && cc !== 'CA' && cc !== 'US') : [];
+  const extraLocal = _destCfg && !_curCfg ? Object.entries(_destCfg).filter(([cc, d]) => d.local && cc !== 'CA' && cc !== 'US') : [];
   const noteLocal = document.getElementById('dest-note-local');
   if (noteLocal) {
     noteLocal.style.display = extraLocal.length ? 'block' : 'none';
@@ -1105,13 +1114,13 @@ function updatePricing() {
   if (_appliedDiscount) {
     discount = _appliedDiscount.discount_pct
       ? Math.round((basePrice + addonCents) * _appliedDiscount.discount_pct / 100)
-      : (_appliedDiscount.discount_cents || 0);
+      : Math.round((_appliedDiscount.discount_cents || 0) * _curRate);
   }
   const price = Math.max(50, basePrice + addonCents - discount);
-  const priceStr = '$' + (price / 100).toFixed(price % 100 === 0 ? 0 : 2);
+  const priceStr = (_curCfg ? _curCfg.symbol : '$') + (price / 100).toFixed(price % 100 === 0 ? 0 : 2);
   document.getElementById('preview-price').textContent   = priceStr;
-  const _tb = document.getElementById('total-bar-amt'); if (_tb) _tb.textContent = priceStr + ' CAD';
-  document.getElementById('summary-total').textContent   = priceStr + ' CAD';
+  const _tb = document.getElementById('total-bar-amt'); if (_tb) _tb.textContent = moneyLabel(price);
+  document.getElementById('summary-total').textContent   = moneyLabel(price);
   document.getElementById('summary-dest').textContent    = isDomestic ? LH_T('send.dom.dest')
     : isLocal ? _destCfg[dest].name + ' ' + LH_T('send.local.dest') : LH_T('send.intl.dest');
   const deliveryBase = (isDomestic || isLocal) ? LH_T('send.dom.delivery') : LH_T('send.intl.delivery');
@@ -1132,7 +1141,7 @@ function updatePricing() {
     note.style.color = window.letterTooLong ? '#b42318' : '';
     note.textContent = window.letterTooLong ? window.letterTooLong : estimatedPageCount
       ? `${estimatedPageCount} page(s)` +
-        (extraPages ? ` · +$${(extraPages * (document.getElementById('opt-colour')?.checked ? EXTRA_PAGE_COLOUR_CENTS : EXTRA_PAGE_CENTS) / 100).toFixed(2)} for ${extraPages} page(s) beyond the first ${FREE_PAGES} free` : '')
+        (extraPages ? ` · +${_curCfg ? _curCfg.symbol : '$'}${(extraPages * (document.getElementById('opt-colour')?.checked ? EXTRA_PAGE_COLOUR_CENTS : EXTRA_PAGE_CENTS) / 100).toFixed(2)} for ${extraPages} page(s) beyond the first ${FREE_PAGES} free` : '')
       : '';
   }
 
@@ -1575,6 +1584,7 @@ async function submitOrder() {
     if (el) form.append(id, el.type === 'checkbox' ? (el.checked ? '1' : '') : el.value);
   });
   form.append('r-province', getRecipientProvince());
+  if (_cur) form.append('currency', _cur);
   form.append('colour_printing',    document.getElementById('opt-colour')?.checked ? '1' : '');
   form.append('large_envelope',     document.getElementById('opt-large-envelope')?.checked ? '1' : '');
   form.append('mail_service',       selectedMailService());
@@ -1669,10 +1679,23 @@ async function applyDiscountCode() {
     if (cfg.price_domestic_cents)      _priceDomCents  = cfg.price_domestic_cents;
     if (cfg.price_usa_cents)           _priceUsaCents  = cfg.price_usa_cents;
     if (cfg.price_international_cents) _priceIntlCents = cfg.price_international_cents;
+    const qCur = (new URLSearchParams(location.search).get('cur') || '').toUpperCase();
+    try { if (qCur) sessionStorage.setItem('lh_cur', qCur === 'CAD' ? '' : qCur); } catch {}
+    let wantCur = qCur; try { wantCur = wantCur || sessionStorage.getItem('lh_cur') || ''; } catch {}
+    if (cfg.local_prices && cfg.local_prices[wantCur]) {
+      _cur = wantCur; _curCfg = cfg.local_prices[wantCur];
+      _curRate = cfg.fx_display?.[wantCur]?.rate || 1;
+      EXTRA_PAGE_CENTS = _curCfg.page; EXTRA_PAGE_COLOUR_CENTS = _curCfg.pageColour; COLOUR_PRINTING_CENTS = _curCfg.colour;
+      document.querySelectorAll('#r-country option').forEach(opt => {
+        opt.textContent = opt.textContent.replace(/\$\d+(?:\.\d+)? CAD/, moneyLabel(_curCfg.dest[opt.value] ?? _curCfg.other));
+      });
+      const noteEl = document.querySelector('[data-i18n="send.dest.note"]'); if (noteEl) noteEl.style.display = 'none';
+      const curEl = document.getElementById('preview-cur'); if (curEl) curEl.textContent = _curCfg.code === 'GBP' ? '' : _curCfg.code;
+    }
     if (cfg.destinations) {
       _destCfg = cfg.destinations;
       // Keep the recipient dropdown's price labels in step with the live per-destination prices.
-      Object.entries(cfg.destinations).forEach(([cc, d]) => {
+      if (!_curCfg) Object.entries(cfg.destinations).forEach(([cc, d]) => {
         document.querySelectorAll(`#r-country option[value="${cc}"]`).forEach(opt => {
           opt.textContent = opt.textContent.replace(/\$\d+(?:\.\d+)? CAD/, '$' + (d.price_cents / 100).toFixed(d.price_cents % 100 ? 2 : 0) + ' CAD');
         });

@@ -64,6 +64,8 @@ db.exec(`
 `);
 
 try { db.exec(`ALTER TABLE orders ADD COLUMN deleted_at DATETIME`);       } catch {}
+try { db.exec(`ALTER TABLE orders ADD COLUMN charge_currency TEXT`);     } catch {}   // set for fixed-price US, UK and AU orders; empty means CAD
+try { db.exec(`ALTER TABLE orders ADD COLUMN charge_cents INTEGER`);    } catch {}   // what the customer paid in charge_currency; price_cents stays CAD for reports
 try { db.exec(`ALTER TABLE orders ADD COLUMN content_flags TEXT`);        } catch {}   // JSON: categories and counts only, never the matched text
 try { db.exec(`ALTER TABLE orders ADD COLUMN content_cleared_at DATETIME`); } catch {}   // set when the owner marks a flagged order safe
 try { db.exec(`ALTER TABLE orders ADD COLUMN customer_ip TEXT`);          } catch {}

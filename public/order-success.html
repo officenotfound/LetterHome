@@ -167,7 +167,7 @@ function copyOrderNum(id) {
 
       <div class="detail-row"><span class="label">${LH_T('success.label.recipient')}</span><span class="val">${esc(data.recipientName)}${data.recipientCity ? ', ' + esc(data.recipientCity) : ''}</span></div>
       <div class="detail-row"><span class="label">${LH_T('success.label.destination')}</span><span class="val">${esc(destName)}</span></div>
-      <div class="detail-row"><span class="label">${LH_T('success.label.price')}</span><span class="val">${data.priceCents ? '$' + (data.priceCents / 100).toFixed(data.priceCents % 100 === 0 ? 0 : 2) : (isDomestic ? '$6' : (data.destinationCountry === 'US' ? '$6' : '$15'))} CAD</span></div>
+      <div class="detail-row"><span class="label">${LH_T('success.label.price')}</span><span class="val">${data.priceCents ? (data.priceCurrency === 'GBP' ? '£' : '$') + (data.priceCents / 100).toFixed(2) + (data.priceCurrency === 'GBP' ? '' : ' ' + (data.priceCurrency || 'CAD')) : '—'} CAD</span></div>
       <div class="detail-row"><span class="label">${LH_T('success.label.delivery')}</span><span class="val">${(isDomestic || isLocal) ? LH_T('success.dom.delivery') : LH_T('success.intl.delivery')}</span></div>
       <div class="detail-row"><span class="label">${LH_T('success.label.status')}</span><span class="val" style="color:var(--red)">${LH_T('success.status.val')}</span></div>
     `;

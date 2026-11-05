@@ -42,6 +42,14 @@ const DESTINATIONS = {
   },
 };
 
+// Fixed prices for the US, UK and Australia pages, in that currency's cents. Each keeps at least 38% profit after
+// PostGrid's USD cost and Stripe's fees, and ends in .00 or .50. XX is everywhere else. Canada's prices stay in CAD above.
+const LOCAL_PRICES = {
+  USD: { symbol: '$', code: 'USD', CA: 500, US: 250, GB: 600, AU: 550, XX: 1350, colour: 50,  page: 50,  pageColour: 100 },
+  GBP: { symbol: '£', code: 'GBP', CA: 350, US: 200, GB: 450, AU: 400, XX: 1000, colour: 50,  page: 50,  pageColour: 50  },
+  AUD: { symbol: '$', code: 'AUD', CA: 650, US: 350, GB: 800, AU: 750, XX: 1950, colour: 100, page: 100, pageColour: 100 },
+};
+
 const INTERNATIONAL = { priceKey: 'price_international_cents', defaultPrice: 1500 };
 const SERVICE_NAMES = { registered: 'Registered mail', certified: 'Certified mail', express: 'Express delivery' };
 // Content on page 1 starts below every country's address zone (lowest zone ends at 3.39 in) and the first fold.
@@ -64,6 +72,13 @@ function makeDestinations(getSetting) {
     return int(INTERNATIONAL.priceKey, INTERNATIONAL.defaultPrice);
   }
 
+  // The fixed base price in a local currency: the destination's price when its network is live, else everywhere-else.
+  function localPriceFor(currency, country) {
+    const t = LOCAL_PRICES[currency], cc = String(country || '').toUpperCase();
+    if (!t) return null;
+    return cc === 'CA' || (t[cc] && liveCountries().includes(cc)) ? t[cc] : t.XX;
+  }
+
   // Services a customer can buy for this destination right now.
   function servicesFor(country) {
     const cc = String(country || '').toUpperCase();
@@ -83,13 +98,19 @@ function makeDestinations(getSetting) {
     for (const cc of Object.keys(DESTINATIONS)) {
       dest[cc] = { name: DESTINATIONS[cc].name, price_cents: priceFor(cc), local: liveCountries().includes(cc), services: servicesFor(cc) };
     }
-    return { destinations: dest, international_cents: int(INTERNATIONAL.priceKey, INTERNATIONAL.defaultPrice) };
+    const local_prices = {};
+    for (const cur of Object.keys(LOCAL_PRICES)) {
+      const t = LOCAL_PRICES[cur];
+      local_prices[cur] = { symbol: t.symbol, code: t.code, colour: t.colour, page: t.page, pageColour: t.pageColour, other: t.XX,
+        dest: Object.fromEntries(Object.keys(DESTINATIONS).map(cc => [cc, localPriceFor(cur, cc)])) };
+    }
+    return { destinations: dest, international_cents: int(INTERNATIONAL.priceKey, INTERNATIONAL.defaultPrice), local_prices };
   }
 
-  return { priceFor, servicesFor, publicConfig, liveCountries, enabledServices };
+  return { priceFor, localPriceFor, servicesFor, publicConfig, liveCountries, enabledServices };
 }
 
 function destinationOf(country) { return DESTINATIONS[String(country || '').toUpperCase()] || null; }
 function pageSizeOf(country) { return PAGE_SIZES[(destinationOf(country) || DESTINATIONS.CA).size]; }
 
-module.exports = { DESTINATIONS, PAGE_SIZES, INTERNATIONAL, SERVICE_NAMES, ADDRESS_CLEARANCE_IN, MARGIN_IN, makeDestinations, destinationOf, pageSizeOf };
+module.exports = { LOCAL_PRICES, DESTINATIONS, PAGE_SIZES, INTERNATIONAL, SERVICE_NAMES, ADDRESS_CLEARANCE_IN, MARGIN_IN, makeDestinations, destinationOf, pageSizeOf };

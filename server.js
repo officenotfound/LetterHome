@@ -447,7 +447,7 @@ function orderDirPath(id, createdAt) {
 // ---- PostGrid fulfilment (off until POSTGRID_API_KEY is set) -----------------
 const { createPostGrid, MAX_SHEETS } = require('./postgrid');
 const contentscan = require('./contentscan');
-const { makeDestinations, SERVICE_NAMES } = require('./destinations');
+const { makeDestinations, SERVICE_NAMES, LOCAL_PRICES } = require('./destinations');
 const destinations = makeDestinations(getSetting);
 const SantaLetter = require('./public/santa-letter.js');
 // Who carries the letter: printed and mailed locally when that country's PostGrid network is on, otherwise from Canada.
@@ -1437,6 +1437,7 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
   // Validate discount code if provided
   let discountCents = 0;
   let appliedCode = null;
+  let discountRow = null;
   const rawCode = (b['discount_code'] || '').trim().toUpperCase();
   if (rawCode) {
     const dc = db.prepare(`
@@ -1453,9 +1454,26 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
         ? Math.round((basePriceCents + addonCents) * dc.discount_pct / 100)
         : (dc.discount_cents || 0);
       appliedCode = dc.code;
+      discountRow = dc;
     }
   }
-  const priceCents = Math.max(50, basePriceCents + addonCents - discountCents);
+  let priceCents = Math.max(50, basePriceCents + addonCents - discountCents);
+
+  // Orders from the US, UK and Australia pages use that country's fixed price and are charged in its currency.
+  // price_cents stays a CAD figure so reports keep working. Santa letters and mail services stay in CAD.
+  const wantCurrency = String(b['currency'] || '').toUpperCase();
+  const chargeCurrency = LOCAL_PRICES[wantCurrency] && !isSanta && !mailService ? wantCurrency : 'CAD';
+  let chargeCents = priceCents;
+  if (chargeCurrency !== 'CAD') {
+    const t = LOCAL_PRICES[chargeCurrency], rate = fxRate(chargeCurrency);
+    const localBase = destinations.localPriceFor(chargeCurrency, b['r-country']);
+    const localAddons = Math.max(0, pageCount - FREE_PAGES) * (colourPrinting ? t.pageColour : t.page) + (colourPrinting ? t.colour : 0);
+    const localDiscount = !discountRow ? 0 : discountRow.discount_pct
+      ? Math.round((localBase + localAddons) * discountRow.discount_pct / 100)
+      : Math.round((discountRow.discount_cents || 0) * rate);
+    chargeCents = Math.max(50, localBase + localAddons - localDiscount);
+    priceCents = Math.round(chargeCents / rate);
+  }
 
   const tempFiles = (req.files || []).map(f => ({
     tempPath:     f.path,
@@ -1544,6 +1562,7 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
 
   db.prepare('UPDATE orders SET attachment_info = ? WHERE id = ?')
     .run(JSON.stringify(movedFiles), orderId);
+  if (chargeCurrency !== 'CAD') db.prepare('UPDATE orders SET charge_currency = ?, charge_cents = ? WHERE id = ?').run(chargeCurrency, chargeCents, orderId);
 
   // Local content scan (no third party). A hit holds the order for review after payment; see postgridSubmit.
   try {
@@ -1567,12 +1586,12 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
       customer_email: rEmail,
       line_items: [{
         price_data: {
-          currency: 'cad',
+          currency: chargeCurrency.toLowerCase(),
           product_data: {
             name: stripeProductName(b['r-country'], letterType),
             description: `To: ${rName}, ${[b['r-city'], b['r-country']].filter(Boolean).join(' ')}${extrasNote}`,
           },
-          unit_amount: priceCents,
+          unit_amount: chargeCents,
         },
         quantity: 1,
       }],
@@ -1630,12 +1649,12 @@ app.get('/resume/:token', trackLimiter, async (req, res) => {
       customer_email: order.customer_email,
       line_items: [{
         price_data: {
-          currency: 'cad',
+          currency: (order.charge_currency || 'CAD').toLowerCase(),
           product_data: {
             name: stripeProductName(order.destination_country, order.letter_type),
             description: `To: ${order.recipient_name}, ${[order.recipient_city, order.destination_country].filter(Boolean).join(' ')}${extrasNote}`,
           },
-          unit_amount: order.price_cents,
+          unit_amount: order.charge_cents || order.price_cents,
         },
         quantity: 1,
       }],
@@ -1680,7 +1699,8 @@ app.get('/api/order-status', trackLimiter, (req, res) => {
     recipientName:      order.recipient_name,
     recipientCity:      order.recipient_city,
     destinationCountry: order.destination_country,
-    priceCents:         order.price_cents,
+    priceCents:         order.charge_cents || order.price_cents,
+    priceCurrency:      order.charge_currency || 'CAD',
   });
 });
 
@@ -3519,7 +3539,9 @@ async function fulfillOrder(sessionId) {
   if (result.changes === 0) return;
   if (order.discount_code) db.prepare('UPDATE discount_codes SET uses_count = uses_count + 1 WHERE code = ?').run(order.discount_code);
 
-  const amountCAD  = (session.amount_total / 100).toFixed(2);
+  const paidCurrency = (order.charge_currency || 'CAD').toUpperCase();
+  const paidAmount = ((order.charge_cents || session.amount_total) / 100).toFixed(2);
+  const amountCAD  = paidCurrency === 'GBP' ? `£${paidAmount}` : `$${paidAmount} ${paidCurrency}`;
   const isDomestic = order.destination_country === 'CA';
 
   const fromAddr = order.skip_return
@@ -3610,7 +3632,7 @@ function buildOperatorEmail(o, fromAddr, toAddr, amountCAD, attachCount) {
   return `
 <div style="font-family:Georgia,serif;max-width:600px;padding:24px;color:#2a2a2a">
   <h2 style="font-size:24px;margin:0 0 4px">New Order #${o.id}</h2>
-  <p style="color:#6b6258;margin:0 0 24px;font-size:14px">$${amountCAD} CAD &nbsp;·&nbsp; ${o.destination_country === 'CA' ? 'Domestic' : 'International'} &nbsp;·&nbsp; ${esc(o.letter_type)} &nbsp;·&nbsp; ${esc(o.customer_email)}</p>
+  <p style="color:#6b6258;margin:0 0 24px;font-size:14px">${amountCAD} &nbsp;·&nbsp; ${o.destination_country === 'CA' ? 'Domestic' : 'International'} &nbsp;·&nbsp; ${esc(o.letter_type)} &nbsp;·&nbsp; ${esc(o.customer_email)}</p>
   <table style="width:100%;border-collapse:collapse;margin-bottom:24px;font-size:14px">
     <tr style="background:#f7f2e6"><td style="padding:12px 16px;font-weight:bold;width:50%;vertical-align:top">
       FROM<br><span style="font-weight:400;white-space:pre-line">${esc(fromAddr)}</span>
@@ -3626,7 +3648,7 @@ function buildOperatorEmail(o, fromAddr, toAddr, amountCAD, attachCount) {
 function buildOperatorEmailText(o, fromAddr, toAddr, amountCAD, attachCount) {
   return [
     `New Order #${o.id}`,
-    `$${amountCAD} CAD · ${o.destination_country === 'CA' ? 'Domestic' : 'International'} · ${o.letter_type || ''} · ${o.customer_email}`,
+    `${amountCAD} · ${o.destination_country === 'CA' ? 'Domestic' : 'International'} · ${o.letter_type || ''} · ${o.customer_email}`,
     '',
     'FROM',
     fromAddr,
@@ -3650,7 +3672,7 @@ function buildCustomerEmailText(o, toAddr, amountCAD, isDomestic) {
     toAddr,
     `Estimated delivery: ${delivery}`,
     '',
-    `Order #${o.id} · $${amountCAD} CAD`,
+    `Order #${o.id} · ${amountCAD}`,
     o.status_token ? `Track your letter: ${process.env.BASE_URL}/status/${o.status_token}` : '',
     'Questions? Reply to this email.',
     '',
@@ -3677,7 +3699,7 @@ function buildCustomerEmail(o, toAddr, amountCAD, isDomestic) {
       <p style="font-size:12px;color:rgba(250,246,236,0.55);margin:0">Estimated delivery: ${delivery}</p>
     </div>
     <div style="border-top:1px solid rgba(42,42,42,0.1);padding-top:20px;font-size:13px;color:#6b6258">
-      <p style="margin:0 0 8px">Order #${o.id} &nbsp;·&nbsp; $${amountCAD} CAD</p>
+      <p style="margin:0 0 8px">Order #${o.id} &nbsp;·&nbsp; ${amountCAD}</p>
       ${o.status_token ? `<p style="margin:0 0 8px">Track your letter: <a href="${process.env.BASE_URL}/status/${o.status_token}" style="color:#a8472d">${process.env.BASE_URL}/status/${o.status_token}</a></p>` : ''}
       <p style="margin:0">Questions? Reply to this email.</p>
       <p style="margin:12px 0 0;color:#968b7d;font-size:11px">Letterhome · ${MAILING_ADDRESS}</p>

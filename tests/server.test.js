@@ -30,7 +30,8 @@ const mockStripe = function StripeClient(_key) {
   return {
     checkout: {
       sessions: {
-        create: async () => ({
+        create: async (o) => ({
+          ...((globalThis.__lastSession = o), {}),
           id:  'cs_test_' + randomUUID().replace(/-/g, ''),
           url: 'https://checkout.stripe.com/c/pay/test',
         }),
@@ -1152,4 +1153,30 @@ test('"at the printer" email goes once to a live PostGrid order (like #17, sent 
     assert.match(sent[0].text, /within two business days/);
     assert.ok(db.prepare('SELECT printer_email_sent_at FROM orders WHERE id = ?').get(live).printer_email_sent_at);
   } finally { delete process.env.SMTP_HOST; }
+});
+
+test('fixed local prices: a UK order is charged in pounds, reports stay in CAD, Canada is unchanged', async () => {
+  db.prepare("INSERT INTO settings (key, value) VALUES ('postgrid_countries', 'CA,US,GB,AU') ON CONFLICT(key) DO UPDATE SET value = excluded.value").run();
+  const post = fields => fetch(`${base}/api/create-order`, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({
+    'r-email': 'cur@example.com', 'r-name': 'Pat Local', 'r-street': '1 High St', 'r-city': 'London', 'r-postal': 'SW1A 1AA',
+    'letter-body': 'Hello.', 'letter-type': 'standard', ...fields }) });
+  const line = () => globalThis.__lastSession.line_items[0].price_data;
+  assert.equal((await post({ 'r-country': 'GB', currency: 'GBP' })).status, 200);
+  assert.equal(line().currency, 'gbp');
+  assert.equal(line().unit_amount, 450);
+  const o = db.prepare("SELECT * FROM orders WHERE customer_email = 'cur@example.com' ORDER BY id DESC").get();
+  assert.equal(o.charge_currency, 'GBP');
+  assert.equal(o.charge_cents, 450);
+  assert.ok(o.price_cents > 450, 'price_cents is a CAD figure for reports');
+  assert.equal((await post({ 'r-country': 'CA', currency: 'USD' })).status, 200);
+  assert.equal(line().currency, 'usd');
+  assert.equal(line().unit_amount, 500);
+  assert.equal((await post({ 'r-country': 'FR', currency: 'AUD' })).status, 200);
+  assert.equal(line().unit_amount, 1950);
+  assert.equal((await post({ 'r-country': 'CA', currency: 'EUR' })).status, 200);   // unknown currency falls back to CAD
+  assert.equal(line().currency, 'cad');
+  assert.equal(line().unit_amount, 600);
+  assert.equal((await post({ 'r-country': 'CA' })).status, 200);
+  assert.equal(line().currency, 'cad');
+  db.prepare("DELETE FROM settings WHERE key = 'postgrid_countries'").run();
 });
