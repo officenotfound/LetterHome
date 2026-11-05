@@ -809,8 +809,8 @@ Object.entries(REGION_REDIRECTS).forEach(([from, to]) =>
  'respond-to-debt-collection-letter', 'dispute-credit-report-error', 'resignation-letter-by-mail',
  'love-letters-and-personal-mail', 'mail-transcripts-and-student-documents',
  'mail-to-retirement-and-nursing-homes', 'schedule-a-letter-for-later', 'send-a-christmas-letter-to-canada',
- 'uk', 'us', 'au', 'nz', 'send-a-letter-online-in-the-usa', 'address-a-letter-to-canada-from-the-uk', 'aussies-in-canada-send-a-letter-home', 'kiwis-in-canada-send-a-letter-home',
- 'send-a-letter-from-canada-to-the-us', 'send-a-letter-from-canada-to-australia', 'send-a-letter-from-canada-to-new-zealand', 'send-letters-between-countries', 'santa-letter', 'send-a-letter-to-the-uk', 'monthly-letters', 'landlord-notices', 'postcards',
+ 'uk', 'us', 'au', 'send-a-letter-online-in-the-usa', 'address-a-letter-to-canada-from-the-uk', 'aussies-in-canada-send-a-letter-home',
+ 'send-a-letter-from-canada-to-the-us', 'send-a-letter-from-canada-to-australia', 'send-letters-between-countries', 'santa-letter', 'send-a-letter-to-the-uk', 'monthly-letters', 'landlord-notices', 'postcards',
  'letter-from-santa-canada', 'free-letter-from-santa-template', 'christmas-family-letter-template',
  'what-to-write-in-a-letter-to-a-grandparent', 'keep-in-touch-with-family-abroad-by-mail',
  'mailed-from-canada', 'non-resident-landlord', 'n12-notice',
@@ -874,20 +874,18 @@ const COUNTRY_GUIDES = {
   'us/how-to-send-mail-to-canada-from-us': 'send-a-letter-from-the-us-to-canada',
   'us/how-to-send-mail-to-uk-from-us': 'send-a-letter-from-the-us-to-the-uk',
   'us/how-to-send-mail-to-australia-from-us': 'send-a-letter-from-the-us-to-australia',
-  'us/how-to-send-mail-to-new-zealand-from-us': 'send-a-letter-from-the-us-to-new-zealand',
   'uk/how-to-send-mail-to-canada-from-uk': 'send-a-letter-from-the-uk-to-canada',
   'uk/how-to-send-mail-to-usa-from-uk': 'send-a-letter-from-the-uk-to-the-us',
   'uk/how-to-send-mail-to-australia-from-uk': 'send-a-letter-from-the-uk-to-australia',
-  'uk/how-to-send-mail-to-new-zealand-from-uk': 'send-a-letter-from-the-uk-to-new-zealand',
   'au/how-to-send-mail-to-canada-from-au': 'send-a-letter-from-australia-to-canada',
   'au/how-to-send-mail-to-usa-from-au': 'send-a-letter-from-australia-to-the-us',
-  'au/how-to-send-mail-to-uk-from-au': 'send-a-letter-from-australia-to-the-uk',
-  'au/how-to-send-mail-to-new-zealand-from-au': 'send-a-letter-from-australia-to-new-zealand',
-  'nz/how-to-send-mail-to-canada-from-nz': 'send-a-letter-from-new-zealand-to-canada',
-  'nz/how-to-send-mail-to-usa-from-nz': 'send-a-letter-from-new-zealand-to-the-us',
-  'nz/how-to-send-mail-to-uk-from-nz': 'send-a-letter-from-new-zealand-to-the-uk',
-  'nz/how-to-send-mail-to-australia-from-nz': 'send-a-letter-from-new-zealand-to-australia'
+  'au/how-to-send-mail-to-uk-from-au': 'send-a-letter-from-australia-to-the-uk'
 };
+// New Zealand pages were retired: send those visitors to the main site
+['nz', 'kiwis-in-canada-send-a-letter-home', 'send-a-letter-from-canada-to-new-zealand'].forEach(p => app.get(`/${p}`, (req, res) => res.redirect(301, '/')));
+['nz/how-to-send-mail-to-canada-from-nz', 'nz/how-to-send-mail-to-usa-from-nz', 'nz/how-to-send-mail-to-uk-from-nz', 'nz/how-to-send-mail-to-australia-from-nz'].forEach(p => app.get(`/${p}`, (req, res) => res.redirect(301, '/')));
+['us', 'uk', 'au'].forEach(c => app.get(`/${c}/how-to-send-mail-to-new-zealand-from-${c}`, (req, res) => res.redirect(301, `/${c}`)));
+app.get('/us/es/como-enviar-una-carta-a-nueva-zelanda-desde-ee-uu', (req, res) => res.redirect(301, '/us/es'));
 Object.keys(COUNTRY_GUIDES).forEach(p => {
   const file = p.split('/')[1];
   app.get(`/${p}`, (req, res) => res.sendFile(path.join(__dirname, 'public', `${file}.html`)));
@@ -1579,6 +1577,7 @@ app.get('/resume/:token', trackLimiter, async (req, res) => {
   const order = db.prepare('SELECT * FROM orders WHERE status_token = ? AND deleted_at IS NULL').get(req.params.token);
   if (!order) return res.redirect('/send');
   if (order.status !== 'awaiting_payment') return res.redirect(`/status/${order.status_token}`);
+  applyCartOffer(order, req.query.code);
   const svc = postgrid.serviceOf(order);
   if (svc && !destinations.servicesFor(order.destination_country)[svc]) return res.redirect('/send');
   try {
@@ -2973,6 +2972,7 @@ const ALLOWED_SETTING_KEYS = new Set([
   'daily_order_cap', 'blocked_countries', 'away_mode', 'away_message',
   'postgrid_auto_submit', 'postgrid_countries', 'services_enabled',
   'price_uk_cents', 'price_au_cents',
+  'cart_offer_enabled', 'cart_offer_pct', 'cart_offer_valid_days',
   'svc_ca_registered_cents', 'svc_ca_express_cents', 'svc_us_certified_cents', 'svc_us_express_cents',
 ]);
 
@@ -4400,6 +4400,150 @@ async function thankYouCouponJob() {
   return { sent };
 }
 
+// ── Abandoned-cart offer: one email 24 hours after a letter was uploaded but never paid, with a single-use code ──
+// The 2-hour reminder above stays as it is. This is the second and last nudge, and it carries the discount.
+const CART_OFFER_AFTER_HOURS = 24;
+const CART_OFFER_MAX_AGE_HOURS = 72;   // never email older carts, so a switch-on or a restart can't surprise anyone
+
+function cartOfferSettings() {
+  const pct = Math.min(50, Math.max(1, parseInt(getSetting('cart_offer_pct', '15'), 10) || 15));
+  const days = Math.min(60, Math.max(1, parseInt(getSetting('cart_offer_valid_days', '7'), 10) || 7));
+  return { enabled: getSetting('cart_offer_enabled', 'true') !== 'false', pct, days };
+}
+
+function newCartOfferCode() {
+  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let suffix = '';
+  for (let i = 0; i < 6; i++) suffix += alphabet[randomInt(alphabet.length)];
+  return `COMEBACK-${suffix}`;
+}
+
+// Applies the order's own offer code to the unpaid order (called when the customer clicks through from the email).
+function applyCartOffer(order, rawCode) {
+  const code = String(rawCode || '').trim().toUpperCase();
+  if (!code || order.discount_code || !order.cart_offer_code || order.cart_offer_code.toUpperCase() !== code) return false;
+  const dc = db.prepare(`SELECT * FROM discount_codes WHERE code = ? AND active = 1
+      AND (expires_at IS NULL OR expires_at > CURRENT_TIMESTAMP) AND (max_uses IS NULL OR uses_count < max_uses)`).get(code);
+  if (!dc || !dc.discount_pct) return false;
+  const gross = order.price_cents + (order.discount_cents || 0);
+  const off = Math.round(gross * dc.discount_pct / 100);
+  const price = Math.max(50, gross - off);
+  db.prepare('UPDATE orders SET discount_code = ?, discount_cents = ?, price_cents = ? WHERE id = ? AND status = \'awaiting_payment\'').run(dc.code, gross - price, price, order.id);
+  order.discount_code = dc.code; order.discount_cents = gross - price; order.price_cents = price;
+  return true;
+}
+
+function buildCartOfferEmail(order, code, pct, expiresOn) {
+  const base   = process.env.BASE_URL || '';
+  const link   = order.status_token ? `${base}/resume/${order.status_token}?code=${encodeURIComponent(code)}` : `${base}/send?code=${encodeURIComponent(code)}`;
+  const unsub  = unsubscribeLink(order.customer_email);
+  const name   = String(order.sender_name || '').trim().split(/\s+/)[0] || '';
+  const hello  = name ? `Hi ${name},` : 'Hello,';
+  const esc    = v => String(v || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const money  = c => '$' + (c / 100).toFixed(c % 100 === 0 ? 0 : 2);
+  const was    = order.price_cents;
+  const now    = Math.max(50, was - Math.round(was * pct / 100));
+  const toLine = [order.recipient_name, [order.recipient_city, order.destination_country].filter(Boolean).join(', ')].filter(Boolean).join(' · ');
+  const facts  = mailFacts(order);
+  const bullets = [
+    'A person checks every letter before it\'s printed',
+    'Printed, put in an envelope and mailed for you, with postage included',
+    'Mailed within two business days of your order',
+    facts.carrier !== 'Canada Post' ? `Mailed locally with ${facts.carrier}` : 'Mailed through Canada Post',
+    'Free reprint and resend if it doesn\'t arrive',
+    'Secure card payment through Stripe',
+  ];
+  const subject = order.recipient_name ? `${pct}% off to send your letter to ${order.recipient_name}` : `${pct}% off to send your letter`;
+  const text = `${hello}\n\nYour letter${order.recipient_name ? ' to ' + order.recipient_name : ''} is ready to send. It's saved, and the only thing left is payment.\n\n` +
+    (toLine ? `To: ${toLine}\n` : '') + `Total: ${money(was)} CAD, now ${money(now)} CAD with ${pct}% off\n\nYour code: ${code}\n\n` +
+    `Finish your order (the code is applied for you):\n${link}\n\n${bullets.map(b => '- ' + b).join('\n')}\n\n` +
+    `The code works once and expires on ${expiresOn}. We keep your letter and files saved for a few weeks, then delete unpaid orders for your privacy.\n\n` +
+    `Need to change something, or have a question first? Reply to this email and a person will help.\n\nLetterhome\n${MAILING_ADDRESS}\nUnsubscribe: ${unsub}`;
+  return {
+    from: process.env.EMAIL_FROM, to: order.customer_email, replyTo: process.env.OPERATOR_EMAIL, subject,
+    headers: { 'List-Unsubscribe': `<${unsub}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' },
+    text,
+    html: `<!DOCTYPE html><html>
+<body style="font-family:Georgia,serif;background:#ede5d3;padding:40px 20px;color:#2a2a2a;margin:0">
+  <div style="max-width:520px;margin:0 auto;background:#faf6ec;border:1px solid rgba(42,42,42,0.12);padding:44px">
+    <h1 style="font-size:27px;font-weight:400;margin:0 0 14px;letter-spacing:-0.02em">Your letter is ready to send.</h1>
+    <p style="margin:0 0 18px;font-size:15px;line-height:1.6;color:#3a3835">${esc(hello)}<br>Your letter${order.recipient_name ? ' to <strong>' + esc(order.recipient_name) + '</strong>' : ''} is saved and ready. The only thing left is payment, and here's ${pct}% off to finish it.</p>
+    ${toLine ? `<p style="margin:0 0 4px;font-size:15px;color:#6b6258">To: <strong style="color:#2a2a2a">${esc(toLine)}</strong></p>` : ''}
+    <p style="margin:0 0 22px;font-size:15px;color:#6b6258">Total: <s>${money(was)}</s> <strong style="color:#2a2a2a">${money(now)} CAD</strong>, printing, envelope and postage included.</p>
+    <p style="margin:0 0 22px;text-align:center"><span style="display:inline-block;border:1.5px dashed #a8472d;padding:14px 26px;font-family:'Courier New',monospace;font-size:22px;letter-spacing:0.08em;color:#a8472d">${esc(code)}</span></p>
+    <p style="margin:0 0 26px;text-align:center"><a href="${link}" style="display:inline-block;background:#a8472d;color:#faf6ec;padding:15px 30px;font-size:16px;text-decoration:none">Finish my order, ${pct}% off</a></p>
+    <ul style="margin:0 0 24px;padding-left:18px;font-size:15px;line-height:1.7;color:#3a3835">${bullets.map(b => `<li>${esc(b)}</li>`).join('')}</ul>
+    <p style="margin:0 0 14px;font-size:14px;color:#6b6258;line-height:1.6">The code works once and expires on ${esc(expiresOn)}. We keep your letter and files saved for a few weeks, then delete unpaid orders for your privacy.</p>
+    <p style="margin:0 0 22px;font-size:14px;color:#6b6258;line-height:1.6">Need to change something, or have a question first? Reply to this email and a person will help.</p>
+    <div style="border-top:1px solid rgba(42,42,42,0.1);padding-top:18px;font-size:12px;color:#968b7d;line-height:1.6">
+      <p style="margin:0">You're receiving this because you started an order with us. This is the last reminder about it.</p>
+      <p style="margin:10px 0 0;font-size:11px">Letterhome · ${MAILING_ADDRESS}<br><a href="${unsub}" style="color:#968b7d">Unsubscribe</a></p>
+    </div>
+  </div>
+</body></html>`,
+  };
+}
+
+let cartOfferRunning = false;
+async function cartOfferJob() {
+  const cfg = cartOfferSettings();
+  if (!cfg.enabled || !process.env.SMTP_HOST || cartOfferRunning) return { sent: 0 };
+  cartOfferRunning = true;
+  let sent = 0;
+  try {
+    const due = db.prepare(`
+      SELECT * FROM orders
+      WHERE status = 'awaiting_payment' AND deleted_at IS NULL
+        AND created_at <= datetime('now', ?) AND created_at > datetime('now', ?)
+        AND cart_offer_sent_at IS NULL
+        AND (discount_code IS NULL OR discount_code = '')
+        AND price_cents > 0
+        AND customer_email LIKE '%_@_%.__%'
+        AND NOT EXISTS (SELECT 1 FROM customers c WHERE lower(c.email) = lower(orders.customer_email) AND c.unsubscribed_at IS NOT NULL)
+        AND NOT EXISTS (SELECT 1 FROM orders o2 WHERE lower(o2.customer_email) = lower(orders.customer_email) AND o2.cart_offer_sent_at > datetime('now', '-30 days'))
+        AND NOT EXISTS (SELECT 1 FROM orders o3 WHERE lower(o3.customer_email) = lower(orders.customer_email) AND o3.paid_at IS NOT NULL AND o3.created_at >= orders.created_at)
+      GROUP BY lower(customer_email)
+      ORDER BY created_at
+      LIMIT 50
+    `).all(`-${CART_OFFER_AFTER_HOURS} hours`, `-${CART_OFFER_MAX_AGE_HOURS} hours`);
+    for (const order of due) {
+      const claim = db.prepare('UPDATE orders SET cart_offer_sent_at = CURRENT_TIMESTAMP WHERE id = ? AND cart_offer_sent_at IS NULL').run(order.id);
+      if (claim.changes !== 1) continue;
+      let code = null, mailed = false;
+      try {
+        const expires = new Date(Date.now() + cfg.days * 86400 * 1000);
+        const expiresSql = expires.toISOString().replace('T', ' ').slice(0, 19);
+        const expiresOn = expires.toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'America/Vancouver' });
+        code = newCartOfferCode();
+        db.prepare(`INSERT INTO discount_codes (code, description, discount_pct, max_uses, expires_at) VALUES (?, ?, ?, 1, ?)`)
+          .run(code, `Abandoned cart offer for order #${order.id}`, cfg.pct, expiresSql);
+        db.prepare('UPDATE orders SET cart_offer_code = ? WHERE id = ?').run(code, order.id);
+        order.cart_offer_code = code;
+        await sendMail(buildCartOfferEmail(order, code, cfg.pct, expiresOn), 'cart_offer', order.id);
+        mailed = true; sent++;
+        console.log(`[cart-offer] sent ${code} for order #${order.id}`);
+      } catch (e) {
+        if (!mailed) {
+          if (code) db.prepare('DELETE FROM discount_codes WHERE code = ?').run(code);
+          db.prepare('UPDATE orders SET cart_offer_sent_at = NULL, cart_offer_code = NULL WHERE id = ?').run(order.id);
+        }
+        console.error(`[cart-offer] failed for order #${order.id}:`, e.message);
+      }
+    }
+  } catch (e) { console.error('[cart-offer] job failed:', e.message); }
+  finally { cartOfferRunning = false; }
+  return { sent };
+}
+cron.schedule('40 * * * *', () => { cartOfferJob(); });
+
+app.get('/api/admin/cart-offer-stats', requireAdmin, (req, res) => {
+  const cfg = cartOfferSettings();
+  const row = db.prepare(`SELECT COUNT(*) AS sent, SUM(CASE WHEN paid_at IS NOT NULL THEN 1 ELSE 0 END) AS paid,
+      SUM(CASE WHEN paid_at IS NOT NULL THEN price_cents ELSE 0 END) AS revenue_cents
+    FROM orders WHERE cart_offer_sent_at IS NOT NULL`).get();
+  res.json({ ...cfg, sent: row.sent || 0, paid: row.paid || 0, revenue_cents: row.revenue_cents || 0 });
+});
+
 cron.schedule('15 * * * *', () => { thankYouCouponJob(); });
 cron.schedule('*/15 * * * *', () => { postgridSweep(); });
 cron.schedule('30 6 * * 1', () => { fxRefreshJob({ force: true }); });   // weekly, Monday 06:30 server time
@@ -4409,4 +4553,4 @@ const PORT = process.env.PORT || 3000;
 if (!process.env.TEST_MODE) {
   app.listen(PORT, () => console.log(`Letterhome running on port ${PORT}`));
 }
-module.exports = { app, db, fxRefreshJob, niceGbp, thankYouCouponJob, postgrid, postgridSubmit, postgridSweep, sendAtPrinterEmail, sendMailedNotification };
+module.exports = { app, db, fxRefreshJob, niceGbp, thankYouCouponJob, cartOfferJob, postgrid, postgridSubmit, postgridSweep, sendAtPrinterEmail, sendMailedNotification };

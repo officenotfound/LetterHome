@@ -2459,6 +2459,9 @@ async function showSettings() {
   const blockedRaw   = settings['blocked_countries']         || '[]';
   const awayOn       = settings['away_mode'] === 'true';
   const awayMessage  = settings['away_message'] || '';
+  const cartOfferOn   = settings['cart_offer_enabled'] !== 'false';
+  const cartOfferPct  = settings['cart_offer_pct'] || '15';
+  const cartOfferDays = settings['cart_offer_valid_days'] || '7';
   let blocked = [];
   try { blocked = JSON.parse(blockedRaw); } catch {}
 
@@ -2539,6 +2542,28 @@ async function showSettings() {
       <div style="padding:20px" id="pg-settings-body"><div class="empty" style="padding:8px 0">Loading…</div></div>
     </div>
 
+    <div class="card" style="max-width:640px;margin-bottom:20px" id="cart-offer-card">
+      <div class="card-header"><div class="card-title">Abandoned cart email</div></div>
+      <div style="padding:20px">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:16px;border-bottom:1px solid #fafafa;margin-bottom:16px;gap:12px">
+          <div>
+            <div style="font-size:14px;font-weight:600;color:#111111;margin-bottom:3px">Discount email 24 hours after an unpaid order</div>
+            <div style="font-size:12px;color:#6b6b6b">When someone uploads a letter and doesn't pay, they get one email 24 hours later with a single-use discount code that applies when they click through. It never goes to unsubscribed customers, never to someone who has already paid, and only once per customer every 30 days.</div>
+          </div>
+          <button id="cart-offer-toggle-btn" class="btn ${cartOfferOn ? 'btn-primary' : 'btn-outline'}" onclick="toggleCartOffer(${cartOfferOn})">${cartOfferOn ? 'On, click to disable' : 'Off, click to enable'}</button>
+        </div>
+        <div style="display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap">
+          <div class="field"><label>Discount %</label><input id="cart-offer-pct" type="number" min="1" max="50" value="${esc(cartOfferPct)}" style="max-width:100px"></div>
+          <div class="field"><label>Code valid for (days)</label><input id="cart-offer-days" type="number" min="1" max="60" value="${esc(cartOfferDays)}" style="max-width:100px"></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+          <button class="btn btn-primary" onclick="saveCartOffer()">Save</button>
+          <span id="cart-offer-saved" style="font-size:12px;color:#16a34a;display:none">✓ Saved</span>
+        </div>
+        <div id="cart-offer-stats" style="font-size:12px;color:#6b6b6b">Loading results…</div>
+      </div>
+    </div>
+
     <div class="card" style="max-width:640px;margin-bottom:20px">
       <div class="card-header"><div class="card-title">Away Auto-Reply</div></div>
       <div style="padding:20px">
@@ -2609,6 +2634,7 @@ async function showSettings() {
 
   window._blockedCountries = [...blocked];
   renderPostgridSettings(settings);
+  loadCartOfferStats();
 }
 
 function addBlockedCountry() {
@@ -2672,6 +2698,31 @@ async function toggleServicePause(currentlyPaused) {
   const r = await saveSetting('service_paused', newVal ? 'true' : 'false');
   if (r?.ok) showSettings();
   else alert('Error saving setting.');
+}
+
+async function toggleCartOffer(currentlyOn) {
+  const r = await saveSetting('cart_offer_enabled', currentlyOn ? 'false' : 'true');
+  if (r?.ok) showSettings();
+  else alert('Error saving setting.');
+}
+
+async function saveCartOffer() {
+  const pct = document.getElementById('cart-offer-pct')?.value || '15';
+  const days = document.getElementById('cart-offer-days')?.value || '7';
+  const r1 = await saveSetting('cart_offer_pct', pct);
+  const r2 = await saveSetting('cart_offer_valid_days', days);
+  const el = document.getElementById('cart-offer-saved');
+  if (r1?.ok && r2?.ok && el) { el.style.display = 'inline'; setTimeout(() => { el.style.display = 'none'; }, 2500); }
+  else alert('Error saving.');
+}
+
+async function loadCartOfferStats() {
+  const el = document.getElementById('cart-offer-stats');
+  if (!el) return;
+  const s = await api('/api/admin/cart-offer-stats', { background: true });
+  if (!s) { el.textContent = ''; return; }
+  const rev = '$' + (s.revenue_cents / 100).toFixed(2);
+  el.textContent = s.sent ? `${s.sent} sent so far, ${s.paid} paid afterwards (${rev} CAD in orders).` : 'None sent yet.';
 }
 
 async function toggleAwayMode(currentlyOn) {

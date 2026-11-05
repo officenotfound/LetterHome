@@ -75,7 +75,7 @@ require.cache[stripeResolvePath] = {
 const sentMail = [];
 require('nodemailer').createTransport = () => ({ sendMail: async (o) => { sentMail.push(o); return {}; } });
 
-const { app, db, thankYouCouponJob, sendAtPrinterEmail, sendMailedNotification, fxRefreshJob, niceGbp } = require('../server');
+const { app, db, thankYouCouponJob, cartOfferJob, sendAtPrinterEmail, sendMailedNotification, fxRefreshJob, niceGbp } = require('../server');
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function webhookSig(payload) {
@@ -693,6 +693,60 @@ test('thank-you coupon: one single-use 15% code per customer, 14 days after mail
   }
 });
 
+test('abandoned cart offer: one email after 24 hours with a code that applies on resume, skipping paid, unsubscribed, fresh and repeat customers', async () => {
+  process.env.SMTP_HOST = 'smtp.test';
+  try {
+    const mk = (email, status, age) => {
+      const sid = seedOrder({ email, status, priceCents: 1000 });
+      const { id } = db.prepare('SELECT id FROM orders WHERE stripe_session_id = ?').get(sid);
+      db.prepare("UPDATE orders SET created_at = datetime('now', ?), sender_name = 'Sam Lee', recipient_city = 'Leeds' WHERE id = ?").run(age, id);
+      return id;
+    };
+    const due    = mk('cart-due@example.com', 'awaiting_payment', '-26 hours');
+    const fresh  = mk('cart-fresh@example.com', 'awaiting_payment', '-3 hours');
+    const stale  = mk('cart-stale@example.com', 'awaiting_payment', '-5 days');
+    const unsub  = mk('cart-unsub@example.com', 'awaiting_payment', '-26 hours');
+    db.prepare("INSERT OR REPLACE INTO customers (email, unsubscribed_at) VALUES ('cart-unsub@example.com', CURRENT_TIMESTAMP)").run();
+    const paidLater = mk('cart-paid@example.com', 'awaiting_payment', '-30 hours');
+    const paid = mk('cart-paid@example.com', 'paid', '-26 hours');
+    db.prepare("UPDATE orders SET paid_at = CURRENT_TIMESTAMP WHERE id = ?").run(paid);
+
+    sentMail.length = 0;
+    const r1 = await cartOfferJob();
+    assert.equal(r1.sent, 1);
+    assert.equal(sentMail.length, 1);
+    assert.equal(sentMail[0].to, 'cart-due@example.com');
+    assert.match(sentMail[0].subject, /15% off/);
+    assert.match(sentMail[0].text, /COMEBACK-[A-Z2-9]{6}/);
+    assert.ok(sentMail[0].headers['List-Unsubscribe']);
+    assert.ok(!sentMail[0].text.includes('\u2014') && !sentMail[0].html.includes('\u2014'));
+    assert.ok(!/postgrid/i.test(sentMail[0].html));
+    const code = sentMail[0].text.match(/COMEBACK-[A-Z2-9]{6}/)[0];
+    const dc = db.prepare('SELECT * FROM discount_codes WHERE code = ?').get(code);
+    assert.equal(dc.discount_pct, 15); assert.equal(dc.max_uses, 1);
+    for (const id of [fresh, stale, unsub, paidLater, paid]) assert.equal(db.prepare('SELECT cart_offer_sent_at FROM orders WHERE id = ?').get(id).cart_offer_sent_at, null);
+
+    assert.equal((await cartOfferJob()).sent, 0);               // once only
+
+    // clicking through applies the code to the unpaid order (price 1000 -> 850)
+    const token = db.prepare('SELECT status_token FROM orders WHERE id = ?').get(due).status_token;
+    await fetch(`${base}/resume/${token}?code=${code}`, { redirect: 'manual' }).catch(() => {});
+    const o = db.prepare('SELECT price_cents, discount_code, discount_cents FROM orders WHERE id = ?').get(due);
+    assert.equal(o.discount_code, code); assert.equal(o.price_cents, 850); assert.equal(o.discount_cents, 150);
+    // a different code is not accepted for the order
+    const other = mk('cart-other@example.com', 'awaiting_payment', '-1 hours');
+    const t2 = db.prepare('SELECT status_token FROM orders WHERE id = ?').get(other).status_token;
+    await fetch(`${base}/resume/${t2}?code=${code}`, { redirect: 'manual' }).catch(() => {});
+    assert.equal(db.prepare('SELECT price_cents FROM orders WHERE id = ?').get(other).price_cents, 1000);
+
+    // the switch turns it off
+    db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('cart_offer_enabled', 'false')").run();
+    mk('cart-off@example.com', 'awaiting_payment', '-26 hours');
+    assert.equal((await cartOfferJob()).sent, 0);
+    db.prepare("DELETE FROM settings WHERE key = 'cart_offer_enabled'").run();
+  } finally { delete process.env.SMTP_HOST; }
+});
+
 test('mailed_at is stamped once, the first time an order reaches mailed', () => {
   const sid = seedOrder({ email: 'stamp@example.com', status: 'paid' });
   const { id } = db.prepare('SELECT id FROM orders WHERE stripe_session_id = ?').get(sid);
@@ -959,7 +1013,6 @@ test('country pages: own language, theme and canonical, no French toggle, listed
     ['us', 'us', 'en-US'], ['us/es', 'us', 'es-US'], ['send-a-letter-online-in-the-usa', 'us', 'en-US'], ['us/es/send-a-letter-online-in-the-usa', 'us', 'es-US'],
     ['uk', 'uk', 'en-GB'], ['send-a-letter-to-the-uk', 'uk', 'en-GB'], ['address-a-letter-to-canada-from-the-uk', 'uk', 'en-GB'],
     ['au', 'au', 'en-AU'], ['aussies-in-canada-send-a-letter-home', 'au', 'en-AU'],
-    ['nz', 'nz', 'en-NZ'], ['kiwis-in-canada-send-a-letter-home', 'nz', 'en-NZ'],
   ];
   const sitemap = await (await fetch(`${base}/sitemap.xml`)).text();
   for (const [slug, cc, lang] of pages) {
@@ -979,17 +1032,17 @@ test('country pages: own language, theme and canonical, no French toggle, listed
     assert.ok(!html.includes('\u2014'), `${slug} has an em dash`);
     if (cc === 'us') assert.ok(html.includes('hreflang="es-US"') || html.includes('data-alt='), `${slug} links its twin`);
   }
-  // Spelling check: US pages say color, UK/AU/NZ say colour
+  // Spelling check: US pages say color, UK/AU say colour
   assert.match(await (await fetch(`${base}/us`)).text(), /Color printing/);
-  for (const slug of ['uk', 'au', 'nz']) assert.match(await (await fetch(`${base}/${slug}`)).text(), /Colour printing/);
+  for (const slug of ['uk', 'au']) assert.match(await (await fetch(`${base}/${slug}`)).text(), /Colour printing/);
   assert.equal((await fetch(`${base}/us/es/not-a-real-page`)).status, 404);
 });
 
 test('letters between countries: every route page is served with its own canonical and is in the sitemap', async () => {
-  const cc = ['us', 'uk', 'au', 'nz'], dest = { ca: 'canada', us: 'usa', uk: 'uk', au: 'australia', nz: 'new-zealand' };
-  const slugs = ['send-a-letter-from-canada-to-the-us', 'send-a-letter-from-canada-to-australia', 'send-a-letter-from-canada-to-new-zealand'];
+  const cc = ['us', 'uk', 'au'], dest = { ca: 'canada', us: 'usa', uk: 'uk', au: 'australia' };
+  const slugs = ['send-a-letter-from-canada-to-the-us', 'send-a-letter-from-canada-to-australia'];
   for (const o of cc) for (const d of Object.keys(dest)) if (o !== d) slugs.push(`${o}/how-to-send-mail-to-${dest[d]}-from-${o}`);
-  const es = ['canada', 'reino-unido', 'australia', 'nueva-zelanda'].map(d => `us/es/como-enviar-una-carta-a-${d}-desde-ee-uu`);
+  const es = ['canada', 'reino-unido', 'australia'].map(d => `us/es/como-enviar-una-carta-a-${d}-desde-ee-uu`);
   slugs.push(...es);
   const sitemap = await (await fetch(`${base}/sitemap.xml`)).text();
   for (const slug of slugs) {
