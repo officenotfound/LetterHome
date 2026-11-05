@@ -1,0 +1,84 @@
+/* ===== Shared layer for inner pages: same system as the home page ===== */
+h1,h2,h3,h4{font-family:'Archivo',system-ui,sans-serif!important;letter-spacing:-.015em!important;color:var(--ink)}
+h1{font-weight:800!important;font-size:clamp(32px,4.2vw,50px)!important;line-height:1.1!important}
+h2{font-weight:800!important;font-size:clamp(24px,3vw,34px)!important;line-height:1.18!important}
+h3{font-weight:700!important}
+h1 em,h2 em{font-style:normal!important;color:inherit!important}
+.eyebrow{display:none!important}
+.main h2::before,.main h2::after{display:none!important}
+p,li{font-size:16px;line-height:1.6}
+.main{max-width:820px!important}
+.main a,.prose a,article a{color:var(--red)}
+/* Page hero */
+.hero{background:var(--w-kraft)!important;color:var(--ink)!important;text-align:left!important;padding:44px 24px 40px!important;border:0!important;background-image:none!important}
+.hero>*{max-width:820px;margin-left:auto!important;margin-right:auto!important;text-align:left}
+.hero h1,.hero p{color:var(--ink)!important}
+.hero p{color:var(--ink-soft)!important;font-size:18px!important}
+.hero-cta{display:flex;gap:14px;flex-wrap:wrap;margin-top:16px;justify-content:flex-start}
+/* Answer and warning boxes */
+.answer-box{background:#fff!important;border:1px solid var(--w-line)!important;border-left:4px solid #1c2f45!important;border-radius:4px!important;box-shadow:var(--rd-shadow);color:var(--ink)!important;padding:18px 22px!important}
+.answer-box *{color:var(--ink)!important}
+.warn-box{background:#fbf1dd!important;border:1px solid rgba(42,42,42,.12)!important;border-left:4px solid #b7791f!important;border-radius:4px!important;box-shadow:none!important;color:var(--ink)!important}
+/* Use cases as ruled facts */
+.use-cases{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:0!important;background:#fff;border:1px solid var(--w-line);border-radius:4px;box-shadow:var(--rd-shadow)}
+.use-case{background:transparent!important;border:0!important;border-bottom:1px solid var(--w-line)!important;border-radius:0!important;box-shadow:none!important;padding:16px 20px!important}
+.use-case:nth-child(odd){border-right:1px solid var(--w-line)!important}
+.use-case:nth-last-child(-n+2){border-bottom:0!important}
+/* FAQ sheet */
+.faq-item{background:#fff!important;border:0!important;border-bottom:1px solid var(--w-line)!important;border-radius:0!important;box-shadow:none!important;padding:0 24px!important;margin:0!important}
+.faq-item:first-of-type{border-top:4px solid #1c2f45!important;border-radius:4px 4px 0 0!important}
+.faq-item:last-child{border-bottom:1px solid var(--w-line)!important;border-radius:0 0 4px 4px!important}
+.faq-item summary,.faq-q{cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:16px;padding:14px 0!important;margin:0!important;font:600 16.5px/1.35 'Archivo',sans-serif!important;color:var(--ink)!important;min-height:44px}
+.faq-item summary::-webkit-details-marker{display:none}
+.faq-item summary::after{content:'+';flex:none;font:400 22px/1 'Roboto',sans-serif}
+.faq-item[open] summary::after{content:'\2212'}
+.faq-a{margin:0!important;padding:0 28px 16px 0!important}
+/* Related + closing */
+.related-card{background:#fff!important;border:1px solid var(--w-line)!important;border-radius:4px!important;box-shadow:none!important}
+.related-card:hover{border-color:#1c2f45!important}
+.cta-block,.cta{background:#1c2f45!important;color:#fff!important;border-radius:4px!important;padding:32px 28px!important;text-align:center!important;border:0!important}
+.cta-block h2,.cta h2{color:#fff!important;margin:0 0 8px!important}
+.cta-block p,.cta p{color:rgba(255,255,255,.9)!important}
+/* About page */
+.story{background:var(--w-cream)!important;border:0!important}
+.values{background:var(--w-kraft)!important}
+.value{background:transparent!important;border:0!important;border-top:2px solid var(--ink)!important;box-shadow:none!important;border-radius:0!important;padding:14px 0 0!important}
+.value-num{color:var(--ink-muted)!important;font-family:'Archivo',sans-serif!important}
+.manifesto{font-family:'Noto Sans',sans-serif!important;font-style:normal!important}
+/* Forms */
+input,select,textarea{border-radius:4px!important}
+label{font-family:'Roboto',sans-serif}
+@media(max-width:640px){.use-cases{grid-template-columns:1fr!important}.use-case{border-right:0!important;border-bottom:1px solid var(--w-line)!important}.use-case:last-child{border-bottom:0!important}.hero{padding:30px 18px 28px!important}}
+/* Dark mode */
+[data-theme="dark"] h1,[data-theme="dark"] h2,[data-theme="dark"] h3,[data-theme="dark"] h4{color:#f1eadb!important}
+[data-theme="dark"] p,[data-theme="dark"] li{color:#d8d0c1}
+[data-theme="dark"] .hero p{color:#d8d0c1!important}
+[data-theme="dark"] .answer-box,[data-theme="dark"] .use-cases,[data-theme="dark"] .faq-item,[data-theme="dark"] .related-card{background:#23262d!important}
+[data-theme="dark"] .answer-box *{color:#f1eadb!important}
+[data-theme="dark"] .warn-box{background:#3a2f1c!important}
+[data-theme="dark"] .warn-box *{color:#f1eadb!important}
+[data-theme="dark"] .faq-item summary,[data-theme="dark"] .faq-q{color:#f1eadb!important}
+[data-theme="dark"] .btn-red,[data-theme="dark"] .btn-primary,[data-theme="dark"] .cta-block a{color:#fff!important}
+
+.story h2,.story p{color:var(--ink)!important}
+.manifesto,.manifesto p{background:#fff;color:var(--ink)!important;border-left:4px solid #1c2f45!important}
+.story{padding:44px 0!important}
+.values-grid{gap:24px!important}
+
+/* Hero alignment */
+.hero{padding-left:max(24px,calc(50% - 410px))!important;padding-right:max(24px,calc(50% - 410px))!important}
+.hero>*{margin-left:0!important;margin-right:0!important;max-width:820px}
+.hero>a,.hero>.btn{display:inline-flex!important;width:fit-content!important;max-width:100%}
+body:has(.values) .hero{padding-left:max(24px,calc(50% - 560px))!important;padding-right:max(24px,calc(50% - 560px))!important}
+.story-inner,.values-inner{max-width:1120px!important;padding-left:24px!important;padding-right:24px!important}
+.manifesto{background:none!important;border:0!important;padding:0!important;box-shadow:none!important}
+.manifesto p{background:#fff!important;border:1px solid var(--w-line)!important;border-left:4px solid #1c2f45!important;padding:18px 22px!important;font-style:normal!important;color:var(--ink)!important}
+[data-theme="dark"] .manifesto p{background:#23262d!important}
+.related h2{color:var(--ink)!important;opacity:1!important}
+.related-card strong{color:var(--ink)!important}
+/* Dark mode fixes for inner pages */
+[data-theme="dark"] .hero{background:#1e2127!important}
+[data-theme="dark"] .hero h1 em,[data-theme="dark"] h2 em{color:inherit!important}
+[data-theme="dark"] .btn-red,[data-theme="dark"] .btn-primary,[data-theme="dark"] .btn,[data-theme="dark"] .cta-block a{background-color:#bf2d3a!important;color:#fff!important}
+.hero>a:not(.btn-ghost){background-color:#bf2d3a!important;color:#fff!important;border:0!important}
+[data-theme="dark"] .hero>a:not(.btn-ghost){background-color:#bf2d3a!important;color:#fff!important}

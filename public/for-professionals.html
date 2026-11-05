@@ -38,7 +38,7 @@
   ]
 }
 </script>
-<link rel="stylesheet" href="/fonts.css?v=1">
+<link rel="stylesheet" href="/fonts.css?v=2">
 <style>
 :root {
   --kraft:#f1ebde;--kraft-light:#f7f2e6;--paper:#faf6ec;
@@ -47,14 +47,14 @@
   --line:rgba(42,42,42,0.14);--shadow-card:0 2px 6px rgba(42,42,42,0.06),0 14px 40px rgba(42,42,42,0.1);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Source Serif 4',Georgia,serif;background:var(--kraft);color:var(--ink);line-height:1.6}
+body{font-family:'Noto Sans',Georgia,serif;background:var(--kraft);color:var(--ink);line-height:1.6}
 .hero{background:var(--ink);color:var(--paper);padding:72px 36px 64px;text-align:center}
-.hero-eyebrow{font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.18em;color:rgba(250,246,236,0.55);margin-bottom:20px}
-.hero h1{font-family:'DM Serif Display',serif;font-size:clamp(28px,4vw,46px);font-weight:400;letter-spacing:-0.02em;line-height:1.1;margin-bottom:18px}
+.hero-eyebrow{font-family:'Roboto',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.18em;color:rgba(250,246,236,0.55);margin-bottom:20px}
+.hero h1{font-family:'Archivo',serif;font-size:clamp(28px,4vw,46px);font-weight:400;letter-spacing:-0.02em;line-height:1.1;margin-bottom:18px}
 .hero h1 em{font-style:italic;color:#d4836a}
 .hero-sub{font-size:17px;color:rgba(250,246,236,0.72);max-width:560px;margin:0 auto 36px;line-height:1.6}
 .main{max-width:740px;margin:0 auto;padding:64px 36px}
-.main h2{font-family:'DM Serif Display',serif;font-size:26px;font-weight:400;margin:48px 0 14px;letter-spacing:-0.01em}
+.main h2{font-family:'Archivo',serif;font-size:26px;font-weight:400;margin:48px 0 14px;letter-spacing:-0.01em}
 .main h2:first-child{margin-top:0}
 .main p{font-size:16px;color:var(--ink-soft);line-height:1.7;margin-bottom:14px}
 .main p:last-child{margin-bottom:0}
@@ -64,14 +64,14 @@ body{font-family:'Source Serif 4',Georgia,serif;background:var(--kraft);color:va
 .audience-card strong{display:block;font-size:15px;margin-bottom:8px;color:var(--ink)}
 .audience-card p{font-size:13px;color:var(--ink-muted);margin:0;line-height:1.55}
 .contact-form{background:var(--paper);border:1px solid var(--line);padding:36px;border-radius:2px;margin-top:40px;box-shadow:var(--shadow-card)}
-.contact-form h3{font-family:'DM Serif Display',serif;font-size:22px;font-weight:400;margin-bottom:6px}
+.contact-form h3{font-family:'Archivo',serif;font-size:22px;font-weight:400;margin-bottom:6px}
 .contact-form p.sub{font-size:14px;color:var(--ink-muted);margin-bottom:24px}
 .field{margin-bottom:16px}
-.field label{display:block;font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:var(--ink-muted);margin-bottom:6px}
-.field input,.field textarea,.field select{width:100%;padding:10px 12px;border:1.5px solid rgba(42,42,42,0.2);border-radius:2px;font-family:'Source Serif 4',Georgia,serif;font-size:15px;color:var(--ink);background:var(--kraft-light);outline:none;transition:border-color 0.15s}
+.field label{display:block;font-family:'Roboto',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:var(--ink-muted);margin-bottom:6px}
+.field input,.field textarea,.field select{width:100%;padding:10px 12px;border:1.5px solid rgba(42,42,42,0.2);border-radius:2px;font-family:'Noto Sans',Georgia,serif;font-size:15px;color:var(--ink);background:var(--kraft-light);outline:none;transition:border-color 0.15s}
 .field input:focus,.field textarea:focus{border-color:var(--red)}
 .field textarea{min-height:100px;resize:vertical}
-.submit-btn{background:var(--red);color:var(--paper);border:none;padding:13px 28px;font-family:'DM Mono',monospace;font-size:12px;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;border-radius:2px;width:100%}
+.submit-btn{background:var(--red);color:var(--paper);border:none;padding:13px 28px;font-family:'Roboto',monospace;font-size:12px;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;border-radius:2px;width:100%}
 .submit-btn:hover{background:#7d3220}
 .submit-btn:disabled{opacity:0.6;cursor:not-allowed}
 #form-success{display:none;background:#f0fff4;border:1px solid #68d391;padding:16px;border-radius:2px;font-size:14px;color:#276749;margin-top:12px}
@@ -79,20 +79,21 @@ body{font-family:'Source Serif 4',Georgia,serif;background:var(--kraft);color:va
 .feature-list li{display:flex;gap:10px;margin-bottom:10px;font-size:15px;color:var(--ink-soft);align-items:flex-start}
 .feature-list li::before{content:'✓';color:var(--red);font-weight:700;flex-shrink:0;margin-top:1px}
 footer{background:var(--ink);color:rgba(255,255,255,0.5);padding:40px 36px;margin-top:80px}
-.footer-bottom{max-width:1280px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;flex-wrap:wrap;gap:16px}
+.footer-bottom{max-width:1280px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;font-family:'Roboto',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;flex-wrap:wrap;gap:16px}
 .footer-bottom a{color:rgba(255,255,255,0.4);text-decoration:none}
 .footer-bottom a:hover{color:#b85540}
 .footer-bottom-links{display:flex;gap:28px}
 @media(max-width:640px){.hero{padding:48px 24px 40px}.main{padding:48px 24px}.contact-form{padding:24px}}
 </style>
 <script>(function(){try{var m=window.matchMedia('(prefers-color-scheme: dark)'),s=function(){document.documentElement.setAttribute('data-theme',m.matches?'dark':'light');};s();if(m.addEventListener)m.addEventListener('change',s);}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
-<link rel="stylesheet" href="/theme.css?v=23">
-<link rel="stylesheet" href="/guide.css?v=7">
+<link rel="stylesheet" href="/theme.css?v=24">
+<link rel="stylesheet" href="/guide.css?v=8">
+<link rel="stylesheet" href="/redesign.css?v=1"><link rel="stylesheet" href="/inner.css?v=1">
 </head>
 <body>
 <a href="#main-content" class="skip-link" style="position:absolute;left:-9999px;top:4px;z-index:9999;background:#a8472d;color:#faf6ec;padding:8px 16px;font-size:14px;font-family:Georgia,serif;text-decoration:none;border-radius:2px" onfocus="this.style.left='4px'" onblur="this.style.left='-9999px'">Skip to main content</a>
 <div id="site-header"></div>
-<script src="/header.js?v=8"></script>
+<script src="/header.js?v=9"></script>
 
 <div class="hero" id="main-content">
   <p class="hero-eyebrow" data-i18n="pro.eyebrow">For Professionals</p>
@@ -168,7 +169,7 @@ footer{background:var(--ink);color:rgba(255,255,255,0.5);padding:40px 36px;margi
 
 <div style="max-width:740px;margin:0 auto;padding:0 36px 64px">
   <div style="margin-top:48px;padding-top:40px;border-top:1px solid var(--line,rgba(42,42,42,0.14))">
-    <h2 style="font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.16em;color:var(--ink-muted,#6b6258);margin-bottom:20px" data-i18n="pro.related">Related guides</h2>
+    <h2 style="font-family:'Roboto',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.16em;color:var(--ink-muted,#6b6258);margin-bottom:20px" data-i18n="pro.related">Related guides</h2>
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px">
       <a style="display:block;background:var(--paper,#faf6ec);border:1px solid var(--line,rgba(42,42,42,0.14));padding:18px 20px;border-radius:2px;text-decoration:none;color:var(--ink,#2a2a2a)" href="/ircc-documents">
         <strong style="display:block;font-size:14px;margin-bottom:4px" data-i18n="pro.rel1.t">IRCC Documents</strong>
@@ -191,9 +192,9 @@ footer{background:var(--ink);color:rgba(255,255,255,0.5);padding:40px 36px;margi
 </div>
 
 <footer id="site-footer"></footer>
-<script src="/footer.js?v=8" defer></script>
+<script src="/footer.js?v=9" defer></script>
 <script src="/theme.js?v=4" defer></script>
-<script src="/lang.js?v=46" defer></script>
+<script src="/lang.js?v=47" defer></script>
 <script>
 const FR = () => document.documentElement.getAttribute('data-lang') === 'fr';
 async function submitProForm() {

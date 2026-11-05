@@ -8,7 +8,7 @@
 
 /* ── Base page ───────────────────────────────────────────────────────────── */
 body {
-  font-family: 'Source Serif 4', Georgia, serif;
+  font-family: 'Noto Sans', Georgia, serif;
   background: var(--kraft);
   color: var(--ink);
   line-height: 1.6;
@@ -38,7 +38,7 @@ nav {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-family: 'DM Serif Display', serif;
+  font-family: 'Archivo', serif;
   font-size: 24px;
   color: var(--ink);
   text-decoration: none;
@@ -92,7 +92,7 @@ nav {
 
 /* ── Typography inside guide pages ──────────────────────────────────────── */
 .guide-wrap h1 {
-  font-family: 'DM Serif Display', serif;
+  font-family: 'Archivo', serif;
   font-size: clamp(28px, 5vw, 44px);
   line-height: 1.15;
   letter-spacing: -0.02em;
@@ -101,7 +101,7 @@ nav {
 }
 
 .guide-wrap h2 {
-  font-family: 'DM Serif Display', serif;
+  font-family: 'Archivo', serif;
   font-size: clamp(18px, 3vw, 24px);
   letter-spacing: -0.01em;
   margin: 48px 0 18px;
@@ -109,7 +109,7 @@ nav {
 }
 
 .guide-wrap h3 {
-  font-family: 'DM Serif Display', serif;
+  font-family: 'Archivo', serif;
   font-size: 18px;
   margin: 28px 0 10px;
   color: var(--ink);
@@ -140,7 +140,7 @@ nav {
 .guide-wrap a:hover { color: var(--red-deep); }
 
 .guide-wrap pre {
-  font-family: 'DM Mono', 'Courier New', monospace;
+  font-family: 'Roboto', 'Courier New', monospace;
   font-size: 14px;
   line-height: 1.9;
   background: var(--paper);
@@ -154,7 +154,7 @@ nav {
 }
 
 .guide-wrap code {
-  font-family: 'DM Mono', 'Courier New', monospace;
+  font-family: 'Roboto', 'Courier New', monospace;
   font-size: 0.875em;
   background: var(--paper);
   border: 1px solid var(--line);
@@ -174,7 +174,7 @@ nav {
 /* ── Breadcrumb ──────────────────────────────────────────────────────────── */
 .guide-wrap .breadcrumb {
   font-size: 0.78rem;
-  font-family: 'DM Mono', monospace;
+  font-family: 'Roboto', monospace;
   color: var(--ink-muted);
   margin-bottom: 1.8em;
   letter-spacing: 0.01em;
@@ -220,7 +220,7 @@ nav {
   font-size: 0.88rem;
   line-height: 1.5;
   margin: 0.5rem 0 1.5rem;
-  font-family: 'DM Mono', 'Source Serif 4', serif;
+  font-family: 'Roboto', 'Noto Sans', serif;
 }
 
 .comparison-table th {
@@ -234,7 +234,7 @@ nav {
   letter-spacing: 0.07em;
   border-bottom: 2px solid var(--line);
   white-space: nowrap;
-  font-family: 'DM Mono', monospace;
+  font-family: 'Roboto', monospace;
 }
 
 .comparison-table td {
@@ -311,7 +311,7 @@ nav {
   border-left: 3px solid var(--red);
   border-radius: 2px;
   padding: 1.8rem 2rem;
-  font-family: 'DM Mono', 'Courier New', monospace;
+  font-family: 'Roboto', 'Courier New', monospace;
   font-size: 13.5px;
   line-height: 2;
   margin: 1rem 0 1.5rem;

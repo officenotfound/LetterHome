@@ -7,22 +7,6 @@
   var cc = root.getAttribute('data-country');
   if (!cc) return;
 
-  // The logo mark is a postmark ring with the country code, in the spot the maple leaf logo sits.
-  var codes = { us: 'US', uk: 'UK', au: 'AU', nz: 'NZ' };
-  var logo = document.querySelector('.logo');
-  var img = document.querySelector('.logo .logo-img');
-  if (codes[cc] && logo && img) {
-    var mark = document.createElement('span');
-    mark.setAttribute('aria-hidden', 'true');
-    mark.style.cssText = 'display:inline-block;line-height:0;flex:0 0 auto;color:#faf6ec';
-    mark.innerHTML = '<svg width="54" height="50" viewBox="0 0 66 58">' +
-      '<circle cx="26" cy="29" r="23" fill="none" stroke="currentColor" stroke-width="2.6"/>' +
-      '<circle cx="26" cy="29" r="18" fill="none" stroke="currentColor" stroke-width="1.3"/>' +
-      '<text x="26" y="35" text-anchor="middle" font-family="DM Mono,monospace" font-size="17" font-weight="700" fill="currentColor">' + codes[cc] + '</text>' +
-      '<path d="M52 21 q6-3 12 0 M52 29 q6-3 12 0 M52 37 q6-3 12 0" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round"/></svg>';
-    logo.insertBefore(mark, img);
-  }
-
   // The header "Send a letter" button follows the page's own call to action, so on a UK page it opens the
   // order form with the UK already chosen as the destination (and on a route page, that route's destination).
   var navCta = document.querySelector('.nav-cta');

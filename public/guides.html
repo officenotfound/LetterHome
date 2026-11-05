@@ -44,17 +44,17 @@
   ]
 }
 </script>
-<link rel="stylesheet" href="/fonts.css?v=1">
+<link rel="stylesheet" href="/fonts.css?v=2">
 <style>
 :root{--kraft:#f1ebde;--kraft-light:#f7f2e6;--paper:#faf6ec;--ink:#2a2a2a;--ink-soft:#3a3835;--ink-muted:#6b6258;--ink-faint:#968b7d;--red:#a8472d;--line:rgba(42,42,42,0.14)}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Source Serif 4',Georgia,serif;background:var(--kraft);color:var(--ink);line-height:1.6}
+body{font-family:'Noto Sans',Georgia,serif;background:var(--kraft);color:var(--ink);line-height:1.6}
 .page-header{padding:56px 36px 48px;max-width:740px;margin:0 auto}
-.eyebrow{font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.18em;color:var(--ink-muted);margin-bottom:16px}
-h1{font-family:'DM Serif Display',serif;font-size:clamp(28px,4vw,44px);font-weight:400;letter-spacing:-0.02em;line-height:1.1;margin-bottom:16px}
+.eyebrow{font-family:'Roboto',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.18em;color:var(--ink-muted);margin-bottom:16px}
+h1{font-family:'Archivo',serif;font-size:clamp(28px,4vw,44px);font-weight:400;letter-spacing:-0.02em;line-height:1.1;margin-bottom:16px}
 .subtitle{font-size:17px;color:var(--ink-muted);max-width:520px;line-height:1.65}
 .main{max-width:740px;margin:0 auto;padding:0 36px 80px}
-.section-label{font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.16em;color:var(--ink-muted);margin-bottom:16px;padding-top:40px;border-top:1px solid var(--line)}
+.section-label{font-family:'Roboto',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.16em;color:var(--ink-muted);margin-bottom:16px;padding-top:40px;border-top:1px solid var(--line)}
 .guide-list{display:flex;flex-direction:column;gap:1px;margin-bottom:48px}
 .chip-list{display:flex;flex-wrap:wrap;gap:8px 10px;margin-bottom:48px}
 .chip-list a{display:inline-block;padding:7px 14px;border:1px solid var(--line);border-radius:2px;color:var(--ink-soft);text-decoration:none;font-size:14px;line-height:1.3;background:var(--paper)}
@@ -69,23 +69,24 @@ h1{font-family:'DM Serif Display',serif;font-size:clamp(28px,4vw,44px);font-weig
 .guide-arrow{color:var(--red);font-size:18px;flex-shrink:0;margin-top:2px}
 .cta-strip{background:var(--ink);color:var(--paper);padding:40px 36px;border-radius:2px;text-align:center;margin-top:8px}
 .cta-strip p{color:rgba(250,246,236,0.65);margin-bottom:20px;font-size:15px}
-.cta-strip a{display:inline-block;background:var(--red);color:var(--paper);padding:14px 28px;font-family:'DM Mono',monospace;font-size:12px;letter-spacing:0.1em;text-transform:uppercase;text-decoration:none;border-radius:2px}
+.cta-strip a{display:inline-block;background:var(--red);color:var(--paper);padding:14px 28px;font-family:'Roboto',monospace;font-size:12px;letter-spacing:0.1em;text-transform:uppercase;text-decoration:none;border-radius:2px}
 .cta-strip a:hover{background:#7d3220}
 footer{background:var(--ink);color:rgba(255,255,255,0.5);padding:40px 36px;margin-top:0}
-.footer-bottom{max-width:1280px;margin:0 auto;display:flex;justify-content:space-between;font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;flex-wrap:wrap;gap:16px}
+.footer-bottom{max-width:1280px;margin:0 auto;display:flex;justify-content:space-between;font-family:'Roboto',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;flex-wrap:wrap;gap:16px}
 .footer-bottom a{color:rgba(255,255,255,0.4);text-decoration:none}
 .footer-bottom a:hover{color:#b85540}
 .footer-bottom-links{display:flex;gap:28px}
 @media(max-width:640px){.page-header{padding:40px 24px 32px}.main{padding:0 24px 64px}.guide-card{flex-direction:column;gap:8px}}
 </style>
 <script>(function(){try{var m=window.matchMedia('(prefers-color-scheme: dark)'),s=function(){document.documentElement.setAttribute('data-theme',m.matches?'dark':'light');};s();if(m.addEventListener)m.addEventListener('change',s);}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
-<link rel="stylesheet" href="/theme.css?v=23">
-<link rel="stylesheet" href="/guide.css?v=7">
+<link rel="stylesheet" href="/theme.css?v=24">
+<link rel="stylesheet" href="/guide.css?v=8">
+<link rel="stylesheet" href="/redesign.css?v=1"><link rel="stylesheet" href="/inner.css?v=1">
 </head>
 <body>
 <a href="#main-content" class="skip-link" style="position:absolute;left:-9999px;top:4px;z-index:9999;background:#a8472d;color:#faf6ec;padding:8px 16px;font-size:14px;font-family:Georgia,serif;text-decoration:none;border-radius:2px" onfocus="this.style.left='4px'" onblur="this.style.left='-9999px'">Skip to main content</a>
 <div id="site-header"></div>
-<script src="/header.js?v=8"></script>
+<script src="/header.js?v=9"></script>
 
 <div class="page-header" id="main-content">
   <p class="eyebrow">Guides</p>
@@ -449,8 +450,8 @@ footer{background:var(--ink);color:rgba(255,255,255,0.5);padding:40px 36px;margi
 </div>
 
 <footer id="site-footer"></footer>
-<script src="/footer.js?v=8" defer></script>
+<script src="/footer.js?v=9" defer></script>
 <script src="/theme.js?v=4" defer></script>
-<script src="/lang.js?v=46" defer></script>
+<script src="/lang.js?v=47" defer></script>
 </body>
 </html>

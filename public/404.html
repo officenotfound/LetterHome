@@ -19,7 +19,7 @@
 <meta property="og:site_name" content="Letterhome">
 <meta property="og:image" content="https://letterhome.ca/og-image.jpg?v=4">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="stylesheet" href="/fonts.css?v=1">
+<link rel="stylesheet" href="/fonts.css?v=2">
 <style>
 :root {
   --kraft:#f1ebde;--kraft-light:#f7f2e6;--paper:#faf6ec;
@@ -28,19 +28,19 @@
   --line:rgba(42,42,42,0.14);--shadow-card:0 2px 6px rgba(42,42,42,0.06),0 14px 40px rgba(42,42,42,0.1);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Source Serif 4',Georgia,serif;background:var(--kraft);color:var(--ink);line-height:1.55;min-height:100vh;display:flex;flex-direction:column}
+body{font-family:'Noto Sans',Georgia,serif;background:var(--kraft);color:var(--ink);line-height:1.55;min-height:100vh;display:flex;flex-direction:column}
 nav{position:sticky;top:0;z-index:100;background:rgba(241,235,222,0.94);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
 .nav-inner{max-width:1280px;margin:0 auto;padding:20px 36px;display:flex;align-items:center;justify-content:space-between}
-.logo{display:flex;align-items:center;gap:12px;font-family:'DM Serif Display',serif;font-size:26px;color:var(--ink);text-decoration:none}
-.logo-mark{width:38px;height:38px;background:var(--red);display:grid;place-items:center;border-radius:2px;color:var(--paper);font-family:'DM Serif Display',serif;font-size:22px;position:relative;box-shadow:0 1px 3px rgba(0,0,0,0.15)}
+.logo{display:flex;align-items:center;gap:12px;font-family:'Archivo',serif;font-size:26px;color:var(--ink);text-decoration:none}
+.logo-mark{width:38px;height:38px;background:var(--red);display:grid;place-items:center;border-radius:2px;color:var(--paper);font-family:'Archivo',serif;font-size:22px;position:relative;box-shadow:0 1px 3px rgba(0,0,0,0.15)}
 .logo-mark::before{content:'';position:absolute;inset:-3px;border:1px dashed var(--ink);border-radius:4px;opacity:0.5}
 .main{flex:1;max-width:640px;margin:0 auto;padding:100px 36px;position:relative;z-index:2;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center}
 .stamp{width:80px;height:80px;border:3px solid var(--red);display:grid;place-items:center;margin-bottom:40px;position:relative}
 .stamp::before{content:'';position:absolute;inset:-6px;border:1px dashed var(--red);opacity:0.4}
-.stamp-num{font-family:'DM Serif Display',serif;font-size:36px;font-style:italic;color:var(--red)}
-.eyebrow{display:inline-flex;align-items:center;gap:12px;font-family:'DM Mono',monospace;font-size:12px;text-transform:uppercase;letter-spacing:0.18em;color:var(--red);font-weight:500;margin-bottom:24px}
+.stamp-num{font-family:'Archivo',serif;font-size:36px;font-style:italic;color:var(--red)}
+.eyebrow{display:inline-flex;align-items:center;gap:12px;font-family:'Roboto',monospace;font-size:12px;text-transform:uppercase;letter-spacing:0.18em;color:var(--red);font-weight:500;margin-bottom:24px}
 .eyebrow::before,.eyebrow::after{content:'';width:40px;height:1px;background:var(--red)}
-h1{font-family:'DM Serif Display',serif;font-size:clamp(36px,5vw,56px);font-weight:400;letter-spacing:-0.025em;margin-bottom:16px;line-height:1.05}
+h1{font-family:'Archivo',serif;font-size:clamp(36px,5vw,56px);font-weight:400;letter-spacing:-0.025em;margin-bottom:16px;line-height:1.05}
 h1 em{font-style:italic;color:var(--red)}
 .sub{font-size:17px;color:var(--ink-muted);margin-bottom:40px;line-height:1.7}
 .actions{display:flex;gap:16px;flex-wrap:wrap;justify-content:center}
@@ -50,7 +50,7 @@ h1 em{font-style:italic;color:var(--red)}
 .btn-outline{background:transparent;color:var(--ink);border:1.5px solid var(--ink)}
 .btn-outline:hover{background:var(--ink);color:var(--paper)}
 footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:40px 36px;position:relative;z-index:2;margin-top:auto}
-.footer-bottom{max-width:1280px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;flex-wrap:wrap;gap:16px}
+.footer-bottom{max-width:1280px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;font-family:'Roboto',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;flex-wrap:wrap;gap:16px}
 .footer-bottom a{color:rgba(255,255,255,0.5);text-decoration:none}
 .footer-bottom a:hover{color:var(--red-stamp)}
 .footer-bottom-links{display:flex;gap:28px}
@@ -59,12 +59,13 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:40px 36px;posi
 </style>
 <script>(function(){try{var m=window.matchMedia('(prefers-color-scheme: dark)'),s=function(){document.documentElement.setAttribute('data-theme',m.matches?'dark':'light');};s();if(m.addEventListener)m.addEventListener('change',s);}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
 
-<link rel="stylesheet" href="/theme.css?v=23">
+<link rel="stylesheet" href="/theme.css?v=24">
+<link rel="stylesheet" href="/redesign.css?v=1"><link rel="stylesheet" href="/inner.css?v=1">
 </head>
 <body>
 <a href="#main-content" class="skip-link" style="position:absolute;left:-9999px;top:4px;z-index:9999;background:#a8472d;color:#faf6ec;padding:8px 16px;font-size:14px;font-family:Georgia,serif;text-decoration:none;border-radius:2px" onfocus="this.style.left='4px'" onblur="this.style.left='-9999px'">Skip to main content</a>
 <div id="site-header"></div>
-<script src="/header.js?v=8"></script>
+<script src="/header.js?v=9"></script>
 
 <div class="main" id="main-content">
   <div class="stamp"><span class="stamp-num">404</span></div>
@@ -78,8 +79,8 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:40px 36px;posi
 </div>
 
 <footer id="site-footer"></footer>
-<script src="/footer.js?v=8" defer></script>
+<script src="/footer.js?v=9" defer></script>
 <script src="/theme.js?v=4" defer></script>
-<script src="/lang.js?v=46" defer></script>
+<script src="/lang.js?v=47" defer></script>
 </body>
 </html>

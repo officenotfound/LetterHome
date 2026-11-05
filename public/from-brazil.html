@@ -152,8 +152,8 @@
   ]
 }
 </script>
-<link rel="stylesheet" href="/fonts.css?v=1">
-<link rel="stylesheet" href="/theme.css?v=23">
+<link rel="stylesheet" href="/fonts.css?v=2">
+<link rel="stylesheet" href="/theme.css?v=24">
 <style>
 :root {
   --kraft: #f1ebde; --kraft-deep: #e1d6bd; --paper: #faf6ec;
@@ -162,10 +162,10 @@
   --shadow-card: 0 2px 6px rgba(42,42,42,0.06), 0 14px 40px rgba(42,42,42,0.1);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Source Serif 4',Georgia,serif;background:var(--kraft);color:var(--ink);line-height:1.6;font-size:16px}
+body{font-family:'Noto Sans',Georgia,serif;background:var(--kraft);color:var(--ink);line-height:1.6;font-size:16px}
 nav{position:sticky;top:0;z-index:100;background:rgba(241,235,222,0.94);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
 .nav-inner{max-width:1100px;margin:0 auto;padding:18px 32px;display:flex;align-items:center;justify-content:space-between;gap:24px}
-.logo{display:flex;align-items:center;gap:10px;font-family:'DM Serif Display',serif;font-size:24px;color:var(--ink);text-decoration:none}
+.logo{display:flex;align-items:center;gap:10px;font-family:'Archivo',serif;font-size:24px;color:var(--ink);text-decoration:none}
 .logo-mark{width:34px;height:34px;background:var(--red);display:grid;place-items:center;border-radius:2px;color:var(--paper)}
 .logo-mark::before{content:'';position:absolute;inset:-3px;border:1px dashed var(--ink);border-radius:4px;opacity:0.5}
 .logo-mark{position:relative}
@@ -173,21 +173,21 @@ nav{position:sticky;top:0;z-index:100;background:rgba(241,235,222,0.94);backdrop
 .btn-red{background:var(--red);color:var(--paper);border:2px dashed white}
 .btn-red:hover{background:var(--red-deep);transform:translateY(-1px)}
 .page{max-width:780px;margin:0 auto;padding:56px 32px 80px}
-.eyebrow{display:inline-flex;align-items:center;gap:12px;font-family:'DM Mono',monospace;font-size:12px;text-transform:uppercase;letter-spacing:0.18em;color:var(--red);font-weight:500;margin-bottom:18px}
+.eyebrow{display:inline-flex;align-items:center;gap:12px;font-family:'Roboto',monospace;font-size:12px;text-transform:uppercase;letter-spacing:0.18em;color:var(--red);font-weight:500;margin-bottom:18px}
 .eyebrow::before,.eyebrow::after{content:'';width:32px;height:1px;background:var(--red)}
-h1{font-family:'DM Serif Display',serif;font-size:clamp(28px,5vw,44px);line-height:1.15;letter-spacing:-0.02em;margin-bottom:20px}
+h1{font-family:'Archivo',serif;font-size:clamp(28px,5vw,44px);line-height:1.15;letter-spacing:-0.02em;margin-bottom:20px}
 .lede{font-size:18px;color:var(--ink-soft);line-height:1.6;margin-bottom:36px;max-width:640px}
 .cta-row{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:56px}
-.price-note{font-family:'DM Mono',monospace;font-size:13px;color:var(--ink-muted)}
-h2{font-family:'DM Serif Display',serif;font-size:24px;letter-spacing:-0.01em;margin-bottom:18px;margin-top:48px}
+.price-note{font-family:'Roboto',monospace;font-size:13px;color:var(--ink-muted)}
+h2{font-family:'Archivo',serif;font-size:24px;letter-spacing:-0.01em;margin-bottom:18px;margin-top:48px}
 .who-list{list-style:none;display:grid;gap:10px;margin-bottom:8px}
 .who-list li{padding:14px 18px;background:var(--paper);border:1px solid var(--line);border-radius:2px;font-size:15px;line-height:1.5}
-.who-list li::before{content:'→';margin-right:10px;color:var(--red);font-family:'DM Mono',monospace}
+.who-list li::before{content:'→';margin-right:10px;color:var(--red);font-family:'Roboto',monospace}
 .pricing-cards{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:0}
 @media(max-width:540px){.pricing-cards{grid-template-columns:1fr}}
 .price-card{background:var(--paper);border:1px solid var(--line);border-radius:2px;padding:24px;box-shadow:var(--shadow-card)}
-.price-amount{font-family:'DM Serif Display',serif;font-size:32px;color:var(--red);margin-bottom:4px}
-.price-label{font-family:'DM Mono',monospace;font-size:12px;text-transform:uppercase;letter-spacing:0.1em;color:var(--ink-muted);margin-bottom:12px}
+.price-amount{font-family:'Archivo',serif;font-size:32px;color:var(--red);margin-bottom:4px}
+.price-label{font-family:'Roboto',monospace;font-size:12px;text-transform:uppercase;letter-spacing:0.1em;color:var(--ink-muted);margin-bottom:12px}
 .price-desc{font-size:14px;color:var(--ink-soft);line-height:1.5}
 .faq-item{border-bottom:1px solid var(--line)}
 .faq-item:first-child{border-top:1px solid var(--line)}
@@ -206,20 +206,21 @@ footer a{color:var(--ink-muted);margin:0 8px}
 [data-theme=dark] .price-card,[data-theme=dark] .who-list li{background:#231d18;border-color:rgba(240,230,211,0.1)}
 [data-theme=dark] .faq-item{border-color:rgba(240,230,211,0.1)}
 </style>
-<link rel="stylesheet" href="/guide.css?v=7">
+<link rel="stylesheet" href="/guide.css?v=8">
 <script>(function(){try{var m=window.matchMedia('(prefers-color-scheme: dark)'),s=function(){document.documentElement.setAttribute('data-theme',m.matches?'dark':'light');};s();if(m.addEventListener)m.addEventListener('change',s);}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
+<link rel="stylesheet" href="/redesign.css?v=1"><link rel="stylesheet" href="/inner.css?v=1">
 </head>
 <body>
 <a href="#main-content" class="skip-link" style="position:absolute;left:-9999px;top:4px;z-index:9999;background:#a8472d;color:#faf6ec;padding:8px 16px;font-size:14px;font-family:Georgia,serif;text-decoration:none;border-radius:2px" onfocus="this.style.left='4px'" onblur="this.style.left='-9999px'">Skip to main content</a>
 
 <div id="site-header"></div>
-<script src="/header.js?v=8"></script>
+<script src="/header.js?v=9"></script>
 
 <div class="page" id="main-content">
 
   <div class="eyebrow" data-i18n="from.brazil.eyebrow">Mailing from Brazil</div>
   <h1 data-i18n="from.brazil.h1">Send mail to Canada from Brazil</h1>
-  <p class="updated" style="font-family:'DM Mono',monospace;font-size:12px;letter-spacing:0.06em;color:var(--ink-faint,#968b7d);margin-bottom:20px">Updated November 2026</p>
+  <p class="updated" style="font-family:'Roboto',monospace;font-size:12px;letter-spacing:0.06em;color:var(--ink-faint,#968b7d);margin-bottom:20px">Updated November 2026</p>
   <p class="lede" data-i18n="from.brazil.lede">Need to mail a letter or document to Canada from Brazil? We handle the printing, the Canadian postage, and the trip to the post office, so you don't have to.</p>
 
   <div class="cta-row">
@@ -310,10 +311,10 @@ footer a{color:var(--ink-muted);margin:0 8px}
 </div>
 
 <footer id="site-footer"></footer>
-<script src="/footer.js?v=8" defer></script>
+<script src="/footer.js?v=9" defer></script>
 
 <script src="/theme.js?v=4" defer></script>
-<script src="/lang.js?v=46" defer></script>
+<script src="/lang.js?v=47" defer></script>
 <script>
   function toggle(i) {
     const btn = document.querySelectorAll('.faq-q')[i];

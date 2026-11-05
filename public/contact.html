@@ -31,15 +31,15 @@
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://letterhome.ca/"},{"@type":"ListItem","position":2,"name":"Contact","item":"https://letterhome.ca/contact"}]}
 </script>
-<link rel="stylesheet" href="/fonts.css?v=1">
+<link rel="stylesheet" href="/fonts.css?v=2">
 <style>
 :root{--kraft:#f1ebde;--kraft-light:#f7f2e6;--paper:#faf6ec;--ink:#2a2a2a;--ink-soft:#3a3835;--ink-muted:#6b6258;--ink-faint:#968b7d;--red:#a8472d;--red-deep:#7d3220;--red-stamp:#b85540;--line:rgba(42,42,42,0.14);--shadow-soft:0 1px 2px rgba(42,42,42,0.04),0 6px 20px rgba(42,42,42,0.06);--shadow-card:0 2px 6px rgba(42,42,42,0.06),0 14px 40px rgba(42,42,42,0.1)}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Source Serif 4',Georgia,serif;background:var(--kraft);color:var(--ink);line-height:1.55;min-height:100vh}
+body{font-family:'Noto Sans',Georgia,serif;background:var(--kraft);color:var(--ink);line-height:1.55;min-height:100vh}
 nav{position:sticky;top:0;z-index:100;background:rgba(241,235,222,0.94);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
 .nav-inner{max-width:1280px;margin:0 auto;padding:20px 36px;display:flex;align-items:center;justify-content:space-between;gap:24px}
-.logo{display:flex;align-items:center;gap:12px;font-family:'DM Serif Display',serif;font-size:26px;color:var(--ink);text-decoration:none}
-.logo-mark{width:38px;height:38px;background:var(--red);display:grid;place-items:center;border-radius:2px;color:var(--paper);font-family:'DM Serif Display',serif;font-size:22px;position:relative;box-shadow:0 1px 3px rgba(0,0,0,0.15)}
+.logo{display:flex;align-items:center;gap:12px;font-family:'Archivo',serif;font-size:26px;color:var(--ink);text-decoration:none}
+.logo-mark{width:38px;height:38px;background:var(--red);display:grid;place-items:center;border-radius:2px;color:var(--paper);font-family:'Archivo',serif;font-size:22px;position:relative;box-shadow:0 1px 3px rgba(0,0,0,0.15)}
 .logo-mark::before{content:'';position:absolute;inset:-3px;border:1px dashed var(--ink);border-radius:4px;opacity:0.5}
 .nav-links{display:flex;gap:36px;align-items:center}
 .nav-links a{color:var(--ink-soft);text-decoration:none;font-size:14px;font-weight:500;transition:color 0.2s}
@@ -51,26 +51,26 @@ nav{position:sticky;top:0;z-index:100;background:rgba(241,235,222,0.94);backdrop
 .btn-ink:hover{background:var(--ink-soft);transform:translateY(-1px)}
 .btn:disabled{opacity:0.4;cursor:not-allowed;transform:none!important}
 .main{max-width:1280px;margin:0 auto;padding:80px 36px 120px;position:relative;z-index:2;display:grid;grid-template-columns:1fr 1.2fr;gap:80px;align-items:start}
-.eyebrow{display:inline-flex;align-items:center;gap:12px;font-family:'DM Mono',monospace;font-size:12px;text-transform:uppercase;letter-spacing:0.18em;color:var(--red);font-weight:500;margin-bottom:28px}
+.eyebrow{display:inline-flex;align-items:center;gap:12px;font-family:'Roboto',monospace;font-size:12px;text-transform:uppercase;letter-spacing:0.18em;color:var(--red);font-weight:500;margin-bottom:28px}
 .eyebrow::before{content:'';width:40px;height:1px;background:var(--red)}
-h1{font-family:'DM Serif Display',serif;font-size:clamp(40px,5vw,64px);font-weight:400;letter-spacing:-0.025em;margin-bottom:20px;line-height:1.05}
+h1{font-family:'Archivo',serif;font-size:clamp(40px,5vw,64px);font-weight:400;letter-spacing:-0.025em;margin-bottom:20px;line-height:1.05}
 h1 em{font-style:italic;color:var(--red)}
 .intro{font-size:17px;color:var(--ink-muted);line-height:1.7;margin-bottom:48px}
 .contact-meta{display:flex;flex-direction:column;gap:24px}
 .meta-item{display:flex;gap:20px;align-items:flex-start}
-.meta-icon{width:44px;flex-shrink:0;font-family:'DM Mono',monospace;font-size:13px;font-weight:500;color:var(--red);letter-spacing:0.05em;padding-top:4px}
-.meta-item h3{font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.15em;color:var(--ink-muted);margin-bottom:6px}
+.meta-icon{width:44px;flex-shrink:0;font-family:'Roboto',monospace;font-size:13px;font-weight:500;color:var(--red);letter-spacing:0.05em;padding-top:4px}
+.meta-item h3{font-family:'Roboto',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.15em;color:var(--ink-muted);margin-bottom:6px}
 .meta-item p{font-size:15px;color:var(--ink-soft);line-height:1.6}
 .meta-item a{color:var(--red);text-decoration:none}
 .form-card{background:var(--paper);border:1px solid var(--line);padding:48px;box-shadow:var(--shadow-card)}
 .form-group{display:flex;flex-direction:column;gap:6px;margin-bottom:20px}
-label{font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.15em;color:var(--ink-muted);font-weight:500}
-input,textarea{width:100%;padding:14px 2px 12px 0;border:none;border-bottom:1.5px solid var(--ink);background:transparent;color:var(--ink);font-family:'Source Serif 4',Georgia,serif;font-size:17px;border-radius:0;transition:border-color 0.2s;outline:none;appearance:none}
+label{font-family:'Roboto',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.15em;color:var(--ink-muted);font-weight:500}
+input,textarea{width:100%;padding:14px 2px 12px 0;border:none;border-bottom:1.5px solid var(--ink);background:transparent;color:var(--ink);font-family:'Noto Sans',Georgia,serif;font-size:17px;border-radius:0;transition:border-color 0.2s;outline:none;appearance:none}
 input:focus,textarea:focus{border-bottom-color:var(--red);box-shadow:none}
 textarea{resize:vertical;min-height:160px;line-height:1.6;border-top:1px dashed var(--line);padding-top:14px}
 .success-msg{background:var(--kraft-light);border-left:4px solid var(--red);padding:20px 24px;font-size:15px;color:var(--ink-soft);display:none}
 footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:48px 36px 32px;position:relative;z-index:2}
-.footer-bottom{max-width:1280px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;flex-wrap:wrap;gap:16px}
+.footer-bottom{max-width:1280px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;font-family:'Roboto',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;flex-wrap:wrap;gap:16px}
 .footer-bottom-links{display:flex;gap:28px}
 .footer-bottom a{color:rgba(255,255,255,0.5);text-decoration:none}
 .footer-bottom a:hover{color:var(--red-stamp)}
@@ -79,12 +79,13 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:48px 36px 32px
 </style>
 <script>(function(){try{var m=window.matchMedia('(prefers-color-scheme: dark)'),s=function(){document.documentElement.setAttribute('data-theme',m.matches?'dark':'light');};s();if(m.addEventListener)m.addEventListener('change',s);}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
 
-<link rel="stylesheet" href="/theme.css?v=23">
+<link rel="stylesheet" href="/theme.css?v=24">
+<link rel="stylesheet" href="/redesign.css?v=1"><link rel="stylesheet" href="/inner.css?v=1">
 </head>
 <body>
 <a href="#main-content" class="skip-link" style="position:absolute;left:-9999px;top:4px;z-index:9999;background:#a8472d;color:#faf6ec;padding:8px 16px;font-size:14px;font-family:Georgia,serif;text-decoration:none;border-radius:2px" onfocus="this.style.left='4px'" onblur="this.style.left='-9999px'">Skip to main content</a>
 <div id="site-header"></div>
-<script src="/header.js?v=8"></script>
+<script src="/header.js?v=9"></script>
 
 <div class="main" id="main-content">
   <div>
@@ -147,7 +148,7 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:48px 36px 32px
 </div>
 
 <footer id="site-footer"></footer>
-<script src="/footer.js?v=8" defer></script>
+<script src="/footer.js?v=9" defer></script>
 
 <script>
 document.getElementById('contact-form').addEventListener('submit', async function(e) {
@@ -177,6 +178,6 @@ document.getElementById('contact-form').addEventListener('submit', async functio
 });
 </script>
 <script src="/theme.js?v=4" defer></script>
-<script src="/lang.js?v=46" defer></script>
+<script src="/lang.js?v=47" defer></script>
 </body>
 </html>

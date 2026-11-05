@@ -31,15 +31,15 @@
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://letterhome.ca/"},{"@type":"ListItem","position":2,"name":"Privacy Policy","item":"https://letterhome.ca/privacy"}]}
 </script>
-<link rel="stylesheet" href="/fonts.css?v=1">
+<link rel="stylesheet" href="/fonts.css?v=2">
 <style>
 :root{--kraft:#f1ebde;--kraft-light:#f7f2e6;--paper:#faf6ec;--ink:#2a2a2a;--ink-soft:#3a3835;--ink-muted:#6b6258;--red:#a8472d;--red-stamp:#b85540;--line:rgba(42,42,42,0.14)}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Source Serif 4',Georgia,serif;background:var(--kraft);color:var(--ink);line-height:1.55;min-height:100vh}
+body{font-family:'Noto Sans',Georgia,serif;background:var(--kraft);color:var(--ink);line-height:1.55;min-height:100vh}
 nav{position:sticky;top:0;z-index:100;background:rgba(241,235,222,0.94);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
 .nav-inner{max-width:1280px;margin:0 auto;padding:20px 36px;display:flex;align-items:center;justify-content:space-between;gap:24px}
-.logo{display:flex;align-items:center;gap:12px;font-family:'DM Serif Display',serif;font-size:26px;color:var(--ink);text-decoration:none}
-.logo-mark{width:38px;height:38px;background:var(--red);display:grid;place-items:center;border-radius:2px;color:var(--paper);font-family:'DM Serif Display',serif;font-size:22px;position:relative;box-shadow:0 1px 3px rgba(0,0,0,0.15)}
+.logo{display:flex;align-items:center;gap:12px;font-family:'Archivo',serif;font-size:26px;color:var(--ink);text-decoration:none}
+.logo-mark{width:38px;height:38px;background:var(--red);display:grid;place-items:center;border-radius:2px;color:var(--paper);font-family:'Archivo',serif;font-size:22px;position:relative;box-shadow:0 1px 3px rgba(0,0,0,0.15)}
 .logo-mark::before{content:'';position:absolute;inset:-3px;border:1px dashed var(--ink);border-radius:4px;opacity:0.5}
 .nav-links{display:flex;gap:36px;align-items:center}
 .nav-links a{color:var(--ink-soft);text-decoration:none;font-size:14px;font-weight:500;transition:color 0.2s}
@@ -48,17 +48,17 @@ nav{position:sticky;top:0;z-index:100;background:rgba(241,235,222,0.94);backdrop
 .btn-red{background:var(--red);color:var(--paper);border:2px dashed white}
 .btn-red:hover{background:#7d3220;transform:translateY(-1px)}
 .main{max-width:760px;margin:0 auto;padding:80px 36px 120px;position:relative;z-index:2}
-.eyebrow{display:inline-flex;align-items:center;gap:12px;font-family:'DM Mono',monospace;font-size:12px;text-transform:uppercase;letter-spacing:0.18em;color:var(--red);font-weight:500;margin-bottom:28px}
+.eyebrow{display:inline-flex;align-items:center;gap:12px;font-family:'Roboto',monospace;font-size:12px;text-transform:uppercase;letter-spacing:0.18em;color:var(--red);font-weight:500;margin-bottom:28px}
 .eyebrow::before{content:'';width:40px;height:1px;background:var(--red)}
-h1{font-family:'DM Serif Display',serif;font-size:clamp(40px,5vw,64px);font-weight:400;letter-spacing:-0.025em;margin-bottom:16px;line-height:1.05}
-.updated{font-family:'DM Mono',monospace;font-size:12px;color:var(--ink-muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:56px}
-h2{font-family:'DM Serif Display',serif;font-size:26px;font-weight:400;margin:48px 0 16px;letter-spacing:-0.01em}
+h1{font-family:'Archivo',serif;font-size:clamp(40px,5vw,64px);font-weight:400;letter-spacing:-0.025em;margin-bottom:16px;line-height:1.05}
+.updated{font-family:'Roboto',monospace;font-size:12px;color:var(--ink-muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:56px}
+h2{font-family:'Archivo',serif;font-size:26px;font-weight:400;margin:48px 0 16px;letter-spacing:-0.01em}
 p{font-size:16px;color:var(--ink-soft);line-height:1.75;margin-bottom:18px}
 ul{margin:0 0 18px 20px}
 li{font-size:16px;color:var(--ink-soft);line-height:1.75;margin-bottom:8px}
 a{color:var(--red)}
 footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:48px 36px 32px;position:relative;z-index:2}
-.footer-bottom{max-width:1280px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;flex-wrap:wrap;gap:16px}
+.footer-bottom{max-width:1280px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;font-family:'Roboto',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;flex-wrap:wrap;gap:16px}
 .footer-bottom-links{display:flex;gap:28px}
 .footer-bottom a{color:rgba(255,255,255,0.5);text-decoration:none}
 .footer-bottom a:hover{color:var(--red-stamp)}
@@ -66,12 +66,13 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:48px 36px 32px
 </style>
 <script>(function(){try{var m=window.matchMedia('(prefers-color-scheme: dark)'),s=function(){document.documentElement.setAttribute('data-theme',m.matches?'dark':'light');};s();if(m.addEventListener)m.addEventListener('change',s);}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
 
-<link rel="stylesheet" href="/theme.css?v=23">
+<link rel="stylesheet" href="/theme.css?v=24">
+<link rel="stylesheet" href="/redesign.css?v=1"><link rel="stylesheet" href="/inner.css?v=1">
 </head>
 <body>
 <a href="#main-content" class="skip-link" style="position:absolute;left:-9999px;top:4px;z-index:9999;background:#a8472d;color:#faf6ec;padding:8px 16px;font-size:14px;font-family:Georgia,serif;text-decoration:none;border-radius:2px" onfocus="this.style.left='4px'" onblur="this.style.left='-9999px'">Skip to main content</a>
 <div id="site-header"></div>
-<script src="/header.js?v=8"></script>
+<script src="/header.js?v=9"></script>
 
 <div class="main" id="main-content">
   <div class="eyebrow" data-i18n="legal.eyebrow">Legal</div>
@@ -113,7 +114,7 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:48px 36px 32px
   <p data-i18n-html="privacy.s4.p">We use <strong>Stripe</strong> to process payments. Stripe is a PCI DSS Level 1 certified payment provider, and we never see or store your card number (<a href="https://stripe.com/privacy" target="_blank" rel="noopener">stripe.com/privacy</a>). Once we approve your order, your letter, attachments and addresses are sent over an encrypted HTTPS connection to the printing and mailing service provider that produces it. That facility has a SOC 2 Type II report and PCI DSS 3.2.1 certification, supports HIPAA, PIPEDA and GDPR compliant handling, and runs on Amazon Web Services. Letterhome itself does not hold a HIPAA certification (HIPAA has none) or sign HIPAA business associate agreements. If your letter contains health information that the law requires you to protect, contact us before you send it. Your letter is delivered by the postal service of the destination country, such as Canada Post. Beyond these, no third parties have access to your order information.</p>
 
   <h2 data-i18n="privacy.s5.h2">Order review</h2>
-  <p data-i18n="privacy.s5.p">Each order is checked by an automatic scan that runs on our own servers. It looks for a short list of warning words and patterns, and nothing is sent to any other service. If it flags an order, a person looks at that order before anything is printed. We do not otherwise read, summarise or share what you wrote. If we find a delivery problem, we will contact you before printing. If an order contains prohibited content, we will cancel and refund it. You can ask us to delete your letter and personal information at any time.</p>
+  <p data-i18n="privacy.s5.p">Each order is checked by an automatic scan that runs on our own servers. It looks for a short list of warning words and patterns, and the scan sends nothing to any other service. If it flags an order, a person looks at that order before anything is printed. We do not otherwise read, summarise or share what you wrote. If we find a delivery problem, we will contact you before printing. If an order contains prohibited content, we will cancel and refund it. You can ask us to delete your letter and personal information at any time.</p>
 
   <h2 data-i18n="privacy.s5b.h2">Content we will not send</h2>
   <p data-i18n="privacy.s5b.p">We will not print or send any letter that contains dangerous, illegal, abusive, threatening or harassing content, or anything else that is against the law. If an order contains this kind of content, we will cancel it and refund your payment.</p>
@@ -139,8 +140,8 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:48px 36px 32px
 </div>
 
 <footer id="site-footer"></footer>
-<script src="/footer.js?v=8" defer></script>
+<script src="/footer.js?v=9" defer></script>
 <script src="/theme.js?v=4" defer></script>
-<script src="/lang.js?v=46" defer></script>
+<script src="/lang.js?v=47" defer></script>
 </body>
 </html>

@@ -19,7 +19,7 @@
 <meta property="og:site_name" content="Letterhome">
 <meta property="og:image" content="https://letterhome.ca/og-image.jpg?v=4">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="stylesheet" href="/fonts.css?v=1">
+<link rel="stylesheet" href="/fonts.css?v=2">
 <style>
 :root {
   --kraft:#f1ebde;--kraft-light:#f7f2e6;--paper:#faf6ec;
@@ -28,23 +28,23 @@
   --line:rgba(42,42,42,0.14);--shadow-card:0 2px 6px rgba(42,42,42,0.06),0 14px 40px rgba(42,42,42,0.1);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Source Serif 4',Georgia,serif;background:var(--kraft);color:var(--ink);line-height:1.55;min-height:100vh}
+body{font-family:'Noto Sans',Georgia,serif;background:var(--kraft);color:var(--ink);line-height:1.55;min-height:100vh}
 nav{position:sticky;top:0;z-index:100;background:rgba(241,235,222,0.94);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
 .nav-inner{max-width:1280px;margin:0 auto;padding:20px 36px;display:flex;align-items:center;justify-content:space-between;gap:16px}
-.logo{display:flex;align-items:center;gap:12px;font-family:'DM Serif Display',serif;font-size:26px;color:var(--ink);text-decoration:none}
-.logo-mark{width:38px;height:38px;background:var(--red);display:grid;place-items:center;border-radius:2px;color:var(--paper);font-family:'DM Serif Display',serif;font-size:22px;position:relative;box-shadow:0 1px 3px rgba(0,0,0,0.15)}
+.logo{display:flex;align-items:center;gap:12px;font-family:'Archivo',serif;font-size:26px;color:var(--ink);text-decoration:none}
+.logo-mark{width:38px;height:38px;background:var(--red);display:grid;place-items:center;border-radius:2px;color:var(--paper);font-family:'Archivo',serif;font-size:22px;position:relative;box-shadow:0 1px 3px rgba(0,0,0,0.15)}
 .logo-mark::before{content:'';position:absolute;inset:-3px;border:1px dashed var(--ink);border-radius:4px;opacity:0.5}
 .main{max-width:720px;margin:0 auto;padding:60px 36px 80px}
 .card{background:var(--paper);border:1px solid var(--line);border-radius:2px;box-shadow:var(--shadow-card);margin-bottom:24px}
 .card-header{padding:20px 28px 0;border-bottom:1px solid var(--line);padding-bottom:16px;display:flex;align-items:center;justify-content:space-between}
-.card-title{font-family:'DM Serif Display',serif;font-size:20px;font-weight:400}
+.card-title{font-family:'Archivo',serif;font-size:20px;font-weight:400}
 .card-body{padding:24px 28px}
-label{display:block;font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:var(--ink-muted);margin-bottom:5px}
-input,select,textarea{width:100%;padding:10px 12px;border:1.5px solid var(--line);background:var(--paper);color:var(--ink);border-radius:2px;font-family:'Source Serif 4',Georgia,serif;font-size:15px;outline:none;transition:border-color 0.15s}
+label{display:block;font-family:'Roboto',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:var(--ink-muted);margin-bottom:5px}
+input,select,textarea{width:100%;padding:10px 12px;border:1.5px solid var(--line);background:var(--paper);color:var(--ink);border-radius:2px;font-family:'Noto Sans',Georgia,serif;font-size:15px;outline:none;transition:border-color 0.15s}
 input:focus,select:focus,textarea:focus{border-color:var(--red)}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .field{margin-bottom:16px}
-.btn{display:inline-block;padding:11px 24px;border-radius:2px;font-weight:500;font-size:13px;text-decoration:none;transition:all 0.2s;border:none;cursor:pointer;font-family:'Source Serif 4',Georgia,serif;letter-spacing:0.02em;text-transform:uppercase}
+.btn{display:inline-block;padding:11px 24px;border-radius:2px;font-weight:500;font-size:13px;text-decoration:none;transition:all 0.2s;border:none;cursor:pointer;font-family:'Noto Sans',Georgia,serif;letter-spacing:0.02em;text-transform:uppercase}
 .btn-primary{background:var(--red);color:var(--paper);border:1.5px solid var(--red)}
 .btn-primary:hover{background:var(--red-deep);border-color:var(--red-deep)}
 .btn-outline{background:transparent;color:var(--ink);border:1.5px solid rgba(42,42,42,0.35)}
@@ -52,51 +52,52 @@ input:focus,select:focus,textarea:focus{border-color:var(--red)}
 .btn-ghost{background:none;border:none;color:var(--ink-muted);cursor:pointer;font-size:13px;font-family:inherit;padding:6px 0}
 .btn-ghost:hover{color:var(--red)}
 .btn-sm{padding:7px 14px;font-size:12px}
-.eyebrow{font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.18em;color:var(--red);margin-bottom:20px;display:flex;align-items:center;gap:12px}
+.eyebrow{font-family:'Roboto',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.18em;color:var(--red);margin-bottom:20px;display:flex;align-items:center;gap:12px}
 .eyebrow::before{content:'';width:32px;height:1px;background:var(--red)}
-h1{font-family:'DM Serif Display',serif;font-size:clamp(32px,5vw,48px);font-weight:400;letter-spacing:-0.02em;margin-bottom:8px;line-height:1.1}
+h1{font-family:'Archivo',serif;font-size:clamp(32px,5vw,48px);font-weight:400;letter-spacing:-0.02em;margin-bottom:8px;line-height:1.1}
 h1 em{font-style:italic;color:var(--red)}
 .sub{font-size:16px;color:var(--ink-muted);margin-bottom:40px;line-height:1.6}
 .err{color:#b91c1c;font-size:13px;margin-top:8px;display:none}
 .ok-msg{color:#15803d;font-size:13px;margin-top:8px;display:none}
 .strength-bar{height:4px;border-radius:2px;margin-top:6px;background:var(--line);overflow:hidden}
 .strength-fill{height:100%;width:0;border-radius:2px;transition:width 0.3s,background 0.3s}
-.strength-label{font-size:11px;font-family:'DM Mono',monospace;margin-top:4px;color:var(--ink-faint)}
+.strength-label{font-size:11px;font-family:'Roboto',monospace;margin-top:4px;color:var(--ink-faint)}
 table{width:100%;border-collapse:collapse;font-size:14px}
-th{font-family:'DM Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.12em;color:var(--ink-muted);padding:0 0 10px;text-align:left;border-bottom:1px solid var(--line)}
+th{font-family:'Roboto',monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.12em;color:var(--ink-muted);padding:0 0 10px;text-align:left;border-bottom:1px solid var(--line)}
 td{padding:12px 0;border-bottom:1px solid rgba(42,42,42,0.07);vertical-align:top}
 tr:last-child td{border-bottom:none}
-.status-badge{display:inline-block;padding:2px 8px;border-radius:2px;font-size:11px;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:0.08em}
+.status-badge{display:inline-block;padding:2px 8px;border-radius:2px;font-size:11px;font-family:'Roboto',monospace;text-transform:uppercase;letter-spacing:0.08em}
 .status-paid{background:#fef3c7;color:#92400e}
 .status-submitted{background:#ede9fe;color:#5b21b6}
 .status-printing{background:#dbeafe;color:#1e40af}
 .status-mailed{background:#dcfce7;color:#166534}
 .status-delivered{background:#d1fae5;color:#065f46}
 .status-refunded{background:#f3f4f6;color:#6b7280}
-.tag{display:inline-block;padding:2px 8px;background:#f1ebde;border:1px solid var(--line);border-radius:2px;font-size:12px;font-family:'DM Mono',monospace;margin:2px}
+.tag{display:inline-block;padding:2px 8px;background:#f1ebde;border:1px solid var(--line);border-radius:2px;font-size:12px;font-family:'Roboto',monospace;margin:2px}
 .divider{border:none;border-top:1px solid var(--line);margin:20px 0}
 footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:40px 36px;margin-top:80px}
-.footer-bottom{max-width:1280px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;flex-wrap:wrap;gap:16px}
+.footer-bottom{max-width:1280px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;font-family:'Roboto',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;flex-wrap:wrap;gap:16px}
 .footer-bottom a{color:rgba(255,255,255,0.5);text-decoration:none}
 .footer-bottom a:hover{color:var(--red-stamp)}
 .footer-bottom-links{display:flex;gap:28px}
 @media(max-width:600px){.grid2{grid-template-columns:1fr}.main{padding:40px 20px 60px}.nav-inner{padding:16px 20px}}
 </style>
 <script>(function(){try{var m=window.matchMedia('(prefers-color-scheme: dark)'),s=function(){document.documentElement.setAttribute('data-theme',m.matches?'dark':'light');};s();if(m.addEventListener)m.addEventListener('change',s);}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
-<link rel="stylesheet" href="/theme.css?v=23">
+<link rel="stylesheet" href="/theme.css?v=24">
+<link rel="stylesheet" href="/redesign.css?v=1"><link rel="stylesheet" href="/inner.css?v=1">
 </head>
 <body>
 <a href="#app" class="skip-link" style="position:absolute;left:-9999px;top:4px;z-index:9999;background:#a8472d;color:#faf6ec;padding:8px 16px;font-size:14px;font-family:Georgia,serif;text-decoration:none;border-radius:2px" onfocus="this.style.left='4px'" onblur="this.style.left='-9999px'">Skip to main content</a>
 <div id="site-header"></div>
-<script src="/header.js?v=8"></script>
+<script src="/header.js?v=9"></script>
 
 <div class="main" id="app"><div style="color:var(--ink-muted);padding:40px 0;font-style:italic" data-i18n="account.loading">Loading…</div></div>
 
 <footer id="site-footer"></footer>
-<script src="/footer.js?v=8" defer></script>
+<script src="/footer.js?v=9" defer></script>
 
 <script src="/theme.js?v=4" defer></script>
-<script src="/lang.js?v=46"></script>
+<script src="/lang.js?v=47"></script>
 <script>
 const app = document.getElementById('app');
 const path = window.location.pathname;
@@ -368,7 +369,7 @@ function renderPortal(me) {
     ? `<tr><td colspan="4" style="color:var(--ink-faint);font-style:italic;padding:20px 0">${LH_T('account.orders.empty')}</td></tr>`
     : orders.map(o => `
         <tr>
-          <td style="font-family:'DM Mono',monospace;font-size:12px">#${o.id}</td>
+          <td style="font-family:'Roboto',monospace;font-size:12px">#${o.id}</td>
           <td>${esc(o.recipient_name)}<br><span style="font-size:12px;color:var(--ink-faint)">${esc(o.destination_country)}</span></td>
           <td><span class="status-badge ${statusClass[o.status]||''}">${statusLabel[o.status]||o.status}</span></td>
           <td style="font-size:12px;color:var(--ink-faint);white-space:nowrap">${o.created_at.slice(0,10)}</td>
