@@ -439,6 +439,7 @@ function orderDirPath(id, createdAt) {
 const { createPostGrid, MAX_SHEETS } = require('./postgrid');
 const { makeDestinations, SERVICE_NAMES } = require('./destinations');
 const destinations = makeDestinations(getSetting);
+const SantaLetter = require('./public/santa-letter.js');
 // Who carries the letter: printed and mailed locally when that country's PostGrid network is on, otherwise from Canada.
 const LOCAL_CARRIERS = { CA: 'Canada Post', US: 'USPS', GB: 'Royal Mail', AU: 'Australia Post' };
 function mailFacts(order) {
@@ -808,6 +809,9 @@ Object.entries(REGION_REDIRECTS).forEach(([from, to]) =>
  'respond-to-debt-collection-letter', 'dispute-credit-report-error', 'resignation-letter-by-mail',
  'love-letters-and-personal-mail', 'mail-transcripts-and-student-documents',
  'mail-to-retirement-and-nursing-homes', 'schedule-a-letter-for-later', 'send-a-christmas-letter-to-canada',
+ 'uk', 'santa-letter', 'send-a-letter-to-the-uk', 'monthly-letters', 'landlord-notices', 'postcards',
+ 'letter-from-santa-canada', 'free-letter-from-santa-template', 'christmas-family-letter-template',
+ 'what-to-write-in-a-letter-to-a-grandparent', 'keep-in-touch-with-family-abroad-by-mail',
  'mailed-from-canada', 'non-resident-landlord', 'n12-notice',
  'serve-eviction-notice-from-abroad', 'bc-rtb-forms',
  'from-nigeria', 'from-mexico', 'from-brazil',
@@ -966,7 +970,50 @@ app.get('/ga.js', (req, res) => {
 
 // Base send price by destination: Canada, United States, rest of world.
 // Name on the Stripe receipt, e.g. "Letterhome Letter to the United Kingdom".
-function stripeProductName(country) {
+function santaPriceCents() {
+  const n = parseInt(getSetting('price_santa_cents', '1200'), 10);
+  return Number.isFinite(n) && n >= 500 ? n : 1200;
+}
+
+// ── Pound estimate for the UK pages ──────────────────────────────────────────
+// Display only: every order is charged in CAD. The rate refreshes weekly (see fxRefreshJob).
+const FX_FALLBACK_GBP_PER_CAD = 1 / 1.88;
+const FX_MAX_AGE_MS = 7 * 24 * 3600 * 1000;
+function gbpPerCad() {
+  const r = parseFloat(getSetting('fx_gbp_per_cad', ''));
+  return r > 0.3 && r < 0.9 ? r : FX_FALLBACK_GBP_PER_CAD;
+}
+// Rounds UP to the next 50p so a price never looks oddly precise: 5.36 shows as 5.50 and 5.60 as 6.
+function niceGbp(cents, rate = gbpPerCad()) {
+  const gbp = (cents / 100) * rate;
+  return Math.max(0.5, Math.ceil(gbp * 2 - 1e-9) / 2);
+}
+const FX_SOURCES = [
+  { name: 'frankfurter', url: 'https://api.frankfurter.dev/v1/latest?base=CAD&symbols=GBP', pick: d => d?.rates?.GBP },
+  { name: 'er-api',      url: 'https://open.er-api.com/v6/latest/CAD',                     pick: d => d?.rates?.GBP },
+];
+// Fetches GBP per CAD from a free source, with a second source as backup. A bad or missing answer keeps the old rate.
+async function fxRefreshJob({ force = false, fetchImpl = fetch } = {}) {
+  const last = Date.parse(getSetting('fx_updated_at', ''));
+  if (!force && last && Date.now() - last < FX_MAX_AGE_MS) return { skipped: true };
+  for (const src of FX_SOURCES) {
+    try {
+      const res = await fetchImpl(src.url, { signal: AbortSignal.timeout(10000) });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const rate = Number(src.pick(await res.json()));
+      if (!(rate > 0.3 && rate < 0.9)) throw new Error('implausible rate ' + rate);
+      setSetting('fx_gbp_per_cad', rate);
+      setSetting('fx_updated_at', new Date().toISOString());
+      setSetting('fx_source', src.name);
+      console.log(`[fx] GBP per CAD ${rate} (${src.name})`);
+      return { updated: true, rate, source: src.name };
+    } catch (e) { console.error(`[fx] ${src.name} failed:`, e.message); }
+  }
+  return { updated: false };
+}
+
+function stripeProductName(country, letterType) {
+  if (letterType === 'santa') return 'Letterhome Letter from Santa';
   const cc = String(country || 'CA').toUpperCase();
   const names = { CA: 'within Canada', US: 'to the United States', GB: 'to the United Kingdom', AU: 'to Australia' };
   return names[cc] ? `Letterhome Letter ${names[cc]}` : 'Letterhome International Letter';
@@ -977,14 +1024,24 @@ function getBasePriceCents(country) {
 }
 
 app.get('/api/site-config', (req, res) => {
+  const pub = destinations.publicConfig();
+  const priceDomestic = parseInt(getSetting('price_domestic_cents',      '600')) || 600;
+  const priceUsa      = getBasePriceCents('US');
+  const priceIntl     = parseInt(getSetting('price_international_cents', '1500')) || 1500;
+  const gbCents       = pub.destinations?.GB?.price_cents || priceIntl;
   res.json({
     orders_open:               getSetting('service_paused', 'false') !== 'true',
     announcement:              getSetting('announcement', ''),
-    price_domestic_cents:      parseInt(getSetting('price_domestic_cents',      '600')) || 600,
-    price_usa_cents:           getBasePriceCents('US'),
-    price_international_cents: parseInt(getSetting('price_international_cents', '1500')) || 1500,
+    price_domestic_cents:      priceDomestic,
+    price_usa_cents:           priceUsa,
+    price_international_cents: priceIntl,
+    gbp_per_cad:               gbpPerCad(),
+    fx_updated_at:             getSetting('fx_updated_at', '') || null,
+    gbp_display:               { domestic: niceGbp(priceDomestic), usa: niceGbp(priceUsa), international: niceGbp(priceIntl), gb: niceGbp(gbCents) },
+    price_santa_cents:         santaPriceCents(),
+    santa_enabled:             getSetting('santa_enabled', '1') !== '0',
     blocked_countries:         JSON.parse(getSetting('blocked_countries', '[]') || '[]'),
-    ...destinations.publicConfig(),     // per-destination price, local printing and extra mail services
+    ...pub,     // per-destination price, local printing and extra mail services
   });
 });
 
@@ -1242,6 +1299,25 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(rEmail))
     return res.status(400).json({ error: 'Please enter a valid email address.' });
 
+  // Letter from Santa: same order, review and mailing flow as any letter, with its own price and a
+  // letter the server writes from the form fields. Canadian addresses only, and no mail upgrades.
+  const isSanta = String(b['product'] || '') === 'santa';
+  if (isSanta) {
+    if (getSetting('santa_enabled', '1') === '0')
+      return res.status(400).json({ error: 'Letters from Santa are not available right now.' });
+    if (String(b['r-country'] || '') !== 'CA')
+      return res.status(400).json({ error: 'Letters from Santa can only be mailed to addresses in Canada right now.' });
+    const santaText = SantaLetter.build({
+      child: b['santa_child'], nice: b['santa_nice'], interest: b['santa_interest'], pet: b['santa_pet'], goal: b['santa_goal'],
+    });
+    if (!santaText) return res.status(400).json({ error: "Please enter the child's first name." });
+    b['letter-body'] = santaText;
+    b['skip-return'] = '1';
+    b['mail_service'] = '';
+    b['registered_mail'] = '';
+  }
+  const letterType = isSanta ? 'santa' : 'standard';
+
   const blockedCountries = JSON.parse(getSetting('blocked_countries', '[]') || '[]');
   if (blockedCountries.includes(b['r-country']))
     return res.status(400).json({ error: 'We are not currently shipping to that destination.' });
@@ -1258,7 +1334,7 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
   }
 
   const isDomestic = b['r-country'] === 'CA';
-  const basePriceCents = getBasePriceCents(b['r-country']);
+  const basePriceCents = isSanta ? santaPriceCents() : getBasePriceCents(b['r-country']);
 
   // Optional mail service (registered / certified / express), only if offered for this destination right now.
   let mailService = String(b['mail_service'] || '').trim().toLowerCase() || null;
@@ -1331,7 +1407,7 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
     b['s-province'] || null, b['s-postal']   || null, b['s-country'] || null,
     rName, rStreet,
     b['r-city']     || null, b['r-province'] || null, b['r-postal'] || null,
-    b['r-country']  || 'CA', 'standard',
+    b['r-country']  || 'CA', letterType,
     b['letter-body'] || null,
     '[]',
     priceCents,
@@ -1387,7 +1463,7 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
       postal:   b['s-postal']   || null,
       country:  b['s-country']  || null,
     },
-    letter_type:  'standard',
+    letter_type:  letterType,
     price_cents:  priceCents,
     attachments:  movedFiles.map(f => path.basename(f.path)),
   }, null, 2), 'utf8');
@@ -1413,7 +1489,7 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
         price_data: {
           currency: 'cad',
           product_data: {
-            name: stripeProductName(b['r-country']),
+            name: stripeProductName(b['r-country'], letterType),
             description: `To: ${rName}, ${[b['r-city'], b['r-country']].filter(Boolean).join(' ')}${extrasNote}`,
           },
           unit_amount: priceCents,
@@ -1475,7 +1551,7 @@ app.get('/resume/:token', trackLimiter, async (req, res) => {
         price_data: {
           currency: 'cad',
           product_data: {
-            name: stripeProductName(order.destination_country),
+            name: stripeProductName(order.destination_country, order.letter_type),
             description: `To: ${order.recipient_name}, ${[order.recipient_city, order.destination_country].filter(Boolean).join(' ')}${extrasNote}`,
           },
           unit_amount: order.price_cents,
@@ -4275,9 +4351,11 @@ async function thankYouCouponJob() {
 
 cron.schedule('15 * * * *', () => { thankYouCouponJob(); });
 cron.schedule('*/15 * * * *', () => { postgridSweep(); });
+cron.schedule('30 6 * * 1', () => { fxRefreshJob({ force: true }); });   // weekly, Monday 06:30 server time
+if (!process.env.TEST_MODE && process.env.NODE_ENV !== 'test') setTimeout(() => { fxRefreshJob(); }, 20000);   // after a restart, refresh if older than a week
 
 const PORT = process.env.PORT || 3000;
 if (!process.env.TEST_MODE) {
   app.listen(PORT, () => console.log(`Letterhome running on port ${PORT}`));
 }
-module.exports = { app, db, thankYouCouponJob, postgrid, postgridSubmit, postgridSweep, sendAtPrinterEmail, sendMailedNotification };
+module.exports = { app, db, fxRefreshJob, niceGbp, thankYouCouponJob, postgrid, postgridSubmit, postgridSweep, sendAtPrinterEmail, sendMailedNotification };

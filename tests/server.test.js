@@ -75,7 +75,7 @@ require.cache[stripeResolvePath] = {
 const sentMail = [];
 require('nodemailer').createTransport = () => ({ sendMail: async (o) => { sentMail.push(o); return {}; } });
 
-const { app, db, thankYouCouponJob, sendAtPrinterEmail, sendMailedNotification } = require('../server');
+const { app, db, thankYouCouponJob, sendAtPrinterEmail, sendMailedNotification, fxRefreshJob, niceGbp } = require('../server');
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function webhookSig(payload) {
@@ -797,6 +797,161 @@ test('checkout stores the province code, not the dropdown label', async () => {
       'r-province': 'QC: Quebec', 'r-postal': 'G7X 9W7', 'r-country': 'CA', 'letter-body': 'Bonjour.', 'letter-type': 'standard' }).toString() });
   assert.equal(res.status, 200);
   assert.equal(db.prepare("SELECT recipient_province FROM orders WHERE customer_email = 'prov@example.com'").get().recipient_province, 'QC');
+});
+
+test('Santa letter template: uses only what is given, cleans input, empty without a name', () => {
+  const SantaLetter = require('../public/santa-letter.js');
+  assert.equal(SantaLetter.build({}), '');
+  assert.equal(SantaLetter.build({ child: '   ' }), '');
+  const bare = SantaLetter.build({ child: 'Emma' });
+  assert.match(bare, /^From Santa's Workshop\n/);
+  assert.match(bare, /Dear Emma,/);
+  assert.doesNotMatch(bare, /I heard that|Word around|Please give|small thing to ask/);
+  const full = SantaLetter.build({ child: ' Emma. ', nice: 'you learned to ride your bike!', interest: 'dinosaurs', pet: 'Biscuit', goal: 'keep reading' });
+  assert.match(full, /I heard that you learned to ride your bike\. That is/);
+  assert.match(full, /you love dinosaurs\./);
+  assert.match(full, /Please give Biscuit a pat from me\./);
+  assert.match(full, /one small thing to ask of you: keep reading\./);
+  assert.doesNotMatch(full, /\.\./);
+  assert.ok(!full.includes('—'), 'no em dashes');
+  assert.equal(SantaLetter.fields({ child: 'x'.repeat(100) }).child.length, 40);
+  assert.equal(SantaLetter.clean('a\n\tb\u0000c'), 'a b c');
+});
+
+test('Santa order: own price, server-written letter, Canada only, colour add-on, kill switch', async () => {
+  const send = async (extra = {}) => {
+    const res = await fetch(`${base}/api/create-order`, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ product: 'santa', santa_child: 'Emma', santa_pet: 'Biscuit', 'r-email': 'parent@example.com', 'r-name': 'Emma Tremblay',
+        'r-street': '1 Rue Test', 'r-city': 'Montreal', 'r-province': 'QC', 'r-postal': 'H2X 1Y4', 'r-country': 'CA',
+        'letter-body': 'IGNORED CLIENT TEXT', ...extra }).toString() });
+    return { res, body: await res.json() };
+  };
+  const last = () => db.prepare("SELECT * FROM orders WHERE customer_email = 'parent@example.com' ORDER BY id DESC LIMIT 1").get();
+
+  const ok = await send();
+  assert.equal(ok.res.status, 200);
+  let o = last();
+  assert.equal(o.letter_type, 'santa');
+  assert.equal(o.price_cents, 1200);
+  assert.equal(o.skip_return, 1);
+  assert.match(o.letter_body, /Dear Emma,/);
+  assert.match(o.letter_body, /Please give Biscuit a pat/);
+  assert.doesNotMatch(o.letter_body, /IGNORED CLIENT TEXT/);
+
+  await send({ colour_printing: '1' });
+  assert.equal(last().price_cents, 1300);
+
+  const us = await send({ 'r-country': 'US' });
+  assert.equal(us.res.status, 400);
+  assert.match(us.body.error, /Canada/);
+
+  const noName = await send({ santa_child: '' });
+  assert.equal(noName.res.status, 400);
+
+  const cfg = await (await fetch(`${base}/api/site-config`)).json();
+  assert.equal(cfg.price_santa_cents, 1200);
+  assert.equal(cfg.santa_enabled, true);
+
+  db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('price_santa_cents', '1500')").run();
+  await send();
+  assert.equal(last().price_cents, 1500);
+  db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('santa_enabled', '0')").run();
+  const off = await send();
+  assert.equal(off.res.status, 400);
+  assert.equal((await (await fetch(`${base}/api/site-config`)).json()).santa_enabled, false);
+  db.prepare("DELETE FROM settings WHERE key IN ('price_santa_cents','santa_enabled')").run();
+
+  // a normal order is unaffected
+  const plain = await fetch(`${base}/api/create-order`, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ 'r-email': 'plain-santa-check@example.com', 'r-name': 'A B', 'r-street': '1 St', 'r-city': 'Toronto', 'r-province': 'ON', 'r-postal': 'M5V 1A1', 'r-country': 'CA', 'letter-body': 'Hello there.' }).toString() });
+  assert.equal(plain.status, 200);
+  const po = db.prepare("SELECT letter_type, price_cents FROM orders WHERE customer_email = 'plain-santa-check@example.com'").get();
+  assert.equal(po.letter_type, 'standard');
+  assert.equal(po.price_cents, 600);
+});
+
+test('pound estimate: rounds UP to the next 50p, never oddly precise', () => {
+  const rate = 0.53156;                                     // GBP per CAD
+  assert.equal(niceGbp(600, rate), 3.5);                    // 3.19
+  assert.equal(niceGbp(900, rate), 5);                      // 4.78
+  assert.equal(niceGbp(1500, rate), 8);                     // 7.97
+  assert.equal(niceGbp(1000, 0.5365), 5.5);                 // 5.365 -> 5.50
+  assert.equal(niceGbp(1000, 0.5601), 6);                   // 5.601 -> 6
+  assert.equal(niceGbp(1000, 0.55), 5.5);                   // exactly 5.50 stays
+  assert.equal(niceGbp(1, rate), 0.5);                      // never below 50p
+  for (const cents of [100, 450, 600, 900, 1200, 1500, 2000]) assert.equal((niceGbp(cents, rate) * 2) % 1, 0, `${cents} is a multiple of 50p`);
+});
+
+test('weekly exchange rate job: updates, skips when fresh, falls back, and ignores bad rates', async () => {
+  const clear = () => db.prepare("DELETE FROM settings WHERE key IN ('fx_gbp_per_cad','fx_updated_at','fx_source')").run();
+  const get = k => db.prepare('SELECT value FROM settings WHERE key = ?').get(k)?.value;
+  const reply = (body, ok = true) => async () => ({ ok, status: ok ? 200 : 503, json: async () => body });
+  try {
+    clear();
+    const calls = [];
+    let r = await fxRefreshJob({ fetchImpl: async url => { calls.push(url); return reply({ rates: { GBP: 0.5316 } })(); } });
+    assert.deepEqual([r.updated, r.rate, r.source], [true, 0.5316, 'frankfurter']);
+    assert.equal(get('fx_gbp_per_cad'), '0.5316');
+    assert.ok(get('fx_updated_at'));
+
+    r = await fxRefreshJob({ fetchImpl: async () => { throw new Error('should not be called'); } });
+    assert.equal(r.skipped, true);                                   // updated less than a week ago
+
+    let cfg = await (await fetch(`${base}/api/site-config`)).json();
+    assert.equal(cfg.gbp_per_cad, 0.5316);
+    assert.deepEqual(cfg.gbp_display, { domestic: 3.5, usa: 3.5, international: 8, gb: 8 });
+    assert.ok(cfg.fx_updated_at);
+
+    // forced refresh: first source down, backup answers
+    let n = 0;
+    r = await fxRefreshJob({ force: true, fetchImpl: async () => (++n === 1 ? reply({}, false)() : reply({ rates: { GBP: 0.5} })()) });
+    assert.deepEqual([r.updated, r.source, get('fx_gbp_per_cad')], [true, 'er-api', '0.5']);
+
+    // an implausible rate from both sources keeps the old rate
+    r = await fxRefreshJob({ force: true, fetchImpl: reply({ rates: { GBP: 5.3 } }) });
+    assert.equal(r.updated, false);
+    assert.equal(get('fx_gbp_per_cad'), '0.5');
+
+    // stale after a week
+    db.prepare("UPDATE settings SET value = ? WHERE key = 'fx_updated_at'").run(new Date(Date.now() - 8 * 864e5).toISOString());
+    r = await fxRefreshJob({ fetchImpl: reply({ rates: { GBP: 0.54 } }) });
+    assert.equal(r.updated, true);
+  } finally { clear(); }
+});
+
+test('site-config feeds the UK page: GB tile is hidden until the UK network is on, then priced', async () => {
+  const cfg = async () => (await fetch(`${base}/api/site-config`)).json();
+  let c = await cfg();
+  assert.equal(c.destinations.GB.local, false);
+  assert.equal(c.destinations.GB.price_cents, 1500);          // sold from Canada at the international price
+  db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('postgrid_countries', 'CA,GB')").run();
+  try {
+    c = await cfg();
+    assert.equal(c.destinations.GB.local, true);
+    assert.equal(c.destinations.GB.price_cents, 900);
+    assert.equal(c.price_domestic_cents, 600);
+    assert.equal(c.price_international_cents, 1500);
+  } finally { db.prepare("DELETE FROM settings WHERE key = 'postgrid_countries'").run(); }
+});
+
+test('new pages: served, have schema, titles and canonicals, and are in the sitemap', async () => {
+  const slugs = ['santa-letter', 'uk', 'send-a-letter-to-the-uk', 'monthly-letters', 'landlord-notices', 'postcards', 'letter-from-santa-canada',
+    'free-letter-from-santa-template', 'christmas-family-letter-template', 'what-to-write-in-a-letter-to-a-grandparent',
+    'keep-in-touch-with-family-abroad-by-mail'];
+  const sitemap = await (await fetch(`${base}/sitemap.xml`)).text();
+  for (const slug of slugs) {
+    const res = await fetch(`${base}/${slug}`);
+    assert.equal(res.status, 200, slug);
+    const html = await res.text();
+    assert.ok(html.includes(`<link rel="canonical" href="https://letterhome.ca/${slug}">`), `${slug} canonical`);
+    const title = html.match(/<title>([^<]*)<\/title>/)[1];
+    assert.ok(title.length > 20 && title.length <= 60, `${slug} title length ${title.length}`);
+    const desc = html.match(/name="description" content="([^"]*)"/)[1];
+    assert.ok(desc.length >= 100 && desc.length <= 160, `${slug} description length ${desc.length}`);
+    for (const block of html.match(/<script type="application\/ld\+json">[\s\S]*?<\/script>/g) || []) JSON.parse(block.replace(/<\/?script[^>]*>/g, ''));
+    assert.ok(sitemap.includes(`https://letterhome.ca/${slug}</loc>`), `${slug} in sitemap`);
+    assert.ok(!html.includes('—'), `${slug} has an em dash`);
+  }
 });
 
 test('Google review line: on the status page once mailed, in the mailed email, and never emailed to unsubscribed customers', async () => {
