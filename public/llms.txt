@@ -83,9 +83,6 @@ An order can be cancelled for a full refund until it is sent to the printer; aft
 
 ## Send from a specific country
 
-- [From the United States](https://letterhome.ca/from-usa)
-- [From the United Kingdom](https://letterhome.ca/from-uk)
-- [From Australia](https://letterhome.ca/from-australia)
 - [From the UAE](https://letterhome.ca/from-uae)
 - [From France](https://letterhome.ca/from-france)
 - [From Hong Kong](https://letterhome.ca/from-hong-kong)

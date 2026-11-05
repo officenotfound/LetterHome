@@ -19,24 +19,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://letterhome.ca/from-usa</loc>
-    <lastmod>2026-11-02</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://letterhome.ca/from-uk</loc>
-    <lastmod>2026-11-02</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://letterhome.ca/from-australia</loc>
-    <lastmod>2026-11-02</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
     <loc>https://letterhome.ca/from-uae</loc>
     <lastmod>2026-11-02</lastmod>
     <changefreq>monthly</changefreq>

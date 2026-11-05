@@ -1085,6 +1085,9 @@ test('letters between countries: every route page is served with its own canonic
   const old = await fetch(`${base}/send-a-letter-from-the-uk-to-canada`, { redirect: 'manual' });
   assert.equal(old.status, 301);
   assert.equal(old.headers.get('location'), '/uk/how-to-send-mail-to-canada-from-uk');
+  const older = await fetch(`${base}/from-australia`, { redirect: 'manual' });
+  assert.equal(older.status, 301);
+  assert.equal(older.headers.get('location'), '/au/how-to-send-mail-to-canada-from-au');
 });
 
 test('site-config: estimates in dollars, pounds, Australian and New Zealand dollars, all rounded up to the next half unit', async () => {

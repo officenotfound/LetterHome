@@ -798,7 +798,7 @@ Object.entries(REGION_REDIRECTS).forEach(([from, to]) =>
 );
 
 ['send', 'guides', 'privacy', 'terms', 'refunds', 'about', 'contact', 'track', 'order-success',
- 'from-usa', 'from-uk', 'from-australia', 'from-uae', 'from-france',
+ 'from-uae', 'from-france',
  'from-hong-kong', 'from-india', 'from-philippines',
  'from-china', 'from-italy', 'from-germany', 'from-pakistan', 'send-documents-to-canada',
  'how-to-send-a-letter-to-canada-from-abroad', 'how-to-mail-cra-tax-forms-from-outside-canada',
@@ -890,6 +890,10 @@ const COUNTRY_GUIDES = {
   'au/how-to-send-mail-to-usa-from-au': 'send-a-letter-from-australia-to-the-us',
   'au/how-to-send-mail-to-uk-from-au': 'send-a-letter-from-australia-to-the-uk'
 };
+// The older Canada-from-abroad pages for these three countries now live under each country's own path
+app.get('/from-usa', (req, res) => res.redirect(301, '/us/how-to-send-mail-to-canada-from-us'));
+app.get('/from-uk', (req, res) => res.redirect(301, '/uk/how-to-send-mail-to-canada-from-uk'));
+app.get('/from-australia', (req, res) => res.redirect(301, '/au/how-to-send-mail-to-canada-from-au'));
 // New Zealand pages were retired: send those visitors to the main site
 ['nz', 'kiwis-in-canada-send-a-letter-home', 'send-a-letter-from-canada-to-new-zealand'].forEach(p => app.get(`/${p}`, (req, res) => res.redirect(301, '/')));
 ['nz/how-to-send-mail-to-canada-from-nz', 'nz/how-to-send-mail-to-usa-from-nz', 'nz/how-to-send-mail-to-uk-from-nz', 'nz/how-to-send-mail-to-australia-from-nz'].forEach(p => app.get(`/${p}`, (req, res) => res.redirect(301, '/')));
