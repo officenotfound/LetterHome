@@ -1,24 +1,33 @@
-// Country pages (/us, /uk, /au, /nz and their guides): adds a small postmark ring beside the Letterhome
-// wordmark, adds the Spanish/English link where a page has a twin, and translates the header labels on
-// Spanish pages. The postmark colour comes from the --m1 variable each country theme sets.
+// Country pages (/us, /uk, /au, /nz and their guides): puts the country's own logo where the maple leaf
+// logo sits in the header (the real stitched M with the leaf cut off and a national emblem above it),
+// adds the Spanish/English link where a page has a twin, and translates the header labels on Spanish pages.
+// The header colours themselves come from the page's CSS (body.c-xx).
 (function () {
   var root = document.documentElement;
   var cc = root.getAttribute('data-country');
   if (!cc) return;
 
+  // The logo mark is a postmark ring with the country code, in the spot the maple leaf logo sits.
   var codes = { us: 'US', uk: 'UK', au: 'AU', nz: 'NZ' };
-  var wordmark = document.querySelector('.logo .logo-wordmark');
-  if (wordmark && codes[cc]) {
-    var pm = document.createElement('span');
-    pm.setAttribute('aria-hidden', 'true');
-    pm.style.cssText = 'display:inline-block;margin-left:10px;vertical-align:middle;line-height:0';
-    pm.innerHTML = '<svg width="50" height="50" viewBox="0 0 58 58" style="color:var(--m1)">' +
-      '<circle cx="24" cy="29" r="21" fill="none" stroke="currentColor" stroke-width="2.5"/>' +
-      '<circle cx="24" cy="29" r="16.5" fill="none" stroke="currentColor" stroke-width="1.2"/>' +
-      '<text x="24" y="34" text-anchor="middle" font-family="DM Mono,monospace" font-size="15" font-weight="700" fill="currentColor">' + codes[cc] + '</text>' +
-      '<path d="M47 22 q5-3 10 0 M47 29 q5-3 10 0 M47 36 q5-3 10 0" stroke="currentColor" stroke-width="2" fill="none"/></svg>';
-    wordmark.parentNode.insertBefore(pm, wordmark.nextSibling);
+  var logo = document.querySelector('.logo');
+  var img = document.querySelector('.logo .logo-img');
+  if (codes[cc] && logo && img) {
+    var mark = document.createElement('span');
+    mark.setAttribute('aria-hidden', 'true');
+    mark.style.cssText = 'display:inline-block;line-height:0;flex:0 0 auto;color:#faf6ec';
+    mark.innerHTML = '<svg width="54" height="50" viewBox="0 0 66 58">' +
+      '<circle cx="26" cy="29" r="23" fill="none" stroke="currentColor" stroke-width="2.6"/>' +
+      '<circle cx="26" cy="29" r="18" fill="none" stroke="currentColor" stroke-width="1.3"/>' +
+      '<text x="26" y="35" text-anchor="middle" font-family="DM Mono,monospace" font-size="17" font-weight="700" fill="currentColor">' + codes[cc] + '</text>' +
+      '<path d="M52 21 q6-3 12 0 M52 29 q6-3 12 0 M52 37 q6-3 12 0" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round"/></svg>';
+    logo.insertBefore(mark, img);
   }
+
+  // The header "Send a letter" button follows the page's own call to action, so on a UK page it opens the
+  // order form with the UK already chosen as the destination (and on a route page, that route's destination).
+  var navCta = document.querySelector('.nav-cta');
+  var pageCta = document.querySelector('.hero-cta') || document.querySelector('.cta-block a');
+  if (navCta && pageCta && (pageCta.getAttribute('href') || '').indexOf('/send') === 0) navCta.setAttribute('href', pageCta.getAttribute('href'));
 
   var right = document.querySelector('.nav-right');
   var alt = root.getAttribute('data-alt');

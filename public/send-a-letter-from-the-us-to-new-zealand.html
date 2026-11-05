@@ -244,6 +244,17 @@ body.c-us .cta-block h2{color:#fff}
 body.c-us .cta-block p{color:rgba(255,255,255,.85)}
 body.c-us .cta-block a{background:#E71921;color:#fff}
 body.c-us .c-tile{border-top:3px solid #333366}
+body.c-us nav{background:#333366 !important;border-bottom:1.5px solid rgba(255,255,255,.18) !important}
+:root[data-theme="dark"] body.c-us nav{background:#333366 !important;border-bottom-color:rgba(255,255,255,.18) !important}
+body.c-us .logo,body.c-us .logo-wordmark{color:#faf6ec !important}
+body.c-us .logo-accent{color:#ff6b73 !important}
+body.c-us .logo-img{display:none !important}
+body.c-us .nav-links a{color:rgba(250,246,236,.85) !important}
+body.c-us .nav-links a:hover{color:#fff !important}
+body.c-us .nav-cta,body.c-us .nav-cta:visited,body.c-us .nav-cta:hover{background:#faf6ec !important;color:#333366 !important;border-color:#faf6ec !important}
+body.c-us .lang-link{color:#faf6ec;border-color:rgba(250,246,236,.45)}
+body.c-us .lang-link:hover{color:#fff;border-color:#fff}
+body.c-us .lang-toggle{color:#faf6ec !important}
 @media(max-width:720px){body.c-us .hero{padding:32px 14px 44px}body.c-us .hero .letter{padding:28px 22px}body.c-us .hero .stamp{display:none}}
 </style>
 </head>
@@ -257,7 +268,7 @@ body.c-us .c-tile{border-top:3px solid #333366}
   <p class="hero-eyebrow">Letters between countries</p>
   <h1>Send a letter<br><em>to New Zealand.</em></h1>
   <p class="hero-sub">Write to family in New Zealand from the US. We print it, put it in an envelope and mail it for you.</p>
-  <a href="/send" class="hero-cta">Send a letter →</a>
+  <a href="/send?to=NZ" class="hero-cta">Send a letter →</a>
   <div class="answer-box"><p>Letters from the US to New Zealand are printed and mailed for you. The price is shown below in Canadian dollars, with an estimate in <strong>USD</strong>.</p></div>
 </div></div>
 
@@ -305,7 +316,7 @@ body.c-us .c-tile{border-top:3px solid #333366}
 
 <div class="faq"><h2>Common questions</h2><div class="faq-item"><p class="faq-q">Can I mail a letter from the US to New Zealand?</p><p class="faq-a">Yes. Write it on our site, and we print it and send it to any address in New Zealand. You don't need a printer or stamps.</p></div><div class="faq-item"><p class="faq-q">How much does it cost?</p><p class="faq-a">The price is shown on this page, with postage and printing included. Color printing is C$1 extra, and each page after the first 2 is C$0.45 (C$0.55 in color).</p></div><div class="faq-item"><p class="faq-q">How long will it take?</p><p class="faq-a">International post to New Zealand typically takes up to 4 weeks. We do not print letters inside New Zealand yet, so every letter is printed in Canada and posted from there. Standard mail has no tracking, so we can't give an exact date.</p></div><div class="faq-item"><p class="faq-q">Is it tracked or signed for?</p><p class="faq-a">No. Standard mail has no tracking, signature or proof of delivery. See our <a href="/proof-of-mailing">proof of mailing guide</a> for the options.</p></div><div class="faq-item"><p class="faq-q">Can I include photos?</p><p class="faq-a">Yes. Attach them and pick color printing so they come out in color.</p></div><div class="faq-item"><p class="faq-q">Can I send it anonymously?</p><p class="faq-a">Yes. Skip the return address when you order. The envelope then carries our return address instead.</p></div></div>
 <div class="related"><h2>Related guides</h2><div class="related-grid"><a class="related-card" href="/send-a-letter-from-new-zealand-to-the-us"><strong>Letters From New Zealand to the US</strong><span>The other direction</span></a><a class="related-card" href="/us"><strong>Letterhome USA</strong><span>For people living there</span></a><a class="related-card" href="/proof-of-mailing"><strong>Proof of Mailing</strong><span>What proof you can get</span></a><a class="related-card" href="/schedule-a-letter-for-later"><strong>Schedule a Letter for Later</strong><span>Write now, choose the date</span></a><a class="related-card" href="/send-letters-between-countries"><strong>Letters Between Countries</strong><span>Every route in one place</span></a></div></div>
-<div class="cta-block"><h2>Got a letter to send?</h2><p>Type it online and we print and mail it.</p><a href="/send">Send a letter →</a></div>
+<div class="cta-block"><h2>Got a letter to send?</h2><p>Type it online and we print and mail it.</p><a href="/send?to=NZ">Send a letter →</a></div>
 </div>
 
 <footer id="site-footer"></footer>
@@ -331,6 +342,6 @@ body.c-us .c-tile{border-top:3px solid #333366}
   }).catch(function () {});
 })();
 </script>
-<script src="/country.js?v=3" defer></script>
+<script src="/country.js?v=10" defer></script>
 </body>
 </html>

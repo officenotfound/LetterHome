@@ -239,6 +239,17 @@ body.c-nz .cta-block h2{color:#fff}
 body.c-nz .cta-block p{color:rgba(255,255,255,.85)}
 body.c-nz .cta-block a{background:#D8291C;color:#fff}
 body.c-nz .c-tile{border-top:3px solid #041E42}
+body.c-nz nav{background:#041E42 !important;border-bottom:1.5px solid rgba(255,255,255,.18) !important}
+:root[data-theme="dark"] body.c-nz nav{background:#041E42 !important;border-bottom-color:rgba(255,255,255,.18) !important}
+body.c-nz .logo,body.c-nz .logo-wordmark{color:#faf6ec !important}
+body.c-nz .logo-accent{color:#ff6a5c !important}
+body.c-nz .logo-img{display:none !important}
+body.c-nz .nav-links a{color:rgba(250,246,236,.85) !important}
+body.c-nz .nav-links a:hover{color:#fff !important}
+body.c-nz .nav-cta,body.c-nz .nav-cta:visited,body.c-nz .nav-cta:hover{background:#faf6ec !important;color:#041E42 !important;border-color:#faf6ec !important}
+body.c-nz .lang-link{color:#faf6ec;border-color:rgba(250,246,236,.45)}
+body.c-nz .lang-link:hover{color:#fff;border-color:#fff}
+body.c-nz .lang-toggle{color:#faf6ec !important}
 @media(max-width:720px){body.c-nz .hero{padding:32px 14px 44px}body.c-nz .hero .letter{padding:28px 22px}body.c-nz .hero .stamp{display:none}}
 </style>
 </head>
@@ -252,7 +263,7 @@ body.c-nz .c-tile{border-top:3px solid #041E42}
   <p class="hero-eyebrow">Letterhome New Zealand</p>
   <h1>Write home to New Zealand<br><em>from Canada.</em></h1>
   <p class="hero-sub">For working holiday makers and expats who want mum and dad to get a proper letter in the mailbox.</p>
-  <a href="/send" class="hero-cta">Send a letter →</a>
+  <a href="/send?to=NZ" class="hero-cta">Send a letter →</a>
   <div class="answer-box"><p>Type your letter on our site and we print it, put it in an envelope and post it to any address in New Zealand. Postage is included and priced in <strong>Canadian dollars</strong>.</p></div>
 </div></div>
 
@@ -284,7 +295,7 @@ body.c-nz .c-tile{border-top:3px solid #041E42}
 
 <div class="faq"><h2>Common questions</h2><div class="faq-item"><p class="faq-q">Can I send a letter home to New Zealand from Canada?</p><p class="faq-a">Yes. Write it on our site and we print it in Canada and post it to any New Zealand address.</p></div><div class="faq-item"><p class="faq-q">How long will it take?</p><p class="faq-a">International post typically takes up to 4 weeks. Standard post has no tracking, so we can't give an exact date.</p></div><div class="faq-item"><p class="faq-q">Can I include photos?</p><p class="faq-a">Yes. Attach them and pick colour printing so they come out in colour.</p></div><div class="faq-item"><p class="faq-q">Do I need a New Zealand stamp?</p><p class="faq-a">No. Postage is included in the price.</p></div></div>
 <div class="related"><h2>Related guides</h2><div class="related-grid"><a class="related-card" href="/nz"><strong>Letterhome New Zealand</strong><span>For people living in New Zealand</span></a><a class="related-card" href="/how-to-send-a-letter-to-canada-from-abroad"><strong>Sending to Canada From Abroad</strong><span>The other direction</span></a><a class="related-card" href="/send-a-christmas-letter-to-canada"><strong>Holiday Letters</strong><span>Order-by dates</span></a></div></div>
-<div class="cta-block"><h2>Got a letter to write home?</h2><p>Type it online and we print and post it to New Zealand.</p><a href="/send">Send a letter →</a></div>
+<div class="cta-block"><h2>Got a letter to write home?</h2><p>Type it online and we print and post it to New Zealand.</p><a href="/send?to=NZ">Send a letter →</a></div>
 </div>
 
 <footer id="site-footer"></footer>
@@ -292,6 +303,6 @@ body.c-nz .c-tile{border-top:3px solid #041E42}
 <script src="/theme.js?v=4" defer></script>
 <script src="/lang.js?v=46" defer></script>
 
-<script src="/country.js?v=3" defer></script>
+<script src="/country.js?v=10" defer></script>
 </body>
 </html>
