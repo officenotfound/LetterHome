@@ -101,3 +101,5 @@ body[class*="c-"] .hero .answer-box,body[class*="c-"] .hero .answer-box *{color:
 [data-theme="dark"] .rm-tt,[data-theme="dark"] .rm-trust,[data-theme="dark"] .c-env,[data-theme="dark"] .c-price,[data-theme="dark"] .related-card{background:#23262d!important;color:#f1eadb!important;border-color:rgba(239,230,212,.16)!important}
 [data-theme="dark"] .rm-tt b,[data-theme="dark"] .c-env *,[data-theme="dark"] .c-price *{color:#f1eadb!important}
 [data-theme="dark"] .rm-tt span{color:#c9c1b2!important}
+[data-theme="dark"] .c-card{background:#23262d!important;border-color:rgba(239,230,212,.16)!important}
+[data-theme="dark"] .c-card *{color:#f1eadb!important}
