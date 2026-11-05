@@ -291,21 +291,76 @@ body.c-us .cta-block{background:#004B87;border-radius:4px;border-bottom:0}
 body.c-us .cta-block h2{font-family:inherit;font-weight:800;color:#fff}
 @media(max-width:720px){body.c-us .hero{padding:32px 16px 40px}}
 </style>
+<style>
+.rm-hero{background:#004B87;color:#fff;padding:52px 24px 60px}
+.rm-in{max-width:1080px;margin:0 auto;display:grid;grid-template-columns:1.15fr .85fr;gap:44px;align-items:start}
+.rm-hero h1{font-family:inherit;font-weight:800;font-size:clamp(34px,5.2vw,58px);line-height:1.04;letter-spacing:-.01em;margin:0 0 22px;color:#fff}
+.rm-hero h1 span{color:#BFD7F2}
+.rm-points{list-style:none;padding:0;margin:0 0 26px}
+.rm-points li{display:flex;gap:12px;align-items:flex-start;font-size:18px;line-height:1.45;margin-bottom:12px;color:#fff}
+.rm-points li:before{content:"";flex:0 0 22px;height:22px;border-radius:50%;background:#ffffff;margin-top:2px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 22 22'%3E%3Cpath d='M6 11.5l3.4 3.4L16 8' fill='none' stroke='%23004B87' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")}
+.rm-note{font-size:14px;color:rgba(255,255,255,.88);max-width:520px;line-height:1.55}
+.rm-widget{background:#fff;color:#1a1a1a;border-radius:4px;box-shadow:0 8px 28px rgba(0,0,0,.28);padding:0 0 22px}
+.rm-tabs{display:flex;background:#f4f4f4;border-radius:0}
+.rm-tabs b,.rm-tabs a{flex:1;text-align:center;padding:16px 10px;font-weight:700;font-size:17px;text-decoration:none;color:#6c6c6c}
+.rm-tabs b{background:#fff;color:#111;border-top:4px solid #004B87}
+.rm-w{padding:22px 24px 0}
+.rm-w label{display:block;font-weight:700;font-size:17px;margin-bottom:10px;color:#111}
+.rm-w select{width:100%;padding:14px 12px;font-size:17px;border:1px solid #b9b9b9;border-radius:6px;background:#fff;color:#1a1a1a;font-family:inherit}
+.rm-price{margin:18px 0 4px;padding:14px 16px;background:#f4f4f4;border-radius:6px;font-size:15px;color:#3d3d3d;line-height:1.45}
+.rm-price b{display:block;font-size:26px;color:#111;font-weight:800}
+.rm-go{display:block;text-align:center;background:#004B87;color:#fff !important;font-weight:700;font-size:18px;padding:15px 20px;border-radius:4px;text-decoration:none;margin-top:16px}
+.rm-go:hover{background:#003a69}
+.rm-small{font-size:13px;color:#6c6c6c;margin-top:12px;text-align:center}
+.rm-trust{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:-34px auto 8px;max-width:1080px;padding:0 24px;position:relative}
+.rm-tt{background:#ffffff;border-radius:4px;box-shadow:0 2px 10px rgba(0,0,0,.12);padding:20px 18px}
+.rm-tt svg{width:34px;height:34px;margin-bottom:10px}
+.rm-tt b{display:block;font-size:17px;color:#111;margin-bottom:6px}
+.rm-tt span{font-size:14px;color:#6c6c6c;line-height:1.5}
+.rm-routes{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:18px 0 8px}
+.rm-r{background:#fff;border-radius:4px;box-shadow:0 1px 6px rgba(0,0,0,.10);padding:20px;text-decoration:none;display:block;border-top:4px solid #004B87}
+.rm-r small{display:block;font-weight:700;font-size:13px;color:#6c6c6c;text-transform:uppercase;letter-spacing:.06em}
+.rm-r b{display:block;font-size:28px;color:#111;font-weight:800;margin:6px 0 2px}
+.rm-r i{font-style:normal;font-size:13px;color:#6c6c6c}
+.rm-r u{display:block;margin-top:12px;color:#E31837;font-weight:700;text-decoration:none;font-size:15px}
+.rm-band{background:#EAF1F8;border-radius:4px;padding:26px 28px;margin:34px 0 10px;color:#1a1a1a}
+.rm-band b{font-size:22px;display:block;margin-bottom:6px;color:#111}
+@media(max-width:860px){.rm-in{grid-template-columns:1fr}.rm-trust{grid-template-columns:1fr 1fr;margin-top:-22px}.rm-routes{grid-template-columns:1fr 1fr}}
+@media(max-width:520px){.rm-trust,.rm-routes{grid-template-columns:1fr}}
+
+.rm-hero{background:#004B87}
+.rm-r{border-top:4px solid #E31837}
+.rm-wide{max-width:1080px;margin:0 auto;padding:0 24px;position:relative}
+.rm-wide .rm-widget{padding:22px 26px}
+.rm-wide .rm-w{padding:0;display:grid;grid-template-columns:1.2fr 1fr auto;gap:20px;align-items:end}
+.rm-wide .rm-w select{margin-bottom:0}
+.rm-wide .rm-price{margin:0}
+.rm-wide .rm-go{margin:0;padding:15px 34px;white-space:nowrap}
+.rm-center{text-align:center}
+.rm-center .rm-in{grid-template-columns:1fr;max-width:820px;gap:10px}
+.rm-center .rm-note{margin:0 auto}
+.rm-center .rm-points{display:inline-block;text-align:left;margin:4px 0 18px}
+.rm-overlap{margin-top:-64px}
+.rm-hero.rm-center{padding-bottom:110px}
+@media(max-width:860px){.rm-wide .rm-w{grid-template-columns:1fr}.rm-overlap{margin-top:-48px}}
+</style>
 </head>
 <body class="c-us">
 <a href="#main-content" class="skip-link" style="position:absolute;left:-9999px;top:4px;z-index:9999;background:#a8472d;color:#faf6ec;padding:8px 16px;font-size:14px;font-family:Georgia,serif;text-decoration:none;border-radius:2px" onfocus="this.style.left='4px'" onblur="this.style.left='-9999px'">Saltar al contenido principal</a>
 <div id="site-header"></div>
 <script src="/header.js?v=8"></script>
 
-<div class="hero" id="main-content">
-<div class="stamp" aria-hidden="true"><svg width="112" height="134" viewBox="0 0 150 180" role="presentation"><rect x="4" y="4" width="142" height="172" fill="#fff"/><rect x="18" y="18" width="114" height="116" fill="#333366"/><polygon points="75.0,32.0 83.2,54.7 107.3,55.5 88.3,70.3 95.0,93.5 75.0,80.0 55.0,93.5 61.7,70.3 42.7,55.5 66.8,54.7" fill="#fff" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/><text x="75" y="124" text-anchor="middle" font-family="DM Serif Display,Georgia,serif" font-size="17" fill="#fff">US</text><text x="75" y="160" text-anchor="middle" font-family="DM Mono,monospace" font-size="11" letter-spacing="2" fill="#1a1a1a">LETTERHOME</text><rect x="2" y="2" width="146" height="176" fill="none" stroke="#333366" stroke-width="7" stroke-dasharray="0 11" stroke-linecap="round"/></svg></div><div class="letter">
-  <p class="hero-eyebrow">Letterhome EE. UU.</p>
-  <h1>Envíe una carta,<br><em>sin ir al correo.</em></h1>
-  <p class="hero-sub">Escríbala en línea. Nosotros la imprimimos, la metemos en un sobre y la enviamos por usted, a EE. UU., Canadá, el Reino Unido, Australia y más.</p>
-  <a href="/send?to=US" class="hero-cta">Enviar una carta →</a>
-  <div class="answer-box"><p>Las cartas empiezan en <strong>C$6 CAD</strong>, con una estimación en <strong>dólares estadounidenses</strong> más abajo. Cobramos en dólares canadienses, así que el monto exacto aparece al pagar.</p></div>
+<div class="rm-hero" id="main-content"><div class="rm-in">
+  <div><h1>Envíe una carta,<br><span>sin ir al correo.</span></h1><ul class="rm-points"><li>Escríbala en línea, nosotros la imprimimos y la enviamos</li><li>A alguien en EE. UU. o a su familia en el extranjero</li><li>Cada pedido lo revisa una persona</li><li>Precios en dólares estadounidenses, sin estampillas ni impresora</li></ul><p class="rm-note">Las cartas empiezan en C$6 CAD, con estimaciones en dólares estadounidenses. Cobramos en dólares canadienses, así que el monto exacto aparece al pagar.</p></div>
+  <div class="rm-widget"><div class="rm-tabs"><b>Enviar</b><a href="/track">Rastrear</a></div>
+    <div class="rm-w">
+      <div><label for="rm-dest">¿A dónde va su carta?</label><select id="rm-dest"><option value="US">Dentro de EE. UU.</option><option value="CA">Canadá</option><option value="GB">Reino Unido</option><option value="AU">Australia</option><option value="XX">Otro país</option></select></div>
+      <div class="rm-price" id="rm-price">Elija un destino para ver el precio.</div>
+      <div><a class="rm-go" id="rm-go" href="/send?to=US">Enviar una carta</a><p class="rm-small">El precio exacto aparece antes de pagar.</p></div>
+    </div></div>
 </div></div>
 
+<style>.rm-trust{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:-34px auto 8px;max-width:1080px;padding:0 24px;position:relative}.rm-tt{background:#fff;border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,.12);padding:20px 18px}.rm-tt svg{width:34px;height:34px;margin-bottom:10px}.rm-tt b{display:block;font-size:17px;color:#111;margin-bottom:6px}.rm-tt span{font-size:14px;color:#6c6c6c;line-height:1.5}@media(max-width:900px){.rm-trust{grid-template-columns:1fr 1fr;margin-top:-22px}}@media(max-width:560px){.rm-trust{grid-template-columns:1fr}}</style><div class="rm-trust"><div class="rm-tt"><svg viewBox="0 0 34 34" fill="none" stroke="#004B87" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="17" cy="11" r="5.5"/><path d="M6 29c1-6 5.5-9 11-9s10 3 11 9"/></svg><b>Revisada por una persona</b><span>Cada pedido lo revisa una persona antes de imprimirse.</span></div><div class="rm-tt"><svg viewBox="0 0 34 34" fill="none" stroke="#004B87" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="8" width="26" height="19" rx="2"/><path d="M5 10l12 9 12-9"/></svg><b>Correo cuando se envía</b><span>Recibe un correo en cuanto su carta va en camino.</span></div><div class="rm-tt"><svg viewBox="0 0 34 34" fill="none" stroke="#004B87" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="15" cy="15" r="9"/><path d="M22 22l8 8"/></svg><b>Rastree su pedido</b><span>Siga el avance en cualquier momento en nuestra <a href="/track">página de seguimiento</a>.</span></div><div class="rm-tt"><svg viewBox="0 0 34 34" fill="none" stroke="#004B87" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="15" width="20" height="14" rx="2"/><path d="M11 15v-4a6 6 0 0 1 12 0v4"/></svg><b>Pago seguro con tarjeta</b><span>Paga con tarjeta, procesado de forma segura por Stripe.</span></div></div>
 <div class="main">
 
 <h2>Cuánto cuesta</h2>
@@ -387,5 +442,23 @@ body.c-us .cta-block h2{font-family:inherit;font-weight:800;color:#fff}
 })();
 </script>
 <script src="/country.js?v=11" defer></script>
+<script>
+(function () {
+  function fmt(n) { return n % 1 ? n.toFixed(2) : n.toFixed(0); }
+  var sel = document.getElementById('rm-dest'), price = document.getElementById('rm-price'), go = document.getElementById('rm-go'), cfg = null;
+  function update() {
+    var v = sel.value; go.setAttribute('href', v === 'XX' ? '/send' : '/send?to=' + v);
+    if (!cfg || !cfg.fx_display) return;
+    var f = cfg.fx_display.USD, intl = cfg.price_international_cents, cents, amt;
+    if (v === 'CA') { cents = cfg.price_domestic_cents; amt = f.domestic; }
+    else if (v === 'US') { cents = cfg.price_usa_cents; amt = f.usa; }
+    else if (v === 'GB' || v === 'AU') { var d = cfg.destinations && cfg.destinations[v]; var local = d && d.local && d.price_cents; cents = local ? d.price_cents : intl; amt = local ? f.local[v] : f.international; }
+    else { cents = intl; amt = f.international; }
+    price.innerHTML = '<b>Aproximadamente $' + fmt(amt) + ' USD</b>C$' + fmt(cents / 100) + ' CAD, una carta con impresión, sobre y franqueo';
+  }
+  sel.addEventListener('change', update);
+  fetch('/api/site-config').then(function (r) { return r.json(); }).then(function (c) { cfg = c; update(); }).catch(function () {});
+})();
+</script>
 </body>
 </html>
