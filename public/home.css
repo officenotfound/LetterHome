@@ -312,3 +312,9 @@ html,body{background:var(--w-cream)!important}
 #how .step-num{justify-content:flex-start!important}
 #pricing .section-head{max-width:860px!important}
 [data-theme="dark"] .v4-strip svg{stroke:#8fb6da}
+.section-inner{max-width:1200px!important;padding-left:36px!important;padding-right:36px!important;margin-left:auto;margin-right:auto}
+.hero{position:relative}
+.hero::after{content:'';position:absolute;left:0;right:0;bottom:0;height:6px;background:repeating-linear-gradient(135deg,#c8483f 0 14px,#faf6ec 14px 20px,#2f5d8a 20px 34px,#faf6ec 34px 40px)}
+[data-theme="dark"] .hero::after{background:repeating-linear-gradient(135deg,#c8483f 0 14px,#16181d 14px 20px,#5b8fc0 20px 34px,#16181d 34px 40px)}
+.v4-strip{padding-bottom:24px!important}
+@media(max-width:760px){.section-inner{padding-left:20px!important;padding-right:20px!important}}
