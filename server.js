@@ -810,7 +810,7 @@ Object.entries(REGION_REDIRECTS).forEach(([from, to]) =>
  'love-letters-and-personal-mail', 'mail-transcripts-and-student-documents',
  'mail-to-retirement-and-nursing-homes', 'schedule-a-letter-for-later', 'send-a-christmas-letter-to-canada',
  'uk', 'us', 'au', 'nz', 'send-a-letter-online-in-the-usa', 'address-a-letter-to-canada-from-the-uk', 'aussies-in-canada-send-a-letter-home', 'kiwis-in-canada-send-a-letter-home',
- 'send-a-letter-from-canada-to-the-us', 'send-a-letter-from-canada-to-australia', 'send-a-letter-from-canada-to-new-zealand', 'send-a-letter-from-the-us-to-the-uk', 'send-a-letter-from-the-us-to-australia', 'send-a-letter-from-the-us-to-new-zealand', 'send-a-letter-from-the-uk-to-the-us', 'send-a-letter-from-the-uk-to-australia', 'send-a-letter-from-the-uk-to-new-zealand', 'send-a-letter-from-australia-to-the-us', 'send-a-letter-from-australia-to-the-uk', 'send-a-letter-from-australia-to-new-zealand', 'send-a-letter-from-new-zealand-to-the-us', 'send-a-letter-from-new-zealand-to-the-uk', 'send-a-letter-from-new-zealand-to-australia', 'send-letters-between-countries', 'santa-letter', 'send-a-letter-to-the-uk', 'monthly-letters', 'landlord-notices', 'postcards',
+ 'send-a-letter-from-canada-to-the-us', 'send-a-letter-from-canada-to-australia', 'send-a-letter-from-canada-to-new-zealand', 'send-letters-between-countries', 'santa-letter', 'send-a-letter-to-the-uk', 'monthly-letters', 'landlord-notices', 'postcards',
  'letter-from-santa-canada', 'free-letter-from-santa-template', 'christmas-family-letter-template',
  'what-to-write-in-a-letter-to-a-grandparent', 'keep-in-touch-with-family-abroad-by-mail',
  'mailed-from-canada', 'non-resident-landlord', 'n12-notice',
@@ -868,6 +868,31 @@ Object.entries(REGION_REDIRECTS).forEach(([from, to]) =>
 app.get('/account', (req, res) => res.sendFile(path.join(__dirname, 'public', 'account.html')));
 app.get('/account/:page', (req, res, next) => req.params.page === 'verify' ? next()   // email confirmation link, handled below
   : res.sendFile(path.join(__dirname, 'public', 'account.html')));
+
+// Country guides live under their country's path; the old flat URLs redirect
+const COUNTRY_GUIDES = {
+  'us/how-to-send-mail-to-canada-from-us': 'send-a-letter-from-the-us-to-canada',
+  'us/how-to-send-mail-to-uk-from-us': 'send-a-letter-from-the-us-to-the-uk',
+  'us/how-to-send-mail-to-australia-from-us': 'send-a-letter-from-the-us-to-australia',
+  'us/how-to-send-mail-to-new-zealand-from-us': 'send-a-letter-from-the-us-to-new-zealand',
+  'uk/how-to-send-mail-to-canada-from-uk': 'send-a-letter-from-the-uk-to-canada',
+  'uk/how-to-send-mail-to-usa-from-uk': 'send-a-letter-from-the-uk-to-the-us',
+  'uk/how-to-send-mail-to-australia-from-uk': 'send-a-letter-from-the-uk-to-australia',
+  'uk/how-to-send-mail-to-new-zealand-from-uk': 'send-a-letter-from-the-uk-to-new-zealand',
+  'au/how-to-send-mail-to-canada-from-au': 'send-a-letter-from-australia-to-canada',
+  'au/how-to-send-mail-to-usa-from-au': 'send-a-letter-from-australia-to-the-us',
+  'au/how-to-send-mail-to-uk-from-au': 'send-a-letter-from-australia-to-the-uk',
+  'au/how-to-send-mail-to-new-zealand-from-au': 'send-a-letter-from-australia-to-new-zealand',
+  'nz/how-to-send-mail-to-canada-from-nz': 'send-a-letter-from-new-zealand-to-canada',
+  'nz/how-to-send-mail-to-usa-from-nz': 'send-a-letter-from-new-zealand-to-the-us',
+  'nz/how-to-send-mail-to-uk-from-nz': 'send-a-letter-from-new-zealand-to-the-uk',
+  'nz/how-to-send-mail-to-australia-from-nz': 'send-a-letter-from-new-zealand-to-australia'
+};
+Object.keys(COUNTRY_GUIDES).forEach(p => {
+  const file = p.split('/')[1];
+  app.get(`/${p}`, (req, res) => res.sendFile(path.join(__dirname, 'public', `${file}.html`)));
+  app.get(`/${COUNTRY_GUIDES[p]}`, (req, res) => res.redirect(301, `/${p}`));
+});
 
 // Spanish versions of the US pages live under /us/es
 app.get('/us/es', (req, res) => res.sendFile(path.join(__dirname, 'public', 'us-es.html')));

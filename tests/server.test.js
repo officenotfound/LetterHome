@@ -986,7 +986,11 @@ test('country pages: own language, theme and canonical, no French toggle, listed
 });
 
 test('letters between countries: every route page is served with its own canonical and is in the sitemap', async () => {
-  const slugs = ['send-a-letter-from-canada-to-the-us', 'send-a-letter-from-canada-to-australia', 'send-a-letter-from-canada-to-new-zealand', 'send-a-letter-from-the-us-to-the-uk', 'send-a-letter-from-the-us-to-australia', 'send-a-letter-from-the-us-to-new-zealand', 'send-a-letter-from-the-uk-to-the-us', 'send-a-letter-from-the-uk-to-australia', 'send-a-letter-from-the-uk-to-new-zealand', 'send-a-letter-from-australia-to-the-us', 'send-a-letter-from-australia-to-the-uk', 'send-a-letter-from-australia-to-new-zealand', 'send-a-letter-from-new-zealand-to-the-us', 'send-a-letter-from-new-zealand-to-the-uk', 'send-a-letter-from-new-zealand-to-australia', 'send-letters-between-countries'];
+  const cc = ['us', 'uk', 'au', 'nz'], dest = { ca: 'canada', us: 'usa', uk: 'uk', au: 'australia', nz: 'new-zealand' };
+  const slugs = ['send-a-letter-from-canada-to-the-us', 'send-a-letter-from-canada-to-australia', 'send-a-letter-from-canada-to-new-zealand'];
+  for (const o of cc) for (const d of Object.keys(dest)) if (o !== d) slugs.push(`${o}/how-to-send-mail-to-${dest[d]}-from-${o}`);
+  const es = ['canada', 'reino-unido', 'australia', 'nueva-zelanda'].map(d => `us/es/como-enviar-una-carta-a-${d}-desde-ee-uu`);
+  slugs.push(...es);
   const sitemap = await (await fetch(`${base}/sitemap.xml`)).text();
   for (const slug of slugs) {
     const res = await fetch(`${base}/${slug}`);
@@ -1002,8 +1006,13 @@ test('letters between countries: every route page is served with its own canonic
     assert.ok(!html.includes('\u2014'), `${slug} has an em dash`);
   }
   // sender's spelling
-  assert.match(await (await fetch(`${base}/send-a-letter-from-the-us-to-australia`)).text(), /Color printing/);
-  assert.match(await (await fetch(`${base}/send-a-letter-from-australia-to-the-us`)).text(), /Colour printing/);
+  assert.match(await (await fetch(`${base}/us/how-to-send-mail-to-australia-from-us`)).text(), /Color printing/);
+  assert.match(await (await fetch(`${base}/au/how-to-send-mail-to-usa-from-au`)).text(), /Colour printing/);
+  // the Spanish guide has the toggle back to English, and old flat URLs redirect
+  assert.match(await (await fetch(`${base}/us/es/como-enviar-una-carta-a-canada-desde-ee-uu`)).text(), /data-alt="\/us\/how-to-send-mail-to-canada-from-us"/);
+  const old = await fetch(`${base}/send-a-letter-from-the-uk-to-canada`, { redirect: 'manual' });
+  assert.equal(old.status, 301);
+  assert.equal(old.headers.get('location'), '/uk/how-to-send-mail-to-canada-from-uk');
 });
 
 test('site-config: estimates in dollars, pounds, Australian and New Zealand dollars, all rounded up to the next half unit', async () => {

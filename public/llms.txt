@@ -72,18 +72,22 @@ An order can be cancelled for a full refund until it is sent to the printer; aft
 - [Send a Letter From Canada to the US](https://letterhome.ca/send-a-letter-from-canada-to-the-us): Print and send a letter between countries, priced in CAD
 - [Send a Letter From Canada to Australia](https://letterhome.ca/send-a-letter-from-canada-to-australia): Print and send a letter between countries, priced in CAD
 - [Send a Letter From Canada to New Zealand](https://letterhome.ca/send-a-letter-from-canada-to-new-zealand): Print and send a letter between countries, priced in CAD
-- [Send a Letter From the US to the UK](https://letterhome.ca/send-a-letter-from-the-us-to-the-uk): Print and send a letter between countries, priced in CAD
-- [Send a Letter From the US to Australia](https://letterhome.ca/send-a-letter-from-the-us-to-australia): Print and send a letter between countries, priced in CAD
-- [Send a Letter From the US to New Zealand](https://letterhome.ca/send-a-letter-from-the-us-to-new-zealand): Print and send a letter between countries, priced in CAD
-- [Send a Letter From the UK to the US](https://letterhome.ca/send-a-letter-from-the-uk-to-the-us): Print and send a letter between countries, priced in CAD
-- [Send a Letter From the UK to Australia](https://letterhome.ca/send-a-letter-from-the-uk-to-australia): Print and send a letter between countries, priced in CAD
-- [Send a Letter From the UK to New Zealand](https://letterhome.ca/send-a-letter-from-the-uk-to-new-zealand): Print and send a letter between countries, priced in CAD
-- [Send a Letter From Australia to the US](https://letterhome.ca/send-a-letter-from-australia-to-the-us): Print and send a letter between countries, priced in CAD
-- [Send a Letter From Australia to the UK](https://letterhome.ca/send-a-letter-from-australia-to-the-uk): Print and send a letter between countries, priced in CAD
-- [Send a Letter From Australia to New Zealand](https://letterhome.ca/send-a-letter-from-australia-to-new-zealand): Print and send a letter between countries, priced in CAD
-- [Send a Letter From New Zealand to the US](https://letterhome.ca/send-a-letter-from-new-zealand-to-the-us): Print and send a letter between countries, priced in CAD
-- [Send a Letter From New Zealand to the UK](https://letterhome.ca/send-a-letter-from-new-zealand-to-the-uk): Print and send a letter between countries, priced in CAD
-- [Send a Letter From New Zealand to Australia](https://letterhome.ca/send-a-letter-from-new-zealand-to-australia): Print and send a letter between countries, priced in CAD
+- [How to Send a Letter to Canada From the US](https://letterhome.ca/us/how-to-send-mail-to-canada-from-us): Print and send a letter between countries
+- [How to Send a Letter to the UK From the US](https://letterhome.ca/us/how-to-send-mail-to-uk-from-us): Print and send a letter between countries
+- [How to Send a Letter to Australia From the US](https://letterhome.ca/us/how-to-send-mail-to-australia-from-us): Print and send a letter between countries
+- [How to Send a Letter to New Zealand From the US](https://letterhome.ca/us/how-to-send-mail-to-new-zealand-from-us): Print and send a letter between countries
+- [How to Send a Letter to Canada From the UK](https://letterhome.ca/uk/how-to-send-mail-to-canada-from-uk): Print and send a letter between countries
+- [How to Send a Letter to the US From the UK](https://letterhome.ca/uk/how-to-send-mail-to-usa-from-uk): Print and send a letter between countries
+- [How to Send a Letter to Australia From the UK](https://letterhome.ca/uk/how-to-send-mail-to-australia-from-uk): Print and send a letter between countries
+- [How to Send a Letter to New Zealand From the UK](https://letterhome.ca/uk/how-to-send-mail-to-new-zealand-from-uk): Print and send a letter between countries
+- [How to Send a Letter to Canada From Australia](https://letterhome.ca/au/how-to-send-mail-to-canada-from-au): Print and send a letter between countries
+- [How to Send a Letter to the US From Australia](https://letterhome.ca/au/how-to-send-mail-to-usa-from-au): Print and send a letter between countries
+- [How to Send a Letter to the UK From Australia](https://letterhome.ca/au/how-to-send-mail-to-uk-from-au): Print and send a letter between countries
+- [How to Send a Letter to New Zealand From Australia](https://letterhome.ca/au/how-to-send-mail-to-new-zealand-from-au): Print and send a letter between countries
+- [How to Send a Letter to Canada From New Zealand](https://letterhome.ca/nz/how-to-send-mail-to-canada-from-nz): Print and send a letter between countries
+- [How to Send a Letter to the US From New Zealand](https://letterhome.ca/nz/how-to-send-mail-to-usa-from-nz): Print and send a letter between countries
+- [How to Send a Letter to the UK From New Zealand](https://letterhome.ca/nz/how-to-send-mail-to-uk-from-nz): Print and send a letter between countries
+- [How to Send a Letter to Australia From New Zealand](https://letterhome.ca/nz/how-to-send-mail-to-australia-from-nz): Print and send a letter between countries
 - [Send Letters Between Canada, US, UK, Australia, NZ](https://letterhome.ca/send-letters-between-countries): Print and send a letter between countries, priced in CAD
 - [Guides](https://letterhome.ca/guides): All mailing guides
 

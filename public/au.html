@@ -51,6 +51,14 @@
         },
         {
           "@type": "Question",
+          "name": "Is Letterhome part of a postal service?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. Letterhome is an independent company. We print your letter and hand it to the mail service for delivery, and a person checks every order before it is printed."
+          }
+        },
+        {
+          "@type": "Question",
           "name": "Do you charge in Australian dollars?",
           "acceptedAnswer": {
             "@type": "Answer",
@@ -70,7 +78,7 @@
           "name": "Is it tracked or signed for?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "No. Standard post has no tracking, signature or proof of delivery. See our <a href=\"/proof-of-mailing\">proof of mailing guide</a> for the options."
+            "text": "No. Standard post has no tracking, signature or proof of delivery. You can follow your order through our own steps on the <a href=\"/track\">track page</a>, and see our <a href=\"/proof-of-mailing\">proof of mailing guide</a> for the options."
           }
         },
         {
@@ -79,6 +87,14 @@
           "acceptedAnswer": {
             "@type": "Answer",
             "text": "Yes. Skip the return address when you order. The envelope then carries our return address instead."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do I get in touch?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Email <a href=\"mailto:support@letterhome.ca\">support@letterhome.ca</a> or use our <a href=\"/contact\">contact page</a>."
           }
         }
       ]
@@ -219,6 +235,58 @@ footer{background:var(--ink);color:rgba(255,255,255,0.5);padding:40px 36px;margi
 .lang-link{font-family:'DM Mono',monospace;font-size:12px;letter-spacing:.08em;text-decoration:none;color:var(--ink);border:1px solid var(--line);padding:6px 10px;border-radius:2px;margin-right:10px}
 .lang-link:hover{border-color:var(--red);color:var(--red)}
 @media(max-width:640px){.c-grid{grid-template-columns:1fr}.c-card{flex-direction:column;align-items:flex-start;padding:20px}}
+</style><style>
+.rm-hero{background:#DC1928;color:#fff;padding:52px 24px 60px}
+.rm-in{max-width:1080px;margin:0 auto;display:grid;grid-template-columns:1.15fr .85fr;gap:44px;align-items:start}
+.rm-hero h1{font-family:inherit;font-weight:800;font-size:clamp(34px,5.2vw,58px);line-height:1.04;letter-spacing:-.01em;margin:0 0 22px;color:#fff}
+.rm-hero h1 span{color:#ffffff}
+.rm-points{list-style:none;padding:0;margin:0 0 26px}
+.rm-points li{display:flex;gap:12px;align-items:flex-start;font-size:18px;line-height:1.45;margin-bottom:12px;color:#fff}
+.rm-points li:before{content:"";flex:0 0 22px;height:22px;border-radius:50%;background:#ffffff;margin-top:2px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 22 22'%3E%3Cpath d='M6 11.5l3.4 3.4L16 8' fill='none' stroke='%23DC1928' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")}
+.rm-note{font-size:14px;color:rgba(255,255,255,.88);max-width:520px;line-height:1.55}
+.rm-widget{background:#fff;color:#1a1a1a;border-radius:20px;box-shadow:0 8px 28px rgba(0,0,0,.28);padding:0 0 22px}
+.rm-tabs{display:flex;background:#f4f4f4;border-radius:0}
+.rm-tabs b,.rm-tabs a{flex:1;text-align:center;padding:16px 10px;font-weight:700;font-size:17px;text-decoration:none;color:#6c6c6c}
+.rm-tabs b{background:#fff;color:#111;border-top:4px solid #DC1928}
+.rm-w{padding:22px 24px 0}
+.rm-w label{display:block;font-weight:700;font-size:17px;margin-bottom:10px;color:#111}
+.rm-w select{width:100%;padding:14px 12px;font-size:17px;border:1px solid #b9b9b9;border-radius:6px;background:#fff;color:#1a1a1a;font-family:inherit}
+.rm-price{margin:18px 0 4px;padding:14px 16px;background:#f4f4f4;border-radius:6px;font-size:15px;color:#3d3d3d;line-height:1.45}
+.rm-price b{display:block;font-size:26px;color:#111;font-weight:800}
+.rm-go{display:block;text-align:center;background:#DC1928;color:#fff !important;font-weight:700;font-size:18px;padding:15px 20px;border-radius:100px;text-decoration:none;margin-top:16px}
+.rm-go:hover{background:#b01420}
+.rm-small{font-size:13px;color:#6c6c6c;margin-top:12px;text-align:center}
+.rm-trust{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:-34px auto 8px;max-width:1080px;padding:0 24px;position:relative}
+.rm-tt{background:#FDECEC;border-radius:20px;box-shadow:0 2px 10px rgba(0,0,0,.12);padding:20px 18px}
+.rm-tt svg{width:34px;height:34px;margin-bottom:10px}
+.rm-tt b{display:block;font-size:17px;color:#111;margin-bottom:6px}
+.rm-tt span{font-size:14px;color:#6c6c6c;line-height:1.5}
+.rm-routes{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:18px 0 8px}
+.rm-r{background:#fff;border-radius:20px;box-shadow:0 1px 6px rgba(0,0,0,.10);padding:20px;text-decoration:none;display:block;border-top:4px solid #DC1928}
+.rm-r small{display:block;font-weight:700;font-size:13px;color:#6c6c6c;text-transform:uppercase;letter-spacing:.06em}
+.rm-r b{display:block;font-size:28px;color:#111;font-weight:800;margin:6px 0 2px}
+.rm-r i{font-style:normal;font-size:13px;color:#6c6c6c}
+.rm-r u{display:block;margin-top:12px;color:#DC1928;font-weight:700;text-decoration:none;font-size:15px}
+.rm-band{background:#FDECEC;border-radius:20px;padding:26px 28px;margin:34px 0 10px;color:#1a1a1a}
+.rm-band b{font-size:22px;display:block;margin-bottom:6px;color:#111}
+@media(max-width:860px){.rm-in{grid-template-columns:1fr}.rm-trust{grid-template-columns:1fr 1fr;margin-top:-22px}.rm-routes{grid-template-columns:1fr 1fr}}
+@media(max-width:520px){.rm-trust,.rm-routes{grid-template-columns:1fr}}
+
+.rm-hero{background:#DC1928}
+.rm-r{border-top:4px solid #DC1928}
+.rm-wide{max-width:1080px;margin:0 auto;padding:0 24px;position:relative}
+.rm-wide .rm-widget{padding:22px 26px}
+.rm-wide .rm-w{padding:0;display:grid;grid-template-columns:1.2fr 1fr auto;gap:20px;align-items:end}
+.rm-wide .rm-w select{margin-bottom:0}
+.rm-wide .rm-price{margin:0}
+.rm-wide .rm-go{margin:0;padding:15px 34px;white-space:nowrap}
+.rm-center{text-align:center}
+.rm-center .rm-in{grid-template-columns:1fr;max-width:820px;gap:10px}
+.rm-center .rm-note{margin:0 auto}
+.rm-center .rm-points{display:inline-block;text-align:left;margin:4px 0 18px}
+.rm-overlap{margin-top:-64px}
+.rm-hero.rm-center{padding-bottom:110px}
+@media(max-width:860px){.rm-wide .rm-w{grid-template-columns:1fr}.rm-overlap{margin-top:-48px}}
 </style>
 <script>(function(){try{var m=window.matchMedia('(prefers-color-scheme: dark)'),s=function(){document.documentElement.setAttribute('data-theme',m.matches?'dark':'light');};s();if(m.addEventListener)m.addEventListener('change',s);}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
 <link rel="stylesheet" href="/theme.css?v=23">
@@ -256,6 +324,40 @@ body.c-au .lang-link{color:#faf6ec;border-color:rgba(250,246,236,.45)}
 body.c-au .lang-link:hover{color:#fff;border-color:#fff}
 body.c-au .lang-toggle{color:#faf6ec !important}
 @media(max-width:720px){body.c-au .hero{padding:32px 14px 44px}body.c-au .hero .letter{padding:28px 22px}body.c-au .hero .stamp{display:none}}
+
+body.c-au{--red:#DC1928;--red-deep:#b01420;--red-stamp:#DC1928;--m1:#DC1928;--ink:#1a1a1a;--ink-soft:#3d3d3d;--ink-muted:#6c6c6c;--paper:#ffffff;--kraft:#f4f4f4;--line:#e2e2e2;--shadow-card:0 1px 6px rgba(0,0,0,.10);
+  background:#ffffff !important;color:#2a2a2f;font-family:"Inter","Helvetica Neue",Helvetica,Arial,sans-serif}
+body.c-au nav,:root[data-theme="dark"] body.c-au nav{background:#DC1928 !important;border-bottom:0 solid transparent !important}
+body.c-au .logo-accent{color:#ffe3e5 !important}
+body.c-au .nav-cta,body.c-au .nav-cta:visited,body.c-au .nav-cta:hover{background:#fff !important;color:#DC1928 !important;border-color:#fff !important;border-radius:100px !important;font-weight:700}
+body.c-au .hero{background:#DC1928;padding:56px 24px 64px;text-align:left}
+body.c-au .hero .stamp{display:none}
+body.c-au .hero .letter{background:transparent;box-shadow:none;transform:none;padding:0;max-width:860px;color:#fff}
+body.c-au .hero .letter:before{display:none}
+body.c-au .hero-eyebrow{color:#fff;opacity:.85;font-family:inherit;font-weight:700;letter-spacing:.12em}
+body.c-au .hero h1{font-family:inherit;font-weight:800;color:#fff;letter-spacing:-.02em;line-height:1.08}
+body.c-au .hero h1 em{font-style:normal;color:#ffffff}
+body.c-au .hero-sub{color:#fff;font-size:19px}
+body.c-au .hero-cta,body.c-au .cta-block a{background:#ffffff;color:#DC1928;border-radius:100px;font-family:inherit;font-weight:700;text-transform:none;letter-spacing:0;font-size:17px;padding:14px 32px}
+body.c-au .hero-cta:hover,body.c-au .cta-block a:hover{filter:brightness(.94)}
+body.c-au .answer-box{background:rgba(0,0,0,.18);border-left:4px solid #ffffff;border-radius:20px}
+body.c-au .answer-box p{color:#fff}
+body.c-au .main{max-width:900px}
+body.c-au .main h2{font-family:inherit;font-weight:800;color:#212129;font-size:30px;letter-spacing:-.01em}
+body.c-au .main p,body.c-au .main li{color:#3d3d3d}
+body.c-au .main a{color:#DC1928}
+body.c-au .steps li::before{background:#DC1928;color:#fff;font-family:inherit;font-weight:700}
+body.c-au .faq-item{background:#fff;border:1px solid #e6e6e9;border-radius:20px;padding:20px 24px;margin-bottom:10px;box-shadow:none}
+body.c-au .faq-q{font-family:inherit;font-weight:700;color:#212129}
+body.c-au .related-card{background:#fff;border:1px solid #e6e6e9;border-radius:20px;box-shadow:none}
+body.c-au .c-tile,body.c-au .c-card{background:#fff;border:1px solid #e6e6e9;border-radius:20px;box-shadow:none}
+body.c-au .c-tile .to{font-family:inherit;font-weight:700;color:#6c6c6c}
+body.c-au .c-tile .amt{font-family:inherit;font-weight:800;color:#212129}
+body.c-au .c-env{border-radius:20px;font-family:inherit;box-shadow:none;border:1px solid #e6e6e9}
+body.c-au .c-env::before{background:#DC1928;border-radius:20px 0 0 20px}
+body.c-au .cta-block{background:#DC1928;border-radius:20px;border-bottom:0}
+body.c-au .cta-block h2{font-family:inherit;font-weight:800;color:#fff}
+@media(max-width:720px){body.c-au .hero{padding:32px 16px 40px}}
 </style>
 </head>
 <body class="c-au">
@@ -263,21 +365,26 @@ body.c-au .lang-toggle{color:#faf6ec !important}
 <div id="site-header"></div>
 <script src="/header.js?v=8"></script>
 
-<div class="hero" id="main-content">
-<div class="stamp" aria-hidden="true"><svg width="112" height="134" viewBox="0 0 150 180" role="presentation"><rect x="4" y="4" width="142" height="172" fill="#fff"/><rect x="18" y="18" width="114" height="116" fill="#B3121F"/><polygon points="75.0,32.0 81.5,52.5 101.6,44.8 89.6,62.7 108.1,73.6 86.7,75.4 89.8,96.6 75.0,81.0 60.2,96.6 63.3,75.4 41.9,73.6 60.4,62.7 48.4,44.8 68.5,52.5" fill="#FFCD00" stroke="#FFCD00" stroke-width="1.5" stroke-linejoin="round"/><text x="75" y="124" text-anchor="middle" font-family="DM Serif Display,Georgia,serif" font-size="17" fill="#fff">AU</text><text x="75" y="160" text-anchor="middle" font-family="DM Mono,monospace" font-size="11" letter-spacing="2" fill="#1a1a1a">LETTERHOME</text><rect x="2" y="2" width="146" height="176" fill="none" stroke="#B3121F" stroke-width="7" stroke-dasharray="0 11" stroke-linecap="round"/></svg></div><div class="letter">
-  <p class="hero-eyebrow">Letterhome Australia</p>
-  <h1>A proper letter,<br><em>posted for you.</em></h1>
-  <p class="hero-sub">Type it online and we print it, pop it in an envelope and post it, to someone in Australia or to family abroad. Need another country? We do that too.</p>
-  <a href="/send?to=AU" class="hero-cta">Send a letter →</a>
-  <div class="answer-box"><p>Letters start at <strong>C$6 CAD</strong>, with estimates in <strong>Australian dollars</strong> below. The price depends on where it's going. We charge in Canadian dollars, so the exact amount shows at checkout.</p></div>
+<div class="rm-hero rm-center" id="main-content"><div class="rm-in">
+  <div><h1>A proper letter,<br><span>posted for you.</span></h1><ul class="rm-points"><li>Type it online, we print it and post it</li><li>To someone in Australia or to family abroad</li><li>A person checks every order</li><li>Prices in Australian dollars, no stamps or printer needed</li></ul><p class="rm-note">Letters start at C$6 CAD, with estimates in Australian dollars. We charge in Canadian dollars, so the exact amount shows at checkout.</p></div>
 </div></div>
+<div class="rm-wide rm-overlap"><div class="rm-widget">
+    <div class="rm-w">
+      <div><label for="rm-dest">Where is your letter going?</label>
+      <select id="rm-dest"><option value="AU">Within Australia</option><option value="CA">Canada</option><option value="US">United States</option><option value="GB">United Kingdom</option><option value="NZ">New Zealand</option><option value="XX">Another country</option></select></div>
+      <div class="rm-price" id="rm-price">Choose a destination to see a price.</div>
+      <div><a class="rm-go" id="rm-go" href="/send?to=AU">Send a letter</a></div>
+    </div></div></div>
 
 <div class="main">
 
-<h2>What it costs</h2>
-<div class="c-grid"><div class="c-tile"><div class="to">Within Australia</div><div class="amt" id="p-au">&nbsp;</div><div class="cad" id="c-au"></div></div><div class="c-tile"><div class="to">To Canada</div><div class="amt" id="p-ca">&nbsp;</div><div class="cad" id="c-ca"></div></div><div class="c-tile"><div class="to">To the United States</div><div class="amt" id="p-us">&nbsp;</div><div class="cad" id="c-us"></div></div><div class="c-tile"><div class="to">To the United Kingdom</div><div class="amt" id="p-gb">&nbsp;</div><div class="cad" id="c-gb"></div></div><div class="c-tile"><div class="to">To New Zealand</div><div class="amt" id="p-nz">&nbsp;</div><div class="cad" id="c-nz"></div></div><div class="c-tile"><div class="to">Any other country</div><div class="amt" id="p-in">&nbsp;</div><div class="cad" id="c-in"></div></div></div>
+<div class="rm-trust" style="margin-top:0;padding:0"><div class="rm-tt"><svg viewBox="0 0 34 34" fill="none" stroke="#DC1928" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="17" cy="11" r="5.5"/><path d="M6 29c1-6 5.5-9 11-9s10 3 11 9"/></svg><b>Checked by a person</b><span>Every order is looked over by a person before it is printed.</span></div><div class="rm-tt"><svg viewBox="0 0 34 34" fill="none" stroke="#DC1928" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="8" width="26" height="19" rx="2"/><path d="M5 10l12 9 12-9"/></svg><b>Email when it is posted</b><span>You get an email as soon as your letter is on its way.</span></div><div class="rm-tt"><svg viewBox="0 0 34 34" fill="none" stroke="#DC1928" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="15" cy="15" r="9"/><path d="M22 22l8 8"/></svg><b>Track your order</b><span>Follow progress any time on our <a href="/track" style="color:#DC1928">track page</a>.</span></div><div class="rm-tt"><svg viewBox="0 0 34 34" fill="none" stroke="#DC1928" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="15" width="20" height="14" rx="2"/><path d="M11 15v-4a6 6 0 0 1 12 0v4"/></svg><b>Secure card payment</b><span>You pay by card, handled securely by Stripe.</span></div></div>
+
+<h2>Where is your letter going?</h2>
+<p>Pick a route for prices and the address format. We send to most countries, and the order page shows the exact price before you pay.</p>
+<div class="rm-routes"><a class="rm-r" href="/send?to=AU"><small>Within Australia</small><b id="p-au">&nbsp;</b><i id="c-au"></i><u>Send inside Australia →</u></a><a class="rm-r" href="/au/how-to-send-mail-to-canada-from-au"><small>To Canada</small><b id="p-ca">&nbsp;</b><i id="c-ca"></i><u>Guide: letters to Canada →</u></a><a class="rm-r" href="/au/how-to-send-mail-to-usa-from-au"><small>To the US</small><b id="p-us">&nbsp;</b><i id="c-us"></i><u>Guide: letters to the US →</u></a><a class="rm-r" href="/au/how-to-send-mail-to-uk-from-au"><small>To the UK</small><b id="p-gb">&nbsp;</b><i id="c-gb"></i><u>Guide: letters to the UK →</u></a><a class="rm-r" href="/au/how-to-send-mail-to-new-zealand-from-au"><small>To New Zealand</small><b id="p-nz">&nbsp;</b><i id="c-nz"></i><u>Guide: letters to New Zealand →</u></a><a class="rm-r" href="/send"><small>Any other country</small><b id="p-in">&nbsp;</b><i id="c-in"></i><u>Choose any country →</u></a></div>
 <p class="c-note">Where our Australian printing is running, your letter is printed and posted inside Australia. Otherwise it's printed in Canada and posted from there, which takes longer. The order page tells you which one applies, along with the price and delivery time, before you pay.</p>
-<p class="c-note">Each price covers one letter with printing, the envelope and postage. We price in Canadian dollars (CAD). The AUD figures are estimates, refreshed weekly and rounded up to the nearest 50 cents. The exact amount shows at checkout, and your bank may convert it at its own rate. The first 2 black and white pages are included. Colour printing is C$1 extra, and each extra page is C$0.45 (C$0.55 in colour).</p>
+<p class="c-note">Each price covers one letter with printing, the envelope and postage. We price in Canadian dollars (CAD). The Australian dollar figures are estimates, refreshed weekly and rounded up to the nearest 50 cents. The exact amount shows at checkout, and your bank may convert it at its own rate. The first 2 black and white pages are included. Colour printing is C$1 extra, and each extra page is C$0.45 (C$0.55 in colour).</p>
 
 <h2>How it works</h2>
 <ol class="steps">
@@ -287,9 +394,7 @@ body.c-au .lang-toggle{color:#faf6ec !important}
   <li><div><strong>It arrives in their letter box</strong><p>No printer, no stamps and no queue at the post office.</p></div></li>
 </ol>
 
-<h2>Where is it going?</h2>
-<p>Pick your route. The first link is for letters inside Australia, then family abroad. Each guide has the address format, what it costs and how long it takes. Any other country works too, and the order page shows the price.</p>
-<ul class="bullets"><li><a href="/send?to=AU">Within Australia</a></li><li><a href="/from-australia">To Canada</a></li><li><a href="/send-a-letter-from-australia-to-the-us">To the US</a></li><li><a href="/send-a-letter-from-australia-to-the-uk">To the UK</a></li><li><a href="/send-a-letter-from-australia-to-new-zealand">To New Zealand</a></li></ul>
+<div class="rm-band"><b>Post it without the post office run.</b>Type it at home, on your phone or on the way to work. We take care of the printing, the envelope and the posting.</div>
 
 <h2>What people send</h2>
 <ul class="bullets"><li>A proper letter for mum and dad, or Nan and Pop, who'd love something to stick on the fridge.</li><li>Letters to family in Canada, the US, the UK or New Zealand, with no queue at the post office.</li><li>Birthday and anniversary letters, timed with <a href="/schedule-a-letter-for-later">schedule for later</a>.</li><li>Anything you'd rather post without your return address on it.</li></ul>
@@ -303,7 +408,7 @@ body.c-au .lang-toggle{color:#faf6ec !important}
 <p>Some people also use us for forms that have to reach Canada on paper: <a href="/how-to-mail-cra-tax-forms-from-outside-canada">CRA tax forms</a>, <a href="/where-to-mail-non-resident-tax-return-to-canada">non-resident tax returns</a>, <a href="/ircc-documents">IRCC documents</a> and <a href="/mail-transcripts-and-student-documents">student transcripts</a>. We print and post what you upload and don't check forms for you, so make sure they're complete and signed where needed.</p>
 <p>Standard post has no tracking and may not carry a dated postmark, so it is not proof of posting. See our <a href="/proof-of-mailing">proof of mailing guide</a> if you need proof.</p>
 
-<div class="faq"><h2>Common questions</h2><div class="faq-item"><p class="faq-q">Can I post a letter within Australia?</p><p class="faq-a">Yes. Where our local printing is running, the letter is printed and posted inside Australia. Otherwise it is printed in Canada and posted from there, which takes longer. The order page tells you which applies, with the price, before you pay.</p></div><div class="faq-item"><p class="faq-q">Can I send letters from Australia to family in other countries?</p><p class="faq-a">Yes. We send letters to Canada, the US, the UK, Australia, New Zealand and most other countries. Pick your route above for the address format and price.</p></div><div class="faq-item"><p class="faq-q">Do you charge in Australian dollars?</p><p class="faq-a">We price in Canadian dollars. The Australian dollar figures on this page are estimates, refreshed weekly and rounded up to the nearest 50 cents. The exact amount shows at checkout, and your bank may convert it at its own rate.</p></div><div class="faq-item"><p class="faq-q">How long does it take?</p><p class="faq-a">We send it within two business days of the order. Delivery within Canada typically takes up to 2 weeks, and international delivery up to 4 weeks. Standard post has no tracking, so we can't give an exact date.</p></div><div class="faq-item"><p class="faq-q">Is it tracked or signed for?</p><p class="faq-a">No. Standard post has no tracking, signature or proof of delivery. See our <a href="/proof-of-mailing">proof of mailing guide</a> for the options.</p></div><div class="faq-item"><p class="faq-q">Can I send it anonymously?</p><p class="faq-a">Yes. Skip the return address when you order. The envelope then carries our return address instead.</p></div></div>
+<div class="faq"><h2>Common questions</h2><div class="faq-item"><p class="faq-q">Can I post a letter within Australia?</p><p class="faq-a">Yes. Where our local printing is running, the letter is printed and posted inside Australia. Otherwise it is printed in Canada and posted from there, which takes longer. The order page tells you which applies, with the price, before you pay.</p></div><div class="faq-item"><p class="faq-q">Can I send letters from Australia to family in other countries?</p><p class="faq-a">Yes. We send letters to Canada, the US, the UK, Australia, New Zealand and most other countries. Pick your route above for the address format and price.</p></div><div class="faq-item"><p class="faq-q">Is Letterhome part of a postal service?</p><p class="faq-a">No. Letterhome is an independent company. We print your letter and hand it to the mail service for delivery, and a person checks every order before it is printed.</p></div><div class="faq-item"><p class="faq-q">Do you charge in Australian dollars?</p><p class="faq-a">We price in Canadian dollars. The Australian dollar figures on this page are estimates, refreshed weekly and rounded up to the nearest 50 cents. The exact amount shows at checkout, and your bank may convert it at its own rate.</p></div><div class="faq-item"><p class="faq-q">How long does it take?</p><p class="faq-a">We send it within two business days of the order. Delivery within Canada typically takes up to 2 weeks, and international delivery up to 4 weeks. Standard post has no tracking, so we can't give an exact date.</p></div><div class="faq-item"><p class="faq-q">Is it tracked or signed for?</p><p class="faq-a">No. Standard post has no tracking, signature or proof of delivery. You can follow your order through our own steps on the <a href="/track">track page</a>, and see our <a href="/proof-of-mailing">proof of mailing guide</a> for the options.</p></div><div class="faq-item"><p class="faq-q">Can I send it anonymously?</p><p class="faq-a">Yes. Skip the return address when you order. The envelope then carries our return address instead.</p></div><div class="faq-item"><p class="faq-q">How do I get in touch?</p><p class="faq-a">Email <a href="mailto:support@letterhome.ca">support@letterhome.ca</a> or use our <a href="/contact">contact page</a>.</p></div></div>
 <div class="related"><h2>Related guides</h2><div class="related-grid"><a class="related-card" href="/send-letters-between-countries"><strong>Letters Between Countries</strong><span>Every route in one place</span></a><a class="related-card" href="/aussies-in-canada-send-a-letter-home"><strong>Aussies in Canada: Send a Letter Home</strong><span>For working holiday makers and expats</span></a><a class="related-card" href="/from-australia"><strong>Sending From Australia to Canada</strong><span>The full guide, with postage and FAQs</span></a><a class="related-card" href="/proof-of-mailing"><strong>Proof of Mailing</strong><span>What proof you can and can't get</span></a></div></div>
 <div class="cta-block"><h2>Got a letter to get out?</h2><p>Type it online and we print and post it, from C$6 CAD.</p><a href="/send?to=AU">Send a letter →</a></div>
 </div>
@@ -334,7 +439,24 @@ body.c-au .lang-toggle{color:#faf6ec !important}
     put('in', intl, f.international);
   }).catch(function () {});
 })();
+</script><script>
+(function () {
+  function fmt(n) { return n % 1 ? n.toFixed(2) : n.toFixed(0); }
+  var sel = document.getElementById('rm-dest'), price = document.getElementById('rm-price'), go = document.getElementById('rm-go'), cfg = null;
+  function update() {
+    var v = sel.value; go.setAttribute('href', v === 'XX' ? '/send' : '/send?to=' + v);
+    if (!cfg || !cfg.fx_display) return;
+    var f = cfg.fx_display.AUD, intl = cfg.price_international_cents, cents, amt;
+    if (v === 'CA') { cents = cfg.price_domestic_cents; amt = f.domestic; }
+    else if (v === 'US') { cents = cfg.price_usa_cents; amt = f.usa; }
+    else if (v === 'GB' || v === 'AU') { var d = cfg.destinations && cfg.destinations[v]; var local = d && d.local && d.price_cents; cents = local ? d.price_cents : intl; amt = local ? f.local[v] : f.international; }
+    else { cents = intl; amt = f.international; }
+    price.innerHTML = '<b>About $' + fmt(amt) + ' AUD</b>C$' + fmt(cents / 100) + ' CAD, one letter with printing, envelope and postage';
+  }
+  sel.addEventListener('change', update);
+  fetch('/api/site-config').then(function (r) { return r.json(); }).then(function (c) { cfg = c; update(); }).catch(function () {});
+})();
 </script>
-<script src="/country.js?v=10" defer></script>
+<script src="/country.js?v=11" defer></script>
 </body>
 </html>
