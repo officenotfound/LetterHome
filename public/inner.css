@@ -103,3 +103,10 @@ body[class*="c-"] .hero .answer-box,body[class*="c-"] .hero .answer-box *{color:
 [data-theme="dark"] .rm-tt span{color:#c9c1b2!important}
 [data-theme="dark"] .c-card{background:#23262d!important;border-color:rgba(239,230,212,.16)!important}
 [data-theme="dark"] .c-card *{color:#f1eadb!important}
+.cta-block a{background-color:#bf2d3a!important;color:#fff!important;text-decoration:none}
+body[class*="c-"] .cta-block{background:var(--cp,#1c2f45)!important}
+body[class*="c-"] .cta-block a{background-color:#fff!important;color:var(--cp,#1c2f45)!important}
+[data-theme="dark"] .main .cta-block p{color:rgba(255,255,255,.92)!important}
+[data-theme="dark"] .main a.hero-cta,[data-theme="dark"] .hero a.hero-cta{color:#fff!important}
+[data-theme="dark"] body[class*="c-"] .main a.hero-cta,[data-theme="dark"] body[class*="c-"] .hero a.hero-cta{color:var(--cp)!important}
+[data-theme="dark"] .notice{background:#23262d!important;border-color:rgba(239,230,212,.16)!important}

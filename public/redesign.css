@@ -1,6 +1,6 @@
 /* Letterhome design system. Loads after theme.css and guide.css on every page.
    Archivo headings, Noto Sans reading text, Roboto labels and controls. */
-:root{--w-cream:#faf6ec;--w-kraft:#ece3cf;--w-line:rgba(42,42,42,.14);--rd-paper:#fbf7ec;--rd-edge:rgba(42,42,42,.12);--rd-shadow:0 1px 2px rgba(42,42,42,.06),0 12px 32px -12px rgba(42,42,42,.18);--red:#bf2d3a;--ink:#1a1a1a;--ink-soft:#3b3833;--ink-muted:#5e564c;--line:rgba(42,42,42,.12);--navy:#1c2f45;--airmail:#2f5d8a}
+:root{--w-cream:#faf6ec;--w-kraft:#ece3cf;--w-line:rgba(42,42,42,.14);--rd-paper:#fbf7ec;--rd-edge:rgba(42,42,42,.12);--rd-shadow:0 1px 2px rgba(42,42,42,.06),0 12px 32px -12px rgba(42,42,42,.18);--red:#bf2d3a!important;--red-deep:#a32431!important;--red-stamp:#bf2d3a!important;--ink:#1a1a1a!important;--ink-soft:#3b3833!important;--ink-muted:#55504a!important;--ink-faint:#5e564c!important;--line:rgba(42,42,42,.12)!important;--navy:#1c2f45;--airmail:#2f5d8a}
 html,body{background:var(--w-cream)!important;color:var(--ink)}
 body::before{display:none!important}
 body,p,li,td,input,select,textarea{font-family:'Noto Sans',system-ui,sans-serif}
@@ -78,3 +78,24 @@ body.c-us{--cp:#004B87;--ca:#E31837;--tint:#EAF1F8}
 body.c-uk{--cp:#DA202A;--ca:#FFD100;--tint:#FBEDEE}
 body.c-au{--cp:#DC1928;--ca:#FFFFFF;--tint:#FBECEE}
 @media(max-width:560px){.nav-cta{display:inline-flex!important}}
+
+[data-theme="dark"]{--red-stamp:#ff9d90!important;--ink-faint:#b9b1a2!important}
+[data-theme="dark"] a:not(.btn):not(.nav-cta):not(.nav-track):not(.logo):not(.hero-cta):not(.rm-go):not(.rm-r):not(.rate-go):not(.related-card):not(.v4-second){color:#ff9d90}
+/* Dark mode: bright red for text, deep red for buttons */
+[data-theme="dark"]{--red:#ff9d90!important;--red-deep:#ff8a7a!important}
+[data-theme="dark"] .btn-red,[data-theme="dark"] .nav-cta,[data-theme="dark"] .btn-large,[data-theme="dark"] .hero-cta,[data-theme="dark"] .rm-go,[data-theme="dark"] .cta-block a{background-color:#bf2d3a!important;color:#fff!important}
+[data-theme="dark"] body[class*="c-"] .nav-cta,[data-theme="dark"] body[class*="c-"] .hero-cta,[data-theme="dark"] body[class*="c-"] .cta-block a{background-color:#fff!important;color:var(--cp)!important}
+[data-theme="dark"] .main a.btn,[data-theme="dark"] .main a.hero-cta,[data-theme="dark"] .cta-block a{color:#fff!important}
+[data-theme="dark"] body[class*="c-"] .cta-block a{color:var(--cp)!important}
+[data-theme="dark"] .related-card span{color:#c9c1b2!important}
+[data-theme="dark"] .cta-block p{color:rgba(255,255,255,.92)!important}
+/* The country order widget stays a light card in dark mode */
+[data-theme="dark"] .rm-widget,[data-theme="dark"] .rm-widget *{color:#1a1a1a}
+[data-theme="dark"] .rm-tabs button,[data-theme="dark"] .rm-tabs a,[data-theme="dark"] .rm-tabs span{color:#1a1a1a!important}
+[data-theme="dark"] .rm-price{background:#eef2f6!important;color:#3d3d3d!important}
+[data-theme="dark"] .rm-price b{color:#111!important}
+[data-theme="dark"] .rm-small{color:#55504a!important}
+[data-theme="dark"] .rm-go{color:#fff!important}
+[data-theme="dark"] input,[data-theme="dark"] select,[data-theme="dark"] textarea{background:#23262d!important;color:#f1eadb!important;border-color:rgba(239,230,212,.25)!important}
+[data-theme="dark"] .rm-widget select,[data-theme="dark"] .rm-widget input{background:#fff!important;color:#1a1a1a!important}
+[data-theme="dark"] .letter-preview{color:#1a1a1a!important}
