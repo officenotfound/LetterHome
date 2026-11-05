@@ -35,7 +35,7 @@
         var cents = +el.getAttribute('data-cad'), x = cents / 100 * rate;
         var v = cents >= 300 ? Math.max(0.5, Math.ceil(x * 2 - 1e-9) / 2) : Math.ceil(x * 20 - 1e-9) / 20;
         var t = v % 1 ? v.toFixed(2) : v.toFixed(0);
-        el.textContent = cur === 'GBP' ? '\u00a3' + t : '$' + t + ' ' + cur;
+        el.textContent = (cur === 'GBP' ? '\u00a3' : '$') + t;
       });
     }).catch(function () {});
   }
