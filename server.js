@@ -1581,6 +1581,8 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
   let stripeSession;
   try {
     stripeSession = await stripe.checkout.sessions.create({
+      // Fixed local prices: don't let Stripe re-price into the visitor's currency.
+      adaptive_pricing: { enabled: false },
       // No payment_method_types: Checkout offers every method enabled in the
       // Stripe Dashboard that supports CAD (card, Alipay, WeChat Pay, Link, wallets).
       customer_email: rEmail,
@@ -1646,6 +1648,7 @@ app.get('/resume/:token', trackLimiter, async (req, res) => {
     if (order.schedule_for_later) extras.push('scheduled delivery');
     const extrasNote = extras.length ? ` + ${extras.join(', ')}` : '';
     const session = await stripe.checkout.sessions.create({
+      adaptive_pricing: { enabled: false },
       customer_email: order.customer_email,
       line_items: [{
         price_data: {
