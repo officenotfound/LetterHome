@@ -39,7 +39,7 @@
   if ((root.lang || '').toLowerCase().indexOf('es') === 0) {
     var es = {
       'nav.how': 'Cómo funciona', 'nav.pricing': 'Precios', 'nav.contact': 'Contacto', 'nav.track': 'Rastrear un pedido', 'nav.send': 'Enviar una carta',
-      'footer.blurb': 'Imprimimos y enviamos sus cartas por usted. Pensado para quienes viven lejos, y útil para cualquiera que necesite enviar correo sin ir a la oficina postal.',
+      'footer.blurb': 'Imprimimos y enviamos sus cartas por usted, sin ir a la oficina postal.',
       'footer.service': 'Servicio', 'footer.countries': 'Países', 'footer.company': 'Empresa', 'footer.guides': 'Guías de envío',
       'footer.ca': 'Canadá', 'footer.us': 'Estados Unidos', 'footer.uk': 'Reino Unido', 'footer.au': 'Australia',
       'footer.about': 'Nosotros', 'footer.refunds': 'Política de reembolsos', 'footer.privacy': 'Privacidad', 'footer.terms': 'Términos', 'footer.accessibility': 'Accesibilidad'
