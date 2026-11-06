@@ -1364,6 +1364,11 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
   });
 
   const b = req.body;
+  // Cap free-text field lengths so a single request cannot store (or later email/print) huge values.
+  for (const [k, max] of Object.entries({ 'r-email': 254, 'r-name': 120, 'r-street': 200, 'r-city': 100, 'r-province': 60, 'r-postal': 20, 'r-country': 4,
+    's-name': 120, 's-street': 200, 's-city': 100, 's-province': 60, 's-postal': 20, 's-country': 4, 'discount_code': 40, 'currency': 4, 'mail_service': 20 })) {
+    if (typeof b[k] === 'string' && b[k].length > max) b[k] = b[k].slice(0, max);
+  }
   // The province list sends "QC: Quebec"; store just the code.
   if (b['r-province']) b['r-province'] = String(b['r-province']).replace(/^\s*([A-Za-z]{2,3})\s*:.*$/s, (m, c) => c.toUpperCase());
   const rEmail  = (b['r-email']  || '').trim().toLowerCase();
@@ -3930,8 +3935,11 @@ function buildRecoveryEmail(order) {
   const base      = process.env.BASE_URL || '';
   const link      = order.status_token ? `${base}/resume/${order.status_token}` : `${base}/send`;
   const total     = (order.price_cents / 100).toFixed(order.price_cents % 100 === 0 ? 0 : 2);
-  const toLine    = [order.recipient_name, [order.recipient_city, order.destination_country].filter(Boolean).join(', ')].filter(Boolean).join(' · ');
-  const subject   = order.recipient_name ? `Your letter to ${order.recipient_name} is ready to mail` : 'Your letter is ready to mail';
+  // The recipient name is typed by whoever started the order, who may not own this email address, so it never
+  // goes into a subject line or body as-is: short, no links, no digit runs, no control characters.
+  const safeName  = (n => (/(https?:|www\.|@|\.[a-z]{2,}\/|\d{4,})/i.test(n) ? '' : n))(String(order.recipient_name || '').replace(/[\u0000-\u001f\u007f]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 40));
+  const toLine    = [safeName, [order.recipient_city, order.destination_country].filter(Boolean).join(', ').slice(0, 40)].filter(Boolean).join(' · ');
+  const subject   = safeName ? `Your letter to ${safeName} is ready to mail` : 'Your letter is ready to mail';
   const unsub     = unsubscribeLink(order.customer_email);
   const facts     = mailFacts(order);
   const benefits  = ['Printed and mailed within two business days', facts.carrier !== 'Canada Post' ? `Mailed locally with ${facts.carrier}` : 'Mailed inside Canada through Canada Post'];

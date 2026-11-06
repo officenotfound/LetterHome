@@ -86,8 +86,10 @@ function docxText(buf) {
   for (let i = buf.length - 22; i >= Math.max(0, buf.length - 65557); i--) if (buf.readUInt32LE(i) === 0x06054b50) { eocd = i; break; }
   if (eocd < 0) return null;
   let p = buf.readUInt32LE(eocd + 16);
-  const n = buf.readUInt16LE(eocd + 10);
-  for (let k = 0; k < n && p + 46 <= buf.length && buf.readUInt32LE(p) === 0x02014b50; k++) {
+  const n = Math.min(buf.readUInt16LE(eocd + 10), 5000);
+  // A crafted zip can list the same bomb thousands of times; cap how much we will inflate in total.
+  let budget = 40 * 1024 * 1024, parts = 0;
+  for (let k = 0; k < n && parts < 24 && budget > 0 && p + 46 <= buf.length && buf.readUInt32LE(p) === 0x02014b50; k++) {
     const method = buf.readUInt16LE(p + 10), csize = buf.readUInt32LE(p + 20);
     const nl = buf.readUInt16LE(p + 28), el = buf.readUInt16LE(p + 30), cl = buf.readUInt16LE(p + 32), off = buf.readUInt32LE(p + 42);
     const name = buf.toString('utf8', p + 46, p + 46 + nl);
@@ -95,33 +97,65 @@ function docxText(buf) {
     if (!/^word\/(document|header\d*|footer\d*|footnotes|endnotes)\.xml$/.test(name)) continue;
     const lnl = buf.readUInt16LE(off + 26), lel = buf.readUInt16LE(off + 28), ds = off + 30 + lnl + lel;
     const raw = buf.subarray(ds, ds + csize);
-    const data = method === 0 ? raw : method === 8 ? (() => { try { return zlib.inflateRawSync(raw, { maxOutputLength: 20 * 1024 * 1024 }); } catch { return null; } })() : null;
+    parts++;
+    const data = method === 0 ? raw : method === 8 ? (() => { try { return zlib.inflateRawSync(raw, { maxOutputLength: Math.min(20 * 1024 * 1024, budget) }); } catch { return null; } })() : null;
+    if (data) budget -= data.length;
     if (data) out.push(data.toString('utf8').replace(/<\/w:p>/g, '\n').replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&apos;/g, "'"));
   }
   return out.join('\n');
 }
 
+// Linear-time scan for the (literal) and <hex> strings inside a content stream. Strings inside a [ ... ] array
+// (the TJ operator) are joined without a gap so kerned words stay whole. Regex was used here before and a crafted
+// stream made it run for minutes, so this walks the text once and gives up on a stream with an unclosed string.
+function pdfStrings(str) {
+  const lim = Math.min(str.length, 4 * 1024 * 1024);
+  let out = '', inArr = false;
+  for (let i = 0; i < lim; i++) {
+    const c = str.charCodeAt(i);
+    if (c === 0x5B) { inArr = true; continue; }                       // [
+    if (c === 0x5D) { if (inArr) out += ' '; inArr = false; continue; } // ]
+    if (c === 0x28) {                                                  // ( literal string
+      let depth = 1, j = i + 1, buf = '';
+      for (; j < lim && depth > 0; j++) {
+        const d = str[j];
+        if (d === '\\') {
+          const n = str[++j];
+          if (n === undefined) break;
+          if (n >= '0' && n <= '7') { let o = n; while (o.length < 3 && str[j + 1] >= '0' && str[j + 1] <= '7') o += str[++j]; buf += String.fromCharCode(parseInt(o, 8) & 255); }
+          else buf += ({ n: '\n', r: '', t: ' ', b: '', f: '' }[n] ?? n);
+        } else if (d === '(') { depth++; buf += d; }
+        else if (d === ')') { if (--depth > 0) buf += d; }
+        else buf += d;
+      }
+      if (depth > 0) return out;   // unclosed: stop reading this stream
+      out += buf; if (!inArr) out += ' ';
+      i = j - 1; continue;
+    }
+    if (c === 0x3C && str.charCodeAt(i + 1) !== 0x3C) {                // <hex>, but not a << dictionary
+      let j = i + 1, h = '';
+      while (j < lim && /[0-9A-Fa-f\s]/.test(str[j])) { if (str[j] > ' ') h += str[j]; j++; }
+      if (str[j] === '>') { for (let k = 0; k + 1 < h.length; k += 2) out += String.fromCharCode(parseInt(h.slice(k, k + 2), 16)); if (!inArr) out += ' '; i = j; }
+    }
+  }
+  return out;
+}
+
 function pdfText(buf) {
   // Pulls literal text from content streams. Works on simple PDFs; scanned or font-encoded PDFs return little or nothing.
   const s = buf.toString('latin1');
-  let out = '', pos = 0;
-  while (true) {
+  let out = '', pos = 0, streams = 0, budget = 40 * 1024 * 1024;
+  while (streams++ < 3000 && budget > 0) {
     const a = s.indexOf('stream', pos); if (a < 0) break;
     let start = a + 6; if (s[start] === '\r') start++; if (s[start] === '\n') start++;
     const b = s.indexOf('endstream', start); if (b < 0) break;
     pos = b + 9;
     const chunk = buf.subarray(start, b);
     const data = inflateSafe(chunk) || chunk;
+    budget -= data.length;
     const str = data.toString('latin1');
     if (!/\b(Tj|TJ)\b/.test(str)) continue;
-    for (const m of str.matchAll(/(\[(?:\\.|[^\]])*\]|\((?:\\.|[^\\)])*\)|<[0-9A-Fa-f\s]*>)\s*T[jJ]/g)) {
-      const arr = m[1];
-      for (const x of arr.matchAll(/\(((?:\\.|[^\\)])*)\)|<([0-9A-Fa-f\s]*)>/g)) {
-        if (x[1] !== undefined) out += x[1].replace(/\\([nrtbf()\\])/g, (_, c) => ({ n: '\n', r: '', t: ' ', b: '', f: '' }[c] ?? c)).replace(/\\(\d{1,3})/g, (_, o) => String.fromCharCode(parseInt(o, 8)));
-        else { const h = x[2].replace(/\s+/g, ''); for (let i = 0; i + 1 < h.length; i += 2) out += String.fromCharCode(parseInt(h.slice(i, i + 2), 16)); }
-      }
-      out += ' ';
-    }
+    out += pdfStrings(str);
     out += '\n';
   }
   return out;

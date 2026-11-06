@@ -6,6 +6,9 @@ on:
     - cron: '0 7 * * 1'
   workflow_dispatch:
 
+permissions:
+  contents: read   # least privilege: these jobs only read the repo
+
 jobs:
   lighthouse:
     name: Lighthouse audit
