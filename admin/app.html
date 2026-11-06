@@ -258,6 +258,137 @@ html[data-theme="dark"] .need-chip.hot b{color:#ff7a82}
 }
 @media(pointer:coarse){
   }
+/* ── Admin skin 2026-11: matches the redesigned site (Archivo + Noto Sans, navy and red). Overrides the older rules above. ── */
+html[data-theme="light"]{--a-bg:#f3f5f8;--a-surface:#ffffff;--a-line:#e1e6ed;--a-text:#14202e;--a-muted:#586779;--a-accent:#c4202b;--a-accent-soft:#fdecee;--a-nav:#17293d;--a-head:#14202e;--a-hover:#f5f7fa}
+html[data-theme="dark"]{--a-bg:#0f1419;--a-surface:#171d25;--a-line:rgba(255,255,255,.1);--a-text:#eef1f5;--a-muted:#9eabba;--a-accent:#ff7a82;--a-accent-soft:#2a1a1d;--a-nav:#0a1017;--a-head:#eef1f5;--a-hover:#1d242d}
+
+html[data-theme] body{background:var(--a-bg);color:var(--a-text);font-family:'Noto Sans',system-ui,sans-serif;font-size:14px}
+html[data-theme] body h1,html[data-theme] body h2,html[data-theme] body h3,html[data-theme] body .topbar-title,html[data-theme] body .stat-value,html[data-theme] body .card-title,html[data-theme] body .logo-text{font-family:'Archivo','Noto Sans',sans-serif}
+
+/* sidebar */
+html[data-theme] body .sidebar{background:var(--a-nav);border-right:0;width:232px}
+html[data-theme] body .content{margin-left:232px}
+html[data-theme] body .sidebar-logo{border-bottom:1px solid rgba(255,255,255,.08);padding:26px 24px 20px}
+html[data-theme] body .logo-text{font-family:'DM Serif Display',Georgia,serif;font-style:italic;font-weight:400;font-size:26px;letter-spacing:0;color:#fff}
+html[data-theme] body .logo-sub{color:#ff9aa0;font:600 11px 'Noto Sans',sans-serif;letter-spacing:.04em;text-transform:none;margin-top:6px}
+html[data-theme] body .sidebar-nav{padding:18px 12px}
+html[data-theme] body .nav-label{display:none}
+html[data-theme] body .nav-link{font:500 14.5px 'Noto Sans',sans-serif;text-transform:none;letter-spacing:0;color:rgba(255,255,255,.78);border-radius:8px;border-left:0;padding:11px 12px;margin-bottom:2px;gap:12px}
+html[data-theme] body .nav-link:hover{background:rgba(255,255,255,.07);color:#fff}
+html[data-theme] body .nav-link.active{background:rgba(255,255,255,.13);color:#fff;border-left:0;font-weight:600}
+html[data-theme] body .nav-icon{font-size:15px;width:20px;color:rgba(255,255,255,.6)}
+html[data-theme] body .nav-link.active .nav-icon{color:#ff9aa0}
+html[data-theme] body #contacts-badge{border-radius:999px;background:#da202a!important}
+html[data-theme] body .sidebar-footer{border-top:1px solid rgba(255,255,255,.08);padding:12px 12px 20px}
+html[data-theme] body .admin-theme-toggle,html[data-theme] body .logout-btn{font:500 13.5px 'Noto Sans',sans-serif;text-transform:none;letter-spacing:0;color:rgba(255,255,255,.7);border-radius:8px;padding:10px 12px}
+html[data-theme] body .admin-theme-toggle:hover,html[data-theme] body .logout-btn:hover{background:rgba(255,255,255,.07);color:#fff}
+html[data-theme] body #deploy-info{color:rgba(255,255,255,.4)!important}
+
+/* top bar, tabs, page header */
+html[data-theme] body .topbar{background:var(--a-surface);border-bottom:1px solid var(--a-line);height:64px;padding:0 28px}
+html[data-theme] body .topbar-title{font-weight:700;font-size:20px;letter-spacing:-.01em;color:var(--a-head)}
+html[data-theme] body .topbar-user{font:500 13px 'Noto Sans',sans-serif;text-transform:none;letter-spacing:0;color:var(--a-muted)}
+html[data-theme] body .notif-btn{border-radius:10px;border-color:var(--a-line);color:var(--a-text);background:transparent}
+html[data-theme] body .twofa-badge{border-radius:999px;font:600 12px 'Noto Sans',sans-serif;text-transform:none;letter-spacing:0;padding:6px 12px;background:#9a3412}
+html[data-theme] body .subtabs{background:var(--a-surface);border-bottom:1px solid var(--a-line);padding:0 24px;gap:6px}
+html[data-theme] body .subtab{font:600 14px 'Noto Sans',sans-serif;text-transform:none;letter-spacing:0;color:var(--a-muted);padding:14px 12px 12px}
+html[data-theme] body .subtab:hover{color:var(--a-text)}
+html[data-theme] body .subtab.active{color:var(--a-accent);border-bottom-color:var(--a-accent)}
+html[data-theme] body .contacts-tab-badge{border-radius:999px;background:#da202a;color:#fff}
+html[data-theme] body .main{padding:26px 28px;max-width:1360px}
+html[data-theme] body .page-title{display:none}
+html[data-theme] body .page-header{margin-bottom:18px;padding-bottom:0;border-bottom:0;justify-content:flex-end}
+html[data-theme] body .page-header:not(:has(button,a,input,select)){display:none}
+html[data-theme] body .back-link{font:600 13px 'Noto Sans',sans-serif;text-transform:none;letter-spacing:0;color:var(--a-muted)}
+html[data-theme] body .back-link:hover{color:var(--a-accent)}
+
+/* cards and stats */
+html[data-theme] body .card,html[data-theme] body .detail-card,html[data-theme] body .need-chip,html[data-theme] body .stat-card{background:var(--a-surface);border:1px solid var(--a-line);border-radius:12px;box-shadow:0 1px 2px rgba(16,24,40,.05)}
+html[data-theme] body .card{margin-bottom:22px}
+html[data-theme] body .card-header{padding:16px 22px;border-bottom:1px solid var(--a-line)}
+html[data-theme] body .card-title{font:700 15px 'Archivo',sans-serif;text-transform:none;letter-spacing:0;color:var(--a-head)}
+html[data-theme] body .dash-grid-5,html[data-theme] body .stats-grid{background:transparent;border:0;gap:12px}
+html[data-theme] body .dash-grid-4,html[data-theme] body .dash-grid-2{gap:14px}
+html[data-theme] body .stat-card{padding:18px 20px}
+html[data-theme] body .stat-label{font:600 12.5px 'Noto Sans',sans-serif;text-transform:none;letter-spacing:0;color:var(--a-muted);margin-bottom:6px}
+html[data-theme] body .stat-value{font-weight:700;font-size:28px;letter-spacing:-.02em;color:var(--a-head)}
+html[data-theme] body .stat-sub{font:400 12.5px 'Noto Sans',sans-serif;text-transform:none;letter-spacing:0;color:var(--a-muted);margin-top:6px}
+html[data-theme] body .need-chip{font-family:'Noto Sans',sans-serif;padding:14px 18px;border-left-width:1px}
+html[data-theme] body .need-chip b{font:700 26px 'Archivo',sans-serif;color:var(--a-head)}
+html[data-theme] body .need-chip span{font:500 13px 'Noto Sans',sans-serif;text-transform:none;letter-spacing:0;color:var(--a-muted)}
+html[data-theme] body .need-chip.hot{background:var(--a-accent-soft);border-color:var(--a-accent)}
+html[data-theme] body .need-chip.hot b{color:var(--a-accent)}
+
+/* tables */
+html[data-theme] body th{font:600 12px 'Noto Sans',sans-serif;text-transform:none;letter-spacing:0;color:var(--a-muted);border-bottom:1px solid var(--a-line);background:transparent;padding:12px 16px}
+html[data-theme] body td{border-bottom:1px solid var(--a-line);color:var(--a-text);font-size:14px;padding:13px 16px}
+html[data-theme] body tr:hover td{background:var(--a-hover)}
+html[data-theme] body .link{color:var(--a-accent);font-weight:600}
+html[data-theme] body .empty{font:400 14px 'Noto Sans',sans-serif;text-transform:none;letter-spacing:0;color:var(--a-muted)}
+
+/* badges and tags */
+html[data-theme] body .badge{border:0;border-radius:999px;font:600 12px 'Noto Sans',sans-serif;text-transform:none;letter-spacing:0;padding:4px 11px;background:#eef1f5;color:#344054}
+html[data-theme] body .badge-gray{background:#eef1f5;color:#475467}
+html[data-theme] body .badge-blue{background:#e3effd;color:#1849a9}
+html[data-theme] body .badge-amber{background:#fdf0d5;color:#8a4b08}
+html[data-theme] body .badge-violet{background:#e8f6ea;color:#17692e}
+html[data-theme] body .badge-green{background:#e8f6ea;color:#17692e}
+html[data-theme] body .badge-red{background:#fde8ea;color:#a4161f;border:0}
+html[data-theme="dark"] body .badge{background:#222b36;color:#d0d7e0}
+html[data-theme="dark"] body .badge-blue{background:#16304f;color:#9cc4f5}
+html[data-theme="dark"] body .badge-amber{background:#3b2a10;color:#f4c26b}
+html[data-theme="dark"] body .badge-violet,html[data-theme="dark"] body .badge-green{background:#143322;color:#7fd6a0}
+html[data-theme="dark"] body .badge-red{background:#3d1a1d;color:#ff9aa0}
+html[data-theme] body .tag{border:0;border-radius:999px;background:var(--a-hover);color:var(--a-text);font:500 12px 'Noto Sans',sans-serif;text-transform:none;letter-spacing:0}
+
+/* buttons, filters, forms */
+html[data-theme] body .btn{border-radius:8px;font:600 13.5px 'Noto Sans',sans-serif;text-transform:none;letter-spacing:0;padding:10px 18px}
+html[data-theme] body .btn-sm{padding:7px 13px;font-size:13px;letter-spacing:0}
+html[data-theme] body .btn-primary{background:var(--a-accent);color:#fff}
+html[data-theme="dark"] body .btn-primary{color:#1a0b0d}
+html[data-theme] body .btn-primary:hover{filter:brightness(.92);background:var(--a-accent);color:#fff}
+html[data-theme] body .btn-outline{background:transparent;color:var(--a-text);border:1px solid var(--a-line)}
+html[data-theme] body .btn-outline:hover{background:var(--a-hover);color:var(--a-text);border-color:var(--a-muted)}
+html[data-theme] body .btn-ghost{font:600 13px 'Noto Sans',sans-serif;text-transform:none;letter-spacing:0;color:var(--a-muted);border-radius:8px}
+html[data-theme] body .btn-ghost:hover{background:var(--a-hover);color:var(--a-accent)}
+html[data-theme] body .filter-btn{border-radius:999px;font:600 13px 'Noto Sans',sans-serif;text-transform:none;letter-spacing:0;padding:7px 14px;border:1px solid var(--a-line);color:var(--a-muted);background:var(--a-surface)}
+html[data-theme] body .filter-btn:hover{border-color:var(--a-muted);color:var(--a-text)}
+html[data-theme] body .filter-btn.active{background:var(--a-nav);color:#fff;border-color:var(--a-nav)}
+html[data-theme] body .field label{font:600 13px 'Noto Sans',sans-serif;text-transform:none;letter-spacing:0;color:var(--a-muted)}
+html[data-theme] body input[type=text],html[data-theme] body input[type=email],html[data-theme] body input[type=password],html[data-theme] body input[type=number],html[data-theme] body input[type=date],html[data-theme] body input[type=search],html[data-theme] body select{border:1px solid var(--a-line);border-radius:8px;padding:10px 12px;background:var(--a-surface);color:var(--a-text);font-family:'Noto Sans',sans-serif;font-size:14px}
+html[data-theme] body textarea{border:1px solid var(--a-line);border-radius:8px;background:var(--a-surface);color:var(--a-text);font-family:'Noto Sans',sans-serif;font-size:14px}
+html[data-theme] body input:focus,html[data-theme] body textarea:focus,html[data-theme] body select:focus{border-color:var(--a-accent);box-shadow:0 0 0 3px var(--a-accent-soft);outline:0}
+
+/* order and customer detail */
+html[data-theme] body .detail-card{padding:22px 24px}
+html[data-theme] body .detail-card-title{font:700 15px 'Archivo',sans-serif;text-transform:none;letter-spacing:0;color:var(--a-head);border-bottom:1px solid var(--a-line)}
+html[data-theme] body .detail-row{border-bottom:1px solid var(--a-line)}
+html[data-theme] body .detail-label{font:600 12.5px 'Noto Sans',sans-serif;text-transform:none;letter-spacing:0;color:var(--a-muted)}
+html[data-theme] body .detail-value{color:var(--a-text);font-weight:600}
+html[data-theme] body .address-block,html[data-theme] body .note-text,html[data-theme] body .letter-body{font-family:'Noto Sans',sans-serif;color:var(--a-text)}
+html[data-theme] body .letter-body{background:var(--a-hover);border:1px solid var(--a-line);border-left:3px solid var(--a-accent);border-radius:8px}
+html[data-theme] body .note-meta{font:500 12px 'Noto Sans',sans-serif;text-transform:none;letter-spacing:0;color:var(--a-muted)}
+html[data-theme] body .file-name{font-family:'Roboto',sans-serif}
+html[data-theme] body .files-list{background:transparent}
+html[data-theme] body .file-item{background:var(--a-hover);border-radius:8px;margin-bottom:6px}
+
+html[data-theme] body .btn,html[data-theme] body a.btn{text-decoration:none}
+html[data-theme="dark"] body .filter-btn.active{background:#eef1f5;color:#0f1419;border-color:#eef1f5}
+html[data-theme="dark"] body input[type=text],html[data-theme="dark"] body input[type=search]{border-color:rgba(255,255,255,.14)}
+html[data-theme] body table.stack td::before{font:600 12px 'Noto Sans',sans-serif;letter-spacing:0;text-transform:none;color:var(--a-muted)}
+html[data-theme] body table.stack tr{border-bottom-color:var(--a-line)}
+html[data-theme] body [style*="24-hour"],html[data-theme] body #sla-banner{border-radius:10px}
+html[data-theme="dark"] body [style*="color:#111111"],html[data-theme="dark"] body [style*="color:#111;"],html[data-theme="dark"] body [style*="color:#2a2a2a"],html[data-theme="dark"] body [style*="color:#333"]{color:var(--a-text)!important}
+html[data-theme="dark"] body [style*="color:#6b6b6b"],html[data-theme="dark"] body [style*="color:#9a9a9a"],html[data-theme="dark"] body [style*="color:#555"]{color:var(--a-muted)!important}
+html[data-theme="dark"] body [style*="background:#fff"],html[data-theme="dark"] body [style*="background:#ffffff"]{background:var(--a-surface)!important}
+html[data-theme="dark"] body [style*="background:#fafafa"],html[data-theme="dark"] body [style*="background:#f5f5f5"]{background:var(--a-hover)!important}
+html[data-theme="dark"] body [style*="solid #ececec"],html[data-theme="dark"] body [style*="solid #fafafa"],html[data-theme="dark"] body [style*="solid #eee"]{border-color:var(--a-line)!important}
+@media(max-width:767px){
+  html[data-theme] body .content{margin-left:0!important}
+  html[data-theme] body .topbar{height:56px;padding:0 12px}
+  html[data-theme] body .subtabs{padding:0 6px}
+  html[data-theme] body .main{padding:14px!important}
+}
 </style>
 </head>
 <body>
@@ -351,12 +482,14 @@ let _navId = 0;
 
 async function route() {
   const nav = ++_navId;
+  window._lastApiError = null;
   const p = window.location.pathname;
   setActiveNav(p);
   setMain('<div class="empty" id="route-loading">Loading…</div>');
   try { await renderRoute(p); } catch (e) { console.error(e); }
   if (nav === _navId && document.getElementById('route-loading')) {
-    setMain('<div class="empty">Could not load this section. Reload the page to try again.</div>');
+    const le = window._lastApiError;
+    setMain('<div class="empty">Could not load this section.' + (le ? '<br><small style="text-transform:none;letter-spacing:0">' + esc(String(le.url)) + ' returned ' + esc(String(le.status)) + '</small>' : '') + '<br><br><button class="btn btn-outline btn-sm" onclick="route()">Try again</button></div>');
   }
 }
 
@@ -434,16 +567,34 @@ function stackTables(root) {
 let _csrfToken = null;
 async function api(url, opts = {}) {
   const nav = _navId;
-  try {
-    const headers = { 'Content-Type': 'application/json', ...(opts.headers || {}) };
-    if (_csrfToken && opts.method && opts.method !== 'GET') headers['X-CSRF-Token'] = _csrfToken;
-    const r = await fetch(url, { ...opts, headers });
-    if (r.status === 401) { window.location.href = '/admin/login'; return null; }
-    const data = r.ok ? await r.json() : (opts.method && opts.method !== 'GET' ? await r.json().then(j => ({ ok: false, error: j.error || ('HTTP ' + r.status) })).catch(() => ({ ok: false, error: 'HTTP ' + r.status })) : null);
-    // The user has moved on: never resolve, so the old section stops here.
-    if (nav !== _navId && !opts.background && (!opts.method || opts.method === 'GET')) return new Promise(() => {});
-    return data;
-  } catch { return null; }
+  const isGet = !opts.method || opts.method === 'GET';
+  // A GET that fails on a blip (network, 5xx, 429, mid-deploy restart) is retried
+  // before the section gives up, so switching tabs doesn't strand a "Loading…".
+  const tries = isGet ? 3 : 1;
+  for (let attempt = 1; attempt <= tries; attempt++) {
+    try {
+      const headers = { 'Content-Type': 'application/json', ...(opts.headers || {}) };
+      if (_csrfToken && !isGet) headers['X-CSRF-Token'] = _csrfToken;
+      const r = await fetch(url, { ...opts, headers });
+      if (r.status === 401) { window.location.href = '/admin/login'; return null; }
+      if (!r.ok && isGet && attempt < tries && (r.status >= 500 || r.status === 429)) {
+        await new Promise(res => setTimeout(res, 350 * attempt));
+        continue;
+      }
+      let data;
+      if (r.ok) data = await r.json();
+      else if (!isGet) data = await r.json().then(j => ({ ok: false, error: j.error || ('HTTP ' + r.status) })).catch(() => ({ ok: false, error: 'HTTP ' + r.status }));
+      else { data = null; window._lastApiError = { url, status: r.status }; }
+      // The user has moved on: never resolve, so the old section stops here.
+      if (nav !== _navId && !opts.background && isGet) return new Promise(() => {});
+      return data;
+    } catch (e) {
+      if (attempt < tries) { await new Promise(res => setTimeout(res, 350 * attempt)); continue; }
+      window._lastApiError = { url, status: 'network' };
+      return null;
+    }
+  }
+  return null;
 }
 
 async function post(url, body) {
