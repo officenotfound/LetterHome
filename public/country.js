@@ -19,9 +19,13 @@
     var a = document.createElement('a');
     a.className = 'lang-link';
     a.href = alt;
-    a.textContent = root.getAttribute('data-alt-label') || '';
-    a.setAttribute('hreflang', root.getAttribute('data-alt-label') === 'ES' ? 'es-US' : 'en-US');
-    right.insertBefore(a, right.firstChild);
+    var es = root.getAttribute('data-alt-label') === 'ES';
+    a.textContent = es ? 'Español' : 'English';
+    a.setAttribute('hreflang', es ? 'es-US' : 'en-US');
+    a.setAttribute('lang', es ? 'es' : 'en');
+    // Same order as the Canadian header: Track an order, language, Send a letter.
+    var track = right.querySelector('.nav-track');
+    right.insertBefore(a, track ? track.nextSibling : right.firstChild);
   }
 
   // Orders started on a country page use that country's fixed prices and currency.
@@ -31,10 +35,22 @@
     if (h.indexOf('cur=') < 0) a.setAttribute('href', h + (h.indexOf('?') < 0 ? '?' : '&') + 'cur=' + cur);
   });
 
+  // Spanish pages (Mexican Spanish): the shared header and footer labels.
   if ((root.lang || '').toLowerCase().indexOf('es') === 0) {
-    var map = { how: 'Cómo funciona', pricing: 'Precios', contact: 'Contacto', track: 'Rastrear un pedido', send: 'Enviar una carta' };
-    Object.keys(map).forEach(function (k) {
-      document.querySelectorAll('[data-i18n="nav.' + k + '"]').forEach(function (el) { el.textContent = map[k]; });
-    });
+    var es = {
+      'nav.how': 'Cómo funciona', 'nav.pricing': 'Precios', 'nav.contact': 'Contacto', 'nav.track': 'Rastrear un pedido', 'nav.send': 'Enviar una carta',
+      'footer.blurb': 'Imprimimos y enviamos sus cartas por usted. Pensado para quienes viven lejos, y útil para cualquiera que necesite enviar correo sin ir a la oficina postal.',
+      'footer.service': 'Servicio', 'footer.countries': 'Países', 'footer.company': 'Empresa', 'footer.guides': 'Guías de envío',
+      'footer.ca': 'Canadá', 'footer.us': 'Estados Unidos', 'footer.uk': 'Reino Unido', 'footer.au': 'Australia',
+      'footer.about': 'Nosotros', 'footer.refunds': 'Política de reembolsos', 'footer.privacy': 'Privacidad', 'footer.terms': 'Términos', 'footer.accessibility': 'Accesibilidad'
+    };
+    var spanish = function () {
+      document.querySelectorAll('[data-i18n]').forEach(function (el) {
+        var v = es[el.getAttribute('data-i18n')];
+        if (v) el.textContent = v;
+      });
+    };
+    spanish();
+    document.addEventListener('DOMContentLoaded', spanish);
   }
 })();

@@ -22,7 +22,8 @@ nav .logo{display:flex;align-items:center;text-decoration:none;margin-right:auto
 .nav-track{font:600 15px/1 'Roboto',sans-serif;color:var(--navy);text-decoration:none;white-space:nowrap}
 .nav-track:hover{color:var(--red)}
 .nav-cta{background:var(--red)!important;color:#fff!important;border:0!important;border-radius:6px!important;font:700 13px/1 'Roboto',sans-serif!important;letter-spacing:.04em!important;padding:13px 22px!important;text-transform:uppercase;text-decoration:none;white-space:nowrap;box-shadow:none!important}
-.lang-toggle,.lang-link{font:600 13px/1 'Roboto',sans-serif!important;color:var(--navy)!important;background:none!important;border:1px solid var(--w-line)!important;border-radius:4px;padding:7px 8px!important;text-decoration:none;cursor:pointer}
+.lang-toggle,.lang-link{width:auto!important;height:auto!important;min-width:0;display:inline-flex!important;align-items:center;gap:6px;font:600 14px/1 'Roboto',sans-serif!important;color:var(--navy)!important;background:none!important;border:1px solid currentColor!important;border-radius:4px;padding:7px 10px!important;text-decoration:none;cursor:pointer;white-space:nowrap}
+.lang-toggle::before,.lang-link::before{content:"";flex:none;width:15px;height:15px;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M2 12h20M12 2c3 3 4 6 4 10s-1 7-4 10c-3-3-4-6-4-10s1-7 4-10z'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M2 12h20M12 2c3 3 4 6 4 10s-1 7-4 10c-3-3-4-6-4-10s1-7 4-10z'/%3E%3C/svg%3E") center/contain no-repeat}
 @media(max-width:560px){.nav-inner{padding:8px 16px!important;gap:10px}.logo-stamp{margin-right:8px}.logo-stamp .stamp-svg{width:25px;height:30px}.logo-wordmark{font-size:32px!important}.nav-right{gap:10px}.nav-track{display:none}.nav-cta{padding:10px 10px!important;font-size:11px!important}}
 @media(max-width:360px){.logo-wordmark{font-size:27px!important}.logo-stamp .stamp-svg{width:20px;height:24px}}
 
@@ -77,7 +78,7 @@ body.c-us .nav-cta{color:#004B87!important}body.c-uk .nav-cta{color:#DA202A!impo
 body.c-us{--cp:#004B87;--ca:#E31837;--tint:#EAF1F8}
 body.c-uk{--cp:#DA202A;--ca:#FFD100;--tint:#FBEDEE}
 body.c-au{--cp:#DC1928;--ca:#FFFFFF;--tint:#FBECEE}
-@media(max-width:560px){.nav-cta{display:inline-flex!important}}
+
 
 [data-theme="dark"]{--red-stamp:#ff9d90!important;--ink-faint:#b9b1a2!important}
 [data-theme="dark"] a:not(.btn):not(.nav-cta):not(.nav-track):not(.logo):not(.hero-cta):not(.rm-go):not(.rm-r):not(.rate-go):not(.related-card):not(.v4-second){color:#ff9d90}
@@ -101,3 +102,24 @@ body.c-au{--cp:#DC1928;--ca:#FFFFFF;--tint:#FBECEE}
 [data-theme="dark"] .letter-preview{color:#1a1a1a!important}
 @media(max-width:560px){.logo-wordmark{font-size:28px!important}.logo-stamp .stamp-svg{width:22px;height:26px}.logo-stamp{margin-right:6px}.nav-inner{gap:8px;padding-left:14px!important;padding-right:14px!important}.nav-right{gap:8px}.nav-track{font-size:13px!important}.nav-cta{padding:9px 8px!important;font-size:10.5px!important}.lang-toggle,.lang-link{padding:5px 6px!important;font-size:12px!important}}
 @media(max-width:360px){.logo-wordmark{font-size:24px!important}.logo-stamp .stamp-svg{width:18px;height:22px}}
+
+/* One header on every page: Track an order, language, Send a letter. Below 900px: Track an order and language. */
+@media(max-width:900px){nav .nav-cta{display:none!important}nav .nav-track{display:inline!important}}
+@media(max-width:420px){nav .nav-track{font-size:13px!important}nav .lang-toggle,nav .lang-link{padding:6px 7px!important;font-size:13px!important}nav .lang-toggle::before,nav .lang-link::before{display:none}nav .nav-right{gap:10px!important}}
+/* Dark mode: filled buttons keep the fixed red with white text, and small inks stay readable. */
+[data-theme="dark"] .submit-btn,[data-theme="dark"] [style*="background:var(--red"]{background:#bf2d3a!important;border-color:#bf2d3a!important;color:#fff!important}
+[data-theme="dark"] .letter-template .placeholder{color:#ff9d90!important}
+[data-theme="dark"] .notice{color:#f1eadb!important}
+/* Country pages keep their colours and logos; running text uses the same font as the rest of the site. */
+body.c-us,body.c-uk,body.c-au{font-family:'Noto Sans',Arial,sans-serif!important}
+/* Footer columns never push the page wider, whatever the language. */
+.lh-f-col{min-width:0}.lh-f-col a,.lh-f-col h4{overflow-wrap:anywhere}
+@media(max-width:900px){footer .lh-f-in{grid-template-columns:1fr 1fr!important}footer .lh-f-brand{grid-column:1/-1}footer .lh-f-col:last-child{display:block!important}}
+@media(max-width:560px){nav .logo-stamp .stamp-svg{width:22px!important;height:26px!important}}
+/* Small phones: the long French and Spanish tracking labels use a short word so the language switch always fits. */
+@media(max-width:420px){
+html[data-lang="fr"] nav .nav-track,html[lang^="es"] nav .nav-track{font-size:0!important}
+html[data-lang="fr"] nav .nav-track::after{content:"Suivi";font-size:13px}
+html[lang^="es"] nav .nav-track::after{content:"Rastrear";font-size:13px}
+nav .logo-wordmark{font-size:25px!important}
+}

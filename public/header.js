@@ -81,7 +81,13 @@
   // English-only guide pages (<html data-en-only>) have no French version, so no toggle.
   var enOnly = document.documentElement.hasAttribute('data-en-only');
   var langToggle = (!isFrench && !isGuidesIndex && !enOnly) ?
-    '<button type="button" class="lang-toggle" onclick="toggleLang()" aria-label="Toggle language">FR</button>' : '';
+    '<button type="button" class="lang-toggle" onclick="toggleLang()" lang="fr" aria-label="Passer au français">Français</button>' : '';
+
+  // Dedicated French pages link to their English twin.
+  if (isFrench) {
+    var en = document.querySelector('link[rel="alternate"][hreflang^="en"]');
+    if (en) langToggle = '<a class="lang-link" lang="en" href="' + new URL(en.href, location.href).pathname + '" onclick="try{localStorage.setItem(\'lh-lang\',\'en\')}catch(e){}">English</a>';
+  }
 
   var sendLabel = isFrench ? 'Envoyer une lettre' : 'Send a letter';
 

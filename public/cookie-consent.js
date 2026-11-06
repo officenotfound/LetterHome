@@ -38,7 +38,20 @@
 
     var text = document.createElement('p');
     text.style.cssText = 'margin:0;flex:1;min-width:' + (small ? '100%' : '200px');
-    text.innerHTML = 'We use analytics to understand how people find Letterhome. <a href="/privacy" style="color:#b85540;text-decoration:underline">Privacy policy</a>.';
+    text.style.color = 'rgba(250,246,236,0.9)';
+    var words = function () {
+      var fr = document.documentElement.getAttribute('data-lang') === 'fr' || (document.documentElement.lang || '').indexOf('fr') === 0;
+      if ((document.documentElement.lang || '').indexOf('es') === 0) {
+        text.innerHTML = 'Usamos herramientas de análisis para entender cómo llegan las personas a Letterhome. <a href="/privacy" style="color:#ffb3a6;text-decoration:underline">Política de privacidad</a>.';
+        decline.textContent = 'Rechazar';
+        accept.textContent = 'Aceptar';
+        return;
+      }
+      text.innerHTML = (fr ? 'Nous utilisons des outils d\'analyse pour comprendre comment les gens trouvent Letterhome. ' : 'We use analytics to understand how people find Letterhome. ') +
+        '<a href="/privacy" style="color:#ffb3a6;text-decoration:underline">' + (fr ? 'Politique de confidentialité' : 'Privacy policy') + '</a>.';
+      decline.textContent = fr ? 'Refuser' : 'Decline';
+      accept.textContent = fr ? 'Accepter' : 'Accept';
+    };
 
     var btns = document.createElement('div');
     btns.style.cssText = 'display:flex;gap:10px;flex-shrink:0' + (small ? ';width:100%' : '');
@@ -49,7 +62,7 @@
 
     var accept = document.createElement('button');
     accept.textContent = 'Accept';
-    accept.style.cssText = 'background:#a8472d;color:#faf6ec;border:none;padding:' + (small ? '11px 12px' : '11px 20px') + ';cursor:pointer;font-family:inherit;font-size:' + (small ? '12px' : '13px') + ';letter-spacing:0.04em;text-transform:uppercase' + (small ? ';flex:1' : '');
+    accept.style.cssText = 'background:#bf2d3a;color:#fff;border:none;padding:' + (small ? '11px 12px' : '11px 20px') + ';cursor:pointer;font-family:inherit;font-size:' + (small ? '12px' : '13px') + ';letter-spacing:0.04em;text-transform:uppercase' + (small ? ';flex:1' : '');
 
     decline.addEventListener('click', function () {
       try { localStorage.setItem(KEY, 'no'); } catch (e) {}
@@ -62,6 +75,8 @@
       loadGA();
     });
 
+    words();
+    document.addEventListener('lh:lang', words);
     btns.appendChild(decline);
     btns.appendChild(accept);
     banner.appendChild(text);
