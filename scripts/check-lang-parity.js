@@ -42,6 +42,9 @@ for (const k of enKeys) {
   }
 }
 for (const k of frKeys) {
+  // 'x.<hash>' keys are the French phrase map for page copy that has no EN
+  // key (the English text is the page itself), so they are French-only by design.
+  if (/^x\.[0-9a-f]{10}$/.test(k)) continue;
   if (!enKeys.has(k)) {
     console.error(`Extra FR key with no EN equivalent: '${k}'`);
     errors++;

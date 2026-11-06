@@ -1675,7 +1675,7 @@ async function showCustomer(email) {
 
   const tagChips = c.tags.map(t => `
     <span class="tag">${esc(t)}
-      <button class="tag-remove" onclick="removeTag('${encodeURIComponent(email)}','${esc(t)}')">×</button>
+      <button class="tag-remove" onclick="removeTag('${encodeURIComponent(email)}',decodeURIComponent('${encodeURIComponent(t)}'))">×</button>
     </span>`).join('');
 
   const noteItems = c.notes.map(n => `

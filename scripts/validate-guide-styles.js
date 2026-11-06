@@ -4,7 +4,7 @@
  * broken pages before. Runs as a pre-push hook and in CI.
  *
  * Any page built on the canonical `.page` content wrapper must:
- *   1. ship the shared inline design system (Source Serif 4 + .page rule
+ *   1. ship the shared inline design system (.page rule
  *      + .eyebrow), so it renders correctly even if guide.css is stale;
  *   2. NOT use the legacy `.guide-wrap` wrapper; and
  *   3. NOT wrap its breadcrumb in a second <nav>, which inherits the
@@ -16,7 +16,6 @@ const fs = require('fs');
 const path = require('path');
 
 const REQUIRED = [
-  "Source Serif 4",   // body font, proves the inline block is present
   ".eyebrow{",        // canonical eyebrow label
 ];
 

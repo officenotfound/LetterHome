@@ -1089,6 +1089,14 @@ const SCHEDULE_LATER_CENTS  = 0;
 
 function toggleSchedule(cb) {
   document.getElementById('schedule-date-wrap').style.display = cb.checked ? 'block' : 'none';
+  // Only dates from today up to a year ahead can be picked; the server enforces the same range.
+  const di = document.getElementById('opt-schedule-date');
+  if (di) {
+    const iso = d => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+    const now = new Date();
+    di.min = iso(now);
+    di.max = iso(new Date(now.getTime() + 365 * 86400000));
+  }
   updatePricing();
 }
 

@@ -367,7 +367,7 @@ async function countAttachmentPages(files) {
 
 const upload = multer({
   dest: 'uploads',
-  limits: { fileSize: 10 * 1024 * 1024, files: 5 },
+  limits: { fileSize: 10 * 1024 * 1024, files: 5, fields: 120, parts: 130 },
   fileFilter(req, file, cb) {
     const ext  = path.extname(file.originalname).toLowerCase();
     const mime = file.mimetype;
@@ -640,7 +640,7 @@ async function abandonedOrderRecovery() {
 }
 abandonedOrderRecovery();
 
-;(async function occasionReminders() {
+async function occasionReminders() {
   try {
     const occasions = db.prepare('SELECT * FROM occasions').all();
     const now = new Date();
@@ -663,10 +663,11 @@ abandonedOrderRecovery();
         }
       } catch (e) { console.error(`[occasions] failed for occasion #${occ.id}:`, e.message); }
     }
-  } catch (e) { console.error('[occasions] startup check failed:', e.message); }
-})();
+  } catch (e) { console.error('[occasions] check failed:', e.message); }
+}
+occasionReminders();
 
-;(async function slaAlerts() {
+async function slaAlerts() {
   if (!process.env.OPERATOR_EMAIL) return;
   try {
     const cutoff20h = new Date(Date.now() - 20 * 3600 * 1000).toISOString();
@@ -693,10 +694,11 @@ abandonedOrderRecovery();
       for (const o of overdue) stmt.run(o.id);
       console.log(`[sla] sent alert for ${overdue.length} overdue orders`);
     }
-  } catch (e) { console.error('[sla] startup check failed:', e.message); }
-})();
+  } catch (e) { console.error('[sla] check failed:', e.message); }
+}
+slaAlerts();
 
-;(function cleanupOldOrderFolders() {
+function cleanupOldOrderFolders() {
   const cutoff = new Date(Date.now() - 7 * 86400 * 1000).toISOString();
   try {
     const old = db.prepare(
@@ -730,7 +732,8 @@ abandonedOrderRecovery();
     }
     if (abandoned.length) console.log(`[privacy] purged ${abandoned.length} abandoned unpaid orders`);
   } catch (e) { console.error('[privacy] abandoned-order cleanup failed:', e.message); }
-})();
+}
+cleanupOldOrderFolders();
 
 app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
   let event;
@@ -1114,7 +1117,7 @@ app.get('/api/site-config', (req, res) => {
     })),
     price_santa_cents:         santaPriceCents(),
     santa_enabled:             getSetting('santa_enabled', '1') !== '0',
-    blocked_countries:         JSON.parse(getSetting('blocked_countries', '[]') || '[]'),
+    blocked_countries:         (() => { try { return JSON.parse(getSetting('blocked_countries', '[]') || '[]'); } catch { return []; } })(),
     ...pub,     // per-destination price, local printing and extra mail services
   });
 });
@@ -1392,7 +1395,8 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
   }
   const letterType = isSanta ? 'santa' : 'standard';
 
-  const blockedCountries = JSON.parse(getSetting('blocked_countries', '[]') || '[]');
+  let blockedCountries = [];
+  try { blockedCountries = JSON.parse(getSetting('blocked_countries', '[]') || '[]'); } catch {}
   if (blockedCountries.includes(b['r-country']))
     return res.status(400).json({ error: 'We are not currently shipping to that destination.' });
 
@@ -1427,7 +1431,15 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
   const extraPageCents = Math.max(0, pageCount - FREE_PAGES) * (colourPrinting ? EXTRA_PAGE_COLOUR_CENTS : EXTRA_PAGE_CENTS);
   const largeEnvelope     = false;   // option retired: letters go in a standard #10 envelope
   const scheduleForLater  = b['schedule_for_later'] === '1' || b['schedule_for_later'] === 'true';
-  const scheduledDate     = scheduleForLater ? (b['scheduled_date'] || null) : null;
+  let scheduledDate       = null;
+  if (scheduleForLater) {
+    // Must be a real YYYY-MM-DD within a year, otherwise the sweep's date compare never matches and the letter would sit unsent.
+    const d = String(b['scheduled_date'] || '').trim();
+    const t = Date.parse(d + 'T00:00:00Z');
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(d) || Number.isNaN(t) || t > Date.now() + 366 * 86400 * 1000)
+      return res.status(400).json({ error: 'Please choose a valid send date within the next year.' });
+    scheduledDate = d;
+  }
   const addonCents = extraPageCents
     + (colourPrinting   ? COLOUR_PRINTING_CENTS : 0)
     + serviceCents
@@ -1518,9 +1530,6 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
     mailService === 'express'   ? 1 : 0,
     serviceCents || null
   );
-  if (appliedCode) {
-  }
-
   const orderId  = row.lastInsertRowid;
   const now      = new Date();
   const orderDir = orderDirPath(orderId, now);
@@ -4392,6 +4401,14 @@ cron.schedule('0 2 * * *', async () => {
 
 cron.schedule('0 * * * *', () => {
   abandonedOrderRecovery();
+  slaAlerts();
+});
+
+// These three used to run only at server start, so on a long-running server a
+// reminder, an SLA alert or the 7-day privacy deletion could wait weeks for a deploy.
+cron.schedule('10 3 * * *', () => {
+  cleanupOldOrderFolders();
+  occasionReminders();
 });
 
 // ── Thank-you coupon: one single-use 15% code, emailed 14 days after an order is mailed ──
