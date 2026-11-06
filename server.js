@@ -2048,8 +2048,10 @@ app.post('/api/admin/orders/bulk-delete', requireAdmin, (req, res) => {
   const cleanIds = ids.map(Number).filter(Number.isInteger);
   if (!cleanIds.length) return res.status(400).json({ error: 'No valid order IDs' });
   const stmt = db.prepare("UPDATE orders SET deleted_at = CURRENT_TIMESTAMP WHERE id = ? AND deleted_at IS NULL");
-  const tx = db.transaction((arr) => { for (const id of arr) stmt.run(id); });
-  tx(cleanIds);
+  // node:sqlite has no db.transaction helper, so wrap the batch by hand.
+  db.exec('BEGIN');
+  try { for (const id of cleanIds) stmt.run(id); db.exec('COMMIT'); }
+  catch (e) { db.exec('ROLLBACK'); return res.status(500).json({ error: e.message }); }
   logAudit(req, 'order.bulk_delete', 'order', cleanIds.join(','), { count: cleanIds.length });
   res.json({ ok: true, count: cleanIds.length });
 });

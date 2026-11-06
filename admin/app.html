@@ -439,7 +439,7 @@ async function api(url, opts = {}) {
     if (_csrfToken && opts.method && opts.method !== 'GET') headers['X-CSRF-Token'] = _csrfToken;
     const r = await fetch(url, { ...opts, headers });
     if (r.status === 401) { window.location.href = '/admin/login'; return null; }
-    const data = r.ok ? await r.json() : null;
+    const data = r.ok ? await r.json() : (opts.method && opts.method !== 'GET' ? await r.json().then(j => ({ ok: false, error: j.error || ('HTTP ' + r.status) })).catch(() => ({ ok: false, error: 'HTTP ' + r.status })) : null);
     // The user has moved on: never resolve, so the old section stops here.
     if (nav !== _navId && !opts.background && (!opts.method || opts.method === 'GET')) return new Promise(() => {});
     return data;
