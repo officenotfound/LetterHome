@@ -1474,7 +1474,9 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
   // Orders from the US, UK and Australia pages use that country's fixed price and are charged in its currency.
   // price_cents stays a CAD figure so reports keep working. Santa letters and mail services stay in CAD.
   const wantCurrency = String(b['currency'] || '').toUpperCase();
-  const chargeCurrency = LOCAL_PRICES[wantCurrency] && !isSanta && !mailService ? wantCurrency : 'CAD';
+  // A visitor Cloudflare places in Canada can't claim the cheaper US/UK/AU local price by posting a currency by hand.
+  const visitorCountry = String(req.headers['cf-ipcountry'] || '').toUpperCase();
+  const chargeCurrency = LOCAL_PRICES[wantCurrency] && !isSanta && !mailService && visitorCountry !== 'CA' ? wantCurrency : 'CAD';
   let chargeCents = priceCents;
   if (chargeCurrency !== 'CAD') {
     const t = LOCAL_PRICES[chargeCurrency], rate = fxRate(chargeCurrency);
