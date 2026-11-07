@@ -20,7 +20,7 @@ for (const { frFile, enFile, frUrl, enUrl } of pairs) {
   const en = fs.readFileSync(path.join(PUBLIC, enFile), 'utf8');
 
   // FR page must reference itself as fr-ca and the EN page as en-ca
-  if (!fr.includes('hreflang="fr-ca"') && !fr.includes("hreflang='fr-ca'"))
+  if (!/hreflang=["']fr-ca["']/i.test(fr))
     errors.push(`${frFile}: missing hreflang="fr-ca"`);
   if (!fr.includes(frUrl))
     errors.push(`${frFile}: missing self-referencing hreflang URL ${frUrl}`);
@@ -28,7 +28,7 @@ for (const { frFile, enFile, frUrl, enUrl } of pairs) {
     errors.push(`${frFile}: missing link to EN counterpart ${enUrl}`);
 
   // EN page must reference itself as en-ca and the FR page as fr-ca
-  if (!en.includes('hreflang="en-ca"') && !en.includes("hreflang='en-ca'"))
+  if (!/hreflang=["']en-ca["']/i.test(en))
     errors.push(`${enFile}: missing hreflang="en-ca"`);
   if (!en.includes(enUrl))
     errors.push(`${enFile}: missing self-referencing hreflang URL ${enUrl}`);
