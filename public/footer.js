@@ -23,15 +23,23 @@
     return '<div class="lh-f-row" role="navigation" aria-label="' + label + '">' +
       links.map(function (l) { return '<a href="' + l[0] + '"' + (l[2] ? ' data-i18n="' + l[2] + '"' : '') + '>' + l[1] + '</a>'; }).join('') + '</div>';
   };
-  // The US pages carry the .us address (a redirect to the /us pages), so it can be read out, printed and typed.
-  var onUs = location.pathname === '/us' || location.pathname.indexOf('/us/') === 0;
+  // On a country domain (letterhome.us, letterhome.co.uk) the home page is that country's page, so the Canada link has
+  // to be absolute. Other country links are plain paths: the server sends them to the right domain.
+  var H = location.hostname.replace(/^www\./, '');
+  var onCountryHost = H === 'letterhome.us' || H === 'letterhome.co.uk';
+  var caHome = onCountryHost ? 'https://letterhome.ca/' : '/';
+  var auHome = onCountryHost ? 'https://letterhome.ca/au' : '/au';
+  var usHome = H === 'letterhome.us' ? '/' : '/us';
+  var ukHome = H === 'letterhome.co.uk' ? '/' : '/uk';
+  // Until the .us domain is switched on, the US pages on letterhome.ca show the .us address in the footer.
+  var onUs = H !== 'letterhome.us' && (location.pathname === '/us' || location.pathname.indexOf('/us/') === 0);
   var usDomain = onUs ? '<a href="https://letterhome.us" data-us-domain>letterhome.us</a>' : '';
   mount.outerHTML =
     '<footer class="lh-footer"><div class="lh-f-in">' +
       '<div class="lh-f-brand"><div class="lh-f-logo"><span class="lh-f-stamp" aria-hidden="true">' + stamp + '</span><span class="lh-f-word">Letter<em>home</em></span></div>' +
       '<p data-i18n="footer.blurb">We print and mail your letters for you. Built for Canadians abroad, useful to anyone who needs Canadian post without the trip.</p>' + social + '</div>' +
       '<div class="lh-f-nav">' +
-      row('Countries', [['/', 'Canada', 'footer.ca'], ['/us', 'United States', 'footer.us'], ['/uk', 'United Kingdom', 'footer.uk'], ['/au', 'Australia', 'footer.au']]) +
+      row('Countries', [[caHome, 'Canada', 'footer.ca'], [usHome, 'United States', 'footer.us'], [ukHome, 'United Kingdom', 'footer.uk'], [auHome, 'Australia', 'footer.au']]) +
       row('Popular guides', [['/how-long-does-it-take-to-mail-a-letter-to-canada', 'How long does a letter take?'], ['/how-much-does-it-cost-to-mail-a-letter-to-canada', 'Cost to mail a letter'], ['/how-to-address-a-letter-to-canada', 'How to address a letter'], ['/send-a-letter-to-canada-without-a-return-address', 'No return address'], ['/how-to-track-a-letter-to-canada', 'Tracking a letter']]) +
       row('Information', [['/about', 'About', 'footer.about'], ['/contact', 'Contact', 'nav.contact'], ['/guides', 'Mailing guides', 'footer.guides'], ['/terms', 'Terms', 'footer.terms'], ['/refunds', 'Refund policy', 'footer.refunds'], ['/accessibility', 'Accessibility', 'footer.accessibility']]) +
       '</div>' +

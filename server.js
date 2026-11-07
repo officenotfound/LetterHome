@@ -74,14 +74,16 @@ for (const m of ['get', 'post', 'put', 'delete', 'patch']) {
 // instead of the real visitor, breaking rate-limiting and IP logging/alerts.
 app.set('trust proxy', 2);
 
-// letterhome.us is an address for the US pages, not a second copy of the site: Cloudflare redirects it before it ever
-// reaches this server. If a request does arrive on that host (a DNS record pointed straight at us), send it to the same
-// place on letterhome.ca. The target host is fixed, so this can never become an open redirect.
-const US_HOSTS = new Set(['letterhome.us', 'www.letterhome.us']);
-app.use((req, res, next) => {
-  if (!US_HOSTS.has(req.hostname)) return next();
-  res.redirect(301, 'https://letterhome.ca' + (req.path === '/' ? '/us' : req.originalUrl));
+// Country domains (letterhome.us, letterhome.co.uk): each has an on/off switch in the admin Settings page. Off, the
+// domain only redirects to the matching page on letterhome.ca; on, it is the real site for that country, with its own
+// canonical URLs, hreflang, sitemap and robots.txt. See sites.js.
+const sites = require('./sites').createSites({
+  getSetting,
+  localSlugs: key => Object.keys(COUNTRY_GUIDES).filter(k => k.startsWith(key + '/')).map(k => k.split('/')[1]),
+  publicDir: path.join(__dirname, 'public'),
 });
+app.use(sites.middleware);
+sites.register(app);
 app.use(compression({ threshold: 512, level: 6 }));
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2024-06-20' });
 
@@ -1673,8 +1675,8 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
         quantity: 1,
       }],
       mode: 'payment',
-      success_url: `${process.env.BASE_URL}/order-success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url:  `${process.env.BASE_URL}/send`,
+      success_url: `${sites.baseUrl(req)}/order-success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url:  `${sites.baseUrl(req)}/send`,
       metadata: { order_id: String(orderId) },
     });
   } catch (e) {
@@ -1737,8 +1739,8 @@ app.get('/resume/:token', trackLimiter, async (req, res) => {
         quantity: 1,
       }],
       mode: 'payment',
-      success_url: `${process.env.BASE_URL}/order-success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url:  `${process.env.BASE_URL}/send`,
+      success_url: `${sites.baseUrl(req)}/order-success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url:  `${sites.baseUrl(req)}/send`,
       metadata: { order_id: String(order.id) },
     });
     db.prepare('UPDATE orders SET stripe_session_id = ? WHERE id = ?').run(session.id, order.id);
@@ -3188,7 +3190,7 @@ const ALLOWED_SETTING_KEYS = new Set([
   'service_paused', 'announcement', 'price_domestic_cents', 'price_usa_cents', 'price_international_cents',
   'daily_order_cap', 'blocked_countries', 'away_mode', 'away_message',
   'postgrid_auto_submit', 'postgrid_countries', 'services_enabled',
-  'price_uk_cents', 'price_au_cents',
+  'price_uk_cents', 'price_au_cents', 'us_domain_live', 'uk_domain_live',
   'cart_offer_enabled', 'cart_offer_pct', 'cart_offer_valid_days',
   'svc_ca_registered_cents', 'svc_ca_express_cents', 'svc_us_certified_cents', 'svc_us_express_cents',
 ]);

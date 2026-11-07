@@ -2829,6 +2829,7 @@ async function showSettings() {
   const awayOn       = settings['away_mode'] === 'true';
   const awayMessage  = settings['away_message'] || '';
   const cartOfferOn   = settings['cart_offer_enabled'] !== 'false';
+  const usLive = settings['us_domain_live'] === 'true', ukLive = settings['uk_domain_live'] === 'true';
   const cartOfferPct  = settings['cart_offer_pct'] || '15';
   const cartOfferDays = settings['cart_offer_valid_days'] || '7';
   let blocked = [];
@@ -2932,6 +2933,18 @@ async function showSettings() {
     <div class="card" style="max-width:640px;margin-bottom:20px" id="pg-settings-card">
       <div class="card-header"><div class="card-title">PostGrid fulfilment &amp; destinations</div></div>
       <div style="padding:20px" id="pg-settings-body"><div class="empty" style="padding:8px 0">Loading…</div></div>
+    </div>
+
+    <div class="card" style="max-width:640px;margin-bottom:20px" id="domains-card">
+      <div class="card-header"><div class="card-title">Country domains</div></div>
+      <div style="padding:20px">
+        <div style="font-size:12px;color:#6b6b6b;margin-bottom:16px">Off: the domain only redirects to the matching page on letterhome.ca. On: it is the real site for that country, with its own page addresses, hreflang, sitemap and robots.txt, and the old /us or /uk addresses on letterhome.ca redirect to it. Point the domain's DNS at the server first (see the steps in the project notes), check it, then switch it on.</div>
+        ${[['us', 'letterhome.us', '/us', usLive], ['uk', 'letterhome.co.uk', '/uk', ukLive]].map(([k, host, pre, on]) => `
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-top:1px solid #fafafa;gap:12px">
+          <div><div style="font-size:14px;font-weight:600;color:#111111">${host}</div><div style="font-size:12px;color:#6b6b6b">${on ? 'Live: serves the ' + pre + ' pages' : 'Redirecting to letterhome.ca' + pre}</div></div>
+          <button class="btn ${on ? 'btn-primary' : 'btn-outline'}" onclick="toggleDomain('${k}', ${on})">${on ? 'Live, click to turn off' : 'Off, click to go live'}</button>
+        </div>`).join('')}
+      </div>
     </div>
 
     <div class="card" style="max-width:640px;margin-bottom:20px" id="cart-offer-card">
@@ -3094,6 +3107,16 @@ async function toggleServicePause(currentlyPaused) {
   const r = await saveSetting('service_paused', newVal ? 'true' : 'false');
   if (r?.ok) showSettings();
   else alert('Error saving setting.');
+}
+
+async function toggleDomain(key, currentlyOn) {
+  const host = key === 'us' ? 'letterhome.us' : 'letterhome.co.uk';
+  const msg = currentlyOn
+    ? `Turn ${host} back to a plain redirect? Its pages will redirect to letterhome.ca again.`
+    : `Make ${host} the live site for this country? Check that its DNS and server setup are done first: after this, the /${key} pages on letterhome.ca redirect to ${host}.`;
+  if (!confirm(msg)) return;
+  const r = await saveSetting(key + '_domain_live', currentlyOn ? 'false' : 'true');
+  if (r?.ok) showSettings(); else alert('Error saving setting.');
 }
 
 async function toggleCartOffer(currentlyOn) {

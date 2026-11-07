@@ -1318,14 +1318,80 @@ test('business portal: onboarding, forced password change, batch checks, approva
   assert.equal((await portal({}, '/login', { method: 'POST', body: { email: 'owner@other.test', password: 'another-Good-pw9' } })).status, 429);
 });
 
-test('letterhome.us: the root goes to /us, other paths keep their place, and the target can never be changed by the request', async () => {
+// ── Country domains (letterhome.us, letterhome.co.uk) ─────────────────────────────────────────────────────────────
+const siteGet = (host, p) => new Promise((resolve, reject) => {
   const http = require('node:http');
-  const get = (host, p) => new Promise((resolve, reject) => {
-    const u = new URL(base);
-    http.get({ host: u.hostname, port: u.port, path: p, headers: { Host: host } }, r => { r.resume(); resolve({ status: r.statusCode, location: r.headers.location }); }).on('error', reject);
-  });
-  assert.deepEqual(await get('letterhome.us', '/'), { status: 301, location: 'https://letterhome.ca/us' });
-  assert.deepEqual(await get('www.letterhome.us', '/send?to=US'), { status: 301, location: 'https://letterhome.ca/send?to=US' });
-  assert.deepEqual(await get('letterhome.us', '//evil.example/x'), { status: 301, location: 'https://letterhome.ca//evil.example/x' });
-  assert.notEqual((await get('letterhome.ca', '/health')).status, 301, 'the normal site is untouched');
+  const u = new URL(base);
+  http.get({ host: u.hostname, port: u.port, path: p, headers: { Host: host } }, r => {
+    let body = ''; r.setEncoding('utf8'); r.on('data', d => { body += d; });
+    r.on('end', () => resolve({ status: r.statusCode, location: r.headers.location, body }));
+  }).on('error', reject);
+});
+const setFlag = (k, v) => db.prepare('INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value').run(k, v);
+
+test('country domains, switch OFF: they only redirect to the matching page on letterhome.ca', async () => {
+  setFlag('us_domain_live', 'false'); setFlag('uk_domain_live', 'false');
+  assert.deepEqual(await siteGet('letterhome.us', '/').then(({ status, location }) => ({ status, location })), { status: 301, location: 'https://letterhome.ca/us' });
+  assert.equal((await siteGet('letterhome.us', '/send?to=US')).location, 'https://letterhome.ca/send?to=US');
+  assert.equal((await siteGet('letterhome.us', '/es')).location, 'https://letterhome.ca/us/es');
+  assert.equal((await siteGet('letterhome.us', '//evil.example/x')).location, 'https://letterhome.ca//evil.example/x', 'the target host can never be changed by the request');
+  assert.equal((await siteGet('www.letterhome.us', '/')).location, 'https://letterhome.us/');
+  assert.equal((await siteGet('letterhome.co.uk', '/')).location, 'https://letterhome.ca/uk');
+  const ca = await siteGet('letterhome.ca', '/us');
+  assert.equal(ca.status, 200, 'letterhome.ca/us is unchanged while the switch is off');
+  assert.match(ca.body, /<link rel="canonical" href="https:\/\/letterhome\.ca\/us">/);
+});
+
+test('country domains, switch ON: real pages, canonical and hreflang on the country domain, one address per page', async () => {
+  setFlag('us_domain_live', 'true'); setFlag('uk_domain_live', 'true');
+  try {
+    const canon = b => (b.match(/<link rel="canonical" href="([^"]*)"/) || [])[1];
+    const hl = (b, lang) => (b.match(new RegExp(`hreflang="${lang}" href="([^"]*)"`)) || [])[1];
+
+    const us = await siteGet('letterhome.us', '/');
+    assert.equal(us.status, 200);
+    assert.equal(canon(us.body), 'https://letterhome.us/');
+    assert.equal(hl(us.body, 'en-US'), 'https://letterhome.us/');
+    assert.equal(hl(us.body, 'es-US'), 'https://letterhome.us/es');
+    assert.equal(hl(us.body, 'en-GB'), 'https://letterhome.co.uk/');
+    assert.equal(hl(us.body, 'en-AU'), 'https://letterhome.ca/au');
+    assert.equal(hl(us.body, 'en-CA'), 'https://letterhome.ca/');
+    assert.equal(hl(us.body, 'x-default'), 'https://letterhome.ca/');
+    assert.ok(!/https:\/\/letterhome\.ca\/us/.test(us.body), 'no stale letterhome.ca/us URLs on the US page');
+
+    assert.equal(canon((await siteGet('letterhome.us', '/es')).body), 'https://letterhome.us/es');
+    const guide = await siteGet('letterhome.us', '/how-to-send-mail-to-canada-from-us');
+    assert.equal(guide.status, 200); assert.equal(canon(guide.body), 'https://letterhome.us/how-to-send-mail-to-canada-from-us');
+    assert.equal((await siteGet('letterhome.co.uk', '/')).status, 200);
+    assert.equal(canon((await siteGet('letterhome.co.uk', '/')).body), 'https://letterhome.co.uk/');
+
+    // Old and foreign addresses redirect once, to the one right place.
+    assert.equal((await siteGet('letterhome.us', '/us')).location, 'https://letterhome.us/');
+    assert.equal((await siteGet('letterhome.us', '/us/es')).location, 'https://letterhome.us/es');
+    assert.equal((await siteGet('letterhome.us', '/uk')).location, 'https://letterhome.co.uk/');
+    assert.equal((await siteGet('letterhome.us', '/au')).location, 'https://letterhome.ca/au');
+    assert.equal((await siteGet('letterhome.us', '/admin/login')).location, 'https://letterhome.ca/admin/login');
+    assert.equal((await siteGet('letterhome.us', '/portal')).location, 'https://letterhome.ca/portal');
+    assert.equal((await siteGet('letterhome.ca', '/us')).location, 'https://letterhome.us/');
+    assert.equal((await siteGet('letterhome.ca', '/us/es')).location, 'https://letterhome.us/es');
+    assert.equal((await siteGet('letterhome.ca', '/uk')).location, 'https://letterhome.co.uk/');
+
+    // Shared pages work on the country domain but keep letterhome.ca as their canonical (never indexed twice).
+    const terms = await siteGet('letterhome.us', '/terms');
+    assert.equal(terms.status, 200); assert.equal(canon(terms.body), 'https://letterhome.ca/terms');
+
+    // The main site's home page now points its US and UK alternates at the country domains.
+    const home = await siteGet('letterhome.ca', '/');
+    assert.equal(home.status, 200); assert.equal(canon(home.body), 'https://letterhome.ca/');
+    assert.equal(hl(home.body, 'en-US'), 'https://letterhome.us/'); assert.equal(hl(home.body, 'en-GB'), 'https://letterhome.co.uk/');
+
+    // Own sitemap and robots.txt per domain; the main sitemap drops the moved URLs.
+    const smUs = (await siteGet('letterhome.us', '/sitemap.xml')).body;
+    assert.match(smUs, /<loc>https:\/\/letterhome\.us\/<\/loc>/); assert.match(smUs, /<loc>https:\/\/letterhome\.us\/es<\/loc>/);
+    assert.ok(!/letterhome\.ca\/us/.test(smUs));
+    const smCa = (await siteGet('letterhome.ca', '/sitemap.xml')).body;
+    assert.match(smCa, /<loc>https:\/\/letterhome\.ca\/<\/loc>/);
+    assert.ok(!/<loc>https:\/\/letterhome\.ca\/(us|uk)(\/|<)/.test(smCa), 'moved pages are not listed on the main sitemap');
+    assert.match((await siteGet('letterhome.us', '/robots.txt')).body, /Sitemap: https:\/\/letterhome\.us\/sitemap\.xml/);
+  } finally { setFlag('us_domain_live', 'false'); setFlag('uk_domain_live', 'false'); }
 });
