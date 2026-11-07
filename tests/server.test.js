@@ -1198,3 +1198,22 @@ test('fixed local prices: a UK order is charged in pounds, reports stay in CAD, 
   assert.equal(line().currency, 'cad');
   db.prepare("DELETE FROM settings WHERE key = 'postgrid_countries'").run();
 });
+
+test('admin login: a malformed body (password[]=x) is answered, not left hanging', async () => {
+  const form = 'username=testadmin&password[]=x&code[]=1';
+  const res = await fetch(`${base}/admin/login`, {
+    method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: form, redirect: 'manual', signal: AbortSignal.timeout(5000),
+  });
+  assert.ok([302, 400, 401].includes(res.status), `expected a normal rejection, got ${res.status}`);
+  assert.match(res.headers.get('location') || '', /error=1/);
+});
+
+test('async route errors reach the error handler instead of hanging the request', async () => {
+  // /api/contact is async: an object where a string is expected must not leave the socket open.
+  const res = await fetch(`${base}/api/contact`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: { a: 1 }, email: ['x@y.com'], message: 'hi' }), signal: AbortSignal.timeout(5000),
+  });
+  assert.ok(res.status < 600, "the request was answered");
+});

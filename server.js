@@ -58,6 +58,17 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 const app    = express();
+
+// Express 4 does not catch errors thrown inside async route handlers: the request would hang forever.
+// Wrap every async handler so a throw (for example a malformed body) goes to the error handler instead.
+for (const m of ['get', 'post', 'put', 'delete', 'patch']) {
+  const orig = app[m].bind(app);
+  app[m] = (...args) => {
+    if (m === 'get' && args.length === 1) return orig(...args);   // app.get('setting') is the settings getter
+    return orig(...args.map(fn => (typeof fn === 'function' && fn.constructor.name === 'AsyncFunction')
+      ? (req, res, next) => fn(req, res, next).catch(next) : fn));
+  };
+}
 // Request chain is: visitor → Cloudflare → Caddy → Node, so two trusted proxies
 // sit in front of the app. With the wrong count, req.ip resolves to a proxy IP
 // instead of the real visitor, breaking rate-limiting and IP logging/alerts.
@@ -163,6 +174,10 @@ function isPrivateIp(ip) {
   return /^(::1$|127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|fe80:|fc00:|fd)/i.test(ip);
 }
 
+// The free ip-api.com tier is HTTP only, so what comes back is not trusted: a country code must be two capital letters.
+const geoCode = c => (typeof c === 'string' && /^[A-Z]{2}$/.test(c)) ? c : '';
+const geoName = n => typeof n === 'string' ? n.replace(/[^\p{L}\p{M}\s.,'()-]/gu, '').slice(0, 80) : '';
+
 async function lookupCountry(ip) {
   if (!ip || isPrivateIp(ip)) return null;
   const cached = ipCountryCache.get(ip);
@@ -173,8 +188,8 @@ async function lookupCountry(ip) {
     });
     if (r.ok) {
       const d = await r.json();
-      if (d && d.success && d.country_code) {
-        const result = { country_code: d.country_code, country_name: d.country || '', time: Date.now() };
+      if (d && d.success && geoCode(d.country_code)) {
+        const result = { country_code: geoCode(d.country_code), country_name: geoName(d.country), time: Date.now() };
         if (ipCountryCache.size > 5000) {
           const sorted = [...ipCountryCache.entries()].sort((a,b) => a[1].time - b[1].time);
           for (let i = 0; i < sorted.length / 2; i++) ipCountryCache.delete(sorted[i][0]);
@@ -190,8 +205,9 @@ async function lookupCountry(ip) {
     });
     if (r.ok) {
       const d = await r.json();
-      if (d && d.status === 'success' && d.countryCode) {
-        const result = { country_code: d.countryCode, country_name: d.country || '', time: Date.now() };
+      if (d && d.status === 'success' && geoCode(d.countryCode)) {
+        const result = { country_code: geoCode(d.countryCode), country_name: geoName(d.country), time: Date.now() };
+        if (ipCountryCache.size > 5000) ipCountryCache.clear();
         ipCountryCache.set(ip, result);
         return result;
       }
@@ -292,6 +308,7 @@ function encryptFile(srcPath, destPath, passphrase) {
 
 function validateCustomerPassword(pwd) {
   if (!pwd || pwd.length < 8)          return 'Password must be at least 8 characters.';
+  if (typeof pwd !== 'string' || pwd.length > 128) return 'Password must be 128 characters or fewer.';
   if (!/[A-Za-z]/.test(pwd))           return 'Password must include at least one letter.';
   if (!/[0-9!@#$%^&*()\-_=+[\]{}|;:,.<>?]/.test(pwd))
     return 'Password must include at least one number or symbol.';
@@ -1274,6 +1291,24 @@ function recordTrackFailure(email) {
 }
 function clearTrackFailures(email) { trackFailures.delete(email); }
 
+// Per-account failed-login throttle for customer sign-in. The per-IP limiter alone lets an attacker spread guesses
+// across many addresses; this caps guesses against any one account (10 failures, then 15 minutes).
+const loginFailures = new Map();
+const LOGIN_MAX_FAILURES = 10, LOGIN_LOCK_MS = 15 * 60 * 1000;
+function loginLocked(email) {
+  const r = loginFailures.get(email);
+  if (!r) return false;
+  if (Date.now() > r.until) { loginFailures.delete(email); return false; }
+  return r.count >= LOGIN_MAX_FAILURES;
+}
+function loginFailed(email) {
+  const now = Date.now();
+  if (loginFailures.size > 5000) for (const [k, v] of loginFailures) if (now > v.until) loginFailures.delete(k);
+  const r = loginFailures.get(email) && now <= loginFailures.get(email).until ? loginFailures.get(email) : { count: 0 };
+  r.count += 1; r.until = now + LOGIN_LOCK_MS;
+  loginFailures.set(email, r);
+}
+
 const ADMIN_SESSION_MAX_AGE_MS = 12 * 60 * 60 * 1000;
 function requireAdmin(req, res, next) {
   if (req.session?.admin) {
@@ -1300,8 +1335,14 @@ function requireCustomer(req, res, next) {
 // Counts the pages/sheets a letter will really print, using the same builder that produces the mailed PDF.
 // Returns { pages, sheets, placement, tooLong, message } or null if the count could not be made.
 let _convSlots = 2;                                        // LibreOffice is heavy: at most 2 conversions at once
+let _convWaiting = 0;
+const CONV_MAX_WAITING = 8;                                // beyond this, give up at once instead of queueing forever
 async function analyseLetter(bodyText, files) {
-  while (_convSlots <= 0) await new Promise(r => setTimeout(r, 100));
+  if (_convSlots <= 0) {
+    if (_convWaiting >= CONV_MAX_WAITING) { console.error('[analyseLetter] queue full, skipping page count'); return null; }
+    _convWaiting++;
+    try { while (_convSlots <= 0) await new Promise(r => setTimeout(r, 100)); } finally { _convWaiting--; }
+  }
   _convSlots--;
   try {
     const att = (files || []).map(f => ({ path: f.path, originalName: f.originalname, mimeType: f.mimetype }));
@@ -1803,7 +1844,10 @@ app.get('/admin/login', (req, res) => {
 });
 
 app.post('/admin/login', loginLimiter, async (req, res) => {
-  const { username, password, code } = req.body;
+  // Strings only: a body like password[]=x would otherwise throw inside bcrypt or .replace()
+  const username = typeof req.body.username === 'string' ? req.body.username : '';
+  const password = typeof req.body.password === 'string' ? req.body.password : '';
+  const code     = typeof req.body.code     === 'string' ? req.body.code     : '';
   // Use Express's req.ip (derived from the trusted-proxy chain) rather than the
   // raw, client-spoofable X-Forwarded-For so the failed-login alert can't be evaded.
   const ip = (req.ip || '').replace(/^::ffff:/, '');
@@ -3427,13 +3471,15 @@ app.post('/api/account/login', accountLimiter, async (req, res) => {
   try {
     const email = (req.body.email || '').trim().toLowerCase();
     const { password } = req.body;
-    if (!email || !password) return res.status(400).json({ error: 'Email and password are required.' });
+    if (!email || typeof password !== 'string' || !password) return res.status(400).json({ error: 'Email and password are required.' });
+    if (loginLocked(email)) return res.status(429).json({ error: 'Too many failed sign-in attempts. Try again in 15 minutes, or reset your password.' });
 
     const customer = db.prepare('SELECT * FROM customers WHERE email = ? AND deleted_at IS NULL').get(email);
     // Always run bcrypt even when no account exists to prevent timing-based email enumeration.
     const hash = customer?.password_hash || '$2a$12$invalidhashpaddingtopreventiumenumeration000000000000000';
     const match = await bcrypt.compare(password, hash);
-    if (!customer?.password_hash || !match) return res.status(401).json({ error: 'Invalid email or password.' });
+    if (!customer?.password_hash || !match) { loginFailed(email); return res.status(401).json({ error: 'Invalid email or password.' }); }
+    loginFailures.delete(email);
     if (!customer.email_verified_at) {
       sendVerifyEmail(customer.email, customer.password_hash);
       return res.status(403).json({ error: 'Please confirm your email first. We just sent you a new confirmation link.', verify: true });

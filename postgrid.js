@@ -111,7 +111,29 @@ class PostGridError extends Error {
 }
 
 // Word -> PDF through headless LibreOffice (apt install libreoffice-writer). Returns PDF bytes, or null if unavailable/failed.
+// LibreOffice is heavy (a few hundred MB each) and the preview endpoints are public, so every conversion goes
+// through one limiter: 2 at a time, at most 8 waiting. A request that arrives with the queue full is answered
+// with null straight away (the caller treats that as "could not convert") instead of piling up.
+let _soffActive = 0;
+const _soffQueue = [];
+const SOFFICE_PARALLEL = 2, SOFFICE_MAX_WAITING = 8;
 function libreOfficeConvert(file, name) {
+  return new Promise(resolve => {
+    const run = () => {
+      _soffActive++;
+      libreOfficeConvertNow(file, name).then(resolve, () => resolve(null)).finally(() => {
+        _soffActive--;
+        const next = _soffQueue.shift();
+        if (next) next();
+      });
+    };
+    if (_soffActive < SOFFICE_PARALLEL) return run();
+    if (_soffQueue.length >= SOFFICE_MAX_WAITING) { console.error('[convert] queue full, refusing conversion'); return resolve(null); }
+    _soffQueue.push(run);
+  });
+}
+
+function libreOfficeConvertNow(file, name) {
   return new Promise(resolve => {
     const out = fs.mkdtempSync(path.join(os.tmpdir(), 'lh-conv-'));
     const profile = path.join(out, 'profile');
