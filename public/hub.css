@@ -326,3 +326,10 @@ ol.steps li::before{position:absolute!important;left:0;top:0;margin:0!important}
 .main{max-width:1128px!important}
 .main>p,.main>ul{max-width:760px}
 @media(max-width:560px){.nav-track{display:inline!important;font-size:14px}.nav-cta{display:none!important}}
+
+/* Social icons above the footer on the country landing pages (same look as the home page row) */
+.social-strip{padding:8px 16px 28px;text-align:center}
+.social-strip .cta-social{display:flex;justify-content:center;align-items:center;gap:20px}
+.social-strip .cta-social a{display:grid;place-items:center;width:44px;height:44px;color:var(--ink,#14202e);opacity:1}
+.social-strip .cta-social a svg{width:26px;height:26px}
+.social-strip .cta-social a:hover{color:#bf2d3a}
