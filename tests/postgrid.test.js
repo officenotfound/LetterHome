@@ -339,3 +339,39 @@ test('rate limiting (HTTP 429) is retried before giving up', async () => {
   assert.equal(r.status, 'ready');
   assert.equal(n, 3);
 });
+
+test('PostGrid refusing to send from an unverifiable return address at letter creation falls back to Letterhome, and a unit-only first line moves to line 2', async () => {
+  const o = seed({ skip: 0 });
+  db.prepare("UPDATE orders SET sender_name = 'Ana', sender_street = 'Ap. 402\nCarrera 7 #71-21', sender_city = 'Bogota', sender_country = 'Colombia' WHERE id = ?").run(o.id);
+  let tries = 0, contactBodies = [];
+  const pgx = createPostGrid({ db, getSetting: (k, f) => settings[k] ?? f, orderDirPath: () => os.tmpdir(), emojiImage: fakeEmoji,
+    fetchImpl: async (url, opts) => {
+      if (url.endsWith('/contacts')) contactBodies.push(JSON.parse(opts.body));
+      if (url.endsWith('/letters') && opts.method === 'POST' && tries++ === 0)
+        return { ok: false, status: 400, json: async () => ({ error: { type: 'x', message: "You cannot send from 'Ap. 402' because it failed to verify with error(s): ['generic: Not enough information.']. Your address strictness setting only allows sending from addresses we are able to verify or correct." } }) };
+      return fakeFetch(url, opts);
+    } });
+  const r = await pgx.submitOrder(db.prepare('SELECT * FROM orders WHERE id = ?').get(o.id));
+  assert.equal(r.usedFallbackReturn, true);
+  const customerFrom = contactBodies.find(b => b.countryCode === 'CO');
+  assert.equal(customerFrom.addressLine1, 'Carrera 7 #71-21');
+  assert.equal(customerFrom.addressLine2, 'Ap. 402');
+});
+
+test('return address in the letter body: printed when it adds no page, left out (with a note) when it would exceed the paid pages', async () => {
+  const withAddr = { sender_name: 'Ana Gomez', sender_street: 'Carrera 7 #71-21', sender_city: 'Bogota', sender_country: 'Colombia', return_in_body: 1 };
+  const short = seed({ skip: 1 });
+  db.prepare("UPDATE orders SET sender_name = ?, sender_street = ?, sender_city = ?, sender_country = ?, return_in_body = 1, page_count = 1 WHERE id = ?")
+    .run(withAddr.sender_name, withAddr.sender_street, withAddr.sender_city, withAddr.sender_country, short.id);
+  let b = await pg.buildLetterPdf(db.prepare('SELECT * FROM orders WHERE id = ?').get(short.id));
+  assert.equal(b.pages, 1);
+  assert.match(b.notices.join(' '), /printed at the top/);
+  // a letter that exactly fills its two included pages: the extra lines would make a third page
+  const long = seed({ skip: 1, body: Array.from({ length: 1000 }, (_, i) => 'word' + i).join(' ') });
+  const plain = await pg.buildLetterPdf(db.prepare('SELECT * FROM orders WHERE id = ?').get(long.id));
+  const fill = plain.pages;
+  db.prepare("UPDATE orders SET sender_name = ?, sender_street = ?, sender_city = ?, sender_country = ?, return_in_body = 1, page_count = ? WHERE id = ?")
+    .run(withAddr.sender_name, withAddr.sender_street, withAddr.sender_city, withAddr.sender_country, fill, long.id);
+  b = await pg.buildLetterPdf(db.prepare('SELECT * FROM orders WHERE id = ?').get(long.id));
+  assert.ok(b.pages <= Math.max(fill, 2), `pages ${b.pages} must not exceed paid ${Math.max(fill, 2)}`);
+});

@@ -1504,6 +1504,7 @@ function addressCard(o) {
       </div>
       <div style="font-weight:600;margin:18px 0 8px">Return address</div>
       <label style="display:flex;gap:8px;align-items:center;font-size:13px;margin-bottom:10px"><input type="checkbox" id="ad-skip"${o.skip_return ? ' checked' : ''}${locked ? ' disabled' : ''} onchange="document.getElementById('ad-sender').style.opacity=this.checked?.45:1"> Use the Letterhome return address instead of the customer's</label>
+      <label style="display:flex;gap:8px;align-items:flex-start;font-size:13px;margin:0 0 10px"><input type="checkbox" id="ad-inbody"${o.return_in_body ? ' checked' : ''}${locked ? ' disabled' : ''} style="margin-top:3px"> <span>Also print the customer's return address at the top of the letter<br><span style="color:#6b6b6b;font-size:12px">Only added if it does not push the letter past the pages they paid for (2 are included). If it would, it is left out and a note is added to the order.</span></span></label>
       <div id="ad-sender" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;opacity:${o.skip_return ? .45 : 1}">
         ${f('s-name', 'Name', o.sender_name)}${f('s-street', 'Street', o.sender_street)}${f('s-city', 'City', o.sender_city)}
         ${f('s-province', 'Province / state', o.sender_province)}${f('s-postal', 'Postal code', o.sender_postal)}${f('s-country', 'Country', o.sender_country)}
@@ -1527,7 +1528,7 @@ async function saveAddresses(id, resend) {
     recipient_name: v('r-name'), recipient_street: v('r-street'), recipient_city: v('r-city'), recipient_province: v('r-province'), recipient_postal: v('r-postal'),
     destination_country: v('r-country'),
     sender_name: v('s-name'), sender_street: v('s-street'), sender_city: v('s-city'), sender_province: v('s-province'), sender_postal: v('s-postal'), sender_country: v('s-country'),
-    skip_return: document.getElementById('ad-skip')?.checked ? 1 : 0, resend: !!resend,
+    skip_return: document.getElementById('ad-skip')?.checked ? 1 : 0, return_in_body: document.getElementById('ad-inbody')?.checked ? 1 : 0, resend: !!resend,
   });
   if (!r || r.ok === false || r.error) { if (msg) { msg.style.color = '#b42318'; msg.textContent = (r && r.error) || 'Could not save'; } return; }
   if (r.resend && !r.resend.ok) { await showOrder(id); const m2 = document.getElementById('pg-msg'); if (m2) { m2.style.color = '#b42318'; m2.textContent = 'Saved, but PostGrid said: ' + r.resend.error; } return; }

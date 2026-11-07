@@ -528,8 +528,8 @@ async function postgridSubmit(orderId, opts) {
   try {
     const r = await postgrid.submitOrder(order, opts);
     if (r.letter.live) sendAtPrinterEmail(orderId);
-    if (r.usedFallbackReturn) {
-      try { db.prepare('INSERT INTO order_notes (order_id, note) VALUES (?,?)').run(orderId, `Automatic: ${r.warnings[r.warnings.length - 1]}`); } catch {}
+    for (const w of r.warnings || []) {   // return-address fallbacks and the return-in-letter result are worth a note on the order
+      try { db.prepare('INSERT INTO order_notes (order_id, note) VALUES (?,?)').run(orderId, `Automatic: ${w}`); } catch {}
     }
     return { ok: true, letter_id: r.letter.id, warnings: r.warnings };
   } catch (e) {
@@ -2165,6 +2165,10 @@ app.post('/api/admin/orders/:id/addresses', requireAdmin, async (req, res) => {
     if (k === 'recipient_street' && !v) return res.status(400).json({ error: 'Recipient street cannot be empty.' });
     const next = v === '' ? null : v;
     if ((order[k] ?? null) !== next) { sets.push(`${k} = ?`); vals.push(next); changes[k] = { from: order[k] ?? null, to: next }; }
+  }
+  if ('return_in_body' in body) {
+    const rb = body.return_in_body === true || body.return_in_body === 1 || body.return_in_body === '1' ? 1 : 0;
+    if (rb !== (order.return_in_body ? 1 : 0)) { sets.push('return_in_body = ?'); vals.push(rb); changes.return_in_body = { from: order.return_in_body ? 1 : 0, to: rb }; }
   }
   if ('skip_return' in body) {
     const sr = body.skip_return === true || body.skip_return === 1 || body.skip_return === '1' ? 1 : 0;

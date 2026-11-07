@@ -109,6 +109,7 @@ try {
 } catch (e) { console.error('[init] mailed_at:', e.message); }
 try { db.exec(`ALTER TABLE orders ADD COLUMN schedule_for_later INTEGER DEFAULT 0`); } catch {}
 try { db.exec(`ALTER TABLE orders ADD COLUMN scheduled_date TEXT`);           } catch {}
+try { db.exec(`ALTER TABLE orders ADD COLUMN return_in_body INTEGER DEFAULT 0`); } catch {}   // admin option: print the customer's return address at the top of the letter
 try {
   db.exec(`CREATE TABLE IF NOT EXISTS discount_codes (
     id            INTEGER PRIMARY KEY AUTOINCREMENT,

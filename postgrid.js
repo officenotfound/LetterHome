@@ -20,6 +20,7 @@ const TWEMOJI_URL = 'https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/7
 const EMOJI_CACHE = path.join(__dirname, '.cache', 'emoji');
 const FONT_SIZE = 11;
 const LEADING = 15;
+const FREE_PAGES = 2;                         // pages included in the base price (matches server.js)
 const MAX_SHEETS = 5;                         // PostGrid: max 5 sheets per standard envelope
 const EMOJI_RE = /\p{Extended_Pictographic}|\p{Regional_Indicator}|\u20E3/u;
 const segmenter = new Intl.Segmenter('en', { granularity: 'grapheme' });
@@ -231,8 +232,9 @@ function createPostGrid({ db, getSetting, orderDirPath, fetchImpl, convertWord =
   }
 
   // Builds the single PDF PostGrid will print. Returns { pdf, pages, placement, warnings, unsupported }.
-  async function buildLetterPdf(order) {
+  async function buildLetterPdf(order, { noReturnBlock = false } = {}) {
     const warnings = new Set();
+    const notices = [];
     const unsupported = [];
     const PAGE = pageSizeOf(order.destination_country);   // US Letter, or A4 for the UK and Australia
     // PostGrid safe zone: 0.25 in on every side (non-bleed). US printing also adds a barcode in the bottom-left corner.
@@ -248,7 +250,14 @@ function createPostGrid({ db, getSetting, orderDirPath, fetchImpl, convertWord =
 
     // Text = typed body + any .txt attachments
     const textParts = [];
-    if ((order.letter_body || '').trim()) textParts.push(order.letter_body);
+    // Optional (set by the admin): the customer's return address printed at the top of the letter itself.
+    const wantBlock = !!order.return_in_body && !!order.sender_street && !noReturnBlock;
+    const returnBlock = wantBlock
+      ? [order.sender_name, ...String(order.sender_street).split(/\r?\n/), [order.sender_city, provinceOf(order.sender_province), order.sender_postal].filter(Boolean).join(' '), order.sender_country]
+          .map(x => String(x || '').trim()).filter(Boolean).join('\n')
+      : '';
+    if ((order.letter_body || '').trim()) textParts.push(returnBlock ? `${returnBlock}\n\n${order.letter_body}` : order.letter_body);
+    else if (returnBlock && textParts.length === 0) textParts.push(returnBlock);
     const pdfFiles = [];
     for (const a of attachments) {
       const ext = path.extname(a.originalName || a.path || '').toLowerCase();
@@ -324,7 +333,18 @@ function createPostGrid({ db, getSetting, orderDirPath, fetchImpl, convertWord =
     const pageCount = doc.getPageCount();
     const sheets = pageCount + (placement === 'insert_blank_page' ? 1 : 0);
     const bytes = Buffer.from(await doc.save({ addDefaultPage: false }));
-    return { pdf: bytes, pages: pageCount, sheets, placement, warnings: [...warnings], unsupported };
+    const result = { pdf: bytes, pages: pageCount, sheets, placement, warnings: [...warnings], unsupported, notices };
+    if (wantBlock && !unsupported.length) {
+      // Never print more pages than the customer paid for (two are included in the base price).
+      const plain = await buildLetterPdf(order, { noReturnBlock: true });
+      const paid = Math.max(Number(order.page_count) || 0, FREE_PAGES);
+      if (result.pages > plain.pages && result.pages > paid) {
+        plain.notices = [...(plain.notices || []), `The customer's return address was not added to the letter: it would go over the ${paid} page${paid === 1 ? '' : 's'} paid for.`];
+        return plain;
+      }
+      result.notices.push("The customer's return address was printed at the top of the letter.");
+    }
+    return result;
   }
 
   // ---- contacts ------------------------------------------------------------
@@ -334,6 +354,8 @@ function createPostGrid({ db, getSetting, orderDirPath, fetchImpl, convertWord =
   }
   function contact(p) {
     const lines = String(p.street || '').split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+    // A unit written on its own first line ('Ap. 402' above the street) is not a street: PostGrid wants it on line 2.
+    if (lines.length > 1 && /^(ap\.?|apt\.?|apto\.?|apartamento|apartment|unit|suite|ste\.?|piso|oficina|of\.?|#)\s*[\w-]+$/i.test(lines[0])) lines.push(lines.shift());
     const c = {
       ...splitName(p.name),
       addressLine1: lines[0] || '',
@@ -457,7 +479,7 @@ function createPostGrid({ db, getSetting, orderDirPath, fetchImpl, convertWord =
       throw new PostGridError(`Recipient address failed verification: ${to.addressErrors || 'no details'}. Check the address with the customer.`, { manual: true });
     // The customer's own return address must never stop a letter that is otherwise good: if PostGrid cannot take it
     // (a country it will not mail from, an address it rejects), fall back to the Letterhome return address and say so.
-    const warnings = [...built.warnings];
+    const warnings = [...built.warnings, ...(built.notices || [])];
     let from, usedFallback = false;
     const useFallback = async why => {
       usedFallback = true;
