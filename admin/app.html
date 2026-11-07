@@ -1226,6 +1226,7 @@ async function showOrder(id) {
     </div>
     ${contentFlagCard(o)}
     ${postgridCard(o)}
+    ${addressCard(o)}
     ${o.letter_body ? `
     <div class="card" style="margin-bottom:24px">
       <div class="card-header"><div class="card-title">Letter Content</div></div>
@@ -1484,6 +1485,53 @@ function contentFlagCard(o) {
 async function clearContentFlag(id) {
   const r = await api('/api/admin/orders/' + id + '/content-clear', { method: 'POST', body: '{}' });
   if (r) { showToast('Marked safe. You can now send it via PostGrid.'); showOrder(id); }
+}
+
+// Edit the recipient and return address when something is wrong (a wrong country, a return address PostGrid will not take).
+function addressCard(o) {
+  const locked = (o.postgrid_letter_id && o.postgrid_status !== 'cancelled') || ['mailed', 'delivered', 'refunded', 'awaiting_payment'].includes(o.status);
+  const f = (id, label, val, wide) => `<div class="field" style="margin:0;${wide ? 'grid-column:1/-1' : ''}"><label for="ad-${id}">${label}</label><input type="text" id="ad-${id}" value="${esc(val || '')}"${locked ? ' disabled' : ''}></div>`;
+  const countryOpts = Object.entries(COUNTRIES || {}).sort((a, b) => a[1].localeCompare(b[1])).map(([c, n]) => `<option value="${esc(c)}"${c === o.destination_country ? ' selected' : ''}>${esc(n)} (${esc(c)})</option>`).join('');
+  const open = o.postgrid_error && !locked ? ' open' : '';
+  return `<details class="card" style="margin-bottom:24px"${open}>
+    <summary class="card-header" style="cursor:pointer"><span class="card-title">Fix addresses</span><span style="font-size:12px;color:#6b6b6b;font-weight:400">${locked ? 'Locked: a letter is already with PostGrid or the order is finished' : 'Change anything below, then save'}</span></summary>
+    <div style="padding:16px 20px">
+      <div style="font-weight:600;margin-bottom:8px">Recipient</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px">
+        ${f('r-name', 'Name', o.recipient_name)}${f('r-street', 'Street (use new lines in the box for line 2)', o.recipient_street)}
+        ${f('r-city', 'City', o.recipient_city)}${f('r-province', 'Province / state', o.recipient_province)}${f('r-postal', 'Postal code', o.recipient_postal)}
+        <div class="field" style="margin:0"><label for="ad-r-country">Destination country</label><select id="ad-r-country"${locked ? ' disabled' : ''}>${countryOpts}</select></div>
+      </div>
+      <div style="font-weight:600;margin:18px 0 8px">Return address</div>
+      <label style="display:flex;gap:8px;align-items:center;font-size:13px;margin-bottom:10px"><input type="checkbox" id="ad-skip"${o.skip_return ? ' checked' : ''}${locked ? ' disabled' : ''} onchange="document.getElementById('ad-sender').style.opacity=this.checked?.45:1"> Use the Letterhome return address instead of the customer's</label>
+      <div id="ad-sender" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;opacity:${o.skip_return ? .45 : 1}">
+        ${f('s-name', 'Name', o.sender_name)}${f('s-street', 'Street', o.sender_street)}${f('s-city', 'City', o.sender_city)}
+        ${f('s-province', 'Province / state', o.sender_province)}${f('s-postal', 'Postal code', o.sender_postal)}${f('s-country', 'Country', o.sender_country)}
+      </div>
+      <p style="font-size:12px;color:#6b6b6b;margin:12px 0 0;line-height:1.5">Changing the destination country does not change what the customer paid. Every edit is saved to the order's notes and the audit log.</p>
+      ${locked ? '' : `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
+        <button class="btn btn-outline btn-sm" onclick="saveAddresses(${o.id}, false)">Save</button>
+        ${o.postgrid_configured && o.status === 'paid' ? `<button class="btn btn-primary btn-sm" onclick="saveAddresses(${o.id}, true)">Save and send via PostGrid</button>` : ''}
+        ${o.sender_street && !o.skip_return ? `<button class="btn btn-outline btn-sm" onclick="document.getElementById('ad-skip').checked=true;saveAddresses(${o.id}, ${o.postgrid_configured && o.status === 'paid'})">${o.postgrid_configured && o.status === 'paid' ? 'Use Letterhome return address and send' : 'Use Letterhome return address'}</button>` : ''}
+      </div><div id="ad-msg" style="font-size:12px;margin-top:10px"></div>`}
+    </div>
+  </details>`;
+}
+
+async function saveAddresses(id, resend) {
+  const v = k => document.getElementById('ad-' + k)?.value ?? '';
+  const msg = document.getElementById('ad-msg');
+  if (resend && !confirm('Save these addresses and send the letter through PostGrid now?')) return;
+  if (msg) { msg.style.color = '#6b6b6b'; msg.textContent = 'Saving…'; }
+  const r = await post(`/api/admin/orders/${id}/addresses`, {
+    recipient_name: v('r-name'), recipient_street: v('r-street'), recipient_city: v('r-city'), recipient_province: v('r-province'), recipient_postal: v('r-postal'),
+    destination_country: v('r-country'),
+    sender_name: v('s-name'), sender_street: v('s-street'), sender_city: v('s-city'), sender_province: v('s-province'), sender_postal: v('s-postal'), sender_country: v('s-country'),
+    skip_return: document.getElementById('ad-skip')?.checked ? 1 : 0, resend: !!resend,
+  });
+  if (!r || r.ok === false || r.error) { if (msg) { msg.style.color = '#b42318'; msg.textContent = (r && r.error) || 'Could not save'; } return; }
+  if (r.resend && !r.resend.ok) { await showOrder(id); const m2 = document.getElementById('pg-msg'); if (m2) { m2.style.color = '#b42318'; m2.textContent = 'Saved, but PostGrid said: ' + r.resend.error; } return; }
+  showOrder(id);
 }
 
 function postgridCard(o) {

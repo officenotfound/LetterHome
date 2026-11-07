@@ -455,24 +455,52 @@ function createPostGrid({ db, getSetting, orderDirPath, fetchImpl, convertWord =
     const to   = await api('POST', '/contacts', { json: contact(recipientOf(order)), idempotencyKey: `${key}-to` });
     if (to.addressStatus === 'failed')
       throw new PostGridError(`Recipient address failed verification: ${to.addressErrors || 'no details'}. Check the address with the customer.`, { manual: true });
-    const from = await api('POST', '/contacts', { json: contact(senderOf(order)),    idempotencyKey: `${key}-from` });
+    // The customer's own return address must never stop a letter that is otherwise good: if PostGrid cannot take it
+    // (a country it will not mail from, an address it rejects), fall back to the Letterhome return address and say so.
+    const warnings = [...built.warnings];
+    let from, usedFallback = false;
+    const useFallback = async why => {
+      usedFallback = true;
+      warnings.push(`The return address could not be used (${String(why).slice(0, 160)}); the Letterhome return address was printed instead.`);
+      from = await api('POST', '/contacts', { json: contact(FALLBACK_FROM), idempotencyKey: `${key}-from-lh` });
+    };
+    const customerReturn = senderOf(order) !== FALLBACK_FROM;
+    try {
+      from = await api('POST', '/contacts', { json: contact(senderOf(order)), idempotencyKey: `${key}-from` });
+      if (customerReturn && from.addressStatus === 'failed') await useFallback(`address check failed: ${from.addressErrors || 'no details'}`);
+    } catch (e) {
+      if (!customerReturn) throw e;
+      await useFallback(e.message);
+    }
 
-    const form = new FormData();
-    form.append('to', to.id);
-    form.append('from', from.id);
-    form.append('addressPlacement', built.placement);
-    form.append('color', order.colour_printing ? 'true' : 'false');
-    form.append('doubleSided', 'false');
-    form.append('size', destinationOf(order.destination_country)?.size || 'us_letter');
-    const svc = serviceOf(order);
-    if (svc) form.append('mailingClass', dest.servicesFor(order.destination_country)[svc].mailingClass);
-    form.append('description', `Letterhome order #${order.id}`);
-    form.append('metadata[orderId]', String(order.id));
-    form.append('pdf', new Blob([built.pdf], { type: 'application/pdf' }), `order-${order.id}.pdf`);
+    const buildForm = () => {
+      const form = new FormData();
+      form.append('to', to.id);
+      form.append('from', from.id);
+      form.append('addressPlacement', built.placement);
+      form.append('color', order.colour_printing ? 'true' : 'false');
+      form.append('doubleSided', 'false');
+      form.append('size', destinationOf(order.destination_country)?.size || 'us_letter');
+      const svc = serviceOf(order);
+      if (svc) form.append('mailingClass', dest.servicesFor(order.destination_country)[svc].mailingClass);
+      form.append('description', `Letterhome order #${order.id}`);
+      form.append('metadata[orderId]', String(order.id));
+      form.append('pdf', new Blob([built.pdf], { type: 'application/pdf' }), `order-${order.id}.pdf`);
+      return form;
+    };
 
-    const letter = await api('POST', '/letters', { form, idempotencyKey: key });
+    let letter;
+    try {
+      letter = await api('POST', '/letters', { form: buildForm(), idempotencyKey: key });
+    } catch (e) {
+      // PostGrid sometimes only objects to the return address when the letter is created.
+      if (usedFallback || !customerReturn || !(e instanceof PostGridError) || !(e.status >= 400 && e.status < 500) || e.status === 429) throw e;
+      if (!/from|return|sender/i.test(e.message)) throw e;
+      await useFallback(e.message);
+      letter = await api('POST', '/letters', { form: buildForm(), idempotencyKey: `${key}-lh` });
+    }
     saveLetter(order.id, letter);
-    return { letter, warnings: built.warnings, sheets: built.sheets, addressStatus: to.addressStatus };
+    return { letter, warnings, sheets: built.sheets, addressStatus: to.addressStatus, usedFallbackReturn: usedFallback };
   }
 
   // Pulls the latest status. Returns { changed, status, mailed }.

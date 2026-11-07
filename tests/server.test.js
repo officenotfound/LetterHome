@@ -555,6 +555,24 @@ test('authenticated admin can change an order status', async () => {
   assert.equal(row.status, 'printing');
 });
 
+test('admin can fix an order\'s addresses; edits are audited, clean the old error, and are refused once mailed', async () => {
+  const { cookie, csrfToken } = await loginAdmin();
+  const id = db.prepare('SELECT id FROM orders WHERE stripe_session_id = ?').get(seedOrder({ status: 'paid' })).id;
+  db.prepare("UPDATE orders SET sender_street = '1 Calle', sender_country = 'Colombia', postgrid_error = 'MANUAL: Return address failed' WHERE id = ?").run(id);
+  const call = (oid, body) => fetch(`${base}/api/admin/orders/${oid}/addresses`, { method: 'POST', headers: { 'Content-Type': 'application/json', Cookie: cookie, 'X-CSRF-Token': csrfToken }, body: JSON.stringify(body) });
+  let res = await call(id, { skip_return: 1, recipient_city: 'Ottawa', recipient_name: '   ' });
+  assert.equal(res.status, 400, 'empty recipient name is refused');
+  res = await call(id, { skip_return: 1, recipient_city: 'Ottawa' });
+  assert.equal(res.status, 200);
+  const row = db.prepare('SELECT skip_return, recipient_city, postgrid_error FROM orders WHERE id = ?').get(id);
+  assert.equal(row.skip_return, 1); assert.equal(row.recipient_city, 'Ottawa'); assert.equal(row.postgrid_error, null);
+  assert.ok(db.prepare("SELECT 1 FROM audit_log WHERE action = 'order.edit_addresses' AND target_id = ?").get(String(id)));
+  db.prepare("UPDATE orders SET status = 'mailed' WHERE id = ?").run(id);
+  assert.equal((await call(id, { recipient_city: 'Elsewhere' })).status, 409);
+  const noAuth = await fetch(`${base}/api/admin/orders/${id}/addresses`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+  assert.equal(noAuth.status, 401);
+});
+
 test('admin status change rejects an invalid status value', async () => {
   const { cookie, csrfToken } = await loginAdmin();
   const sessionId = seedOrder({ status: 'paid' });

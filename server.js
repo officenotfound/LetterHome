@@ -528,6 +528,9 @@ async function postgridSubmit(orderId, opts) {
   try {
     const r = await postgrid.submitOrder(order, opts);
     if (r.letter.live) sendAtPrinterEmail(orderId);
+    if (r.usedFallbackReturn) {
+      try { db.prepare('INSERT INTO order_notes (order_id, note) VALUES (?,?)').run(orderId, `Automatic: ${r.warnings[r.warnings.length - 1]}`); } catch {}
+    }
     return { ok: true, letter_id: r.letter.id, warnings: r.warnings };
   } catch (e) {
     const manual = !!e.manual || (e.status >= 400 && e.status < 500 && e.status !== 429);
@@ -2139,6 +2142,46 @@ app.post('/api/admin/orders/:id/content-clear', requireAdmin, (req, res) => {
   db.prepare("UPDATE orders SET content_cleared_at = CURRENT_TIMESTAMP, postgrid_error = CASE WHEN postgrid_error LIKE 'MANUAL: Held for content review%' THEN NULL ELSE postgrid_error END WHERE id = ?").run(id);
   logAudit(req, 'order.content_cleared', 'order', id, {});
   res.json({ ok: true });
+});
+
+// Fix an order's addresses by hand (a wrong country, a return address PostGrid will not take) and optionally resend.
+const ADDRESS_FIELDS = { recipient_name: 120, recipient_street: 200, recipient_city: 100, recipient_province: 60, recipient_postal: 20, destination_country: 4,
+  sender_name: 120, sender_street: 200, sender_city: 100, sender_province: 60, sender_postal: 20, sender_country: 60 };
+app.post('/api/admin/orders/:id/addresses', requireAdmin, async (req, res) => {
+  const id = Number(req.params.id);
+  const order = db.prepare('SELECT * FROM orders WHERE id = ? AND deleted_at IS NULL').get(id);
+  if (!order) return res.status(404).json({ error: 'Not found' });
+  if (order.postgrid_letter_id && order.postgrid_status !== 'cancelled')
+    return res.status(409).json({ error: 'This order already has a letter at PostGrid. Cancel that letter first, then edit the addresses.' });
+  if (['mailed', 'delivered', 'refunded', 'awaiting_payment'].includes(order.status))
+    return res.status(409).json({ error: `Addresses cannot be edited while the order is "${order.status}".` });
+  const body = req.body || {};
+  const sets = [], vals = [], changes = {};
+  for (const [k, max] of Object.entries(ADDRESS_FIELDS)) {
+    if (!(k in body)) continue;
+    let v = String(body[k] ?? '').replace(/\u0000/g, '').trim().slice(0, max);
+    if (k === 'destination_country') v = v.toUpperCase();
+    if (k === 'recipient_name' && !v) return res.status(400).json({ error: 'Recipient name cannot be empty.' });
+    if (k === 'recipient_street' && !v) return res.status(400).json({ error: 'Recipient street cannot be empty.' });
+    const next = v === '' ? null : v;
+    if ((order[k] ?? null) !== next) { sets.push(`${k} = ?`); vals.push(next); changes[k] = { from: order[k] ?? null, to: next }; }
+  }
+  if ('skip_return' in body) {
+    const sr = body.skip_return === true || body.skip_return === 1 || body.skip_return === '1' ? 1 : 0;
+    if (sr !== (order.skip_return ? 1 : 0)) { sets.push('skip_return = ?'); vals.push(sr); changes.skip_return = { from: order.skip_return ? 1 : 0, to: sr }; }
+  }
+  if (sets.length) {
+    // A new attempt starts clean: the old failure no longer applies.
+    db.prepare(`UPDATE orders SET ${sets.join(', ')}, postgrid_error = NULL WHERE id = ?`).run(...vals, id);
+    try { db.prepare('INSERT INTO order_notes (order_id, note) VALUES (?,?)').run(id, `Addresses edited by ${req.session.admin.username}: ${Object.keys(changes).join(', ')}`); } catch {}
+    logAudit(req, 'order.edit_addresses', 'order', id, changes);
+  }
+  if (body.resend && postgrid.isConfigured()) {
+    const r = await postgridSubmit(id, { force: true });
+    logAudit(req, 'order.postgrid_submit', 'order', id, { ok: r.ok, error: r.error, letter_id: r.letter_id, after_edit: true });
+    return res.json({ ok: true, changed: Object.keys(changes), resend: r });
+  }
+  res.json({ ok: true, changed: Object.keys(changes) });
 });
 
 app.post('/api/admin/orders/:id/postgrid/submit', requireAdmin, async (req, res) => {

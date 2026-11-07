@@ -293,7 +293,26 @@ test('typed sender countries ("Canada", "États-Unis", "UK") are sent to PostGri
   assert.equal(from.countryCode, 'FR');
   const bad = seed({ skip: 0 });
   db.prepare("UPDATE orders SET sender_name = 'Tom', sender_street = '1 Road', sender_country = 'Narnia' WHERE id = ?").run(bad.id);
-  await assert.rejects(pg.submitOrder(db.prepare('SELECT * FROM orders WHERE id = ?').get(bad.id)), e => e.manual && /Narnia/.test(e.message) && /return address/.test(e.message));
+  // An unreadable return address no longer blocks the letter: the Letterhome return address is printed instead.
+  calls.length = 0;
+  const r = await pg.submitOrder(db.prepare('SELECT * FROM orders WHERE id = ?').get(bad.id));
+  assert.equal(r.usedFallbackReturn, true);
+  assert.match(r.warnings.join(' '), /Narnia/);
+  assert.equal(JSON.parse(calls.filter(c => c.url.endsWith('/contacts'))[1].opts.body).addressLine1, '1515 Discovery St');
+});
+
+test('a return address PostGrid rejects (Colombia) falls back to the Letterhome address instead of blocking the order', async () => {
+  const o = seed({ skip: 0 });
+  db.prepare("UPDATE orders SET sender_name = 'Ana', sender_street = 'Carrera 7 #71-21', sender_city = 'Bogota', sender_country = 'Colombia' WHERE id = ?").run(o.id);
+  const pgx = createPostGrid({ db, getSetting: (k, f) => settings[k] ?? f, orderDirPath: () => os.tmpdir(), emojiImage: fakeEmoji,
+    fetchImpl: async (url, opts) => {
+      if (url.endsWith('/contacts') && JSON.parse(opts.body).countryCode === 'CO')
+        return { ok: false, status: 400, json: async () => ({ error: { type: 'x', message: 'Return address country CO is not supported' } }) };
+      return fakeFetch(url, opts);
+    } });
+  const r = await pgx.submitOrder(db.prepare('SELECT * FROM orders WHERE id = ?').get(o.id));
+  assert.equal(r.usedFallbackReturn, true);
+  assert.match(r.warnings.join(' '), /Letterhome return address/);
 });
 
 test('provinces from the checkout list ("QC: Quebec") and typed names ("Québec") reach PostGrid as codes', async () => {
