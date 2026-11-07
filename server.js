@@ -783,6 +783,10 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
   res.json({ received: true });
 });
 
+// Business portal (test): has its own larger body parser for CSV batches, so it is mounted before the global 64 kB one.
+const business = require('./business');
+business.registerPortal(app, { db, getSetting, sendMail });
+
 app.use(express.json({ limit: '64kb' }));
 app.use(express.urlencoded({ limit: '64kb', extended: true }));
 
@@ -1921,6 +1925,9 @@ app.use('/api/admin', (req, res, next) => {
   }
   next();
 });
+
+// Business accounts and batch approvals (after the admin CSRF middleware above, so every change is protected).
+business.registerAdmin(app, { db, requireAdmin, logAudit, getSetting, setSetting });
 
 app.get('/api/admin/me', requireAdmin, (req, res) =>
   res.json({

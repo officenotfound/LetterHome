@@ -1217,3 +1217,103 @@ test('async route errors reach the error handler instead of hanging the request'
   });
   assert.ok(res.status < 600, "the request was answered");
 });
+
+// ── Business portal (test) ─────────────────────────────────────────────────────────────────────────────────────────
+test('business portal: onboarding, forced password change, batch checks, approval, isolation, switch', async () => {
+  const { cookie, csrfToken } = await loginAdmin();
+  const adminPost = (p, body, method = 'POST') => fetch(`${base}${p}`, { method, headers: { 'Content-Type': 'application/json', Cookie: cookie, 'X-CSRF-Token': csrfToken }, body: JSON.stringify(body) });
+
+  // The admin API needs an admin session and a CSRF token.
+  assert.equal((await fetch(`${base}/api/admin/businesses`)).status, 401);
+  assert.equal((await fetch(`${base}/api/admin/businesses`, { method: 'POST', headers: { 'Content-Type': 'application/json', Cookie: cookie }, body: '{}' })).status, 403);
+
+  const mk = async (name, email) => (await adminPost('/api/admin/businesses', { name, owner_email: email, price_per_piece_cents: 550, contact_name: 'Pat' })).json();
+  const a = await mk('Acme Property Mgmt', 'owner@acme.test');
+  const other = await mk('Other Co', 'owner@other.test');
+  assert.ok(a.ok && a.login.tempPassword.length >= 12 && other.ok);
+  assert.equal((await adminPost('/api/admin/businesses', { name: 'Dup', owner_email: 'owner@acme.test' })).status, 409);
+  assert.ok(!JSON.stringify(db.prepare('SELECT * FROM business_users').all()).includes(a.login.tempPassword), 'the temporary password is never stored in plain text');
+
+  // Portal calls: custom header required; session kept in a cookie jar.
+  const portal = async (jar, p, { method = 'GET', body } = {}) => {
+    const r = await fetch(`${base}/api/portal${p}`, { method, headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'portal', ...(jar.c ? { Cookie: jar.c } : {}) }, body: body === undefined ? undefined : JSON.stringify(body) });
+    const sc = (r.headers.getSetCookie?.() || []).map(c => c.split(';')[0]).find(c => c.startsWith('connect.sid='));
+    if (sc) jar.c = sc;
+    return { status: r.status, json: await r.json().catch(() => ({})) };
+  };
+  const A = {}, B = {};
+  assert.equal((await portal({}, '/batches')).status, 401, 'no session, no data');
+  assert.equal((await fetch(`${base}/api/portal/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })).status, 403, 'login needs the portal header');
+  assert.equal((await portal(A, '/login', { method: 'POST', body: { email: 'owner@acme.test', password: 'wrong-password-1' } })).status, 401);
+  assert.equal((await portal(A, '/login', { method: 'POST', body: { email: ['x'], password: { a: 1 } } })).status, 400, 'malformed login body is rejected, not thrown');
+  const li = await portal(A, '/login', { method: 'POST', body: { email: 'owner@acme.test', password: a.login.tempPassword } });
+  assert.equal(li.status, 200); assert.equal(li.json.mustChangePassword, true);
+
+  // Until the temporary password is replaced, nothing else works.
+  assert.equal((await portal(A, '/batches')).status, 403);
+  assert.equal((await portal(A, '/change-password', { method: 'POST', body: { current: a.login.tempPassword, next: 'short' } })).status, 400);
+  const NEWPW = 'a-Better-passw0rd';
+  assert.equal((await portal(A, '/change-password', { method: 'POST', body: { current: a.login.tempPassword, next: NEWPW } })).status, 200);
+  const me = await portal(A, '/me');
+  assert.equal(me.status, 200); assert.equal(me.json.business.name, 'Acme Property Mgmt'); assert.equal(me.json.business.pricePerPieceCents, 550);
+
+  // Checking a batch: good rows, a bad postal code, a missing merge value, and a field filled safely as plain text.
+  const rows = [
+    { name: 'Jane Smith', street: '123 Main St', city: 'Toronto', province: 'ON', postal: 'm5v2t6', country: 'Canada', first_name: 'Jane' },
+    { name: 'Raj <b>Patel</b>', street: '88 Granville St', city: 'Vancouver', province: 'BC', postal: 'V6C 1T2', first_name: 'Raj' },
+    { name: 'Bad Postal', street: '1 St', city: 'Calgary', province: 'AB', postal: 'ZZZ', first_name: 'Bad' },
+    { name: 'No Name Field', street: '2 St', city: 'Calgary', province: 'AB', postal: 'T2P 1J9', first_name: '' },
+  ];
+  const tpl = 'Dear {{first_name}},\n\nYour address on file is {{street}}.';
+  const chk = await portal(A, '/batches/check', { method: 'POST', body: { name: 'Nov', template: tpl, rows } });
+  assert.equal(chk.status, 200);
+  assert.equal(chk.json.count, 4); assert.equal(chk.json.issueCount, 2); assert.equal(chk.json.totalCents, 4 * 550);
+  assert.match(chk.json.sample[0].body, /^Dear Jane,/);
+  assert.match(chk.json.problems.map(p => p.issues.join()).join(), /postal code/i);
+  assert.match(chk.json.problems.map(p => p.issues.join()).join(), /first_name/);
+  assert.equal((await portal(A, '/batches/check', { method: 'POST', body: { name: 'x', template: 'hi', rows: new Array(201).fill(rows[0]) } })).status, 400, 'over the per-batch limit');
+
+  // A batch with problems saves, but cannot be submitted.
+  const bad = await portal(A, '/batches', { method: 'POST', body: { name: 'Has problems', template: tpl, rows } });
+  assert.equal(bad.status, 200); assert.equal(bad.json.issueCount, 2);
+  assert.equal((await portal(A, `/batches/${bad.json.id}/submit`, { method: 'POST', body: {} })).status, 409);
+
+  // A clean batch goes through submit → admin approval.
+  const good = await portal(A, '/batches', { method: 'POST', body: { name: 'Clean', template: tpl, rows: rows.slice(0, 2) } });
+  assert.equal(good.json.issueCount, 0);
+  const piece = db.prepare('SELECT postal, country, body, recipient_name FROM business_pieces WHERE batch_id = ? ORDER BY row_num').all(good.json.id);
+  assert.equal(piece[0].postal, 'M5V 2T6', 'postal code normalised'); assert.equal(piece[0].country, 'CA');
+  assert.equal(piece[1].recipient_name, 'Raj <b>Patel</b>', 'stored as plain text; the pages escape it');
+  assert.equal((await portal(A, `/batches/${good.json.id}/submit`, { method: 'POST', body: {} })).status, 200);
+  assert.equal((await portal(A, `/batches/${good.json.id}/submit`, { method: 'POST', body: {} })).status, 409, 'cannot submit twice');
+
+  // Another business cannot see or touch it.
+  await portal(B, '/login', { method: 'POST', body: { email: 'owner@other.test', password: other.login.tempPassword } });
+  await portal(B, '/change-password', { method: 'POST', body: { current: other.login.tempPassword, next: 'another-Good-pw9' } });
+  assert.equal((await portal(B, `/batches/${good.json.id}`)).status, 404);
+  assert.equal((await portal(B, `/batches/${good.json.id}/cancel`, { method: 'POST', body: {} })).status, 404);
+  assert.deepEqual((await portal(B, '/batches')).json, []);
+
+  // The admin sees it in the queue and approves. Approving sends nothing anywhere.
+  const list = await (await fetch(`${base}/api/admin/businesses`, { headers: { Cookie: cookie } })).json();
+  assert.ok(list.queue.some(q => q.id === good.json.id));
+  assert.equal((await adminPost(`/api/admin/business-batches/${good.json.id}/decision`, { decision: 'approve', note: 'Looks right' })).status, 200);
+  assert.equal((await adminPost(`/api/admin/business-batches/${good.json.id}/decision`, { decision: 'approve' })).status, 409, 'already decided');
+  const after = await portal(A, `/batches/${good.json.id}`);
+  assert.equal(after.json.batch.status, 'approved'); assert.equal(after.json.batch.admin_note, 'Looks right');
+  assert.equal((await portal(A, `/batches/${good.json.id}/cancel`, { method: 'POST', body: {} })).status, 409);
+
+  // Pausing a business locks it out; the kill switch turns the whole portal off.
+  assert.equal((await adminPost(`/api/admin/businesses/${a.id}`, { status: 'paused' }, 'PUT')).status, 200);
+  assert.equal((await portal(A, '/batches')).status, 401);
+  assert.equal((await portal({}, '/login', { method: 'POST', body: { email: 'owner@acme.test', password: NEWPW } })).status, 403);
+  assert.equal((await adminPost(`/api/admin/businesses/${a.id}`, { status: 'active' }, 'PUT')).status, 200);
+  assert.equal((await adminPost('/api/admin/businesses/portal-switch', { enabled: false })).status, 200);
+  assert.equal((await portal(B, '/me')).status, 503);
+  assert.equal((await fetch(`${base}/portal`)).status, 200, 'the page itself still loads');
+  await adminPost('/api/admin/businesses/portal-switch', { enabled: true });
+
+  // Lock-out after repeated failures on one account (the per-IP limiter is off in tests).
+  for (let i = 0; i < 8; i++) await portal({}, '/login', { method: 'POST', body: { email: 'owner@other.test', password: 'nope-nope-nope' } });
+  assert.equal((await portal({}, '/login', { method: 'POST', body: { email: 'owner@other.test', password: 'another-Good-pw9' } })).status, 429);
+});

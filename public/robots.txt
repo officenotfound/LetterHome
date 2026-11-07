@@ -23,6 +23,7 @@ User-agent: *
 Content-Signal: search=yes, ai-input=yes, ai-train=no
 Allow: /
 Disallow: /admin/
+Disallow: /portal
 Disallow: /api/
 Disallow: /order-success
 Disallow: /resume/
@@ -55,6 +56,7 @@ User-agent: DuckDuckBot
 User-agent: Applebot
 Allow: /
 Disallow: /admin/
+Disallow: /portal
 Disallow: /api/
 Disallow: /order-success
 Disallow: /resume/

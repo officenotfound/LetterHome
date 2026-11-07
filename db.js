@@ -399,6 +399,72 @@ try {
   db.exec(`CREATE INDEX IF NOT EXISTS idx_arcade_score ON arcade_scores(game, score DESC)`);
 } catch (e) { console.error('[init] arcade_scores table:', e.message); }
 
+// ── Business portal (test): companies that send letters in batches ───────────────────────────────────────────────
+db.exec(`
+  CREATE TABLE IF NOT EXISTS businesses (
+    id                    INTEGER PRIMARY KEY AUTOINCREMENT,
+    name                  TEXT NOT NULL,
+    contact_name          TEXT,
+    contact_email         TEXT,
+    phone                 TEXT,
+    industry              TEXT,
+    status                TEXT NOT NULL DEFAULT 'active',      -- active | paused
+    price_per_piece_cents INTEGER NOT NULL DEFAULT 600,        -- CAD, what this business pays per mailed piece
+    monthly_fee_cents     INTEGER NOT NULL DEFAULT 0,          -- platform fee, invoiced by hand for now
+    max_batch_size        INTEGER NOT NULL DEFAULT 200,
+    billing_terms         TEXT,
+    notes                 TEXT,
+    created_at            DATETIME DEFAULT CURRENT_TIMESTAMP,
+    deleted_at            DATETIME
+  );
+  CREATE TABLE IF NOT EXISTS business_users (
+    id                   INTEGER PRIMARY KEY AUTOINCREMENT,
+    business_id          INTEGER NOT NULL REFERENCES businesses(id),
+    email                TEXT NOT NULL UNIQUE,
+    name                 TEXT,
+    role                 TEXT NOT NULL DEFAULT 'owner',         -- owner | member
+    password_hash        TEXT NOT NULL,
+    must_change_password INTEGER NOT NULL DEFAULT 1,
+    disabled_at          DATETIME,
+    last_login_at        DATETIME,
+    created_at           DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+  CREATE TABLE IF NOT EXISTS business_batches (
+    id                    INTEGER PRIMARY KEY AUTOINCREMENT,
+    business_id           INTEGER NOT NULL REFERENCES businesses(id),
+    created_by            INTEGER REFERENCES business_users(id),
+    name                  TEXT NOT NULL,
+    template              TEXT NOT NULL,
+    status                TEXT NOT NULL DEFAULT 'draft',        -- draft | pending_approval | approved | rejected | cancelled
+    piece_count           INTEGER NOT NULL DEFAULT 0,
+    issue_count           INTEGER NOT NULL DEFAULT 0,
+    price_per_piece_cents INTEGER NOT NULL,
+    total_cents           INTEGER NOT NULL DEFAULT 0,
+    admin_note            TEXT,
+    created_at            DATETIME DEFAULT CURRENT_TIMESTAMP,
+    submitted_at          DATETIME,
+    decided_at            DATETIME
+  );
+  CREATE TABLE IF NOT EXISTS business_pieces (
+    id             INTEGER PRIMARY KEY AUTOINCREMENT,
+    batch_id       INTEGER NOT NULL REFERENCES business_batches(id),
+    row_num        INTEGER NOT NULL,
+    recipient_name TEXT,
+    street         TEXT,
+    city           TEXT,
+    province       TEXT,
+    postal         TEXT,
+    country        TEXT,
+    merge_json     TEXT,
+    body           TEXT,
+    issues         TEXT                                           -- JSON array of plain-language problems; empty means ready
+  );
+  CREATE INDEX IF NOT EXISTS idx_business_users_business ON business_users(business_id);
+  CREATE INDEX IF NOT EXISTS idx_business_batches_business ON business_batches(business_id, status);
+  CREATE INDEX IF NOT EXISTS idx_business_pieces_batch ON business_pieces(batch_id);
+`);
+
+
 // Schema version stamp. The CREATE/ALTER statements above are idempotent and
 // run on every boot, so this is a marker (not a migration runner) that records
 // which schema revision the code expects. Bump SCHEMA_VERSION whenever the DDL

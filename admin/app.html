@@ -514,13 +514,15 @@ function renderRoute(p) {
   if (p === '/admin/emails')                        return showEmails();
   if (p === '/admin/audit-log')                     return showAuditLog();
   if (p === '/admin/codes')                         return showCodes();
+  if (p === '/admin/businesses')                    return showBusinesses();
+  if (p.match(/^\/admin\/businesses\/\d+$/))         return showBusiness(p.split('/').pop());
   return showDashboard();
 }
 
 // Related sections share one menu item and show as tabs. Every address still works as before.
 const NAV_GROUPS = {
   orders:   { tabs: [['/admin/orders', 'Orders'], ['/admin/print-queue', 'Print queue']] },
-  people:   { tabs: [['/admin/customers', 'Customers'], ['/admin/accounts', 'Accounts'], ['/admin/contacts', 'Contacts']] },
+  people:   { tabs: [['/admin/customers', 'Customers'], ['/admin/accounts', 'Accounts'], ['/admin/contacts', 'Contacts'], ['/admin/businesses', 'Businesses']] },
   messages: { tabs: [['/admin/broadcast', 'Broadcast'], ['/admin/outreach', 'Outreach'], ['/admin/templates', 'Templates'], ['/admin/emails', 'Emails']] },
   reports:  { tabs: [['/admin/insights', 'Insights'], ['/admin/visitors', 'Visitors'], ['/admin/stripe', 'Stripe']] },
   system:   { tabs: [['/admin/settings', 'Settings'], ['/admin/codes', 'Codes'], ['/admin/audit-log', 'Audit log'], ['/admin/trash', 'Trash']] },
@@ -3180,6 +3182,162 @@ function fmtBytes(bytes) {
   if (bytes < 1024)        return bytes + ' B';
   if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
   return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+// ── Businesses (test portal): onboarding, logins and batch approvals ──────────────────────────────────────────
+const BIZ_STATUS = { draft: 'Draft', pending_approval: 'Waiting for approval', approved: 'Approved', rejected: 'Rejected', cancelled: 'Cancelled' };
+const bizBadge = s => `<span class="badge ${s === 'approved' ? 'badge-green' : s === 'pending_approval' ? 'badge-amber' : s === 'draft' ? 'badge-gray' : 'badge-blue'}">${esc(BIZ_STATUS[s] || s)}</span>`;
+const bizMoney = c => '$' + (Number(c || 0) / 100).toFixed(2);
+const bizInput = (id, label, val = '', attrs = '') => `<div><label style="font-family:'DM Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.12em;color:#9a9a9a;display:block;margin-bottom:4px">${label}</label><input id="${id}" type="text" value="${esc(val)}" ${attrs} style="width:100%;padding:8px 10px;border:1px solid #e0e0e0;border-radius:2px;font-size:13px"></div>`;
+window._bizLogin = null;
+
+function bizLoginBox() {
+  const l = window._bizLogin; if (!l) return '';
+  window._bizLogin = null;
+  return `<div class="card" style="margin-bottom:20px;border-left:4px solid #e63946"><div style="padding:16px 20px">
+    <strong>Portal login created. Copy it now: the password is shown only once.</strong>
+    <div style="font-family:'DM Mono',monospace;font-size:13px;margin:10px 0;line-height:1.8">
+      Address: <b>${esc(location.origin)}/portal</b><br>Email: <b>${esc(l.email)}</b><br>Temporary password: <b>${esc(l.tempPassword)}</b></div>
+    <button class="btn btn-outline btn-sm" onclick="bizCopyLogin(this)" data-text="${esc(`Letterhome business portal\n${location.origin}/portal\nEmail: ${l.email}\nTemporary password: ${l.tempPassword}\n(You will be asked to choose your own password when you sign in.)`)}">Copy login details</button>
+    </div></div>`;
+}
+function bizCopyLogin(btn) {
+  const t = btn.dataset.text;
+  (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(() => { btn.textContent = 'Copied'; }, () => { prompt('Copy these login details:', t); });
+}
+
+async function showBusinesses() {
+  setTitle('Businesses');
+  const d = await api('/api/admin/businesses');
+  if (!d) return setMain('<div class="empty">Could not load businesses.</div>');
+  const rows = d.businesses.map(b => `<tr>
+      <td><button class="link" onclick="go('/admin/businesses/${b.id}')">${esc(b.name)}</button>${b.status === 'paused' ? ' <span class="badge badge-gray">paused</span>' : ''}<div style="font-size:12px;color:#9a9a9a">${esc(b.industry || '')}</div></td>
+      <td style="font-size:12px">${esc(b.contact_name || '')}<div style="color:#9a9a9a">${esc(b.contact_email || '')}</div></td>
+      <td>${bizMoney(b.price_per_piece_cents)}</td><td>${b.users}</td><td>${b.batches}</td>
+      <td>${b.pending ? `<span class="badge badge-amber">${b.pending} to approve</span>` : '—'}</td><td>${b.pieces_approved}</td></tr>`).join('');
+  const queue = d.queue.map(q => `<tr><td>${esc(q.business_name)}</td><td>${esc(q.name)}</td><td>${q.piece_count}</td><td>${bizMoney(q.total_cents)}</td><td style="font-size:12px;color:#6b6b6b">${fmtDateTime(q.submitted_at)}</td>
+      <td><button class="btn btn-primary btn-sm" onclick="go('/admin/businesses/${q.business_id}')">Review</button></td></tr>`).join('');
+  setMain(`
+    <div class="page-header"><div class="page-title">Businesses</div>
+      <div style="font-size:13px;color:#6b6b6b">Test portal: ${d.portalEnabled ? '<b style="color:#1f7a45">ON</b>' : '<b style="color:#a4161f">OFF</b>'}
+        &nbsp;<button class="btn btn-outline btn-sm" onclick="bizPortalSwitch(${!d.portalEnabled})">Turn ${d.portalEnabled ? 'off' : 'on'}</button></div></div>
+    <div class="card" style="margin-bottom:20px"><div style="padding:12px 20px;font-size:13px;color:#6b6b6b">Businesses sign in at <b>${esc(location.origin)}/portal</b>, upload a CSV and submit batches. In this test, approving a batch only records the decision: nothing is printed or sent to PostGrid.</div></div>
+    ${d.queue.length ? `<div class="card" style="margin-bottom:20px"><div class="card-header"><span class="card-title">Batches waiting for approval</span></div>
+      <table><thead><tr><th>Business</th><th>Batch</th><th>Pieces</th><th>Total</th><th>Submitted</th><th></th></tr></thead><tbody>${queue}</tbody></table></div>` : ''}
+    <div class="card" style="margin-bottom:20px"><div class="card-header"><span class="card-title">Businesses</span></div>
+      <table><thead><tr><th>Business</th><th>Contact</th><th>Per piece</th><th>Logins</th><th>Batches</th><th>Pending</th><th>Pieces approved</th></tr></thead>
+      <tbody>${rows || '<tr><td colspan="7" class="empty">No businesses yet. Add the first one below.</td></tr>'}</tbody></table></div>
+    <div class="card"><div class="card-header"><span class="card-title">Add a business</span></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:20px">
+        ${bizInput('nb-name', 'Business name')}${bizInput('nb-industry', 'Industry', '', 'placeholder="Property management"')}
+        ${bizInput('nb-contact', 'Contact name')}${bizInput('nb-cemail', 'Contact email')}
+        ${bizInput('nb-phone', 'Phone')}${bizInput('nb-owner', 'Owner sign-in email', '', 'placeholder="the email they will log in with"')}
+        ${bizInput('nb-price', 'Price per piece (CAD $)', '6.00')}${bizInput('nb-fee', 'Monthly platform fee (CAD $, invoiced by hand)', '0')}
+        ${bizInput('nb-max', 'Max recipients per batch', '200')}${bizInput('nb-terms', 'Billing terms', '', 'placeholder="Invoice monthly, net 15"')}
+        <div style="grid-column:1/-1"><label style="font-family:'DM Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.12em;color:#9a9a9a;display:block;margin-bottom:4px">Notes (private)</label><textarea id="nb-notes" rows="2" style="width:100%;padding:8px 10px;border:1px solid #e0e0e0;border-radius:2px;font-size:13px"></textarea></div>
+      </div>
+      <div style="padding:0 20px 20px"><button class="btn btn-primary" onclick="bizCreate()">Create business and login</button><span id="nb-msg" style="font-size:12px;margin-left:12px;color:#a4161f"></span></div></div>`);
+}
+
+async function bizPortalSwitch(on) {
+  if (!on && !confirm('Turn the business portal off? Nobody will be able to sign in or use it until you turn it on again.')) return;
+  const r = await post('/api/admin/businesses/portal-switch', { enabled: on });
+  if (r?.ok) showBusinesses(); else alert(r?.error || 'Could not change the portal setting.');
+}
+
+const bizCents = v => Math.round(parseFloat(String(v).replace(/[^0-9.]/g, '') || '0') * 100);
+async function bizCreate() {
+  const v = id => document.getElementById(id).value;
+  const r = await post('/api/admin/businesses', {
+    name: v('nb-name'), industry: v('nb-industry'), contact_name: v('nb-contact'), contact_email: v('nb-cemail'), phone: v('nb-phone'), owner_email: v('nb-owner'),
+    price_per_piece_cents: bizCents(v('nb-price')), monthly_fee_cents: bizCents(v('nb-fee')), max_batch_size: parseInt(v('nb-max'), 10) || 200, billing_terms: v('nb-terms'), notes: v('nb-notes'),
+  });
+  if (!r?.ok) return document.getElementById('nb-msg').textContent = r?.error || 'Could not create the business.';
+  window._bizLogin = r.login;
+  go('/admin/businesses/' + r.id);
+}
+
+async function showBusiness(id) {
+  setTitle('Business');
+  const d = await api('/api/admin/businesses/' + encodeURIComponent(id));
+  if (!d) return setMain('<div class="empty">Business not found.</div>');
+  const b = d.business;
+  const users = d.users.map(u => `<tr><td>${esc(u.email)}<div style="font-size:12px;color:#9a9a9a">${esc(u.name || '')} · ${esc(u.role)}</div></td>
+      <td style="font-size:12px">${u.last_login_at ? fmtDateTime(u.last_login_at) : 'never'}${u.must_change_password ? '<div style="color:#8a5a00">temporary password</div>' : ''}</td>
+      <td>${u.disabled_at ? '<span class="badge badge-gray">disabled</span>' : '<span class="badge badge-green">active</span>'}</td>
+      <td><button class="link" onclick="bizResetPw(${u.id})">Reset password</button> &nbsp;<button class="link" onclick="bizToggleUser(${u.id}, ${u.disabled_at ? 'false' : 'true'})">${u.disabled_at ? 'Enable' : 'Disable'}</button></td></tr>`).join('');
+  const batches = d.batches.map(x => `<tr><td>${esc(x.name)}</td><td>${bizBadge(x.status)}</td><td>${x.piece_count}</td><td>${bizMoney(x.total_cents)}</td>
+      <td style="font-size:12px;color:#6b6b6b">${fmtDateTime(x.created_at)}</td><td><button class="btn btn-outline btn-sm" onclick="bizReview(${x.id})">${x.status === 'pending_approval' ? 'Review' : 'View'}</button></td></tr>`).join('');
+  setMain(`
+    <button class="back-link" onclick="go('/admin/businesses')">← Back to Businesses</button>
+    <div class="page-header"><div class="page-title">${esc(b.name)} ${b.status === 'paused' ? '<span class="badge badge-gray">paused</span>' : ''}</div></div>
+    ${bizLoginBox()}
+    <div id="biz-review"></div>
+    <div class="card" style="margin-bottom:20px"><div class="card-header"><span class="card-title">Batches</span></div>
+      <table><thead><tr><th>Name</th><th>Status</th><th>Pieces</th><th>Total</th><th>Created</th><th></th></tr></thead><tbody>${batches || '<tr><td colspan="6" class="empty">No batches yet.</td></tr>'}</tbody></table></div>
+    <div class="card" style="margin-bottom:20px"><div class="card-header"><span class="card-title">Portal logins</span></div>
+      <table><thead><tr><th>User</th><th>Last sign-in</th><th>Status</th><th></th></tr></thead><tbody>${users}</tbody></table>
+      <div style="padding:14px 20px;display:flex;gap:10px;align-items:end;flex-wrap:wrap">${bizInput('bu-email', 'Add another login (email)')}${bizInput('bu-name', 'Name')}<button class="btn btn-outline btn-sm" onclick="bizAddUser(${b.id})">Add login</button><span id="bu-msg" style="font-size:12px;color:#a4161f"></span></div></div>
+    <div class="card"><div class="card-header"><span class="card-title">Business details and pricing</span></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:20px">
+        ${bizInput('eb-name', 'Business name', b.name)}${bizInput('eb-industry', 'Industry', b.industry)}
+        ${bizInput('eb-contact', 'Contact name', b.contact_name)}${bizInput('eb-cemail', 'Contact email', b.contact_email)}
+        ${bizInput('eb-phone', 'Phone', b.phone)}${bizInput('eb-terms', 'Billing terms', b.billing_terms)}
+        ${bizInput('eb-price', 'Price per piece (CAD $)', (b.price_per_piece_cents / 100).toFixed(2))}${bizInput('eb-fee', 'Monthly platform fee (CAD $)', (b.monthly_fee_cents / 100).toFixed(2))}
+        ${bizInput('eb-max', 'Max recipients per batch', b.max_batch_size)}
+        <div><label style="font-family:'DM Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.12em;color:#9a9a9a;display:block;margin-bottom:4px">Status</label>
+          <select id="eb-status" style="width:100%;padding:8px 10px;border:1px solid #e0e0e0;font-size:13px"><option value="active" ${b.status === 'active' ? 'selected' : ''}>Active</option><option value="paused" ${b.status === 'paused' ? 'selected' : ''}>Paused (cannot sign in)</option></select></div>
+        <div style="grid-column:1/-1"><label style="font-family:'DM Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.12em;color:#9a9a9a;display:block;margin-bottom:4px">Notes (private)</label><textarea id="eb-notes" rows="3" style="width:100%;padding:8px 10px;border:1px solid #e0e0e0;font-size:13px">${esc(b.notes || '')}</textarea></div>
+      </div>
+      <div style="padding:0 20px 20px"><button class="btn btn-primary" onclick="bizSave(${b.id})">Save changes</button><span id="eb-msg" style="font-size:12px;margin-left:12px"></span></div></div>`);
+}
+
+async function bizSave(id) {
+  const v = k => document.getElementById('eb-' + k).value;
+  const r = await api('/api/admin/businesses/' + id, { method: 'PUT', body: JSON.stringify({
+    name: v('name'), industry: v('industry'), contact_name: v('contact'), contact_email: v('cemail'), phone: v('phone'), billing_terms: v('terms'),
+    price_per_piece_cents: bizCents(v('price')), monthly_fee_cents: bizCents(v('fee')), max_batch_size: parseInt(v('max'), 10) || 200, status: v('status'), notes: v('notes') }) });
+  const m = document.getElementById('eb-msg');
+  m.style.color = r?.ok ? '#1f7a45' : '#a4161f'; m.textContent = r?.ok ? 'Saved' : (r?.error || 'Could not save.');
+}
+async function bizAddUser(id) {
+  const r = await post(`/api/admin/businesses/${id}/users`, { email: document.getElementById('bu-email').value, name: document.getElementById('bu-name').value });
+  if (!r?.ok) return document.getElementById('bu-msg').textContent = r?.error || 'Could not add the login.';
+  window._bizLogin = r.login; showBusiness(id);
+}
+async function bizResetPw(uid) {
+  if (!confirm('Create a new temporary password for this login? The old password stops working.')) return;
+  const r = await post(`/api/admin/business-users/${uid}/reset-password`, {});
+  if (!r?.ok) return alert(r?.error || 'Could not reset the password.');
+  window._bizLogin = r.login; go(location.pathname);
+}
+async function bizToggleUser(uid, disabled) {
+  const r = await post(`/api/admin/business-users/${uid}/disable`, { disabled });
+  if (r?.ok) go(location.pathname); else alert(r?.error || 'Could not update the login.');
+}
+
+async function bizReview(batchId) {
+  const d = await api('/api/admin/business-batches/' + batchId);
+  const box = document.getElementById('biz-review'); if (!d || !box) return;
+  const b = d.batch;
+  box.innerHTML = `<div class="card" style="margin-bottom:20px;border-left:4px solid #8a5a00"><div class="card-header"><span class="card-title">${esc(b.name)} · ${bizBadge(b.status)}</span></div>
+    <div style="padding:16px 20px;font-size:13px">
+      <div style="margin-bottom:10px"><b>${b.piece_count}</b> pieces · <b>${bizMoney(b.total_cents)}</b> (${bizMoney(b.price_per_piece_cents)} each) · ${b.issue_count} with problems</div>
+      <div style="font-family:'DM Mono',monospace;font-size:12px;white-space:pre-wrap;background:#fffdf8;border:1px solid #e3dccb;padding:12px;margin-bottom:12px">${esc(d.sample)}</div>
+      <div style="max-height:240px;overflow:auto;margin-bottom:12px"><table><thead><tr><th>#</th><th>Name</th><th>Address</th></tr></thead><tbody>
+        ${d.pieces.map(p => `<tr><td>${p.row_num}</td><td>${esc(p.recipient_name)}</td><td style="font-size:12px">${esc(p.street)}, ${esc(p.city)} ${esc(p.province)} ${esc(p.postal)} ${esc(p.country)}</td></tr>`).join('')}</tbody></table></div>
+      ${b.admin_note ? `<div style="margin-bottom:10px">Note: ${esc(b.admin_note)}</div>` : ''}
+      ${b.status === 'pending_approval' ? `<input id="bz-note" type="text" placeholder="Note to the business (optional)" style="width:100%;padding:8px 10px;border:1px solid #e0e0e0;margin-bottom:10px">
+        <button class="btn btn-primary btn-sm" onclick="bizDecide(${b.id}, 'approve')">Approve (test: not sent)</button>
+        <button class="btn btn-outline btn-sm" onclick="bizDecide(${b.id}, 'reject')">Reject</button>
+        <span id="bz-msg" style="font-size:12px;color:#a4161f;margin-left:10px"></span>` : ''}
+    </div></div>`;
+  box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+async function bizDecide(batchId, decision) {
+  const note = document.getElementById('bz-note')?.value || '';
+  const r = await post(`/api/admin/business-batches/${batchId}/decision`, { decision, note });
+  if (r?.ok) go(location.pathname); else document.getElementById('bz-msg').textContent = r?.error || 'Could not save the decision.';
 }
 
 async function showCodes() {

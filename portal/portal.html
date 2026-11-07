@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Letterhome Business Portal</title>
+<link rel="stylesheet" href="/fonts.css">
+<style>
+:root{--navy:#17293d;--ink:#14202e;--muted:#586779;--line:#e1e6ed;--red:#c4202b;--bg:#f6f7f9;--card:#fff;--ok:#1f7a45;--okbg:#e6f4ec;--warn:#8a5a00;--warnbg:#fff4d6;--bad:#a4161f;--badbg:#fdecee}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 'Noto Sans',system-ui,sans-serif}
+h1,h2,h3{font-family:'Archivo','Noto Sans',sans-serif;letter-spacing:-.01em;margin:0}
+a{color:var(--red)}
+header{background:var(--navy);color:#fff}
+.bar{max-width:1040px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.brand{font:600 20px 'Archivo',sans-serif;margin-right:auto}
+.brand small{font:500 12px 'Noto Sans';opacity:.7;margin-left:8px}
+.who{font-size:13px;opacity:.85}
+.test{background:var(--warnbg);color:var(--warn);border-bottom:1px solid #f0dca0;text-align:center;font-size:13px;padding:7px 12px}
+main{max-width:1040px;margin:0 auto;padding:24px 20px 64px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:22px;margin-bottom:18px}
+.login{max-width:400px;margin:56px auto}
+label{display:block;font-weight:600;font-size:13px;margin:14px 0 5px}
+input[type=text],input[type=email],input[type=password],textarea{width:100%;padding:10px 12px;border:1px solid #c9d1db;border-radius:8px;font:inherit;background:#fff;color:var(--ink)}
+textarea{min-height:200px;resize:vertical;font-family:'Roboto',ui-monospace,monospace;font-size:14px;line-height:1.5}
+input:focus,textarea:focus,button:focus-visible{outline:2px solid #6b8bb0;outline-offset:1px}
+.btn{display:inline-block;background:var(--red);color:#fff;border:0;border-radius:8px;padding:10px 18px;font:600 14px 'Noto Sans',sans-serif;cursor:pointer}
+.btn:disabled{opacity:.5;cursor:default}
+.btn.alt{background:#fff;color:var(--navy);border:1px solid #c9d1db}
+.btn.ghost{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.4);padding:6px 12px;font-size:13px}
+.btn.sm{padding:6px 12px;font-size:13px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:18px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+.stat b{display:block;font:600 26px 'Archivo',sans-serif;font-variant-numeric:tabular-nums}
+.stat span{font-size:13px;color:var(--muted)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font-size:12px;color:var(--muted);font-weight:600;padding:8px 10px;border-bottom:1px solid var(--line)}
+td{padding:10px;border-bottom:1px solid var(--line);vertical-align:top}
+tr.click{cursor:pointer}tr.click:hover{background:#f3f6fa}
+.num{text-align:right;font-variant-numeric:tabular-nums}
+.pill{display:inline-block;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:600}
+.s-draft{background:#eef1f5;color:var(--muted)}.s-pending_approval{background:var(--warnbg);color:var(--warn)}
+.s-approved{background:var(--okbg);color:var(--ok)}.s-rejected,.s-cancelled{background:var(--badbg);color:var(--bad)}
+.msg{padding:10px 14px;border-radius:8px;margin:12px 0;font-size:14px}
+.msg.err{background:var(--badbg);color:var(--bad)}.msg.ok{background:var(--okbg);color:var(--ok)}.msg.warn{background:var(--warnbg);color:var(--warn)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 4px}
+.chip{border:1px solid #c9d1db;background:#fff;border-radius:999px;padding:2px 10px;font:500 12px 'Roboto',monospace;cursor:pointer}
+.letter{white-space:pre-wrap;font-family:'Roboto',ui-monospace,monospace;font-size:13.5px;background:#fffdf8;border:1px solid #e3dccb;border-radius:8px;padding:16px;margin:8px 0 14px}
+.to{font-family:'Roboto',monospace;font-size:13px;color:var(--muted);margin-top:10px}
+.muted{color:var(--muted);font-size:13px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media(max-width:760px){.grid2{grid-template-columns:1fr}.hide-sm{display:none}}
+.scroll{overflow-x:auto}
+ul.issues{margin:4px 0 0;padding-left:18px;color:var(--bad);font-size:13px}
+</style>
+</head>
+<body>
+<header><div class="bar"><div class="brand">Letterhome <small>Business portal</small></div><div class="who" id="who"></div><button class="btn ghost" id="signout" hidden>Sign out</button></div></header>
+<div class="test">Test mode: approved batches are recorded but not printed or mailed yet.</div>
+<main id="app"></main>
+
+<script>
+'use strict';
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+const money = c => '$' + (Number(c) / 100).toLocaleString('en-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const when = d => d ? new Date(String(d).replace(' ', 'T') + 'Z').toLocaleString('en-CA', { dateStyle: 'medium', timeStyle: 'short' }) : '';
+const STATUS = { draft: 'Draft', pending_approval: 'Waiting for approval', approved: 'Approved', rejected: 'Not approved', cancelled: 'Cancelled' };
+const app = $('#app');
+let me = null, draft = { name: '', csv: '', template: '' };
+
+async function api(path, opts = {}) {
+  const o = { method: opts.method || 'GET', headers: { 'X-Requested-With': 'portal' }, credentials: 'same-origin' };
+  if (opts.body !== undefined) { o.headers['Content-Type'] = 'application/json'; o.body = JSON.stringify(opts.body); }
+  let r;
+  try { r = await fetch('/api/portal' + path, o); } catch { return { ok: false, status: 0, error: 'Could not reach the server. Check your connection.' }; }
+  const data = await r.json().catch(() => ({}));
+  if (r.status === 401 && path !== '/login') { me = null; showLogin(); return { ok: false, status: 401, error: 'Please sign in.' }; }
+  return { ok: r.ok, status: r.status, ...data };
+}
+const msg = (el, text, kind = 'err') => { el.innerHTML = text ? `<div class="msg ${kind}" role="alert">${esc(text)}</div>` : ''; };
+
+// ── CSV ──
+function parseCSV(text) {
+  text = text.replace(/^﻿/, '');
+  const delim = (text.split('\n')[0].match(/\t/g) || []).length > (text.split('\n')[0].match(/,/g) || []).length ? '\t' : ',';
+  const rows = []; let row = [], cell = '', q = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) { if (c === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; } else cell += c; }
+    else if (c === '"' && cell === '') q = true;
+    else if (c === delim) { row.push(cell); cell = ''; }
+    else if (c === '\n' || c === '\r') { if (c === '\r' && text[i + 1] === '\n') i++; row.push(cell); cell = ''; if (row.some(x => x.trim() !== '')) rows.push(row); row = []; }
+    else cell += c;
+  }
+  row.push(cell); if (row.some(x => x.trim() !== '')) rows.push(row);
+  if (rows.length < 2) return { headers: [], rows: [] };
+  const headers = rows[0].map(h => h.trim());
+  return { headers, rows: rows.slice(1).map(r => Object.fromEntries(headers.map((h, i) => [h, (r[i] ?? '').trim()]).filter(([h]) => h))) };
+}
+const SAMPLE = 'name,street,city,province,postal,country,first_name,amount_due\nJane Smith,123 Main St Apt 4,Toronto,ON,M5V 2T6,Canada,Jane,$450.00\nRaj Patel,88 Granville St,Vancouver,BC,V6C 1T2,Canada,Raj,$1200.00\n';
+
+// ── Views ──
+function showLogin(note) {
+  $('#who').textContent = ''; $('#signout').hidden = true;
+  app.innerHTML = `<form class="card login" id="lf" novalidate>
+    <h2>Sign in</h2><p class="muted">For businesses set up by Letterhome.</p>
+    <label for="em">Email</label><input id="em" type="email" autocomplete="username" required>
+    <label for="pw">Password</label><input id="pw" type="password" autocomplete="current-password" required>
+    <div id="lm">${note ? `<div class="msg ok">${esc(note)}</div>` : ''}</div>
+    <p><button class="btn" type="submit">Sign in</button></p></form>`;
+  $('#lf').onsubmit = async e => {
+    e.preventDefault();
+    const btn = e.target.querySelector('button'); btn.disabled = true;
+    const r = await api('/login', { method: 'POST', body: { email: $('#em').value, password: $('#pw').value } });
+    btn.disabled = false;
+    if (!r.ok) return msg($('#lm'), r.error || 'Could not sign in.');
+    await boot();
+  };
+}
+
+function showChangePassword(forced) {
+  app.innerHTML = `<form class="card login" id="cf" novalidate>
+    <h2>${forced ? 'Choose your own password' : 'Change password'}</h2>
+    ${forced ? '<p class="muted">You signed in with a temporary password. Choose a new one to continue.</p>' : ''}
+    <label for="cur">Current password</label><input id="cur" type="password" autocomplete="current-password">
+    <label for="nw">New password</label><input id="nw" type="password" autocomplete="new-password">
+    <p class="muted">At least 10 characters, with letters and a number.</p>
+    <div id="cm"></div>
+    <p class="row"><button class="btn" type="submit">Save password</button>${forced ? '' : '<button class="btn alt" type="button" id="cc">Cancel</button>'}</p></form>`;
+  if (!forced) $('#cc').onclick = showDashboard;
+  $('#cf').onsubmit = async e => {
+    e.preventDefault();
+    const r = await api('/change-password', { method: 'POST', body: { current: $('#cur').value, next: $('#nw').value } });
+    if (!r.ok) return msg($('#cm'), r.error || 'Could not change the password.');
+    await boot();
+  };
+}
+
+async function showDashboard() {
+  const [m, b] = await Promise.all([api('/me'), api('/batches')]);
+  if (!m.ok) return;
+  me = m;
+  const list = Array.isArray(b) ? b : [];
+  app.innerHTML = `
+    <div class="row" style="justify-content:space-between;margin-bottom:14px"><h1>${esc(m.business.name)}</h1>
+      <div class="row"><button class="btn alt sm" id="pwbtn">Change password</button><button class="btn" id="newb">New batch</button></div></div>
+    <div class="stats">
+      <div class="stat"><b>${m.stats.batches}</b><span>Batches</span></div>
+      <div class="stat"><b>${m.stats.pending}</b><span>Waiting for approval</span></div>
+      <div class="stat"><b>${m.stats.pieces_approved}</b><span>Pieces approved</span></div>
+      <div class="stat"><b>${money(m.stats.month_cents)}</b><span>Approved this month</span></div>
+    </div>
+    <div class="card"><div class="row" style="justify-content:space-between"><h2>Batches</h2><span class="muted">${money(m.business.pricePerPieceCents)} per piece</span></div>
+      <div class="scroll"><table><thead><tr><th>Name</th><th>Status</th><th class="num">Pieces</th><th class="num">Total</th><th class="hide-sm">Created</th></tr></thead><tbody>
+      ${list.map(x => `<tr class="click" data-id="${x.id}"><td>${esc(x.name)}</td><td><span class="pill s-${esc(x.status)}">${esc(STATUS[x.status] || x.status)}</span></td><td class="num">${x.piece_count}</td><td class="num">${money(x.total_cents)}</td><td class="hide-sm">${esc(when(x.created_at))}</td></tr>`).join('') || '<tr><td colspan="5" class="muted">No batches yet. Choose New batch to send your first mailing.</td></tr>'}
+      </tbody></table></div></div>`;
+  $('#newb').onclick = () => showNewBatch();
+  $('#pwbtn').onclick = () => showChangePassword(false);
+  app.querySelectorAll('tr.click').forEach(tr => tr.onclick = () => showBatch(tr.dataset.id));
+}
+
+let parsed = { headers: [], rows: [] }, checked = null;
+function showNewBatch() {
+  checked = null;
+  app.innerHTML = `
+    <p><button class="btn alt sm" id="back">← Back</button></p>
+    <h1>New batch</h1>
+    <div class="card">
+      <label for="bn">Batch name</label><input id="bn" type="text" maxlength="120" placeholder="e.g. November rent notices" value="${esc(draft.name)}">
+      <h2 style="margin-top:22px">1. Your recipients</h2>
+      <p class="muted">Upload a CSV file or paste it below. Each row is one letter. We look for the columns <b>name, street, city, province, postal, country</b>. Any other columns can be used inside your letter.
+        <a href="#" id="sample">Download an example file</a></p>
+      <input type="file" id="file" accept=".csv,.tsv,.txt,text/csv">
+      <label for="csv">Or paste your list</label><textarea id="csv" spellcheck="false" style="min-height:110px">${esc(draft.csv)}</textarea>
+      <p class="muted" id="csvinfo"></p>
+      <h2 style="margin-top:22px">2. Your letter</h2>
+      <p class="muted">Write the letter once. Put a column name in double curly brackets to fill it in for each person, like <code>{{first_name}}</code>.</p>
+      <div class="chips" id="chips"></div>
+      <textarea id="tpl" spellcheck="true" placeholder="Dear {{first_name}},&#10;&#10;...">${esc(draft.template)}</textarea>
+      <div id="cm"></div>
+      <p class="row"><button class="btn" id="check">Check my batch</button><span class="muted">Nothing is saved or sent yet.</span></p>
+    </div>
+    <div id="result"></div>`;
+  $('#back').onclick = showDashboard;
+  $('#sample').onclick = e => { e.preventDefault(); const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([SAMPLE], { type: 'text/csv' })); a.download = 'letterhome-example.csv'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); };
+  $('#file').onchange = async e => {
+    const f = e.target.files[0]; if (!f) return;
+    if (f.size > 900000) return msg($('#cm'), 'That file is too large. Keep it under 900 KB (about 2,000 rows).');
+    $('#csv').value = await f.text(); readCsv();
+  };
+  $('#csv').oninput = readCsv; $('#tpl').oninput = () => { draft.template = $('#tpl').value; };
+  $('#bn').oninput = () => { draft.name = $('#bn').value; };
+  $('#check').onclick = runCheck;
+  readCsv();
+}
+function readCsv() {
+  draft.csv = $('#csv').value;
+  parsed = parseCSV(draft.csv);
+  $('#csvinfo').textContent = parsed.rows.length ? `${parsed.rows.length} recipient${parsed.rows.length === 1 ? '' : 's'} found. Columns: ${parsed.headers.join(', ')}` : '';
+  $('#chips').innerHTML = parsed.headers.filter(Boolean).map(h => `<button type="button" class="chip" data-h="${esc(h)}">{{${esc(h)}}}</button>`).join('');
+  $('#chips').querySelectorAll('.chip').forEach(c => c.onclick = () => {
+    const t = $('#tpl'), s = t.selectionStart ?? t.value.length, tag = '{{' + c.dataset.h + '}}';
+    t.value = t.value.slice(0, s) + tag + t.value.slice(t.selectionEnd ?? s); t.focus(); t.selectionStart = t.selectionEnd = s + tag.length; draft.template = t.value;
+  });
+}
+async function runCheck() {
+  draft.name = $('#bn').value; draft.template = $('#tpl').value;
+  const out = $('#result'); out.innerHTML = '';
+  if (!parsed.rows.length) return msg($('#cm'), 'Add your recipients first (a header row, then one row per person).');
+  msg($('#cm'), '');
+  const r = await api('/batches/check', { method: 'POST', body: { name: draft.name || 'Untitled', template: draft.template, rows: parsed.rows } });
+  if (!r.ok) return msg($('#cm'), r.error || 'Could not check the batch.');
+  checked = r;
+  out.innerHTML = `<div class="card">
+    <h2>${r.count} letter${r.count === 1 ? '' : 's'} · ${money(r.totalCents)}</h2>
+    ${r.issueCount ? `<div class="msg err">${r.issueCount} recipient${r.issueCount === 1 ? ' has' : 's have'} a problem. Fix them in your list and check again.</div>
+      <div class="scroll"><table><thead><tr><th>Row</th><th>Name</th><th>Problem</th></tr></thead><tbody>${r.problems.map(p => `<tr><td>${p.row}</td><td>${esc(p.name)}</td><td><ul class="issues">${p.issues.map(i => `<li>${esc(i)}</li>`).join('')}</ul></td></tr>`).join('')}</tbody></table></div>
+      ${r.issueCount > r.problems.length ? `<p class="muted">Showing the first ${r.problems.length}.</p>` : ''}`
+      : '<div class="msg ok">Every address and field looks good.</div>'}
+    <h3 style="margin-top:16px">Preview</h3>
+    ${r.sample.map(s => `<div class="to">Letter ${s.row} to: ${esc(s.to.join(' · '))}</div><div class="letter">${esc(s.body)}</div>`).join('')}
+    <p class="row"><button class="btn" id="save" ${r.issueCount ? 'disabled' : ''}>Save batch</button><span class="muted">You can still review it before it goes to Letterhome for approval.</span></p>
+    <div id="sm"></div></div>`;
+  $('#save').onclick = async () => {
+    $('#save').disabled = true;
+    const s = await api('/batches', { method: 'POST', body: { name: draft.name || 'Untitled', template: draft.template, rows: parsed.rows } });
+    if (!s.ok) { $('#save').disabled = false; return msg($('#sm'), s.error || 'Could not save the batch.'); }
+    draft = { name: '', csv: '', template: '' };
+    showBatch(s.id);
+  };
+  out.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+async function showBatch(id, note) {
+  const r = await api('/batches/' + encodeURIComponent(id));
+  if (!r.ok) return showDashboard();
+  const b = r.batch;
+  app.innerHTML = `
+    <p><button class="btn alt sm" id="back">← All batches</button></p>
+    <div class="row" style="justify-content:space-between"><h1>${esc(b.name)}</h1><span class="pill s-${esc(b.status)}">${esc(STATUS[b.status] || b.status)}</span></div>
+    ${note ? `<div class="msg ok">${esc(note)}</div>` : ''}
+    <div class="stats" style="margin-top:14px">
+      <div class="stat"><b>${b.piece_count}</b><span>Letters</span></div>
+      <div class="stat"><b>${money(b.price_per_piece_cents)}</b><span>Per letter</span></div>
+      <div class="stat"><b>${money(b.total_cents)}</b><span>Total</span></div>
+    </div>
+    ${b.admin_note ? `<div class="msg warn">Note from Letterhome: ${esc(b.admin_note)}</div>` : ''}
+    <div id="bm"></div>
+    <p class="row">
+      ${b.status === 'draft' ? '<button class="btn" id="submit">Send for approval</button>' : ''}
+      ${['draft', 'pending_approval'].includes(b.status) ? '<button class="btn alt" id="cancel">Cancel this batch</button>' : ''}
+    </p>
+    <div class="grid2">
+      <div class="card"><h3>Letter preview</h3><div class="letter">${esc(r.sample)}</div><p class="muted">Shown for the first recipient.</p></div>
+      <div class="card"><h3>Recipients</h3><div class="scroll" style="max-height:420px;overflow-y:auto"><table><thead><tr><th>#</th><th>Name</th><th>City</th></tr></thead><tbody>
+        ${r.pieces.map(p => `<tr><td>${p.row_num}</td><td>${esc(p.recipient_name)}</td><td>${esc(p.city)} ${esc(p.province)}</td></tr>`).join('')}</tbody></table></div></div>
+    </div>`;
+  $('#back').onclick = showDashboard;
+  if ($('#submit')) $('#submit').onclick = async () => {
+    $('#submit').disabled = true;
+    const s = await api(`/batches/${b.id}/submit`, { method: 'POST', body: {} });
+    if (!s.ok) { $('#submit').disabled = false; return msg($('#bm'), s.error || 'Could not submit.'); }
+    showBatch(b.id, 'Sent to Letterhome for approval.');
+  };
+  if ($('#cancel')) $('#cancel').onclick = async () => {
+    if ($('#cancel').dataset.sure !== '1') { $('#cancel').dataset.sure = '1'; $('#cancel').textContent = 'Click again to cancel this batch'; return; }
+    const s = await api(`/batches/${b.id}/cancel`, { method: 'POST', body: {} });
+    if (!s.ok) return msg($('#bm'), s.error || 'Could not cancel.');
+    showBatch(b.id, 'Batch cancelled.');
+  };
+}
+
+async function boot() {
+  const m = await api('/me');
+  if (m.status === 503) { app.innerHTML = `<div class="card login"><h2>Portal unavailable</h2><p class="muted">${esc(m.error)}</p></div>`; return; }
+  if (!m.ok && m.status !== 403) return showLogin();
+  if (m.status === 403 && m.mustChangePassword) { $('#signout').hidden = false; return showChangePassword(true); }
+  me = m;
+  $('#who').textContent = m.user.email; $('#signout').hidden = false;
+  if (m.user.mustChangePassword) return showChangePassword(true);
+  showDashboard();
+}
+$('#signout').onclick = async () => { await api('/logout', { method: 'POST', body: {} }); me = null; showLogin('You are signed out.'); };
+boot();
+</script>
+</body>
+</html>
