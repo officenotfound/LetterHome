@@ -151,9 +151,11 @@ const ipCountryCache = new Map();
 const IP_CACHE_TTL_MS = 24 * 3600 * 1000;
 
 function getClientIp(req) {
-  const xff = ((req.headers['x-forwarded-for'] || '').toString().split(',')[0] || '').trim();
-  const raw = xff || req.socket?.remoteAddress || req.connection?.remoteAddress || '';
-  return raw.replace(/^::ffff:/, '');
+  // req.ip already honours the trusted-proxy count set above. The first X-Forwarded-For entry is whatever the
+  // visitor typed, so it must never be used: it would let anyone forge the IP stored in analytics and logs, and
+  // pick the address sent to the external geo lookup. Only a well-formed IP is returned.
+  const ip = (req.ip || req.socket?.remoteAddress || '').replace(/^::ffff:/, '');
+  return require('net').isIP(ip) ? ip : '';
 }
 
 function isPrivateIp(ip) {
@@ -3314,6 +3316,9 @@ app.post('/api/contact', contactLimiter, async (req, res, next) => {
   // Strip CR/LF to prevent email header injection via name or email fields.
   const safeName  = String(name).slice(0, 200).replace(/[\r\n]/g, ' ');
   const safeEmail = String(email).slice(0, 200).replace(/[\r\n]/g, '');
+  // The away auto-reply goes to whoever typed this address, which may not be them, so the name placed in it is
+  // short and plain: no links, no digit runs, no control characters.
+  const firstName = (n => (/(https?:|www\.|@|\.[a-z]{2,}\/|\d{4,}|\.[a-z]{2,}$)/i.test(n) ? '' : n))(String(name).replace(/[\u0000-\u001f\u007f]+/g, ' ').trim().split(/\s+/)[0].slice(0, 30));
 
   try {
     db.prepare('INSERT INTO contact_submissions (name, email, message, ip) VALUES (?,?,?,?)')
@@ -3334,9 +3339,9 @@ app.post('/api/contact', contactLimiter, async (req, res, next) => {
     if (awayOn) {
       await sendMail({
         from:    process.env.EMAIL_FROM,
-        to:      email,
+        to:      safeEmail,
         subject: 'We received your message | Letterhome',
-        text:    `Hi ${String(name).split(' ')[0]},\n\n${awayMsg}\n\nLetterhome`,
+        text:    `Hi${firstName ? ' ' + firstName : ''},\n\n${awayMsg}\n\nLetterhome`,
       }, 'away_autoreply');
     }
   } catch (e) {
@@ -3528,9 +3533,11 @@ app.get('/api/account/me', requireCustomer, (req, res) => {
 
 app.put('/api/account/return-address', requireCustomer, (req, res) => {
   const email = req.session.customer.email;
+  // Length-capped like the order form, so a saved return address can never grow without limit.
+  const clip = (v, n) => (v == null || v === '') ? null : String(v).slice(0, n);
   const { sender_name, sender_street, sender_city, sender_province, sender_postal, sender_country } = req.body;
   db.prepare('UPDATE customers SET sender_name=?,sender_street=?,sender_city=?,sender_province=?,sender_postal=?,sender_country=? WHERE email=?')
-    .run(sender_name||null, sender_street||null, sender_city||null, sender_province||null, sender_postal||null, sender_country||null, email);
+    .run(clip(sender_name, 200), clip(sender_street, 200), clip(sender_city, 100), clip(sender_province, 100), clip(sender_postal, 20), clip(sender_country, 100), email);
   res.json({ ok: true });
 });
 
