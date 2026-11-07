@@ -23,6 +23,9 @@
     return '<div class="lh-f-row" role="navigation" aria-label="' + label + '">' +
       links.map(function (l) { return '<a href="' + l[0] + '"' + (l[2] ? ' data-i18n="' + l[2] + '"' : '') + '>' + l[1] + '</a>'; }).join('') + '</div>';
   };
+  // The US pages carry the .us address (a redirect to the /us pages), so it can be read out, printed and typed.
+  var onUs = location.pathname === '/us' || location.pathname.indexOf('/us/') === 0;
+  var usDomain = onUs ? '<a href="https://letterhome.us" data-us-domain>letterhome.us</a>' : '';
   mount.outerHTML =
     '<footer class="lh-footer"><div class="lh-f-in">' +
       '<div class="lh-f-brand"><div class="lh-f-logo"><span class="lh-f-stamp" aria-hidden="true">' + stamp + '</span><span class="lh-f-word">Letter<em>home</em></span></div>' +
@@ -32,5 +35,5 @@
       row('Popular guides', [['/how-long-does-it-take-to-mail-a-letter-to-canada', 'How long does a letter take?'], ['/how-much-does-it-cost-to-mail-a-letter-to-canada', 'Cost to mail a letter'], ['/how-to-address-a-letter-to-canada', 'How to address a letter'], ['/send-a-letter-to-canada-without-a-return-address', 'No return address'], ['/how-to-track-a-letter-to-canada', 'Tracking a letter']]) +
       row('Information', [['/about', 'About', 'footer.about'], ['/contact', 'Contact', 'nav.contact'], ['/guides', 'Mailing guides', 'footer.guides'], ['/terms', 'Terms', 'footer.terms'], ['/refunds', 'Refund policy', 'footer.refunds'], ['/accessibility', 'Accessibility', 'footer.accessibility']]) +
       '</div>' +
-    '</div><div class="lh-f-bar"><div class="lh-f-in2"><span>© 2026 Letterhome</span><a href="/privacy" data-i18n="footer.privacy">Privacy</a><a href="https://jeffbuilds.ca" target="_blank" rel="noopener">Jeffbuilds</a></div></div></footer>';
+    '</div><div class="lh-f-bar"><div class="lh-f-in2"><span>© 2026 Letterhome</span>' + usDomain + '<a href="/privacy" data-i18n="footer.privacy">Privacy</a><a href="https://jeffbuilds.ca" target="_blank" rel="noopener">Jeffbuilds</a></div></div></footer>';
 })();

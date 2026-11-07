@@ -73,6 +73,15 @@ for (const m of ['get', 'post', 'put', 'delete', 'patch']) {
 // sit in front of the app. With the wrong count, req.ip resolves to a proxy IP
 // instead of the real visitor, breaking rate-limiting and IP logging/alerts.
 app.set('trust proxy', 2);
+
+// letterhome.us is an address for the US pages, not a second copy of the site: Cloudflare redirects it before it ever
+// reaches this server. If a request does arrive on that host (a DNS record pointed straight at us), send it to the same
+// place on letterhome.ca. The target host is fixed, so this can never become an open redirect.
+const US_HOSTS = new Set(['letterhome.us', 'www.letterhome.us']);
+app.use((req, res, next) => {
+  if (!US_HOSTS.has(req.hostname)) return next();
+  res.redirect(301, 'https://letterhome.ca' + (req.path === '/' ? '/us' : req.originalUrl));
+});
 app.use(compression({ threshold: 512, level: 6 }));
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2024-06-20' });
 

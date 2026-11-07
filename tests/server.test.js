@@ -1317,3 +1317,15 @@ test('business portal: onboarding, forced password change, batch checks, approva
   for (let i = 0; i < 8; i++) await portal({}, '/login', { method: 'POST', body: { email: 'owner@other.test', password: 'nope-nope-nope' } });
   assert.equal((await portal({}, '/login', { method: 'POST', body: { email: 'owner@other.test', password: 'another-Good-pw9' } })).status, 429);
 });
+
+test('letterhome.us: the root goes to /us, other paths keep their place, and the target can never be changed by the request', async () => {
+  const http = require('node:http');
+  const get = (host, p) => new Promise((resolve, reject) => {
+    const u = new URL(base);
+    http.get({ host: u.hostname, port: u.port, path: p, headers: { Host: host } }, r => { r.resume(); resolve({ status: r.statusCode, location: r.headers.location }); }).on('error', reject);
+  });
+  assert.deepEqual(await get('letterhome.us', '/'), { status: 301, location: 'https://letterhome.ca/us' });
+  assert.deepEqual(await get('www.letterhome.us', '/send?to=US'), { status: 301, location: 'https://letterhome.ca/send?to=US' });
+  assert.deepEqual(await get('letterhome.us', '//evil.example/x'), { status: 301, location: 'https://letterhome.ca//evil.example/x' });
+  assert.notEqual((await get('letterhome.ca', '/health')).status, 301, 'the normal site is untouched');
+});
