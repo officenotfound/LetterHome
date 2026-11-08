@@ -658,6 +658,12 @@ function fmtCharged(o, withCad) {
   return fmtCAD(o.price_cents);
 }
 
+// Which site took the order. letterhome.ca is the default and stays unmarked; the country domains get a small tag.
+const SITE_NAMES = { us: 'letterhome.us', uk: 'letterhome.co.uk' };
+function siteTag(o) {
+  return o && SITE_NAMES[o.order_site] ? `<div style="color:#9a9a9a;font-size:11px">${SITE_NAMES[o.order_site]}</div>` : '';
+}
+
 function timeLeftHTML(createdAt, status) {
   if (status === 'mailed' || status === 'delivered')
     return `<span data-countdown-created="${createdAt}" data-countdown-status="${status}" style="color:#6b6b6b;font-size:12px">Completed</span>`;
@@ -769,7 +775,7 @@ function renderDashboard(stats, paidOrders, submittedOrders, chartData, geoData,
     .map(o => `
     <tr>
       <td><button class="link" onclick="go('/admin/orders/${o.id}')">#${o.id}</button></td>
-      <td>${fmtDateTime(o.created_at)}</td>
+      <td>${fmtDateTime(o.created_at)}${siteTag(o)}</td>
       <td>${esc(o.recipient_name)}</td>
       <td>${o.destination_country || '—'}</td>
       <td>${statusBadge(o.status)}</td>
@@ -1167,7 +1173,7 @@ async function showOrder(id) {
       </div>
     </div>
     <div class="card" id="message-form" style="display:none;margin-bottom:20px">
-      <div class="card-header"><div class="card-title">Email ${esc(o.customer_email)}</div></div>
+      <div class="card-header"><div class="card-title">Email ${esc(o.customer_email)}${SITE_NAMES[o.order_site] ? ` <span style="color:#9a9a9a;font-weight:400;font-size:12px">· ordered on ${SITE_NAMES[o.order_site]}</span>` : ''}</div></div>
       <div style="padding:20px">
         <div class="field" style="margin-bottom:12px">
           <label>Template</label>

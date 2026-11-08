@@ -1395,3 +1395,29 @@ test('country domains, switch ON: real pages, canonical and hreflang on the coun
     assert.match((await siteGet('letterhome.us', '/robots.txt')).body, /Sitemap: https:\/\/letterhome\.us\/sitemap\.xml/);
   } finally { setFlag('us_domain_live', 'false'); setFlag('uk_domain_live', 'false'); }
 });
+
+test('country domains: customers can do everything on the country domain and the order is tagged with its site', async () => {
+  setFlag('us_domain_live', 'true'); setFlag('uk_domain_live', 'true');
+  try {
+    for (const host of ['letterhome.us', 'letterhome.co.uk']) {
+      for (const p of ['/send', '/track', '/account/login', '/api/site-config', '/terms']) {
+        const r = await siteGet(host, p);
+        assert.equal(r.status, 200, `${host}${p} should be served on the country domain, got ${r.status}`);
+      }
+    }
+    const post = (host, email) => new Promise((resolve, reject) => {
+      const http = require('node:http'); const u = new URL(base);
+      const data = new URLSearchParams({ 'r-email': email, 'r-name': 'Site Test', 'r-street': '1 Main St', 'r-city': 'Toronto', 'r-province': 'ON', 'r-postal': 'M5V 1A1', 'r-country': 'CA', 'letter-body': 'Hi', 'letter-type': 'standard' }).toString();
+      const rq = http.request({ host: u.hostname, port: u.port, path: '/api/create-order', method: 'POST', headers: { Host: host, 'Content-Type': 'application/x-www-form-urlencoded', 'Content-Length': Buffer.byteLength(data) } },
+        r => { let b = ''; r.on('data', d => { b += d; }); r.on('end', () => resolve({ status: r.statusCode, body: b })); });
+      rq.on('error', reject); rq.end(data);
+    });
+    for (const [host, key] of [['letterhome.us', 'us'], ['letterhome.co.uk', 'uk'], ['letterhome.ca', 'ca']]) {
+      const email = `site-${key}@example.com`;
+      const r = await post(host, email);
+      assert.equal(r.status, 200, `${host}: ${r.body}`);
+      const row = db.prepare('SELECT order_site FROM orders WHERE customer_email = ? ORDER BY id DESC LIMIT 1').get(email);
+      assert.equal(row.order_site, key, `order placed on ${host} should be tagged ${key}`);
+    }
+  } finally { setFlag('us_domain_live', 'false'); setFlag('uk_domain_live', 'false'); }
+});

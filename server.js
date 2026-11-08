@@ -84,6 +84,13 @@ const sites = require('./sites').createSites({
 });
 app.use(sites.middleware);
 sites.register(app);
+// The site a customer is on (letterhome.ca, .us or .co.uk) follows them into the emails sent while handling their request,
+// and each order remembers its site so later emails (tracking, reminders, recovery) link back to the same address.
+const { AsyncLocalStorage } = require('node:async_hooks');
+const siteStore = new AsyncLocalStorage();
+app.use((req, _res, next) => siteStore.run({ base: sites.baseUrl(req) }, next));
+const siteBase  = () => siteStore.getStore()?.base || (process.env.BASE_URL || '').replace(/\/$/, '');
+const orderBase = o => sites.baseForKey(o && o.order_site) || siteBase();
 app.use(compression({ threshold: 512, level: 6 }));
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2024-06-20' });
 
@@ -1571,8 +1578,8 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
       destination_country, letter_type, letter_body, attachment_info, price_cents, customer_ip,
       status_token, discount_code, discount_cents,
       page_count, extra_page_cents, colour_printing, registered_mail, large_envelope, schedule_for_later, scheduled_date,
-      certified_mail, express_mail, mail_service_cents
-    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+      certified_mail, express_mail, mail_service_cents, order_site
+    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
   `).run(
     rEmail, b['skip-return'] ? 1 : 0,
     b['s-name']     || null, b['s-street']   || null, b['s-city']  || null,
@@ -1596,7 +1603,8 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
     scheduledDate,
     mailService === 'certified' ? 1 : 0,
     mailService === 'express'   ? 1 : 0,
-    serviceCents || null
+    serviceCents || null,
+    sites.keyOf(req)
   );
   const orderId  = row.lastInsertRowid;
   const now      = new Date();
@@ -2088,14 +2096,14 @@ app.get('/api/admin/orders', requireAdmin, (req, res) => {
   // "Needs you": paid orders not yet sent to PostGrid for real (waiting for approval, refused, or only a test letter).
   if (status === 'needs_you') {
     return res.json(db.prepare(`SELECT id, stripe_session_id, customer_email, recipient_name, recipient_street, recipient_city, recipient_province, recipient_postal,
-        destination_country, letter_type, attachment_info, price_cents, charge_currency, charge_cents, status, status_token, created_at, recovery_sent_at, postgrid_error, postgrid_mode, content_flags, content_cleared_at
+        destination_country, letter_type, attachment_info, price_cents, charge_currency, charge_cents, order_site, status, status_token, created_at, recovery_sent_at, postgrid_error, postgrid_mode, content_flags, content_cleared_at
       FROM orders WHERE status = 'paid' AND deleted_at IS NULL
         AND (postgrid_letter_id IS NULL OR postgrid_mode = 'test')      -- every paid order waits for the owner's approval
       ORDER BY created_at`).all().map(o => o.postgrid_mode === 'test' && !o.postgrid_error ? { ...o, postgrid_error: 'Only a TEST letter exists (not mailed). Clear it and send for real.' } : o));
   }
   const rows = status
-    ? db.prepare("SELECT id, stripe_session_id, customer_email, recipient_name, recipient_street, recipient_city, recipient_province, recipient_postal, destination_country, letter_type, attachment_info, price_cents, charge_currency, charge_cents, status, status_token, created_at, recovery_sent_at, content_flags, content_cleared_at FROM orders WHERE status = ? AND deleted_at IS NULL ORDER BY created_at DESC").all(status)
-    : db.prepare("SELECT id, stripe_session_id, customer_email, recipient_name, recipient_street, recipient_city, recipient_province, recipient_postal, destination_country, letter_type, attachment_info, price_cents, charge_currency, charge_cents, status, status_token, created_at, recovery_sent_at, content_flags, content_cleared_at FROM orders WHERE deleted_at IS NULL ORDER BY created_at DESC").all();
+    ? db.prepare("SELECT id, stripe_session_id, customer_email, recipient_name, recipient_street, recipient_city, recipient_province, recipient_postal, destination_country, letter_type, attachment_info, price_cents, charge_currency, charge_cents, order_site, status, status_token, created_at, recovery_sent_at, content_flags, content_cleared_at FROM orders WHERE status = ? AND deleted_at IS NULL ORDER BY created_at DESC").all(status)
+    : db.prepare("SELECT id, stripe_session_id, customer_email, recipient_name, recipient_street, recipient_city, recipient_province, recipient_postal, destination_country, letter_type, attachment_info, price_cents, charge_currency, charge_cents, order_site, status, status_token, created_at, recovery_sent_at, content_flags, content_cleared_at FROM orders WHERE deleted_at IS NULL ORDER BY created_at DESC").all();
   res.json(rows);
 });
 
@@ -2555,7 +2563,7 @@ app.post('/api/admin/customers/:email/reset-password', requireAdmin, async (req,
     to:      email,
     subject: 'Your Letterhome password was reset by support',
     text:    `Hi,\n\nA Letterhome administrator has reset the password on your account at your request.\n\n` +
-             `Your new password has been shared with you separately. After signing in, you can change it from your account page: ${process.env.BASE_URL}/account\n\n` +
+             `Your new password has been shared with you separately. After signing in, you can change it from your account page: ${siteBase()}/account\n\n` +
              `If you did NOT request this, contact us immediately at ${process.env.OPERATOR_EMAIL || 'support@letterhome.ca'}.\n\nLetterhome`,
   }, 'password_reset_admin').catch(() => {});
   res.json({ ok: true });
@@ -2932,7 +2940,7 @@ app.get('/api/admin/orders/:id/reorder-url', requireAdmin, (req, res) => {
     'r-postal':   order.recipient_postal || '',
     'r-country':  order.destination_country || 'CA',
   });
-  const url = `${process.env.BASE_URL || ''}/send?${params.toString()}`;
+  const url = `${siteBase()}/send?${params.toString()}`;
   res.json({ url });
 });
 
@@ -3437,7 +3445,7 @@ app.post('/api/account/register', accountLimiter, async (req, res) => {
         subject: 'Account already exists | Letterhome',
         text:    `Hi,\n\nSomeone (possibly you) just tried to register a Letterhome account using this email address. ` +
                  `An account already exists, so we didn't create a duplicate.\n\n` +
-                 `If this was you:\n  • Sign in: ${process.env.BASE_URL}/account/login\n  • Forgot your password? ${process.env.BASE_URL}/account/forgot\n\n` +
+                 `If this was you:\n  • Sign in: ${siteBase()}/account/login\n  • Forgot your password? ${siteBase()}/account/forgot\n\n` +
                  `If this wasn't you, no action is needed. Your account is safe.\n\nLetterhome`,
       }, 'register_collision').catch(() => {});
       return res.json({ ok: true, verify: true });
@@ -3462,7 +3470,7 @@ app.post('/api/account/register', accountLimiter, async (req, res) => {
 const VERIFY_MAX_AGE_MS = 48 * 60 * 60 * 1000;
 function sendVerifyEmail(email, hash) {
   const token = passwordResetToken(email, hash, 'verify');
-  const link  = `${process.env.BASE_URL}/account/verify?email=${encodeURIComponent(email)}&token=${encodeURIComponent(token)}`;
+  const link  = `${siteBase()}/account/verify?email=${encodeURIComponent(email)}&token=${encodeURIComponent(token)}`;
   sendMail({
     from:    process.env.EMAIL_FROM,
     to:      email,
@@ -3531,7 +3539,7 @@ app.post('/api/account/forgot', accountLimiter, async (req, res) => {
     const customer = db.prepare('SELECT email, password_hash FROM customers WHERE email = ? AND deleted_at IS NULL').get(email);
     if (customer?.password_hash) {
       const token = passwordResetToken(email, customer.password_hash);
-      const link  = `${process.env.BASE_URL}/account/reset?email=${encodeURIComponent(email)}&token=${encodeURIComponent(token)}`;
+      const link  = `${siteBase()}/account/reset?email=${encodeURIComponent(email)}&token=${encodeURIComponent(token)}`;
       sendMail({
         from:    process.env.EMAIL_FROM,
         to:      email,
@@ -3652,7 +3660,7 @@ app.put('/api/account/password', requireCustomer, accountLimiter, async (req, re
       text:    `Hi,\n\nYour Letterhome account password was just changed.\n\n` +
                `If this was you, no action is needed.\n\n` +
                `If you did NOT change your password, contact us immediately at ${process.env.OPERATOR_EMAIL || 'support@letterhome.ca'} ` +
-               `and reset your password at ${process.env.BASE_URL}/account/forgot\n\nLetterhome`,
+               `and reset your password at ${siteBase()}/account/forgot\n\nLetterhome`,
     }, 'password_changed').catch(() => {});
     res.json({ ok: true });
   } catch (e) {
@@ -3812,7 +3820,7 @@ function buildCustomerEmailText(o, toAddr, amountCAD, isDomestic) {
     `Estimated delivery: ${delivery}`,
     '',
     `Order #${o.id} · ${amountCAD}`,
-    o.status_token ? `Track your letter: ${process.env.BASE_URL}/status/${o.status_token}` : '',
+    o.status_token ? `Track your letter: ${orderBase(o)}/status/${o.status_token}` : '',
     'Questions? Reply to this email.',
     '',
     `Letterhome · ${MAILING_ADDRESS}`,
@@ -3839,7 +3847,7 @@ function buildCustomerEmail(o, toAddr, amountCAD, isDomestic) {
     </div>
     <div style="border-top:1px solid rgba(42,42,42,0.1);padding-top:20px;font-size:13px;color:#6b6258">
       <p style="margin:0 0 8px">Order #${o.id} &nbsp;·&nbsp; ${amountCAD}</p>
-      ${o.status_token ? `<p style="margin:0 0 8px">Track your letter: <a href="${process.env.BASE_URL}/status/${o.status_token}" style="color:#a8472d">${process.env.BASE_URL}/status/${o.status_token}</a></p>` : ''}
+      ${o.status_token ? `<p style="margin:0 0 8px">Track your letter: <a href="${orderBase(o)}/status/${o.status_token}" style="color:#a8472d">${orderBase(o)}/status/${o.status_token}</a></p>` : ''}
       <p style="margin:0">Questions? Reply to this email.</p>
       <p style="margin:12px 0 0;color:#968b7d;font-size:11px">Letterhome · ${MAILING_ADDRESS}</p>
     </div>
@@ -3865,7 +3873,7 @@ function buildAtPrinterEmail(o, toAddr) {
     <p style="color:#6b6258;font-size:14px;line-height:1.7;margin:0 0 24px">Spotted a mistake in the address or the letter? Reply to this email right away and we'll do our best to stop it before it prints.</p>
     <div style="border-top:1px solid rgba(42,42,42,0.1);padding-top:20px;font-size:13px;color:#6b6258">
       <p style="margin:0 0 8px">Order #${o.id}</p>
-      ${o.status_token ? `<p style="margin:0 0 8px">Track your letter: <a href="${process.env.BASE_URL}/status/${o.status_token}" style="color:#a8472d">${process.env.BASE_URL}/status/${o.status_token}</a></p>` : ''}
+      ${o.status_token ? `<p style="margin:0 0 8px">Track your letter: <a href="${orderBase(o)}/status/${o.status_token}" style="color:#a8472d">${orderBase(o)}/status/${o.status_token}</a></p>` : ''}
       <p style="margin:12px 0 0;color:#968b7d;font-size:11px">Letterhome · ${MAILING_ADDRESS}</p>
     </div>
   </div>
@@ -3884,7 +3892,7 @@ function buildAtPrinterEmailText(o, toAddr) {
     'Spotted a mistake in the address or the letter? Reply to this email right away and we\'ll do our best to stop it before it prints.',
     '',
     `Order #${o.id}`,
-    o.status_token ? `Track your letter: ${process.env.BASE_URL}/status/${o.status_token}` : '',
+    o.status_token ? `Track your letter: ${orderBase(o)}/status/${o.status_token}` : '',
     '',
     `Letterhome · ${MAILING_ADDRESS}`,
   ].join('\n');
@@ -3909,7 +3917,7 @@ function buildMailedEmail(o, toAddr, deliveryText) {
     <p style="color:#6b6258;font-size:14px;line-height:1.7;margin:0 0 24px">Lettermail doesn't have tracking, so we can't tell you exactly when it'll land. If you don't see it after the estimated window, reply to this email and we'll work it out.</p>
     <div style="border-top:1px solid rgba(42,42,42,0.1);padding-top:20px;font-size:13px;color:#6b6258">
       <p style="margin:0 0 8px">Order #${o.id}</p>
-      ${o.status_token ? `<p style="margin:0 0 8px">Track your letter: <a href="${process.env.BASE_URL}/status/${o.status_token}" style="color:#a8472d">${process.env.BASE_URL}/status/${o.status_token}</a></p>` : ''}
+      ${o.status_token ? `<p style="margin:0 0 8px">Track your letter: <a href="${orderBase(o)}/status/${o.status_token}" style="color:#a8472d">${orderBase(o)}/status/${o.status_token}</a></p>` : ''}
       <p style="margin:0">Thank you for trusting us with your letter.</p>
       ${reviewAskAllowed(o) ? `<p style="margin:8px 0 0">${REVIEW_ASK} <a href="${GOOGLE_REVIEW_URL}" style="color:#a8472d">${REVIEW_LINK_TEXT}</a></p>` : ''}
       <p style="margin:12px 0 0;color:#968b7d;font-size:11px">Letterhome · ${MAILING_ADDRESS}</p>
@@ -3932,7 +3940,7 @@ function buildMailedEmailText(o, toAddr, deliveryText) {
     `Lettermail doesn't have tracking, so we can't tell you exactly when it'll land. If you don't see it after the estimated window, reply to this email and we'll work it out.`,
     '',
     `Order #${o.id}`,
-    o.status_token ? `Track your letter: ${process.env.BASE_URL}/status/${o.status_token}` : '',
+    o.status_token ? `Track your letter: ${orderBase(o)}/status/${o.status_token}` : '',
     'Thank you for trusting us with your letter.',
     ...(reviewAskAllowed(o) ? [`${REVIEW_ASK} ${REVIEW_LINK_TEXT}: ${GOOGLE_REVIEW_URL}`] : []),
     '',
@@ -4050,7 +4058,7 @@ a{color:#a8472d}</style></head>
 
 function buildRecoveryEmail(order) {
   const esc = v => String(v || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  const base      = process.env.BASE_URL || '';
+  const base      = orderBase(order) || '';
   const link      = order.status_token ? `${base}/resume/${order.status_token}` : `${base}/send`;
   const total     = (order.price_cents / 100).toFixed(order.price_cents % 100 === 0 ? 0 : 2);
   // The recipient name is typed by whoever started the order, who may not own this email address, so it never
@@ -4104,7 +4112,7 @@ function buildOccasionReminderEmail(occ, lastOrder) {
     <div style="width:38px;height:38px;background:#a8472d;display:inline-flex;align-items:center;justify-content:center;color:#faf6ec;font-size:20px;font-family:Georgia,serif;margin-bottom:28px">L</div>
     <h1 style="font-size:28px;font-weight:400;margin:0 0 10px;letter-spacing:-0.02em">${occasionNameEsc} is coming up.</h1>
     <p style="color:#6b6258;margin:0 0 32px;font-size:16px;line-height:1.6">${occasionNameEsc} is ${occ.remind_days_before} days away (${dateFormatted}).${lastOrderHintEsc} Send a letter. It'll mean more than a text.</p>
-    <a href="${process.env.BASE_URL || ''}/send" style="display:inline-block;background:#a8472d;color:#faf6ec;padding:14px 28px;font-family:Georgia,serif;font-size:15px;text-decoration:none;letter-spacing:0.02em;margin-bottom:32px">Send a Letter →</a>
+    <a href="${orderBase(lastOrder)}/send" style="display:inline-block;background:#a8472d;color:#faf6ec;padding:14px 28px;font-family:Georgia,serif;font-size:15px;text-decoration:none;letter-spacing:0.02em;margin-bottom:32px">Send a Letter →</a>
     <div style="border-top:1px solid rgba(42,42,42,0.1);padding-top:20px;font-size:12px;color:#968b7d">
       <p style="margin:0">You set this reminder via Letterhome. Reply to stop.</p>
       <p style="margin:12px 0 0;font-size:11px">Letterhome · ${MAILING_ADDRESS}</p>
@@ -4552,7 +4560,7 @@ function newThankYouCode() {
 }
 
 function buildThankYouEmail(order, code, expiresOn) {
-  const base   = process.env.BASE_URL || '';
+  const base   = orderBase(order) || '';
   const link   = `${base}/send?code=${encodeURIComponent(code)}`;
   const unsub  = unsubscribeLink(order.customer_email);
   const name   = String(order.sender_name || '').trim().split(/\s+/)[0] || '';
@@ -4675,7 +4683,7 @@ function applyCartOffer(order, rawCode) {
 }
 
 function buildCartOfferEmail(order, code, pct, expiresOn) {
-  const base   = process.env.BASE_URL || '';
+  const base   = orderBase(order) || '';
   const link   = order.status_token ? `${base}/resume/${order.status_token}?code=${encodeURIComponent(code)}` : `${base}/send?code=${encodeURIComponent(code)}`;
   const unsub  = unsubscribeLink(order.customer_email);
   const name   = String(order.sender_name || '').trim().split(/\s+/)[0] || '';

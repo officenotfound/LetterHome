@@ -167,7 +167,12 @@ function createSites({ getSetting, localSlugs, publicDir }) {
     });
   }
 
-  return { middleware, register, baseUrl, isLive, SITES };
+  // 'us' / 'uk' when the request came in on a live country domain, otherwise 'ca'.
+  function keyOf(req) { const s = siteOfHost(hostOf(req)); return s && isLive(s) ? s.key : 'ca'; }
+  // The public address for a stored site key; null for ca/unknown or a domain that was switched off since.
+  function baseForKey(key) { const s = SITES.find(x => x.key === key); return s && isLive(s) ? `https://${s.host}` : null; }
+
+  return { middleware, register, baseUrl, keyOf, baseForKey, isLive, SITES };
 }
 
 module.exports = { createSites, rewriteFor, SITES, PRIMARY };
