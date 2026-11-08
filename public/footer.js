@@ -40,7 +40,6 @@
       '<p data-i18n="footer.blurb">We print and mail your letters for you. Built for Canadians abroad, useful to anyone who needs Canadian post without the trip.</p>' + social + '</div>' +
       '<div class="lh-f-nav">' +
       row('Countries', [[caHome, 'Canada', 'footer.ca'], [usHome, 'United States', 'footer.us'], [ukHome, 'United Kingdom', 'footer.uk'], [auHome, 'Australia', 'footer.au']]) +
-      row('Popular guides', [['/how-long-does-it-take-to-mail-a-letter-to-canada', 'How long does a letter take?'], ['/how-much-does-it-cost-to-mail-a-letter-to-canada', 'Cost to mail a letter'], ['/how-to-address-a-letter-to-canada', 'How to address a letter'], ['/send-a-letter-to-canada-without-a-return-address', 'No return address'], ['/how-to-track-a-letter-to-canada', 'Tracking a letter']]) +
       row('Information', [['/about', 'About', 'footer.about'], ['/contact', 'Contact', 'nav.contact'], ['/guides', 'Mailing guides', 'footer.guides'], ['/terms', 'Terms', 'footer.terms'], ['/refunds', 'Refund policy', 'footer.refunds'], ['/accessibility', 'Accessibility', 'footer.accessibility']]) +
       '</div>' +
     '</div><div class="lh-f-bar"><div class="lh-f-in2"><span>© 2026 Letterhome</span>' + usDomain + '<a href="/privacy" data-i18n="footer.privacy">Privacy</a><a href="https://jeffbuilds.ca" target="_blank" rel="noopener">Jeffbuilds</a></div></div></footer>';
