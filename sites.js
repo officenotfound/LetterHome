@@ -19,11 +19,14 @@ const path = require('node:path');
 
 const PRIMARY = 'letterhome.ca';
 const SITES = [
-  { key: 'us', host: 'letterhome.us',    prefix: '/us', setting: 'us_domain_live', roots: ['/es'] },
-  { key: 'uk', host: 'letterhome.co.uk', prefix: '/uk', setting: 'uk_domain_live', roots: [] },
+  { key: 'us', host: 'letterhome.us',    prefix: '/us', setting: 'us_domain_live', roots: ['/es'], pages: ['/send-a-letter-online-in-the-usa'] },
+  { key: 'uk', host: 'letterhome.co.uk', prefix: '/uk', setting: 'uk_domain_live', roots: [], pages: ['/address-a-letter-to-canada-from-the-uk'] },
 ];
 
 const escRe = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+// `pages` are guides written for that country's readers that live at a plain address (no /us or /uk in it); they move to the
+// country domain with it, so the domain owns its audience's guides and letterhome.ca does not index a second copy.
+const hasPage = (p, site) => (site.pages || []).includes(p.replace(/\/$/, ''));
 const hasPrefix = (p, site) => p === site.prefix || p.startsWith(site.prefix + '/');
 const stripPrefix = (p, site) => p === site.prefix ? '/' : p.slice(site.prefix.length);
 const qs = req => { const i = req.originalUrl.indexOf('?'); return i < 0 ? '' : req.originalUrl.slice(i); };
@@ -35,7 +38,11 @@ function rewriteFor(site, { relative = false } = {}) {
   const pre = escRe(site.prefix);
   const abs = new RegExp(`https://${escRe(PRIMARY)}${pre}(/[^"'\\s<>)]*)?(?=["'\\s<>)]|$)`, 'g');
   const rel = new RegExp(`((?:href|action)=["'])${pre}(/[^"']*)?(?=["'])`, 'g');
-  return html => html
+  const pages = (site.pages || []).map(escRe).join('|');
+  const absPage = pages && new RegExp(`https://${escRe(PRIMARY)}(${pages})(?![\\w/-])`, 'g');
+  const relPage = pages && new RegExp(`((?:href|action)=["'])(${pages})(?=["'?#])`, 'g');
+  return html => (absPage ? html.replace(absPage, (_m, pg) => `https://${site.host}${pg}`) : html)
+    .replace(relPage || /$^/g, (_m, a, pg) => a + (relative ? pg : `https://${site.host}${pg}`))
     .replace(abs, (_m, rest) => `https://${site.host}${rest || '/'}`)
     .replace(rel, (_m, a, rest) => a + (relative ? (rest || '/') : `https://${site.host}${rest || '/'}`));
 }
@@ -84,6 +91,10 @@ function createSites({ getSetting, localSlugs, publicDir }) {
       for (const o of SITES) {
         if (o.key !== site.key && hasPrefix(p, o)) return res.redirect(301, isLive(o) ? `https://${o.host}${stripPrefix(p, o)}${qs(req)}` : `https://${PRIMARY}${req.originalUrl}`);
       }
+      // Another country's own guides likewise belong on that country's address.
+      for (const o of SITES) {
+        if (o.key !== site.key && hasPage(p, o)) return res.redirect(301, isLive(o) ? `https://${o.host}${p}${qs(req)}` : `https://${PRIMARY}${req.originalUrl}`);
+      }
       if (hasPrefix(p, { prefix: '/au' })) return res.redirect(301, `https://${PRIMARY}${req.originalUrl}`);
       // The old /us and /uk addresses collapse into the clean ones.
       if (hasPrefix(p, site)) return res.redirect(301, `https://${site.host}${stripPrefix(p, site)}${qs(req)}`);
@@ -95,6 +106,7 @@ function createSites({ getSetting, localSlugs, publicDir }) {
 
     // Main domain: country paths that have moved to a live country domain get a 301 to it.
     for (const s of SITES) {
+      if (hasPage(req.path, s) && isLive(s)) return res.redirect(301, `https://${s.host}${req.path}${qs(req)}`);
       if (hasPrefix(req.path, s) && isLive(s)) return res.redirect(301, `https://${s.host}${stripPrefix(req.path, s)}${qs(req)}`);
     }
     if (SITES.some(isLive)) wrapSendFile(res, transformFor(null));
@@ -132,7 +144,7 @@ function createSites({ getSetting, localSlugs, publicDir }) {
     }
     return sitemapCache;
   }
-  const belongsTo = (loc, site) => loc === `https://${PRIMARY}${site.prefix}` || loc.startsWith(`https://${PRIMARY}${site.prefix}/`);
+  const belongsTo = (loc, site) => (site.pages || []).some(pg => loc === `https://${PRIMARY}${pg}`) || loc === `https://${PRIMARY}${site.prefix}` || loc.startsWith(`https://${PRIMARY}${site.prefix}/`);
 
   function register(app) {
     app.get('/sitemap.xml', (req, res, next) => {

@@ -1421,3 +1421,32 @@ test('country domains: customers can do everything on the country domain and the
     }
   } finally { setFlag('us_domain_live', 'false'); setFlag('uk_domain_live', 'false'); }
 });
+
+test('country domains: each country owns the guides written for its readers, and tracking works on the domain', async () => {
+  setFlag('us_domain_live', 'true'); setFlag('uk_domain_live', 'true');
+  try {
+    const canon = b => (b.match(/<link rel="canonical" href="([^"]*)"/) || [])[1];
+    const us = await siteGet('letterhome.us', '/send-a-letter-online-in-the-usa');
+    assert.equal(us.status, 200); assert.equal(canon(us.body), 'https://letterhome.us/send-a-letter-online-in-the-usa');
+    const uk = await siteGet('letterhome.co.uk', '/address-a-letter-to-canada-from-the-uk');
+    assert.equal(uk.status, 200); assert.equal(canon(uk.body), 'https://letterhome.co.uk/address-a-letter-to-canada-from-the-uk');
+    // One address per page: the other domains and letterhome.ca send readers to the owner.
+    assert.equal((await siteGet('letterhome.co.uk', '/send-a-letter-online-in-the-usa')).location, 'https://letterhome.us/send-a-letter-online-in-the-usa');
+    assert.equal((await siteGet('letterhome.us', '/address-a-letter-to-canada-from-the-uk')).location, 'https://letterhome.co.uk/address-a-letter-to-canada-from-the-uk');
+    assert.equal((await siteGet('letterhome.ca', '/send-a-letter-online-in-the-usa')).location, 'https://letterhome.us/send-a-letter-online-in-the-usa');
+    assert.equal((await siteGet('letterhome.ca', '/address-a-letter-to-canada-from-the-uk')).location, 'https://letterhome.co.uk/address-a-letter-to-canada-from-the-uk');
+    // Sitemaps follow the pages.
+    assert.ok((await siteGet('letterhome.us', '/sitemap.xml')).body.includes('https://letterhome.us/send-a-letter-online-in-the-usa'));
+    assert.ok((await siteGet('letterhome.co.uk', '/sitemap.xml')).body.includes('https://letterhome.co.uk/address-a-letter-to-canada-from-the-uk'));
+    const main = (await siteGet('letterhome.ca', '/sitemap.xml')).body;
+    assert.ok(!main.includes('send-a-letter-online-in-the-usa') && !main.includes('address-a-letter-to-canada-from-the-uk'));
+    // The tracking pages work on the country domain.
+    db.prepare("INSERT INTO orders (customer_email, recipient_name, recipient_street, price_cents, status, status_token) VALUES ('track-site@example.com','T','1 St',600,'paid','track-site-token')").run();
+    const row = { status_token: 'track-site-token' };
+    for (const host of ['letterhome.us', 'letterhome.co.uk']) {
+      assert.equal((await siteGet(host, '/track')).status, 200);
+      assert.equal((await siteGet(host, '/how-to-track-a-letter-to-canada')).status, 200);
+      if (row) assert.equal((await siteGet(host, `/status/${row.status_token}`)).status, 200);
+    }
+  } finally { setFlag('us_domain_live', 'false'); setFlag('uk_domain_live', 'false'); }
+});
