@@ -106,8 +106,10 @@ def build(key):
                 'html[data-country] body .hero-eyebrow{color:rgba(255,255,255,.8) !important}html[data-country] body .hero-sub{color:rgba(255,255,255,.92) !important}'
                 'html[data-country] .pill{background:var(--red)}' if c['cc'] else '')
     c = dict(c, mark={'ca':'Canada','us':'U.S.A.','uk':'U.K.','au':'Australia'}[key])
-    cards = ''.join(f'<div class="bz-card{" soon" if st=="Coming soon" else ""}"><span class="bz-status">{esc(st)}</span><h3>{esc(n)}</h3><p>{esc(d)}</p></div>' for n, st, d in PRODUCTS)
-    who = ''.join(f'<div class="bz-use"><span class="n">{i+1:02d}</span><div><h3>{esc(n)}</h3><p>{esc(d)}</p></div></div>' for i, (n, d) in enumerate(c['who']))
+    LL = ' <a href="/landlord-notices">Landlord notices &rarr;</a>'
+    extra = {'Postcards': ' <a href="/postcards">Postcard sizes and options &rarr;</a>'}
+    cards = ''.join(f'<div class="bz-card{" soon" if st=="Coming soon" else ""}"><span class="bz-status">{esc(st)}</span><h3>{esc(n)}</h3><p>{esc(d)}{extra.get(n, "")}</p></div>' for n, st, d in PRODUCTS)
+    who = ''.join(f'<div class="bz-use"><span class="n">{i+1:02d}</span><div><h3>{esc(n)}</h3><p>{esc(d)}{LL if i == 0 else ""}</p></div></div>' for i, (n, d) in enumerate(c['who']))
     steps = ''.join(f'<li>{esc(s)}</li>' for s in STEPS)
     dests = ''.join(f'<option>{esc(d)}</option>' for d in c['dests'])
     faq = [
