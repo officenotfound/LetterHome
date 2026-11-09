@@ -4472,6 +4472,12 @@
     }
   };
 
+  // Spanish exists only for the US ordering pages (send, track, order confirmation, account): lang-es.js supplies it.
+  TRANSLATIONS.es = window.LH_ES || {};
+  var COUNTRY_LANG = { us: 'en-US', uk: 'en-GB', au: 'en-AU' };
+  function countryOf() { return document.documentElement.getAttribute('data-country') || ''; }
+  function spanishOk() { return countryOf() === 'us' && !!window.LH_ES; }
+
   function t(key) {
     var lang = document.documentElement.getAttribute('data-lang') || startLang();
     var dict = TRANSLATIONS[lang] || TRANSLATIONS.en;
@@ -4485,7 +4491,10 @@
     if ((root.lang || '').toLowerCase().indexOf('fr') === 0) return 'fr';
     var saved = null;
     try { saved = localStorage.getItem('lh-lang') || sessionStorage.getItem('lh-lang'); } catch (e) {}
-    return saved || browserLang();
+    var c = countryOf();
+    if (c === 'uk' || c === 'au') return 'en';                 // English-only country sites
+    if (c === 'us') return spanishOk() && (saved === 'es' || (!saved && browserLang() === 'es')) ? 'es' : 'en';
+    return saved === 'fr' || (!saved && browserLang() === 'fr') ? 'fr' : 'en';
   }
 
   window.LH_T = t;
@@ -4532,7 +4541,7 @@
     labelToggle(lang);
 
     var before = document.documentElement.getAttribute('data-lang') || 'en';
-    document.documentElement.lang = lang === 'fr' ? 'fr-CA' : 'en-CA';
+    document.documentElement.lang = lang === 'fr' ? 'fr-CA' : lang === 'es' ? 'es-US' : (COUNTRY_LANG[countryOf()] || 'en-CA');
     document.documentElement.setAttribute('data-lang', lang);
     if (before !== lang) swapRendered(before, lang);
     document.dispatchEvent(new CustomEvent('lh:lang', { detail: lang }));
@@ -4541,9 +4550,10 @@
   // The switch names the language it leads to, in that language.
   function labelToggle(lang) {
     document.querySelectorAll('.lang-toggle').forEach(function (btn) {
-      btn.textContent = lang === 'fr' ? 'English' : 'Français';
-      btn.setAttribute('lang', lang === 'fr' ? 'en' : 'fr');
-      btn.setAttribute('aria-label', lang === 'fr' ? 'Switch to English' : 'Passer au français');
+      var other = lang !== 'en' ? 'en' : (countryOf() === 'us' ? 'es' : 'fr');
+      btn.textContent = other === 'en' ? 'English' : other === 'es' ? 'Español' : 'Français';
+      btn.setAttribute('lang', other);
+      btn.setAttribute('aria-label', other === 'en' ? 'Switch to English' : other === 'es' ? 'Cambiar a español' : 'Passer au français');
     });
   }
 
@@ -4572,12 +4582,13 @@
   // First visit only: follow the browser's language. Not saved, so the switch always has the last word.
   function browserLang() {
     var list = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || ''];
-    return (list[0] || '').toLowerCase().indexOf('fr') === 0 ? 'fr' : 'en';
+    var first = (list[0] || '').toLowerCase();
+    return first.indexOf('fr') === 0 ? 'fr' : first.indexOf('es') === 0 ? 'es' : 'en';
   }
 
   window.toggleLang = function () {
     var current = document.documentElement.getAttribute('data-lang') || 'en';
-    var next = current === 'en' ? 'fr' : 'en';
+    var next = current !== 'en' ? 'en' : (countryOf() === 'us' && spanishOk() ? 'es' : 'fr');
     try { localStorage.setItem('lh-lang', next); } catch(e) {}   // remembered on every page and visit
     // Pages with a dedicated French twin go there instead of translating in place.
     var twin = next === 'fr' && document.querySelector('link[rel="alternate"][hreflang^="fr"]');

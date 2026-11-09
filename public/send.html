@@ -5,6 +5,7 @@
 <link rel="preload" as="font" type="font/woff2" href="/fonts/vEFI2_tTDB4M7-auWDN0ahZJW1gb8tc.woff2" crossorigin>
 <link rel="dns-prefetch" href="https://www.googletagmanager.com">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="/country.js?v=2"></script>
 <script src="/ga.js" defer></script>
 <script src="/cookie-consent.js?v=11" defer></script>
 <title>Send a Letter from Canada | Letterhome</title>
@@ -473,13 +474,13 @@ textarea.field-error { border-color: var(--red) !important; }
 <script>(function(){try{var m=window.matchMedia('(prefers-color-scheme: dark)'),s=function(){document.documentElement.setAttribute('data-theme',m.matches?'dark':'light');};s();if(m.addEventListener)m.addEventListener('change',s);}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
 
 <link rel="stylesheet" href="/theme.css?v=24">
-<link rel="stylesheet" href="/redesign.css?v=28"><link rel="stylesheet" href="/inner.css?v=7">
+<link rel="stylesheet" href="/redesign.css?v=28"><link rel="stylesheet" href="/inner.css?v=7"><link rel="stylesheet" href="/country-order.css?v=1">
 </head>
 <body>
 <a data-i18n-html="x.cc367b544f" href="#main-content" class="skip-link" style="position:absolute;left:-9999px;top:4px;z-index:9999;background:#a8472d;color:#faf6ec;padding:8px 16px;font-size:14px;font-family:Georgia,serif;text-decoration:none;border-radius:2px" onfocus="this.style.left='4px'" onblur="this.style.left='-9999px'">Skip to main content</a>
 
 <div id="site-header"></div>
-<script src="/header.js?v=12"></script>
+<script src="/header.js?v=13"></script>
 
 <!-- PROGRESS -->
 <div class="progress-wrap" id="main-content" role="group" aria-label="Order form step 1 of 3">
@@ -957,12 +958,13 @@ var uploadedFiles = [];
 
 function estDeliveryDate(daysToAdd) {
   const months = { en: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
-                   fr: ['jan.','fév.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'] };
+                   fr: ['jan.','fév.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'],
+                   es: ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'] };
   const d = new Date();
   d.setDate(d.getDate() + 1 + daysToAdd);
   const lang = document.documentElement.getAttribute('data-lang') || 'en';
   const m = months[lang] || months.en;
-  return lang === 'fr' ? d.getDate() + ' ' + m[d.getMonth()] : m[d.getMonth()] + ' ' + d.getDate();
+  return lang === 'fr' || lang === 'es' ? d.getDate() + ' ' + m[d.getMonth()] : m[d.getMonth()] + ' ' + d.getDate();
 }
 
 // Countries where state/province is a required part of a postal address
@@ -1034,16 +1036,17 @@ function moneyLabel(cents) {
 // Country names in the destination list follow the page language. The English name stays on the option
 // for the envelope preview; orders only ever send the two-letter code.
 function localizeCountries() {
-  const fr = document.documentElement.getAttribute('data-lang') === 'fr';
+  const lang = document.documentElement.getAttribute('data-lang');
+  const fr = lang === 'fr' || lang === 'es';
   let names = null;
-  try { if (fr) names = new Intl.DisplayNames(['fr-CA'], { type: 'region' }); } catch {}
+  try { if (fr) names = new Intl.DisplayNames([lang === 'es' ? 'es-US' : 'fr-CA'], { type: 'region' }); } catch {}
   document.querySelectorAll('#r-country option').forEach(opt => {
     if (opt._en === undefined) opt._en = opt.textContent;
     const m = opt._en.match(/^(.*), ([$£])([\d.]+)(?: ([A-Z]{3}))?$/);
     if (!m) return;
     if (!fr) { opt.textContent = opt._en; return; }
     let n = m[1]; try { n = names.of(opt.value) || n; } catch {}
-    opt.textContent = n + ', ' + m[3].replace('.', ',') + '\u00a0' + m[2] + (m[4] ? '\u00a0' + m[4] : '');
+    opt.textContent = lang === 'es' ? n + ', ' + m[2] + m[3] + (m[4] ? ' ' + m[4] : '') : n + ', ' + m[3].replace('.', ',') + '\u00a0' + m[2] + (m[4] ? '\u00a0' + m[4] : '');
   });
 }
 document.addEventListener('lh:lang', localizeCountries);
@@ -1611,6 +1614,7 @@ async function submitOrder() {
   });
   form.append('r-province', getRecipientProvince());
   if (_cur) form.append('currency', _cur);
+  form.append('lang', document.documentElement.getAttribute('data-lang') || 'en');
   form.append('colour_printing',    document.getElementById('opt-colour')?.checked ? '1' : '');
   form.append('large_envelope',     document.getElementById('opt-large-envelope')?.checked ? '1' : '');
   form.append('mail_service',       selectedMailService());
@@ -1936,7 +1940,8 @@ function fillSavedRecipient(sel) {
   } catch(e) {}
 }
 </script>
-<script src="/lang.js?v=53" defer></script>
+<script src="/lang-es.js?v=1" defer></script>
+<script src="/lang.js?v=54" defer></script>
 <script type="module">
   import * as pdfjsLib from '/vendor/pdfjs/pdf.min.mjs';
   pdfjsLib.GlobalWorkerOptions.workerSrc = '/vendor/pdfjs/pdf.worker.min.mjs';

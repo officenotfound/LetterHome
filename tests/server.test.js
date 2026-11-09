@@ -1450,3 +1450,18 @@ test('country domains: each country owns the guides written for its readers, and
     }
   } finally { setFlag('us_domain_live', 'false'); setFlag('uk_domain_live', 'false'); }
 });
+
+test('ordering pages carry the country look and a complete Spanish dictionary', () => {
+  const fs = require('node:fs'), path = require('node:path');
+  const pub = f => fs.readFileSync(path.join(__dirname, '..', 'public', f), 'utf8');
+  const es = new Function(pub('lang-es.js').replace('window.LH_ES =', 'return'))();
+  for (const f of ['send', 'track', 'order-success', 'account']) {
+    const html = pub(`${f}.html`);
+    assert.ok(html.includes('/country.js') && html.includes('/country-order.css') && html.includes('/lang-es.js'), `${f}.html wires country.js, country-order.css and lang-es.js`);
+    const keys = new Set([...html.matchAll(/data-i18n(?:-html|-placeholder|-aria)?="([a-z]+\.[a-z0-9._-]+)"/g)].map(m => m[1]).filter(k => !k.startsWith('x.')));
+    const missing = [...keys].filter(k => es[k] === undefined && !['send.svc.', 'country.'].includes(k));
+    assert.deepEqual(missing, [], `${f}.html keys missing from lang-es.js`);
+  }
+  const css = pub('country-order.css');
+  for (const c of ['us', 'uk', 'au']) assert.ok(css.includes(`html[data-country="${c}"] body{`), `${c} palette`);
+});

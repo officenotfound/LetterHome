@@ -74,7 +74,16 @@
   var mount = document.getElementById('site-header');
   if (!mount) return;
 
-  var isFrench = (document.documentElement.lang || '').toLowerCase().indexOf('fr') === 0;
+  var htmlLang = (document.documentElement.lang || '').toLowerCase();
+  var isFrench = htmlLang.indexOf('fr') === 0;
+  var isSpanish = htmlLang.indexOf('es') === 0;
+  var country = document.documentElement.getAttribute('data-country') || '';
+  var onUsDomain = location.hostname.replace(/^www\./, '') === 'letterhome.us';
+  // Remember the visitor's language on the US pages, so the ordering pages that follow open in it.
+  try {
+    if (isSpanish) localStorage.setItem('lh-lang', 'es');
+    else if (country === 'us' && document.documentElement.hasAttribute('data-en-only')) localStorage.setItem('lh-lang', 'en');
+  } catch (e) {}
   // Hide toggle only on the /guides index page (not on individual blog/guide pages).
   var isGuidesIndex = window.location.pathname === '/guides' || window.location.pathname === '/guides/';
 
@@ -82,14 +91,25 @@
   var enOnly = document.documentElement.hasAttribute('data-en-only');
   var langToggle = (!isFrench && !isGuidesIndex && !enOnly) ?
     '<button type="button" class="lang-toggle" onclick="toggleLang()" lang="fr" aria-label="Passer au français">Français</button>' : '';
+  // The ordering pages on the US site switch between English and Spanish; the UK and Australian ones are English only.
+  if (country === 'us' && !enOnly && !isGuidesIndex) langToggle = '<button type="button" class="lang-toggle" onclick="toggleLang()" lang="es" aria-label="Cambiar a español">Español</button>';
+  else if ((country === 'uk' || country === 'au') && !enOnly) langToggle = '';
 
   // Dedicated French pages link to their English twin.
   if (isFrench) {
     var en = document.querySelector('link[rel="alternate"][hreflang^="en"]');
     if (en) langToggle = '<a class="lang-link" lang="en" href="' + new URL(en.href, location.href).pathname + '" onclick="try{localStorage.setItem(\'lh-lang\',\'en\')}catch(e){}">English</a>';
   }
+  // The US landing pages and their Spanish twins link to each other (data-alt on <html>: the other page's path).
+  var alt = document.documentElement.getAttribute('data-alt');
+  if (alt && country === 'us') {
+    var altHref = onUsDomain ? alt.replace(/^\/us(?=\/|$)/, '') || '/' : alt;
+    var toEs = !isSpanish;
+    langToggle = '<a class="lang-link" lang="' + (toEs ? 'es' : 'en') + '" href="' + altHref + '" onclick="try{localStorage.setItem(\'lh-lang\',\'' + (toEs ? 'es' : 'en') + '\')}catch(e){}">' + (toEs ? 'Español' : 'English') + '</a>';
+  }
 
-  var sendLabel = isFrench ? 'Envoyer une lettre' : 'Send a letter';
+  var sendLabel = isFrench ? 'Envoyer une lettre' : isSpanish ? 'Enviar una carta' : 'Send a letter';
+  var trackLabel = isSpanish ? 'Rastrear un pedido' : 'Track an order';
 
   var stamp = window.LHStamp ? window.LHStamp('h', 44) : '';
   mount.outerHTML =
@@ -97,7 +117,7 @@
       '<div class="nav-inner">' +
         '<a href="/" class="logo" aria-label="Letterhome home"><span class="logo-stamp" aria-hidden="true">' + stamp + '</span><span class="logo-wordmark">Letter<span class="logo-accent">home</span></span></a>' +
         '<div class="nav-right">' +
-          '<a href="/track" class="nav-track" data-i18n="nav.track">Track an order</a>' +
+          '<a href="/track" class="nav-track" data-i18n="nav.track">' + trackLabel + '</a>' +
           langToggle +
           '<a href="/send" class="btn btn-red nav-cta" data-i18n="nav.send">' + sendLabel + '</a>' +
         '</div>' +
