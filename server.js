@@ -79,7 +79,7 @@ app.set('trust proxy', 2);
 // canonical URLs, hreflang, sitemap and robots.txt. See sites.js.
 const sites = require('./sites').createSites({
   getSetting,
-  localSlugs: key => Object.keys(COUNTRY_GUIDES).filter(k => k.startsWith(key + '/')).map(k => k.split('/')[1]),
+  localSlugs: key => ['business', ...Object.keys(COUNTRY_GUIDES).filter(k => k.startsWith(key + '/')).map(k => k.split('/')[1])],
   publicDir: path.join(__dirname, 'public'),
 });
 app.use(sites.middleware);
@@ -877,7 +877,7 @@ Object.entries(REGION_REDIRECTS).forEach(([from, to]) =>
  'respond-to-debt-collection-letter', 'dispute-credit-report-error', 'resignation-letter-by-mail',
  'love-letters-and-personal-mail', 'mail-transcripts-and-student-documents',
  'mail-to-retirement-and-nursing-homes', 'schedule-a-letter-for-later', 'send-a-christmas-letter-to-canada',
- 'uk', 'us', 'au', 'send-a-letter-online-in-the-usa', 'address-a-letter-to-canada-from-the-uk', 'aussies-in-canada-send-a-letter-home',
+ 'uk', 'us', 'au', 'business', 'send-a-letter-online-in-the-usa', 'address-a-letter-to-canada-from-the-uk', 'aussies-in-canada-send-a-letter-home',
  'send-a-letter-from-canada-to-the-us', 'send-a-letter-from-canada-to-australia', 'send-letters-between-countries', 'santa-letter', 'send-a-letter-to-the-uk', 'monthly-letters', 'landlord-notices', 'postcards',
  'letter-from-santa-canada', 'free-letter-from-santa-template', 'christmas-family-letter-template',
  'what-to-write-in-a-letter-to-a-grandparent', 'keep-in-touch-with-family-abroad-by-mail',
@@ -962,6 +962,12 @@ Object.keys(COUNTRY_GUIDES).forEach(p => {
   const file = p.split('/')[1];
   app.get(`/${p}`, (req, res) => res.sendFile(path.join(__dirname, 'public', `${file}.html`)));
   app.get(`/${COUNTRY_GUIDES[p]}`, (req, res) => res.redirect(301, `/${p}`));
+});
+
+// Business mail pages: one per country (a template builds them: scripts/build-business-pages.py)
+['us', 'uk', 'au'].forEach(c => {
+  app.get(`/${c}/business`, (req, res) => res.sendFile(path.join(__dirname, 'public', `business-${c}.html`)));
+  app.get(`/business-${c}`, (req, res) => res.redirect(301, `/${c}/business`));
 });
 
 // Spanish versions of the US pages live under /us/es
@@ -4013,7 +4019,7 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:48px 36px 32px
 @media(max-width:600px){nav,.main{padding-left:20px!important;padding-right:20px!important}.main{padding-top:40px!important;padding-bottom:80px!important}}
 </style>
 <script>(function(){try{var m=window.matchMedia('(prefers-color-scheme: dark)'),s=function(){document.documentElement.setAttribute('data-theme',m.matches?'dark':'light');};s();if(m.addEventListener)m.addEventListener('change',s);}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
-<link rel="stylesheet" href="/theme.css"><script src="/country.js?v=2"></script><link rel="stylesheet" href="/country-order.css?v=1">
+<link rel="stylesheet" href="/theme.css"><script src="/country.js?v=2"></script><link rel="stylesheet" href="/country-order.css?v=2">
 </head>
 <body>
 <div id="site-header"></div>

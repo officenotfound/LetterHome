@@ -1465,3 +1465,23 @@ test('ordering pages carry the country look and a complete Spanish dictionary', 
   const css = pub('country-order.css');
   for (const c of ['us', 'uk', 'au']) assert.ok(css.includes(`html[data-country="${c}"] body{`), `${c} palette`);
 });
+
+test('business pages: one per site, own canonical, quote form works, and the country domains serve them at /business', async () => {
+  const canon = b => (b.match(/<link rel="canonical" href="([^"]*)"/) || [])[1];
+  for (const [p, c] of [['/business', 'https://letterhome.ca/business'], ['/us/business', 'https://letterhome.ca/us/business'], ['/uk/business', 'https://letterhome.ca/uk/business'], ['/au/business', 'https://letterhome.ca/au/business']]) {
+    const r = await fetch(`${base}${p}`); const b = await r.text();
+    assert.equal(r.status, 200, p); assert.equal(canon(b), c, p);
+    assert.ok(!/postgrid/i.test(b), `${p} must not name the print partner`);
+    assert.ok(b.includes('id="biz-submit"'), `${p} has the quote form`);
+  }
+  setFlag('us_domain_live', 'true'); setFlag('uk_domain_live', 'true');
+  try {
+    const us = await siteGet('letterhome.us', '/business'); assert.equal(us.status, 200); assert.equal(canon(us.body), 'https://letterhome.us/business');
+    const uk = await siteGet('letterhome.co.uk', '/business'); assert.equal(uk.status, 200); assert.equal(canon(uk.body), 'https://letterhome.co.uk/business');
+    assert.equal((await siteGet('letterhome.ca', '/us/business')).location, 'https://letterhome.us/business');
+    assert.equal((await siteGet('letterhome.ca', '/uk/business')).location, 'https://letterhome.co.uk/business');
+    assert.ok((await siteGet('letterhome.us', '/sitemap.xml')).body.includes('https://letterhome.us/business'));
+    assert.ok(!(await siteGet('letterhome.ca', '/sitemap.xml')).body.includes('https://letterhome.ca/us/business'));
+    assert.ok(us.body.includes('hreflang="en-GB" href="https://letterhome.co.uk/business"'));
+  } finally { setFlag('us_domain_live', 'false'); setFlag('uk_domain_live', 'false'); }
+});
