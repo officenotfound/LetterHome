@@ -4315,8 +4315,12 @@ app.get('/api/admin/cloudflare/analytics', requireAdmin, async (req, res) => {
 
   try {
     const byDate = new Map();
-    for (const [, zoneId] of ids) {
-      for (const d of await cfDaily(token, zoneId, since, until)) {
+    const failed = [];
+    for (const [key, zoneId] of ids) {
+      let rows;
+      try { rows = await cfDaily(token, zoneId, since, until); }
+      catch (e) { console.error('[CF analytics]', key, e.message); failed.push({ site: key, error: e.message }); continue; }
+      for (const d of rows) {
         const k = d.dimensions.date;
         const cur = byDate.get(k) || { dimensions: { date: k }, sum: { requests: 0, pageViews: 0, cachedRequests: 0, bytes: 0, threats: 0 }, uniq: { uniques: 0 } };
         for (const f of Object.keys(cur.sum)) cur.sum[f] += d.sum[f] || 0;
@@ -4334,10 +4338,11 @@ app.get('/api/admin/cloudflare/analytics', requireAdmin, async (req, res) => {
       acc.uniques        += d.uniq?.uniques       || 0;
       return acc;
     }, { requests: 0, pageViews: 0, cachedRequests: 0, bytes: 0, threats: 0, uniques: 0 });
-    res.json({ ok: true, totals, daily, days, site, zones: ids.map(([k]) => k) });
+    if (failed.length === ids.length) throw new Error(failed.map(f => `${f.site}: ${f.error}`).join(' | '));
+    res.json({ ok: true, totals, daily, days, site, zones: ids.map(([k]) => k).filter(k => !failed.some(f => f.site === k)), failed });
   } catch (e) {
     console.error('[CF analytics]', e.message);
-    res.status(502).json({ error: e.message });
+    res.json({ configured: true, error: e.message });
   }
 });
 

@@ -2422,6 +2422,7 @@ function renderVisitors(cf, s, recent) {
     cfHtml = `<div class="card" style="margin-bottom:24px;padding:20px 24px;color:#6b6b6b;font-size:13px">
       <strong>Cloudflare Analytics</strong> — not configured. ${cf && cf.missing && cf.missing.length ? 'Missing on the server: <code>' + cf.missing.map(esc).join('</code>, <code>') + '</code>. Add it to <code>.env</code> and run <code>pm2 reload letterhome --update-env</code>.' : 'Add <code>CF_API_TOKEN</code> and <code>CF_ZONE_ID</code> to your .env and restart (the country domains use <code>CF_ZONE_ID_US</code> and <code>CF_ZONE_ID_UK</code>).'}</div>`;
   } else if (cf.error) {
+    cf.error = /permission/i.test(cf.error) ? 'The Cloudflare API token does not have Analytics Read permission for this domain. In Cloudflare, edit the token and set Zone Resources to All zones. (' + cf.error + ')' : cf.error;
     cfHtml = `<div class="card" style="margin-bottom:24px;padding:20px 24px;color:#e63946;font-size:13px">
       Cloudflare error: ${esc(cf.error)}</div>`;
   } else {
@@ -2450,7 +2451,7 @@ function renderVisitors(cf, s, recent) {
     cfHtml = `
     <div class="card" style="margin-bottom:24px">
       <div class="card-header">
-        <div class="card-title">Cloudflare — Last ${cf.days} Days <span style="font-size:11px;color:#9a9a9a;font-weight:400;margin-left:8px">█ requests &nbsp; █ page views</span></div>
+        <div class="card-title">Cloudflare — Last ${cf.days} Days${(cf.failed || []).length ? ` <span style="font-size:11px;color:#b45309;font-weight:400;margin-left:8px">Not included: ${cf.failed.map(f => esc(({ ca: 'letterhome.ca', us: 'letterhome.us', uk: 'letterhome.co.uk' })[f.site] || f.site)).join(', ')} (token has no access)</span>` : ''} <span style="font-size:11px;color:#9a9a9a;font-weight:400;margin-left:8px">█ requests &nbsp; █ page views</span></div>
         <div style="display:flex;gap:6px">${periodBtns}</div>
       </div>
       <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:0;border-bottom:1px solid #fafafa">
