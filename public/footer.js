@@ -49,6 +49,14 @@
     if (!src || !em) return;
     var c = getComputedStyle(src).color;
     if (c) em.style.setProperty('color', c, 'important');
+    // Same letterforms as the header wordmark: italic DM Serif Display with the same tracking on both words.
+    var w = em.parentNode;
+    [w, em].forEach(function (el) {
+      el.style.setProperty('font-family', "'DM Serif Display', Georgia, serif", 'important');
+      el.style.setProperty('font-style', 'italic', 'important');
+      el.style.setProperty('font-weight', '400', 'important');
+      el.style.setProperty('letter-spacing', '-0.02em', 'important');
+    });
   }
   syncAccent();
   window.addEventListener('load', syncAccent);
