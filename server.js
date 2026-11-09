@@ -548,6 +548,59 @@ function mailFacts(order) {
   const local = cc === 'CA' || (destinations.liveCountries().includes(cc) && !!LOCAL_CARRIERS[cc]);
   return { carrier: local ? LOCAL_CARRIERS[cc] : 'Canada Post', local, defaultDelivery: local ? 'within 2 weeks' : 'within 4 weeks' };
 }
+// Customer-facing wording for emails and the status page, in the language the order was placed in (English or Spanish).
+function mailText(o) {
+  const es = !!(o && o.order_lang === 'es');
+  const id = o && o.id, name = (o && o.recipient_name) || '';
+  const dl = d => !es ? d : ({ 'within 2 weeks': 'en un plazo de 2 semanas', 'within 4 weeks': 'en un plazo de 4 semanas' }[d] || d);
+  return es ? {
+    es, dl, htmlLang: 'es-US', dateLocale: 'es-US',
+    subjConfirmed: `Su pedido de Letterhome está confirmado: carta para ${name}`,
+    subjAtPrinter: `Su carta para ${name} está en la imprenta: pedido n.º ${id}`,
+    subjMailed:    `Su carta para ${name} ya se envió: pedido n.º ${id}`,
+    order: `Pedido n.º ${id}`, deliveringTo: 'Se entrega a', track: 'Siga su carta', questions: '¿Preguntas? Responda a este correo.',
+    estDelivery: 'Entrega estimada', estArrival: 'Llegada estimada',
+    inH1: 'Recibimos su carta.', inP: 'Recibimos su pago. Su carta se imprimirá y se enviará por correo en un plazo de dos días hábiles.',
+    printerH1: 'Su carta está en la imprenta.',
+    printerP: c => `Revisamos el pedido n.º ${id} y lo enviamos a imprimir. Se imprimirá, se cerrará y se entregará a ${c} en un plazo de dos días hábiles, y le escribiremos otra vez en cuanto esté en el correo.`,
+    printerFix: '¿Ve un error en la dirección o en la carta? Responda a este correo de inmediato y haremos lo posible por detenerla antes de que se imprima.',
+    mailedH1: 'Su carta va en camino.',
+    mailedP: c => `El pedido n.º ${id} se imprimió, se cerró y se entregó al correo. A partir de aquí está en manos de ${c}.`,
+    noTracking: 'El correo estándar no tiene rastreo, así que no podemos decirle el día exacto en que llegará. Si no la recibe después del plazo estimado, responda a este correo y lo resolvemos.',
+    thanks: 'Gracias por confiarnos su carta.',
+    reviewAsk: 'Si tiene un minuto cuando llegue, una reseña honesta ayuda a otras personas a encontrarnos.', reviewLink: 'Dejar una reseña en Google',
+    statusTitle: 'Estado de la carta | Letterhome', letterTo: n => `Carta para ${n}`,
+    s0: 'Pedido recibido', s0d: n => `Pago confirmado &nbsp;·&nbsp; Pedido n.º ${n}`, s1: 'En preparación', s1d: 'Su carta se envió a imprimir.',
+    s2Mailed: 'Enviada', s2Way: 'En camino', s2Done: (c, d) => `Entregada a ${c}. Llegada estimada: ${d}`, s2Wait: 'Cuando se envíe, aquí aparecerá la entrega estimada.',
+    s3: 'Entregada', s3d: 'Su carta fue entregada.',
+    trackNo: (n, c) => `Número de rastreo: ${n}. Úselo en el sitio web de ${c} para seguir su carta.`, trackWait: 'Su número de rastreo aparecerá aquí cuando esté disponible.',
+    estBox: 'Entrega estimada',
+    help: 'Si tiene preguntas sobre su carta, escriba a <a href="mailto:support@letterhome.ca" style="color:#a8472d">support@letterhome.ca</a> e incluya su número de pedido.',
+  } : {
+    es, dl, htmlLang: 'en-CA', dateLocale: 'en-CA',
+    subjConfirmed: `Your Letterhome order is confirmed: letter to ${name}`,
+    subjAtPrinter: `Your letter to ${name} is at the printer: order #${id}`,
+    subjMailed:    `Your letter to ${name} has been mailed: order #${id}`,
+    order: `Order #${id}`, deliveringTo: 'Delivering to', track: 'Track your letter', questions: 'Questions? Reply to this email.',
+    estDelivery: 'Estimated delivery', estArrival: 'Estimated arrival',
+    inH1: 'Your letter is in.', inP: "We've received your payment. Your letter will be printed and mailed within two business days.",
+    printerH1: 'Your letter is at the printer.',
+    printerP: c => `We've reviewed order #${id} and sent it to our print partner. It will be printed, sealed and handed to ${c} within two business days, and we'll email you again as soon as it's in the post.`,
+    printerFix: "Spotted a mistake in the address or the letter? Reply to this email right away and we'll do our best to stop it before it prints.",
+    mailedH1: 'Your letter is on its way.',
+    mailedP: c => `Order #${id} has been printed, sealed, and handed to the post office. From here, it's in ${c}'s hands.`,
+    noTracking: "Lettermail doesn't have tracking, so we can't tell you exactly when it'll land. If you don't see it after the estimated window, reply to this email and we'll work it out.",
+    thanks: 'Thank you for trusting us with your letter.',
+    reviewAsk: REVIEW_ASK, reviewLink: REVIEW_LINK_TEXT,
+    statusTitle: 'Letter Status | Letterhome', letterTo: n => `Letter to ${n}`,
+    s0: 'Order Received', s0d: n => `Payment confirmed &nbsp;·&nbsp; Order #${n}`, s1: 'Being Prepared', s1d: 'Your letter has been submitted for printing.',
+    s2Mailed: 'Mailed', s2Way: 'On Its Way', s2Done: (c, d) => `Dropped off with ${c}. Estimated arrival: ${d}`, s2Wait: 'Once mailed, your estimated delivery will appear here.',
+    s3: 'Delivered', s3d: 'Your letter has been delivered.',
+    trackNo: (n, c) => `Tracking number: ${n}. Use it on the ${c} website to follow your letter.`, trackWait: 'Your tracking number will appear here once it is available.',
+    estBox: 'Estimated delivery',
+    help: 'Questions about your letter? Email <a href="mailto:support@letterhome.ca" style="color:#a8472d">support@letterhome.ca</a> and include your order number.',
+  };
+}
 const postgrid = createPostGrid({ db, getSetting, orderDirPath, destinations });
 
 // One quiet review line, the same for every customer. No reward is ever tied to it, and Google doesn't allow asking only happy customers.
@@ -569,7 +622,7 @@ function sendMailedNotification(order) {
   sendMail({
     from:    process.env.EMAIL_FROM,
     to:      order.customer_email,
-    subject: `Your letter to ${order.recipient_name} has been mailed: order #${order.id}`,
+    subject: mailText(order).subjMailed,
     html:    buildMailedEmail(order, toAddr, deliveryText),
     text:    buildMailedEmailText(order, toAddr, deliveryText),
   }, 'mailed_notification', order.id).catch(console.error);
@@ -591,7 +644,7 @@ function sendAtPrinterEmail(orderId) {
     from:    process.env.EMAIL_FROM,
     to:      order.customer_email,
     replyTo: process.env.OPERATOR_EMAIL,
-    subject: `Your letter to ${order.recipient_name} is at the printer: order #${order.id}`,
+    subject: mailText(order).subjAtPrinter,
     html:    buildAtPrinterEmail(order, toAddr),
     text:    buildAtPrinterEmailText(order, toAddr),
   }, 'at_printer_notification', order.id).catch(err => {
@@ -1600,8 +1653,8 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
       destination_country, letter_type, letter_body, attachment_info, price_cents, customer_ip,
       status_token, discount_code, discount_cents,
       page_count, extra_page_cents, colour_printing, registered_mail, large_envelope, schedule_for_later, scheduled_date,
-      certified_mail, express_mail, mail_service_cents, order_site
-    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+      certified_mail, express_mail, mail_service_cents, order_site, order_lang
+    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
   `).run(
     rEmail, b['skip-return'] ? 1 : 0,
     b['s-name']     || null, b['s-street']   || null, b['s-city']  || null,
@@ -1626,7 +1679,8 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
     mailService === 'certified' ? 1 : 0,
     mailService === 'express'   ? 1 : 0,
     serviceCents || null,
-    sites.keyOf(req)
+    sites.keyOf(req),
+    b.lang === 'es' ? 'es' : null
   );
   const orderId  = row.lastInsertRowid;
   const now      = new Date();
@@ -2209,7 +2263,7 @@ app.post('/api/admin/orders/:id/status', requireAdmin, async (req, res) => {
       sendMail({
         from:    process.env.EMAIL_FROM,
         to:      order.customer_email,
-        subject: `Your letter to ${order.recipient_name} has been mailed: order #${order.id}`,
+        subject: mailText(order).subjMailed,
         html:    buildMailedEmail(order, toAddr, deliveryText),
         text:    buildMailedEmailText(order, toAddr, deliveryText),
       }, 'mailed_notification', id).catch(console.error);
@@ -2375,7 +2429,7 @@ app.post('/api/admin/orders/:id/mark-mailed', requireAdmin, async (req, res) => 
   sendMail({
     from:    process.env.EMAIL_FROM,
     to:      order.customer_email,
-    subject: `Your letter to ${order.recipient_name} has been mailed: order #${order.id}`,
+    subject: mailText(order).subjMailed,
     html:    buildMailedEmail(order, toAddr, estimated_delivery.trim()),
     text:    buildMailedEmailText(order, toAddr, estimated_delivery.trim()),
   }, 'mailed_notification', id).catch(console.error);
@@ -2925,7 +2979,7 @@ app.post('/api/admin/orders/bulk-status', requireAdmin, async (req, res) => {
       sendMail({
         from:    process.env.EMAIL_FROM,
         to:      order.customer_email,
-        subject: `Your letter to ${order.recipient_name} has been mailed: order #${order.id}`,
+        subject: mailText(order).subjMailed,
         html:    buildMailedEmail(order, toAddr, deliveryText),
         text:    buildMailedEmailText(order, toAddr, deliveryText),
       }, 'mailed_notification', id).catch(console.error);
@@ -3761,7 +3815,7 @@ async function fulfillOrder(sessionId) {
   await sendMail({
     from:    process.env.EMAIL_FROM,
     to:      order.customer_email,
-    subject: `Your Letterhome order is confirmed: letter to ${order.recipient_name}`,
+    subject: mailText(order).subjConfirmed,
     html:    buildCustomerEmail(order, toAddr, amountCAD, isDomestic),
     text:    buildCustomerEmailText(order, toAddr, amountCAD, isDomestic),
   }, 'order_confirmation', order.id).catch(err => {
@@ -3838,19 +3892,20 @@ function buildOperatorEmailText(o, fromAddr, toAddr, amountCAD, attachCount) {
 }
 
 function buildCustomerEmailText(o, toAddr, amountCAD, isDomestic) {
-  const delivery = mailFacts(o).defaultDelivery;
+  const L = mailText(o);
+  const delivery = L.dl(mailFacts(o).defaultDelivery);
   return [
-    'Your letter is in.',
+    L.inH1,
     '',
-    `We've received your payment. Your letter will be printed and mailed within two business days.`,
+    L.inP,
     '',
-    'Delivering to:',
+    `${L.deliveringTo}:`,
     toAddr,
-    `Estimated delivery: ${delivery}`,
+    `${L.estDelivery}: ${delivery}`,
     '',
-    `Order #${o.id} · ${amountCAD}`,
-    o.status_token ? `Track your letter: ${orderBase(o)}/status/${o.status_token}` : '',
-    'Questions? Reply to this email.',
+    `${L.order} · ${amountCAD}`,
+    o.status_token ? `${L.track}: ${orderBase(o)}/status/${o.status_token}` : '',
+    L.questions,
     '',
     `Letterhome · ${MAILING_ADDRESS}`,
     '',
@@ -3859,25 +3914,26 @@ function buildCustomerEmailText(o, toAddr, amountCAD, isDomestic) {
 }
 
 function buildCustomerEmail(o, toAddr, amountCAD, isDomestic) {
-  const delivery = mailFacts(o).defaultDelivery;
+  const L = mailText(o);
+  const delivery = L.dl(mailFacts(o).defaultDelivery);
   const esc = s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   toAddr = esc(toAddr);
   return `
-<!DOCTYPE html><html>
+<!DOCTYPE html><html lang="${L.htmlLang}">
 <body style="font-family:Georgia,serif;background:#ede5d3;padding:40px 20px;color:#2a2a2a;margin:0">
   <div style="max-width:520px;margin:0 auto;background:#faf6ec;border:1px solid rgba(42,42,42,0.12);padding:48px">
     <div style="width:38px;height:38px;background:#a8472d;display:inline-flex;align-items:center;justify-content:center;color:#faf6ec;font-size:20px;font-family:Georgia,serif;margin-bottom:28px">L</div>
-    <h1 style="font-size:28px;font-weight:400;margin:0 0 10px;letter-spacing:-0.02em">Your letter is in.</h1>
-    <p style="color:#6b6258;margin:0 0 32px;font-size:16px;line-height:1.6">We've received your payment. Your letter will be printed and mailed within two business days.</p>
+    <h1 style="font-size:28px;font-weight:400;margin:0 0 10px;letter-spacing:-0.02em">${L.inH1}</h1>
+    <p style="color:#6b6258;margin:0 0 32px;font-size:16px;line-height:1.6">${L.inP}</p>
     <div style="background:#2a2a2a;color:#faf6ec;padding:24px;margin-bottom:28px">
-      <p style="font-size:11px;text-transform:uppercase;letter-spacing:0.15em;color:rgba(250,246,236,0.55);margin:0 0 10px">Delivering to</p>
+      <p style="font-size:11px;text-transform:uppercase;letter-spacing:0.15em;color:rgba(250,246,236,0.55);margin:0 0 10px">${L.deliveringTo}</p>
       <p style="font-size:18px;line-height:1.5;white-space:pre-line;margin:0 0 16px">${toAddr}</p>
-      <p style="font-size:12px;color:rgba(250,246,236,0.55);margin:0">Estimated delivery: ${delivery}</p>
+      <p style="font-size:12px;color:rgba(250,246,236,0.55);margin:0">${L.estDelivery}: ${delivery}</p>
     </div>
     <div style="border-top:1px solid rgba(42,42,42,0.1);padding-top:20px;font-size:13px;color:#6b6258">
-      <p style="margin:0 0 8px">Order #${o.id} &nbsp;·&nbsp; ${amountCAD}</p>
-      ${o.status_token ? `<p style="margin:0 0 8px">Track your letter: <a href="${orderBase(o)}/status/${o.status_token}" style="color:#a8472d">${orderBase(o)}/status/${o.status_token}</a></p>` : ''}
-      <p style="margin:0">Questions? Reply to this email.</p>
+      <p style="margin:0 0 8px">${L.order} &nbsp;·&nbsp; ${amountCAD}</p>
+      ${o.status_token ? `<p style="margin:0 0 8px">${L.track}: <a href="${orderBase(o)}/status/${o.status_token}" style="color:#a8472d">${orderBase(o)}/status/${o.status_token}</a></p>` : ''}
+      <p style="margin:0">${L.questions}</p>
       <p style="margin:12px 0 0;color:#968b7d;font-size:11px">Letterhome · ${MAILING_ADDRESS}</p>
     </div>
   </div>
@@ -3886,23 +3942,24 @@ function buildCustomerEmail(o, toAddr, amountCAD, isDomestic) {
 
 // "Your letter is at the printer": sent once, when a live letter has gone to PostGrid.
 function buildAtPrinterEmail(o, toAddr) {
+  const L = mailText(o);
   const esc = s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   const carrier = mailFacts(o).carrier;
   return `
-<!DOCTYPE html><html>
+<!DOCTYPE html><html lang="${L.htmlLang}">
 <body style="font-family:Georgia,serif;background:#ede5d3;padding:40px 20px;color:#2a2a2a;margin:0">
   <div style="max-width:520px;margin:0 auto;background:#faf6ec;border:1px solid rgba(42,42,42,0.12);padding:48px">
     <div style="width:38px;height:38px;background:#a8472d;display:inline-flex;align-items:center;justify-content:center;color:#faf6ec;font-size:20px;font-family:Georgia,serif;margin-bottom:28px">L</div>
-    <h1 style="font-size:28px;font-weight:400;margin:0 0 10px;letter-spacing:-0.02em">Your letter is at the printer.</h1>
-    <p style="color:#6b6258;margin:0 0 32px;font-size:16px;line-height:1.6">We've reviewed order #${o.id} and sent it to our print partner. It will be printed, sealed and handed to ${carrier} within two business days, and we'll email you again as soon as it's in the post.</p>
+    <h1 style="font-size:28px;font-weight:400;margin:0 0 10px;letter-spacing:-0.02em">${L.printerH1}</h1>
+    <p style="color:#6b6258;margin:0 0 32px;font-size:16px;line-height:1.6">${L.printerP(carrier)}</p>
     <div style="background:#2a2a2a;color:#faf6ec;padding:24px;margin-bottom:28px">
-      <p style="font-size:11px;text-transform:uppercase;letter-spacing:0.15em;color:rgba(250,246,236,0.55);margin:0 0 10px">Delivering to</p>
+      <p style="font-size:11px;text-transform:uppercase;letter-spacing:0.15em;color:rgba(250,246,236,0.55);margin:0 0 10px">${L.deliveringTo}</p>
       <p style="font-size:18px;line-height:1.5;white-space:pre-line;margin:0">${esc(toAddr)}</p>
     </div>
-    <p style="color:#6b6258;font-size:14px;line-height:1.7;margin:0 0 24px">Spotted a mistake in the address or the letter? Reply to this email right away and we'll do our best to stop it before it prints.</p>
+    <p style="color:#6b6258;font-size:14px;line-height:1.7;margin:0 0 24px">${L.printerFix}</p>
     <div style="border-top:1px solid rgba(42,42,42,0.1);padding-top:20px;font-size:13px;color:#6b6258">
-      <p style="margin:0 0 8px">Order #${o.id}</p>
-      ${o.status_token ? `<p style="margin:0 0 8px">Track your letter: <a href="${orderBase(o)}/status/${o.status_token}" style="color:#a8472d">${orderBase(o)}/status/${o.status_token}</a></p>` : ''}
+      <p style="margin:0 0 8px">${L.order}</p>
+      ${o.status_token ? `<p style="margin:0 0 8px">${L.track}: <a href="${orderBase(o)}/status/${o.status_token}" style="color:#a8472d">${orderBase(o)}/status/${o.status_token}</a></p>` : ''}
       <p style="margin:12px 0 0;color:#968b7d;font-size:11px">Letterhome · ${MAILING_ADDRESS}</p>
     </div>
   </div>
@@ -3910,45 +3967,47 @@ function buildAtPrinterEmail(o, toAddr) {
 }
 
 function buildAtPrinterEmailText(o, toAddr) {
+  const L = mailText(o);
   return [
-    'Your letter is at the printer.',
+    L.printerH1,
     '',
-    `We've reviewed order #${o.id} and sent it to our print partner. It will be printed, sealed and handed to ${mailFacts(o).carrier} within two business days, and we'll email you again as soon as it's in the post.`,
+    L.printerP(mailFacts(o).carrier),
     '',
-    'Delivering to:',
+    `${L.deliveringTo}:`,
     toAddr,
     '',
-    'Spotted a mistake in the address or the letter? Reply to this email right away and we\'ll do our best to stop it before it prints.',
+    L.printerFix,
     '',
-    `Order #${o.id}`,
-    o.status_token ? `Track your letter: ${orderBase(o)}/status/${o.status_token}` : '',
+    L.order,
+    o.status_token ? `${L.track}: ${orderBase(o)}/status/${o.status_token}` : '',
     '',
     `Letterhome · ${MAILING_ADDRESS}`,
   ].join('\n');
 }
 
 function buildMailedEmail(o, toAddr, deliveryText) {
-  const delivery = deliveryText || mailFacts(o).defaultDelivery;
+  const L = mailText(o);
+  const delivery = L.dl(deliveryText || mailFacts(o).defaultDelivery);
   const esc = s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   toAddr = esc(toAddr);
   return `
-<!DOCTYPE html><html>
+<!DOCTYPE html><html lang="${L.htmlLang}">
 <body style="font-family:Georgia,serif;background:#ede5d3;padding:40px 20px;color:#2a2a2a;margin:0">
   <div style="max-width:520px;margin:0 auto;background:#faf6ec;border:1px solid rgba(42,42,42,0.12);padding:48px">
     <div style="width:38px;height:38px;background:#a8472d;display:inline-flex;align-items:center;justify-content:center;color:#faf6ec;font-size:20px;font-family:Georgia,serif;margin-bottom:28px">L</div>
-    <h1 style="font-size:28px;font-weight:400;margin:0 0 10px;letter-spacing:-0.02em">Your letter is on its way.</h1>
-    <p style="color:#6b6258;margin:0 0 32px;font-size:16px;line-height:1.6">Order #${o.id} has been printed, sealed, and handed to the post office. From here, it's in ${mailFacts(o).carrier}'s hands.</p>
+    <h1 style="font-size:28px;font-weight:400;margin:0 0 10px;letter-spacing:-0.02em">${L.mailedH1}</h1>
+    <p style="color:#6b6258;margin:0 0 32px;font-size:16px;line-height:1.6">${L.mailedP(mailFacts(o).carrier)}</p>
     <div style="background:#2a2a2a;color:#faf6ec;padding:24px;margin-bottom:28px">
-      <p style="font-size:11px;text-transform:uppercase;letter-spacing:0.15em;color:rgba(250,246,236,0.55);margin:0 0 10px">Delivering to</p>
+      <p style="font-size:11px;text-transform:uppercase;letter-spacing:0.15em;color:rgba(250,246,236,0.55);margin:0 0 10px">${L.deliveringTo}</p>
       <p style="font-size:18px;line-height:1.5;white-space:pre-line;margin:0 0 16px">${toAddr}</p>
-      <p style="font-size:12px;color:rgba(250,246,236,0.55);margin:0">Estimated arrival: ${delivery}</p>
+      <p style="font-size:12px;color:rgba(250,246,236,0.55);margin:0">${L.estArrival}: ${delivery}</p>
     </div>
-    <p style="color:#6b6258;font-size:14px;line-height:1.7;margin:0 0 24px">Lettermail doesn't have tracking, so we can't tell you exactly when it'll land. If you don't see it after the estimated window, reply to this email and we'll work it out.</p>
+    <p style="color:#6b6258;font-size:14px;line-height:1.7;margin:0 0 24px">${L.noTracking}</p>
     <div style="border-top:1px solid rgba(42,42,42,0.1);padding-top:20px;font-size:13px;color:#6b6258">
-      <p style="margin:0 0 8px">Order #${o.id}</p>
-      ${o.status_token ? `<p style="margin:0 0 8px">Track your letter: <a href="${orderBase(o)}/status/${o.status_token}" style="color:#a8472d">${orderBase(o)}/status/${o.status_token}</a></p>` : ''}
-      <p style="margin:0">Thank you for trusting us with your letter.</p>
-      ${reviewAskAllowed(o) ? `<p style="margin:8px 0 0">${REVIEW_ASK} <a href="${GOOGLE_REVIEW_URL}" style="color:#a8472d">${REVIEW_LINK_TEXT}</a></p>` : ''}
+      <p style="margin:0 0 8px">${L.order}</p>
+      ${o.status_token ? `<p style="margin:0 0 8px">${L.track}: <a href="${orderBase(o)}/status/${o.status_token}" style="color:#a8472d">${orderBase(o)}/status/${o.status_token}</a></p>` : ''}
+      <p style="margin:0">${L.thanks}</p>
+      ${reviewAskAllowed(o) ? `<p style="margin:8px 0 0">${L.reviewAsk} <a href="${GOOGLE_REVIEW_URL}" style="color:#a8472d">${L.reviewLink}</a></p>` : ''}
       <p style="margin:12px 0 0;color:#968b7d;font-size:11px">Letterhome · ${MAILING_ADDRESS}</p>
     </div>
   </div>
@@ -3956,28 +4015,30 @@ function buildMailedEmail(o, toAddr, deliveryText) {
 }
 
 function buildMailedEmailText(o, toAddr, deliveryText) {
-  const delivery = deliveryText || mailFacts(o).defaultDelivery;
+  const L = mailText(o);
+  const delivery = L.dl(deliveryText || mailFacts(o).defaultDelivery);
   return [
-    'Your letter is on its way.',
+    L.mailedH1,
     '',
-    `Order #${o.id} has been printed, sealed, and handed to the post office. From here, it's in ${mailFacts(o).carrier}'s hands.`,
+    L.mailedP(mailFacts(o).carrier),
     '',
-    'Delivering to:',
+    `${L.deliveringTo}:`,
     toAddr,
-    `Estimated arrival: ${delivery}`,
+    `${L.estArrival}: ${delivery}`,
     '',
-    `Lettermail doesn't have tracking, so we can't tell you exactly when it'll land. If you don't see it after the estimated window, reply to this email and we'll work it out.`,
+    L.noTracking,
     '',
-    `Order #${o.id}`,
-    o.status_token ? `Track your letter: ${orderBase(o)}/status/${o.status_token}` : '',
-    'Thank you for trusting us with your letter.',
-    ...(reviewAskAllowed(o) ? [`${REVIEW_ASK} ${REVIEW_LINK_TEXT}: ${GOOGLE_REVIEW_URL}`] : []),
+    L.order,
+    o.status_token ? `${L.track}: ${orderBase(o)}/status/${o.status_token}` : '',
+    L.thanks,
+    ...(reviewAskAllowed(o) ? [`${L.reviewAsk} ${L.reviewLink}: ${GOOGLE_REVIEW_URL}`] : []),
     '',
     'Letterhome',
   ].filter(s => s !== undefined).join('\n');
 }
 
 function buildStatusPage(order) {
+  const L = mailText(order);
   const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   // Mailed is the final step: only tracked services can ever report a delivery.
   const tracked    = !!(order.registered_mail || order.certified_mail || order.express_mail);
@@ -4000,22 +4061,22 @@ function buildStatusPage(order) {
     </div>`;
   }
 
-  const deliveryLine = order.estimated_delivery ? esc(order.estimated_delivery) : mailFacts(order).defaultDelivery;
+  const deliveryLine = L.dl(order.estimated_delivery ? esc(order.estimated_delivery) : mailFacts(order).defaultDelivery);
   const step3Desc = stageIndex >= 2
-    ? `Dropped off with ${mailFacts(order).carrier}. Estimated arrival: ${deliveryLine}`
-    : 'Once mailed, your estimated delivery will appear here.';
+    ? L.s2Done(mailFacts(order).carrier, deliveryLine)
+    : L.s2Wait;
 
   const trackingLine = order.postgrid_tracking_number
-    ? `Tracking number: ${esc(order.postgrid_tracking_number)}. Use it on the ${mailFacts(order).carrier} website to follow your letter.`
-    : 'Your tracking number will appear here once it is available.';
+    ? L.trackNo(esc(order.postgrid_tracking_number), mailFacts(order).carrier)
+    : L.trackWait;
 
   return `<!DOCTYPE html>
-<html lang="en-CA">
+<html lang="${L.htmlLang}">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Letter Status | Letterhome</title>
-<link rel="stylesheet" href="/fonts.css">
+<title>${L.statusTitle}</title>
+<link rel="stylesheet" href="/fonts.css?v=2">
 <style>
 :root{--kraft:#f1ebde;--kraft-light:#f7f2e6;--paper:#faf6ec;--ink:#2a2a2a;--ink-soft:#3a3835;--ink-muted:#6b6258;--ink-faint:#968b7d;--red:#a8472d;--red-deep:#7d3220;--red-stamp:#b85540;--line:rgba(42,42,42,0.14);--shadow-card:0 2px 6px rgba(42,42,42,0.06),0 14px 40px rgba(42,42,42,0.1)}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -4040,35 +4101,35 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:48px 36px 32px
 @media(max-width:600px){nav,.main{padding-left:20px!important;padding-right:20px!important}.main{padding-top:40px!important;padding-bottom:80px!important}}
 </style>
 <script>(function(){try{var m=window.matchMedia('(prefers-color-scheme: dark)'),s=function(){document.documentElement.setAttribute('data-theme',m.matches?'dark':'light');};s();if(m.addEventListener)m.addEventListener('change',s);}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
-<link rel="stylesheet" href="/theme.css"><script src="/order-country.js?v=1"></script><link rel="stylesheet" href="/country-order.css?v=3">
+<link rel="stylesheet" href="/theme.css?v=24"><script src="/order-country.js?v=1"></script><link rel="stylesheet" href="/country-order.css?v=4">
 </head>
 <body>
 <div id="site-header"></div>
-<script src="/header.js"></script>
+<script src="/header.js?v=14"></script>
 <div class="main" style="max-width:580px;margin:0 auto;padding:64px 36px 100px">
   <div style="display:inline-flex;align-items:center;gap:10px;font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.18em;color:#a8472d;margin-bottom:20px">
-    <span style="width:28px;height:1px;background:#a8472d;display:inline-block"></span>Order #${esc(String(order.id))}
+    <span style="width:28px;height:1px;background:#a8472d;display:inline-block"></span>${L.order.replace(/\d+$/, '')}${esc(String(order.id))}
   </div>
-  <h1 style="font-family:'DM Serif Display',serif;font-size:clamp(28px,5vw,40px);font-weight:400;letter-spacing:-0.02em;margin-bottom:6px">Letter to ${esc(order.recipient_name)}</h1>
-  <p style="font-family:'DM Mono',monospace;font-size:12px;color:#6b6258;letter-spacing:0.08em;margin-bottom:48px">${new Date(order.created_at).toLocaleDateString('en-CA',{year:'numeric',month:'long',day:'numeric'})}</p>
+  <h1 style="font-family:'DM Serif Display',serif;font-size:clamp(28px,5vw,40px);font-weight:400;letter-spacing:-0.02em;margin-bottom:6px">${L.letterTo(esc(order.recipient_name))}</h1>
+  <p style="font-family:'DM Mono',monospace;font-size:12px;color:#6b6258;letter-spacing:0.08em;margin-bottom:48px">${new Date(order.created_at).toLocaleDateString(L.dateLocale,{year:'numeric',month:'long',day:'numeric'})}</p>
   <div style="margin-bottom:40px">
-    ${stepHTML(0, 'Order Received', `Payment confirmed &nbsp;·&nbsp; Order #${esc(String(order.id))}`)}
-    ${stepHTML(1, 'Being Prepared', 'Your letter has been submitted for printing.')}
-    <div style="border-bottom:none">${stepHTML(2, stageIndex >= 3 ? 'Mailed' : 'On Its Way', step3Desc)}</div>
-    ${tracked ? `<div style="border-bottom:none">${stepHTML(3, 'Delivered', stageIndex >= 4 ? 'Your letter has been delivered.' : trackingLine)}</div>` : ''}
+    ${stepHTML(0, L.s0, L.s0d(esc(String(order.id))))}
+    ${stepHTML(1, L.s1, L.s1d)}
+    <div style="border-bottom:none">${stepHTML(2, stageIndex >= 3 ? L.s2Mailed : L.s2Way, step3Desc)}</div>
+    ${tracked ? `<div style="border-bottom:none">${stepHTML(3, L.s3, stageIndex >= 4 ? L.s3d : trackingLine)}</div>` : ''}
   </div>
   ${stageIndex >= 2 && order.estimated_delivery ? `
   <div style="background:#2a2a2a;color:#faf6ec;padding:24px;border-radius:4px;margin-bottom:32px">
-    <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.15em;color:rgba(250,246,236,0.5);margin-bottom:8px;font-family:'DM Mono',monospace">Estimated delivery</div>
-    <div style="font-family:'DM Serif Display',serif;font-size:24px">${esc(order.estimated_delivery)}</div>
+    <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.15em;color:rgba(250,246,236,0.5);margin-bottom:8px;font-family:'DM Mono',monospace">${L.estBox}</div>
+    <div style="font-family:'DM Serif Display',serif;font-size:24px">${L.dl(esc(order.estimated_delivery))}</div>
   </div>` : ''}
-  <p style="font-size:13px;color:#6b6258;line-height:1.6">Questions about your letter? Email <a href="mailto:support@letterhome.ca" style="color:#a8472d">support@letterhome.ca</a> and include your order number.</p>
-  ${stageIndex >= 3 ? `<p style="font-size:13px;color:#6b6258;line-height:1.6;margin-top:10px">${REVIEW_ASK} <a href="${GOOGLE_REVIEW_URL}" target="_blank" rel="noopener" style="color:#a8472d">${REVIEW_LINK_TEXT}</a></p>` : ''}
+  <p style="font-size:13px;color:#6b6258;line-height:1.6">${L.help}</p>
+  ${stageIndex >= 3 ? `<p style="font-size:13px;color:#6b6258;line-height:1.6;margin-top:10px">${L.reviewAsk} <a href="${GOOGLE_REVIEW_URL}" target="_blank" rel="noopener" style="color:#a8472d">${L.reviewLink}</a></p>` : ''}
 </div>
 <footer id="site-footer"></footer>
-<script src="/theme.js"></script>
-<script src="/lang.js" defer></script>
-<script src="/footer.js" defer></script>
+<script src="/theme.js?v=4"></script>
+<script src="/lang.js?v=56" defer></script>
+<script src="/footer.js?v=20" defer></script>
 </body>
 </html>`;
 }

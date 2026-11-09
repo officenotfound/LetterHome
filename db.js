@@ -65,6 +65,7 @@ db.exec(`
 
 try { db.exec(`ALTER TABLE orders ADD COLUMN deleted_at DATETIME`);       } catch {}
 try { db.exec(`ALTER TABLE orders ADD COLUMN order_site TEXT`);          } catch {}   // which site took the order: ca, us or uk
+try { db.exec(`ALTER TABLE orders ADD COLUMN order_lang TEXT`);          } catch {}   // 'es' when the order was placed in Spanish (emails and status page follow it)
 try { db.exec(`ALTER TABLE orders ADD COLUMN charge_currency TEXT`);     } catch {}   // set for fixed-price US, UK and AU orders; empty means CAD
 try { db.exec(`ALTER TABLE orders ADD COLUMN charge_cents INTEGER`);    } catch {}   // what the customer paid in charge_currency; price_cents stays CAD for reports
 try { db.exec(`ALTER TABLE orders ADD COLUMN content_flags TEXT`);        } catch {}   // JSON: categories and counts only, never the matched text

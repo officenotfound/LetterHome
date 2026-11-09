@@ -1532,3 +1532,39 @@ test('US and UK everyday-mail guides: served on their own domain with a self can
     assert.equal(ca.status, 301, 'on letterhome.ca the US guide moves to letterhome.us');
   } finally { setFlag('us_domain_live', 'false'); setFlag('uk_domain_live', 'false'); }
 });
+
+test('Spanish orders: the order remembers its language, and the status page and emails are in Spanish', async () => {
+  const sid = seedOrder({ email: 'es-order@example.com', status: 'mailed', recipientName: 'María López', country: 'US' });
+  db.prepare("UPDATE orders SET order_lang = 'es' WHERE stripe_session_id = ?").run(sid);
+  const o = db.prepare('SELECT * FROM orders WHERE stripe_session_id = ?').get(sid);
+  const page = await (await fetch(`${base}/status/${o.status_token}`)).text();
+  assert.match(page, /<html lang="es-US">/);
+  assert.match(page, /Carta para María López/);
+  assert.match(page, /Pedido recibido/);
+  assert.doesNotMatch(page, /Order Received|Being Prepared|Letter to /);
+
+  const en = seedOrder({ email: 'en-order@example.com', status: 'mailed' });
+  const enPage = await (await fetch(`${base}/status/${db.prepare('SELECT status_token FROM orders WHERE stripe_session_id = ?').get(en).status_token}`)).text();
+  assert.match(enPage, /Order Received/, 'English orders are unchanged');
+
+  process.env.SMTP_HOST = 'smtp.test';
+  try {
+    const before = sentMail.length;
+    sendMailedNotification(o);
+    await new Promise(r => setTimeout(r, 50));
+    const m = sentMail.slice(before)[0];
+    assert.match(m.subject, /Su carta para María López ya se envió/);
+    assert.match(m.html, /Su carta va en camino/);
+    assert.match(m.text, /Llegada estimada/);
+    assert.doesNotMatch(m.text, /Your letter|Estimated arrival/);
+  } finally { delete process.env.SMTP_HOST; }
+});
+
+test('an order placed with the Spanish form is stored as a Spanish order', async () => {
+  const fd = new FormData();
+  Object.entries({ 'r-email': 'es-form@example.com', 'r-name': 'Ana Ruiz', 'r-street': '1 Main St', 'r-city': 'Toronto', 'r-province': 'ON',
+    'r-postal': 'M5V 1A1', 'r-country': 'CA', 'letter-body': 'Hola.', 'letter-type': 'standard', lang: 'es' }).forEach(([k, v]) => fd.append(k, v));
+  const res = await fetch(`${base}/api/create-order`, { method: 'POST', body: fd });
+  assert.equal(res.status, 200, await res.clone().text());
+  assert.equal(db.prepare("SELECT order_lang FROM orders WHERE customer_email = 'es-form@example.com'").get().order_lang, 'es');
+});
