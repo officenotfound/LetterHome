@@ -25,7 +25,7 @@ COUNTRIES = {
          ('Small businesses','Invoices, statements, renewals and thank-you letters, printed and posted without a printer in the office.'),
          ('Clubs, schools and charities','Appeals, receipts and invitations to a membership list.'),
          ('Marketers','Postcards to a local list, sent in one batch.'),
-         ('Care homes, hospitals and veterans\' groups','Letters and cards to residents, patients and members on a schedule, so no one goes without mail.')],
+         ('Real estate agents', 'Just listed and just sold postcards, open house invitations and market updates, sent to a neighbourhood list.')],
     dests=['Mostly within Canada','Mostly the United States','A mix of Canada and the United States','Other countries too'],
     pricing='Letters have published volume pricing from 10 pieces, see <a href="/bulk-mailing">bulk letter pricing</a>. Postcards and anything custom are quoted per job.',
     single='/send', single_label='Send a single letter, from $6 →'),
@@ -40,7 +40,7 @@ COUNTRIES = {
          ('Small businesses','Invoices, statements, renewals and thank-you letters, printed and mailed without a printer in the office.'),
          ('Nonprofits, schools and clubs','Appeals, receipts and invitations to a membership list.'),
          ('Marketers','Postcards to a local list, sent in one batch.'),
-         ('Care homes, hospitals and veterans\' groups','Letters and cards to residents, patients and members on a schedule, so no one goes without mail.')],
+         ('Real estate agents', 'Just listed and just sold postcards, open house invitations and market updates, sent to a neighbourhood list.')],
     dests=['Mostly within the U.S.','Mostly Canada','A mix of U.S. and Canada','Other countries too'],
     pricing='Volume pricing is quoted per job: send us the quantity and where the pieces are going and we reply with an exact total in U.S. dollars.',
     single='/send?to=US&cur=USD', single_label='Send a single letter →'),
@@ -55,7 +55,7 @@ COUNTRIES = {
          ('Small businesses','Invoices, statements, renewals and thank-you letters, printed and posted without a printer in the office.'),
          ('Charities, schools and clubs','Appeals, receipts and invitations to a membership list.'),
          ('Marketers','Postcards to a local list, sent in one batch.'),
-         ('Care homes, hospitals and veterans\' groups','Letters and cards to residents, patients and members on a schedule, so no one goes without mail.')],
+         ('Estate agents', 'Just listed and just sold postcards, viewing invitations and market updates, sent to a local list.')],
     dests=['Mostly within the UK','Mostly Canada','A mix of UK and Canada','Other countries too'],
     pricing='Volume pricing is quoted per job: send us the quantity and where the pieces are going and we reply with an exact total in pounds.',
     single='/send?to=GB&cur=GBP', single_label='Send a single letter →'),
@@ -70,7 +70,7 @@ COUNTRIES = {
          ('Small businesses','Invoices, statements, renewals and thank-you letters, printed and posted without a printer in the office.'),
          ('Charities, schools and clubs','Appeals, receipts and invitations to a membership list.'),
          ('Marketers','Postcards to a local list, sent in one batch.'),
-         ('Care homes, hospitals and veterans\' groups','Letters and cards to residents, patients and members on a schedule, so no one goes without mail.')],
+         ('Real estate agents', 'Just listed and just sold postcards, open home invitations and market updates, sent to a neighbourhood list.')],
     dests=['Mostly within Australia','Mostly Canada','A mix of Australia and Canada','Other countries too'],
     pricing='Volume pricing is quoted per job: send us the quantity and where the pieces are going and we reply with an exact total in Australian dollars.',
     single='/send?to=AU&cur=AUD', single_label='Send a single letter →'),
@@ -78,7 +78,7 @@ COUNTRIES = {
 
 PRODUCTS = [
   ('Letters', 'Available now', 'Your text or your own PDF and Word files, printed in black and white or colour, folded and sealed in a window envelope. Every recipient address is checked before printing.'),
-  ('Postcards', 'By quote', 'Postcards printed and mailed in a batch to your list. Tell us the size and quantity and we confirm what we can do and the price before anything prints.'),
+  ('Postcards', 'By quote', 'Postcards printed and mailed in a batch to your list. We can design them in-house, or print your own artwork. Tell us the size and quantity and we confirm what we can do and the price before anything prints.'),
   ('Mailing lists', 'Available now', 'Send a spreadsheet with one row per recipient. We merge names and details into your letter and check each address before it prints.'),
   ('Mail services', 'Where offered', 'Registered, certified or express mail on routes where it is offered, when you need proof of delivery.'),
   ('Scheduled mailings', 'Available now', 'Pick the date your batch goes to print, so notices and renewals leave when they should.'),
@@ -87,7 +87,7 @@ PRODUCTS = [
 STEPS = [
   'Tell us what you need to send, roughly how many pieces, and where they are going.',
   'We reply within one business day with an exact total and a secure payment link. Nothing prints until you agree.',
-  'You send the document and the recipient list. We check every address and look over the batch before printing.',
+  'You send the document and the recipient list, or ask us to design your postcards. We check every address and look over the batch before printing.',
   'Everything is printed and mailed, and we email you when your pieces go out.',
 ]
 
@@ -113,6 +113,7 @@ def build(key):
     faq = [
       ('Is there a minimum order?', 'No. A single letter works from the send page. Batches of ten or more pieces are quoted individually so you get the best total.'),
       ('How long does it take?', 'Pieces go to print within two business days of your approval. Delivery is typically up to two weeks within the destination country and up to four weeks internationally.'),
+      ('Can you design the postcards?', 'Yes. We can design them in-house, so you do not need a designer. Tell us what the postcard is for and send your logo and any photos, and we send a proof for your approval before anything prints. You can also send your own finished artwork.'),
       ('Can I use my own files?', 'Yes. Send PDF or Word files, or plain text, and we lay out and print them. Colour printing is available.'),
       ('Do I need an account?', 'No. We can also set up a business account for regular senders so you can upload batches yourself. Ask when you request your quote.'),
       ('What do you check before printing?', 'Every recipient address is checked for delivery problems, and every batch is reviewed before it is printed. We do not mail threats, scams or illegal content.'),
