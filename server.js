@@ -1175,7 +1175,8 @@ app.use(express.static('public', {
 app.get('/ga.js', (req, res) => {
   const id = process.env.GA4_MEASUREMENT_ID;
   res.setHeader('Content-Type', 'application/javascript');
-  res.setHeader('Cache-Control', 'public, max-age=604800');
+  // Short cache: this file changes when the measurement ID is set or changed on the server.
+  res.setHeader('Cache-Control', 'public, max-age=3600');
   // No measurement ID configured, serve an inert script rather than a stray default property.
   if (!id) return res.send('/* analytics disabled: GA4_MEASUREMENT_ID not set */');
   // GA4 IDs are strictly G-XXXXXXXXXX, reject anything else before injecting into JS.

@@ -130,8 +130,8 @@ def build(key):
 <link rel="preload" as="font" type="font/woff2" href="/fonts/vEFI2_tTDB4M7-auWDN0ahZJW1gb8tc.woff2" crossorigin>
 <link rel="dns-prefetch" href="https://www.googletagmanager.com">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<script src="/ga.js" defer></script>
-<script src="/cookie-consent.js?v=11" defer></script>
+<script src="/ga.js?v=2" defer></script>
+<script src="/cookie-consent.js?v=12" defer></script>
 <title>{esc(c['title'])}</title>
 <meta name="description" content="{esc(c['desc'])}">
 <link rel="canonical" href="{url}">
