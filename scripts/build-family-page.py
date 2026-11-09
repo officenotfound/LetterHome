@@ -4,7 +4,7 @@ Keeps the existing <head>, structured data, FAQ and waitlist form wiring; reuses
 Run from the project root after public/business.html exists:  python3 scripts/build-family-page.py"""
 import re, html, subprocess
 
-OLD = open('/tmp/ml-old.html', encoding='utf-8').read() if False else subprocess.check_output(['git', 'show', 'HEAD:public/monthly-letters.html']).decode('utf-8')
+OLD = open('/tmp/ml-old.html', encoding='utf-8').read() if False else subprocess.check_output(['git', 'show', 'dac014a:public/monthly-letters.html']).decode('utf-8')
 BIZ = open('public/business.html', encoding='utf-8').read()
 
 head = OLD[:OLD.index('<style>')]                                        # everything up to the styles (meta, canonical, JSON-LD)

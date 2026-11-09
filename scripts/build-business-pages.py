@@ -225,6 +225,14 @@ def build(key):
 #form-success{{display:none;grid-column:1/-1;background:var(--kraft);border-left:4px solid var(--red);padding:14px 16px;font-size:15px}}
 .bz-foot{{margin:36px 0 0;font-size:15px;color:var(--ink-muted)}}
 .bz-foot a{{color:var(--red)}}
+.bz-sec-grid{{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px}}
+.bz-cert{{background:var(--paper);border:1px solid var(--line);padding:16px 16px 18px;min-width:0}}
+.bz-cert svg{{width:22px;height:22px;fill:none;stroke:var(--red);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;margin-bottom:8px}}
+.bz-cert strong{{display:block;font-family:'Archivo',sans-serif;font-size:16px;margin-bottom:4px;color:var(--ink)}}
+.bz-cert span{{font-size:13.5px;line-height:1.45;color:var(--ink-muted)}}
+.bz-secnote{{margin:22px 0 0;font-size:14.5px;color:var(--ink-muted);max-width:75ch}}
+@media(max-width:900px){{.bz-sec-grid{{grid-template-columns:repeat(2,minmax(0,1fr))}}}}
+@media(max-width:600px){{.bz-sec-grid{{grid-template-columns:1fr}}}}
 @media(max-width:900px){{.bz-hero-in,.bz-quote{{grid-template-columns:1fr;gap:40px}}.bz-visual{{max-width:380px}}.bz-grid{{grid-template-columns:repeat(2,minmax(0,1fr))}}.bz-steps{{grid-template-columns:repeat(2,minmax(0,1fr))}}}}
 @media(max-width:600px){{.bz-hero{{padding:40px 0 44px}}.bz-sec{{padding:48px 0}}.bz-grid,.bz-uses,.bz-steps,.bz-form{{grid-template-columns:1fr}}.bz-form{{padding:30px 18px 22px}}.bz-price{{padding:22px 20px}}.bz-proof ul{{flex-direction:column}}}}
 </style>
@@ -281,15 +289,27 @@ def build(key):
 </div></section>
 
 <section class="bz-sec alt"><div class="bz-wrap">
+  <div class="bz-head"><h2>Security and privacy</h2><p>Business mail often carries personal, financial or health information. The print and mail facility that produces your pieces reports these compliance standards:</p></div>
+  <div class="bz-sec-grid">
+    <div class="bz-cert"><svg viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.5-3.2 7.6-8 9-4.8-1.4-8-4.5-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg><strong>HIPAA</strong><span>US health information privacy</span></div>
+    <div class="bz-cert"><svg viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.5-3.2 7.6-8 9-4.8-1.4-8-4.5-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg><strong>SOC 2 Type 2</strong><span>Independently audited security controls</span></div>
+    <div class="bz-cert"><svg viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.5-3.2 7.6-8 9-4.8-1.4-8-4.5-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg><strong>PCI DSS</strong><span>Payment card data security</span></div>
+    <div class="bz-cert"><svg viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.5-3.2 7.6-8 9-4.8-1.4-8-4.5-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg><strong>PIPEDA</strong><span>Canadian federal privacy law</span></div>
+    <div class="bz-cert"><svg viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.5-3.2 7.6-8 9-4.8-1.4-8-4.5-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg><strong>PHIPA</strong><span>Ontario health information privacy</span></div>
+  </div>
+  <p class="bz-secnote">These describe the facility that prints and mails your pieces, not Letterhome's website. If your industry needs documentation for a compliance review, ask in your quote request and we will tell you what we can provide.</p>
+</div></section>
+
+<section class="bz-sec"><div class="bz-wrap">
   <div class="bz-price"><div><h2>Pricing</h2><p>{c['pricing']}</p></div><a class="bz-btn" href="#quote">Request a quote</a></div>
 </div></section>
 
-<section class="bz-sec"><div class="bz-wrap bz-faq">
+<section class="bz-sec alt"><div class="bz-wrap bz-faq">
   <div class="bz-head"><h2>Common questions</h2></div>
   {faq_html}
 </div></section>
 
-<section class="bz-sec alt" id="quote"><div class="bz-wrap bz-quote">
+<section class="bz-sec" id="quote"><div class="bz-wrap bz-quote">
   <div>
     <h2>Request a quote</h2>
     <p class="lead">Tell us what you need to send and we will reply within one business day with an exact total.</p>
