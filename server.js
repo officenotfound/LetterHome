@@ -375,8 +375,8 @@ async function sendMail(opts, type = 'general', orderId = null) {
 // Base send price ($6 Canada / $6 United States / $15 elsewhere) is configurable via settings.
 // Optional-extra pricing (cents).
 const FREE_PAGES              = 2;
-const EXTRA_PAGE_CENTS        = 45;
-const EXTRA_PAGE_COLOUR_CENTS = 55;   // colour pages cost more to print
+const EXTRA_PAGE_CENTS        = 55;
+const EXTRA_PAGE_COLOUR_CENTS = 75;   // colour pages cost more to print
 const COLOUR_PRINTING_CENTS   = 100;
 const SCHEDULE_LATER_CENTS    = 0;
 const LARGE_ENVELOPE_CENTS    = 300;
@@ -4019,7 +4019,7 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:48px 36px 32px
 @media(max-width:600px){nav,.main{padding-left:20px!important;padding-right:20px!important}.main{padding-top:40px!important;padding-bottom:80px!important}}
 </style>
 <script>(function(){try{var m=window.matchMedia('(prefers-color-scheme: dark)'),s=function(){document.documentElement.setAttribute('data-theme',m.matches?'dark':'light');};s();if(m.addEventListener)m.addEventListener('change',s);}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
-<link rel="stylesheet" href="/theme.css"><script src="/order-country.js?v=1"></script><link rel="stylesheet" href="/country-order.css?v=2">
+<link rel="stylesheet" href="/theme.css"><script src="/order-country.js?v=1"></script><link rel="stylesheet" href="/country-order.css?v=3">
 </head>
 <body>
 <div id="site-header"></div>
@@ -4555,8 +4555,9 @@ cron.schedule('10 3 * * *', () => {
   occasionReminders();
 });
 
-// ── Thank-you coupon: one single-use 15% code, emailed 14 days after an order is mailed ──
-const THANKYOU_PCT = 15;
+// ── Thank-you coupon: one single-use $0.50-off code, emailed 14 days after an order is mailed ──
+const THANKYOU_CENTS = 50;
+const THANKYOU_OFF = '$0.50';
 const THANKYOU_DELAY_DAYS = 14;
 const THANKYOU_VALID_DAYS = 30;
 
@@ -4574,21 +4575,21 @@ function buildThankYouEmail(order, code, expiresOn) {
   const name   = String(order.sender_name || '').trim().split(/\s+/)[0] || '';
   const hello  = name ? `Hi ${name},` : 'Hello,';
   const esc    = v => String(v || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  const subject = `${THANKYOU_PCT}% off your next letter`;
+  const subject = `${THANKYOU_OFF} off your next letter`;
   return {
     from:    process.env.EMAIL_FROM,
     to:      order.customer_email,
     replyTo: process.env.OPERATOR_EMAIL,
     subject,
     headers: { 'List-Unsubscribe': `<${unsub}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' },
-    text: `${hello}\n\nThanks for sending a letter with Letterhome. Here is ${THANKYOU_PCT}% off your next one:\n\n${code}\n\nUse it at checkout, or open this link and it applies automatically:\n${link}\n\nThe code works once and expires on ${expiresOn}.\n\nLetterhome · ${MAILING_ADDRESS}\nYou're receiving this because you placed an order with us. To stop these emails: ${unsub}`,
+    text: `${hello}\n\nThanks for sending a letter with Letterhome. Here is ${THANKYOU_OFF} off your next one:\n\n${code}\n\nUse it at checkout, or open this link and it applies automatically:\n${link}\n\nThe code works once and expires on ${expiresOn}.\n\nLetterhome · ${MAILING_ADDRESS}\nYou're receiving this because you placed an order with us. To stop these emails: ${unsub}`,
     html: `<!DOCTYPE html><html>
 <body style="font-family:Georgia,serif;background:#ede5d3;padding:40px 20px;color:#2a2a2a;margin:0">
   <div style="max-width:520px;margin:0 auto;background:#faf6ec;border:1px solid rgba(42,42,42,0.12);padding:44px">
-    <h1 style="font-size:26px;font-weight:400;margin:0 0 14px;letter-spacing:-0.02em">${THANKYOU_PCT}% off your next letter</h1>
+    <h1 style="font-size:26px;font-weight:400;margin:0 0 14px;letter-spacing:-0.02em">${THANKYOU_OFF} off your next letter</h1>
     <p style="margin:0 0 18px;font-size:15px;line-height:1.6;color:#3a3835">${esc(hello)}<br>Thanks for sending a letter with Letterhome. Here is a thank-you for your next one.</p>
     <p style="margin:0 0 22px;text-align:center"><span style="display:inline-block;border:1.5px dashed #a8472d;padding:14px 26px;font-family:'Courier New',monospace;font-size:22px;letter-spacing:0.08em;color:#a8472d">${esc(code)}</span></p>
-    <p style="margin:0 0 26px;text-align:center"><a href="${link}" style="display:inline-block;background:#a8472d;color:#faf6ec;padding:15px 30px;font-size:16px;text-decoration:none">Send a letter with ${THANKYOU_PCT}% off</a></p>
+    <p style="margin:0 0 26px;text-align:center"><a href="${link}" style="display:inline-block;background:#a8472d;color:#faf6ec;padding:15px 30px;font-size:16px;text-decoration:none">Send a letter with ${THANKYOU_OFF} off</a></p>
     <p style="margin:0 0 22px;font-size:14px;color:#6b6258;line-height:1.6">The code works once and expires on ${esc(expiresOn)}. Questions? Reply to this email and a person will answer.</p>
     <div style="border-top:1px solid rgba(42,42,42,0.1);padding-top:18px;font-size:12px;color:#968b7d;line-height:1.6">
       <p style="margin:0">You're receiving this because you placed an order with us.</p>
@@ -4638,8 +4639,8 @@ async function thankYouCouponJob() {
         const expiresSql = expires.toISOString().replace('T', ' ').slice(0, 19);
         const expiresOn  = expires.toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'America/Vancouver' });
         code = newThankYouCode();
-        db.prepare(`INSERT INTO discount_codes (code, description, discount_pct, max_uses, expires_at)
-                    VALUES (?, ?, ?, 1, ?)`).run(code, `Thank-you coupon for order #${order.id}`, THANKYOU_PCT, expiresSql);
+        db.prepare(`INSERT INTO discount_codes (code, description, discount_cents, max_uses, expires_at)
+                    VALUES (?, ?, ?, 1, ?)`).run(code, `Thank-you coupon for order #${order.id}`, THANKYOU_CENTS, expiresSql);
         await sendMail(buildThankYouEmail(order, code, expiresOn), 'thankyou_coupon', order.id);
         mailed = true;
         sent++;

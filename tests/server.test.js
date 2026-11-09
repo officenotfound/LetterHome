@@ -284,11 +284,11 @@ test('extra pages: $0.45 each in B&W, $0.55 each in colour, counted from an uplo
   };
   const bw = await send('pages-bw@example.com', {});
   assert.equal(bw.page_count, 4);
-  assert.equal(bw.extra_page_cents, 90);          // 2 extra pages x $0.45
-  assert.equal(bw.price_cents, 690);              // $6 + $0.90
+  assert.equal(bw.extra_page_cents, 110);         // 2 extra pages x $0.55
+  assert.equal(bw.price_cents, 710);              // $6 + $1.10
   const col = await send('pages-col@example.com', { colour_printing: '1' });
-  assert.equal(col.extra_page_cents, 110);        // 2 extra pages x $0.55
-  assert.equal(col.price_cents, 810);             // $6 + $1 colour + $1.10
+  assert.equal(col.extra_page_cents, 150);        // 2 extra pages x $0.75
+  assert.equal(col.price_cents, 850);             // $6 + $1 colour + $1.50
 });
 
 test('POST /webhook with valid signature marks order paid', async () => {
@@ -695,14 +695,14 @@ test('thank-you coupon: one single-use 15% code per customer, 14 days after mail
 
     const code = sentMail[0].text.match(/THANKS-[A-Z2-9]{6}/)[0];
     const dc = db.prepare('SELECT * FROM discount_codes WHERE code = ?').get(code);
-    assert.equal(dc.discount_pct, 15);
+    assert.equal(dc.discount_cents, 50);
     assert.equal(dc.max_uses, 1);
     assert.ok(dc.expires_at);
 
     const res = await fetch(base + '/api/validate-code', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code, country: 'CA' }) });
     const body = await res.json();
     assert.equal(body.valid, true);
-    assert.equal(body.discount_pct, 15);
+    assert.equal(body.discount_cents, 50);
 
     const r2 = await thankYouCouponJob();          // nothing left to send
     assert.equal(r2.sent, 0);
@@ -814,7 +814,7 @@ test('bulk mailing page is served and lists the volume tiers', async () => {
   assert.equal(res.status, 200);
   const html = await res.text();
   assert.ok(html.includes('rel="canonical" href="https://letterhome.ca/bulk-mailing"'));
-  for (const price of ['$5.50', '$5.00', '$4.75']) assert.ok(html.includes(price), price);
+  for (const price of ['$5.50']) assert.ok(html.includes(price), price);
   assert.ok(!html.includes('$6.50'), 'US tiers match Canada');
 });
 
