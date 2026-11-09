@@ -289,7 +289,7 @@ def build(key):
 </div></section>
 
 <section class="bz-sec alt"><div class="bz-wrap">
-  <div class="bz-head"><h2>Security and privacy</h2><p>Business mail often carries personal, financial or health information. The print and mail facility that produces your pieces reports these compliance standards:</p></div>
+  <div class="bz-head"><h2>Security and privacy</h2><p>Business mail often carries personal, financial or health information. The print and mail facility that produces your pieces follows these compliance standards:</p></div>
   <div class="bz-sec-grid">
     <div class="bz-cert"><svg viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.5-3.2 7.6-8 9-4.8-1.4-8-4.5-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg><strong>HIPAA</strong><span>US health information privacy</span></div>
     <div class="bz-cert"><svg viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.5-3.2 7.6-8 9-4.8-1.4-8-4.5-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg><strong>SOC 2 Type 2</strong><span>Independently audited security controls</span></div>
