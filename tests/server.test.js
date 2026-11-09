@@ -1584,3 +1584,11 @@ test('Spanish business page: served at letterhome.us/es/business, Spanish canoni
     assert.ok((await siteGet('letterhome.us', '/sitemap.xml')).body.includes('<loc>https://letterhome.us/es/business</loc>'));
   } finally { setFlag('us_domain_live', 'false'); }
 });
+
+test('www.letterhome.ca redirects to the bare domain, and the server does not announce Express', async () => {
+  const r = await siteGet('www.letterhome.ca', '/about?x=1');
+  assert.equal(r.status, 301);
+  assert.equal(r.location, 'https://letterhome.ca/about?x=1');
+  const res = await fetch(`${base}/`);
+  assert.equal(res.headers.get('x-powered-by'), null);
+});

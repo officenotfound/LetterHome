@@ -73,7 +73,8 @@ function createSites({ getSetting, localSlugs, publicDir }) {
   function middleware(req, res, next) {
     const h = hostOf(req);
 
-    // www.<country domain> → the bare country domain
+    // www.<any of our domains> → the bare domain, so each page has one address
+    if (h === 'www.' + PRIMARY) return res.redirect(301, `https://${PRIMARY}${req.originalUrl}`);
     for (const site of SITES) if (h === 'www.' + site.host) return res.redirect(301, `https://${site.host}${req.originalUrl}`);
 
     const site = siteOfHost(h);

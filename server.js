@@ -161,6 +161,7 @@ app.use(session({
   },
 }));
 
+app.disable('x-powered-by');   // don't announce the server software
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
