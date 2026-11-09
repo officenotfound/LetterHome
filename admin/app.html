@@ -2420,7 +2420,7 @@ function renderVisitors(cf, s, recent) {
     let cfHtml = '';
   if (!cf || cf.configured === false) {
     cfHtml = `<div class="card" style="margin-bottom:24px;padding:20px 24px;color:#6b6b6b;font-size:13px">
-      <strong>Cloudflare Analytics</strong> — not configured. Add <code>CF_API_TOKEN</code> and <code>CF_ZONE_ID</code> to your .env and restart (the country domains use <code>CF_ZONE_ID_US</code> and <code>CF_ZONE_ID_UK</code>).${cf && cf.error ? ' ' + esc(cf.error) : ''}</div>`;
+      <strong>Cloudflare Analytics</strong> — not configured. ${cf && cf.missing && cf.missing.length ? 'Missing on the server: <code>' + cf.missing.map(esc).join('</code>, <code>') + '</code>. Add it to <code>.env</code> and run <code>pm2 reload letterhome --update-env</code>.' : 'Add <code>CF_API_TOKEN</code> and <code>CF_ZONE_ID</code> to your .env and restart (the country domains use <code>CF_ZONE_ID_US</code> and <code>CF_ZONE_ID_UK</code>).'}</div>`;
   } else if (cf.error) {
     cfHtml = `<div class="card" style="margin-bottom:24px;padding:20px 24px;color:#e63946;font-size:13px">
       Cloudflare error: ${esc(cf.error)}</div>`;

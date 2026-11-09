@@ -4303,7 +4303,11 @@ app.get('/api/admin/cloudflare/analytics', requireAdmin, async (req, res) => {
   const zones = cfZones();
   const site  = ['ca', 'us', 'uk'].includes(req.query.site) ? req.query.site : 'all';
   const ids   = site === 'all' ? Object.entries(zones).filter(([, z]) => z) : [[site, zones[site]]].filter(([, z]) => z);
-  if (!token || !ids.length) return res.status(503).json({ error: site === 'all' ? 'Cloudflare not configured' : `No Cloudflare zone ID set for this site (CF_ZONE_ID${site === 'ca' ? '' : '_' + site.toUpperCase()})`, configured: false });
+  if (!token || !ids.length) {
+    // Answered with 200 so the admin screen can say exactly which setting is missing.
+    const missing = [!token && 'CF_API_TOKEN', ...Object.entries(zones).filter(([k, z]) => !z && (site === 'all' || site === k)).map(([k]) => k === 'ca' ? 'CF_ZONE_ID' : `CF_ZONE_ID_${k.toUpperCase()}`)].filter(Boolean);
+    return res.json({ configured: false, missing, error: `Missing in .env: ${missing.join(', ')}` });
+  }
 
   const days  = Math.min(30, Math.max(1, parseInt(req.query.days) || 7));
   const since = new Date(Date.now() - days * 86400 * 1000).toISOString().slice(0, 10);
