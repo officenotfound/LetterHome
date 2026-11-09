@@ -43,4 +43,14 @@
       row('Information', [['/about', 'About', 'footer.about'], ['/contact', 'Contact', 'nav.contact'], ['/guides', 'Mailing guides', 'footer.guides'], ['/terms', 'Terms', 'footer.terms'], ['/refunds', 'Refund policy', 'footer.refunds'], ['/accessibility', 'Accessibility', 'footer.accessibility']]) +
       '</div>' +
     '</div><div class="lh-f-bar"><div class="lh-f-in2"><span>© 2026 Letterhome</span>' + usDomain + '<a href="/privacy" data-i18n="footer.privacy">Privacy</a><a href="https://jeffbuilds.ca" target="_blank" rel="noopener">Jeffbuilds</a></div></div></footer>';
+  // The "home" in the footer wordmark takes the exact colour of the header's, on every page, theme and country look.
+  function syncAccent() {
+    var src = document.querySelector('nav .logo-accent, header .logo-accent, .logo-accent'), em = document.querySelector('.lh-f-word em');
+    if (!src || !em) return;
+    var c = getComputedStyle(src).color;
+    if (c) em.style.setProperty('color', c, 'important');
+  }
+  syncAccent();
+  window.addEventListener('load', syncAccent);
+  try { new MutationObserver(function () { setTimeout(syncAccent, 50); }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'data-country', 'class'] }); } catch (e) {}
 })();

@@ -338,7 +338,7 @@ def build(key):
 </main>
 
 <footer id="site-footer"></footer>
-<script src="/footer.js?v=18" defer></script>
+<script src="/footer.js?v=19" defer></script>
 <script src="/theme.js?v=4" defer></script>
 <script src="/lang.js?v=54" defer></script>
 <script>
