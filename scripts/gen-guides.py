@@ -146,7 +146,7 @@ footer{{background:var(--ink);color:rgba(255,255,255,0.5);padding:40px 36px;marg
 </head>
 <body>
 <a href="#main-content" class="skip-link" style="position:absolute;left:-9999px;top:4px;z-index:9999;background:#a8472d;color:#faf6ec;padding:8px 16px;font-size:14px;font-family:'Noto Sans',system-ui,sans-serif;text-decoration:none;border-radius:2px" onfocus="this.style.left='4px'" onblur="this.style.left='-9999px'">Skip to main content</a>
-<div id="site-header"></div>
+<div id="site-header"><nav aria-label="Main"><a href="/">Letterhome</a> · <a href="/send">Send a letter</a> · <a href="/track">Track an order</a> · <a href="/guides">Guides</a> · <a href="/business">Business mail</a></nav></div>
 <script src="/header.js?v=6"></script>
 
 <div class="hero" id="main-content">
@@ -185,7 +185,7 @@ footer{{background:var(--ink);color:rgba(255,255,255,0.5);padding:40px 36px;marg
   </div>
 </div>
 
-<footer id="site-footer"></footer>
+<footer id="site-footer"><nav aria-label="Site links" style="padding:24px;font-size:14px"><a href="/about">About</a> · <a href="/careers">Careers</a> · <a href="/contact">Contact</a> · <a href="/guides">Mailing guides</a> · <a href="/business">Business mail</a> · <a href="/monthly-letters">Monthly letters</a> · <a href="/terms">Terms</a> · <a href="/privacy">Privacy</a> · <a href="/refunds">Refund policy</a> · <a href="https://letterhome.ca/">Canada</a> · <a href="/us">United States</a> · <a href="/uk">United Kingdom</a> · <a href="/au">Australia</a></nav></footer>
 <script src="/footer.js" defer></script>
 <script src="/theme.js?v=2" defer></script>
 </body>
