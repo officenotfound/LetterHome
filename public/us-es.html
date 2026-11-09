@@ -354,7 +354,7 @@ body.c-us .cta-block h2{font-family:inherit;font-weight:800;color:#fff}
 <body class="c-us">
 <a href="#main-content" class="skip-link" style="position:absolute;left:-9999px;top:4px;z-index:9999;background:#a8472d;color:#faf6ec;padding:8px 16px;font-size:14px;font-family:Georgia,serif;text-decoration:none;border-radius:2px" onfocus="this.style.left='4px'" onblur="this.style.left='-9999px'">Saltar al contenido principal</a>
 <div id="site-header"></div>
-<script src="/header.js?v=13"></script>
+<script src="/header.js?v=14"></script>
 
 <div class="rm-hero" id="main-content"><div class="rm-in">
   <div><h1>Envíe una carta,<br><span>sin ir al correo.</span></h1><ul class="rm-points"><li>Escríbala en línea, nosotros la imprimimos y la enviamos</li><li>A alguien en EE. UU. o a su familia en el extranjero</li><li>Cada dirección se verifica antes de imprimir</li><li>Precios en dólares estadounidenses, sin timbres ni impresora</li></ul><p class="rm-note">Las cartas empiezan en $3.00. El monto exacto aparece al pagar.</p></div>
@@ -372,8 +372,8 @@ body.c-us .cta-block h2{font-family:inherit;font-weight:800;color:#fff}
 <h2>Cuánto cuesta</h2>
 <div class="c-grid">
   <div class="c-tile" data-dest="US"><div class="to">Dentro de EE. UU.</div><div class="amt">$3.00</div><div class="cad"></div></div>
-  <div class="c-tile" data-dest="CA"><div class="to">A Canadá</div><div class="amt">$5</div><div class="cad"></div></div>
-  <div class="c-tile" data-dest="GB"><div class="to">Al Reino Unido</div><div class="amt">$6</div><div class="cad"></div></div>
+  <div class="c-tile" data-dest="CA"><div class="to">A Canadá</div><div class="amt">$5.00</div><div class="cad"></div></div>
+  <div class="c-tile" data-dest="GB"><div class="to">Al Reino Unido</div><div class="amt">$6.00</div><div class="cad"></div></div>
   <div class="c-tile" data-dest="AU"><div class="to">A Australia</div><div class="amt">$6.50</div><div class="cad"></div></div>
   <div class="c-tile" data-dest="IN"><div class="to">A cualquier otro país</div><div class="amt">$13.50</div><div class="cad"></div></div>
 </div>
@@ -423,10 +423,10 @@ body.c-us .cta-block h2{font-family:inherit;font-weight:800;color:#fff}
 <script src="/theme.js?v=4" defer></script>
 <script src="/lang.js?v=54" defer></script>
 
-<script src="/country.js?v=21" defer></script>
+<script src="/country.js?v=22" defer></script>
 <script>
 (function () {
-  var P = {CA:'$5',US:'$3.00',GB:'$6',AU:'$6.50',XX:'$13.50'}, sel = document.getElementById('rm-dest'), price = document.getElementById('rm-price'), go = document.getElementById('rm-go');
+  var P = {CA:'$5.00',US:'$3.00',GB:'$6.00',AU:'$6.50',XX:'$13.50'}, sel = document.getElementById('rm-dest'), price = document.getElementById('rm-price'), go = document.getElementById('rm-go');
   function update() {
     var v = sel.value;
     go.setAttribute('href', (v === 'XX' ? '/send?' : '/send?to=' + v + '&') + 'cur=USD');

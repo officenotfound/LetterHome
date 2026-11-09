@@ -377,7 +377,7 @@ body.c-us .cta-block h2{font-family:inherit;font-weight:800;color:#fff}
 <body class="c-us">
 <a href="#main-content" class="skip-link" style="position:absolute;left:-9999px;top:4px;z-index:9999;background:#a8472d;color:#faf6ec;padding:8px 16px;font-size:14px;font-family:Georgia,serif;text-decoration:none;border-radius:2px" onfocus="this.style.left='4px'" onblur="this.style.left='-9999px'">Skip to main content</a>
 <div id="site-header"></div>
-<script src="/header.js?v=13"></script>
+<script src="/header.js?v=14"></script>
 
 <div class="rm-hero" id="main-content"><div class="rm-in">
   <div><h1>A real letter,<br><span>mailed for you.</span></h1><ul class="rm-points"><li>Type it online, we print it and mail it</li><li>To someone in the U.S. or to family abroad</li><li>Every address verified before printing</li><li>Prices in U.S. dollars, no stamps or printer needed</li></ul><p class="rm-note">Letters start at $3.00. The exact amount appears at checkout.</p></div>
@@ -396,7 +396,7 @@ body.c-us .cta-block h2{font-family:inherit;font-weight:800;color:#fff}
 
 <h2>Where is your letter going?</h2>
 <p>Pick a route for prices and the address format. We send to most countries, and the order page shows the exact price before you pay.</p>
-<div class="rm-routes"><a class="rm-r" href="/send?to=US"><small>Within the U.S.</small><b id="p-us">$3.00</b><i id="c-us"></i><u>Send inside the U.S. →</u></a><a class="rm-r" href="/us/how-to-send-mail-to-canada-from-us"><small>To Canada</small><b id="p-ca">$5</b><i id="c-ca"></i><u>Guide: letters to Canada →</u></a><a class="rm-r" href="/us/how-to-send-mail-to-uk-from-us"><small>To the UK</small><b id="p-gb">$6</b><i id="c-gb"></i><u>Guide: letters to the UK →</u></a><a class="rm-r" href="/us/how-to-send-mail-to-australia-from-us"><small>To Australia</small><b id="p-au">$6.50</b><i id="c-au"></i><u>Guide: letters to Australia →</u></a><a class="rm-r" href="/send"><small>Any other country</small><b id="p-in">$13.50</b><i id="c-in"></i><u>Choose any country →</u></a></div>
+<div class="rm-routes"><a class="rm-r" href="/send?to=US"><small>Within the U.S.</small><b id="p-us">$3.00</b><i id="c-us"></i><u>Send inside the U.S. →</u></a><a class="rm-r" href="/us/how-to-send-mail-to-canada-from-us"><small>To Canada</small><b id="p-ca">$5.00</b><i id="c-ca"></i><u>Guide: letters to Canada →</u></a><a class="rm-r" href="/us/how-to-send-mail-to-uk-from-us"><small>To the UK</small><b id="p-gb">$6.00</b><i id="c-gb"></i><u>Guide: letters to the UK →</u></a><a class="rm-r" href="/us/how-to-send-mail-to-australia-from-us"><small>To Australia</small><b id="p-au">$6.50</b><i id="c-au"></i><u>Guide: letters to Australia →</u></a><a class="rm-r" href="/send"><small>Any other country</small><b id="p-in">$13.50</b><i id="c-in"></i><u>Choose any country →</u></a></div>
 <p class="c-note">Where our U.S. printing is running, your letter is printed and mailed inside the U.S. Otherwise it's printed in Canada and mailed from there, which takes longer. The order page tells you which one applies, along with the price and delivery time, before you pay.</p>
 <p class="c-note">Each price covers one letter with printing, the envelope and postage. This is the price you pay at checkout. The first 2 black and white pages are included. Color printing is $0.50 extra, and each extra page is $0.50 ($1 in color).</p>
 
@@ -441,7 +441,7 @@ body.c-us .cta-block h2{font-family:inherit;font-weight:800;color:#fff}
 <script src="/lang.js?v=54" defer></script>
 <script>
 (function () {
-  var P = {CA:'$5',US:'$3.00',GB:'$6',AU:'$6.50',XX:'$13.50'}, sel = document.getElementById('rm-dest'), price = document.getElementById('rm-price'), go = document.getElementById('rm-go');
+  var P = {CA:'$5.00',US:'$3.00',GB:'$6.00',AU:'$6.50',XX:'$13.50'}, sel = document.getElementById('rm-dest'), price = document.getElementById('rm-price'), go = document.getElementById('rm-go');
   function update() {
     var v = sel.value;
     go.setAttribute('href', (v === 'XX' ? '/send?' : '/send?to=' + v + '&') + 'cur=USD');
@@ -450,6 +450,6 @@ body.c-us .cta-block h2{font-family:inherit;font-weight:800;color:#fff}
   sel.addEventListener('change', update); update();
 })();
 </script>
-<script src="/country.js?v=21" defer></script>
+<script src="/country.js?v=22" defer></script>
 </body>
 </html>

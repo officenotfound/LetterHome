@@ -15,7 +15,7 @@
 
   var right = document.querySelector('.nav-right');
   var alt = root.getAttribute('data-alt');
-  if (right && alt) {
+  if (right && alt && !right.querySelector('.lang-link, .lang-toggle')) {
     var a = document.createElement('a');
     a.className = 'lang-link';
     a.href = alt;

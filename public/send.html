@@ -480,7 +480,7 @@ textarea.field-error { border-color: var(--red) !important; }
 <a data-i18n-html="x.cc367b544f" href="#main-content" class="skip-link" style="position:absolute;left:-9999px;top:4px;z-index:9999;background:#a8472d;color:#faf6ec;padding:8px 16px;font-size:14px;font-family:Georgia,serif;text-decoration:none;border-radius:2px" onfocus="this.style.left='4px'" onblur="this.style.left='-9999px'">Skip to main content</a>
 
 <div id="site-header"></div>
-<script src="/header.js?v=13"></script>
+<script src="/header.js?v=14"></script>
 
 <!-- PROGRESS -->
 <div class="progress-wrap" id="main-content" role="group" aria-label="Order form step 1 of 3">
@@ -1027,7 +1027,7 @@ new MutationObserver(() => { _svcDest = null; if (typeof updatePricing === 'func
 // Fixed-price orders from the US, UK and Australia pages: ?cur=USD|GBP|AUD, remembered for this visit.
 let _cur = null, _curCfg = null, _curRate = 1;
 function moneyLabel(cents) {
-  const v = (cents / 100).toFixed(cents % 100 ? 2 : 0);
+  const v = (cents / 100).toFixed(2);
   const fr = document.documentElement.getAttribute('data-lang') === 'fr';
   const code = _curCfg ? _curCfg.code : 'CAD';
   if (code === 'GBP') return fr ? v.replace('.', ',') + '\u00a0£' : '£' + v;
@@ -1074,7 +1074,7 @@ function renderMailServices(dest) {
     txt.append(t, s); lab.append(inp, txt); list.appendChild(lab);
   };
   row('', LH_T('send.svc.standard'), '', LH_T('send.svc.standard.sub'));
-  keys.forEach(k => row(k, LH_T('send.svc.' + k), '+$' + (services[k].cents / 100).toFixed(services[k].cents % 100 ? 2 : 0), LH_T('send.svc.' + k + '.sub')));
+  keys.forEach(k => row(k, LH_T('send.svc.' + k), '+$' + (services[k].cents / 100).toFixed(2), LH_T('send.svc.' + k + '.sub')));
 }
 function selectedMailService() {
   const el = document.querySelector('input[name="mail_service"]:checked');
@@ -1132,7 +1132,7 @@ function updatePricing() {
     noteLocal.style.display = extraLocal.length ? 'block' : 'none';
     document.getElementById('dest-note-local-list').textContent = extraLocal
       .map(([cc, d]) => {
-        const n = LH_T('country.' + cc), amt = (d.price_cents / 100).toFixed(d.price_cents % 100 ? 2 : 0);
+        const n = LH_T('country.' + cc), amt = (d.price_cents / 100).toFixed(2);
         const fr = document.documentElement.getAttribute('data-lang') === 'fr';
         return (n === 'country.' + cc ? d.name : n) + ' ' + (fr ? amt.replace('.', ',') + '\u00a0$' : '$' + amt);
       }).join(' · ');
@@ -1145,7 +1145,7 @@ function updatePricing() {
       : Math.round((_appliedDiscount.discount_cents || 0) * _curRate);
   }
   const price = Math.max(50, basePrice + addonCents - discount);
-  const _pv = (price / 100).toFixed(price % 100 === 0 ? 0 : 2), _sym = _curCfg ? _curCfg.symbol : '$';
+  const _pv = (price / 100).toFixed(2), _sym = _curCfg ? _curCfg.symbol : '$';
   const priceStr = document.documentElement.getAttribute('data-lang') === 'fr' ? _pv.replace('.', ',') + '\u00a0' + _sym : _sym + _pv;
   document.getElementById('preview-price').textContent   = priceStr;
   const _tb = document.getElementById('total-bar-amt'); if (_tb) _tb.textContent = moneyLabel(price);
@@ -1717,7 +1717,7 @@ async function applyDiscountCode() {
       _curRate = cfg.fx_display?.[wantCur]?.rate || 1;
       EXTRA_PAGE_CENTS = _curCfg.page; EXTRA_PAGE_COLOUR_CENTS = _curCfg.pageColour; COLOUR_PRINTING_CENTS = _curCfg.colour;
       document.querySelectorAll('#r-country option').forEach(opt => {
-        const amt = ((_curCfg.dest[opt.value] ?? _curCfg.other) / 100), v = amt.toFixed(amt % 1 ? 2 : 0);
+        const amt = ((_curCfg.dest[opt.value] ?? _curCfg.other) / 100), v = amt.toFixed(2);
         opt._en = (opt._en ?? opt.textContent).replace(/\$\d+(?:\.\d+)? CAD/, _curCfg.code === 'GBP' ? '£' + v : '$' + v + ' ' + _curCfg.code);
         opt.textContent = opt._en;
       });
@@ -1730,7 +1730,7 @@ async function applyDiscountCode() {
       // Keep the recipient dropdown's price labels in step with the live per-destination prices.
       if (!_curCfg) Object.entries(cfg.destinations).forEach(([cc, d]) => {
         document.querySelectorAll(`#r-country option[value="${cc}"]`).forEach(opt => {
-          opt.textContent = opt.textContent.replace(/\$\d+(?:\.\d+)? CAD/, '$' + (d.price_cents / 100).toFixed(d.price_cents % 100 ? 2 : 0) + ' CAD');
+          opt.textContent = opt.textContent.replace(/\$\d+(?:\.\d+)? CAD/, '$' + (d.price_cents / 100).toFixed(2) + ' CAD');
         });
       });
     }

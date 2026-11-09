@@ -4068,7 +4068,7 @@ function buildRecoveryEmail(order) {
   const esc = v => String(v || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   const base      = orderBase(order) || '';
   const link      = order.status_token ? `${base}/resume/${order.status_token}` : `${base}/send`;
-  const total     = (order.price_cents / 100).toFixed(order.price_cents % 100 === 0 ? 0 : 2);
+  const total     = (order.price_cents / 100).toFixed(2);
   // The recipient name is typed by whoever started the order, who may not own this email address, so it never
   // goes into a subject line or body as-is: short, no links, no digit runs, no control characters.
   const safeName  = (n => (/(https?:|www\.|@|\.[a-z]{2,}\/|\d{4,})/i.test(n) ? '' : n))(String(order.recipient_name || '').replace(/[\u0000-\u001f\u007f]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 40));
@@ -4698,7 +4698,7 @@ function buildCartOfferEmail(order, code, pct, expiresOn) {
   const name   = String(order.sender_name || '').trim().split(/\s+/)[0] || '';
   const hello  = name ? `Hi ${name},` : 'Hello,';
   const esc    = v => String(v || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  const money  = c => '$' + (c / 100).toFixed(c % 100 === 0 ? 0 : 2);
+  const money  = c => '$' + (c / 100).toFixed(2);
   const was    = order.price_cents;
   const now    = Math.max(50, was - Math.round(was * pct / 100));
   const toLine = [order.recipient_name, [order.recipient_city, order.destination_country].filter(Boolean).join(', ')].filter(Boolean).join(' · ');

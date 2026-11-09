@@ -370,7 +370,7 @@ body.c-au .cta-block h2{font-family:inherit;font-weight:800;color:#fff}
 <body class="c-au">
 <a href="#main-content" class="skip-link" style="position:absolute;left:-9999px;top:4px;z-index:9999;background:#a8472d;color:#faf6ec;padding:8px 16px;font-size:14px;font-family:Georgia,serif;text-decoration:none;border-radius:2px" onfocus="this.style.left='4px'" onblur="this.style.left='-9999px'">Skip to main content</a>
 <div id="site-header"></div>
-<script src="/header.js?v=13"></script>
+<script src="/header.js?v=14"></script>
 
 <div class="rm-hero rm-center" id="main-content"><div class="rm-in">
   <div><h1>A proper letter,<br><span>posted for you.</span></h1><ul class="rm-points"><li>Type it online, we print it and post it</li><li>To someone in Australia or to family abroad</li><li>Every address verified before printing</li><li>Prices in Australian dollars, no stamps or printer needed</li></ul><p class="rm-note">Letters start at $3.50. The exact amount shows at checkout.</p></div>
@@ -389,7 +389,7 @@ body.c-au .cta-block h2{font-family:inherit;font-weight:800;color:#fff}
 
 <h2>Where is your letter going?</h2>
 <p>Pick a route for prices and the address format. We send to most countries, and the order page shows the exact price before you pay.</p>
-<div class="rm-routes"><a class="rm-r" href="/send?to=AU"><small>Within Australia</small><b id="p-au">$7.50</b><i id="c-au"></i><u>Send inside Australia →</u></a><a class="rm-r" href="/au/how-to-send-mail-to-canada-from-au"><small>To Canada</small><b id="p-ca">$6.50</b><i id="c-ca"></i><u>Guide: letters to Canada →</u></a><a class="rm-r" href="/au/how-to-send-mail-to-usa-from-au"><small>To the US</small><b id="p-us">$3.50</b><i id="c-us"></i><u>Guide: letters to the US →</u></a><a class="rm-r" href="/au/how-to-send-mail-to-uk-from-au"><small>To the UK</small><b id="p-gb">$8</b><i id="c-gb"></i><u>Guide: letters to the UK →</u></a><a class="rm-r" href="/send"><small>Any other country</small><b id="p-in">$19.50</b><i id="c-in"></i><u>Choose any country →</u></a></div>
+<div class="rm-routes"><a class="rm-r" href="/send?to=AU"><small>Within Australia</small><b id="p-au">$7.50</b><i id="c-au"></i><u>Send inside Australia →</u></a><a class="rm-r" href="/au/how-to-send-mail-to-canada-from-au"><small>To Canada</small><b id="p-ca">$6.50</b><i id="c-ca"></i><u>Guide: letters to Canada →</u></a><a class="rm-r" href="/au/how-to-send-mail-to-usa-from-au"><small>To the US</small><b id="p-us">$3.50</b><i id="c-us"></i><u>Guide: letters to the US →</u></a><a class="rm-r" href="/au/how-to-send-mail-to-uk-from-au"><small>To the UK</small><b id="p-gb">$8.00</b><i id="c-gb"></i><u>Guide: letters to the UK →</u></a><a class="rm-r" href="/send"><small>Any other country</small><b id="p-in">$19.50</b><i id="c-in"></i><u>Choose any country →</u></a></div>
 <p class="c-note">Letters inside Australia are printed and posted locally.</p>
 <p class="c-note">Each price covers one letter with printing, the envelope and postage. This is the price you pay at checkout. The first 2 black and white pages are included. Colour printing is $1 extra, and each extra page is $1 ($1 in colour).</p>
 
@@ -434,7 +434,7 @@ body.c-au .cta-block h2{font-family:inherit;font-weight:800;color:#fff}
 <script src="/lang.js?v=54" defer></script>
 <script>
 (function () {
-  var P = {CA:'$6.50',US:'$3.50',GB:'$8',AU:'$7.50',XX:'$19.50'}, sel = document.getElementById('rm-dest'), price = document.getElementById('rm-price'), go = document.getElementById('rm-go');
+  var P = {CA:'$6.50',US:'$3.50',GB:'$8.00',AU:'$7.50',XX:'$19.50'}, sel = document.getElementById('rm-dest'), price = document.getElementById('rm-price'), go = document.getElementById('rm-go');
   function update() {
     var v = sel.value;
     go.setAttribute('href', (v === 'XX' ? '/send?' : '/send?to=' + v + '&') + 'cur=AUD');
@@ -443,6 +443,6 @@ body.c-au .cta-block h2{font-family:inherit;font-weight:800;color:#fff}
   sel.addEventListener('change', update); update();
 })();
 </script>
-<script src="/country.js?v=21" defer></script>
+<script src="/country.js?v=22" defer></script>
 </body>
 </html>
