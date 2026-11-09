@@ -1485,3 +1485,27 @@ test('business pages: one per site, own canonical, quote form works, and the cou
     assert.ok(us.body.includes('hreflang="en-GB" href="https://letterhome.co.uk/business"'));
   } finally { setFlag('us_domain_live', 'false'); setFlag('uk_domain_live', 'false'); }
 });
+
+test('admin visitor stats: page views are tagged with their domain and can be filtered by site', async () => {
+  setFlag('us_domain_live', 'true'); setFlag('uk_domain_live', 'true');
+  try {
+    db.prepare('DELETE FROM page_views').run();
+    await siteGet('letterhome.us', '/');
+    await siteGet('letterhome.co.uk', '/business');
+    await fetch(`${base}/about`);
+    await fetch(`${base}/from-uk`, { redirect: 'manual' });
+    await fetch(`${base}/no-such-page-here`);
+    await new Promise(r => setTimeout(r, 50));
+    const rows = db.prepare('SELECT site, path FROM page_views ORDER BY id').all();
+    assert.deepEqual(rows.map(r => r.site + ' ' + r.path), ['us /', 'uk /business', 'ca /about'], 'the visitor-facing path and domain are stored; redirects and 404s are not counted');
+    const { cookie } = await loginAdmin();
+    const get = q => fetch(`${base}/api/admin/visitors/stats${q}`, { headers: { Cookie: cookie } }).then(r => r.json());
+    assert.equal((await get('')).total, 3);
+    assert.equal((await get('?site=us')).total, 1);
+    assert.equal((await get('?site=uk')).topPages[0].path, '/business');
+    assert.equal((await get('?site=ca')).total, 1);
+    assert.equal((await get('?site=bogus')).total, 3, 'an unknown site falls back to all sites');
+    const recent = await fetch(`${base}/api/admin/visitors/recent?site=us`, { headers: { Cookie: cookie } }).then(r => r.json());
+    assert.deepEqual(recent.map(r => r.site), ['us']);
+  } finally { setFlag('us_domain_live', 'false'); setFlag('uk_domain_live', 'false'); }
+});

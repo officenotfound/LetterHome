@@ -2397,15 +2397,19 @@ const FLAG_EMOJI = cc => {
 };
 
 let visitorsCFDays = 7;
+let visitorsSite = 'all';   // all | ca | us | uk
+const VISITOR_SITES = [['all', 'All sites'], ['ca', 'letterhome.ca'], ['us', 'letterhome.us'], ['uk', 'letterhome.co.uk']];
 
-async function showVisitors(cfDays) {
-  if (cfDays !== undefined) visitorsCFDays = cfDays;
+async function showVisitors(cfDays, site) {
+  if (cfDays !== undefined && cfDays !== null) visitorsCFDays = cfDays;
+  if (site) visitorsSite = site;
+  const q = visitorsSite === 'all' ? '' : `site=${visitorsSite}`;
   setTitle('Visitors');
   setMain('<div class="empty">Loading…</div>');
   const [cf, dbStats, recent] = await Promise.all([
-    api(`/api/admin/cloudflare/analytics?days=${visitorsCFDays}`),
-    api('/api/admin/visitors/stats'),
-    api('/api/admin/visitors/recent?limit=50'),
+    api(`/api/admin/cloudflare/analytics?days=${visitorsCFDays}${q ? '&' + q : ''}`),
+    api(`/api/admin/visitors/stats${q ? '?' + q : ''}`),
+    api(`/api/admin/visitors/recent?limit=50${q ? '&' + q : ''}`),
   ]);
   renderVisitors(cf, dbStats, recent || []);
 }
@@ -2416,7 +2420,7 @@ function renderVisitors(cf, s, recent) {
     let cfHtml = '';
   if (!cf || cf.configured === false) {
     cfHtml = `<div class="card" style="margin-bottom:24px;padding:20px 24px;color:#6b6b6b;font-size:13px">
-      <strong>Cloudflare Analytics</strong> — not configured. Add <code>CF_API_TOKEN</code> and <code>CF_ZONE_ID</code> to your .env and restart.</div>`;
+      <strong>Cloudflare Analytics</strong> — not configured. Add <code>CF_API_TOKEN</code> and <code>CF_ZONE_ID</code> to your .env and restart (the country domains use <code>CF_ZONE_ID_US</code> and <code>CF_ZONE_ID_UK</code>).${cf && cf.error ? ' ' + esc(cf.error) : ''}</div>`;
   } else if (cf.error) {
     cfHtml = `<div class="card" style="margin-bottom:24px;padding:20px 24px;color:#e63946;font-size:13px">
       Cloudflare error: ${esc(cf.error)}</div>`;
@@ -2440,7 +2444,7 @@ function renderVisitors(cf, s, recent) {
     }).join('') || '<div class="empty" style="padding:20px;width:100%">No data.</div>';
 
     const periodBtns = [7, 14, 30].map(d =>
-      `<button class="filter-btn ${visitorsCFDays===d?'active':''}" onclick="showVisitors(${d})">${d}d</button>`
+      `<button class="filter-btn ${visitorsCFDays===d?'active':''}" onclick="showVisitors(${d}, visitorsSite)">${d}d</button>`
     ).join('');
 
     cfHtml = `
@@ -2507,11 +2511,12 @@ function renderVisitors(cf, s, recent) {
         <td style="white-space:nowrap;font-size:12px">${fmtDateTime(r.created_at)}</td>
         <td>${r.country_code ? FLAG_EMOJI(r.country_code) + ' ' + esc(r.country_name || r.country_code) : '<span style="color:#9a9a9a">—</span>'}</td>
         <td style="font-family:monospace;font-size:11px;color:#6b6b6b">${esc(r.ip || '')}</td>
+        <td style="font-size:11px;color:#6b6b6b">${esc(({ ca: '.ca', us: '.us', uk: '.co.uk' })[r.site] || '.ca')}</td>
         <td style="font-family:monospace;font-size:11px">${esc(r.path)}</td>
         <td style="text-transform:capitalize">${esc(r.device_type || '')}</td>
         <td>${esc(r.browser || '')}</td>
         <td style="font-size:11px;color:#6b6b6b">${esc(r.referrer || '')}</td>
-      </tr>`).join('') || '<tr><td colspan="7" class="empty">No app-level sessions recorded yet — will populate after deployment.</td></tr>';
+      </tr>`).join('') || '<tr><td colspan="8" class="empty">No app-level sessions recorded yet — will populate after deployment.</td></tr>';
 
     dbHtml = `
     <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:#9a9a9a;margin-bottom:12px">App-level detail (30 days · ${s.total} total logged)</div>
@@ -2551,7 +2556,7 @@ function renderVisitors(cf, s, recent) {
       </div>
       <div style="overflow-x:auto">
         <table>
-          <thead><tr><th>Time</th><th>Country</th><th>IP</th><th>Page</th><th>Device</th><th>Browser</th><th>Referrer</th></tr></thead>
+          <thead><tr><th>Time</th><th>Country</th><th>IP</th><th>Site</th><th>Page</th><th>Device</th><th>Browser</th><th>Referrer</th></tr></thead>
           <tbody>${recentRows}</tbody>
         </table>
       </div>
@@ -2561,6 +2566,7 @@ function renderVisitors(cf, s, recent) {
   setMain(`
     <div class="page-header">
       <div class="page-title">Visitors</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">${VISITOR_SITES.map(([k, l]) => `<button class="filter-btn ${visitorsSite === k ? 'active' : ''}" onclick="showVisitors(null, '${k}')">${l}</button>`).join('')}</div>
     </div>
     ${cfHtml}
     ${dbHtml}

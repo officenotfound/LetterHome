@@ -91,6 +91,60 @@ const siteStore = new AsyncLocalStorage();
 app.use((req, _res, next) => siteStore.run({ base: sites.baseUrl(req) }, next));
 const siteBase  = () => siteStore.getStore()?.base || (process.env.BASE_URL || '').replace(/\/$/, '');
 const orderBase = o => sites.baseForKey(o && o.order_site) || siteBase();
+
+// Page-view log for the admin Visitors screen. It runs before the page routes and the static files so every page is counted,
+// with the address the visitor saw and the domain it was on.
+app.use((req, res, next) => {
+  try {
+    if (req.method !== 'GET') return next();
+    if (req.path.startsWith('/api/'))      return next();
+    if (req.path.startsWith('/admin'))     return next();
+    if (req.path === '/webhook')           return next();
+    if (req.path.startsWith('/status/'))   return next();
+    if (req.path === '/ga.js')             return next();
+    if (/\.[a-z0-9]+$/i.test(req.path))    return next();
+
+    const ip  = getClientIp(req);
+    const ua  = req.headers['user-agent'] || '';
+    const ref = req.headers['referer'] || req.headers['referrer'] || '';
+
+    let referrer = '';
+    try {
+      if (ref) {
+        const u = new URL(ref);
+        const host = (req.headers.host || '').split(':')[0];
+        if (u.hostname && u.hostname !== host) referrer = u.hostname;
+      }
+    } catch {}
+
+    const { device, browser } = parseUA(ua);
+    const visitedPath = String(req.originalUrl || req.path).split('?')[0];
+    const site = sites.keyOf(req);
+
+    // Count it only once the page was actually served (no redirects, 404s or errors).
+    res.on('finish', () => {
+      if (res.statusCode !== 200) return;
+      let rowId;
+      try {
+        rowId = db.prepare(
+          'INSERT INTO page_views (path, ip, referrer, device_type, browser, site) VALUES (?, ?, ?, ?, ?, ?)'
+        ).run(visitedPath, ip, referrer, device, browser, site).lastInsertRowid;
+      } catch (e) { console.error('[pageview]', e.message); return; }
+      if (rowId && ip && !isPrivateIp(ip)) {
+        lookupCountry(ip).then(r => {
+          if (r) {
+            try {
+              db.prepare('UPDATE page_views SET country_code = ?, country_name = ? WHERE id = ?')
+                .run(r.country_code, r.country_name, rowId);
+            } catch {}
+          }
+        }).catch(() => {});
+      }
+    });
+  } catch {}
+  next();
+});
+
 app.use(compression({ threshold: 512, level: 6 }));
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2024-06-20' });
 
@@ -1202,55 +1256,7 @@ function parseUA(ua) {
   return { device, browser };
 }
 
-app.use((req, res, next) => {
-  try {
-    if (req.method !== 'GET') return next();
-    if (req.path.startsWith('/api/'))      return next();
-    if (req.path.startsWith('/admin'))     return next();
-    if (req.path === '/webhook')           return next();
-    if (req.path.startsWith('/status/'))   return next();
-    if (req.path === '/ga.js')             return next();
-    if (/\.[a-z0-9]+$/i.test(req.path))    return next();
 
-    const ip  = getClientIp(req);
-    const ua  = req.headers['user-agent'] || '';
-    const ref = req.headers['referer'] || req.headers['referrer'] || '';
-
-    let referrer = '';
-    try {
-      if (ref) {
-        const u = new URL(ref);
-        const host = (req.headers.host || '').split(':')[0];
-        if (u.hostname && u.hostname !== host) referrer = u.hostname;
-      }
-    } catch {}
-
-    const { device, browser } = parseUA(ua);
-
-    let rowId;
-    try {
-      const result = db.prepare(
-        'INSERT INTO page_views (path, ip, referrer, device_type, browser) VALUES (?, ?, ?, ?, ?)'
-      ).run(req.path, ip, referrer, device, browser);
-      rowId = result.lastInsertRowid;
-    } catch (e) {
-      console.error('[pageview]', e.message);
-      return next();
-    }
-
-    if (rowId && ip && !isPrivateIp(ip)) {
-      lookupCountry(ip).then(r => {
-        if (r) {
-          try {
-            db.prepare('UPDATE page_views SET country_code = ?, country_name = ? WHERE id = ?')
-              .run(r.country_code, r.country_name, rowId);
-          } catch {}
-        }
-      }).catch(() => {});
-    }
-  } catch {}
-  next();
-});
 
 const orderLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
@@ -3024,57 +3030,61 @@ app.get('/api/admin/stats/geo', requireAdmin, (req, res) => {
   res.json({ from, to });
 });
 
+// ?site=ca|us|uk limits the stats to one domain (rows from before the site column count as letterhome.ca).
+const pvSource = req => ['ca', 'us', 'uk'].includes(req.query.site) ? `(SELECT * FROM page_views WHERE COALESCE(site, 'ca') = '${req.query.site}')` : 'page_views';
+
 app.get('/api/admin/visitors/stats', requireAdmin, (req, res) => {
   try {
+    const T = pvSource(req);
     const c = (sql, ...args) => db.prepare(sql).get(...args).c;
-    const today      = c(`SELECT COUNT(*) as c FROM page_views WHERE date(created_at) = date('now')`);
-    const week       = c(`SELECT COUNT(*) as c FROM page_views WHERE created_at >= datetime('now', '-7 days')`);
-    const month      = c(`SELECT COUNT(*) as c FROM page_views WHERE created_at >= datetime('now', '-30 days')`);
-    const total      = c(`SELECT COUNT(*) as c FROM page_views`);
-    const todayUniq  = c(`SELECT COUNT(DISTINCT ip) as c FROM page_views WHERE date(created_at) = date('now')`);
-    const weekUniq   = c(`SELECT COUNT(DISTINCT ip) as c FROM page_views WHERE created_at >= datetime('now', '-7 days')`);
-    const monthUniq  = c(`SELECT COUNT(DISTINCT ip) as c FROM page_views WHERE created_at >= datetime('now', '-30 days')`);
+    const today      = c(`SELECT COUNT(*) as c FROM ${T} WHERE date(created_at) = date('now')`);
+    const week       = c(`SELECT COUNT(*) as c FROM ${T} WHERE created_at >= datetime('now', '-7 days')`);
+    const month      = c(`SELECT COUNT(*) as c FROM ${T} WHERE created_at >= datetime('now', '-30 days')`);
+    const total      = c(`SELECT COUNT(*) as c FROM ${T}`);
+    const todayUniq  = c(`SELECT COUNT(DISTINCT ip) as c FROM ${T} WHERE date(created_at) = date('now')`);
+    const weekUniq   = c(`SELECT COUNT(DISTINCT ip) as c FROM ${T} WHERE created_at >= datetime('now', '-7 days')`);
+    const monthUniq  = c(`SELECT COUNT(DISTINCT ip) as c FROM ${T} WHERE created_at >= datetime('now', '-30 days')`);
 
     const topPages = db.prepare(`
-      SELECT path, COUNT(*) as count FROM page_views
+      SELECT path, COUNT(*) as count FROM ${T}
       WHERE created_at >= datetime('now', '-30 days')
       GROUP BY path ORDER BY count DESC LIMIT 10
     `).all();
 
     const topCountries = db.prepare(`
-      SELECT country_code, country_name, COUNT(*) as count FROM page_views
+      SELECT country_code, country_name, COUNT(*) as count FROM ${T}
       WHERE country_code IS NOT NULL AND created_at >= datetime('now', '-30 days')
       GROUP BY country_code ORDER BY count DESC LIMIT 15
     `).all();
 
     const devices = db.prepare(`
-      SELECT device_type, COUNT(*) as count FROM page_views
+      SELECT device_type, COUNT(*) as count FROM ${T}
       WHERE created_at >= datetime('now', '-30 days')
       GROUP BY device_type ORDER BY count DESC
     `).all();
 
     const browsers = db.prepare(`
-      SELECT browser, COUNT(*) as count FROM page_views
+      SELECT browser, COUNT(*) as count FROM ${T}
       WHERE created_at >= datetime('now', '-30 days')
       GROUP BY browser ORDER BY count DESC
     `).all();
 
     const referrers = db.prepare(`
-      SELECT referrer, COUNT(*) as count FROM page_views
+      SELECT referrer, COUNT(*) as count FROM ${T}
       WHERE referrer != '' AND referrer IS NOT NULL AND created_at >= datetime('now', '-30 days')
       GROUP BY referrer ORDER BY count DESC LIMIT 10
     `).all();
 
     const daily = db.prepare(`
       SELECT date(created_at) as day, COUNT(*) as count, COUNT(DISTINCT ip) as unique_count
-      FROM page_views
+      FROM ${T}
       WHERE created_at >= date('now', '-14 days')
       GROUP BY day ORDER BY day
     `).all();
 
     const hourly = db.prepare(`
       SELECT CAST(strftime('%H', created_at) AS INTEGER) as hour, COUNT(*) as count
-      FROM page_views
+      FROM ${T}
       WHERE created_at >= datetime('now', '-7 days')
       GROUP BY hour ORDER BY hour
     `).all();
@@ -3093,9 +3103,10 @@ app.get('/api/admin/visitors/stats', requireAdmin, (req, res) => {
 app.get('/api/admin/visitors/recent', requireAdmin, (req, res) => {
   try {
     const limit = Math.min(parseInt(req.query.limit) || 100, 500);
+    const T = pvSource(req);
     const rows = db.prepare(`
-      SELECT id, path, ip, country_code, country_name, referrer, device_type, browser, created_at
-      FROM page_views
+      SELECT id, COALESCE(site, 'ca') AS site, path, ip, country_code, country_name, referrer, device_type, browser, created_at
+      FROM ${T}
       ORDER BY created_at DESC LIMIT ?
     `).all(limit);
     res.json(rows);
@@ -4245,42 +4256,61 @@ app.get('/api/admin/stripe/revenue', requireAdmin, async (req, res) => {
   } catch (e) { res.status(502).json({ error: e.message }); }
 });
 
+// Each domain is its own Cloudflare zone: CF_ZONE_ID (letterhome.ca), CF_ZONE_ID_US, CF_ZONE_ID_UK.
+// ?site=ca|us|uk shows one zone; no site (or "all") adds up every configured zone.
+const cfZones = () => ({ ca: process.env.CF_ZONE_ID, us: process.env.CF_ZONE_ID_US, uk: process.env.CF_ZONE_ID_UK });
+async function cfDaily(token, zoneId, since, until) {
+  const r = await fetch('https://api.cloudflare.com/client/v4/graphql', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      query: `{
+        viewer {
+          zones(filter: {zoneTag: "${zoneId}"}) {
+            daily: httpRequests1dGroups(
+              limit: 31,
+              filter: {date_geq: "${since}", date_leq: "${until}"},
+              orderBy: [date_ASC]
+            ) {
+              dimensions { date }
+              sum { requests pageViews cachedRequests bytes threats }
+              uniq { uniques }
+            }
+          }
+        }
+      }`,
+    }),
+    signal: AbortSignal.timeout(10000),
+  });
+  if (!r.ok) throw new Error(`CF API ${r.status}`);
+  const data = await r.json();
+  if (data.errors) throw new Error(data.errors[0]?.message || 'CF GraphQL error');
+  return data?.data?.viewer?.zones?.[0]?.daily || [];
+}
+
 app.get('/api/admin/cloudflare/analytics', requireAdmin, async (req, res) => {
-  const token  = process.env.CF_API_TOKEN;
-  const zoneId = process.env.CF_ZONE_ID;
-  if (!token || !zoneId) return res.status(503).json({ error: 'Cloudflare not configured', configured: false });
+  const token = process.env.CF_API_TOKEN;
+  const zones = cfZones();
+  const site  = ['ca', 'us', 'uk'].includes(req.query.site) ? req.query.site : 'all';
+  const ids   = site === 'all' ? Object.entries(zones).filter(([, z]) => z) : [[site, zones[site]]].filter(([, z]) => z);
+  if (!token || !ids.length) return res.status(503).json({ error: site === 'all' ? 'Cloudflare not configured' : `No Cloudflare zone ID set for this site (CF_ZONE_ID${site === 'ca' ? '' : '_' + site.toUpperCase()})`, configured: false });
 
   const days  = Math.min(30, Math.max(1, parseInt(req.query.days) || 7));
   const since = new Date(Date.now() - days * 86400 * 1000).toISOString().slice(0, 10);
   const until = new Date().toISOString().slice(0, 10);
 
   try {
-    const r = await fetch('https://api.cloudflare.com/client/v4/graphql', {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        query: `{
-          viewer {
-            zones(filter: {zoneTag: "${zoneId}"}) {
-              daily: httpRequests1dGroups(
-                limit: 31,
-                filter: {date_geq: "${since}", date_leq: "${until}"},
-                orderBy: [date_ASC]
-              ) {
-                dimensions { date }
-                sum { requests pageViews cachedRequests bytes threats }
-                uniq { uniques }
-              }
-            }
-          }
-        }`,
-      }),
-      signal: AbortSignal.timeout(10000),
-    });
-    if (!r.ok) throw new Error(`CF API ${r.status}`);
-    const data = await r.json();
-    if (data.errors) throw new Error(data.errors[0]?.message || 'CF GraphQL error');
-    const daily = data?.data?.viewer?.zones?.[0]?.daily || [];
+    const byDate = new Map();
+    for (const [, zoneId] of ids) {
+      for (const d of await cfDaily(token, zoneId, since, until)) {
+        const k = d.dimensions.date;
+        const cur = byDate.get(k) || { dimensions: { date: k }, sum: { requests: 0, pageViews: 0, cachedRequests: 0, bytes: 0, threats: 0 }, uniq: { uniques: 0 } };
+        for (const f of Object.keys(cur.sum)) cur.sum[f] += d.sum[f] || 0;
+        cur.uniq.uniques += d.uniq?.uniques || 0;
+        byDate.set(k, cur);
+      }
+    }
+    const daily = [...byDate.values()].sort((x, y) => x.dimensions.date.localeCompare(y.dimensions.date));
     const totals = daily.reduce((acc, d) => {
       acc.requests       += d.sum.requests       || 0;
       acc.pageViews      += d.sum.pageViews       || 0;
@@ -4290,7 +4320,7 @@ app.get('/api/admin/cloudflare/analytics', requireAdmin, async (req, res) => {
       acc.uniques        += d.uniq?.uniques       || 0;
       return acc;
     }, { requests: 0, pageViews: 0, cachedRequests: 0, bytes: 0, threats: 0, uniques: 0 });
-    res.json({ ok: true, totals, daily, days });
+    res.json({ ok: true, totals, daily, days, site, zones: ids.map(([k]) => k) });
   } catch (e) {
     console.error('[CF analytics]', e.message);
     res.status(502).json({ error: e.message });

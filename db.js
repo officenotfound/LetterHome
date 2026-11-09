@@ -308,6 +308,7 @@ try {
     browser      TEXT,
     created_at   DATETIME DEFAULT CURRENT_TIMESTAMP
   )`);
+  try { db.exec(`ALTER TABLE page_views ADD COLUMN site TEXT`); } catch {}
   db.exec(`CREATE INDEX IF NOT EXISTS idx_page_views_created ON page_views(created_at)`);
   db.exec(`CREATE INDEX IF NOT EXISTS idx_page_views_ip      ON page_views(ip)`);
   db.exec(`CREATE INDEX IF NOT EXISTS idx_page_views_country ON page_views(country_code)`);
