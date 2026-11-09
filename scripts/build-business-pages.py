@@ -96,7 +96,7 @@ def build(key):
     alts += f'<link rel="alternate" hreflang="x-default" href="{BASE + PATHS["ca"]}">\n'
     ld = '{"@context":"https://schema.org","@graph":[{"@type":"WebPage","@id":"%s","url":"%s","name":"%s","description":"%s","isPartOf":{"@id":"https://letterhome.ca/#website"},"inLanguage":"%s"}]}' % (url, url, esc(c['title'].split(' | ')[0]), esc(c['desc']), c['lang'])
     ctry_attr = f' data-country="{c["cc"]}"' if c['cc'] else ''
-    extra_css = ('<link rel="stylesheet" href="/country-order.css?v=2">\n' if c['cc'] else '')
+    extra_css = ('<link rel="stylesheet" href="/country-order.css?v=3">\n' if c['cc'] else '')
     hero_css = ('html[data-country] body .hero{background:var(--red) !important;color:#fff !important}'
                 'html[data-country] body .hero h1,html[data-country] body .hero h1 em{color:#fff !important;font-style:normal !important}'
                 'html[data-country] body .hero-eyebrow{color:rgba(255,255,255,.8) !important}html[data-country] body .hero-sub{color:rgba(255,255,255,.92) !important}'

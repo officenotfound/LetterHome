@@ -45,7 +45,7 @@ const DESTINATIONS = {
 // Fixed prices for the US, UK and Australia pages, in that currency's cents. Each keeps at least 38% profit after
 // PostGrid's USD cost and Stripe's fees, and ends in .00 or .50. XX is everywhere else. Canada's prices stay in CAD above.
 const LOCAL_PRICES = {
-  USD: { symbol: '$', code: 'USD', CA: 500, US: 250, GB: 600, AU: 550, XX: 1350, colour: 50,  page: 50,  pageColour: 100 },
+  USD: { symbol: '$', code: 'USD', CA: 500, US: 300, GB: 600, AU: 650, XX: 1350, colour: 50,  page: 50,  pageColour: 100 },
   GBP: { symbol: '£', code: 'GBP', CA: 350, US: 200, GB: 450, AU: 400, XX: 1000, colour: 50,  page: 50,  pageColour: 50  },
   AUD: { symbol: '$', code: 'AUD', CA: 650, US: 350, GB: 800, AU: 750, XX: 1950, colour: 100, page: 100, pageColour: 100 },
 };
