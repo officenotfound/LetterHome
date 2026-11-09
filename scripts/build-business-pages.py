@@ -100,7 +100,7 @@ def build(key):
     alts += f'<link rel="alternate" hreflang="x-default" href="{BASE + PATHS["ca"]}">\n'
     ld = '{"@context":"https://schema.org","@graph":[{"@type":"WebPage","@id":"%s","url":"%s","name":"%s","description":"%s","isPartOf":{"@id":"https://letterhome.ca/#website"},"inLanguage":"%s"}]}' % (url, url, esc(c['title'].split(' | ')[0]), esc(c['desc']), c['lang'])
     ctry_attr = f' data-country="{c["cc"]}"' if c['cc'] else ''
-    extra_css = ('<link rel="stylesheet" href="/country-order.css?v=3">\n' if c['cc'] else '')
+    extra_css = ('<link rel="stylesheet" href="/country-order.css?v=4">\n' if c['cc'] else '')
     hero_css = ('html[data-country] body .hero{background:var(--red) !important;color:#fff !important}'
                 'html[data-country] body .hero h1,html[data-country] body .hero h1 em{color:#fff !important;font-style:normal !important}'
                 'html[data-country] body .hero-eyebrow{color:rgba(255,255,255,.8) !important}html[data-country] body .hero-sub{color:rgba(255,255,255,.92) !important}'
@@ -242,7 +242,7 @@ def build(key):
 <link rel="stylesheet" href="/redesign.css?v=28"><link rel="stylesheet" href="/inner.css?v=7">
 {extra_css}</head>
 <body>
-<a href="#main-content" class="skip-link" style="position:absolute;left:-9999px;top:4px;z-index:9999;background:#a8472d;color:#faf6ec;padding:8px 16px;font-size:14px;font-family:Georgia,serif;text-decoration:none;border-radius:2px" onfocus="this.style.left='4px'" onblur="this.style.left='-9999px'">Skip to main content</a>
+<a href="#main-content" class="skip-link" style="position:absolute;left:-9999px;top:4px;z-index:9999;background:#a8472d;color:#faf6ec;padding:8px 16px;font-size:14px;font-family:'Noto Sans',system-ui,sans-serif;text-decoration:none;border-radius:2px" onfocus="this.style.left='4px'" onblur="this.style.left='-9999px'">Skip to main content</a>
 <div id="site-header"></div>
 <script src="/header.js?v=14"></script>
 

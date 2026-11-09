@@ -12,7 +12,7 @@ html[data-country="us"] body .lang-link{color:#faf6ec;border-color:rgba(250,246,
 html[data-country="us"] body .lang-link:hover{color:#fff;border-color:#fff}
 html[data-country="us"] body .lang-toggle{color:#faf6ec !important}
 html[data-country="us"] body{--red:#004B87;--red-deep:#003a69;--red-stamp:#004B87;--m1:#004B87;--ink:#1a1a1a;--ink-soft:#3d3d3d;--ink-muted:#6c6c6c;--paper:#ffffff;--kraft:#f4f4f4;--line:#e2e2e2;--shadow-card:0 1px 6px rgba(0,0,0,.10);
-  background:#ffffff !important;color:#2a2a2f;font-family:"Inter","Helvetica Neue",Helvetica,Arial,sans-serif}
+  background:#ffffff !important;color:#2a2a2f}
 html[data-country="us"] body nav,:root[data-theme="dark"][data-country="us"] body nav{background:#004B87 !important;border-bottom:4px solid #E31837 !important}
 html[data-country="us"] body .logo-accent{color:#E31837 !important}
 html[data-country="us"] body .nav-cta,html[data-country="us"] body .nav-cta:visited,html[data-country="us"] body .nav-cta:hover{background:#fff !important;color:#004B87 !important;border-color:#fff !important;border-radius:4px !important;font-weight:700}
@@ -28,7 +28,7 @@ html[data-country="uk"] body .lang-link{color:#faf6ec;border-color:rgba(250,246,
 html[data-country="uk"] body .lang-link:hover{color:#fff;border-color:#fff}
 html[data-country="uk"] body .lang-toggle{color:#faf6ec !important}
 html[data-country="uk"] body{--red:#DA202A;--red-deep:#b81b24;--red-stamp:#DA202A;--m1:#DA202A;--ink:#1a1a1a;--ink-soft:#3d3d3d;--ink-muted:#6c6c6c;--paper:#ffffff;--kraft:#f4f4f4;--line:#e2e2e2;--shadow-card:0 1px 6px rgba(0,0,0,.10);
-  background:#f4f4f4 !important;color:#3d3d3d;font-family:"Helvetica Neue",Helvetica,Arial,sans-serif}
+  background:#f4f4f4 !important;color:#3d3d3d}
 html[data-country="uk"] body nav,:root[data-theme="dark"][data-country="uk"] body nav{background:#DA202A !important;border-bottom:4px solid #FFD100 !important}
 html[data-country="uk"] body .logo-accent{color:#FFD100 !important}
 html[data-country="uk"] body .nav-cta,html[data-country="uk"] body .nav-cta:visited,html[data-country="uk"] body .nav-cta:hover{background:#fff !important;color:#DA202A !important;border-color:#fff !important;border-radius:100px !important;font-weight:700}
@@ -44,10 +44,16 @@ html[data-country="au"] body .lang-link{color:#faf6ec;border-color:rgba(250,246,
 html[data-country="au"] body .lang-link:hover{color:#fff;border-color:#fff}
 html[data-country="au"] body .lang-toggle{color:#faf6ec !important}
 html[data-country="au"] body{--red:#DC1928;--red-deep:#b01420;--red-stamp:#DC1928;--m1:#DC1928;--ink:#1a1a1a;--ink-soft:#3d3d3d;--ink-muted:#6c6c6c;--paper:#ffffff;--kraft:#f4f4f4;--line:#e2e2e2;--shadow-card:0 1px 6px rgba(0,0,0,.10);
-  background:#ffffff !important;color:#2a2a2f;font-family:"Inter","Helvetica Neue",Helvetica,Arial,sans-serif}
+  background:#ffffff !important;color:#2a2a2f}
 html[data-country="au"] body nav,:root[data-theme="dark"][data-country="au"] body nav{background:#DC1928 !important;border-bottom:0 solid transparent !important}
 html[data-country="au"] body .logo-accent{color:#ffe3e5 !important}
 html[data-country="au"] body .nav-cta,html[data-country="au"] body .nav-cta:visited,html[data-country="au"] body .nav-cta:hover{background:#fff !important;color:#DC1928 !important;border-color:#fff !important;border-radius:100px !important;font-weight:700}
 /* "Track an order" sits on the coloured header, so it needs a light colour on every country look. */
 html[data-country="us"] body .nav-track,html[data-country="uk"] body .nav-track,html[data-country="au"] body .nav-track{color:rgba(250,246,236,.92) !important}
 html[data-country="us"] body .nav-track:hover,html[data-country="uk"] body .nav-track:hover,html[data-country="au"] body .nav-track:hover{color:#fff !important}
+
+/* One type system everywhere: Noto Sans for text, Archivo for headings, Roboto for small labels, DM Serif Display for the wordmark. */
+html[data-country] body{font-family:'Noto Sans',system-ui,sans-serif !important}
+html[data-country] h1,html[data-country] h2,html[data-country] h3,html[data-country] h4{font-family:'Archivo',system-ui,sans-serif !important}
+html[data-country] body .logo-wordmark,html[data-country] body .lh-f-word{font-family:'DM Serif Display',Georgia,serif !important}
+html[data-country] button,html[data-country] .btn,html[data-country] .submit-btn,html[data-country] .btn-submit{font-family:'Roboto',monospace !important}

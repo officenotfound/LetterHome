@@ -50,7 +50,7 @@ cards = ''.join(f'<div class="bz-card"><h3>{html.escape(n)}</h3><p>{html.escape(
 steps_html = ''.join(f'<li><strong style="display:block;color:var(--ink);font-family:\'Archivo\',sans-serif;font-size:17px;margin-bottom:4px">{t}</strong>{s}</li>' for t, s in zip(step_t, steps))
 
 body = f'''<body>
-<a href="#main-content" class="skip-link" style="position:absolute;left:-9999px;top:4px;z-index:9999;background:#a8472d;color:#faf6ec;padding:8px 16px;font-size:14px;font-family:Georgia,serif;text-decoration:none;border-radius:2px" onfocus="this.style.left='4px'" onblur="this.style.left='-9999px'">Skip to main content</a>
+<a href="#main-content" class="skip-link" style="position:absolute;left:-9999px;top:4px;z-index:9999;background:#a8472d;color:#faf6ec;padding:8px 16px;font-size:14px;font-family:'Noto Sans',system-ui,sans-serif;text-decoration:none;border-radius:2px" onfocus="this.style.left='4px'" onblur="this.style.left='-9999px'">Skip to main content</a>
 <div id="site-header"></div>
 <script src="/header.js?v=14"></script>
 <main id="main-content">
