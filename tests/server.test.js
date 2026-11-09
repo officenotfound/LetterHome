@@ -1457,7 +1457,7 @@ test('ordering pages carry the country look and a complete Spanish dictionary', 
   const es = new Function(pub('lang-es.js').replace('window.LH_ES =', 'return'))();
   for (const f of ['send', 'track', 'order-success', 'account']) {
     const html = pub(`${f}.html`);
-    assert.ok(html.includes('/country.js') && html.includes('/country-order.css') && html.includes('/lang-es.js'), `${f}.html wires country.js, country-order.css and lang-es.js`);
+    assert.ok(html.includes('/order-country.js') && html.includes('/country-order.css') && html.includes('/lang-es.js'), `${f}.html wires order-country.js, country-order.css and lang-es.js`);
     const keys = new Set([...html.matchAll(/data-i18n(?:-html|-placeholder|-aria)?="([a-z]+\.[a-z0-9._-]+)"/g)].map(m => m[1]).filter(k => !k.startsWith('x.')));
     const missing = [...keys].filter(k => es[k] === undefined && !['send.svc.', 'country.'].includes(k));
     assert.deepEqual(missing, [], `${f}.html keys missing from lang-es.js`);

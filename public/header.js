@@ -100,14 +100,6 @@
     var en = document.querySelector('link[rel="alternate"][hreflang^="en"]');
     if (en) langToggle = '<a class="lang-link" lang="en" href="' + new URL(en.href, location.href).pathname + '" onclick="try{localStorage.setItem(\'lh-lang\',\'en\')}catch(e){}">English</a>';
   }
-  // The US landing pages and their Spanish twins link to each other (data-alt on <html>: the other page's path).
-  var alt = document.documentElement.getAttribute('data-alt');
-  if (alt && country === 'us') {
-    var altHref = onUsDomain ? alt.replace(/^\/us(?=\/|$)/, '') || '/' : alt;
-    var toEs = !isSpanish;
-    langToggle = '<a class="lang-link" lang="' + (toEs ? 'es' : 'en') + '" href="' + altHref + '" onclick="try{localStorage.setItem(\'lh-lang\',\'' + (toEs ? 'es' : 'en') + '\')}catch(e){}">' + (toEs ? 'Español' : 'English') + '</a>';
-  }
-
   var sendLabel = isFrench ? 'Envoyer une lettre' : isSpanish ? 'Enviar una carta' : 'Send a letter';
   var trackLabel = isSpanish ? 'Rastrear un pedido' : 'Track an order';
 
