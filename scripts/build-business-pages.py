@@ -241,7 +241,7 @@ def build(key):
 {THEME_SCRIPT}
 <link rel="stylesheet" href="/theme.css?v=24">
 <link rel="stylesheet" href="/guide.css?v=8">
-<link rel="stylesheet" href="/redesign.css?v=28"><link rel="stylesheet" href="/inner.css?v=7">
+<link rel="stylesheet" href="/redesign.css?v=29"><link rel="stylesheet" href="/inner.css?v=7">
 {extra_css}</head>
 <body>
 <a href="#main-content" class="skip-link" style="position:absolute;left:-9999px;top:4px;z-index:9999;background:#a8472d;color:#faf6ec;padding:8px 16px;font-size:14px;font-family:'Noto Sans',system-ui,sans-serif;text-decoration:none;border-radius:2px" onfocus="this.style.left='4px'" onblur="this.style.left='-9999px'">Skip to main content</a>

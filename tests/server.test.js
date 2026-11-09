@@ -1509,3 +1509,26 @@ test('admin visitor stats: page views are tagged with their domain and can be fi
     assert.deepEqual(recent.map(r => r.site), ['us']);
   } finally { setFlag('us_domain_live', 'false'); setFlag('uk_domain_live', 'false'); }
 });
+
+test('US and UK everyday-mail guides: served on their own domain with a self canonical, listed in that domain sitemap', async () => {
+  setFlag('us_domain_live', 'true'); setFlag('uk_domain_live', 'true');
+  try {
+    const guides = { 'letterhome.us': ['how-long-does-mail-take', 'how-much-is-a-stamp', 'return-address-on-a-letter'],
+                     'letterhome.co.uk': ['how-long-does-post-take', 'how-much-is-a-stamp', 'return-address-on-a-letter'] };
+    for (const [host, slugs] of Object.entries(guides)) {
+      const sm = (await siteGet(host, '/sitemap.xml')).body;
+      for (const slug of slugs) {
+        const r = await siteGet(host, `/${slug}`);
+        assert.equal(r.status, 200, `${host}/${slug}`);
+        assert.ok(r.body.includes(`<link rel="canonical" href="https://${host}/${slug}">`), `${host}/${slug} canonical`);
+        assert.ok(!r.body.includes('—'), `${host}/${slug} has no em dashes`);
+        assert.ok(sm.includes(`<loc>https://${host}/${slug}</loc>`), `${host}/${slug} in sitemap`);
+        const ld = JSON.parse(r.body.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)[1]);
+        const faq = ld['@graph'].find(x => x['@type'] === 'FAQPage');
+        for (const q of faq.mainEntity) assert.ok(r.body.includes(q.name.replace(/'/g, '&#x27;')) || r.body.includes(q.name), `${slug}: FAQ "${q.name}" is visible on the page`);
+      }
+    }
+    const ca = await fetch(`${base}/us/how-much-is-a-stamp`, { redirect: 'manual' });
+    assert.equal(ca.status, 301, 'on letterhome.ca the US guide moves to letterhome.us');
+  } finally { setFlag('us_domain_live', 'false'); setFlag('uk_domain_live', 'false'); }
+});

@@ -131,6 +131,6 @@ body = f'''<body>
 </html>
 '''
 out = head + '<style>:root{--sans:inherit}\n' + biz_css + extra_css + '</style>\n' + theme_script + \
-  '\n<link rel="stylesheet" href="/theme.css?v=24">\n<link rel="stylesheet" href="/guide.css?v=8">\n<link rel="stylesheet" href="/redesign.css?v=28"><link rel="stylesheet" href="/inner.css?v=7">\n</head>\n' + body
+  '\n<link rel="stylesheet" href="/theme.css?v=24">\n<link rel="stylesheet" href="/guide.css?v=8">\n<link rel="stylesheet" href="/redesign.css?v=29"><link rel="stylesheet" href="/inner.css?v=7">\n</head>\n' + body
 open('public/monthly-letters.html', 'w', encoding='utf-8').write(out)
 print('wrote public/monthly-letters.html', len(out))

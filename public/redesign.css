@@ -70,8 +70,9 @@ body.c-us nav{background:#004B87!important;border-bottom:4px solid #E31837!impor
 body.c-uk nav{background:#DA202A!important;border-bottom:4px solid #FFD100!important}
 body.c-au nav{background:#DC1928!important;border-bottom:0!important}
 body[class*="c-"] .logo-wordmark{color:#faf6ec!important}
-body.c-us .logo-accent{color:#ffb3ba!important}
-body.c-uk .logo-accent,body.c-au .logo-accent{color:#ffd6d9!important}
+body.c-us .logo-accent{color:#E31837!important}
+body.c-uk .logo-accent{color:#FFD100!important}
+body.c-au .logo-accent{color:#ffe3e5!important}
 body[class*="c-"] .nav-track,body[class*="c-"] .lang-toggle,body[class*="c-"] .lang-link{color:#fff!important}
 body[class*="c-"] .nav-cta{background:#fff!important}
 body.c-us .nav-cta{color:#004B87!important}body.c-uk .nav-cta{color:#DA202A!important}body.c-au .nav-cta{color:#DC1928!important}

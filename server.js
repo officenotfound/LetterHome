@@ -79,7 +79,7 @@ app.set('trust proxy', 2);
 // canonical URLs, hreflang, sitemap and robots.txt. See sites.js.
 const sites = require('./sites').createSites({
   getSetting,
-  localSlugs: key => ['business', ...Object.keys(COUNTRY_GUIDES).filter(k => k.startsWith(key + '/')).map(k => k.split('/')[1])],
+  localSlugs: key => ['business', ...[...Object.keys(COUNTRY_GUIDES), ...LOCAL_GUIDES].filter(k => k.startsWith(key + '/')).map(k => k.split('/')[1])],
   publicDir: path.join(__dirname, 'public'),
 });
 app.use(sites.middleware);
@@ -992,6 +992,10 @@ app.get('/account/:page', (req, res, next) => req.params.page === 'verify' ? nex
   : res.sendFile(path.join(__dirname, 'public', 'account.html')));
 
 // Country guides live under their country's path; the old flat URLs redirect
+const LOCAL_GUIDES = [
+  'us/how-long-does-mail-take', 'us/how-much-is-a-stamp', 'us/return-address-on-a-letter',
+  'uk/how-long-does-post-take', 'uk/how-much-is-a-stamp', 'uk/return-address-on-a-letter',
+];
 const COUNTRY_GUIDES = {
   'us/how-to-send-mail-to-canada-from-us': 'send-a-letter-from-the-us-to-canada',
   'us/how-to-send-mail-to-uk-from-us': 'send-a-letter-from-the-us-to-the-uk',
@@ -1012,6 +1016,12 @@ app.get('/from-australia', (req, res) => res.redirect(301, '/au/how-to-send-mail
 ['nz/how-to-send-mail-to-canada-from-nz', 'nz/how-to-send-mail-to-usa-from-nz', 'nz/how-to-send-mail-to-uk-from-nz', 'nz/how-to-send-mail-to-australia-from-nz'].forEach(p => app.get(`/${p}`, (req, res) => res.redirect(301, '/')));
 ['us', 'uk', 'au'].forEach(c => app.get(`/${c}/how-to-send-mail-to-new-zealand-from-${c}`, (req, res) => res.redirect(301, `/${c}`)));
 app.get('/us/es/como-enviar-una-carta-a-nueva-zelanda-desde-ee-uu', (req, res) => res.redirect(301, '/us/es'));
+// Guides written for one country's readers (US and UK everyday mail). Served at /us/<slug> and /uk/<slug>, which become
+// letterhome.us/<slug> and letterhome.co.uk/<slug> when those domains are switched on. File: public/<country>-<slug>.html.
+LOCAL_GUIDES.forEach(p => {
+  const [c, slug] = p.split('/');
+  app.get(`/${p}`, (req, res) => res.sendFile(path.join(__dirname, 'public', `${c}-${slug}.html`)));
+});
 Object.keys(COUNTRY_GUIDES).forEach(p => {
   const file = p.split('/')[1];
   app.get(`/${p}`, (req, res) => res.sendFile(path.join(__dirname, 'public', `${file}.html`)));
