@@ -34,6 +34,7 @@
       'footer.uk': 'United Kingdom',
       'footer.au': 'Australia',
       'footer.about': 'About',
+      'footer.careers': 'Careers',
       'footer.refunds': 'Refund policy',
       // INDEX
       'index.eyebrow': 'Mail from Canada',
@@ -2576,6 +2577,7 @@
       'footer.uk': 'Royaume-Uni',
       'footer.au': 'Australie',
       'footer.about': 'À propos',
+      'footer.careers': 'Carrières',
       'footer.refunds': 'Politique de remboursement',
       // INDEX
       'index.eyebrow': 'Courrier du Canada',

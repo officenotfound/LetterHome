@@ -1600,3 +1600,64 @@ test('Google Analytics: /ga.js carries the site measurement ID, loads only after
   assert.match(js, /lh-analytics-consent/);
   assert.equal(res.headers.get('cache-control'), 'public, max-age=3600');
 });
+
+test('careers: /careers lists the open role, the role page has JobPosting data and an application form that reaches the inbox', async () => {
+  const idx = await fetch(`${base}/careers`);
+  assert.equal(idx.status, 200);
+  const ih = await idx.text();
+  assert.ok(ih.includes('href="/careers/independent-sales-representative"'));
+  const r = await fetch(`${base}/careers/independent-sales-representative`);
+  assert.equal(r.status, 200);
+  const h = await r.text();
+  assert.ok(h.includes('<link rel="canonical" href="https://letterhome.ca/careers/independent-sales-representative">'));
+  const ld = JSON.parse(h.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)[1]);
+  assert.equal(ld['@type'], 'JobPosting');
+  assert.equal(ld.employmentType, 'CONTRACTOR');
+  assert.equal(ld.jobLocationType, 'TELECOMMUTE');
+  assert.match(h, /15% commission/);
+  assert.match(h, /14 days/);
+  assert.doesNotMatch(h, /\[X\]|—/, 'no placeholders or em dashes');
+  assert.match(h, /id="apply-form"/);
+  assert.equal((await fetch(`${base}/careers/no-such-role`)).status, 404);
+  assert.equal((await fetch(`${base}/careers/..%2Fsecret`)).status, 404);
+});
+
+test('careers application: accepts a real PDF resume, rejects fake or oversized files, emails the resume to the operator', async () => {
+  const fsx = require('node:fs'), pathx = require('node:path');
+  const form = (file) => {
+    const fd = new FormData();
+    Object.entries({ name: 'Sam Rep', email: 'sam-rep@example.com', country: 'Canada', link: 'https://example.com/sam',
+      experience: 'Five years selling B2B software.', businesses: 'Property managers in Toronto.', role: 'Independent Sales Representative' })
+      .forEach(([k, v]) => fd.append(k, v));
+    if (file) fd.append('resume', file.blob, file.name);
+    return fd;
+  };
+  process.env.SMTP_HOST = 'smtp.test'; process.env.OPERATOR_EMAIL = 'ops@example.com';
+  try {
+    const pdf = new Blob([Buffer.from('%PDF-1.4\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF')], { type: 'application/pdf' });
+    const before = sentMail.length;
+    const ok = await fetch(`${base}/api/careers/apply`, { method: 'POST', body: form({ blob: pdf, name: 'resume.pdf' }) });
+    assert.equal(ok.status, 200, await ok.clone().text());
+    await new Promise(r => setTimeout(r, 30));
+    const mail = sentMail.slice(before).find(m => /Letterhome Careers/.test(m.subject));
+    assert.ok(mail, 'operator gets an email');
+    assert.equal(mail.replyTo, 'sam-rep@example.com');
+    assert.equal(mail.attachments.length, 1);
+    assert.ok(fsx.existsSync(mail.attachments[0].path), 'resume kept on disk');
+    assert.ok(mail.attachments[0].path.includes(pathx.join('uploads', 'applications')));
+    const row = db.prepare("SELECT message FROM contact_submissions WHERE email = 'sam-rep@example.com' ORDER BY id DESC").get();
+    assert.match(row.message, /CAREERS APPLICATION: Independent Sales Representative/);
+
+    const fake = new Blob([Buffer.from('MZ this is not a pdf')], { type: 'application/pdf' });
+    assert.equal((await fetch(`${base}/api/careers/apply`, { method: 'POST', body: form({ blob: fake, name: 'resume.pdf' }) })).status, 400);
+    const exe = new Blob([Buffer.from('%PDF-1.4')], { type: 'application/x-msdownload' });
+    assert.equal((await fetch(`${base}/api/careers/apply`, { method: 'POST', body: form({ blob: exe, name: 'resume.exe' }) })).status, 400);
+    const big = new Blob([Buffer.concat([Buffer.from('%PDF-1.4\n'), Buffer.alloc(5 * 1024 * 1024 + 10)])], { type: 'application/pdf' });
+    const tooBig = await fetch(`${base}/api/careers/apply`, { method: 'POST', body: form({ blob: big, name: 'big.pdf' }) });
+    assert.equal(tooBig.status, 400);
+    assert.match((await tooBig.json()).error, /5 MB/);
+    const noFile = await fetch(`${base}/api/careers/apply`, { method: 'POST', body: form(null) });
+    assert.equal(noFile.status, 200, 'the resume is optional');
+    try { fsx.unlinkSync(mail.attachments[0].path); } catch {}
+  } finally { delete process.env.SMTP_HOST; delete process.env.OPERATOR_EMAIL; }
+});

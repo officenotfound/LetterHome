@@ -1088,6 +1088,13 @@ Object.keys(COUNTRY_GUIDES).forEach(p => {
   app.get(`/business-${c}`, (req, res) => res.redirect(301, `/${c}/business`));
 });
 app.get('/us/es/business', (req, res) => res.sendFile(path.join(__dirname, 'public', 'business-us-es.html')));
+// Careers: /careers lists open roles (scripts/build-careers.py builds the pages)
+app.get('/careers', (req, res) => res.sendFile(path.join(__dirname, 'public', 'careers.html')));
+app.get('/careers/:slug', (req, res, next) => {
+  if (!/^[a-z0-9-]+$/.test(req.params.slug)) return next();
+  const file = path.join(__dirname, 'public', `careers-${req.params.slug}.html`);
+  require('fs').access(file, err => err ? next() : res.sendFile(file));
+});
 app.get('/business-us-es', (req, res) => res.redirect(301, '/us/es/business'));
 
 // Spanish versions of the US pages live under /us/es
@@ -3509,6 +3516,61 @@ app.post('/api/contact', contactLimiter, async (req, res, next) => {
   res.json({ ok: true });
 });
 
+// ── Job applications from /careers/<role>, with an optional resume (PDF or Word, up to 5 MB) ──
+// The resume is checked by its actual bytes, kept in uploads/applications (never served publicly) and emailed to the operator.
+const APPLICATION_DIR = path.join(__dirname, 'uploads', 'applications');
+const resumeUpload = multer({
+  dest: path.join(__dirname, 'uploads'),
+  limits: { fileSize: 5 * 1024 * 1024, files: 1, fields: 20, parts: 25 },
+  fileFilter(req, file, cb) {
+    const ext = path.extname(file.originalname).toLowerCase();
+    const ok = { '.pdf': 'application/pdf', '.doc': 'application/msword', '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' };
+    if (ok[ext] && ok[ext] === file.mimetype) return cb(null, true);
+    const err = new Error('Please upload your resume as a PDF or Word file.'); err.code = 'UNSUPPORTED_FILE_TYPE'; cb(err);
+  },
+});
+const careersLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, max: 5, standardHeaders: true, legacyHeaders: false,
+  skip: () => process.env.NODE_ENV === 'test',
+  handler: (req, res) => { res.set('Retry-After', '3600'); res.status(429).json({ error: 'Too many applications sent. Please try again in an hour.' }); },
+});
+app.post('/api/careers/apply', careersLimiter, (req, res, next) => {
+  resumeUpload.single('resume')(req, res, async err => {
+    const drop = () => { if (req.file) try { fs.unlinkSync(req.file.path); } catch {} };
+    if (err) {
+      drop();
+      return res.status(400).json({ error: err.code === 'LIMIT_FILE_SIZE' ? 'Your resume is larger than 5 MB. Please upload a smaller file.' : (err.code === 'UNSUPPORTED_FILE_TYPE' ? err.message : 'The upload could not be read. Please try again.') });
+    }
+    const b = req.body || {};
+    const clean = (v, n) => String(v || '').replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, '').trim().slice(0, n);
+    const name = clean(b.name, 200).replace(/[\r\n]/g, ' '), email = clean(b.email, 200).replace(/[\r\n]/g, '');
+    const role = clean(b.role, 200).replace(/[\r\n]/g, ' ') || 'Not stated';
+    const experience = clean(b.experience, 3000), businesses = clean(b.businesses, 3000);
+    if (!name || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email) || !experience || !businesses) { drop(); return res.status(400).json({ error: 'Please fill in your name, a valid email and both questions.' }); }
+    let saved = null;
+    if (req.file) {
+      if (!checkMagicBytes(req.file.path, req.file.mimetype)) { drop(); return res.status(400).json({ error: 'That file does not look like a real PDF or Word document.' }); }
+      fs.mkdirSync(APPLICATION_DIR, { recursive: true });
+      const ext = path.extname(req.file.originalname).toLowerCase();
+      saved = path.join(APPLICATION_DIR, `${new Date().toISOString().slice(0, 10)}-${randomUUID()}${ext}`);
+      fs.renameSync(req.file.path, saved);
+    }
+    const message = `CAREERS APPLICATION: ${role}\n\nCountry: ${clean(b.country, 100) || 'not given'}\nLinkedIn or website: ${clean(b.link, 300) || 'not given'}\nResume: ${saved ? path.basename(saved) + ' (attached to the email, kept in uploads/applications)' : 'none uploaded'}\n\nSales experience:\n${experience}\n\nBusinesses they would approach:\n${businesses}`;
+    try {
+      db.prepare('INSERT INTO contact_submissions (name, email, message, ip) VALUES (?,?,?,?)').run(name, email, message, getClientIp(req));
+    } catch (e) { console.error('[careers] db log failed:', e.message); }
+    try {
+      await sendMail({
+        from: process.env.EMAIL_FROM, to: process.env.OPERATOR_EMAIL, replyTo: email,
+        subject: `[Letterhome Careers] ${name}: ${role}`,
+        text: `From: ${name} <${email}>\n\n${message}`,
+        ...(saved ? { attachments: [{ filename: `resume-${name.replace(/[^\w.-]+/g, '-').slice(0, 60)}${path.extname(saved)}`, path: saved }] } : {}),
+      }, 'careers_application');
+    } catch (e) { return next(e); }
+    res.json({ ok: true });
+  });
+});
+
 app.post('/api/account/register', accountLimiter, async (req, res) => {
   try {
     const email = (req.body.email || '').trim().toLowerCase();
@@ -4133,8 +4195,8 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:48px 36px 32px
 </div>
 <footer id="site-footer"></footer>
 <script src="/theme.js?v=4"></script>
-<script src="/lang.js?v=56" defer></script>
-<script src="/footer.js?v=20" defer></script>
+<script src="/lang.js?v=57" defer></script>
+<script src="/footer.js?v=21" defer></script>
 </body>
 </html>`;
 }

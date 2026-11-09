@@ -340,9 +340,9 @@ def build(key):
 </main>
 
 <footer id="site-footer"></footer>
-<script src="/footer.js?v=20" defer></script>
+<script src="/footer.js?v=21" defer></script>
 <script src="/theme.js?v=4" defer></script>
-<script src="/lang.js?v=56" defer></script>
+<script src="/lang.js?v=57" defer></script>
 <script>
 async function submitBizForm() {{
   const v = id => document.getElementById(id).value.trim();
