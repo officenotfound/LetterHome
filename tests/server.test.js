@@ -1592,3 +1592,11 @@ test('www.letterhome.ca redirects to the bare domain, and the server does not an
   const res = await fetch(`${base}/`);
   assert.equal(res.headers.get('x-powered-by'), null);
 });
+
+test('Google Analytics: /ga.js carries the site measurement ID, loads only after consent, and is cached briefly', async () => {
+  const res = await fetch(`${base}/ga.js`);
+  const js = await res.text();
+  assert.match(js, /G-DF3XQ6ML41/);
+  assert.match(js, /lh-analytics-consent/);
+  assert.equal(res.headers.get('cache-control'), 'public, max-age=3600');
+});

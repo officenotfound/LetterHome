@@ -1173,7 +1173,8 @@ app.use(express.static('public', {
 }));
 
 app.get('/ga.js', (req, res) => {
-  const id = process.env.GA4_MEASUREMENT_ID;
+  // The measurement ID is public (it appears in every page that loads the tag), so the site's own ID is the default.
+  const id = process.env.GA4_MEASUREMENT_ID || 'G-DF3XQ6ML41';
   res.setHeader('Content-Type', 'application/javascript');
   // Short cache: this file changes when the measurement ID is set or changed on the server.
   res.setHeader('Cache-Control', 'public, max-age=3600');
