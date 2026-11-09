@@ -1568,3 +1568,19 @@ test('an order placed with the Spanish form is stored as a Spanish order', async
   assert.equal(res.status, 200, await res.clone().text());
   assert.equal(db.prepare("SELECT order_lang FROM orders WHERE customer_email = 'es-form@example.com'").get().order_lang, 'es');
 });
+
+test('Spanish business page: served at letterhome.us/es/business, Spanish canonical, linked both ways with the English page', async () => {
+  setFlag('us_domain_live', 'true');
+  try {
+    const es = await siteGet('letterhome.us', '/es/business');
+    assert.equal(es.status, 200);
+    assert.match(es.body, /<html lang="es-US"/);
+    assert.ok(es.body.includes('<link rel="canonical" href="https://letterhome.us/es/business">'));
+    assert.match(es.body, /Lo que enviamos para empresas/);
+    assert.ok(es.body.includes('href="/business"'), 'links back to the English page');
+    const en = await siteGet('letterhome.us', '/business');
+    assert.ok(en.body.includes('hreflang="es-US" href="https://letterhome.us/es/business"'), 'English page lists the Spanish alternate');
+    assert.ok(en.body.includes('href="/es/business"'), 'English page links to the Spanish one');
+    assert.ok((await siteGet('letterhome.us', '/sitemap.xml')).body.includes('<loc>https://letterhome.us/es/business</loc>'));
+  } finally { setFlag('us_domain_live', 'false'); }
+});

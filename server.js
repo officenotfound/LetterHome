@@ -1086,6 +1086,8 @@ Object.keys(COUNTRY_GUIDES).forEach(p => {
   app.get(`/${c}/business`, (req, res) => res.sendFile(path.join(__dirname, 'public', `business-${c}.html`)));
   app.get(`/business-${c}`, (req, res) => res.redirect(301, `/${c}/business`));
 });
+app.get('/us/es/business', (req, res) => res.sendFile(path.join(__dirname, 'public', 'business-us-es.html')));
+app.get('/business-us-es', (req, res) => res.redirect(301, '/us/es/business'));
 
 // Spanish versions of the US pages live under /us/es
 app.get('/us/es', (req, res) => res.sendFile(path.join(__dirname, 'public', 'us-es.html')));

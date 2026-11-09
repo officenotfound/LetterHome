@@ -9,9 +9,9 @@ STYLE = re.search(r'<style>(.*?)</style>', SRC, re.S).group(1)
 THEME_SCRIPT = re.search(r'(<script>\(function\(\)\{try\{var m=window\.matchMedia.*?</script>)', SRC, re.S).group(1)
 
 BASE = 'https://letterhome.ca'
-PATHS = {'ca': '/business', 'us': '/us/business', 'uk': '/uk/business', 'au': '/au/business'}
+PATHS = {'ca': '/business', 'us': '/us/business', 'uk': '/uk/business', 'au': '/au/business', 'us-es': '/us/es/business'}
 FILES = {'ca': 'business.html', 'us': 'business-us.html', 'uk': 'business-uk.html', 'au': 'business-au.html'}
-HREFLANG = [('en-CA', 'ca'), ('en-US', 'us'), ('en-GB', 'uk'), ('en-AU', 'au')]
+HREFLANG = [('en-CA', 'ca'), ('en-US', 'us'), ('es-US', 'us-es'), ('en-GB', 'uk'), ('en-AU', 'au')]
 
 COUNTRIES = {
   'ca': dict(
@@ -368,5 +368,131 @@ async function submitBizForm() {{
 '''
 
 for k in COUNTRIES:
-    open('public/' + FILES[k], 'w', encoding='utf-8').write(build(k))
+    page = build(k)
+    if k == 'us': page = page.replace('<p class="bz-fine">', '<p class="bz-fine"><a href="/us/es/business" hreflang="es-US" lang="es">Leer en español</a> · ', 1)
+    open('public/' + FILES[k], 'w', encoding='utf-8').write(page)
     print('wrote public/' + FILES[k])
+
+# ── Spanish US page (letterhome.us/es/business), translated from the US page ─────────────────────────────────────────────
+ES = [
+ ('For business', 'Para empresas'),
+ ('Print and mail at volume,', 'Imprima y envíe por volumen,'),
+ ('without a print shop.', 'sin pasar por una imprenta.'),
+ ('Letters, postcards and more, printed, addressed and mailed for you, in the U.S. and abroad. One list in, every piece checked and mailed.', 'Cartas, postales y más: las imprimimos, les ponemos la dirección y las enviamos en su nombre, en EE. UU. y al extranjero. Usted nos manda una lista y nosotros revisamos y enviamos cada pieza.'),
+ ('See what we mail', 'Vea lo que enviamos'),
+ ('We reply within one business day. Nothing prints until you agree to the price.', 'Respondemos en un día hábil. No se imprime nada hasta que usted acepte el precio.'),
+ ('Your business', 'Su empresa'), ('Your return address', 'Su dirección de remitente'), ('On every envelope', 'En cada sobre'),
+ ('Each name on your list', 'Cada nombre de su lista'), ('Each address checked', 'Cada dirección revisada'), ('Mailed from', 'Enviado desde'),
+ ('One list in', 'Una sola lista'), ('every piece checked and mailed', 'cada pieza revisada y enviada'),
+ ('Every address checked before printing', 'Revisamos cada dirección antes de imprimir'),
+ ('A set price before anything prints', 'Un precio fijo antes de imprimir'),
+ ('An email when your pieces go out', 'Un correo cuando salen sus envíos'),
+ ('What we mail for businesses', 'Lo que enviamos para empresas'),
+ ('Where our U.S. printing is running, your pieces are printed and mailed inside the U.S. Otherwise they are printed in Canada and mailed from there, which takes longer. Your quote says which applies.', 'Donde nuestra impresión en EE. UU. está activa, sus envíos se imprimen y se envían dentro de EE. UU. Si no, se imprimen en Canadá y se envían desde allí, lo que tarda más. Su cotización indica cuál aplica.'),
+ ('Available now', 'Disponible'), ('By quote', 'Con cotización'), ('Where offered', 'Donde se ofrece'), ('Coming soon', 'Próximamente'),
+ ('Your text or your own PDF and Word files, printed in black and white or colour, folded and sealed in a window envelope. Every recipient address is checked before printing.', 'Su texto o sus propios archivos PDF y Word, impresos en blanco y negro o a color, doblados y cerrados en un sobre con ventana. Revisamos la dirección de cada destinatario antes de imprimir.'),
+ ('Postcards printed and mailed in a batch to your list. We can design them in-house, or print your own artwork. Tell us the size and quantity and we confirm what we can do and the price before anything prints.', 'Postales impresas y enviadas en un solo lote a su lista. Podemos diseñarlas nosotros o imprimir su propio diseño. Díganos el tamaño y la cantidad y le confirmamos lo que podemos hacer y el precio antes de imprimir.'),
+ ('Postcard sizes and options &rarr;', 'Tamaños y opciones de postales (en inglés) &rarr;'),
+ ('Mailing lists', 'Listas de envío'),
+ ('Send a spreadsheet with one row per recipient. We merge names and details into your letter and check each address before it prints.', 'Mándenos una hoja de cálculo con una fila por destinatario. Combinamos los nombres y datos en su carta y revisamos cada dirección antes de imprimir.'),
+ ('Mail services', 'Servicios de correo'),
+ ('Registered, certified or express mail on routes where it is offered, when you need proof of delivery.', 'Correo registrado, certificado o exprés en las rutas donde se ofrece, cuando necesita comprobante de entrega.'),
+ ('Scheduled mailings', 'Envíos programados'),
+ ('Pick the date your batch goes to print, so notices and renewals leave when they should.', 'Elija la fecha en que su lote se imprime, para que los avisos y las renovaciones salgan a tiempo.'),
+ ('Self-mailers and snap packs', 'Autoenvíos y formularios sellados'),
+ ('Folded self-mailers and snap-pack forms are on our list. Tell us what you would use them for and we will let you know when they are ready.', 'Los autoenvíos plegados y los formularios sellados (snap packs) están en nuestros planes. Cuéntenos para qué los usaría y le avisaremos cuando estén listos.'),
+ ('How it works', 'Cómo funciona'),
+ ('Tell us what you need to send, roughly how many pieces, and where they are going.', 'Díganos qué necesita enviar, cuántas piezas aproximadamente y a dónde van.'),
+ ('We reply within one business day with an exact total and a secure payment link. Nothing prints until you agree.', 'Respondemos en un día hábil con el total exacto y un enlace de pago seguro. No se imprime nada hasta que usted acepte.'),
+ ('You send the document and the recipient list, or ask us to design your postcards. We check every address and look over the batch before printing.', 'Usted nos manda el documento y la lista de destinatarios, o nos pide que diseñemos sus postales. Revisamos cada dirección y el lote completo antes de imprimir.'),
+ ('Everything is printed and mailed, and we email you when your pieces go out.', 'Todo se imprime y se envía, y le escribimos cuando salen sus envíos.'),
+ ('Who uses it', 'Quién lo usa'),
+ ('Property managers and landlords', 'Administradores de propiedades y arrendadores'),
+ ('Mail notices to many tenants at once, with a record of what went out and when.', 'Envíe avisos a muchos inquilinos a la vez, con un registro de lo que salió y cuándo.'),
+ ('Landlord notices &rarr;', 'Avisos para inquilinos (en inglés) &rarr;'),
+ ('Law offices and service firms', 'Despachos legales y empresas de servicios'),
+ ('Client letters and documents mailed in batches, in the U.S. and to Canada.', 'Cartas y documentos para clientes enviados por lotes, en EE. UU. y a Canadá.'),
+ ('Small businesses', 'Pequeñas empresas'),
+ ('Invoices, statements, renewals and thank-you letters, printed and mailed without a printer in the office.', 'Facturas, estados de cuenta, renovaciones y cartas de agradecimiento, impresas y enviadas sin impresora en la oficina.'),
+ ('Nonprofits, schools and clubs', 'Organizaciones sin fines de lucro, escuelas y clubes'),
+ ('Appeals, receipts and invitations to a membership list.', 'Campañas de donación, recibos e invitaciones a su lista de miembros.'),
+ ('Marketers', 'Mercadólogos'),
+ ('Postcards to a local list, sent in one batch.', 'Postales a una lista local, enviadas en un solo lote.'),
+ ('Real estate agents', 'Agentes inmobiliarios'),
+ ('Just listed and just sold postcards, open house invitations and market updates, sent to a neighbourhood list.', 'Postales de "recién listada" y "recién vendida", invitaciones a casa abierta y novedades del mercado, enviadas a una lista del vecindario.'),
+ ('Security and privacy', 'Seguridad y privacidad'),
+ ('Business mail often carries personal, financial or health information. The print and mail facility that produces your pieces follows these compliance standards:', 'El correo de empresa suele llevar información personal, financiera o de salud. Las instalaciones de impresión y envío que producen sus piezas cumplen estas normas:'),
+ ('US health information privacy', 'Privacidad de la información de salud en EE. UU.'),
+ ('Independently audited security controls', 'Controles de seguridad auditados de forma independiente'),
+ ('Payment card data security', 'Seguridad de los datos de tarjetas de pago'),
+ ('Canadian federal privacy law', 'Ley federal de privacidad de Canadá'),
+ ('Ontario health information privacy', 'Privacidad de la información de salud en Ontario'),
+ ('<h2>Pricing</h2>', '<h2>Precios</h2>'),
+ ('Volume pricing is quoted per job: send us the quantity and where the pieces are going and we reply with an exact total in U.S. dollars.', 'Los precios por volumen se cotizan por trabajo: díganos la cantidad y a dónde van las piezas y le respondemos con el total exacto en dólares estadounidenses.'),
+ ('Common questions', 'Preguntas frecuentes'),
+ ('Is there a minimum order?', '¿Hay un pedido mínimo?'),
+ ('No. A single letter works from the send page. Batches of ten or more pieces are quoted individually so you get the best total.', 'No. Una sola carta se envía desde la página de envío. Los lotes de diez piezas o más se cotizan por separado para darle el mejor total.'),
+ ('How long does it take?', '¿Cuánto tarda?'),
+ ('Pieces go to print within two business days of your approval. Delivery is typically up to two weeks within the destination country and up to four weeks internationally.', 'Las piezas se imprimen en un plazo de dos días hábiles después de su aprobación. La entrega suele tardar hasta dos semanas dentro del país de destino y hasta cuatro semanas a otros países.'),
+ ('Can you design the postcards?', '¿Pueden diseñar las postales?'),
+ ('Yes. We can design them in-house, so you do not need a designer. Tell us what the postcard is for and send your logo and any photos, and we send a proof for your approval before anything prints. You can also send your own finished artwork.', 'Sí. Podemos diseñarlas nosotros, así que no necesita un diseñador. Díganos para qué es la postal y mándenos su logotipo y fotos, y le enviamos una prueba para su aprobación antes de imprimir. También puede mandar su propio diseño terminado.'),
+ ('Can I use my own files?', '¿Puedo usar mis propios archivos?'),
+ ('Yes. Send PDF or Word files, or plain text, and we lay out and print them. Colour printing is available.', 'Sí. Mande archivos PDF o Word, o texto simple, y nosotros les damos formato y los imprimimos. Hay impresión a color.'),
+ ('Do I need an account?', '¿Necesito una cuenta?'),
+ ('No. We can also set up a business account for regular senders so you can upload batches yourself. Ask when you request your quote.', 'No. También podemos crear una cuenta de empresa para quienes envían con frecuencia, para que suba sus lotes usted mismo. Pregúntelo al pedir su cotización.'),
+ ('What do you check before printing?', '¿Qué revisan antes de imprimir?'),
+ ('Every recipient address is checked for delivery problems, and every batch is reviewed before it is printed. We do not mail threats, scams or illegal content.', 'Revisamos cada dirección para detectar problemas de entrega, y cada lote se revisa antes de imprimirse. No enviamos amenazas, estafas ni contenido ilegal.'),
+ ('Tell us what you need to send and we will reply within one business day with an exact total.', 'Díganos qué necesita enviar y le responderemos en un día hábil con el total exacto.'),
+ ('No minimum, no account needed', 'Sin mínimo y sin cuenta'),
+ ('An exact total and a secure payment link', 'Un total exacto y un enlace de pago seguro'),
+ ('Nothing prints until you agree', 'No se imprime nada hasta que usted acepte'),
+ ('Only need to send one?', '¿Solo necesita enviar una?'),
+ ('Send a single letter →', 'Enviar una sola carta →'),
+ ('>Your name<', '>Su nombre<'), ('>Business name<', '>Nombre de la empresa<'), ('>Email<', '>Correo electrónico<'), ('>Phone (optional)<', '>Teléfono (opcional)<'),
+ ('What do you want to mail?', '¿Qué quiere enviar?'), ('Select…', 'Elija…'),
+ ('<option>Letters</option>', '<option value="Letters">Cartas</option>'), ('<option>Postcards</option>', '<option value="Postcards">Postales</option>'),
+ ('<option>Letters and postcards</option>', '<option value="Letters and postcards">Cartas y postales</option>'),
+ ('<option>Self-mailers or snap packs (when available)</option>', '<option value="Self-mailers or snap packs">Autoenvíos o formularios sellados (cuando estén disponibles)</option>'),
+ ('<option>Not sure yet</option>', '<option value="Not sure yet">Todavía no lo sé</option>'),
+ ('About how many pieces?', '¿Cuántas piezas, aproximadamente?'),
+ ('<option>Under 10</option>', '<option value="Under 10">Menos de 10</option>'), ('<option>10 to 49</option>', '<option value="10 to 49">10 a 49</option>'),
+ ('<option>50 to 249</option>', '<option value="50 to 249">50 a 249</option>'), ('<option>250 to 999</option>', '<option value="250 to 999">250 a 999</option>'),
+ ('<option>1,000 or more</option>', '<option value="1,000 or more">1,000 o más</option>'),
+ ('Where are they going?', '¿A dónde van?'),
+ ('<option>Mostly within the U.S.</option>', '<option value="Mostly within the U.S.">Sobre todo dentro de EE. UU.</option>'),
+ ('<option>Mostly Canada</option>', '<option value="Mostly Canada">Sobre todo a Canadá</option>'),
+ ('<option>A mix of U.S. and Canada</option>', '<option value="A mix of U.S. and Canada">EE. UU. y Canadá</option>'),
+ ('<option>Other countries too</option>', '<option value="Other countries too">También otros países</option>'),
+ ('>Details<', '>Detalles<'),
+ ('e.g. a one-page notice to 120 tenants, black and white, mailed on the 1st of each month.', 'p. ej., un aviso de una página a 120 inquilinos, en blanco y negro, enviado el día 1 de cada mes.'),
+ ('Thanks. We will reply within one business day with the exact total and a payment link.', 'Gracias. Le responderemos en un día hábil con el total exacto y un enlace de pago.'),
+ ("alert('Please fill in all fields except phone.')", "alert('Complete todos los campos, excepto el teléfono.')"),
+ ("btn.textContent = 'Sending…'", "btn.textContent = 'Enviando…'"),
+ ("alert('Something went wrong. Please email us directly at support@letterhome.ca')", "alert('Algo salió mal. Escríbanos directamente a support@letterhome.ca')"),
+ ('BUSINESS QUOTE REQUEST (US site)', 'BUSINESS QUOTE REQUEST (US site, Spanish)'),
+ ("'Request a quote →'", "'Pedir cotización →'"), ('Request a quote →', 'Pedir cotización →'),
+ ('Request a quote', 'Pedir cotización'),
+]
+ES_TITLE = 'Correo para empresas en EE. UU.: cartas y postales por volumen | Letterhome'
+ES_DESC = 'Imprimimos, ponemos dirección y enviamos el correo de su empresa: cartas y postales por volumen, con direcciones revisadas. Pida una cotización.'
+
+def build_us_es():
+    en = build('us')
+    en_title = COUNTRIES['us']['title']; en_desc = COUNTRIES['us']['desc']
+    t = en.replace(esc(en_title), esc(ES_TITLE)).replace(esc(en_desc), esc(ES_DESC)).replace(en_title, ES_TITLE).replace(en_desc, ES_DESC)
+    for a, b in ES:
+        if a not in t: raise SystemExit(f'Spanish page: text not found in the US page: {a[:70]}')
+        t = t.replace(a, b)
+    t = t.replace('<html lang="en-US" data-en-only', '<html lang="es-US" data-en-only', 1)
+    t = t.replace(f'<link rel="canonical" href="{BASE}/us/business">', f'<link rel="canonical" href="{BASE}/us/es/business">', 1)
+    t = t.replace(f'<meta property="og:url" content="{BASE}/us/business">', f'<meta property="og:url" content="{BASE}/us/es/business">', 1)
+    t = t.replace('"@id":"%s/us/business","url":"%s/us/business"' % (BASE, BASE), '"@id":"%s/us/es/business","url":"%s/us/es/business"' % (BASE, BASE), 1)
+    t = t.replace('"inLanguage":"en-US"', '"inLanguage":"es-US"', 1)
+    t = t.replace('<meta property="og:locale" content="en_US">', '<meta property="og:locale" content="es_US">')
+    t = t.replace('<p class="bz-fine">', '<p class="bz-fine"><a href="/us/business" hreflang="en-US" lang="en">Read in English</a> · ', 1)
+    leftovers = [w for w in ['What we mail', 'How it works', 'Who uses it', 'Common questions', 'Your name', 'Business name', 'Request a quote'] if w in t]
+    if leftovers: raise SystemExit(f'Spanish page still has English: {leftovers}')
+    return t
+
+open('public/business-us-es.html', 'w', encoding='utf-8').write(build_us_es())
+print('wrote public/business-us-es.html')
