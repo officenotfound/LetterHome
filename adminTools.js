@@ -178,7 +178,7 @@ function parseUpload(buf, filename) {
 // Insights from stored snapshots
 // ---------------------------------------------------------------------------------------------
 
-function register(app, { db, requireAdmin, logAudit, getSetting, backupDir, appRoot, baseUrl, submitOrder, contentHeld, printReady }) {
+function register(app, { db, requireAdmin, logAudit, getSetting, indexNow, backupDir, appRoot, baseUrl, submitOrder, contentHeld, printReady }) {
   db.exec(`CREATE TABLE IF NOT EXISTS gsc_snapshots (
     id INTEGER PRIMARY KEY AUTOINCREMENT, site TEXT NOT NULL, imported_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     date_from TEXT, date_to TEXT, clicks INTEGER DEFAULT 0, impressions INTEGER DEFAULT 0, filename TEXT)`);
@@ -567,6 +567,13 @@ function register(app, { db, requireAdmin, logAudit, getSetting, backupDir, appR
     result.ran_at = row.ran_at;
     if (prev) { try { result.previous_counts = JSON.parse(prev.result).counts; } catch {} }
     res.json(result);
+  });
+
+  app.get('/api/admin/indexnow', requireAdmin, (req, res) => res.json(indexNow ? indexNow.status() : { enabled: false, last: null }));
+  app.post('/api/admin/indexnow/run', requireAdmin, async (req, res) => {
+    if (!indexNow) return res.status(404).json({ error: 'Not available' });
+    try { const r = await indexNow.run({ all: !!(req.body && req.body.all) }); logAudit(req, 'indexnow.run', 'sitemap', String(r.submitted || 0)); res.json(r); }
+    catch (e) { res.status(500).json({ error: e.message }); }
   });
 
   app.post('/api/admin/seo-audit/run', requireAdmin, (req, res) => {

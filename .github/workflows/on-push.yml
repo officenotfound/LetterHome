@@ -41,11 +41,7 @@ jobs:
             "https://www.google.com/ping?sitemap=https://letterhome.ca/sitemap.xml")
           echo "Google ping status: $STATUS"
 
-      - name: Ping IndexNow (Bing/Yandex/DuckDuckGo)
-        if: steps.new-urls.outputs.urls != ''
-        env:
-          NEW_URLS: ${{ steps.new-urls.outputs.urls }}
-        run: node .github/scripts/indexnow.js
+      # IndexNow now runs on the server after each deploy (indexnow.js), so pages are live when Bing fetches them
 
       - name: Submit to Wayback Machine
         if: steps.new-urls.outputs.urls != ''

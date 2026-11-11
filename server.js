@@ -2085,8 +2085,12 @@ app.use('/api/admin', (req, res, next) => {
 business.registerAdmin(app, { db, requireAdmin, logAudit, getSetting, setSetting });
 
 // Search Console import, funnel and revenue, server health, restore drill and the content audit.
+const indexNow = require('./indexnow').create({
+  getSetting, setSetting, publicDir: path.join(__dirname, 'public'), baseUrl: process.env.BASE_URL,
+  log: r => console.log(`IndexNow: ${r.submitted} pages sent, ${r.ok ? 'accepted' : 'failed, will retry'}`),
+});
 const adminTools = require('./adminTools').register(app, {
-  db, requireAdmin, logAudit, getSetting,
+  db, requireAdmin, logAudit, getSetting, indexNow,
   backupDir: process.env.BACKUP_DIR || path.join(__dirname, 'backups'),
   appRoot: __dirname,
   baseUrl: process.env.BASE_URL,
@@ -5061,6 +5065,9 @@ async function cartOfferJob() {
 }
 cron.schedule('40 * * * *', () => { cartOfferJob(); });
 cron.schedule('30 3 * * *', () => { try { adminTools.runAudit(); } catch (e) { console.error('Content audit failed:', e.message); } });
+// Tell Bing about new and changed pages: two minutes after each start (so after a deploy) and every night
+setTimeout(() => indexNow.run().catch(e => console.error('IndexNow failed:', e.message)), 120000).unref();
+cron.schedule('45 3 * * *', () => indexNow.run().catch(e => console.error('IndexNow failed:', e.message)));
 
 app.get('/api/admin/cart-offer-stats', requireAdmin, (req, res) => {
   const cfg = cartOfferSettings();

@@ -4097,6 +4097,7 @@ async function showSeoAudit(filter) {
   setTitle('Content audit');
   setMain('<div class="empty">Loading…</div>');
   const a = await api('/api/admin/seo-audit');
+  const inx = await api('/api/admin/indexnow');
   const runBtn = `<button class="btn btn-primary btn-sm" onclick="runSeoAudit()" id="audit-btn">Run audit now</button>`;
   if (!a || a.empty) return setMain(`<div class="card"><div class="card-header"><div class="card-title">Content audit</div>${runBtn}</div><div class="empty">No audit has run yet. It runs every night, or press the button.</div></div>`);
   const c = a.counts, pc = a.previous_counts;
@@ -4105,6 +4106,7 @@ async function showSeoAudit(filter) {
   const sevCol = { high: '#c1121f', med: '#b45309', low: '#6b6b6b' };
   const sevName = { high: 'Fix', med: 'Check', low: 'Minor' };
   setMain(`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px"><div style="font-size:12px;color:#6b6b6b">${nf(a.pages)} pages read from the site files on ${fmtDateTime(a.ran_at)}. It checks titles, descriptions, canonical links, headings, internal links, the sitemap and old "Updated" dates.</div>${runBtn}</div>
+    ${indexNowCard(inx)}
     <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
       ${statCard('Fix', nf(c.high), chg('high'), c.high ? '#c1121f' : '#15803d')}
       ${statCard('Check', nf(c.med), chg('med'), c.med ? '#b45309' : '#15803d')}
@@ -4112,6 +4114,21 @@ async function showSeoAudit(filter) {
     </div>
     <div style="display:flex;gap:6px;margin-bottom:16px">${['all', 'high', 'med', 'low'].map(k => `<button class="filter-btn ${auditFilter === k ? 'active' : ''}" onclick="showSeoAudit('${k}')">${k === 'all' ? 'All' : sevName[k]}</button>`).join('')}</div>
     <div class="card">${tbl(['Page', 'Issue', 'Level'], list.map(i => `<tr><td style="font-family:monospace;font-size:12px;word-break:break-all"><a href="${esc(i.page.startsWith('/') ? i.page : '#')}" target="_blank" rel="noopener" class="link">${esc(i.page)}</a></td><td style="text-align:left">${esc(i.msg)}</td><td style="text-align:right;color:${sevCol[i.sev]}">${sevName[i.sev]}</td></tr>`), 'Nothing found. Everything checked is in order.')}${a.truncated ? '<div style="padding:12px 24px;font-size:12px;color:#6b6b6b">Showing the first 400 findings.</div>' : ''}</div>`);
+}
+function indexNowCard(x) {
+  if (!x) return '';
+  const l = x.last;
+  const line = !x.enabled ? 'Only the live site sends these, so this server stays quiet.'
+    : !l ? 'Nothing sent yet. New and changed pages go out two minutes after each deploy and every night.'
+    : `Last sent ${esc(fmtDateTime(l.at))}: ${nf(l.submitted)} page${l.submitted === 1 ? '' : 's'}, ${l.ok ? 'accepted' : 'failed, it will retry'}.`;
+  return `<div class="card" style="margin-bottom:16px"><div class="card-header"><div class="card-title">Bing and AI search updates</div>${x.enabled ? '<button class="btn btn-primary btn-sm" id="inx-btn" onclick="runIndexNow()">Send changed pages now</button>' : ''}</div><div style="padding:0 16px 14px;font-size:13px;color:#6b6b6b">${line} Bing feeds Copilot and ChatGPT search, so new and changed pages are sent to it automatically.</div></div>`;
+}
+async function runIndexNow() {
+  const b = document.getElementById('inx-btn'); if (b) { b.disabled = true; b.textContent = 'Sending…'; }
+  const r = await api('/api/admin/indexnow/run', { method: 'POST', body: '{}' });
+  if (r && r.error) showToast(r.error);
+  else if (r) showToast(r.submitted ? `Sent ${r.submitted} page${r.submitted === 1 ? '' : 's'}` : 'Nothing has changed since the last send');
+  showSeoAudit();
 }
 async function runSeoAudit() {
   const b = document.getElementById('audit-btn'); if (b) { b.disabled = true; b.textContent = 'Running…'; }
