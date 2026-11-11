@@ -4392,7 +4392,10 @@ app.post('/api/admin/contacts/:id/reply', requireAdmin, async (req, res) => {
   }
 });
 
+// The dashboard and the Stripe tab both ask for this, and it is three live Stripe calls, so a good answer is reused for a minute.
+let stripeOverviewCache = { at: 0, data: null };
 app.get('/api/admin/stripe/overview', requireAdmin, async (req, res) => {
+  if (stripeOverviewCache.data && Date.now() - stripeOverviewCache.at < 60000 && !req.query.fresh) return res.json(stripeOverviewCache.data);
   try {
     const [balance, disputesList, payoutsList] = await Promise.all([
       stripe.balance.retrieve(),
@@ -4404,7 +4407,7 @@ app.get('/api/admin/stripe/overview', requireAdmin, async (req, res) => {
     const currency  = (balance.available[0]?.currency || 'cad').toUpperCase();
     const openDisputes = disputesList.data.filter(d => d.status === 'needs_response' || d.status === 'under_review');
     const lastPayout = payoutsList.data[0] || null;
-    res.json({
+    const data = {
       available, pending, currency,
       openDisputeCount: openDisputes.length,
       lastPayout: lastPayout ? {
@@ -4414,7 +4417,9 @@ app.get('/api/admin/stripe/overview', requireAdmin, async (req, res) => {
         arrival_date: lastPayout.arrival_date,
         created: lastPayout.created,
       } : null,
-    });
+    };
+    stripeOverviewCache = { at: Date.now(), data };
+    res.json(data);
   } catch (e) {
     console.error('[stripe/overview]', e.message);
     res.status(502).json({ error: e.message });
