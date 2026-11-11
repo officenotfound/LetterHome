@@ -178,7 +178,7 @@ function parseUpload(buf, filename) {
 // Insights from stored snapshots
 // ---------------------------------------------------------------------------------------------
 
-function register(app, { db, requireAdmin, logAudit, getSetting, backupDir, appRoot, baseUrl }) {
+function register(app, { db, requireAdmin, logAudit, getSetting, backupDir, appRoot, baseUrl, submitOrder, contentHeld, printReady }) {
   db.exec(`CREATE TABLE IF NOT EXISTS gsc_snapshots (
     id INTEGER PRIMARY KEY AUTOINCREMENT, site TEXT NOT NULL, imported_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     date_from TEXT, date_to TEXT, clicks INTEGER DEFAULT 0, impressions INTEGER DEFAULT 0, filename TEXT)`);
@@ -186,6 +186,7 @@ function register(app, { db, requireAdmin, logAudit, getSetting, backupDir, appR
     snapshot_id INTEGER NOT NULL, kind TEXT NOT NULL, key TEXT NOT NULL,
     clicks REAL, impressions REAL, ctr REAL, position REAL)`);
   db.exec('CREATE INDEX IF NOT EXISTS idx_gsc_rows_snap ON gsc_rows(snapshot_id, kind)');
+  for (const col of ['replied_at DATETIME', 'followup_note TEXT', 'followup_done_at DATETIME']) { try { db.exec(`ALTER TABLE outreach_contacts ADD COLUMN ${col}`); } catch {} }
   db.exec(`CREATE TABLE IF NOT EXISTS seo_audit_runs (id INTEGER PRIMARY KEY AUTOINCREMENT, ran_at DATETIME DEFAULT CURRENT_TIMESTAMP, result TEXT NOT NULL)`);
 
   const rowsOf = (id, kind) => db.prepare('SELECT key, clicks, impressions, ctr, position FROM gsc_rows WHERE snapshot_id = ? AND kind = ?').all(id, kind);
@@ -309,12 +310,13 @@ function register(app, { db, requireAdmin, logAudit, getSetting, backupDir, appR
       const median = hours.length ? hours[Math.floor(hours.length / 2)] : null;
       const repeat = db.prepare(`SELECT COUNT(*) n FROM (SELECT customer_email FROM orders WHERE status != 'awaiting_payment' AND deleted_at IS NULL GROUP BY customer_email HAVING COUNT(*) > 1)`).get().n;
       const customers = db.prepare(`SELECT COUNT(DISTINCT customer_email) n FROM orders WHERE status != 'awaiting_payment' AND deleted_at IS NULL`).get().n;
+      const mailedEmails = db.prepare(`SELECT COUNT(*) n FROM email_log WHERE type = 'mailed_notification' AND created_at >= datetime('now', ?)`).get(`-${days} days`).n;
       const topPages = db.prepare(`SELECT path, COUNT(*) n FROM page_views WHERE created_at >= datetime('now', ?)${pvSite} GROUP BY path ORDER BY n DESC LIMIT 8`).all(`-${days} days`);
 
       res.json({
         days, site,
         steps: { visitors: views.u, views: views.n, send_view: f.send_view || 0, step2: f.step2 || 0, step3: f.step3 || 0, pay_click: f.pay_click || 0, paid: paid.n, mailed },
-        resume_click: f.resume_click || 0,
+        resume_click: f.resume_click || 0, mailed_emails: mailedEmails,
         revenue_cents: paid.cents, orders: paid.n, unpaid, refunded,
         aov_cents: paid.n ? Math.round(paid.cents / paid.n) : 0,
         weekly, byCountry, bySite, topPages,
@@ -570,6 +572,112 @@ function register(app, { db, requireAdmin, logAudit, getSetting, backupDir, appR
   app.post('/api/admin/seo-audit/run', requireAdmin, (req, res) => {
     try { const r = runAudit(); r.ran_at = new Date().toISOString(); res.json(r); }
     catch (e) { res.status(500).json({ error: e.message }); }
+  });
+
+  // -------------------------------------------------------------------------------------------
+  // Approval queue: paid orders waiting for the owner to send them to print. Nothing is sent
+  // unless the owner presses Approve (one order or a ticked batch); no job ever does it for them.
+  // -------------------------------------------------------------------------------------------
+  const POSTAL = {
+    CA: /^[A-Za-z]\d[A-Za-z][ -]?\d[A-Za-z]\d$/, US: /^\d{5}(-\d{4})?$/, AU: /^\d{4}$/,
+    GB: /^[A-Za-z]{1,2}\d[A-Za-z\d]? ?\d[A-Za-z]{2}$/,
+  };
+  function addressIssues(o) {
+    const out = [];
+    const cc = String(o.destination_country || '').toUpperCase();
+    if (!o.recipient_name || !String(o.recipient_name).trim()) out.push('No recipient name');
+    if (!o.recipient_street || String(o.recipient_street).trim().length < 4) out.push('Street line is missing or very short');
+    if (POSTAL[cc]) {
+      if (!o.recipient_city) out.push('No city');
+      if (!o.recipient_postal) out.push('No postal code');
+      else if (!POSTAL[cc].test(String(o.recipient_postal).trim())) out.push(`Postal code "${o.recipient_postal}" does not look like a ${cc} code`);
+      if ((cc === 'CA' || cc === 'US' || cc === 'AU') && !o.recipient_province) out.push('No province or state');
+    }
+    return out;
+  }
+
+  app.get('/api/admin/approvals', requireAdmin, (req, res) => {
+    try {
+      const today = new Date().toISOString().slice(0, 10);
+      const rows = db.prepare(`SELECT id, created_at, paid_at, order_site, recipient_name, recipient_street, recipient_city, recipient_province, recipient_postal,
+          destination_country, page_count, colour_printing, registered_mail, certified_mail, express_mail, large_envelope, price_cents, postgrid_error,
+          scheduled_date, content_flags, content_cleared_at, skip_return
+        FROM orders WHERE status = 'paid' AND postgrid_letter_id IS NULL AND deleted_at IS NULL ORDER BY COALESCE(paid_at, created_at) ASC LIMIT 100`).all();
+      const orders = rows.map(o => {
+        const held = contentHeld ? !!contentHeld(o) : false;
+        let flags = [];
+        if (held) { try { flags = (JSON.parse(o.content_flags).hits || []).map(h => h.label); } catch {} }
+        const issues = addressIssues(o);
+        const scheduled = o.scheduled_date && o.scheduled_date > today ? o.scheduled_date : null;
+        const manual = !!(o.postgrid_error && /^MANUAL/.test(o.postgrid_error)) && !/Scheduled for/.test(o.postgrid_error);
+        const clean = !held && !issues.length && !scheduled && !manual;
+        return {
+          id: o.id, created_at: o.created_at, paid_at: o.paid_at, site: o.order_site || 'ca',
+          to: [o.recipient_name, o.recipient_street, [o.recipient_city, o.recipient_province, o.recipient_postal].filter(Boolean).join(' '), o.destination_country].filter(Boolean),
+          country: o.destination_country, pages: o.page_count || null, colour: !!o.colour_printing, large_envelope: !!o.large_envelope,
+          extras: [o.registered_mail && 'registered', o.certified_mail && 'certified', o.express_mail && 'express'].filter(Boolean),
+          price_cents: o.price_cents, error: o.postgrid_error || null, scheduled, held, flags, issues, clean, no_return: !!o.skip_return,
+        };
+      });
+      res.json({ orders, configured: printReady ? !!printReady() : false, max_batch: 10 });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+
+  let approving = false;
+  app.post('/api/admin/approvals/approve', requireAdmin, async (req, res) => {
+    const ids = Array.isArray(req.body && req.body.ids) ? [...new Set(req.body.ids.map(Number).filter(n => Number.isInteger(n) && n > 0))] : [];
+    if (!ids.length) return res.status(400).json({ error: 'No orders chosen.' });
+    if (ids.length > 10) return res.status(400).json({ error: 'Approve at most 10 at a time.' });
+    if (!printReady || !printReady()) return res.status(400).json({ error: 'PostGrid is not configured.' });
+    if (approving) return res.status(409).json({ error: 'A batch is already being sent. Wait for it to finish.' });
+    approving = true;
+    const results = [];
+    try {
+      for (const id of ids) {
+        const o = db.prepare("SELECT id, status, postgrid_letter_id, deleted_at FROM orders WHERE id = ?").get(id);
+        if (!o || o.deleted_at || o.status !== 'paid' || o.postgrid_letter_id) { results.push({ id, ok: false, error: 'Not waiting for approval any more.' }); continue; }
+        const r = await submitOrder(id);
+        logAudit(req, 'order.approve_submit', 'order', id, { ok: r.ok, error: r.error, letter_id: r.letter_id, batch: ids.length > 1 });
+        results.push({ id, ok: !!r.ok, error: r.ok ? null : r.error, letter_id: r.letter_id || null });
+      }
+      res.json({ ok: results.every(r => r.ok), results });
+    } catch (e) { res.status(500).json({ error: e.message, results }); }
+    finally { approving = false; }
+  });
+
+  // -------------------------------------------------------------------------------------------
+  // Outreach follow-ups: who was emailed, opened, and has not answered. Nothing is sent from here.
+  // -------------------------------------------------------------------------------------------
+  app.get('/api/admin/outreach/followups', requireAdmin, (req, res) => {
+    try {
+      const days = Math.min(60, Math.max(1, parseInt(req.query.days, 10) || 7));
+      const base = `SELECT oc.id, oc.campaign, oc.business_name, oc.contact_name, oc.email, oc.phone, oc.notes, oc.status, oc.sent_at, oc.error,
+          oc.replied_at, oc.followup_note, oc.followup_done_at, COALESCE(eo.open_count, 0) AS opens,
+          (SELECT 1 FROM customers c WHERE lower(c.email) = lower(oc.email) AND c.unsubscribed_at IS NOT NULL) AS unsub
+        FROM outreach_contacts oc LEFT JOIN email_opens eo ON eo.token = oc.token`;
+      const due = db.prepare(`${base} WHERE oc.status = 'sent' AND oc.replied_at IS NULL
+          AND COALESCE(oc.followup_done_at, oc.sent_at) <= datetime('now', ?) ORDER BY opens DESC, oc.sent_at ASC LIMIT 200`).all(`-${days} days`).filter(r => !r.unsub);
+      const waiting = db.prepare(`SELECT COUNT(*) n FROM outreach_contacts WHERE status = 'sent' AND replied_at IS NULL AND COALESCE(followup_done_at, sent_at) > datetime('now', ?)`).get(`-${days} days`).n;
+      const replied = db.prepare(`${base} WHERE oc.replied_at IS NOT NULL ORDER BY oc.replied_at DESC LIMIT 50`).all();
+      const failed = db.prepare(`${base} WHERE oc.status = 'failed' ORDER BY oc.id DESC LIMIT 50`).all();
+      const unsubscribed = db.prepare(`SELECT COUNT(*) n FROM outreach_contacts oc WHERE EXISTS (SELECT 1 FROM customers c WHERE lower(c.email) = lower(oc.email) AND c.unsubscribed_at IS NOT NULL)`).get().n;
+      res.json({ days, due, waiting, replied, failed, unsubscribed });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+
+  app.post('/api/admin/outreach/contacts/:id/followup', requireAdmin, (req, res) => {
+    const id = parseInt(req.params.id, 10);
+    const action = req.body && req.body.action;
+    const note = typeof (req.body && req.body.note) === 'string' ? req.body.note.slice(0, 500) : null;
+    const row = db.prepare('SELECT id FROM outreach_contacts WHERE id = ?').get(id);
+    if (!row) return res.status(404).json({ error: 'Contact not found' });
+    if (action === 'replied') db.prepare('UPDATE outreach_contacts SET replied_at = CURRENT_TIMESTAMP, followup_note = COALESCE(?, followup_note) WHERE id = ?').run(note, id);
+    else if (action === 'followed_up') db.prepare('UPDATE outreach_contacts SET followup_done_at = CURRENT_TIMESTAMP, followup_note = COALESCE(?, followup_note) WHERE id = ?').run(note, id);
+    else if (action === 'reopen') db.prepare('UPDATE outreach_contacts SET replied_at = NULL, followup_done_at = NULL WHERE id = ?').run(id);
+    else if (action === 'note') db.prepare('UPDATE outreach_contacts SET followup_note = ? WHERE id = ?').run(note, id);
+    else return res.status(400).json({ error: 'Unknown action.' });
+    logAudit(req, 'outreach.' + action, 'outreach', String(id));
+    res.json({ ok: true });
   });
 
   return { runAudit };

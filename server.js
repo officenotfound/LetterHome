@@ -203,6 +203,12 @@ app.use(helmet({
     : false,
   referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
 }));
+// The admin shows letter previews in a frame on its own pages (the approval queue). Public pages keep frame-src 'none'.
+app.use('/admin', (req, res, next) => {
+  const csp = res.getHeader('Content-Security-Policy');
+  if (csp) res.setHeader('Content-Security-Policy', String(csp).replace("frame-src 'none'", "frame-src 'self'"));
+  next();
+});
 // Home page, sitemap and robots.txt per domain. Registered after helmet so they carry the same security headers as every other page.
 sites.register(app);
 
@@ -2083,6 +2089,9 @@ const adminTools = require('./adminTools').register(app, {
   backupDir: process.env.BACKUP_DIR || path.join(__dirname, 'backups'),
   appRoot: __dirname,
   baseUrl: process.env.BASE_URL,
+  submitOrder: id => postgridSubmit(id, { force: true }),
+  contentHeld: o => contentHeld(o),
+  printReady: () => postgrid.isConfigured(),
 });
 
 app.get('/api/admin/me', requireAdmin, (req, res) =>
@@ -2449,6 +2458,8 @@ app.get('/api/admin/orders/:id/postgrid/preview', requireAdmin, async (req, res)
     // Default: the finished look, with addresses where PostGrid stamps them. ?raw=1: the exact file uploaded to PostGrid.
     const b = req.query.raw ? await postgrid.buildLetterPdf(order) : await postgrid.buildPreviewPdf(order);
     res.setHeader('Content-Type', 'application/pdf');
+    // Lets the browser's PDF viewer draw inside the approval queue frame (the site-wide policy blocks plug-in content).
+    res.setHeader('Content-Security-Policy', "default-src 'none'; object-src 'self'; style-src 'unsafe-inline'");
     if (b.sheets !== undefined) res.setHeader('X-Letter-Sheets', String(b.sheets));
     res.setHeader('X-Letter-Unsupported', encodeURIComponent(b.unsupported.join(',')));
     res.send(b.pdf);

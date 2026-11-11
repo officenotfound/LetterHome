@@ -504,7 +504,9 @@ function renderRoute(p) {
   if (p === '/admin/trash')                         return showTrash();
   if (p === '/admin/broadcast')                     return showBroadcast();
   if (p === '/admin/outreach')                       return showOutreach();
+  if (p === '/admin/followups')                     return showFollowups();
   if (p === '/admin/print-queue')                   return showPrintQueue();
+  if (p === '/admin/approvals')                     return showApprovals();
   if (p === '/admin/insights')                      return showInsights();
   if (p === '/admin/visitors')                      return showVisitors();
   if (p === '/admin/stripe')                        return showStripe();
@@ -525,9 +527,9 @@ function renderRoute(p) {
 
 // Related sections share one menu item and show as tabs. Every address still works as before.
 const NAV_GROUPS = {
-  orders:   { tabs: [['/admin/orders', 'Orders'], ['/admin/print-queue', 'Print queue']] },
+  orders:   { tabs: [['/admin/orders', 'Orders'], ['/admin/approvals', 'Approvals'], ['/admin/print-queue', 'Print queue']] },
   people:   { tabs: [['/admin/customers', 'Customers'], ['/admin/accounts', 'Accounts'], ['/admin/contacts', 'Contacts'], ['/admin/businesses', 'Businesses']] },
-  messages: { tabs: [['/admin/broadcast', 'Broadcast'], ['/admin/outreach', 'Outreach'], ['/admin/templates', 'Templates'], ['/admin/emails', 'Emails']] },
+  messages: { tabs: [['/admin/broadcast', 'Broadcast'], ['/admin/outreach', 'Outreach'], ['/admin/followups', 'Follow-ups'], ['/admin/templates', 'Templates'], ['/admin/emails', 'Emails']] },
   reports:  { tabs: [['/admin/insights', 'Insights'], ['/admin/visitors', 'Visitors'], ['/admin/growth', 'Search'], ['/admin/funnel', 'Funnel'], ['/admin/seo-audit', 'Content audit'], ['/admin/stripe', 'Stripe']] },
   system:   { tabs: [['/admin/settings', 'Settings'], ['/admin/health', 'Health'], ['/admin/codes', 'Codes'], ['/admin/audit-log', 'Audit log'], ['/admin/trash', 'Trash']] },
 };
@@ -3917,7 +3919,7 @@ init();
 // ── Search growth, funnel and revenue, server health, content audit ───────────────────────────────
 const SITE_LABELS = { ca: 'letterhome.ca', us: 'letterhome.us', uk: 'letterhome.co.uk', au: 'letterhome.ca/au' };
 const tbl = (head, rows, empty) => rows.length
-  ? `<table><thead><tr>${head.map((h, i) => `<th${i ? ' style="text-align:right"' : ''}>${esc(h)}</th>`).join('')}</tr></thead><tbody>${rows.join('')}</tbody></table>`
+  ? `<div style="overflow-x:auto"><table><thead><tr>${head.map((h, i) => `<th${i ? ' style="text-align:right"' : ''}>${esc(h)}</th>`).join('')}</tr></thead><tbody>${rows.join('')}</tbody></table></div>`
   : `<div class="empty" style="padding:28px">${esc(empty || 'Nothing here yet.')}</div>`;
 const nf = n => Math.round(n || 0).toLocaleString();
 const pf = (n, d = 1) => (n * 100).toFixed(d) + '%';
@@ -4034,7 +4036,7 @@ async function showFunnel(days, site) {
   }).join('');
   const wmax = Math.max(1, ...f.weekly.map(w => w.cents));
   const weekly = f.weekly.map(w => `<tr><td>${esc(w.week)}</td><td style="text-align:right">${nf(w.orders)}</td><td style="text-align:right">${cad(w.cents)}</td><td style="width:40%"><div style="background:#16a34a;height:10px;width:${Math.max(1, Math.round(w.cents / wmax * 100))}%"></div></td></tr>`);
-  const note = `<div style="font-size:12px;color:#6b6b6b;margin-bottom:20px">Visitors are unique addresses seen by the site's own counter. The checkout steps are not split by site, so they stay the same whichever site you pick. A big drop between two steps is where to look first.</div>`;
+  const note = `<div style="font-size:12px;color:#6b6b6b;margin-bottom:20px">The "mailed" email, which carries the one quiet review line, went out ${nf(f.mailed_emails)} time${f.mailed_emails === 1 ? '' : 's'} in this period. Review counts live on your Google profile. Visitors are unique addresses seen by the site's own counter. The checkout steps are not split by site, so they stay the same whichever site you pick. A big drop between two steps is where to look first.</div>`;
   setMain(ctl + kpis + note +
     `<div class="card"><div class="card-header"><div class="card-title">Checkout funnel, last ${f.days} days</div></div><table><tbody>${funnel}</tbody></table></div>` +
     `<div class="card"><div class="card-header"><div class="card-title">Orders per week</div></div>${tbl(['Week', 'Orders', 'Revenue', ''], weekly, 'No paid orders in this period.')}</div>` +
@@ -4113,6 +4115,139 @@ async function runSeoAudit() {
   await api('/api/admin/seo-audit/run', { method: 'POST', body: '{}' });
   showSeoAudit();
 }
+
+// ── Approval queue: check each paid order, then approve it yourself ───────────────────────────────
+let _appr = { orders: [], focus: 0, ticked: new Set(), open: new Set(), configured: false, busy: false };
+async function showApprovals() {
+  setTitle('Approvals');
+  setMain('<div class="empty">Loading…</div>');
+  const d = await api('/api/admin/approvals');
+  if (!d) return setMain('<div class="empty">Could not load this section.</div>');
+  _appr = { orders: d.orders, focus: 0, ticked: new Set(), open: new Set(), configured: d.configured, busy: false, max: d.max_batch };
+  renderApprovals();
+}
+function apprCard(o, i) {
+  const tag = (txt, bad) => `<span style="display:inline-block;margin:0 6px 4px 0;padding:2px 8px;font-size:11px;border:1px solid ${bad ? '#e63946' : '#d4d4d4'};color:${bad ? '#e63946' : '#6b6b6b'}">${esc(txt)}</span>`;
+  const status = o.clean ? '<span style="color:#16a34a">Looks clean</span>' : '<span style="color:#e63946">Needs a look</span>';
+  const problems = [
+    ...(o.held ? ['Held for content review' + (o.flags.length ? ': ' + o.flags.join(', ') : '') + '. Open the order and mark it safe first.'] : []),
+    ...o.issues, ...(o.scheduled ? ['Scheduled for ' + o.scheduled] : []),
+    ...(o.error && /^MANUAL/.test(o.error) && !o.held && !o.scheduled ? [o.error.replace(/^MANUAL: /, '')] : []),
+  ];
+  const focus = i === _appr.focus;
+  const open = _appr.open.has(o.id);
+  return `<div id="appr-${o.id}" class="card" style="margin-bottom:16px;${focus ? 'outline:2px solid #111111;' : ''}">
+    <div style="display:grid;grid-template-columns:${open ? 'minmax(260px,1fr) minmax(300px,1.4fr)' : '1fr'};gap:0">
+      <div style="padding:16px 20px;min-width:0">
+        <div style="display:flex;justify-content:space-between;gap:10px;font-size:11px;color:#9a9a9a;font-family:monospace;margin-bottom:10px">
+          <label style="display:flex;gap:8px;align-items:center;cursor:${o.clean ? 'pointer' : 'not-allowed'}"><input type="checkbox" ${_appr.ticked.has(o.id) ? 'checked' : ''} ${o.clean ? '' : 'disabled'} onchange="apprTick(${o.id}, this.checked)"> ORDER #${o.id} · ${fmtDate(o.paid_at || o.created_at)} · ${esc(o.site)}</label>
+          <span>${status}</span></div>
+        <div style="font-size:14px;line-height:1.7;font-weight:500;color:#111111;margin-bottom:10px">${o.to.map(esc).join('<br>')}</div>
+        <div style="margin-bottom:8px">${tag(o.pages ? o.pages + (o.pages > 1 ? ' pages' : ' page') : 'pages unknown', !o.pages)}${tag(o.colour ? 'colour' : 'black and white')}${o.large_envelope ? tag('large envelope') : ''}${o.extras.map(x => tag(x)).join('')}${o.no_return ? tag('no return address') : ''}${tag((o.price_cents / 100).toLocaleString(undefined, { style: 'currency', currency: 'CAD' }))}</div>
+        ${problems.length ? `<div style="font-size:12px;color:#e63946;line-height:1.6;margin-bottom:8px">${problems.map(p => '• ' + esc(p)).join('<br>')}</div>` : ''}
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+          <button class="btn btn-outline btn-sm" onclick="apprPreview(${o.id})">${open ? 'Hide preview' : 'Preview letter'}</button>
+          <a class="btn btn-outline btn-sm" href="/admin/orders/${o.id}" onclick="event.preventDefault();go('/admin/orders/${o.id}')">Open order</a>
+          <button class="btn btn-primary btn-sm" ${_appr.configured && !_appr.busy ? '' : 'disabled'} onclick="apprApprove([${o.id}])">Approve and send to print</button>
+        </div>
+        <div id="appr-res-${o.id}" style="font-size:12px;margin-top:8px"></div>
+      </div>
+      ${open ? `<div style="border-left:1px solid #ececec;min-width:0"><div style="padding:8px 14px;font-size:11px;border-bottom:1px solid #ececec"><a class="link" href="/api/admin/orders/${o.id}/postgrid/preview" target="_blank" rel="noopener">Open full size</a> <span style="color:#9a9a9a">· if the letter does not appear here, your browser is not showing PDFs in frames</span></div><iframe src="/api/admin/orders/${o.id}/postgrid/preview" title="Letter preview for order ${o.id}" style="width:100%;height:540px;border:0;background:#f5f5f5"></iframe></div>` : ''}
+    </div></div>`;
+}
+function renderApprovals() {
+  const a = _appr, n = a.ticked.size;
+  const cleanCount = a.orders.filter(o => o.clean).length;
+  if (!a.orders.length) return setMain('<div class="empty" style="padding:60px">Nothing is waiting for approval.</div>');
+  setMain(`
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px">
+      <div style="font-size:12px;color:#6b6b6b;line-height:1.6">${a.orders.length} paid order${a.orders.length > 1 ? 's' : ''} waiting, ${cleanCount} look clean. Nothing is sent until you approve it.<br>
+        Keys: <strong>j</strong> / <strong>k</strong> move, <strong>p</strong> preview, <strong>x</strong> tick, <strong>a</strong> approve this order, <strong>o</strong> open it.</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-outline btn-sm" onclick="apprTickAll()">Tick all clean (up to ${a.max || 10})</button>
+        <button class="btn btn-primary btn-sm" ${n && a.configured && !a.busy ? '' : 'disabled'} onclick="apprApprove([...(_appr.ticked)])">Approve ${n || ''} ticked</button>
+      </div>
+    </div>
+    ${a.configured ? '' : '<div class="card" style="padding:14px 20px;color:#b45309;font-size:13px">PostGrid is not set up on this server, so orders can be checked here but not sent.</div>'}
+    ${a.orders.map(apprCard).join('')}`);
+}
+function apprTick(id, on) { on ? _appr.ticked.add(id) : _appr.ticked.delete(id); if (_appr.ticked.size > (_appr.max || 10)) { _appr.ticked.delete(id); } renderApprovals(); }
+function apprTickAll() { _appr.ticked = new Set(_appr.orders.filter(o => o.clean).slice(0, _appr.max || 10).map(o => o.id)); renderApprovals(); }
+function apprPreview(id) { _appr.open.has(id) ? _appr.open.delete(id) : _appr.open.add(id); renderApprovals(); }
+async function apprApprove(ids) {
+  if (!ids.length || _appr.busy) return;
+  const list = _appr.orders.filter(o => ids.includes(o.id));
+  const warn = list.filter(o => !o.clean).length;
+  const msg = `Send ${ids.length} order${ids.length > 1 ? 's' : ''} to print (#${ids.join(', #')})?` + (warn ? `\n\n${warn} of them need a look. Send anyway?` : '') + '\n\nThis cannot be undone from here.';
+  if (!confirm(msg)) return;
+  _appr.busy = true; renderApprovals();
+  const r = await api('/api/admin/approvals/approve', { method: 'POST', body: JSON.stringify({ ids }) });
+  _appr.busy = false;
+  if (!r || !r.results) { alert((r && r.error) || 'Nothing was sent. Check the order page.'); return renderApprovals(); }
+  const failed = r.results.filter(x => !x.ok);
+  const sent = r.results.filter(x => x.ok).map(x => x.id);
+  _appr.orders = _appr.orders.filter(o => !sent.includes(o.id));
+  sent.forEach(id => _appr.ticked.delete(id));
+  _appr.focus = Math.min(_appr.focus, Math.max(0, _appr.orders.length - 1));
+  renderApprovals();
+  failed.forEach(f => { const el = document.getElementById('appr-res-' + f.id); if (el) { el.style.color = '#e63946'; el.textContent = 'Not sent: ' + (f.error || 'unknown error'); } });
+  if (sent.length) toastApproved(sent.length);
+}
+function toastApproved(n) {
+  const t = document.createElement('div');
+  t.textContent = n + ' order' + (n > 1 ? 's' : '') + ' sent to print.';
+  t.style.cssText = 'position:fixed;bottom:24px;right:24px;background:#111111;color:#fff;padding:12px 18px;font-size:13px;z-index:9999';
+  document.body.appendChild(t); setTimeout(() => t.remove(), 3500);
+}
+document.addEventListener('keydown', e => {
+  if (window.location.pathname !== '/admin/approvals' || e.metaKey || e.ctrlKey || e.altKey) return;
+  const tg = e.target && e.target.tagName;
+  if (tg === 'INPUT' || tg === 'TEXTAREA' || tg === 'SELECT') return;
+  const a = _appr, o = a.orders[a.focus];
+  if (!o) return;
+  const move = d => { a.focus = Math.max(0, Math.min(a.orders.length - 1, a.focus + d)); renderApprovals(); const el = document.getElementById('appr-' + a.orders[a.focus].id); if (el) el.scrollIntoView({ block: 'center' }); };
+  if (e.key === 'j') move(1);
+  else if (e.key === 'k') move(-1);
+  else if (e.key === 'p') apprPreview(o.id);
+  else if (e.key === 'x' && o.clean) apprTick(o.id, !a.ticked.has(o.id));
+  else if (e.key === 'a') apprApprove([o.id]);
+  else if (e.key === 'o') go('/admin/orders/' + o.id);
+});
+
+// ── Outreach follow-ups: who has not answered yet. Nothing is sent from here. ────────────────────
+let followDays = 7;
+async function showFollowups(days) {
+  if (days) followDays = days;
+  setTitle('Follow-ups');
+  setMain('<div class="empty">Loading…</div>');
+  const f = await api('/api/admin/outreach/followups?days=' + followDays);
+  if (!f) return setMain('<div class="empty">Could not load this section.</div>');
+  const ago = d => { const n = Math.floor((Date.now() - new Date(String(d).replace(' ', 'T') + 'Z')) / 86400000); return n <= 0 ? 'today' : n + ' day' + (n > 1 ? 's' : '') + ' ago'; };
+  const who = r => `<strong>${esc(r.business_name || r.contact_name || r.email)}</strong>${r.contact_name && r.business_name ? ' · ' + esc(r.contact_name) : ''}<br><span style="font-family:monospace;font-size:12px">${esc(r.email)}</span>${r.phone ? ' · ' + esc(r.phone) : ''}`;
+  const noteCell = r => `<input type="text" value="${esc(r.followup_note || '')}" maxlength="500" placeholder="Note" style="width:100%;font-size:12px;padding:6px 8px;border:1px solid #ececec" onchange="followAct(${r.id}, 'note', this.value)">`;
+  const dueRows = f.due.map(r => `<tr><td>${who(r)}<div style="font-size:11px;color:#9a9a9a;margin-top:4px">${esc(r.campaign)} · sent ${ago(r.followup_done_at || r.sent_at)}${r.opens ? ` · <span style="color:#16a34a">opened ${r.opens} time${r.opens > 1 ? 's' : ''}</span>` : ''}</div></td><td style="min-width:160px">${noteCell(r)}</td><td style="text-align:right;white-space:nowrap"><button class="btn btn-outline btn-sm" onclick="followAct(${r.id}, 'followed_up')">I followed up</button> <button class="btn btn-primary btn-sm" onclick="followAct(${r.id}, 'replied')">They replied</button></td></tr>`);
+  const repliedRows = f.replied.map(r => `<tr><td>${who(r)}</td><td>${esc(r.followup_note || '')}</td><td style="text-align:right;white-space:nowrap">${ago(r.replied_at)} <button class="link" onclick="followAct(${r.id}, 'reopen')">Reopen</button></td></tr>`);
+  const failedRows = f.failed.map(r => `<tr><td>${who(r)}</td><td style="font-size:12px;color:#e63946">${esc(r.error || 'Could not be sent')}</td><td></td></tr>`);
+  const dayBtns = [3, 7, 14, 30].map(d => `<button class="filter-btn ${followDays === d ? 'active' : ''}" onclick="showFollowups(${d})">${d} days</button>`).join('');
+  setMain(`<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px">
+      <div style="font-size:12px;color:#6b6b6b;line-height:1.6;max-width:640px">Contacts you emailed more than ${followDays} days ago who have not replied. Contacts who opened your email come first. Replies arrive in your own inbox, so mark them here when they do. Unsubscribed contacts never show up.</div>
+      <div style="display:flex;gap:6px">${dayBtns}</div></div>
+    <div class="stats-grid">
+      ${statCard('To follow up', nf(f.due.length), f.due.filter(r => r.opens).length + ' opened the email')}
+      ${statCard('Still waiting', nf(f.waiting), 'sent in the last ' + f.days + ' days')}
+      ${statCard('Replied', nf(f.replied.length), 'marked by you')}
+      ${statCard('Unsubscribed', nf(f.unsubscribed), 'left alone')}
+    </div>
+    <div class="card"><div class="card-header"><div class="card-title">Follow up</div></div>${tbl(['Contact', 'Note', ''], dueRows, 'No one is due a follow-up right now.')}</div>
+    <div class="card"><div class="card-header"><div class="card-title">Replied</div></div>${tbl(['Contact', 'Note', ''], repliedRows, 'No replies marked yet.')}</div>
+    <div class="card"><div class="card-header"><div class="card-title">Could not be sent</div></div>${tbl(['Contact', 'Problem', ''], failedRows, 'No failed sends.')}</div>`);
+}
+async function followAct(id, action, note) {
+  const r = await api(`/api/admin/outreach/contacts/${id}/followup`, { method: 'POST', body: JSON.stringify({ action, note }) });
+  if (action === 'note') return;
+  if (!r || !r.ok) return alert((r && r.error) || 'Could not save that.');
+  showFollowups();
+}
 </script>
 
 <div id="bulk-delete-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;padding:20px">
@@ -4135,6 +4270,7 @@ html[data-theme="dark"] #bulk-delete-modal-card{background:#141414;border-color:
 html[data-theme="dark"] #bulk-delete-modal-card div[style*="color:#111"]{color:#f5f5f5!important}
 html[data-theme="dark"] #bulk-delete-input{background:#0a0a0a;border-color:rgba(255,255,255,0.15);color:#f5f5f5}
 #bulk-delete-confirm:disabled{opacity:0.45;cursor:not-allowed}
+.btn:disabled{opacity:0.45;cursor:not-allowed}
 </style>
 </body>
 </html>

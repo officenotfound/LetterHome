@@ -48,14 +48,19 @@ const COUNTRIES = 'Country,Clicks,Impressions,CTR,Position\nCanada,19,5185,0.37%
 const CHART = 'Date,Clicks,Impressions,CTR,Position\n2026-10-01,1,133,0.75%,9\n2026-10-02,2,104,1.92%,8.4\n';
 
 let server, base;
+const submitted = [];
 
 before(async () => {
   const app = express();
+  app.use(express.json());
   const requireAdmin = (req, res, next) => next();
   app.use('/api/admin', (req, res, next) => { req.session = {}; next(); });
   const res = tools.register(app, {
     db, requireAdmin, logAudit: () => {}, getSetting: () => null,
     backupDir, appRoot: path.join(__dirname, '..'), baseUrl: 'http://localhost',
+    submitOrder: async id => { submitted.push(id); return id === 999999 ? { ok: false, error: 'PostGrid said no' } : { ok: true, letter_id: 'letter_' + id }; },
+    contentHeld: o => !!(o.content_flags && !o.content_cleared_at),
+    printReady: () => true,
   });
   assert.equal(typeof res.runAudit, 'function');
   await new Promise(r => { server = app.listen(0, '127.0.0.1', r); });
@@ -172,4 +177,83 @@ test('content audit reads the real pages and reports counts', async () => {
   assert.equal(again.pages, r.pages);
   const newPage = r.issues.filter(i => i.page === '/postage-for-a-large-letter-in-canada' && i.sev !== 'low');
   assert.deepEqual(newPage, [], 'the new large-letter page should have no high or medium issues');
+});
+
+const mkOrder = (email, o) => Number(db.prepare(`INSERT INTO orders (customer_email, recipient_name, recipient_street, recipient_city, recipient_province, recipient_postal, destination_country, price_cents, status, paid_at, content_flags)
+  VALUES (?,?,?,?,?,?,?,600,'paid', datetime('now'), ?)`).run(email, o.name || 'Pat Lee', o.street || '12 King St W', o.city || 'Toronto', o.prov || 'ON', o.postal || 'M5H 1A1', o.cc || 'CA', o.flags || null).lastInsertRowid);
+
+test('approval queue lists paid orders and separates clean ones from those that need a look', async () => {
+  const clean = mkOrder('c1@example.com', {});
+  const badPostal = mkOrder('c2@example.com', { postal: '12' });
+  const held = mkOrder('c3@example.com', { flags: JSON.stringify({ hits: [{ label: 'threat' }] }) });
+  const d = await (await fetch(`${base}/api/admin/approvals`)).json();
+  assert.equal(d.configured, true);
+  const by = Object.fromEntries(d.orders.map(o => [o.id, o]));
+  assert.equal(by[clean].clean, true);
+  assert.equal(by[badPostal].clean, false);
+  assert.match(by[badPostal].issues.join(' '), /Postal code/);
+  assert.equal(by[held].clean, false);
+  assert.equal(by[held].held, true);
+  assert.deepEqual(by[held].flags, ['threat']);
+});
+
+test('approving sends only what was chosen, and never an order that is not waiting', async () => {
+  const a = mkOrder('d1@example.com', {});
+  const b = mkOrder('d2@example.com', {});
+  const post = body => fetch(`${base}/api/admin/approvals/approve`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+  submitted.length = 0;
+  const r = await (await post({ ids: [a] })).json();
+  assert.equal(r.ok, true);
+  assert.deepEqual(submitted, [a], 'only the chosen order is sent');
+  db.prepare("UPDATE orders SET status = 'printing', postgrid_letter_id = 'x' WHERE id = ?").run(a);
+  submitted.length = 0;
+  const again = await (await post({ ids: [a, b] })).json();
+  assert.equal(again.results.find(x => x.id === a).ok, false, 'an order already sent is refused');
+  assert.deepEqual(submitted, [b]);
+});
+
+test('approving needs a list of ids and caps a batch at 10', async () => {
+  const post = body => fetch(`${base}/api/admin/approvals/approve`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+  assert.equal((await post({})).status, 400);
+  assert.equal((await post({ ids: [] })).status, 400);
+  assert.equal((await post({ ids: Array.from({ length: 11 }, (_, i) => i + 1) })).status, 400);
+  assert.equal((await post({ ids: ['x', -4, 1.5] })).status, 400);
+});
+
+test('a failed send is reported per order and does not stop the rest', async () => {
+  const good = mkOrder('e1@example.com', {});
+  const post = body => fetch(`${base}/api/admin/approvals/approve`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+  const bad = Number(db.prepare(`INSERT INTO orders (id, customer_email, recipient_name, recipient_street, price_cents, status) VALUES (999999,'e2@example.com','X','1 Main St',600,'paid')`).run().lastInsertRowid);
+  const r = await (await post({ ids: [bad, good] })).json();
+  assert.equal(r.ok, false);
+  assert.equal(r.results.find(x => x.id === bad).error, 'PostGrid said no');
+  assert.equal(r.results.find(x => x.id === good).ok, true);
+});
+
+test('outreach follow-ups: opened and quiet contacts come first, replied and unsubscribed are left out', async () => {
+  const add = (email, status, sentDaysAgo, token) => db.prepare(`INSERT INTO outreach_contacts (campaign, business_name, email, status, token, sent_at) VALUES ('t', ?, ?, ?, ?, datetime('now', ?))`)
+    .run('Biz ' + email, email, status, token, `-${sentDaysAgo} days`).lastInsertRowid;
+  const quiet = Number(add('quiet@example.com', 'sent', 10, 'tok-q'));
+  const opened = Number(add('opened@example.com', 'sent', 9, 'tok-o'));
+  const recent = Number(add('recent@example.com', 'sent', 2, 'tok-r'));
+  const gone = Number(add('gone@example.com', 'sent', 12, 'tok-g'));
+  const bounced = Number(add('bounce@example.com', 'failed', 12, 'tok-b'));
+  db.prepare("INSERT INTO email_opens (token, open_count) VALUES ('tok-o', 3)").run();
+  db.prepare("INSERT INTO customers (email, unsubscribed_at) VALUES ('gone@example.com', CURRENT_TIMESTAMP)").run();
+  const f = await (await fetch(`${base}/api/admin/outreach/followups?days=7`)).json();
+  const ids = f.due.map(r => r.id);
+  assert.deepEqual(ids, [opened, quiet], 'opened first, then oldest; recent and unsubscribed are not due');
+  assert.equal(f.waiting, 1);
+  assert.equal(f.failed[0].id, bounced);
+  assert.equal(f.unsubscribed, 1);
+  const post = body => fetch(`${base}/api/admin/outreach/contacts/${quiet}/followup`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+  assert.equal((await post({ action: 'replied', note: 'wants a quote' })).status, 200);
+  const after = await (await fetch(`${base}/api/admin/outreach/followups?days=7`)).json();
+  assert.deepEqual(after.due.map(r => r.id), [opened]);
+  assert.equal(after.replied[0].followup_note, 'wants a quote');
+  await post({ action: 'reopen' });
+  const reopened = await (await fetch(`${base}/api/admin/outreach/followups?days=7`)).json();
+  assert.ok(reopened.due.some(r => r.id === quiet));
+  assert.equal((await post({ action: 'nonsense' })).status, 400);
+  assert.equal(recent > 0, true);
 });
