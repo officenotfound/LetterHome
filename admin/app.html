@@ -508,6 +508,10 @@ function renderRoute(p) {
   if (p === '/admin/insights')                      return showInsights();
   if (p === '/admin/visitors')                      return showVisitors();
   if (p === '/admin/stripe')                        return showStripe();
+  if (p === '/admin/growth')                        return showGrowth();
+  if (p === '/admin/funnel')                        return showFunnel();
+  if (p === '/admin/health')                        return showHealth();
+  if (p === '/admin/seo-audit')                     return showSeoAudit();
   if (p === '/admin/contacts')                      return showContacts();
   if (p === '/admin/templates')                     return showTemplates();
   if (p === '/admin/settings')                      return showSettings();
@@ -524,8 +528,8 @@ const NAV_GROUPS = {
   orders:   { tabs: [['/admin/orders', 'Orders'], ['/admin/print-queue', 'Print queue']] },
   people:   { tabs: [['/admin/customers', 'Customers'], ['/admin/accounts', 'Accounts'], ['/admin/contacts', 'Contacts'], ['/admin/businesses', 'Businesses']] },
   messages: { tabs: [['/admin/broadcast', 'Broadcast'], ['/admin/outreach', 'Outreach'], ['/admin/templates', 'Templates'], ['/admin/emails', 'Emails']] },
-  reports:  { tabs: [['/admin/insights', 'Insights'], ['/admin/visitors', 'Visitors'], ['/admin/stripe', 'Stripe']] },
-  system:   { tabs: [['/admin/settings', 'Settings'], ['/admin/codes', 'Codes'], ['/admin/audit-log', 'Audit log'], ['/admin/trash', 'Trash']] },
+  reports:  { tabs: [['/admin/insights', 'Insights'], ['/admin/visitors', 'Visitors'], ['/admin/growth', 'Search'], ['/admin/funnel', 'Funnel'], ['/admin/seo-audit', 'Content audit'], ['/admin/stripe', 'Stripe']] },
+  system:   { tabs: [['/admin/settings', 'Settings'], ['/admin/health', 'Health'], ['/admin/codes', 'Codes'], ['/admin/audit-log', 'Audit log'], ['/admin/trash', 'Trash']] },
 };
 function groupOf(p) {
   for (const [g, v] of Object.entries(NAV_GROUPS)) {
@@ -933,6 +937,7 @@ function renderDashboard(stats, paidOrders, submittedOrders, chartData, geoData,
       <span>Memory: <strong>${Math.round(health.heapUsed/1048576)}MB used / ${Math.round(health.heapTotal/1048576)}MB total</strong></span>
       <span>DB: <strong>${health.dbSize > 1048576 ? (health.dbSize/1048576).toFixed(1)+'MB' : Math.round(health.dbSize/1024)+'KB'}</strong></span>
       <span>Node: <strong>${esc(health.nodeVersion)}</strong></span>
+      <button class="link" onclick="go('/admin/health')">Details →</button>
     </div>` : ''}`);
 }
 
@@ -3908,6 +3913,206 @@ function closeMobSidebar() {
 }
 
 init();
+
+// ── Search growth, funnel and revenue, server health, content audit ───────────────────────────────
+const SITE_LABELS = { ca: 'letterhome.ca', us: 'letterhome.us', uk: 'letterhome.co.uk', au: 'letterhome.ca/au' };
+const tbl = (head, rows, empty) => rows.length
+  ? `<table><thead><tr>${head.map((h, i) => `<th${i ? ' style="text-align:right"' : ''}>${esc(h)}</th>`).join('')}</tr></thead><tbody>${rows.join('')}</tbody></table>`
+  : `<div class="empty" style="padding:28px">${esc(empty || 'Nothing here yet.')}</div>`;
+const nf = n => Math.round(n || 0).toLocaleString();
+const pf = (n, d = 1) => (n * 100).toFixed(d) + '%';
+const cad = c => '$' + ((c || 0) / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const statCard = (label, value, sub, color) => `<div class="stat-card"><div class="stat-label">${esc(label)}</div><div class="stat-value"${color ? ` style="color:${color}"` : ''}>${value}</div>${sub ? `<div class="stat-sub">${sub}</div>` : ''}</div>`;
+const siteTabs = (cur, fn) => ['ca', 'us', 'uk', 'au'].map(s => `<button class="filter-btn ${cur === s ? 'active' : ''}" onclick="${fn}('${s}')">${esc(SITE_LABELS[s])}</button>`).join('');
+const deltaTxt = (now, before) => before == null ? '' : (now - before === 0 ? 'no change' : (now > before ? '+' : '') + nf(now - before) + ' vs last import');
+
+let growthSite = 'ca';
+async function showGrowth(site) {
+  if (site) growthSite = site;
+  setTitle('Search growth');
+  setMain('<div class="empty">Loading…</div>');
+  const g = await api('/api/admin/growth?site=' + growthSite);
+  if (!g) return setMain('<div class="empty">Could not load this section.</div>');
+  const upload = `
+    <div class="card"><div class="card-header"><div class="card-title">Import a Search Console export</div></div>
+      <div style="padding:16px 24px;font-size:13px;color:#6b6b6b;line-height:1.7">
+        In Search Console open <strong>Performance → Search results</strong>, choose a date range, then <strong>Export → Download Excel</strong> (or CSV, which comes as a .zip). Choose that file here for <strong>${esc(SITE_LABELS[growthSite])}</strong>.
+        Each import is kept, so the next one shows what moved.
+        <div style="margin-top:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <input type="file" id="gsc-file" accept=".zip,.xlsx,.csv" style="font-size:12px">
+          <button class="btn btn-primary btn-sm" onclick="importGrowth()">Import</button>
+          <span id="gsc-msg" style="font-size:12px"></span>
+        </div></div></div>`;
+  const head = `<div style="display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap">${siteTabs(growthSite, 'showGrowth')}</div>`;
+  if (g.empty) return setMain(head + upload + '<div class="empty">No export imported for this site yet.</div>');
+
+  const l = g.latest, p = g.previous;
+  const maxI = Math.max(1, ...g.chart.map(d => d.impressions));
+  const bars = g.chart.map(d => {
+    const h = Math.max(2, Math.round(d.impressions / maxI * 110)), c = Math.round(d.clicks / maxI * 110);
+    return `<div style="flex:1;min-width:0" title="${esc(d.key)}: ${nf(d.impressions)} impressions, ${nf(d.clicks)} clicks, position ${d.position.toFixed(1)}"><div style="height:${h}px;background:#bfdbfe;position:relative"><div style="position:absolute;bottom:0;left:0;right:0;height:${c}px;background:#2563eb"></div></div></div>`;
+  }).join('');
+  const kpis = `<div class="stats-grid">
+    ${statCard('Clicks', nf(l.clicks), p ? deltaTxt(l.clicks, p.clicks) : esc(l.date_from || '') + ' to ' + esc(l.date_to || ''))}
+    ${statCard('Impressions', nf(l.impressions), p ? deltaTxt(l.impressions, p.impressions) : '')}
+    ${statCard('Click rate', l.impressions ? pf(l.clicks / l.impressions, 2) : '–', 'clicks per impression')}
+    ${statCard('Average position', g.avgPosition ? g.avgPosition.toFixed(1) : '–', 'lower is better')}
+  </div>`;
+  const chartCard = g.chart.length ? `<div class="card"><div class="card-header"><div class="card-title">Daily impressions (clicks in dark blue)</div><span style="font-size:11px;color:#9a9a9a">${esc(l.date_from || '')} to ${esc(l.date_to || '')}</span></div><div style="padding:16px 20px;display:flex;align-items:flex-end;gap:2px;height:140px">${bars}</div></div>` : '';
+
+  const pageRow = r => `<tr><td style="font-family:monospace;font-size:12px;word-break:break-all">${esc(r.key)}</td><td style="text-align:right">${nf(r.impressions)}</td><td style="text-align:right">${nf(r.clicks)}</td><td style="text-align:right">${pf(r.ctr, 2)}</td><td style="text-align:right">${r.position.toFixed(1)}</td></tr>`;
+  const qRow = r => `<tr><td>${esc(r.key)}</td><td style="text-align:right">${nf(r.impressions)}</td><td style="text-align:right">${nf(r.clicks)}</td><td style="text-align:right">${r.position.toFixed(1)}</td></tr>`;
+  const sect = (title, note, body) => `<div class="card"><div class="card-header"><div class="card-title">${esc(title)}</div></div>${note ? `<div style="padding:10px 24px 0;font-size:12px;color:#6b6b6b">${note}</div>` : ''}${body}</div>`;
+
+  const html = head + kpis + chartCard +
+    sect('Page one, few clicks', 'These pages already show on page one but few people click. The fix is the title or the first lines, not more links. Change them carefully: a ranking title is not worth risking.',
+      tbl(['Page', 'Impressions', 'Clicks', 'Click rate', 'Position'], g.pageOneQuiet.map(pageRow), 'No page-one pages with many impressions and few clicks.')) +
+    sect('Close to page one', 'Searches where you sit at positions 11 to 20. A better answer, or links from related pages, can move these up.',
+      tbl(['Search', 'Impressions', 'Clicks', 'Position'], g.nearPageOne.map(qRow), 'None yet.')) +
+    sect('Questions people search', 'Each question is a candidate for a short, sourced guide, or a better answer at the top of an existing page.',
+      tbl(['Question', 'Impressions', 'Clicks', 'Position'], g.questions.map(qRow), 'None yet.')) +
+    (p ? sect('Moved since the last import', 'Pages whose impressions changed by 20 or more.',
+      tbl(['Page', 'Impressions', 'Change', 'Position'], g.movers.map(r => `<tr><td style="font-family:monospace;font-size:12px;word-break:break-all">${esc(r.key)}${r.isNew ? ' <span style="color:#16a34a">new</span>' : ''}</td><td style="text-align:right">${nf(r.impressions)}</td><td style="text-align:right;color:${r.delta >= 0 ? '#16a34a' : '#e63946'}">${r.delta > 0 ? '+' : ''}${nf(r.delta)}</td><td style="text-align:right">${r.position.toFixed(1)}</td></tr>`), 'Nothing moved by 20 or more.')) +
+      sect('New searches since the last import', '', tbl(['Search', 'Impressions', 'Clicks', 'Position'], g.newQueries.map(qRow), 'No new searches with 5 or more impressions.')) : '') +
+    sect('Top pages', '', tbl(['Page', 'Impressions', 'Clicks', 'Click rate', 'Position'], g.topPages.map(pageRow))) +
+    sect('Top searches', '', tbl(['Search', 'Impressions', 'Clicks', 'Position'], g.topQueries.map(qRow))) +
+    sect('Countries', g.deepCountries.length ? 'Countries with 50 or more impressions where you rank below position 25: ' + g.deepCountries.map(c => esc(c.key)).join(', ') + '.' : '',
+      tbl(['Country', 'Impressions', 'Clicks', 'Position'], g.countries.map(qRow))) +
+    `<div class="card"><div class="card-header"><div class="card-title">Imports kept</div></div>${tbl(['Imported', 'Dates', 'Clicks', 'Impressions', ''], g.snapshots.map(s => `<tr><td>${fmtDateTime(s.imported_at)}</td><td>${esc(s.date_from || '')} to ${esc(s.date_to || '')}</td><td style="text-align:right">${nf(s.clicks)}</td><td style="text-align:right">${nf(s.impressions)}</td><td style="text-align:right"><button class="link" onclick="deleteGrowth(${s.id})">Delete</button></td></tr>`))}</div>`;
+  setMain(head + upload + html.slice(head.length));
+}
+
+async function importGrowth() {
+  const f = document.getElementById('gsc-file').files[0];
+  const msg = document.getElementById('gsc-msg');
+  if (!f) { msg.style.color = '#e63946'; msg.textContent = 'Choose a file first.'; return; }
+  if (f.size > 6 * 1024 * 1024) { msg.style.color = '#e63946'; msg.textContent = 'That file is over 6 MB.'; return; }
+  msg.style.color = '#6b6b6b'; msg.textContent = 'Importing…';
+  try {
+    const r = await fetch('/api/admin/growth/import', { method: 'POST', body: f, headers: { 'Content-Type': 'application/octet-stream', 'X-Site': growthSite, 'X-Filename': f.name, 'X-CSRF-Token': _csrfToken || '' } });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok || !j.ok) { msg.style.color = '#e63946'; msg.textContent = j.error || ('Import failed (' + r.status + ')'); return; }
+    showGrowth(growthSite);
+  } catch (e) { msg.style.color = '#e63946'; msg.textContent = 'Import failed.'; }
+}
+async function deleteGrowth(id) {
+  if (!confirm('Delete this import?')) return;
+  await api('/api/admin/growth/' + id, { method: 'DELETE' });
+  showGrowth(growthSite);
+}
+
+let funnelDays = 30, funnelSite = 'all';
+async function showFunnel(days, site) {
+  if (days) funnelDays = days;
+  if (site) funnelSite = site;
+  setTitle('Funnel and revenue');
+  setMain('<div class="empty">Loading…</div>');
+  const f = await api(`/api/admin/funnel?days=${funnelDays}&site=${funnelSite}`);
+  if (!f) return setMain('<div class="empty">Could not load this section.</div>');
+  const s = f.steps;
+  const ctl = `<div style="display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap;align-items:center">
+    ${[7, 30, 90].map(d => `<button class="filter-btn ${funnelDays === d ? 'active' : ''}" onclick="showFunnel(${d})">${d} days</button>`).join('')}
+    <span style="width:12px"></span>
+    ${['all', 'ca', 'us', 'uk', 'au'].map(x => `<button class="filter-btn ${funnelSite === x ? 'active' : ''}" onclick="showFunnel(null,'${x}')">${x === 'all' ? 'All sites' : esc(SITE_LABELS[x])}</button>`).join('')}</div>`;
+  const rate = s.visitors && s.paid <= s.visitors ? pf(s.paid / s.visitors, 2) : '–';
+  const kpis = `<div class="stats-grid">
+    ${statCard('Revenue', cad(f.revenue_cents), 'Canadian dollars, paid orders')}
+    ${statCard('Paid orders', nf(f.orders), nf(f.unpaid) + ' left unpaid')}
+    ${statCard('Average order', cad(f.aov_cents), f.refunded ? nf(f.refunded) + ' refunded' : '')}
+    ${statCard('Visitors to order', rate, nf(s.visitors) + ' visitors')}
+  </div><div class="stats-grid">
+    ${statCard('Paid to mailed', f.median_hours_to_mail == null ? '–' : f.median_hours_to_mail + ' h', 'median')}
+    ${statCard('Mailed', nf(s.mailed), 'of ' + nf(f.orders) + ' paid')}
+    ${statCard('Repeat customers', nf(f.repeat_customers), 'of ' + nf(f.customers) + ' all time')}
+    ${statCard('Resume-email clicks', nf(f.resume_click), 'came back to finish')}
+  </div>`;
+  const steps = [['Visitors', s.visitors], ['Opened the order page', s.send_view], ['Reached the letter step', s.step2], ['Reached the review step', s.step3], ['Clicked Pay', s.pay_click], ['Paid', s.paid], ['Mailed', s.mailed]];
+  const top = Math.max(1, ...steps.map(x => x[1]));
+  const funnel = steps.map((x, i) => {
+    const prev = i ? steps[i - 1][1] : null;
+    return `<tr><td style="width:36%">${esc(x[0])}</td><td style="width:44%"><div style="background:#2563eb;height:14px;width:${Math.max(1, Math.round(x[1] / top * 100))}%"></div></td><td style="text-align:right">${nf(x[1])}</td><td style="text-align:right;color:#9a9a9a">${prev && x[1] <= prev ? pf(x[1] / prev, 0) + ' of previous' : ''}</td></tr>`;
+  }).join('');
+  const wmax = Math.max(1, ...f.weekly.map(w => w.cents));
+  const weekly = f.weekly.map(w => `<tr><td>${esc(w.week)}</td><td style="text-align:right">${nf(w.orders)}</td><td style="text-align:right">${cad(w.cents)}</td><td style="width:40%"><div style="background:#16a34a;height:10px;width:${Math.max(1, Math.round(w.cents / wmax * 100))}%"></div></td></tr>`);
+  const note = `<div style="font-size:12px;color:#6b6b6b;margin-bottom:20px">Visitors are unique addresses seen by the site's own counter. The checkout steps are not split by site, so they stay the same whichever site you pick. A big drop between two steps is where to look first.</div>`;
+  setMain(ctl + kpis + note +
+    `<div class="card"><div class="card-header"><div class="card-title">Checkout funnel, last ${f.days} days</div></div><table><tbody>${funnel}</tbody></table></div>` +
+    `<div class="card"><div class="card-header"><div class="card-title">Orders per week</div></div>${tbl(['Week', 'Orders', 'Revenue', ''], weekly, 'No paid orders in this period.')}</div>` +
+    `<div class="card"><div class="card-header"><div class="card-title">By destination</div></div>${tbl(['Country', 'Orders', 'Revenue'], f.byCountry.map(c => `<tr><td>${esc(c.country)}</td><td style="text-align:right">${nf(c.orders)}</td><td style="text-align:right">${cad(c.cents)}</td></tr>`), 'None yet.')}</div>` +
+    `<div class="card"><div class="card-header"><div class="card-title">By site</div></div>${tbl(['Site', 'Orders', 'Revenue'], f.bySite.map(c => `<tr><td>${esc(SITE_LABELS[c.site] || c.site)}</td><td style="text-align:right">${nf(c.orders)}</td><td style="text-align:right">${cad(c.cents)}</td></tr>`), 'None yet.')}</div>` +
+    `<div class="card"><div class="card-header"><div class="card-title">Most visited pages</div></div>${tbl(['Page', 'Views'], f.topPages.map(c => `<tr><td style="font-family:monospace;font-size:12px">${esc(c.path)}</td><td style="text-align:right">${nf(c.n)}</td></tr>`), 'No visits recorded.')}</div>`);
+}
+
+async function showHealth() {
+  setTitle('Server health');
+  setMain('<div class="empty">Loading…</div>');
+  const h = await api('/api/admin/health-detail');
+  if (!h) return setMain('<div class="empty">Could not load this section.</div>');
+  const GB = b => (b / 1073741824).toFixed(1) + ' GB';
+  const col = (bad, warn) => bad ? '#e63946' : warn ? '#b45309' : '#16a34a';
+  const usedMem = h.mem.available != null ? h.mem.total - h.mem.available : h.mem.total - h.mem.free;
+  const memPct = usedMem / h.mem.total;
+  const load = h.load[0] / h.cpus;
+  const dur = s => s < 3600 ? Math.floor(s / 60) + ' min' : s < 172800 ? Math.floor(s / 3600) + ' h' : Math.floor(s / 86400) + ' days';
+  const diskPct = h.disk ? 1 - h.disk.free / h.disk.total : null;
+  const swapPct = h.swap && h.swap.total ? h.swap.used / h.swap.total : 0;
+  const clam = h.clamav === 'active';
+  const b = h.backup;
+  const cards = `<div class="stats-grid">
+    ${statCard('CPU load', h.load[0].toFixed(2), h.cpus + ' cores, ' + h.load[1].toFixed(2) + ' (5 min)', col(load > 1, load > 0.7))}
+    ${statCard('Memory used', pf(memPct, 0), GB(usedMem) + ' of ' + GB(h.mem.total), col(memPct > 0.9, memPct > 0.75))}
+    ${statCard('Swap used', h.swap ? GB(h.swap.used) : '–', h.swap ? 'of ' + GB(h.swap.total) : 'not readable here', col(swapPct > 0.5, swapPct > 0.1))}
+    ${statCard('Disk used', diskPct == null ? '–' : pf(diskPct, 0), h.disk ? GB(h.disk.free) + ' free' : '', diskPct == null ? '' : col(diskPct > 0.9, diskPct > 0.75))}
+  </div><div class="stats-grid">
+    ${statCard('Virus scanner', h.clamav == null ? '–' : (clam ? 'Running' : esc(h.clamav)), 'ClamAV', h.clamav == null ? '' : col(!clam, false))}
+    ${statCard('App restarts', h.pm2 ? nf(h.pm2.count) : '–', h.pm2 ? esc(h.pm2.status) + ', up ' + dur(h.uptime_s) : 'pm2 not readable here', h.pm2 ? col(h.pm2.status !== 'online', h.pm2.count > 20) : '')}
+    ${statCard('Certificate', h.cert_days == null ? '–' : h.cert_days + ' days', 'until it expires', h.cert_days == null ? '' : col(h.cert_days < 7, h.cert_days < 21))}
+    ${statCard('Last backup', b ? (b.ageHours < 48 ? b.ageHours + ' h ago' : Math.round(b.ageHours / 24) + ' days ago') : 'none', b ? esc(b.file) + ', ' + (b.size / 1024).toFixed(0) + ' KB' : '', b ? col(b.ageHours > 36, b.ageHours > 26) : '#e63946')}
+  </div>`;
+  const rows = [['Database (with write-ahead files)', (h.db_bytes / 1048576).toFixed(1) + ' MB'], ['Server up', dur(h.host_uptime_s)], ['Node', h.node], ['Backups kept', b ? nf(b.count) : '0']];
+  setMain(cards +
+    `<div class="card"><div class="card-header"><div class="card-title">Restore drill</div><button class="btn btn-primary btn-sm" id="drill-btn" onclick="runDrill()">Run drill</button></div>
+      <div id="drill-out" style="padding:16px 24px;font-size:13px;color:#6b6b6b;line-height:1.7">Opens the newest backup in a scratch file, checks it is intact, compares it with the live order count, then deletes the scratch file. It never touches the live database. Run it monthly.</div></div>` +
+    `<div class="card"><div class="card-header"><div class="card-title">Details</div></div>${tbl(['Item', 'Value'], rows.map(r => `<tr><td>${esc(r[0])}</td><td style="text-align:right">${esc(r[1])}</td></tr>`))}</div>`);
+}
+async function runDrill() {
+  const btn = document.getElementById('drill-btn'), out = document.getElementById('drill-out');
+  btn.disabled = true; out.style.color = '#6b6b6b'; out.textContent = 'Running… this takes a few seconds.';
+  const r = await api('/api/admin/backups/drill', { method: 'POST', body: '{}' });
+  btn.disabled = false;
+  if (!r || !r.ok) { out.style.color = '#e63946'; out.textContent = 'Drill failed: ' + ((r && r.error) || 'no answer') + (r && r.file ? ' (' + r.file + ')' : ''); return; }
+  const gap = r.liveOrders - r.backupOrders;
+  out.style.color = '#16a34a';
+  out.innerHTML = `Passed. <strong>${esc(r.file)}</strong> (${r.ageHours} h old) opened in ${r.ms} ms. Integrity check: <strong>${esc(r.integrity)}</strong>. The backup holds ${nf(r.backupOrders)} orders (last id ${nf(r.backupLastId)}); the live database has ${nf(r.liveOrders)} (last id ${nf(r.liveLastId)})${gap > 0 ? ', so ' + gap + ' newer order' + (gap > 1 ? 's' : '') + ' arrived since that backup, which is normal.' : '.'}`;
+}
+
+let auditFilter = 'all';
+async function showSeoAudit(filter) {
+  if (filter) auditFilter = filter;
+  setTitle('Content audit');
+  setMain('<div class="empty">Loading…</div>');
+  const a = await api('/api/admin/seo-audit');
+  const runBtn = `<button class="btn btn-primary btn-sm" onclick="runSeoAudit()" id="audit-btn">Run audit now</button>`;
+  if (!a || a.empty) return setMain(`<div class="card"><div class="card-header"><div class="card-title">Content audit</div>${runBtn}</div><div class="empty">No audit has run yet. It runs every night, or press the button.</div></div>`);
+  const c = a.counts, pc = a.previous_counts;
+  const chg = (k) => pc ? (c[k] === pc[k] ? 'same as last run' : (c[k] > pc[k] ? '+' : '') + (c[k] - pc[k]) + ' since last run') : '';
+  const list = a.issues.filter(i => auditFilter === 'all' || i.sev === auditFilter);
+  const sevCol = { high: '#e63946', med: '#b45309', low: '#6b6b6b' };
+  const sevName = { high: 'Fix', med: 'Check', low: 'Minor' };
+  setMain(`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px"><div style="font-size:12px;color:#6b6b6b">${nf(a.pages)} pages read from the site files on ${fmtDateTime(a.ran_at)}. It checks titles, descriptions, canonical links, headings, internal links, the sitemap and old "Updated" dates.</div>${runBtn}</div>
+    <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
+      ${statCard('Fix', nf(c.high), chg('high'), c.high ? '#e63946' : '#16a34a')}
+      ${statCard('Check', nf(c.med), chg('med'), c.med ? '#b45309' : '#16a34a')}
+      ${statCard('Minor', nf(c.low), chg('low'))}
+    </div>
+    <div style="display:flex;gap:6px;margin-bottom:16px">${['all', 'high', 'med', 'low'].map(k => `<button class="filter-btn ${auditFilter === k ? 'active' : ''}" onclick="showSeoAudit('${k}')">${k === 'all' ? 'All' : sevName[k]}</button>`).join('')}</div>
+    <div class="card">${tbl(['Page', 'Issue', 'Level'], list.map(i => `<tr><td style="font-family:monospace;font-size:12px;word-break:break-all"><a href="${esc(i.page.startsWith('/') ? i.page : '#')}" target="_blank" rel="noopener" class="link">${esc(i.page)}</a></td><td style="text-align:left">${esc(i.msg)}</td><td style="text-align:right;color:${sevCol[i.sev]}">${sevName[i.sev]}</td></tr>`), 'Nothing found. Everything checked is in order.')}${a.truncated ? '<div style="padding:12px 24px;font-size:12px;color:#6b6b6b">Showing the first 400 findings.</div>' : ''}</div>`);
+}
+async function runSeoAudit() {
+  const b = document.getElementById('audit-btn'); if (b) { b.disabled = true; b.textContent = 'Running…'; }
+  await api('/api/admin/seo-audit/run', { method: 'POST', body: '{}' });
+  showSeoAudit();
+}
 </script>
 
 <div id="bulk-delete-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;padding:20px">

@@ -2077,6 +2077,14 @@ app.use('/api/admin', (req, res, next) => {
 // Business accounts and batch approvals (after the admin CSRF middleware above, so every change is protected).
 business.registerAdmin(app, { db, requireAdmin, logAudit, getSetting, setSetting });
 
+// Search Console import, funnel and revenue, server health, restore drill and the content audit.
+const adminTools = require('./adminTools').register(app, {
+  db, requireAdmin, logAudit, getSetting,
+  backupDir: process.env.BACKUP_DIR || path.join(__dirname, 'backups'),
+  appRoot: __dirname,
+  baseUrl: process.env.BASE_URL,
+});
+
 app.get('/api/admin/me', requireAdmin, (req, res) =>
   res.json({
     username: req.session.admin.username,
@@ -5035,6 +5043,7 @@ async function cartOfferJob() {
   return { sent };
 }
 cron.schedule('40 * * * *', () => { cartOfferJob(); });
+cron.schedule('30 3 * * *', () => { try { adminTools.runAudit(); } catch (e) { console.error('Content audit failed:', e.message); } });
 
 app.get('/api/admin/cart-offer-stats', requireAdmin, (req, res) => {
   const cfg = cartOfferSettings();
