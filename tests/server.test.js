@@ -1095,7 +1095,7 @@ test('site-config feeds the UK page: GB tile is hidden until the UK network is o
 test('new pages: served, have schema, titles and canonicals, and are in the sitemap', async () => {
   const slugs = ['santa-letter', 'uk', 'send-a-letter-to-the-uk', 'monthly-letters', 'landlord-notices', 'postcards', 'letter-from-santa-canada',
     'free-letter-from-santa-template', 'christmas-family-letter-template', 'what-to-write-in-a-letter-to-a-grandparent',
-    'keep-in-touch-with-family-abroad-by-mail'];
+    'keep-in-touch-with-family-abroad-by-mail', 'canada-post-christmas-mailing-deadlines-2026'];
   const sitemap = await (await fetch(`${base}/sitemap.xml`)).text();
   for (const slug of slugs) {
     const res = await fetch(`${base}/${slug}`);
@@ -1579,7 +1579,7 @@ test('admin visitor stats: page views are tagged with their domain and can be fi
 test('US and UK everyday-mail guides: served on their own domain with a self canonical, listed in that domain sitemap', async () => {
   setFlag('us_domain_live', 'true'); setFlag('uk_domain_live', 'true');
   try {
-    const guides = { 'letterhome.us': ['how-long-does-mail-take', 'how-much-is-a-stamp', 'return-address-on-a-letter', 'postage-rates-2026', 'what-is-certified-mail'],
+    const guides = { 'letterhome.us': ['how-long-does-mail-take', 'how-much-is-a-stamp', 'return-address-on-a-letter', 'postage-rates-2026', 'what-is-certified-mail', 'christmas-mailing-deadlines-2026', 'christmas-card-postage-2026'],
                      'letterhome.co.uk': ['how-long-does-post-take', 'how-much-is-a-stamp', 'return-address-on-a-letter'] };
     for (const [host, slugs] of Object.entries(guides)) {
       const sm = (await siteGet(host, '/sitemap.xml')).body;

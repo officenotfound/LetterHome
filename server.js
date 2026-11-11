@@ -1032,7 +1032,7 @@ Object.entries(REGION_REDIRECTS).forEach(([from, to]) =>
  'mail-to-retirement-and-nursing-homes', 'schedule-a-letter-for-later', 'send-a-christmas-letter-to-canada',
  'uk', 'us', 'au', 'business', 'send-a-letter-online-in-the-usa', 'address-a-letter-to-canada-from-the-uk', 'aussies-in-canada-send-a-letter-home',
  'send-a-letter-from-canada-to-the-us', 'send-a-letter-from-canada-to-australia', 'send-letters-between-countries', 'santa-letter', 'send-a-letter-to-the-uk', 'monthly-letters', 'landlord-notices', 'postcards',
- 'letter-from-santa-canada', 'free-letter-from-santa-template', 'christmas-family-letter-template',
+ 'letter-from-santa-canada', 'free-letter-from-santa-template', 'christmas-family-letter-template', 'canada-post-christmas-mailing-deadlines-2026',
  'what-to-write-in-a-letter-to-a-grandparent', 'keep-in-touch-with-family-abroad-by-mail',
  'mailed-from-canada', 'non-resident-landlord', 'n12-notice',
  'serve-eviction-notice-from-abroad', 'bc-rtb-forms',
@@ -1093,7 +1093,7 @@ app.get('/account/:page', (req, res, next) => req.params.page === 'verify' ? nex
 // Country guides live under their country's path; the old flat URLs redirect
 const LOCAL_GUIDES = [
   'us/how-long-does-mail-take', 'us/how-much-is-a-stamp', 'us/return-address-on-a-letter',
-  'us/postage-rates-2026', 'us/what-is-certified-mail',
+  'us/postage-rates-2026', 'us/what-is-certified-mail', 'us/christmas-mailing-deadlines-2026', 'us/christmas-card-postage-2026',
   'uk/how-long-does-post-take', 'uk/how-much-is-a-stamp', 'uk/return-address-on-a-letter',
 ];
 const COUNTRY_GUIDES = {
@@ -4247,7 +4247,7 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:48px 36px 32px
 </head>
 <body>
 <div id="site-header"></div>
-<script src="/header.js?v=14"></script>
+<script src="/header.js?v=15"></script>
 <div class="main" style="max-width:580px;margin:0 auto;padding:64px 36px 100px">
   <div style="display:inline-flex;align-items:center;gap:10px;font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.18em;color:#a8472d;margin-bottom:20px">
     <span style="width:28px;height:1px;background:#a8472d;display:inline-block"></span>${L.order.replace(/\d+$/, '')}${esc(String(order.id))}

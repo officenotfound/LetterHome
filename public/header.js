@@ -104,7 +104,25 @@
   var trackLabel = isSpanish ? 'Rastrear un pedido' : 'Track an order';
 
   var stamp = window.LHStamp ? window.LHStamp('h', 44) : '';
-  mount.outerHTML =
+
+  // Holiday touch, December 1 to January 2 by the visitor's date: a slim green strip linking to the mailing deadlines, and a green
+  // line under the Canadian header. Colour and one link only, no change to page content. ?xmas=1 or ?xmas=0 forces it on or off.
+  var season = (function () {
+    try { var q = /[?&]xmas=([01])/.exec(location.search); if (q) return q[1] === '1'; } catch (e) {}
+    var d = new Date(), m = d.getMonth();
+    return m === 11 || (m === 0 && d.getDate() <= 2);
+  })();
+  var seasonBar = '';
+  if (season && !isFrench && !isSpanish) {
+    document.documentElement.setAttribute('data-season', 'christmas');
+    var onUs = location.hostname === 'letterhome.us';
+    var href = country === 'us' ? (onUs ? '/christmas-mailing-deadlines-2026' : '/us/christmas-mailing-deadlines-2026')
+      : (country === 'uk' || country === 'au') ? '/send-a-christmas-letter-to-canada' : '/canada-post-christmas-mailing-deadlines-2026';
+    var label = (country === 'uk' || country === 'au') ? 'Holiday letters to Canada: order-by dates' : 'Last days to mail for Christmas';
+    seasonBar = '<style>html[data-season] body:not([class*="c-"]) nav{border-bottom:3px solid #1f6b3a!important}</style>' +
+      '<div class="season-bar" style="background:#14532d;text-align:center;padding:8px 16px;font:600 13px/1.3 Roboto,Arial,sans-serif"><a href="' + href + '" style="color:#fff;text-decoration:underline;text-underline-offset:2px">' + label + '</a></div>';
+  }
+  mount.outerHTML = seasonBar +
     '<nav>' +
       '<div class="nav-inner">' +
         '<a href="/" class="logo" aria-label="Letterhome home"><span class="logo-stamp" aria-hidden="true">' + stamp + '</span><span class="logo-wordmark">Letter<span class="logo-accent">home</span></span></a>' +

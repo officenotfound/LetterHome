@@ -543,8 +543,14 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://letterhome.ca/canada-post-christmas-mailing-deadlines-2026</loc>
+    <lastmod>2026-11-11</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://letterhome.ca/send-a-christmas-letter-to-canada</loc>
-    <lastmod>2026-11-02</lastmod>
+    <lastmod>2026-11-11</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -838,13 +844,13 @@
   </url>
   <url>
     <loc>https://letterhome.ca/santa-letter</loc>
-    <lastmod>2026-11-05</lastmod>
+    <lastmod>2026-11-11</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://letterhome.ca/letter-from-santa-canada</loc>
-    <lastmod>2026-11-05</lastmod>
+    <lastmod>2026-11-11</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -1080,6 +1086,18 @@
     <loc>https://letterhome.ca/us/what-is-certified-mail</loc>
     <lastmod>2026-11-11</lastmod>
     <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://letterhome.ca/us/christmas-mailing-deadlines-2026</loc>
+    <lastmod>2026-11-11</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://letterhome.ca/us/christmas-card-postage-2026</loc>
+    <lastmod>2026-11-11</lastmod>
+    <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
