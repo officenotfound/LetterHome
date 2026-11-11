@@ -380,7 +380,7 @@ function encryptFile(srcPath, destPath, passphrase) {
   const plain  = fs.readFileSync(srcPath);
   const cipherText = Buffer.concat([cipher.update(plain), cipher.final()]);
   const authTag = cipher.getAuthTag();
-  fs.writeFileSync(destPath, Buffer.concat([salt, iv, authTag, cipherText]));
+  fs.writeFileSync(destPath, Buffer.concat([salt, iv, authTag, cipherText]), { mode: 0o600 });
 }
 
 function validateCustomerPassword(pwd) {
@@ -4686,8 +4686,17 @@ process.on('uncaughtException', (err) => {
   setTimeout(() => process.exit(1), 1000).unref();
 });
 
-const BACKUP_DIR      = path.join(__dirname, 'backups');
+const BACKUP_DIR      = process.env.BACKUP_DIR || path.join(__dirname, 'backups');
 const BACKUP_KEEP     = 14;
+try { fs.mkdirSync(BACKUP_DIR, { recursive: true, mode: 0o700 }); } catch {}
+
+// A consistent copy of the live database, made by SQLite itself. A plain file copy can miss recent changes that
+// still sit in the WAL file, or catch the file in the middle of a write, and a backup that will not open is useless.
+function snapshotDb(destPath) {
+  try { fs.unlinkSync(destPath); } catch {}
+  db.prepare('VACUUM INTO ?').run(destPath);
+  fs.chmodSync(destPath, 0o600);
+}
 
 async function uploadToB2(filePath) {
   if (!process.env.B2_KEY_ID || !process.env.B2_APPLICATION_KEY || !process.env.B2_BUCKET_ID) {
@@ -4716,11 +4725,16 @@ async function runBackup() {
     const ext  = passphrase ? '.db.enc' : '.db';
     const dest = path.join(BACKUP_DIR, `orders-${ts}${ext}`);
 
-    const dbPath = process.env.DB_PATH || 'orders.db';
-    if (passphrase) {
-      encryptFile(dbPath, dest, passphrase);
-    } else {
-      fs.copyFileSync(dbPath, dest);
+    const snap = path.join(BACKUP_DIR, `.snapshot-${ts}.db`);
+    snapshotDb(snap);
+    try {
+      if (passphrase) {
+        encryptFile(snap, dest, passphrase);
+      } else {
+        fs.renameSync(snap, dest);
+      }
+    } finally {
+      try { fs.unlinkSync(snap); } catch {}   // the plain snapshot never stays on disk next to the encrypted backup
     }
 
     const files = fs.readdirSync(BACKUP_DIR)

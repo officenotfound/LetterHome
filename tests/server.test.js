@@ -10,6 +10,8 @@ const { randomUUID, createHmac } = require('node:crypto');
 // ── Test env setup (must happen before requiring server) ──────────────────────
 const tmpDb = path.join(os.tmpdir(), `lh-test-${randomUUID()}.db`);
 process.env.DB_PATH          = tmpDb;
+const tmpBackups = path.join(os.tmpdir(), `lh-backups-${randomUUID()}`);
+process.env.BACKUP_DIR       = tmpBackups;
 process.env.TEST_MODE        = 'true';
 process.env.NODE_ENV         = 'test';
 process.env.SESSION_SECRET   = 'test-session-secret';
@@ -120,9 +122,73 @@ before(async () => {
 after(async () => {
   await new Promise(resolve => server.close(resolve));
   try { fs.unlinkSync(tmpDb); } catch {}
+  for (const s of ['-wal', '-shm']) { try { fs.unlinkSync(tmpDb + s); } catch {} }
+  try { fs.rmSync(tmpBackups, { recursive: true, force: true }); } catch {}
 });
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
+
+test('the database runs in WAL mode with a busy timeout', () => {
+  assert.equal(db.prepare('PRAGMA journal_mode').get().journal_mode, 'wal');
+  assert.equal(db.prepare('PRAGMA busy_timeout').get().timeout, 5000);
+});
+
+async function runAdminBackup() {
+  const { cookie, csrfToken } = await loginAdmin();
+  const res = await fetch(`${base}/api/admin/backups/run`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: cookie, 'X-CSRF-Token': csrfToken },
+    body: '{}',
+  });
+  return res.json();
+}
+
+test('a backup is a consistent, openable copy with the latest orders, readable only by its owner, and leaves no snapshot behind', async () => {
+  const { DatabaseSync } = require('node:sqlite');
+  const saved = process.env.BACKUP_PASSPHRASE;
+  delete process.env.BACKUP_PASSPHRASE;
+  try {
+    seedOrder({ status: 'paid' });
+    const total = db.prepare('SELECT COUNT(*) AS n FROM orders').get().n;
+    const out = await runAdminBackup();
+    assert.equal(out.ok, true, out.error);
+    const file = path.join(tmpBackups, out.filename);
+    assert.match(out.filename, /^orders-.*\.db$/);
+    const copy = new DatabaseSync(file, { readOnly: true });
+    assert.equal(copy.prepare('PRAGMA integrity_check').get().integrity_check, 'ok');
+    assert.equal(copy.prepare('SELECT COUNT(*) AS n FROM orders').get().n, total);
+    copy.close();
+    assert.equal(fs.statSync(file).mode & 0o077, 0, 'backup must not be readable by other users');
+    assert.deepEqual(fs.readdirSync(tmpBackups).filter(f => f.startsWith('.snapshot-')), []);
+  } finally { if (saved !== undefined) process.env.BACKUP_PASSPHRASE = saved; }
+});
+
+test('an encrypted backup decrypts with the restore script into a database that opens and matches', async () => {
+  const { DatabaseSync } = require('node:sqlite');
+  const { execFileSync } = require('node:child_process');
+  const saved = process.env.BACKUP_PASSPHRASE;
+  process.env.BACKUP_PASSPHRASE = 'test-passphrase-for-backups';
+  try {
+    seedOrder({ status: 'paid' });
+    const total = db.prepare('SELECT COUNT(*) AS n FROM orders').get().n;
+    const out = await runAdminBackup();
+    assert.equal(out.ok, true, out.error);
+    assert.match(out.filename, /\.db\.enc$/);
+    const enc = path.join(tmpBackups, out.filename);
+    assert.equal(fs.statSync(enc).mode & 0o077, 0, 'encrypted backup must not be readable by other users');
+    assert.deepEqual(fs.readdirSync(tmpBackups).filter(f => f.startsWith('.snapshot-')), [], 'the plain snapshot must be removed');
+    const restored = path.join(os.tmpdir(), `lh-restored-${randomUUID()}.db`);
+    execFileSync(process.execPath, [path.join(__dirname, '..', 'scripts', 'decrypt-backup.js'), enc, restored],
+      { env: { ...process.env, BACKUP_PASSPHRASE: 'test-passphrase-for-backups' }, stdio: 'pipe' });
+    const copy = new DatabaseSync(restored, { readOnly: true });
+    assert.equal(copy.prepare('PRAGMA integrity_check').get().integrity_check, 'ok');
+    assert.equal(copy.prepare('SELECT COUNT(*) AS n FROM orders').get().n, total);
+    copy.close();
+    fs.unlinkSync(restored);
+  } finally {
+    if (saved === undefined) delete process.env.BACKUP_PASSPHRASE; else process.env.BACKUP_PASSPHRASE = saved;
+  }
+});
 
 test('GET /health returns 200 with db ok', async () => {
   const res  = await fetch(`${base}/health`);

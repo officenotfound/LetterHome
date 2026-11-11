@@ -17,3 +17,6 @@ Thumbs.db
 
 # Emoji images fetched for printing (postgrid.js)
 .cache/
+*.db-wal
+*.db-shm
+*.db-journal

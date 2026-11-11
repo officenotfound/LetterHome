@@ -5,6 +5,11 @@
 const { DatabaseSync: Database } = require('node:sqlite');
 
 const db = new Database(process.env.DB_PATH || 'orders.db', { allowBareNamedParameters: true });
+// WAL lets page views and admin reads continue while an order is being written, and the busy timeout makes a
+// second writer wait a moment instead of failing with "database is locked". WAL keeps recent changes in a
+// side file (orders.db-wal), so never copy orders.db alone while the app runs: use sqlite3 ".backup" or runBackup().
+db.exec('PRAGMA journal_mode = WAL');
+db.exec('PRAGMA busy_timeout = 5000');
 db.exec(`
   CREATE TABLE IF NOT EXISTS orders (
     id                 INTEGER PRIMARY KEY AUTOINCREMENT,

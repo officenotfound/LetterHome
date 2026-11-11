@@ -19,6 +19,8 @@ Everything in here has been tested in production.
 | Backups | Daily 02:00 UTC → local `backups/` + Backblaze B2 (encrypted) |
 | GitHub | `git@github.com:officenotfound/LetterHome.git` |
 
+The database runs in WAL mode, so `orders.db-wal` and `orders.db-shm` sit beside `orders.db` while the app runs. Never copy `orders.db` on its own while the app is running (recent orders can be in the `-wal` file). To copy it safely, use `sqlite3 /var/letterhome/orders.db ".backup '/path/to/copy.db'"`. The nightly backup already does this.
+
 ---
 
 ## Deploy a new version
@@ -96,6 +98,8 @@ pm2 stop letterhome
 
 # 2. Move the bad DB aside (don't delete — keep it for forensics)
 mv /var/letterhome/orders.db /var/letterhome/orders.db.bad-$(date +%Y%m%d)
+# The database runs in WAL mode, so move its side files aside too
+for s in -wal -shm; do [ -f /var/letterhome/orders.db$s ] && mv /var/letterhome/orders.db$s /var/letterhome/orders.db$s.bad-$(date +%Y%m%d); done
 
 # 3. Find the most recent good backup
 ls -lat /var/letterhome/backups/ | head -5
@@ -275,7 +279,7 @@ pm2 reload letterhome --update-env
 pm2 stop letterhome
 
 # Backup first
-cp /var/letterhome/orders.db /var/letterhome/orders.db.pre-launch-$(date +%Y%m%d)
+sqlite3 /var/letterhome/orders.db ".backup '/var/letterhome/orders.db.pre-launch-$(date +%Y%m%d)'"
 
 # Truncate the data tables, reset auto-increment IDs
 sqlite3 /var/letterhome/orders.db <<SQL
