@@ -1661,3 +1661,22 @@ test('careers application: accepts a real PDF resume, rejects fake or oversized 
     try { fsx.unlinkSync(mail.attachments[0].path); } catch {}
   } finally { delete process.env.SMTP_HOST; delete process.env.OPERATOR_EMAIL; }
 });
+
+test('outreach import: valid contacts are added with phone and notes; invalid, repeated and unsubscribed emails are left out', async () => {
+  const { cookie, csrfToken } = await loginAdmin();
+  const send = body => fetch(`${base}/api/admin/outreach/contacts`, { method: 'POST', headers: { 'Content-Type': 'application/json', Cookie: cookie, 'X-CSRF-Token': csrfToken }, body: JSON.stringify(body) });
+  db.prepare('INSERT INTO customers (email, unsubscribed_at) VALUES (?, CURRENT_TIMESTAMP)').run('stop@import.example');
+  const res = await send({ campaign: 'import-test', contacts: [
+    { business_name: 'Acme Immigration', contact_name: 'Jane Doe', email: 'Jane@Acme-Import.example', source_url: 'acme.example', phone: '416-555-0100', notes: 'Toronto' },
+    { business_name: 'Dup', email: 'jane@acme-import.example' },
+    { business_name: 'Bad', email: 'not-an-email' },
+    { business_name: 'Opted out', email: 'stop@import.example' },
+    { email: 'only@email-import.example' },
+  ] });
+  assert.equal(res.status, 200, await res.clone().text());
+  const body = await res.json();
+  assert.deepEqual({ added: body.added, invalid: body.invalid, duplicates: body.duplicates, unsubscribed: body.unsubscribed }, { added: 2, invalid: 1, duplicates: 1, unsubscribed: 1 });
+  const row = db.prepare("SELECT * FROM outreach_contacts WHERE email = 'jane@acme-import.example'").get();
+  assert.equal(row.phone, '416-555-0100'); assert.equal(row.notes, 'Toronto'); assert.equal(row.status, 'pending');
+  assert.equal((await fetch(`${base}/api/admin/outreach/contacts`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })).status, 401, 'needs an admin login');
+});

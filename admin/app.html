@@ -2202,11 +2202,16 @@ async function showOutreach() {
     ${outreachCampaign ? `
     <div class="card" style="max-width:900px;margin-bottom:20px">
       <div style="padding:24px">
-        <div class="field" style="margin-bottom:16px">
-          <label>Add contacts (one per line: business name, contact name, email, source url — contact name and source optional)</label>
-          <textarea id="or-bulk" rows="6" placeholder="Acme Immigration, Jane Doe, jane@acme.com, https://acme.com/contact"></textarea>
+        <div class="field" style="margin-bottom:12px">
+          <label>Add contacts: paste rows straight from Excel or Google Sheets (with or without a header row), or one contact per line</label>
+          <textarea id="or-bulk" rows="7" oninput="previewOutreachPaste()" placeholder="Copy the cells in your spreadsheet and paste them here.&#10;&#10;Company	Contact	Email	Website	Phone&#10;Acme Immigration	Jane Doe	jane@acme.com	acme.com	416-555-0100"></textarea>
         </div>
-        <button class="btn btn-outline btn-sm" onclick="addOutreachContacts()">Add contacts</button>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
+          <label class="btn btn-outline btn-sm" style="cursor:pointer;margin:0">Or choose a .csv file<input type="file" accept=".csv,.tsv,.txt,text/csv" style="display:none" onchange="loadOutreachFile(this)"></label>
+          <span style="font-size:12px;color:#6b6b6b">Every contact needs an email. Columns can be in any order.</span>
+        </div>
+        <div id="or-preview"></div>
+        <button class="btn btn-primary btn-sm" id="or-import-btn" onclick="addOutreachContacts()" disabled>Import contacts</button>
         <span id="or-add-status" style="font-size:13px;margin-left:10px"></span>
       </div>
     </div>
@@ -2241,22 +2246,144 @@ async function createOutreachCampaign() {
   showOutreach();
 }
 
+// ── Spreadsheet paste → contacts ─────────────────────────────────────────────
+/* outreach-parser:start */
+const OR_FIELDS = [['', 'Ignore'], ['business_name', 'Business'], ['contact_name', 'Contact name'], ['first_name', 'First name'], ['last_name', 'Last name'],
+                   ['email', 'Email'], ['source_url', 'Website'], ['phone', 'Phone'], ['notes', 'Notes']];
+const OR_EMAIL = /[^\s@<>,;:"'()]+@[^\s@<>,;:"'()]+\.[a-z]{2,}/i;
+
+// Splits pasted text into rows of cells. Tabs (Excel, Sheets) win; otherwise commas or semicolons, with "quoted, cells" kept whole.
+function orParseTable(raw) {
+  const text = String(raw || '').replace(/\r\n?/g, '\n').replace(/^﻿/, '');
+  const first = text.split('\n').find(l => l.trim()) || '';
+  const delim = text.includes('\t') ? '\t' : (first.split(';').length > first.split(',').length ? ';' : ',');
+  const rows = []; let row = [], cell = '', quoted = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (quoted) {
+      if (ch === '"' && text[i + 1] === '"') { cell += '"'; i++; }
+      else if (ch === '"') quoted = false;
+      else cell += ch;
+    } else if (ch === '"' && cell === '') quoted = true;
+    else if (ch === delim) { row.push(cell); cell = ''; }
+    else if (ch === '\n') { row.push(cell); rows.push(row); row = []; cell = ''; }
+    else cell += ch;
+  }
+  row.push(cell); rows.push(row);
+  return rows.map(r => r.map(c => c.replace(/\s+/g, ' ').trim())).filter(r => r.some(c => c));
+}
+
+// Works out what each column holds: from the header row when there is one, otherwise from what the cells look like.
+function orGuessColumns(rows) {
+  const width = Math.max(0, ...rows.map(r => r.length));
+  const head = (rows[0] || []).map(c => c.toLowerCase());
+  const hasHeader = rows.length > 1 && !head.some(c => OR_EMAIL.test(c)) &&
+    head.some(c => /e-?mail|courriel|correo|company|business|organi[sz]ation|firm|name|contact|website|url|phone|tel|mobile|notes?/.test(c));
+  const map = new Array(width).fill('');
+  const take = (i, f) => { if (!map[i] && (f === 'notes' || !map.includes(f))) map[i] = f; };
+  if (hasHeader) head.forEach((c, i) => {
+    if (/e-?mail|courriel|correo/.test(c)) take(i, 'email');
+    else if (/first|given|prénom|nombre/.test(c)) take(i, 'first_name');
+    else if (/last|surname|family|apellido/.test(c)) take(i, 'last_name');
+    else if (/company|business|organi[sz]ation|firm|agency|brokerage|employer|account/.test(c)) take(i, 'business_name');
+    else if (/contact|owner|person|full ?name|^name$|manager|agent|principal/.test(c)) take(i, 'contact_name');
+    else if (/web|url|site|link|source|domain/.test(c)) take(i, 'source_url');
+    else if (/phone|tel|mobile|cell/.test(c)) take(i, 'phone');
+    else if (/note|comment|city|address|province|state|title|role|type|category|industry/.test(c)) take(i, 'notes');
+  });
+  const body = hasHeader ? rows.slice(1) : rows;
+  const share = (i, re) => body.length ? body.filter(r => re.test(r[i] || '')).length / body.length : 0;
+  for (let i = 0; i < width; i++) {
+    if (map[i]) continue;
+    if (share(i, OR_EMAIL) > 0.5) take(i, 'email');
+    else if (share(i, /^(https?:\/\/|www\.)|^[a-z0-9-]+(\.[a-z0-9-]+)+(\/\S*)?$/i) > 0.5) take(i, 'source_url');
+    else if (share(i, /^[+(]?\d[\d\s().-]{6,}(\s*(x|ext\.?)\s*\d+)?$/i) > 0.5) take(i, 'phone');
+  }
+  if (!hasHeader) {   // remaining text columns, left to right: business, then contact
+    for (let i = 0; i < width; i++) if (!map[i] && share(i, /[a-z]/i) > 0.5) take(i, map.includes('business_name') ? 'contact_name' : 'business_name');
+  }
+  return { map, hasHeader };
+}
+
+// Turns rows + column choices into contacts, and counts what will be left out.
+function orBuildContacts(rows, map, hasHeader) {
+  const body = hasHeader ? rows.slice(1) : rows;
+  const seen = new Set(), contacts = []; let noEmail = 0, repeats = 0;
+  for (const r of body) {
+    const c = { notes: [] };
+    map.forEach((f, i) => {
+      const v = r[i] || ''; if (!f || !v) return;
+      if (f === 'notes') c.notes.push(v);
+      else if (f === 'email') { const m = v.match(OR_EMAIL); if (m && !c.email) c.email = m[0].toLowerCase().replace(/[.,;]+$/, ''); }
+      else if (!c[f]) c[f] = v;
+    });
+    if (!c.email) { noEmail++; continue; }
+    if (seen.has(c.email)) { repeats++; continue; }
+    seen.add(c.email);
+    const name = c.contact_name || [c.first_name, c.last_name].filter(Boolean).join(' ');
+    contacts.push({ business_name: c.business_name || '', contact_name: name, email: c.email, source_url: c.source_url || '', phone: c.phone || '', notes: c.notes.join(' · ') });
+  }
+  return { contacts, noEmail, repeats };
+}
+/* outreach-parser:end */
+
+let orPaste = null;   // { rows, map, hasHeader }
+function previewOutreachPaste(keepMap) {
+  const rows = orParseTable(document.getElementById('or-bulk').value);
+  const box = document.getElementById('or-preview'), btn = document.getElementById('or-import-btn');
+  if (!rows.length) { orPaste = null; box.innerHTML = ''; btn.disabled = true; btn.textContent = 'Import contacts'; return; }
+  const guess = orGuessColumns(rows);
+  const width = guess.map.length;
+  if (keepMap && orPaste && orPaste.map.length === width) { guess.map = orPaste.map; guess.hasHeader = orPaste.hasHeader; }
+  orPaste = { rows, map: guess.map, hasHeader: guess.hasHeader };
+  const { contacts, noEmail, repeats } = orBuildContacts(rows, orPaste.map, orPaste.hasHeader);
+  const body = orPaste.hasHeader ? rows.slice(1) : rows;
+  const selects = orPaste.map.map((f, i) => `<th style="padding:6px 8px"><select onchange="orPaste.map[${i}]=this.value;previewOutreachPaste(true)" style="font-size:12px;padding:4px 6px;min-width:112px">${
+    OR_FIELDS.map(([v, l]) => `<option value="${v}" ${v === f ? 'selected' : ''}>${l}</option>`).join('')}</select></th>`).join('');
+  const sample = body.slice(0, 6).map(r => `<tr>${orPaste.map.map((_, i) => `<td style="padding:6px 8px;font-size:12px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r[i] || '')}</td>`).join('')}</tr>`).join('');
+  const hasEmailCol = orPaste.map.includes('email');
+  box.innerHTML = `
+    <div style="border:1px solid #e5e5e5;border-radius:6px;margin-bottom:12px;overflow-x:auto">
+      <table style="border-collapse:collapse;width:100%"><thead><tr style="background:#fafafa">${selects}</tr></thead><tbody>${sample}</tbody></table>
+    </div>
+    <div style="font-size:13px;margin-bottom:12px;color:#444">
+      <label style="margin-right:14px"><input type="checkbox" ${orPaste.hasHeader ? 'checked' : ''} onchange="orPaste.hasHeader=this.checked;previewOutreachPaste(true)"> First row is a header</label>
+      ${hasEmailCol ? `<strong>${contacts.length}</strong> contact${contacts.length === 1 ? '' : 's'} ready` : '<span style="color:#e63946">Pick which column is the Email.</span>'}
+      ${noEmail ? ` · ${noEmail} row${noEmail === 1 ? '' : 's'} without a valid email left out` : ''}
+      ${repeats ? ` · ${repeats} repeated email${repeats === 1 ? '' : 's'} left out` : ''}
+      ${body.length > 6 ? ` · showing the first 6 of ${body.length} rows` : ''}
+    </div>`;
+  btn.disabled = !contacts.length;
+  btn.textContent = contacts.length ? `Import ${contacts.length} contact${contacts.length === 1 ? '' : 's'}` : 'Import contacts';
+}
+
+function loadOutreachFile(input) {
+  const file = input.files && input.files[0];
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) { alert('That file is larger than 5 MB.'); input.value = ''; return; }
+  const reader = new FileReader();
+  reader.onload = () => { document.getElementById('or-bulk').value = String(reader.result || ''); previewOutreachPaste(); input.value = ''; };
+  reader.readAsText(file);
+}
+
 async function addOutreachContacts() {
-  const raw = document.getElementById('or-bulk').value.trim();
-  if (!raw) return;
-  const contacts = raw.split('\n').map(line => {
-    const [business_name, contact_name, email, source_url] = line.split(',').map(s => (s || '').trim());
-    return { business_name, contact_name, email, source_url };
-  }).filter(c => c.email);
-  if (!contacts.length) return alert('No valid rows (need at least an email in each line).');
+  if (!orPaste) return;
+  const { contacts } = orBuildContacts(orPaste.rows, orPaste.map, orPaste.hasHeader);
+  if (!contacts.length) return alert('No rows with a valid email.');
+  const btn = document.getElementById('or-import-btn'); btn.disabled = true;
   const r = await post('/api/admin/outreach/contacts', { campaign: outreachCampaign, contacts });
-  const s = document.getElementById('or-add-status');
   if (r?.ok) {
-    s.style.color = '#16a34a';
-    s.textContent = `Added ${r.added}, skipped ${r.skipped} (duplicates).`;
-    document.getElementById('or-bulk').value = '';
-    showOutreach();
+    const parts = [`Added ${r.added}`];
+    if (r.duplicates) parts.push(`${r.duplicates} already in this campaign`);
+    if (r.unsubscribed) parts.push(`${r.unsubscribed} unsubscribed, not added`);
+    if (r.invalid) parts.push(`${r.invalid} invalid`);
+    orPaste = null;
+    await showOutreach();
+    const s = document.getElementById('or-add-status');
+    if (s) { s.style.color = '#16a34a'; s.textContent = parts.join(' · ') + '.'; }
   } else {
+    btn.disabled = false;
+    const s = document.getElementById('or-add-status');
     s.style.color = '#e63946';
     s.textContent = 'Failed: ' + (r?.error || 'unknown error');
   }
@@ -2286,7 +2413,8 @@ async function loadOutreachContacts() {
     <tr>
       <td>${esc(c.business_name || '—')}</td>
       <td>${esc(c.contact_name || '—')}</td>
-      <td>${esc(c.email)}</td>
+      <td>${esc(c.email)}${c.source_url ? `<div style="font-size:11px;color:#6b6b6b">${esc(c.source_url)}</div>` : ''}</td>
+      <td style="font-size:12px">${esc(c.phone || '')}${c.notes ? `<div style="color:#6b6b6b">${esc(c.notes)}</div>` : ''}</td>
       <td>${c.status === 'sent' ? '<span style="color:#16a34a">sent</span>' : c.status === 'failed' ? '<span style="color:#e63946">failed</span>' : 'pending'}</td>
       <td>${c.open_count > 0 ? `<span style="color:#16a34a">${c.open_count}</span>` : '0'}</td>
       <td><button class="link" onclick="deleteOutreachContact(${c.id})">remove</button></td>
@@ -2295,8 +2423,8 @@ async function loadOutreachContacts() {
   document.getElementById('or-contacts').innerHTML = `
     <div class="card" style="max-width:900px">
       <table class="table">
-        <thead><tr><th>Business</th><th>Contact</th><th>Email</th><th>Status</th><th>Opens</th><th></th></tr></thead>
-        <tbody>${html || '<tr><td colspan="6" style="color:#6b6b6b">No contacts yet.</td></tr>'}</tbody>
+        <thead><tr><th>Business</th><th>Contact</th><th>Email</th><th>Phone / notes</th><th>Status</th><th>Opens</th><th></th></tr></thead>
+        <tbody>${html || '<tr><td colspan="7" style="color:#6b6b6b">No contacts yet.</td></tr>'}</tbody>
       </table>
     </div>`;
 }

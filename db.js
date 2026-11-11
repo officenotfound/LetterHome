@@ -385,6 +385,7 @@ try {
     created_at     DATETIME DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(campaign, email)
   )`);
+  for (const col of ['phone TEXT', 'notes TEXT']) { try { db.exec(`ALTER TABLE outreach_contacts ADD COLUMN ${col}`); } catch {} }
   db.exec(`CREATE INDEX IF NOT EXISTS idx_outreach_campaign ON outreach_contacts(campaign)`);
   db.exec(`CREATE INDEX IF NOT EXISTS idx_outreach_status ON outreach_contacts(status)`);
 } catch (e) { console.error('[init] outreach_contacts table:', e.message); }

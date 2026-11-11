@@ -2873,18 +2873,27 @@ app.post('/api/admin/outreach/contacts', requireAdmin, (req, res) => {
     if (!campaign?.trim() || !Array.isArray(contacts) || !contacts.length) {
       return res.status(400).json({ error: 'campaign and contacts[] required' });
     }
+    if (contacts.length > 5000) return res.status(400).json({ error: 'Too many rows at once. Import up to 5,000 at a time.' });
+    const clean = (v, n) => String(v ?? '').replace(/[\u0000-\u001f\u007f]+/g, ' ').trim().slice(0, n) || null;
     const insert = db.prepare(`
-      INSERT OR IGNORE INTO outreach_contacts (campaign, business_name, contact_name, email, source_url)
-      VALUES (?,?,?,?,?)
+      INSERT OR IGNORE INTO outreach_contacts (campaign, business_name, contact_name, email, source_url, phone, notes)
+      VALUES (?,?,?,?,?,?,?)
     `);
-    let added = 0;
-    for (const c of contacts) {
-      if (!c.email?.trim()) continue;
-      const info = insert.run(campaign.trim(), c.business_name || null, c.contact_name || null, c.email.trim().toLowerCase(), c.source_url || null);
-      if (info.changes) added++;
-    }
-    logAudit(req, 'outreach.contacts.add', 'outreach', campaign, { added, submitted: contacts.length });
-    res.json({ ok: true, added, skipped: contacts.length - added });
+    const optedOut = db.prepare('SELECT 1 FROM customers WHERE lower(email) = ? AND unsubscribed_at IS NOT NULL');
+    let added = 0, invalid = 0, duplicates = 0, unsubscribed = 0;
+    db.exec('BEGIN');
+    try {
+      for (const c of contacts) {
+        const email = String(c?.email || '').trim().toLowerCase();
+        if (!/^[^\s@<>,;]+@[^\s@<>,;]+\.[^\s@<>,;]{2,}$/.test(email) || email.length > 200) { invalid++; continue; }
+        if (optedOut.get(email)) { unsubscribed++; continue; }   // never re-add someone who asked us to stop emailing
+        const info = insert.run(campaign.trim().slice(0, 100), clean(c.business_name, 200), clean(c.contact_name, 200), email, clean(c.source_url, 500), clean(c.phone, 50), clean(c.notes, 1000));
+        if (info.changes) added++; else duplicates++;
+      }
+      db.exec('COMMIT');
+    } catch (e) { db.exec('ROLLBACK'); throw e; }
+    logAudit(req, 'outreach.contacts.add', 'outreach', campaign, { added, submitted: contacts.length, invalid, duplicates, unsubscribed });
+    res.json({ ok: true, added, invalid, duplicates, unsubscribed, skipped: contacts.length - added });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
