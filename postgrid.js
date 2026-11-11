@@ -142,7 +142,11 @@ function libreOfficeConvertNow(file, name) {
     const label = path.basename(name || file);
     execFile(process.env.SOFFICE_PATH || 'soffice', [
       `-env:UserInstallation=file://${profile}`, '--headless', '--norestore', '--convert-to', 'pdf', '--outdir', out, input,
-    ], { timeout: 60000 }, (err, stdout, stderr) => {
+    ], {
+      timeout: 60000,
+      // The converter reads customer files, so it gets a bare environment: none of the server's keys or passwords.
+      env: { PATH: process.env.PATH || '/usr/bin:/bin', HOME: out, TMPDIR: out, LANG: 'C.UTF-8' },
+    }, (err, stdout, stderr) => {
       if (err) console.error(`[convert] soffice failed for ${label}: ${err.code === 'ENOENT' ? 'soffice not found (set SOFFICE_PATH or install libreoffice-writer)' : err.message} ${String(stderr || '').trim().slice(0, 300)}`);
       let buf = null;
       if (!err) {

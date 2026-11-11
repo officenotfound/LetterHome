@@ -1680,3 +1680,35 @@ test('outreach import: valid contacts are added with phone and notes; invalid, r
   assert.equal(row.phone, '416-555-0100'); assert.equal(row.notes, 'Toronto'); assert.equal(row.status, 'pending');
   assert.equal((await fetch(`${base}/api/admin/outreach/contacts`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })).status, 401, 'needs an admin login');
 });
+
+test('security headers: the home page and sitemap carry the same headers as other pages, on every domain', async () => {
+  setFlag('us_domain_live', 'true'); setFlag('uk_domain_live', 'true');
+  try {
+    for (const p of ['/', '/about', '/sitemap.xml', '/robots.txt']) {
+      const res = await fetch(`${base}${p}`);
+      assert.ok(res.headers.get('content-security-policy'), `${p} has a CSP`);
+      assert.equal(res.headers.get('x-content-type-options'), 'nosniff', `${p} nosniff`);
+      assert.ok(res.headers.get('x-frame-options'), `${p} frame protection`);
+    }
+  } finally { setFlag('us_domain_live', 'false'); setFlag('uk_domain_live', 'false'); }
+});
+
+test('virus scan: when a scanner is installed, an infected upload is refused and a clean one goes through', async () => {
+  const fsx = require('node:fs'), osx = require('node:os'), pathx = require('node:path');
+  const fake = pathx.join(osx.tmpdir(), `fake-clam-${Date.now()}.sh`);
+  // Stand-in scanner: flags any file containing the standard EICAR test marker, like ClamAV does.
+  fsx.writeFileSync(fake, '#!/bin/sh\nfor a in "$@"; do f="$a"; done\nif grep -q "EICAR-STANDARD-ANTIVIRUS-TEST-FILE" "$f"; then echo "$f: Eicar-Signature FOUND"; exit 1; fi\nexit 0\n', { mode: 0o755 });
+  process.env.CLAMSCAN_PATH = fake;
+  try {
+    const apply = text => {
+      const fd = new FormData();
+      Object.entries({ name: 'Scan Test', email: 'scan@example.com', experience: 'x', businesses: 'y', role: 'r' }).forEach(([k, v]) => fd.append(k, v));
+      fd.append('resume', new Blob([Buffer.from('%PDF-1.4\n' + text)], { type: 'application/pdf' }), 'cv.pdf');
+      return fetch(`${base}/api/careers/apply`, { method: 'POST', body: fd });
+    };
+    const bad = await apply('X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*');
+    assert.equal(bad.status, 400);
+    assert.match((await bad.json()).error, /virus scan/);
+    assert.equal((await apply('a clean resume')).status, 200);
+  } finally { delete process.env.CLAMSCAN_PATH; try { fsx.unlinkSync(fake); } catch {} }
+});

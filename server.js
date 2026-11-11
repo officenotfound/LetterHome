@@ -83,7 +83,6 @@ const sites = require('./sites').createSites({
   publicDir: path.join(__dirname, 'public'),
 });
 app.use(sites.middleware);
-sites.register(app);
 // The site a customer is on (letterhome.ca, .us or .co.uk) follows them into the emails sent while handling their request,
 // and each order remembers its site so later emails (tracking, reminders, recovery) link back to the same address.
 const { AsyncLocalStorage } = require('node:async_hooks');
@@ -182,6 +181,9 @@ app.use(helmet({
                     'https://maps.gstatic.com',
                     'https://www.google-analytics.com',
                     'https://analytics.google.com',
+                    'https://*.google-analytics.com',      // GA4 sends hits to regional hosts (region1.google-analytics.com)
+                    'https://*.analytics.google.com',
+                    'https://www.googletagmanager.com',
                     'https://cloudflareinsights.com'],
       frameSrc:    ["'none'"],
       objectSrc:   ["'none'"],
@@ -201,6 +203,8 @@ app.use(helmet({
     : false,
   referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
 }));
+// Home page, sitemap and robots.txt per domain. Registered after helmet so they carry the same security headers as every other page.
+sites.register(app);
 
 app.use((_req, res, next) => {
   res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()');
@@ -510,8 +514,39 @@ function checkMagicBytes(filePath, mimetype) {
 
 // Wraps upload.array so multer errors (size limit, file count, bad type) become
 // friendly 400s rather than a generic 500 from the global error handler.
+// Optional virus scan. When ClamAV is installed on the server (apt install clamav-daemon), every uploaded file is scanned
+// and an infected one is refused. Without ClamAV the upload still goes through the type and content checks above.
+// CLAMSCAN_PATH can name the scanner; otherwise clamdscan (fast, needs the daemon) is tried, then clamscan.
+let _clam;   // undefined = not looked for yet, null = not installed, string = command
+function virusScan(filePath) {
+  const { execFile } = require('node:child_process');
+  const tryCmd = cmd => new Promise(resolve => {
+    const args = /clamdscan/.test(cmd) ? ['--no-summary', '--fdpass', filePath] : ['--no-summary', filePath];
+    execFile(cmd, args, { timeout: 30000, env: { PATH: process.env.PATH || '/usr/bin:/bin' } }, (err, stdout) => {
+      if (!err) return resolve({ ran: true, infected: false });
+      if (err.code === 1) return resolve({ ran: true, infected: true, name: (String(stdout).match(/: (.+) FOUND/) || [])[1] || 'unknown' });
+      resolve({ ran: false, missing: err.code === 'ENOENT' });
+    });
+  });
+  return (async () => {
+    const named = process.env.CLAMSCAN_PATH;
+    const candidates = named ? [named] : _clam ? [_clam] : _clam === null ? [] : ['clamdscan', 'clamscan'];
+    for (const cmd of candidates) {
+      const r = await tryCmd(cmd);
+      if (r.ran) { if (!named) _clam = cmd; return r; }
+      if (!r.missing) { console.error(`[virus-scan] ${cmd} could not scan the file; continuing without a scan`); return { ran: false }; }
+    }
+    if (!named && _clam === undefined) { _clam = null; console.log('[virus-scan] ClamAV not found; uploads are checked by type and content only'); }
+    return { ran: false };
+  })();
+}
+async function firstInfected(files) {
+  for (const f of files) { const r = await virusScan(f.path); if (r.infected) { console.error(`[virus-scan] refused upload: ${r.name}`); return f; } }
+  return null;
+}
+
 function uploadAttachments(req, res, next) {
-  upload.array('attachments', 5)(req, res, err => {
+  upload.array('attachments', 5)(req, res, async err => {
     if (!err) {
       // Verify actual file content matches declared MIME type.
       const bad = (req.files || []).find(f => !checkMagicBytes(f.path, f.mimetype));
@@ -519,6 +554,10 @@ function uploadAttachments(req, res, next) {
         // Clean up all uploaded temp files before rejecting.
         for (const f of req.files) { try { fs.unlinkSync(f.path); } catch {} }
         return res.status(400).json({ error: 'One or more files failed content validation. Please ensure your files are valid PDF, DOC, DOCX, or TXT.' });
+      }
+      if (await firstInfected(req.files || []).catch(() => null)) {
+        for (const f of req.files) { try { fs.unlinkSync(f.path); } catch {} }
+        return res.status(400).json({ error: 'One of your files was flagged by our virus scan and was not accepted. Please check the file and try again.' });
       }
       return next();
     }
@@ -2924,11 +2963,13 @@ app.post('/api/admin/outreach/send', requireAdmin, async (req, res) => {
           db.prepare('INSERT INTO email_opens (token, campaign, recipient_email) VALUES (?,?,?)')
             .run(token, campaign.trim(), contact.email);
 
+          const escH = v => String(v || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
           const greeting = contact.contact_name ? `Hi ${contact.contact_name.split(' ')[0]},` : 'Hi there,';
           const personalized = body.replace(/\{\{business_name\}\}/g, contact.business_name || 'there');
+          const personalizedHtml = escH(body).replace(/\{\{business_name\}\}/g, escH(contact.business_name || 'there'));
           const pixel = `<img src="${process.env.BASE_URL || 'https://letterhome.ca'}/t/${token}.png" width="1" height="1" style="display:none" alt="">`;
-          const html = `<div>${greeting}</div><div><br></div>` +
-            personalized.split('\n\n').map(p => `<div>${p}</div><div><br></div>`).join('') +
+          const html = `<div>${escH(greeting)}</div><div><br></div>` +
+            personalizedHtml.split('\n\n').map(p => `<div>${p.replace(/\n/g, '<br>')}</div><div><br></div>`).join('') +
             `<div><b>Jeffrey</b><br>Founder, Letterhome</div><div><br></div>` +
             `<div>Print and mail service for Canadians abroad</div><div><br></div>` +
             `<div><a href="https://letterhome.ca">letterhome.ca</a></div><div><br></div>` +
@@ -3559,6 +3600,7 @@ app.post('/api/careers/apply', careersLimiter, (req, res, next) => {
     let saved = null;
     if (req.file) {
       if (!checkMagicBytes(req.file.path, req.file.mimetype)) { drop(); return res.status(400).json({ error: 'That file does not look like a real PDF or Word document.' }); }
+      if (await firstInfected([req.file]).catch(() => null)) { drop(); return res.status(400).json({ error: 'That file was flagged by our virus scan and was not accepted.' }); }
       fs.mkdirSync(APPLICATION_DIR, { recursive: true });
       const ext = path.extname(req.file.originalname).toLowerCase();
       saved = path.join(APPLICATION_DIR, `${new Date().toISOString().slice(0, 10)}-${randomUUID()}${ext}`);
