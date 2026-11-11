@@ -8,9 +8,13 @@ Letterhome is used by Canadians living abroad, immigrants sending documents to C
 
 - $6 CAD: letters to any Canadian address (domestic)
 - $6 CAD: letters to the United States
+- $9 CAD: letters to the United Kingdom
+- $9 CAD: letters to Australia
 - $15 CAD: letters to any other international destination (160+ countries)
 
-All prices include the first 2 pages printed in black & white, plus the envelope, postage, and delivery. You can attach up to 5 files (10 MB each). Optional add-ons, all shown before checkout: colour printing $1, each extra page after the first 2 $0.45 ($0.55 in colour), scheduled sending free. Each letter can be up to 5 printed pages (4 if only a PDF is uploaded). No account required. Pay once per order.
+letterhome.us, letterhome.co.uk and letterhome.ca/au show the same service in US dollars, pounds and Australian dollars, with prices set for each country.
+
+All prices include the first 2 pages printed in black & white, plus the envelope, postage, and delivery. You can attach up to 5 files (10 MB each). Optional add-ons, all shown before checkout: colour printing $1, each extra page after the first 2 $0.55 ($0.75 in colour), scheduled sending free. Each letter can be up to 5 printed pages (4 if only a PDF is uploaded). No account required. Pay once per order.
 
 ## How it works
 
@@ -45,6 +49,7 @@ An order can be cancelled for a full refund until it is sent to the printer; aft
 - [Cheapest way to send a letter to Canada](https://letterhome.ca/cheapest-way-to-send-a-letter-to-canada): Honest comparison of postage rates
 - [Mail a letter online](https://letterhome.ca/mail-a-letter-online): How to send a physical letter without a printer, stamps, or post office
 - [What is lettermail?](https://letterhome.ca/what-is-lettermail): Canada Post lettermail explained, rates, size limits, delivery times
+- [Postage for a large letter in Canada](https://letterhome.ca/postage-for-a-large-letter-in-canada): Canada Post rates by weight for standard and large letters, with ounces converted to grams
 - [Can you mail cash to Canada](https://letterhome.ca/can-you-mail-cash-to-canada): What you can and cannot mail to Canada
 - [How to track a letter to Canada](https://letterhome.ca/how-to-track-a-letter-to-canada): Tracking options and what to do if a letter goes missing
 - [How to send a registered letter to Canada](https://letterhome.ca/how-to-send-a-registered-letter-to-canada): Options, costs, and delivery times for registered mail

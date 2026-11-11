@@ -20,6 +20,7 @@ const SKIP_SCHEMA = new Set([
 // Pages that already have visible "Updated" text (from grep audit)
 const HAS_UPDATED = new Set([
   'can-you-mail-cash-to-canada.html',
+  'postage-for-a-large-letter-in-canada.html',
   'can-i-mail-a-package-to-canada.html',
   'combien-coute-envoyer-une-lettre-au-canada.html',
   'format-adresse-canadienne.html',
