@@ -1579,7 +1579,7 @@ test('admin visitor stats: page views are tagged with their domain and can be fi
 test('US and UK everyday-mail guides: served on their own domain with a self canonical, listed in that domain sitemap', async () => {
   setFlag('us_domain_live', 'true'); setFlag('uk_domain_live', 'true');
   try {
-    const guides = { 'letterhome.us': ['how-long-does-mail-take', 'how-much-is-a-stamp', 'return-address-on-a-letter'],
+    const guides = { 'letterhome.us': ['how-long-does-mail-take', 'how-much-is-a-stamp', 'return-address-on-a-letter', 'postage-rates-2026', 'what-is-certified-mail'],
                      'letterhome.co.uk': ['how-long-does-post-take', 'how-much-is-a-stamp', 'return-address-on-a-letter'] };
     for (const [host, slugs] of Object.entries(guides)) {
       const sm = (await siteGet(host, '/sitemap.xml')).body;

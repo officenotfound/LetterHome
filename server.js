@@ -1093,6 +1093,7 @@ app.get('/account/:page', (req, res, next) => req.params.page === 'verify' ? nex
 // Country guides live under their country's path; the old flat URLs redirect
 const LOCAL_GUIDES = [
   'us/how-long-does-mail-take', 'us/how-much-is-a-stamp', 'us/return-address-on-a-letter',
+  'us/postage-rates-2026', 'us/what-is-certified-mail',
   'uk/how-long-does-post-take', 'uk/how-much-is-a-stamp', 'uk/return-address-on-a-letter',
 ];
 const COUNTRY_GUIDES = {
