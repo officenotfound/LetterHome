@@ -175,6 +175,18 @@ function copyOrderNum(id) {
 
     const trackNote = document.getElementById('track-note');
     if (trackNote) trackNote.innerHTML = LH_T('success.track.note');
+
+    // Most people write to more than one person, so offer the next letter right here (English pages only).
+    if ((document.documentElement.lang || 'en').toLowerCase().indexOf('en') === 0 && /^[A-Z]{2}$/.test(String(data.destinationCountry || ''))) {
+      const next = document.createElement('div');
+      next.className = 'card';
+      next.style.cssText = 'margin-bottom:28px;border-left:3px solid var(--red)';
+      next.innerHTML = '<div style="padding:24px 32px"><p style="font-size:17px;font-weight:600;margin-bottom:6px">Writing to anyone else?</p>' +
+        '<p style="font-size:15px;line-height:1.5;margin-bottom:16px;color:var(--ink-soft)">Each person gets their own letter, and it takes a couple of minutes. For December, the <a href="/canada-post-christmas-mailing-deadlines-2026" style="color:inherit;text-decoration:underline">mailing deadlines</a> show the last day to send.</p>' +
+        '<a href="/send?to=' + encodeURIComponent(data.destinationCountry) + '" class="btn btn-red" style="font-size:13px">Send another letter</a></div>';
+      const anchor = document.getElementById('account-prompt');
+      anchor.parentNode.insertBefore(next, anchor);
+    }
   } catch (err) {
     clearTimeout(loadingTimeout);
     el.innerHTML = '<p style="color:var(--ink-muted);font-size:14px">' + LH_T('success.catch_p') + '</p>';

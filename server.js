@@ -4149,6 +4149,7 @@ function buildMailedEmail(o, toAddr, deliveryText) {
       <p style="margin:0 0 8px">${L.order}</p>
       ${o.status_token ? `<p style="margin:0 0 8px">${L.track}: <a href="${orderBase(o)}/status/${o.status_token}" style="color:#a8472d">${orderBase(o)}/status/${o.status_token}</a></p>` : ''}
       <p style="margin:0">${L.thanks}</p>
+      ${L.es ? '' : `<p style="margin:8px 0 0">Writing to anyone else? <a href="${orderBase(o)}/send" style="color:#a8472d">Send another letter</a></p>`}
       ${reviewAskAllowed(o) ? `<p style="margin:8px 0 0">${L.reviewAsk} <a href="${GOOGLE_REVIEW_URL}" style="color:#a8472d">${L.reviewLink}</a></p>` : ''}
       <p style="margin:12px 0 0;color:#968b7d;font-size:11px">Letterhome · ${MAILING_ADDRESS}</p>
     </div>
@@ -4173,6 +4174,7 @@ function buildMailedEmailText(o, toAddr, deliveryText) {
     L.order,
     o.status_token ? `${L.track}: ${orderBase(o)}/status/${o.status_token}` : '',
     L.thanks,
+    ...(L.es ? [] : [`Writing to anyone else? Send another letter: ${orderBase(o)}/send`]),
     ...(reviewAskAllowed(o) ? [`${L.reviewAsk} ${L.reviewLink}: ${GOOGLE_REVIEW_URL}`] : []),
     '',
     'Letterhome',

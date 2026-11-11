@@ -219,6 +219,14 @@ textarea { resize: vertical; min-height: 260px; line-height: 1.6; }
   letter-spacing: 0.15em; color: var(--red); font-weight: 500; margin-bottom: 10px;
 }
 
+.xmas-note { max-width: 520px; margin: 12px 0 0; padding: 10px 14px; font-size: 14px; line-height: 1.5; color: var(--ink-soft); border-left: 3px solid #1f6b3a; background: rgba(31,107,58,0.08); }
+.xmas-note a { color: inherit; text-decoration: underline; }
+@media (max-width: 560px) {
+  #account-banner > div { padding: 12px 14px !important; margin-bottom: 18px !important; }
+  #account-banner .acct-text { display: none; }
+  #account-banner-collapsed { align-items: center !important; }
+}
+
 /* ADDRESS COLUMNS */
 .address-columns {
   display: grid; grid-template-columns: 1fr 1fr; gap: 40px;
@@ -721,6 +729,7 @@ textarea.field-error { border-color: var(--red) !important; }
         </select>
         <span class="field-note" data-i18n="send.dest.note">Canada and United States $6 · Everywhere else $15, all prices CAD</span>
         <span class="field-note" id="dest-note-local" style="display:none"><span data-i18n="send.dest.local">Printed and mailed locally:</span> <span id="dest-note-local-list"></span></span>
+        <p id="xmas-note" class="xmas-note" style="display:none" role="status"></p>
       </div>
     </div>
 
@@ -1115,6 +1124,27 @@ function computeAddonCents() {
   if (document.getElementById('opt-schedule')?.checked)      cents += SCHEDULE_LATER_CENTS;
   return cents;
 }
+
+// Christmas order-by note for 2026: real dates from our holiday page, shown November 11 to December 24 only, English only.
+function updateXmasNote() {
+  const el = document.getElementById('xmas-note'), sel = document.getElementById('r-country');
+  if (!el || !sel) return;
+  const now = new Date(), m = now.getMonth(), d = now.getDate();
+  const inSeason = now.getFullYear() === 2026 && ((m === 10 && d >= 11) || (m === 11 && d <= 24));
+  if (!inSeason || (document.documentElement.lang || 'en').toLowerCase().indexOf('en') !== 0) { el.style.display = 'none'; return; }
+  const domestic = (sel.value || 'CA') === 'CA';
+  const deadline = domestic ? new Date(2026, 11, 5) : new Date(2026, 10, 20);
+  const label = domestic ? 'December 5' : 'November 20';
+  const today = new Date(now.getFullYear(), m, d);
+  const left = Math.round((deadline - today) / 864e5);
+  const link = ' <a href="/canada-post-christmas-mailing-deadlines-2026">Mailing deadlines</a>';
+  el.innerHTML = left >= 0
+    ? 'For Christmas, order by <strong>' + label + '</strong>' + (left <= 14 ? ' (' + (left === 0 ? 'today is the last day' : left + (left === 1 ? ' day' : ' days') + ' left') + ')' : '') + '. This is our estimate, since Canada Post does not guarantee delivery dates.' + link
+    : 'Our Christmas order-by date for this destination was <strong>' + label + '</strong>. It may still arrive in time, but we would not count on it. You can also schedule it for later at checkout.' + link;
+  el.style.display = 'block';
+}
+document.addEventListener('change', e => { if (e.target && e.target.id === 'r-country') updateXmasNote(); });
+window.addEventListener('load', () => { updateXmasNote(); setTimeout(updateXmasNote, 800); });
 
 function updatePricing() {
   const isDomestic = document.getElementById('r-country').value === 'CA';
@@ -1819,7 +1849,7 @@ function renderAccountBanner(loggedIn, email) {
     el.innerHTML = `
       <div style="background:var(--paper,#faf6ec);border:1px solid var(--line,rgba(42,42,42,0.14));border-left:3px solid var(--red,#a8472d);border-radius:2px;padding:22px 26px;margin-bottom:32px">
         <div id="account-banner-collapsed" style="display:flex;align-items:flex-start;justify-content:space-between;gap:20px;flex-wrap:wrap">
-          <div style="flex:1;min-width:240px">
+          <div class="acct-text" style="flex:1;min-width:240px">
             <div style="font-family:'Roboto',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.14em;color:var(--red,#a8472d);margin-bottom:8px">${LH_T('send.acct.eyebrow')}</div>
             <p style="font-size:15px;line-height:1.5;color:var(--ink-soft,#3a3835);margin:0">${LH_T('send.acct.p')}</p>
           </div>
