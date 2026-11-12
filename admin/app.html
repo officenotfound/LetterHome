@@ -667,10 +667,17 @@ function fmtCharged(o, withCad) {
   return fmtCAD(o.price_cents);
 }
 
-// Which site took the order. letterhome.ca is the default and stays unmarked; the country domains get a small tag.
-const SITE_NAMES = { us: 'letterhome.us', uk: 'letterhome.co.uk' };
+// Which site took the order. Orders from the Australian page are recognised by their AUD charge, since they are
+// taken on letterhome.ca itself.
+const SITE_NAMES = { ca: 'letterhome.ca', us: 'letterhome.us', uk: 'letterhome.co.uk' };
+function siteName(o) {
+  if (!o) return '';
+  const key = SITE_NAMES[o.order_site] ? o.order_site : 'ca';
+  if (key === 'ca' && String(o.charge_currency || '').toUpperCase() === 'AUD') return 'letterhome.ca/au';
+  return SITE_NAMES[key];
+}
 function siteTag(o) {
-  return o && SITE_NAMES[o.order_site] ? `<div style="color:#9a9a9a;font-size:11px">${SITE_NAMES[o.order_site]}</div>` : '';
+  return o ? `<div style="color:#9a9a9a;font-size:11px">${siteName(o)}</div>` : '';
 }
 
 function timeLeftHTML(createdAt, status) {
@@ -1013,7 +1020,7 @@ function renderOrdersTable() {
     <tr>
       <td><input type="checkbox" class="order-cb" value="${o.id}" onchange="updateBulkBar()"></td>
       <td><button class="link" onclick="go('/admin/orders/${o.id}')">#${o.id}</button></td>
-      <td>${fmtDateTime(o.created_at)}</td>
+      <td>${fmtDateTime(o.created_at)}${siteTag(o)}</td>
       <td>${esc(o.recipient_name)}${(() => { const f = contentFlags(o); return f && (f.hits || []).length && !o.content_cleared_at ? '<div><span class="badge badge-red" style="margin-top:3px">FLAGGED: ' + esc(f.hits.map(h => h.label).join(', ')) + '</span></div>' : ''; })()}${o.postgrid_error !== undefined ? `<div style="font-size:12px;color:#b42318;margin-top:3px;max-width:360px;line-height:1.4">${esc((o.postgrid_error || 'Waiting for your approval: check the letter, then Send via PostGrid').replace(/^(MANUAL|RETRY): /, ''))}</div>` : ''}</td>
       <td>${esc(o.recipient_city||'')}${o.recipient_city&&o.destination_country?', ':''}${o.destination_country||''}</td>
       <td>${statusBadge(o.status)}</td>
@@ -1183,7 +1190,7 @@ async function showOrder(id) {
       </div>
     </div>
     <div class="card" id="message-form" style="display:none;margin-bottom:20px">
-      <div class="card-header"><div class="card-title">Email ${esc(o.customer_email)}${SITE_NAMES[o.order_site] ? ` <span style="color:#9a9a9a;font-weight:400;font-size:12px">· ordered on ${SITE_NAMES[o.order_site]}</span>` : ''}</div></div>
+      <div class="card-header"><div class="card-title">Email ${esc(o.customer_email)}<span style="color:#9a9a9a;font-weight:400;font-size:12px"> · ordered on ${siteName(o)}</span></div></div>
       <div style="padding:20px">
         <div class="field" style="margin-bottom:12px">
           <label>Template</label>
