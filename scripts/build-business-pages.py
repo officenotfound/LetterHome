@@ -30,7 +30,7 @@ COUNTRIES = {
     pricing='Letters have published volume pricing from 10 pieces, see <a href="/bulk-mailing">bulk letter pricing</a>. Postcards and anything custom are quoted per job.',
     single='/send', single_label='Send a single letter, from $6 →'),
   'us': dict(
-    lang='en-US', cc='us', place='the U.S.', title='Business Mail in the U.S.: Letters and Postcards at Volume | Letterhome',
+    lang='en-US', cc='us', place='the U.S.', title='Business Mail in the U.S.: Volume Letters | Letterhome',
     desc='Printed, addressed and mailed for your U.S. business: letters and postcards at volume, address-checked. Request a quote.',
     h1='Print and mail at volume,<br><em>without a print shop.</em>',
     sub='Letters, postcards and more, printed, addressed and mailed for you, in the U.S. and abroad. One list in, every piece checked and mailed.',
@@ -45,7 +45,7 @@ COUNTRIES = {
     pricing='Volume pricing is quoted per job: send us the quantity and where the pieces are going and we reply with an exact total in U.S. dollars.',
     single='/send?to=US&cur=USD', single_label='Send a single letter →'),
   'uk': dict(
-    lang='en-GB', cc='uk', place='the UK', title='Business Mail in the UK: Letters and Postcards at Volume | Letterhome',
+    lang='en-GB', cc='uk', place='the UK', title='Business Mail in the UK: Volume Letters | Letterhome',
     desc='Printed, addressed and posted for your UK business: letters and postcards at volume, address-checked. Request a quote.',
     h1='Print and post at volume,<br><em>without a print shop.</em>',
     sub='Letters, postcards and more, printed, addressed and posted for you, in the UK and abroad. One list in, every piece checked and posted.',
@@ -60,7 +60,7 @@ COUNTRIES = {
     pricing='Volume pricing is quoted per job: send us the quantity and where the pieces are going and we reply with an exact total in pounds.',
     single='/send?to=GB&cur=GBP', single_label='Send a single letter →'),
   'au': dict(
-    lang='en-AU', cc='au', place='Australia', title='Business Mail in Australia: Letters and Postcards at Volume | Letterhome',
+    lang='en-AU', cc='au', place='Australia', title='Business Mail in Australia: Volume Letters | Letterhome',
     desc='Printed, addressed and posted for your Australian business: letters and postcards at volume, address-checked. Request a quote.',
     h1='Print and post at volume,<br><em>without a print shop.</em>',
     sub='Letters, postcards and more, printed, addressed and posted for you, in Australia and abroad. One list in, every piece checked and posted.',
@@ -473,7 +473,7 @@ ES = [
  ("'Request a quote →'", "'Pedir cotización →'"), ('Request a quote →', 'Pedir cotización →'),
  ('Request a quote', 'Pedir cotización'),
 ]
-ES_TITLE = 'Correo para empresas en EE. UU.: cartas y postales por volumen | Letterhome'
+ES_TITLE = 'Correo para empresas en EE. UU. por volumen | Letterhome'
 ES_DESC = 'Imprimimos, ponemos dirección y enviamos el correo de su empresa: cartas y postales por volumen, con direcciones revisadas. Pida una cotización.'
 
 def build_us_es():
