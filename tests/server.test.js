@@ -1251,12 +1251,21 @@ test('fixed local prices: a UK order is charged in pounds, reports stay in CAD, 
   const o = db.prepare("SELECT * FROM orders WHERE customer_email = 'cur@example.com' ORDER BY id DESC").get();
   assert.equal(o.charge_currency, 'GBP');
   assert.equal(o.charge_cents, 450);
+  assert.equal(o.order_region, 'ca', 'a pound order placed on letterhome.ca is tagged ca');
   assert.ok(o.price_cents > 450, 'price_cents is a CAD figure for reports');
   assert.equal((await post({ 'r-country': 'CA', currency: 'USD' })).status, 200);
   assert.equal(line().currency, 'usd');
   assert.equal(line().unit_amount, 500);
   assert.equal((await post({ 'r-country': 'FR', currency: 'AUD' })).status, 200);
   assert.equal(line().unit_amount, 1950);
+  assert.equal(db.prepare("SELECT order_region FROM orders WHERE customer_email = 'cur@example.com' ORDER BY id DESC").get().order_region, 'au', 'an order priced in AUD is tagged as the Australian pages');
+  // A visitor Cloudflare places in Canada is charged in CAD, but still came through the Australian pages.
+  assert.equal((await fetch(`${base}/api/create-order`, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'cf-ipcountry': 'CA' }, body: new URLSearchParams({
+    'r-email': 'cur-au-ca@example.com', 'r-name': 'Pat Local', 'r-street': '1 High St', 'r-city': 'Sydney', 'r-postal': '2000',
+    'letter-body': 'Hello.', 'letter-type': 'standard', 'r-country': 'AU', currency: 'AUD' }) })).status, 200);
+  const caAu = db.prepare("SELECT charge_currency, order_region FROM orders WHERE customer_email = 'cur-au-ca@example.com'").get();
+  assert.ok(!caAu.charge_currency, 'charged in CAD');
+  assert.equal(caAu.order_region, 'au', 'tagged by the page they came through, not by what they were charged');
   assert.equal((await post({ 'r-country': 'CA', currency: 'EUR' })).status, 200);   // unknown currency falls back to CAD
   assert.equal(line().currency, 'cad');
   assert.equal(line().unit_amount, 600);
@@ -1482,8 +1491,9 @@ test('country domains: customers can do everything on the country domain and the
       const email = `site-${key}@example.com`;
       const r = await post(host, email);
       assert.equal(r.status, 200, `${host}: ${r.body}`);
-      const row = db.prepare('SELECT order_site FROM orders WHERE customer_email = ? ORDER BY id DESC LIMIT 1').get(email);
+      const row = db.prepare('SELECT order_site, order_region FROM orders WHERE customer_email = ? ORDER BY id DESC LIMIT 1').get(email);
       assert.equal(row.order_site, key, `order placed on ${host} should be tagged ${key}`);
+      assert.equal(row.order_region, key, `order placed on ${host} should carry the region ${key}`);
     }
   } finally { setFlag('us_domain_live', 'false'); setFlag('uk_domain_live', 'false'); }
 });
