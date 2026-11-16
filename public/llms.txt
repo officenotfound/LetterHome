@@ -39,6 +39,7 @@ An order can be cancelled for a full refund until it is sent to the printer; aft
 
 - [Home](https://letterhome.ca/): Service overview and order form
 - [Send a letter](https://letterhome.ca/send): Order form, upload documents and mail a letter to Canada
+- [Canada Post stamp price rising to $2 in 2027](https://letterhome.ca/canada-post-stamp-price-2027): what the 2026 federal budget confirms about the $2 domestic stamp, past prices, and what is still unannounced
 - [How much does it cost to mail a letter to Canada? (2026)](https://letterhome.ca/how-much-does-it-cost-to-mail-a-letter-to-canada): Canada Post stamp prices in 2026 and comparison with Letterhome
 - [How to mail IRCC documents from outside Canada](https://letterhome.ca/how-to-mail-ircc-documents-from-outside-canada): Guide for mailing immigration documents to IRCC from abroad
 - [How to mail CRA tax forms from outside Canada](https://letterhome.ca/how-to-mail-cra-tax-forms-from-outside-canada): Guide for mailing tax forms to the Canada Revenue Agency from abroad

@@ -8,7 +8,7 @@
     <xhtml:link xmlns:xhtml="http://www.w3.org/1999/xhtml" rel="alternate" hreflang="en-GB" href="https://letterhome.ca/uk"/>
     <xhtml:link xmlns:xhtml="http://www.w3.org/1999/xhtml" rel="alternate" hreflang="en-AU" href="https://letterhome.ca/au"/>
     <xhtml:link xmlns:xhtml="http://www.w3.org/1999/xhtml" rel="alternate" hreflang="x-default" href="https://letterhome.ca/"/>
-    <lastmod>2026-11-03</lastmod>
+    <lastmod>2026-11-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>1.0</priority>
   </url>
@@ -181,6 +181,12 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://letterhome.ca/canada-post-stamp-price-2027</loc>
+    <lastmod>2026-11-16</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://letterhome.ca/comment-envoyer-une-lettre-au-canada</loc>
     <lastmod>2026-11-02</lastmod>
     <changefreq>monthly</changefreq>
@@ -304,7 +310,7 @@
   </url>
   <url>
     <loc>https://letterhome.ca/how-long-does-it-take-to-mail-a-letter-to-canada</loc>
-    <lastmod>2026-11-04</lastmod>
+    <lastmod>2026-11-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -1102,13 +1108,13 @@
   </url>
   <url>
     <loc>https://letterhome.ca/us/return-address-on-a-letter</loc>
-    <lastmod>2026-11-09</lastmod>
+    <lastmod>2026-11-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://letterhome.ca/uk/how-long-does-post-take</loc>
-    <lastmod>2026-11-09</lastmod>
+    <lastmod>2026-11-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
