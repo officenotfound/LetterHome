@@ -2178,6 +2178,13 @@ const estCostCents = c => ({ CA: COST_DOMESTIC, US: COST_USA, GB: COST_UK, AU: C
 const STRIPE_PCT         = 0.029;   // 2.9% Canadian card rate
 const STRIPE_FIXED       = 30;      // $0.30 per transaction
 
+// Abandoned-cart offer results for the Settings screen: how many offers went out, and how many of those orders were paid afterwards
+app.get('/api/admin/cart-offer-stats', requireAdmin, (req, res) => {
+  const sent = db.prepare("SELECT COUNT(*) n FROM orders WHERE cart_offer_sent_at IS NOT NULL").get().n;
+  const paid = db.prepare("SELECT COUNT(*) n, COALESCE(SUM(price_cents), 0) c FROM orders WHERE cart_offer_sent_at IS NOT NULL AND status IN ('paid','submitted_to_printer','printing','mailed','delivered')").get();
+  res.json({ sent, paid: paid.n, revenue_cents: paid.c });
+});
+
 app.get('/api/admin/stats', requireAdmin, (req, res) => {
   try {
     const paidOrders = db.prepare(`
