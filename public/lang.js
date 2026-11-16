@@ -4722,6 +4722,7 @@
     var c = countryOf();
     if (c === 'uk' || c === 'au') return 'en';                 // English-only country sites
     if (c === 'us') return spanishOk() && (saved === 'es' || (!saved && browserLang() === 'es')) ? 'es' : 'en';
+    if (/[?&]lang=fr(&|$)/.test(location.search)) { try { localStorage.setItem('lh-lang', 'fr'); } catch (e) {} return 'fr'; }   // a link from a French page on another domain
     return saved === 'fr' || (!saved && browserLang() === 'fr') ? 'fr' : 'en';
   }
 

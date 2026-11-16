@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap">
 <link rel="stylesheet" href="/fonts.css">
+<script src="/sla-clock.js"></script>
 <script>(function(){try{var t=localStorage.getItem('lh-admin-theme')||'light';document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -685,14 +686,21 @@ function siteTag(o) {
   return o ? `<div style="color:#9a9a9a;font-size:11px">${siteFlag(o)} ${siteName(o)}</div>` : '';
 }
 
+// "Mon 9:00 AM" in the facility's time zone
+function slaWhen(ms) {
+  return new Date(ms).toLocaleString('en-CA', { timeZone: LHSla.TZ, weekday: 'short', hour: 'numeric', minute: '2-digit', hour12: true }).replace(/\./g, '');
+}
+
 function timeLeftHTML(createdAt, status) {
   if (status === 'mailed' || status === 'delivered')
     return `<span data-countdown-created="${createdAt}" data-countdown-status="${status}" style="color:#6b6b6b;font-size:12px">Completed</span>`;
   if (status === 'awaiting_payment')
     return `<span data-countdown-created="${createdAt}" data-countdown-status="${status}" style="color:#9a9a9a;font-size:12px">—</span>`;
 
-  const deadline  = parseDbDate(createdAt).getTime() + 24 * 3600000;
-  const remaining = deadline - Date.now();
+  const ck = LHSla.clock(parseDbDate(createdAt).getTime(), Date.now());
+  if (ck.waiting)
+    return `<span data-countdown-created="${createdAt}" data-countdown-status="${status}" style="color:#6b6b6b;font-weight:600;font-size:12px">Clock starts ${slaWhen(ck.start)}</span>`;
+  const remaining = ck.deadline - Date.now();
   const h = Math.floor(Math.abs(remaining) / 3600000);
   const m = Math.floor((Math.abs(remaining) % 3600000) / 60000);
 
@@ -706,19 +714,20 @@ function timeLeftHTML(createdAt, status) {
 
 function slaBanner(createdAt, status) {
   if (status === 'mailed' || status === 'delivered' || status === 'awaiting_payment') return '';
-  const deadline  = parseDbDate(createdAt).getTime() + 24 * 3600000;
-  const remaining = deadline - Date.now();
+  const ck = LHSla.clock(parseDbDate(createdAt).getTime(), Date.now());
+  const remaining = ck.deadline - Date.now();
   const h = Math.floor(Math.abs(remaining) / 3600000);
   const m = Math.floor((Math.abs(remaining) % 3600000) / 60000);
 
   let bg, color, icon, text;
-  if (remaining < 0)                  { bg='#fef2f2'; color='#991b1b'; icon='⚠'; text=`Overdue by ${h}h ${m}m — mail this order immediately.`; }
+  if (ck.waiting)                     { bg='#f4f4f5'; color='#52525b'; icon='🕘'; text=`Placed outside business hours. The print and mail facility opens ${slaWhen(ck.start)}, so the 24 hours start then.`; }
+  else if (remaining < 0)                  { bg='#fef2f2'; color='#991b1b'; icon='⚠'; text=`Overdue by ${h}h ${m}m. Mail this order immediately.`; }
   else if (remaining < 4 * 3600000)   { bg='#fef2f2'; color='#991b1b'; icon='⚠'; text=`${h}h ${m}m left to mail this order.`; }
   else if (remaining < 12 * 3600000)  { bg='#fffbeb'; color='#92400e'; icon='⏱'; text=`${h}h ${m}m left to mail this order.`; }
   else                                { bg='#f0fdf4'; color='#166534'; icon='✓'; text=`${h}h ${m}m left to mail this order.`; }
   return `<div data-sla-created="${createdAt}" data-sla-status="${status}" style="background:${bg};color:${color};padding:14px 20px;border-radius:0;margin-bottom:20px;font-size:14px;display:flex;align-items:center;gap:12px;border:1px solid ${color}33">
     <span style="font-size:18px">${icon}</span>
-    <span><strong>24-hour fulfillment SLA — </strong>${text}</span>
+    <span><strong>24-hour fulfillment clock (business hours, Mon to Fri) — </strong>${text}</span>
   </div>`;
 }
 

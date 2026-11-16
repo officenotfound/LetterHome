@@ -162,7 +162,7 @@ def build(key):
 .bz-lede{{font-size:18px;line-height:1.55;color:var(--ink-muted);max-width:520px;margin:0 0 30px}}
 .bz-actions{{display:flex;flex-wrap:wrap;gap:20px;align-items:center}}
 .bz-btn{{display:inline-block;background:var(--red);color:#fff!important;padding:16px 30px;font-family:'Roboto',monospace;font-size:13px;letter-spacing:.1em;text-transform:uppercase;text-decoration:none!important;border:2px dashed rgba(255,255,255,.85);outline:2px solid var(--red);outline-offset:-1px}}
-.bz-btn:hover{{background:var(--red-deep);outline-color:var(--red-deep)}}
+.bz-btn:hover{{background:var(--red-deep);outline-color:var(--red-deep)}}html[data-theme="dark"] .bz-btn{{color:#2a1410!important}}
 .bz-second{{color:var(--ink)!important;font-weight:600;text-decoration:underline;text-underline-offset:4px}}
 .bz-fine{{font-size:14px;color:var(--ink-muted);margin:18px 0 0}}
 .bz-visual{{position:relative;max-width:460px;margin:0 auto;width:100%;padding:0 0 34px}}
@@ -246,7 +246,7 @@ def build(key):
 <body>
 <a href="#main-content" class="skip-link" style="position:absolute;left:-9999px;top:4px;z-index:9999;background:#a8472d;color:#faf6ec;padding:8px 16px;font-size:14px;font-family:'Noto Sans',system-ui,sans-serif;text-decoration:none;border-radius:2px" onfocus="this.style.left='4px'" onblur="this.style.left='-9999px'">Skip to main content</a>
 <div id="site-header"><nav aria-label="Main"><a href="/">Letterhome</a> · <a href="/send">Send a letter</a> · <a href="/track">Track an order</a> · <a href="/guides">Guides</a> · <a href="/business">Business mail</a></nav></div>
-<script src="/header.js?v=16"></script>
+<script src="/header.js?v=17"></script>
 
 <main id="main-content">
 <section class="bz-hero"><div class="bz-wrap bz-hero-in">
@@ -342,7 +342,7 @@ def build(key):
 <footer id="site-footer"><nav aria-label="Site links" style="padding:24px;font-size:14px"><a href="/about">About</a> · <a href="/careers">Careers</a> · <a href="/contact">Contact</a> · <a href="/guides">Mailing guides</a> · <a href="/business">Business mail</a> · <a href="/monthly-letters">Monthly letters</a> · <a href="/terms">Terms</a> · <a href="/privacy">Privacy</a> · <a href="/refunds">Refund policy</a> · <a href="https://letterhome.ca/">Canada</a> · <a href="/us">United States</a> · <a href="/uk">United Kingdom</a> · <a href="/au">Australia</a></nav></footer>
 <script src="/footer.js?v=21" defer></script>
 <script src="/theme.js?v=4" defer></script>
-<script src="/lang.js?v=57" defer></script>
+<script src="/lang.js?v=58" defer></script>
 <script>
 async function submitBizForm() {{
   const v = id => document.getElementById(id).value.trim();
@@ -366,6 +366,13 @@ async function submitBizForm() {{
 </body>
 </html>
 '''
+
+# The US, UK and Australian business pages are a deliberate light look (white cards, each country's colours). Left to follow the
+# device's dark mode they showed white cards under cream text that could not be read, so they always use the light theme.
+_build_raw = build
+def build(key):
+    page = _build_raw(key)
+    return page if key == 'ca' else page.replace("m.matches?'dark':'light'", "'light'")
 
 for k in COUNTRIES:
     page = build(k)

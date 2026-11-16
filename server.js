@@ -860,19 +860,24 @@ async function occasionReminders() {
 }
 occasionReminders();
 
+const SlaClock = require('./public/sla-clock.js');
 async function slaAlerts() {
   if (!process.env.OPERATOR_EMAIL) return;
   try {
-    const cutoff20h = new Date(Date.now() - 20 * 3600 * 1000).toISOString();
+    // Alert 4 hours before the 24-hour fulfilment clock runs out. The clock only runs in business hours
+    // (Mon to Fri, 9 to 17 Eastern), so an order placed on a Friday night is not flagged over the weekend.
+    const now = Date.now();
     const overdue = db.prepare(`
       SELECT * FROM orders
       WHERE status IN ('paid','submitted_to_printer')
-        AND created_at < ?
         AND sla_alert_sent_at IS NULL
         AND deleted_at IS NULL
         -- live PostGrid letters run on PostGrid's own 2-business-day clock; the 15-minute sync tracks them
         AND NOT (postgrid_mode = 'live' AND COALESCE(postgrid_status, '') != 'cancelled')
-    `).all(cutoff20h);
+    `).all().filter(o => {
+      const created = Date.parse(String(o.created_at).replace(' ', 'T') + (/Z|[+-]\d\d:?\d\d$/.test(o.created_at) ? '' : 'Z'));
+      return Number.isFinite(created) && SlaClock.clock(created, now).deadline - 4 * 3600000 < now;
+    });
     if (overdue.length) {
       const lines = overdue.map(o =>
         `  Order #${o.id}: ${o.recipient_name}, ${o.status}, created ${o.created_at}`
@@ -881,7 +886,7 @@ async function slaAlerts() {
         from:    process.env.EMAIL_FROM,
         to:      process.env.OPERATOR_EMAIL,
         subject: `[Letterhome] SLA Alert: ${overdue.length} order${overdue.length > 1 ? 's' : ''} overdue`,
-        text:    `The following orders have been in paid/submitted_to_printer status for over 20 hours:\n\n${lines}\n\nPlease take action.`,
+        text:    `The following orders are close to or past their 24-hour mailing deadline (the clock only runs Monday to Friday, 9 to 17 Eastern):\n\n${lines}\n\nPlease take action.`,
       }, 'sla_alert');
       const stmt = db.prepare('UPDATE orders SET sla_alert_sent_at = CURRENT_TIMESTAMP WHERE id = ?');
       for (const o of overdue) stmt.run(o.id);
@@ -1629,6 +1634,10 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
   }
   const serviceCents   = mailService ? offered[mailService].cents : 0;
   const registeredMail = mailService === 'registered';
+
+  // The ordering page needs a message or a file before it lets anyone pay; hold the server to the same rule.
+  if (!String(b['letter-body'] || '').trim() && !(req.files || []).length)
+    return res.status(400).json({ error: 'Please type your letter or attach a file before paying.' });
 
   const analysis = await analyseLetter(b['letter-body'], req.files || []);
   if (analysis?.tooLong) return res.status(400).json({ error: analysis.message });
@@ -4249,11 +4258,11 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:48px 36px 32px
 @media(max-width:600px){nav,.main{padding-left:20px!important;padding-right:20px!important}.main{padding-top:40px!important;padding-bottom:80px!important}}
 </style>
 <script>(function(){try{var m=window.matchMedia('(prefers-color-scheme: dark)'),s=function(){document.documentElement.setAttribute('data-theme',m.matches?'dark':'light');};s();if(m.addEventListener)m.addEventListener('change',s);}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
-<link rel="stylesheet" href="/theme.css?v=24"><script src="/order-country.js?v=1"></script><link rel="stylesheet" href="/country-order.css?v=4">
+<link rel="stylesheet" href="/theme.css?v=24"><script src="/order-country.js?v=2"></script><link rel="stylesheet" href="/country-order.css?v=4">
 </head>
 <body>
 <div id="site-header"></div>
-<script src="/header.js?v=16"></script>
+<script src="/header.js?v=17"></script>
 <div class="main" style="max-width:580px;margin:0 auto;padding:64px 36px 100px">
   <div style="display:inline-flex;align-items:center;gap:10px;font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.18em;color:#a8472d;margin-bottom:20px">
     <span style="width:28px;height:1px;background:#a8472d;display:inline-block"></span>${L.order.replace(/\d+$/, '')}${esc(String(order.id))}
@@ -4276,7 +4285,7 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:48px 36px 32px
 </div>
 <footer id="site-footer"></footer>
 <script src="/theme.js?v=4"></script>
-<script src="/lang.js?v=57" defer></script>
+<script src="/lang.js?v=58" defer></script>
 <script src="/footer.js?v=21" defer></script>
 </body>
 </html>`;

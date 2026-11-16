@@ -1788,3 +1788,13 @@ test('virus scan: when a scanner is installed, an infected upload is refused and
     assert.equal((await apply('a clean resume')).status, 200);
   } finally { delete process.env.CLAMSCAN_PATH; try { fsx.unlinkSync(fake); } catch {} }
 });
+
+test('an order with no letter text and no files is refused before checkout, a real one still goes through', async () => {
+  const post = fields => fetch(`${base}/api/create-order`, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({
+    'r-email': 'blank-letter@example.com', 'r-name': 'Pat Blank', 'r-street': '1 Main St', 'r-city': 'Toronto', 'r-province': 'ON', 'r-postal': 'M5V 1A1',
+    'r-country': 'CA', 'letter-type': 'standard', ...fields }) });
+  assert.equal((await post({ 'letter-body': '   ' })).status, 400);
+  assert.equal((await post({})).status, 400);
+  assert.equal(db.prepare("SELECT COUNT(*) AS n FROM orders WHERE customer_email = 'blank-letter@example.com'").get().n, 0, 'a refused order leaves no row');
+  assert.equal((await post({ 'letter-body': 'Hello.' })).status, 200);
+});

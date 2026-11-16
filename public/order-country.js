@@ -24,6 +24,11 @@
   el.setAttribute('data-country', c);
   el.setAttribute('lang', LANG[c]);
   window.LH_COUNTRY = c;
+  // The country looks are deliberately light (white cards, each country's own colours). The pages also follow the device's
+  // dark mode, and the two together left white cards with cream text that could not be read, so these pages stay light.
+  var keepLight = function () { if (el.getAttribute('data-theme') !== 'light') el.setAttribute('data-theme', 'light'); };
+  keepLight();
+  try { new MutationObserver(keepLight).observe(el, { attributes: true, attributeFilter: ['data-theme'] }); } catch (e) {}
   // Tab title: no "from Canada" on the country sites.
   var NAME = { us: 'USA', uk: 'UK', au: 'Australia' };
   document.addEventListener('DOMContentLoaded', function () {

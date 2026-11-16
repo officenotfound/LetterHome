@@ -79,9 +79,10 @@
   var isSpanish = htmlLang.indexOf('es') === 0;
   var country = document.documentElement.getAttribute('data-country') || '';
   var onUsDomain = location.hostname.replace(/^www\./, '') === 'letterhome.us';
-  // Remember the visitor's language on the US pages, so the ordering pages that follow open in it.
+  // Remember the visitor's language on the French and US Spanish pages, so the ordering pages that follow open in it.
   try {
     if (isSpanish) localStorage.setItem('lh-lang', 'es');
+    else if (isFrench) localStorage.setItem('lh-lang', 'fr');   // a visitor on a French page orders in French
     else if (country === 'us' && document.documentElement.hasAttribute('data-en-only')) localStorage.setItem('lh-lang', 'en');
   } catch (e) {}
   // Hide toggle only on the /guides index page (not on individual blog/guide pages).
@@ -133,4 +134,16 @@
         '</div>' +
       '</div>' +
     '</nav>';
+
+  // The French pages are written for the Canadian service. When one is served on the US or UK domain, its order, tracking
+  // and home links go to letterhome.ca, and ?lang=fr tells the order page to open in French (storage does not cross domains).
+  if (isFrench && /(^|\.)letterhome\.(us|co\.uk)$/.test(location.hostname)) {
+    try {
+      document.querySelectorAll('a[href]').forEach(function (a) {
+        var h = a.getAttribute('href') || '';
+        if (h === '/' || h === '/track') a.setAttribute('href', 'https://letterhome.ca' + h);
+        else if (h === '/send' || h.indexOf('/send?') === 0) a.setAttribute('href', 'https://letterhome.ca' + h + (h.indexOf('?') < 0 ? '?' : '&') + 'lang=fr');
+      });
+    } catch (e) {}
+  }
 })();
