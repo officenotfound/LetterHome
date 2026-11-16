@@ -691,7 +691,14 @@ function slaWhen(ms) {
   return new Date(ms).toLocaleString('en-CA', { timeZone: LHSla.TZ, weekday: 'short', hour: 'numeric', minute: '2-digit', hour12: true }).replace(/\./g, '');
 }
 
-function timeLeftHTML(createdAt, status) {
+// Once a letter has gone to PostGrid it is out of our hands: no countdown, no overdue
+function handedOff(o) {
+  return !!o && (['submitted_to_printer', 'printing'].includes(o.status) || (o.postgrid_letter_id && o.postgrid_mode === 'live' && o.postgrid_status !== 'cancelled'));
+}
+
+function timeLeftHTML(createdAt, status, out) {
+  if (out && status !== 'mailed' && status !== 'delivered' && status !== 'awaiting_payment')
+    return `<span data-countdown-created="${createdAt}" data-countdown-status="${status}" data-out="1" style="color:#6b6b6b;font-size:12px">With the printer</span>`;
   if (status === 'mailed' || status === 'delivered')
     return `<span data-countdown-created="${createdAt}" data-countdown-status="${status}" style="color:#6b6b6b;font-size:12px">Completed</span>`;
   if (status === 'awaiting_payment')
@@ -712,7 +719,8 @@ function timeLeftHTML(createdAt, status) {
   return `<span data-countdown-created="${createdAt}" data-countdown-status="${status}" style="color:${color};font-weight:600;font-size:12px">${text}</span>`;
 }
 
-function slaBanner(createdAt, status) {
+function slaBanner(createdAt, status, out) {
+  if (out) return '';
   if (status === 'mailed' || status === 'delivered' || status === 'awaiting_payment') return '';
   const ck = LHSla.clock(parseDbDate(createdAt).getTime(), Date.now());
   const remaining = ck.deadline - Date.now();
@@ -737,14 +745,14 @@ function startCountdownTicker() {
       const created = el.dataset.countdownCreated;
       const status  = el.dataset.countdownStatus;
       const tmp = document.createElement('div');
-      tmp.innerHTML = timeLeftHTML(created, status);
+      tmp.innerHTML = timeLeftHTML(created, status, el.dataset.out === '1');
       el.replaceWith(tmp.firstElementChild);
     });
     document.querySelectorAll('[data-sla-created]').forEach(el => {
       const created = el.dataset.slaCreated;
       const status  = el.dataset.slaStatus;
       const tmp = document.createElement('div');
-      tmp.innerHTML = slaBanner(created, status);
+      tmp.innerHTML = slaBanner(created, status, el.dataset.out === '1');
       if (tmp.firstElementChild) el.replaceWith(tmp.firstElementChild);
     });
   }, 60000);
@@ -809,7 +817,7 @@ function renderDashboard(stats, paidOrders, submittedOrders, chartData, geoData,
       <td>${esc(o.recipient_name)}</td>
       <td>${o.destination_country || '—'}</td>
       <td>${statusBadge(o.status)}</td>
-      <td>${timeLeftHTML(o.created_at, o.status)}</td>
+      <td>${timeLeftHTML(o.created_at, o.status, handedOff(o))}</td>
       <td>${fmtCharged(o)}</td>
       <td><button class="btn btn-primary btn-sm" onclick="go('/admin/orders/${o.id}')">Action →</button></td>
     </tr>`).join('');
@@ -1038,7 +1046,7 @@ function renderOrdersTable() {
       <td>${esc(o.recipient_name)}${(() => { const f = contentFlags(o); return f && (f.hits || []).length && !o.content_cleared_at ? '<div><span class="badge badge-red" style="margin-top:3px">FLAGGED: ' + esc(f.hits.map(h => h.label).join(', ')) + '</span></div>' : ''; })()}${o.postgrid_error !== undefined ? `<div style="font-size:12px;color:#b42318;margin-top:3px;max-width:360px;line-height:1.4">${esc((o.postgrid_error || 'Waiting for your approval: check the letter, then Send via PostGrid').replace(/^(MANUAL|RETRY): /, ''))}</div>` : ''}</td>
       <td>${esc(o.recipient_city||'')}${o.recipient_city&&o.destination_country?', ':''}${o.destination_country||''}</td>
       <td>${statusBadge(o.status)}</td>
-      <td>${timeLeftHTML(o.created_at, o.status)}</td>
+      <td>${timeLeftHTML(o.created_at, o.status, handedOff(o))}</td>
       <td>${fmtCharged(o)}</td>
       <td><button class="link" onclick="go('/admin/orders/${o.id}')">View →</button></td>
     </tr>`).join('');
@@ -1226,7 +1234,7 @@ async function showOrder(id) {
         <div class="email-hist"><div style="font-size:12px;color:#777;margin-bottom:4px;text-transform:uppercase;letter-spacing:.08em">Emails sent for this order</div><div id="msg-history"><div class="notif-empty" style="padding:6px 0">Loading…</div></div></div>
       </div>
     </div>
-    ${slaBanner(o.created_at, o.status)}
+    ${slaBanner(o.created_at, o.status, handedOff(o))}
     <div class="detail-grid">
       <div class="detail-card">
         <div class="detail-card-title">From</div>

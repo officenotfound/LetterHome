@@ -2266,8 +2266,8 @@ app.get('/api/admin/orders', requireAdmin, (req, res) => {
       ORDER BY created_at`).all().map(o => o.postgrid_mode === 'test' && !o.postgrid_error ? { ...o, postgrid_error: 'Only a TEST letter exists (not mailed). Clear it and send for real.' } : o));
   }
   const rows = status
-    ? db.prepare("SELECT id, stripe_session_id, customer_email, recipient_name, recipient_street, recipient_city, recipient_province, recipient_postal, destination_country, letter_type, attachment_info, price_cents, charge_currency, charge_cents, order_site, order_region, status, status_token, created_at, recovery_sent_at, content_flags, content_cleared_at FROM orders WHERE status = ? AND deleted_at IS NULL ORDER BY created_at DESC").all(status)
-    : db.prepare("SELECT id, stripe_session_id, customer_email, recipient_name, recipient_street, recipient_city, recipient_province, recipient_postal, destination_country, letter_type, attachment_info, price_cents, charge_currency, charge_cents, order_site, order_region, status, status_token, created_at, recovery_sent_at, content_flags, content_cleared_at FROM orders WHERE deleted_at IS NULL ORDER BY created_at DESC").all();
+    ? db.prepare("SELECT id, stripe_session_id, customer_email, recipient_name, recipient_street, recipient_city, recipient_province, recipient_postal, destination_country, letter_type, attachment_info, price_cents, charge_currency, charge_cents, order_site, order_region, postgrid_letter_id, postgrid_mode, postgrid_status, status, status_token, created_at, recovery_sent_at, content_flags, content_cleared_at FROM orders WHERE status = ? AND deleted_at IS NULL ORDER BY created_at DESC").all(status)
+    : db.prepare("SELECT id, stripe_session_id, customer_email, recipient_name, recipient_street, recipient_city, recipient_province, recipient_postal, destination_country, letter_type, attachment_info, price_cents, charge_currency, charge_cents, order_site, order_region, postgrid_letter_id, postgrid_mode, postgrid_status, status, status_token, created_at, recovery_sent_at, content_flags, content_cleared_at FROM orders WHERE deleted_at IS NULL ORDER BY created_at DESC").all();
   res.json(rows);
 });
 
