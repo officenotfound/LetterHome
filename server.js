@@ -2663,6 +2663,8 @@ app.get('/api/admin/customers/:email', requireAdmin, (req, res) => {
     has_account:        !!manual?.password_hash,
     account_created_at: manual?.account_created_at || null,
     account_site:       manual?.account_site || null,
+    account_ip:         manual?.account_ip || null,
+    order_ip:           manual?.ip || null,
     saved_recipients_count: db.prepare('SELECT COUNT(*) as n FROM saved_recipients WHERE customer_email = ?').get(email).n,
     orders, notes, tags,
   });
@@ -2713,7 +2715,7 @@ app.get('/api/admin/audit-log', requireAdmin, (req, res) => {
 
 app.get('/api/admin/accounts', requireAdmin, (req, res) => {
   const accounts = db.prepare(`
-    SELECT c.email, c.display_name, c.account_created_at, c.account_site,
+    SELECT c.email, c.display_name, c.account_created_at, c.account_site, c.account_ip,
            (SELECT COUNT(*) FROM saved_recipients WHERE customer_email = c.email) AS recipients_count,
            (SELECT COUNT(*) FROM orders WHERE customer_email = c.email AND deleted_at IS NULL) AS order_count,
            (SELECT MAX(created_at) FROM orders WHERE customer_email = c.email AND deleted_at IS NULL) AS last_order
@@ -3704,9 +3706,9 @@ app.post('/api/account/register', accountLimiter, async (req, res) => {
     // register someone else's email and see that person's orders.
     const hash = await bcrypt.hash(password, 12);
     if (existing) {
-      db.prepare('UPDATE customers SET password_hash = ?, account_created_at = CURRENT_TIMESTAMP, account_site = ?, email_verified_at = NULL, deleted_at = NULL WHERE email = ?').run(hash, accountSite() || req.hostname || null, email);
+      db.prepare('UPDATE customers SET password_hash = ?, account_created_at = CURRENT_TIMESTAMP, account_site = ?, account_ip = ?, email_verified_at = NULL, deleted_at = NULL WHERE email = ?').run(hash, accountSite() || req.hostname || null, (req.ip || '').replace(/^::ffff:/, '') || null, email);
     } else {
-      db.prepare('INSERT INTO customers (email, password_hash, account_created_at, account_site) VALUES (?,?,CURRENT_TIMESTAMP,?)').run(email, hash, accountSite() || req.hostname || null);
+      db.prepare('INSERT INTO customers (email, password_hash, account_created_at, account_site, account_ip) VALUES (?,?,CURRENT_TIMESTAMP,?,?)').run(email, hash, accountSite() || req.hostname || null, (req.ip || '').replace(/^::ffff:/, '') || null);
     }
     sendVerifyEmail(email, hash);
     res.json({ ok: true, verify: true });
