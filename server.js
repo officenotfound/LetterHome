@@ -89,6 +89,8 @@ const { AsyncLocalStorage } = require('node:async_hooks');
 const siteStore = new AsyncLocalStorage();
 app.use((req, _res, next) => siteStore.run({ base: sites.baseUrl(req) }, next));
 const siteBase  = () => siteStore.getStore()?.base || (process.env.BASE_URL || '').replace(/\/$/, '');
+// The site a visitor registered on, as a bare host name, kept so the admin can see which site an account came from.
+const accountSite = () => { try { return new URL(siteBase()).hostname; } catch { return null; } };
 const orderBase = o => sites.baseForKey(o && o.order_site) || siteBase();
 
 // Page-view log for the admin Visitors screen. It runs before the page routes and the static files so every page is counted,
@@ -2660,6 +2662,7 @@ app.get('/api/admin/customers/:email', requireAdmin, (req, res) => {
     sender_country:  manual?.sender_country  || null,
     has_account:        !!manual?.password_hash,
     account_created_at: manual?.account_created_at || null,
+    account_site:       manual?.account_site || null,
     saved_recipients_count: db.prepare('SELECT COUNT(*) as n FROM saved_recipients WHERE customer_email = ?').get(email).n,
     orders, notes, tags,
   });
@@ -2710,7 +2713,7 @@ app.get('/api/admin/audit-log', requireAdmin, (req, res) => {
 
 app.get('/api/admin/accounts', requireAdmin, (req, res) => {
   const accounts = db.prepare(`
-    SELECT c.email, c.display_name, c.account_created_at,
+    SELECT c.email, c.display_name, c.account_created_at, c.account_site,
            (SELECT COUNT(*) FROM saved_recipients WHERE customer_email = c.email) AS recipients_count,
            (SELECT COUNT(*) FROM orders WHERE customer_email = c.email AND deleted_at IS NULL) AS order_count,
            (SELECT MAX(created_at) FROM orders WHERE customer_email = c.email AND deleted_at IS NULL) AS last_order
@@ -3701,9 +3704,9 @@ app.post('/api/account/register', accountLimiter, async (req, res) => {
     // register someone else's email and see that person's orders.
     const hash = await bcrypt.hash(password, 12);
     if (existing) {
-      db.prepare('UPDATE customers SET password_hash = ?, account_created_at = CURRENT_TIMESTAMP, email_verified_at = NULL, deleted_at = NULL WHERE email = ?').run(hash, email);
+      db.prepare('UPDATE customers SET password_hash = ?, account_created_at = CURRENT_TIMESTAMP, account_site = ?, email_verified_at = NULL, deleted_at = NULL WHERE email = ?').run(hash, accountSite() || req.hostname || null, email);
     } else {
-      db.prepare('INSERT INTO customers (email, password_hash, account_created_at) VALUES (?,?,CURRENT_TIMESTAMP)').run(email, hash);
+      db.prepare('INSERT INTO customers (email, password_hash, account_created_at, account_site) VALUES (?,?,CURRENT_TIMESTAMP,?)').run(email, hash, accountSite() || req.hostname || null);
     }
     sendVerifyEmail(email, hash);
     res.json({ ok: true, verify: true });

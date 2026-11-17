@@ -145,6 +145,7 @@ try { db.exec(`ALTER TABLE customers ADD COLUMN sender_postal TEXT`);  } catch {
 try { db.exec(`ALTER TABLE customers ADD COLUMN sender_country TEXT`); } catch {}
 try { db.exec(`ALTER TABLE customers ADD COLUMN password_hash TEXT`);         } catch {}
 try { db.exec(`ALTER TABLE customers ADD COLUMN account_created_at DATETIME`);} catch {}
+try { db.exec(`ALTER TABLE customers ADD COLUMN account_site TEXT`);} catch {}
 try { db.exec(`ALTER TABLE customers ADD COLUMN unsubscribed_at DATETIME`);   } catch {}
 // Accounts must prove they own the email before they can see its orders. Accounts made
 // before this column existed are treated as verified (only on the run that adds it).

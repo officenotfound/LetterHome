@@ -1839,6 +1839,7 @@ async function showCustomer(email) {
       <div style="padding:20px">
         ${c.has_account ? `
           <div class="detail-row" style="border:none;padding:0 0 14px"><span class="detail-label">Account Created</span><span class="detail-value">${fmtDate(c.account_created_at) || '—'}</span></div>
+          <div class="detail-row" style="border:none;padding:0 0 14px"><span class="detail-label">Signed up on</span><span class="detail-value">${esc(c.account_site || 'Not recorded (before this was tracked)')}</span></div>
           <div class="detail-row" style="border:none;padding:0 0 18px"><span class="detail-label">Saved Recipients</span><span class="detail-value">${c.saved_recipients_count}</span></div>
           <div style="border-top:1px solid #fafafa;padding-top:18px">
             <div style="font-size:13px;font-weight:600;color:#111111;margin-bottom:10px">Set New Password</div>
@@ -1964,6 +1965,7 @@ async function showAccounts() {
     <tr>
       <td><button class="link" onclick="go('/admin/accounts/${encodeURIComponent(a.email)}')">${esc(a.email)}${a.display_name ? ` <span style="color:#9a9a9a;font-weight:400">(${esc(a.display_name)})</span>` : ''}</button></td>
       <td style="font-size:12px;color:#6b6b6b;white-space:nowrap">${fmtDate(a.account_created_at) || '—'}</td>
+      <td style="font-size:12px;color:#6b6b6b">${esc(a.account_site || '—')}</td>
       <td>${a.order_count}</td>
       <td>${a.recipients_count}</td>
       <td style="font-size:12px;color:#6b6b6b;white-space:nowrap">${fmtDate(a.last_order) || '—'}</td>
@@ -1980,7 +1982,7 @@ async function showAccounts() {
     </div>
     <div class="card">
       <table>
-        <thead><tr><th>Email</th><th>Account Created</th><th>Orders</th><th>Saved Recipients</th><th>Last Order</th><th></th></tr></thead>
+        <thead><tr><th>Email</th><th>Account Created</th><th>Signed up on</th><th>Orders</th><th>Saved Recipients</th><th>Last Order</th><th></th></tr></thead>
         <tbody>${rows || '<tr><td colspan="6" class="empty">No customer accounts yet. Customers can sign up at /account/register.</td></tr>'}</tbody>
       </table>
     </div>`);
