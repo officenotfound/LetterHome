@@ -1028,7 +1028,7 @@ Object.entries(REGION_REDIRECTS).forEach(([from, to]) =>
  'mail-a-letter-online', 'send-a-letter-from-home', 'what-is-lettermail', 'postage-for-a-large-letter-in-canada',
  'ircc-processing-times', 'n4-notice', 'ircc-documents', 'for-professionals', 'bulk-mailing',
  'cra-mail', 'cra-notice-of-objection', 'ltb-forms',
- 'registered-mail-vs-xpresspost', 'proof-of-mailing', 'canada-post-stamp-price-2027', 'cancel-gym-membership-by-mail', 'write-to-a-child-at-summer-camp', 'mail-a-letter-to-a-university-student-in-canada', 'send-a-letter-from-canada-to-india', 'send-a-letter-from-canada-to-the-philippines', 'send-a-letter-from-canada-to-pakistan', 'send-a-letter-from-canada-to-nigeria', 'write-a-letter-to-your-future-self', 'open-when-letters', 'how-to-write-a-condolence-letter', 'write-a-letter-to-your-mp', 'real-estate-letters-by-mail', 'government-forms-that-require-mail',
+ 'registered-mail-vs-xpresspost', 'proof-of-mailing', 'canada-post-stamp-price-2027', 'write-a-letter-to-santa', 'cancel-gym-membership-by-mail', 'write-to-a-child-at-summer-camp', 'mail-a-letter-to-a-university-student-in-canada', 'send-a-letter-from-canada-to-india', 'send-a-letter-from-canada-to-the-philippines', 'send-a-letter-from-canada-to-pakistan', 'send-a-letter-from-canada-to-nigeria', 'write-a-letter-to-your-future-self', 'open-when-letters', 'how-to-write-a-condolence-letter', 'write-a-letter-to-your-mp', 'real-estate-letters-by-mail', 'government-forms-that-require-mail',
  'n9-notice', 'renew-pr-card-by-mail', 'canadian-citizenship-application-by-mail',
  'cpp-application-by-mail', 'oas-gis-application-by-mail', 'canada-child-benefit-by-mail',
  'demand-letter-unpaid-invoice', 'security-deposit-demand-letter', 'cease-and-desist-letter',

@@ -438,3 +438,45 @@ LOCAL = [
 
 from guides_2026_11_countries import COUNTRIES
 CA = CA[:3] + COUNTRIES + CA[3:]
+
+CA.append(dict(slug="write-a-letter-to-santa",
+  title="How to Write a Letter to Santa (and Get a Reply in Canada) | Letterhome",
+  meta_desc="How to write a letter to Santa: what to say, the free Canada Post address (H0H 0H0), the December 9 deadline, and a template for kids who cannot write yet.",
+  service_name="Letter mailing", breadcrumb="Write a Letter to Santa", eyebrow="Holiday 2026",
+  h1_main="How to write", h1_em="a letter to Santa.",
+  hero_sub="The address, the deadline, and what to put in the letter so Santa has something to reply to.",
+  cta_label="Send a Letter →",
+  answer_box="Write the letter, address it to Santa Claus, North Pole, H0H 0H0, Canada, add your own return address, and mail it. Within Canada it needs no stamp. Canada Post says to send it by December 9 this year to get a reply, and December 2 for letters sent by a whole class.",
+  steps=[
+   ("Write it", "Handwritten or typed, either works. A child who cannot write yet can tell a parent what to say and sign it with a drawing."),
+   ("Add the return address", "Santa replies to the address on the letter. A letter without one gets no answer. Put it on the page and on the envelope."),
+   ("Mail it by December 9", "Address it to Santa Claus, North Pole, H0H 0H0, Canada. The postal code uses zeros, not the letter O."),
+  ],
+  warn=("Check the dates every year:", "Canada Post sets the deadline, and it has moved in the past. The December 9 and December 2 dates are the ones it published for 2026. See the Canada Post Santa page for the current rules."),
+  sections=[
+   ("What a good letter to Santa says", [
+    "Santa has a lot of letters to answer. A reply feels personal when the child gave him something to hold on to. Name one real thing from this year, such as learning to ride a bike or losing a first tooth. Ask Santa one question, about the reindeer or the weather at the North Pole. Then say what you would like, and keep that part short. Finish with a thank you and the child's name.",
+   ]),
+   ("A short letter you can copy", [
+    "Dear Santa,<br><br>My name is Maya and I am six. This year I learned to ride my bike without training wheels and I lost two teeth. How cold is it at the North Pole? Do the reindeer get tired? I would like a telescope and a book about space. I will leave you cookies. Thank you for the presents every year.<br><br>Love, Maya<br>12 Maple Street, Ottawa, Ontario, K1A 0B1",
+   ]),
+   ("The free Canada Post program", [
+    "Canada Post runs the Santa program and replies to children who write in. Within Canada, no stamp is needed. Letters from outside Canada need normal postage to Canada, and we could not confirm from the Canada Post page whether overseas letters get a reply, so check its guidelines for international letters before you rely on it.",
+    "Source: the Canada Post page, &ldquo;Write a letter to Santa&rdquo;, at canadapost-postescanada.ca/holiday.",
+   ]),
+   ("When a letter from you will not work out", [
+    "A child at a grandparent's house, a family living abroad, or a class with no time to go to a post office can all run into trouble with the deadline. We can print and mail the child's letter from Canada with the family's return address on it. Type what the child said, add the Santa address as the recipient, and enter your own address as the sender. Allow two business days for us to mail it, so order by December 2 to stay ahead of December 9. That is our estimate, and Canada Post decides what counts as received in time. It costs from $6, while doing it yourself within Canada is free, so use us only when that is the easier option.",
+   ]),
+   ("If you want Santa to write first", [
+    "Canada Post's program needs the child to write first. If you would like a letter from Santa to arrive without that, see our <a href=\"/letter-from-santa-canada\">letter from Santa</a> page. Our <a href=\"/free-letter-from-santa-template\">free template</a> works for parents who would rather write the reply themselves.",
+   ]),
+  ],
+  faq=[
+   ("What is Santa's address?", "Santa Claus, North Pole, H0H 0H0, Canada. The postal code is H, zero, H, zero, H, zero."),
+   ("Do I need a stamp?", "Not for letters mailed within Canada to Santa, according to Canada Post. From another country, normal postage to Canada applies."),
+   ("What is the deadline?", "Canada Post's 2026 page says December 9 to get a reply, and December 2 for letters sent by a whole class."),
+   ("Will Santa reply if there is no return address?", "No. The reply goes to the return address on the letter."),
+   ("Can I type the letter?", "Yes. Typed or handwritten letters are both fine. A child's drawing or signature at the bottom makes it feel like theirs."),
+  ],
+  related=[("/letter-from-santa-canada", "Letter From Santa in Canada", "Two ways to get a letter from Santa"), ("/free-letter-from-santa-template", "Free Letter From Santa Template", "Write the reply yourself"), ("/santa-letter", "Letter From Santa", "A personalized surprise letter"), ("/canada-post-christmas-mailing-deadlines-2026", "Christmas Mailing Deadlines", "Last days to mail in Canada")],
+  cta_h2="Need it mailed from Canada?", cta_p="Type the letter and add your return address. We print and mail it.", cta_final="Send a Letter →"))
