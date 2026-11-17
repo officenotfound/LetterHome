@@ -180,7 +180,7 @@ nav {
   font-weight: 400; letter-spacing: -0.02em; margin-bottom: 8px; line-height: 1.05;
 }
 .panel-sub {
-  color: var(--ink-muted); font-size: 15px; margin-bottom: 28px;
+  color: var(--ink-muted); font-size: 17px; line-height: 1.55; margin-bottom: 28px;
   padding-bottom: 24px; border-bottom: 1px solid var(--line);
 }
 
@@ -189,14 +189,14 @@ nav {
 .form-group { display: flex; flex-direction: column; gap: 4px; margin-bottom: 14px; }
 .form-group:last-child { margin-bottom: 0; }
 label {
-  font-family: 'Roboto', monospace; font-size: 11px; text-transform: uppercase;
-  letter-spacing: 0.15em; color: var(--ink-muted); font-weight: 500;
+  font-family: 'Roboto', monospace; font-size: 14px; text-transform: uppercase;
+  letter-spacing: 0.08em; color: var(--ink-muted); font-weight: 500;
 }
 input, select, textarea {
-  width: 100%; padding: 9px 2px 8px 0; border: none;
+  width: 100%; padding: 12px 2px 10px 0; border: none;
   border-bottom: 1.5px solid var(--ink); background: transparent;
   color: var(--ink); font-family: 'Noto Sans', Georgia, serif;
-  font-size: 18px; border-radius: 0; transition: border-color 0.2s;
+  font-size: 20px; border-radius: 0; transition: border-color 0.2s;
   outline: none; appearance: none;
 }
 input:focus, select:focus, textarea:focus {
@@ -207,7 +207,8 @@ textarea {
   border-top: 1px dashed var(--line); padding-top: 10px;
 }
 textarea { resize: vertical; min-height: 260px; line-height: 1.6; }
-.field-note { font-size: 12px; color: var(--ink-faint); margin-top: 4px; }
+.field-note { font-size: 15px; line-height: 1.5; color: var(--ink-muted); margin-top: 4px; }
+.field-note.hint { display: block; margin: 0 0 14px; }
 
 /* DESTINATION PICKER */
 .destination-picker {
@@ -343,7 +344,7 @@ textarea { resize: vertical; min-height: 260px; line-height: 1.6; }
 
 /* NAV BUTTONS */
 .panel-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--line); }
-.btn-large { padding: 18px 36px; font-size: 14px; }
+.btn-large { padding: 20px 40px; font-size: 17px; }
 
 /* EYEBROW */
 .eyebrow {
@@ -737,6 +738,7 @@ textarea.field-error { border-color: var(--red) !important; }
     <div class="address-columns">
       <div class="address-col">
         <h3 data-i18n="send.from.h3">From. Sender</h3>
+        <span class="field-note hint" data-i18n="send.hint.sender">Your own address. It goes in the top-left corner of the envelope, so the letter can find its way back to you if it cannot be delivered.</span>
         <div class="check-row" style="margin-bottom:6px;">
           <input type="checkbox" id="skip-return" onchange="toggleReturn(this)">
           <label for="skip-return" data-i18n="send.from.anon">Skip return address (anonymous send)</label>
@@ -758,6 +760,7 @@ textarea.field-error { border-color: var(--red) !important; }
 
       <div class="address-col">
         <h3 data-i18n="send.to.h3">To. Recipient</h3>
+        <span class="field-note hint" data-i18n="send.hint.recipient">The person you are writing to. Copy their address exactly as they write it, including the postal code. Any letter or bill sent to them shows it.</span>
         <div class="form-group"><label for="r-name" data-i18n="send.from.name">Full Name</label><input id="r-name" type="text" placeholder="James Okafor" autocomplete="off" autocapitalize="words"></div>
         <div class="form-group"><label for="r-street" data-i18n="send.from.street">Street Address</label><input id="r-street" type="text" placeholder="456 Oak Avenue, Apt 3" autocomplete="off"><span class="field-note" data-i18n="send.autocomplete.hint">Start typing for address suggestions</span></div>
         <div class="form-grid-2">
@@ -783,7 +786,7 @@ textarea.field-error { border-color: var(--red) !important; }
     <div class="form-group" style="margin-top:32px;padding-top:28px;border-top:1px dashed var(--line);max-width:520px">
       <label for="r-email" data-i18n="send.email.label">Your Email (confirmation)</label>
       <input id="r-email" type="email" placeholder="you@example.com" autocomplete="email">
-      <span class="field-note" data-i18n="send.email.note">Your order confirmation goes here, used only for this order.</span>
+      <span class="field-note" data-i18n="send.hint.email">We send your receipt and order number here. Use your own email address, not the recipient's. It is used only for this order.</span>
     </div>
 
     <div class="panel-nav">
@@ -800,11 +803,13 @@ textarea.field-error { border-color: var(--red) !important; }
 
     <div class="form-group">
       <label for="letter-body" data-i18n="send.letter.label">Your Message</label>
+        <span class="field-note hint" data-i18n="send.hint.letter">Type it just like a normal letter. You will see exactly how it looks before you pay.</span>
       <textarea id="letter-body" placeholder="Dear Margaret,&#10;&#10;I hope this letter finds you well. I'm writing from..." data-i18n-placeholder="send.letter.placeholder" oninput="updatePreview()"></textarea>
       <span class="field-note" data-i18n="send.letter.note">Up to 5 pages (~2,500 words). Plain text, we lay it out in a clean serif typeface.</span>
       <span class="field-note" id="word-count" style="margin-top:2px;text-align:right" data-i18n="send.word.zero">0 words</span>
     </div>
 
+    <span class="field-note hint" data-i18n="send.hint.attach">Optional. Skip this if you are only sending a letter.</span>
     <div class="attach-zone" onclick="document.getElementById('file-input').click()">
       <div class="attach-icon">📎</div>
       <p><strong data-i18n="send.attach.title">Attach documents</strong><span data-i18n="send.attach.sub">, click to upload PDF, Word or TXT files</span></p>
@@ -1971,8 +1976,8 @@ function fillSavedRecipient(sel) {
   } catch(e) {}
 }
 </script>
-<script src="/lang-es.js?v=2" defer></script>
-<script src="/lang.js?v=59" defer></script>
+<script src="/lang-es.js?v=3" defer></script>
+<script src="/lang.js?v=60" defer></script>
 <script type="module">
   import * as pdfjsLib from '/vendor/pdfjs/pdf.min.mjs';
   pdfjsLib.GlobalWorkerOptions.workerSrc = '/vendor/pdfjs/pdf.worker.min.mjs';
