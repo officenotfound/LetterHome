@@ -106,12 +106,12 @@
 
   var stamp = window.LHStamp ? window.LHStamp('h', 44) : '';
 
-  // Holiday touch, December 1 to January 2 by the visitor's date: a slim green strip linking to the mailing deadlines, and a green
+  // Holiday touch, November 11 to January 2 by the visitor's date: a slim green strip linking to the mailing deadlines, and a green
   // line under the Canadian header. Colour and one link only, no change to page content. ?xmas=1 or ?xmas=0 forces it on or off.
   var season = (function () {
     try { var q = /[?&]xmas=([01])/.exec(location.search); if (q) return q[1] === '1'; } catch (e) {}
     var d = new Date(), m = d.getMonth();
-    return m === 11 || (m === 0 && d.getDate() <= 2);
+    return (m === 10 && d.getDate() >= 11) || m === 11 || (m === 0 && d.getDate() <= 2);
   })();
   var seasonBar = '';
   if (season && !isFrench && !isSpanish) {
@@ -120,8 +120,16 @@
     var href = country === 'us' ? (onUs ? '/christmas-mailing-deadlines-2026' : '/us/christmas-mailing-deadlines-2026')
       : (country === 'uk' || country === 'au') ? '/send-a-christmas-letter-to-canada' : '/canada-post-christmas-mailing-deadlines-2026';
     var label = (country === 'uk' || country === 'au') ? 'Holiday letters to Canada: order-by dates' : 'Last days to mail for Christmas';
+    var now = new Date(), cut = new Date(now.getFullYear(), 11, 5), left = Math.ceil((cut - new Date(now.getFullYear(), now.getMonth(), now.getDate())) / 86400000);
+    var santa = '';
+    if (country !== 'uk' && country !== 'au' && now.getMonth() >= 10 && left > 0 && left <= 30) {
+      label = 'Christmas mail: ' + left + (left === 1 ? ' day' : ' days') + ' left to order for Canada (by Dec 5)';
+    }
+    if (country !== 'us' && country !== 'uk' && country !== 'au' && now.getMonth() >= 10 && left > -5) {
+      santa = ' <span style="color:#fff;opacity:.6">|</span> <a href="/santa-letter" style="color:#fff;text-decoration:underline;text-underline-offset:2px">Letter from Santa</a>';
+    }
     seasonBar = '<style>html[data-season] body:not([class*="c-"]) nav{border-bottom:3px solid #1f6b3a!important}</style>' +
-      '<div class="season-bar" style="background:#14532d;text-align:center;padding:8px 16px;font:600 13px/1.3 Roboto,Arial,sans-serif"><a href="' + href + '" style="color:#fff;text-decoration:underline;text-underline-offset:2px">' + label + '</a></div>';
+      '<div class="season-bar" style="background:#14532d;text-align:center;padding:8px 16px;font:600 13px/1.3 Roboto,Arial,sans-serif"><a href="' + href + '" style="color:#fff;text-decoration:underline;text-underline-offset:2px">' + label + '</a>' + santa + '</div>';
   }
   mount.outerHTML = seasonBar +
     '<nav>' +

@@ -1028,7 +1028,7 @@ Object.entries(REGION_REDIRECTS).forEach(([from, to]) =>
  'mail-a-letter-online', 'send-a-letter-from-home', 'what-is-lettermail', 'postage-for-a-large-letter-in-canada',
  'ircc-processing-times', 'n4-notice', 'ircc-documents', 'for-professionals', 'bulk-mailing',
  'cra-mail', 'cra-notice-of-objection', 'ltb-forms',
- 'registered-mail-vs-xpresspost', 'proof-of-mailing', 'canada-post-stamp-price-2027', 'government-forms-that-require-mail',
+ 'registered-mail-vs-xpresspost', 'proof-of-mailing', 'canada-post-stamp-price-2027', 'cancel-gym-membership-by-mail', 'write-to-a-child-at-summer-camp', 'mail-a-letter-to-a-university-student-in-canada', 'send-a-letter-from-canada-to-india', 'send-a-letter-from-canada-to-the-philippines', 'send-a-letter-from-canada-to-pakistan', 'send-a-letter-from-canada-to-nigeria', 'write-a-letter-to-your-future-self', 'open-when-letters', 'how-to-write-a-condolence-letter', 'write-a-letter-to-your-mp', 'real-estate-letters-by-mail', 'government-forms-that-require-mail',
  'n9-notice', 'renew-pr-card-by-mail', 'canadian-citizenship-application-by-mail',
  'cpp-application-by-mail', 'oas-gis-application-by-mail', 'canada-child-benefit-by-mail',
  'demand-letter-unpaid-invoice', 'security-deposit-demand-letter', 'cease-and-desist-letter',
@@ -1099,6 +1099,7 @@ app.get('/account/:page', (req, res, next) => req.params.page === 'verify' ? nex
 const LOCAL_GUIDES = [
   'us/how-long-does-mail-take', 'us/how-much-is-a-stamp', 'us/return-address-on-a-letter',
   'us/postage-rates-2026', 'us/what-is-certified-mail', 'us/christmas-mailing-deadlines-2026', 'us/christmas-card-postage-2026',
+  'us/debt-validation-letter', 'us/request-medical-records-by-mail', 'us/donor-thank-you-letters',
   'uk/how-long-does-post-take', 'uk/how-much-is-a-stamp', 'uk/return-address-on-a-letter',
 ];
 const COUNTRY_GUIDES = {
@@ -4269,7 +4270,7 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:48px 36px 32px
 </head>
 <body>
 <div id="site-header"></div>
-<script src="/header.js?v=17"></script>
+<script src="/header.js?v=18"></script>
 <div class="main" style="max-width:580px;margin:0 auto;padding:64px 36px 100px">
   <div style="display:inline-flex;align-items:center;gap:10px;font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.18em;color:#a8472d;margin-bottom:20px">
     <span style="width:28px;height:1px;background:#a8472d;display:inline-block"></span>${L.order.replace(/\d+$/, '')}${esc(String(order.id))}
