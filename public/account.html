@@ -98,8 +98,8 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:40px 36px;marg
 <script src="/footer.js?v=22" defer></script>
 
 <script src="/theme.js?v=4" defer></script>
-<script src="/lang-es.js?v=1"></script>
-<script src="/lang.js?v=58"></script>
+<script src="/lang-es.js?v=2"></script>
+<script src="/lang.js?v=59"></script>
 <script>
 const app = document.getElementById('app');
 const path = window.location.pathname;
@@ -396,8 +396,9 @@ function renderPortal(me) {
         <h1>${esc(c.display_name || c.email.split('@')[0])}</h1>
         <p style="color:var(--ink-muted);font-size:14px">${esc(c.email)}</p>
       </div>
-      <button class="btn btn-outline btn-sm" onclick="doLogout()">${LH_T('account.signout')}</button>
+      <div style="display:flex;gap:12px;flex-wrap:wrap"><a class="btn btn-primary" href="/send" style="color:#fff!important;font-size:16px;padding:14px 28px">${LH_T('account.cta.send')}</a><button class="btn btn-outline btn-sm" onclick="doLogout()">${LH_T('account.signout')}</button></div>
     </div>
+    ${orders.length ? '' : `<div class="card" style="margin-bottom:24px"><div style="padding:20px 24px"><p style="font-weight:600;font-size:18px;margin-bottom:6px">${LH_T('account.nudge.h')}</p><p style="color:var(--ink-muted);font-size:16px;line-height:1.6;margin-bottom:16px">${LH_T('account.nudge.p')}</p><a class="btn btn-primary" href="/send" style="color:#fff!important;font-size:16px;padding:14px 28px">${LH_T('account.cta.send')}</a></div></div>`}
 
     <div class="card">
       <div class="card-header"><div class="card-title">${LH_T('account.orders.title')}</div></div>

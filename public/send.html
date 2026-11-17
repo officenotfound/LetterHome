@@ -496,21 +496,21 @@ textarea.field-error { border-color: var(--red) !important; }
     <div class="progress-steps">
       <div class="progress-step">
         <div class="progress-step-row">
-          <div class="step-circle active" id="circle-1">i</div>
+          <div class="step-circle active" id="circle-1">1</div>
           <div class="step-line" id="line-1"></div>
         </div>
         <div class="step-label active" id="label-1" data-i18n="send.step1.label">Addresses</div>
       </div>
       <div class="progress-step">
         <div class="progress-step-row">
-          <div class="step-circle" id="circle-2">ii</div>
+          <div class="step-circle" id="circle-2">2</div>
           <div class="step-line" id="line-2"></div>
         </div>
         <div class="step-label" id="label-2" data-i18n="send.step2.label">Your Letter</div>
       </div>
       <div class="progress-step">
         <div class="progress-step-row">
-          <div class="step-circle" id="circle-3">iii</div>
+          <div class="step-circle" id="circle-3">3</div>
           <div class="step-line" style="opacity:0"></div>
         </div>
         <div class="step-label" id="label-3" data-i18n="send.step3.label">Review & Pay</div>
@@ -530,9 +530,10 @@ textarea.field-error { border-color: var(--red) !important; }
 
   <!-- STEP 1: ADDRESSES -->
   <div class="panel active" id="panel-1">
-    <div class="eyebrow" data-i18n="send.step1.eyebrow">Step One</div>
+    <div class="eyebrow" data-i18n="send.step1.eyebrow">Step 1 of 3</div>
     <h2 class="panel-title serif" data-i18n="send.step1.title">Who is this going to?</h2>
     <p class="panel-sub" data-i18n="send.step1.sub">Enter the sender and recipient addresses. The sender address appears as the return address on the envelope.</p>
+    <p class="panel-sub" data-i18n="send.help.line" style="font-weight:600">This takes about 5 minutes. You only pay on the last step, and nothing is sent until you do. Stuck? Email support@letterhome.ca and we will help.</p>
 
     <div class="draft-banner" id="draft-banner" role="status">
       <div class="db-row">
@@ -793,7 +794,7 @@ textarea.field-error { border-color: var(--red) !important; }
 
   <!-- STEP 2: LETTER -->
   <div class="panel" id="panel-2">
-    <div class="eyebrow" data-i18n="send.step2.eyebrow">Step Two</div>
+    <div class="eyebrow" data-i18n="send.step2.eyebrow">Step 2 of 3</div>
     <h2 class="panel-title serif" data-i18n="send.step2.title">Write your letter.</h2>
     <p class="panel-sub" data-i18n="send.step2.sub">Type your message below. Attach any PDF or Word documents you'd like printed alongside the letter.</p>
 
@@ -850,7 +851,7 @@ textarea.field-error { border-color: var(--red) !important; }
 
   <!-- STEP 3: PREVIEW & PAY -->
   <div class="panel" id="panel-3">
-    <div class="eyebrow" data-i18n="send.step3.eyebrow">Step Three</div>
+    <div class="eyebrow" data-i18n="send.step3.eyebrow">Step 3 of 3</div>
     <h2 class="panel-title serif" data-i18n="send.step3.title">Review your order.</h2>
     <p class="panel-sub" data-i18n="send.step3.sub" data-ship="canada">Have one last look before paying. After checkout, we verify the address, then your letter is printed in black & white by default (colour available) and mailed from Canada within two business days.</p><p class="panel-sub" style="display:none" data-i18n="send.step3.sub.local" data-ship="local">Have one last look before paying. After checkout, your letter is printed in black &amp; white by default (colour available) and mailed within two business days, printed and posted inside the destination country.</p>
 
@@ -1014,7 +1015,7 @@ function updateStepUI() {
 }
 
 function setCircleLabel(el, i) {
-  if (!el.classList.contains('done')) el.textContent = ['i','ii','iii'][i - 1];
+  if (!el.classList.contains('done')) el.textContent = ['1','2','3'][i - 1];
 }
 
 function toggleReturn(cb) {
@@ -1970,8 +1971,8 @@ function fillSavedRecipient(sel) {
   } catch(e) {}
 }
 </script>
-<script src="/lang-es.js?v=1" defer></script>
-<script src="/lang.js?v=58" defer></script>
+<script src="/lang-es.js?v=2" defer></script>
+<script src="/lang.js?v=59" defer></script>
 <script type="module">
   import * as pdfjsLib from '/vendor/pdfjs/pdf.min.mjs';
   pdfjsLib.GlobalWorkerOptions.workerSrc = '/vendor/pdfjs/pdf.worker.min.mjs';
