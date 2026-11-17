@@ -194,6 +194,7 @@ footer .lh-f-bar .lh-f-in2>*{margin:0!important;white-space:nowrap}
 footer .lh-f-bar .lh-f-in2>:first-child{justify-self:start;text-align:left}
 footer .lh-f-bar .lh-f-in2>:nth-child(2){justify-self:center;text-align:center}
 footer .lh-f-bar .lh-f-in2>:last-child{justify-self:end;text-align:right}
+footer .lh-f-bar .lh-f-in2>:nth-child(2):last-child{grid-column:3}
 @media(max-width:900px){footer .lh-f-in{grid-template-columns:1fr 1fr!important}}
 @media(max-width:560px){div.hero-cta{width:100%!important}}
 footer .lh-f-col a{display:block!important}
