@@ -1321,7 +1321,7 @@ app.get('/ga.js', (req, res) => {
 // Base send price by destination: Canada, United States, rest of world.
 // Name on the Stripe receipt, e.g. "Letterhome Letter to the United Kingdom".
 // A second child's letter in the same envelope, and a Nice List certificate per child: cheap to print, so cheap to add.
-function santaSecondCents() { const n = parseInt(getSetting('price_santa_second_cents', '900'), 10); return Number.isFinite(n) && n >= 0 ? n : 900; }
+function santaSecondCents() { const n = parseInt(getSetting('price_santa_second_cents', '500'), 10); return Number.isFinite(n) && n >= 0 ? n : 500; }
 function santaCertCents()   { const n = parseInt(getSetting('price_santa_cert_cents', '300'), 10);   return Number.isFinite(n) && n >= 0 ? n : 300; }
 // What a stored Santa body holds: letters and certificates, in order.
 function santaParts(body) {
