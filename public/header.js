@@ -131,6 +131,13 @@
     seasonBar = '<style>html[data-season] body:not([class*="c-"]) nav{border-bottom:3px solid #1f6b3a!important}</style>' +
       '<div class="season-bar" style="background:#14532d;text-align:center;padding:8px 16px;font:600 13px/1.3 Roboto,Arial,sans-serif"><a href="' + href + '" style="color:#fff;text-decoration:underline;text-underline-offset:2px">' + label + '</a>' + santa + '</div>';
   }
+  // Snow on the home page and the Letter from Santa pages only (never on the order forms). ?snow=1 or ?snow=0 forces it on or off.
+  (function () {
+    var path = location.pathname.replace(/\/+$/, '') || '/';
+    var snowy = season && !isFrench && !isSpanish && (path === '/' || path === '/index.html' || /santa/.test(path));
+    try { var q = /[?&]snow=([01])/.exec(location.search); if (q) snowy = q[1] === '1'; } catch (e) {}
+    if (snowy) { var sc = document.createElement('script'); sc.src = '/snow.js?v=1'; sc.defer = true; document.head.appendChild(sc); }
+  })();
   mount.outerHTML = seasonBar +
     '<nav>' +
       '<div class="nav-inner">' +

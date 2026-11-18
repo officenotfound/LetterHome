@@ -306,17 +306,18 @@ function createPostGrid({ db, getSetting, orderDirPath, fetchImpl, convertWord =
     const hasText = textParts.some(t => t.trim());
     if (hasText) {
       const charset = new Set(font.getCharacterSet());
-      const paras = tokenize(textParts.join('\n\n'), charset, warnings);
+      // A Letter from Santa can hold several pages in order, separated by a form feed: each child's letter, and Nice List certificates ("#CERT#Name").
+      const segments = santa ? textParts.join('\n\n').split('\f').map(t => t.trim()).filter(Boolean) : [textParts.join('\n\n')];
+      const parsed = segments.map(seg => seg.startsWith('#CERT#') ? { cert: seg.slice(6).trim() } : { paras: tokenize(seg, charset, warnings) });
       // Fetch each distinct emoji image once; an emoji we cannot get sends the order to the manual queue.
       const images = new Map();
-      for (const name of new Set(paras.flat(2).filter(r => r.emoji).map(r => r.emoji))) {
+      for (const name of new Set(parsed.flatMap(p => p.paras ? p.paras.flat(2) : []).filter(r => r.emoji).map(r => r.emoji))) {
         const png = await emojiImage(name);
         if (png) { try { images.set(name, await doc.embedPng(png)); continue; } catch {} }
         warnings.add(`An emoji in the letter could not be loaded for printing (${name}).`);
       }
       const left = santa ? SANTA_TEXT.x : MARGIN;
       const SIZE = santa ? SANTA_TEXT.size : FONT_SIZE, LEAD = santa ? SANTA_TEXT.leading : LEADING;
-      const lines = layoutLines(paras, font, PAGE.w - 2 * left, SIZE);
       const EM = SIZE * 1.2, space = font.widthOfTextAtSize(' ', SIZE);
       let letterhead = null;
       if (santa) letterhead = (await doc.embedPdf(fs.readFileSync(SANTA_LETTERHEAD), [0]))[0];
@@ -328,25 +329,48 @@ function createPostGrid({ db, getSetting, orderDirPath, fetchImpl, convertWord =
       const firstY = santa ? PAGE.h - SANTA_TEXT.top : PAGE.h - ADDRESS_CLEARANCE;
       const nextY = santa ? firstY : PAGE.h - MARGIN;
       const floor = santa ? SANTA_TEXT.bottom : MARGIN;
-      let page = newPage();
-      let y = firstY;
-      for (const line of lines) {
-        if (y < floor) { page = newPage(); y = nextY; }
-        let x = left;
-        line.forEach((word, wi) => {
-          if (wi) x += space;
-          for (const r of word) {
-            if (r.emoji) {
-              const img = images.get(r.emoji);
-              if (img) page.drawImage(img, { x, y: y - SIZE * 0.22, width: EM, height: EM });
-              x += EM;
-            } else {
-              page.drawText(r.text, { x, y, size: SIZE, font, color: rgb(0, 0, 0) });
-              x += font.widthOfTextAtSize(r.text, SIZE);
+      const red = rgb(0.56, 0.2, 0.19);   // the letterhead's red
+      const centred = (pg, text, y, size, color = rgb(0.1, 0.1, 0.1)) => {
+        let sz = size; while (sz > 8 && font.widthOfTextAtSize(text, sz) > PAGE.w - 190) sz -= 1;
+        pg.drawText(text, { x: (PAGE.w - font.widthOfTextAtSize(text, sz)) / 2, y, size: sz, font, color });
+      };
+      for (const seg of parsed) {
+        if (seg.cert !== undefined) {
+          // Nice List certificate on the same letterhead
+          const pg = newPage(), year = new Date().getFullYear();
+          centred(pg, 'OFFICIAL NICE LIST CERTIFICATE', 520, 17, red);
+          centred(pg, 'This certifies that', 470, 13);
+          centred(pg, seg.cert, 420, 34, red);
+          centred(pg, 'has been placed on the Nice List', 380, 14);
+          centred(pg, `for Christmas ${year}`, 358, 14);
+          centred(pg, 'for being kind, curious, and a joy to everyone', 318, 12);
+          centred(pg, 'at the North Pole.', 301, 12);
+          centred(pg, 'Signed with love,', 235, 12);
+          centred(pg, 'Santa Claus', 205, 22, red);
+          pg.drawLine({ start: { x: PAGE.w / 2 - 90, y: 198 }, end: { x: PAGE.w / 2 + 90, y: 198 }, thickness: 0.6, color: red });
+          continue;
+        }
+        const lines = layoutLines(seg.paras, font, PAGE.w - 2 * left, SIZE);
+        let page = newPage();
+        let y = firstY;
+        for (const line of lines) {
+          if (y < floor) { page = newPage(); y = nextY; }
+          let x = left;
+          line.forEach((word, wi) => {
+            if (wi) x += space;
+            for (const r of word) {
+              if (r.emoji) {
+                const img = images.get(r.emoji);
+                if (img) page.drawImage(img, { x, y: y - SIZE * 0.22, width: EM, height: EM });
+                x += EM;
+              } else {
+                page.drawText(r.text, { x, y, size: SIZE, font, color: rgb(0, 0, 0) });
+                x += font.widthOfTextAtSize(r.text, SIZE);
+              }
             }
-          }
-        });
-        y -= LEAD;
+          });
+          y -= LEAD;
+        }
       }
     }
 

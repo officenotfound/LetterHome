@@ -53,6 +53,25 @@
     return lines.join('\n');
   }
 
+  // Everything the order prints, as ordered pages: each child's letter, then a Nice List certificate per child if chosen.
+  // children is a list of field sets (the first is required, a second is optional). Returns [{ kind: 'letter'|'certificate', child, text }].
+  function pages(input) {
+    input = input || {};
+    var kids = (input.children || []).map(fields).filter(function (f) { return f.child; });
+    var out = kids.map(function (f) { return { kind: 'letter', child: f.child, text: build(f) }; });
+    if (input.certificate) kids.forEach(function (f) { out.push({ kind: 'certificate', child: f.child, text: '#CERT#' + f.child }); });
+    return out;
+  }
+  // The text stored on the order: pages separated by a form feed.
+  function buildAll(input) { return pages(input).map(function (p) { return p.text; }).join('\n\f\n'); }
+  // Rewrites a stored body with the current wording (letters are rebuilt from their own details, certificates are kept).
+  function rebuild(body) {
+    return String(body || '').split('\f').map(function (seg) {
+      seg = seg.trim();
+      return seg.indexOf('#CERT#') === 0 ? seg : build(parse(seg));
+    }).filter(Boolean).join('\n\f\n');
+  }
+
   // Recovers the fields from a letter written by any earlier version of this template (for rebuilding an order's letter).
   function parse(text) {
     text = String(text || '');
@@ -69,5 +88,5 @@
   // The address on the envelope of every Letter from Santa: the one Canada Post publishes for Santa's mail.
   var RETURN = { name: 'Santa Claus', street: 'North Pole', city: 'North Pole', province: '', postal: 'H0H 0H0', country: 'CA' };
 
-  return { build: build, parse: parse, clean: clean, fields: fields, MAX: MAX, RETURN: RETURN };
+  return { build: build, pages: pages, buildAll: buildAll, rebuild: rebuild, parse: parse, clean: clean, fields: fields, MAX: MAX, RETURN: RETURN };
 });

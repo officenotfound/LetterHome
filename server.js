@@ -1320,6 +1320,15 @@ app.get('/ga.js', (req, res) => {
 
 // Base send price by destination: Canada, United States, rest of world.
 // Name on the Stripe receipt, e.g. "Letterhome Letter to the United Kingdom".
+// A second child's letter in the same envelope, and a Nice List certificate per child: cheap to print, so cheap to add.
+function santaSecondCents() { const n = parseInt(getSetting('price_santa_second_cents', '900'), 10); return Number.isFinite(n) && n >= 0 ? n : 900; }
+function santaCertCents()   { const n = parseInt(getSetting('price_santa_cert_cents', '300'), 10);   return Number.isFinite(n) && n >= 0 ? n : 300; }
+// What a stored Santa body holds: letters and certificates, in order.
+function santaParts(body) {
+  const segs = String(body || '').split('\f').map(t => t.trim()).filter(Boolean);
+  return { letters: segs.filter(t => !t.startsWith('#CERT#')).length, certs: segs.filter(t => t.startsWith('#CERT#')).length };
+}
+
 function santaPriceCents() {
   const n = parseInt(getSetting('price_santa_cents', '1200'), 10);
   return Number.isFinite(n) && n >= 500 ? n : 1200;
@@ -1410,6 +1419,8 @@ app.get('/api/site-config', (req, res) => {
                      local: { US: niceMoney(centsFor('US'), rate), GB: niceMoney(centsFor('GB'), rate), AU: niceMoney(centsFor('AU'), rate) } }];
     })),
     price_santa_cents:         santaPriceCents(),
+    price_santa_second_cents:  santaSecondCents(),
+    price_santa_cert_cents:    santaCertCents(),
     santa_enabled:             getSetting('santa_enabled', '1') !== '0',
     blocked_countries:         (() => { try { return JSON.parse(getSetting('blocked_countries', '[]') || '[]'); } catch { return []; } })(),
     ...pub,     // per-destination price, local printing and extra mail services
@@ -1659,10 +1670,11 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
       return res.status(400).json({ error: 'Letters from Santa are not available right now.' });
     if (String(b['r-country'] || '') !== 'CA')
       return res.status(400).json({ error: 'Letters from Santa can only be mailed to addresses in Canada right now.' });
-    const santaText = SantaLetter.build({
-      child: b['santa_child'], nice: b['santa_nice'], interest: b['santa_interest'], pet: b['santa_pet'], goal: b['santa_goal'],
-    });
-    if (!santaText) return res.status(400).json({ error: "Please enter the child's first name." });
+    const kid = (pre) => ({ child: b[pre + 'child'], nice: b[pre + 'nice'], interest: b[pre + 'interest'], pet: b[pre + 'pet'], goal: b[pre + 'goal'] });
+    const children = [kid('santa_')];
+    if (SantaLetter.fields(kid('santa2_')).child) children.push(kid('santa2_'));
+    const wantCert = b['santa_cert'] === '1' || b['santa_cert'] === 'true';
+    const santaText = SantaLetter.fields(children[0]).child ? SantaLetter.buildAll({ children, certificate: wantCert }) : '';
     b['letter-body'] = santaText;
     // Every Letter from Santa goes out with Santa's own return address (the one Canada Post publishes), never the customer's or ours.
     const R = SantaLetter.RETURN;
@@ -1711,7 +1723,10 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
   if (analysis?.tooLong) return res.status(400).json({ error: analysis.message });
   const pageCount = analysis ? analysis.pages : await countAttachmentPages(req.files || []);
   const colourPrinting    = b['colour_printing']    === '1' || b['colour_printing']    === 'true';
-  const extraPageCents = Math.max(0, pageCount - FREE_PAGES) * (colourPrinting ? EXTRA_PAGE_COLOUR_CENTS : EXTRA_PAGE_CENTS);
+  // Santa orders never pay the extra-page rate: a second letter and certificates have their own flat prices.
+  const extraPageCents = isSanta ? 0 : Math.max(0, pageCount - FREE_PAGES) * (colourPrinting ? EXTRA_PAGE_COLOUR_CENTS : EXTRA_PAGE_CENTS);
+  const santaParts_ = isSanta ? santaParts(b['letter-body']) : { letters: 0, certs: 0 };
+  const santaExtraCents = isSanta ? Math.max(0, santaParts_.letters - 1) * santaSecondCents() + santaParts_.certs * santaCertCents() : 0;
   const largeEnvelope     = false;   // option retired: letters go in a standard #10 envelope
   const scheduleForLater  = b['schedule_for_later'] === '1' || b['schedule_for_later'] === 'true';
   let scheduledDate       = null;
@@ -1723,7 +1738,7 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
       return res.status(400).json({ error: 'Please choose a valid send date within the next year.' });
     scheduledDate = d;
   }
-  const addonCents = extraPageCents
+  const addonCents = extraPageCents + santaExtraCents
     + (colourPrinting && !isSanta ? COLOUR_PRINTING_CENTS : 0)
     + serviceCents
     + (largeEnvelope    ? LARGE_ENVELOPE_CENTS  : 0)
@@ -1942,7 +1957,8 @@ app.get('/resume/:token', trackLimiter, async (req, res) => {
     }
     const extras = [];
     if (order.extra_page_cents > 0) extras.push(`${(order.page_count || 0) - FREE_PAGES} extra page(s)`);
-    if (order.colour_printing)   extras.push('colour printing');
+    if (order.colour_printing && order.letter_type !== 'santa') extras.push('colour printing');
+    if (order.letter_type === 'santa') { const sp = santaParts(order.letter_body); if (sp.letters > 1) extras.push('second letter'); if (sp.certs) extras.push(sp.certs > 1 ? `${sp.certs} Nice List certificates` : 'Nice List certificate'); }
     if (order.registered_mail)   extras.push('registered mail');
     if (order.certified_mail)    extras.push('certified mail');
     if (order.express_mail)      extras.push('express delivery');
@@ -2543,7 +2559,7 @@ app.post('/api/admin/orders/:id/postgrid/rebuild-santa', requireAdmin, (req, res
   if (!order) return res.status(404).json({ error: 'Order not found' });
   if (order.letter_type !== 'santa') return res.status(400).json({ error: 'This is not a Letter from Santa.' });
   if (order.postgrid_letter_id && order.postgrid_status !== 'cancelled') return res.status(409).json({ error: 'This letter is at PostGrid. Cancel it there first.' });
-  const text = SantaLetter.build(SantaLetter.parse(order.letter_body));
+  const text = SantaLetter.rebuild(order.letter_body);
   if (!text) return res.status(422).json({ error: "Could not find the child's name in the letter." });
   const R = SantaLetter.RETURN;
   db.prepare('UPDATE orders SET letter_body = ?, colour_printing = 1, skip_return = 0, sender_name = ?, sender_street = ?, sender_city = ?, sender_province = ?, sender_postal = ?, sender_country = ? WHERE id = ?')
@@ -4364,7 +4380,7 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:48px 36px 32px
 </head>
 <body>
 <div id="site-header"></div>
-<script src="/header.js?v=18"></script>
+<script src="/header.js?v=19"></script>
 <div class="main" style="max-width:580px;margin:0 auto;padding:64px 36px 100px">
   <div style="display:inline-flex;align-items:center;gap:10px;font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.18em;color:#a8472d;margin-bottom:20px">
     <span style="width:28px;height:1px;background:#a8472d;display:inline-block"></span>${L.order.replace(/\d+$/, '')}${esc(String(order.id))}

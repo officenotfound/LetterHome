@@ -435,3 +435,13 @@ test('Letter from Santa: colour letterhead on every text page, address on its ow
   assert.equal(await hasTemplate(santa.pdf), true);
   assert.equal(await hasTemplate(plain.pdf), false);
 });
+
+test('Letter from Santa with a second child and certificates: every page on the letterhead, 4 pages plus the address sheet fit one envelope', async () => {
+  const SL = require('../public/santa-letter.js');
+  const body = SL.buildAll({ children: [{ child: 'Emma', pet: 'Biscuit' }, { child: 'Leo', interest: 'trucks' }], certificate: true });
+  const r = await pg.buildLetterPdf({ letter_type: 'santa', letter_body: body, destination_country: 'CA' });
+  assert.equal(r.pages, 4);
+  assert.equal(r.sheets, 5);
+  const d = await PDFDocument.load(r.pdf);
+  assert.ok(d.getPages().every(p => (p.node.Resources()?.lookup(PDFName.of('XObject')) || { keys: () => [] }).keys().length > 0));
+});

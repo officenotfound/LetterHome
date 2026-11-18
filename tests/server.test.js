@@ -1007,6 +1007,22 @@ test('Santa order: own price, server-written letter, Canada only, colour add-on,
   assert.equal(last().price_cents, 1200);   // colour is always on for Santa (red letterhead) and included in the price
   assert.equal(last().colour_printing, 1);
 
+  // a brother or sister in the same envelope (+$9), and a Nice List certificate per child (+$3 each); never an extra-page charge
+  await send({ santa2_child: 'Leo', santa2_interest: 'trucks' });
+  assert.equal(last().price_cents, 2100);
+  assert.equal(last().page_count, 2);
+  assert.equal(last().extra_page_cents, 0);
+  assert.match(last().letter_body, /Dear Emma,[\s\S]*\f[\s\S]*Dear Leo,/);
+  await send({ santa2_child: 'Leo', santa_cert: '1' });
+  assert.equal(last().price_cents, 1200 + 900 + 2 * 300);
+  assert.equal(last().page_count, 4);
+  assert.match(last().letter_body, /#CERT#Emma[\s\S]*#CERT#Leo/);
+  await send({ santa_cert: '1' });
+  assert.equal(last().price_cents, 1500);
+  assert.equal(last().page_count, 2);
+  await send({ santa2_nice: 'only the second child had details' });
+  assert.equal(last().price_cents, 1200, 'a second child needs a name');
+
   const us = await send({ 'r-country': 'US' });
   assert.equal(us.res.status, 400);
   assert.match(us.body.error, /Canada/);
@@ -1016,6 +1032,8 @@ test('Santa order: own price, server-written letter, Canada only, colour add-on,
 
   const cfg = await (await fetch(`${base}/api/site-config`)).json();
   assert.equal(cfg.price_santa_cents, 1200);
+  assert.equal(cfg.price_santa_second_cents, 900);
+  assert.equal(cfg.price_santa_cert_cents, 300);
   assert.equal(cfg.santa_enabled, true);
 
   db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('price_santa_cents', '1500')").run();
