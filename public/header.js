@@ -126,10 +126,10 @@
       label = 'Christmas mail: ' + left + (left === 1 ? ' day' : ' days') + ' left to order for Canada (by Dec 5)';
     }
     if (country !== 'us' && country !== 'uk' && country !== 'au' && now.getMonth() >= 10 && left > -5) {
-      santa = ' <span style="color:#fff;opacity:.6">|</span> <a href="/santa-letter" style="color:#fff;text-decoration:underline;text-underline-offset:2px">Letter from Santa</a>';
+      santa = ' <a href="/santa-letter" class="season-santa" style="display:inline-block;background:#fff;color:#14532d;text-decoration:none;font-weight:700;padding:6px 14px;border-radius:999px;white-space:nowrap">Order a Letter from Santa, $12 &rarr;</a>';
     }
     seasonBar = '<style>html[data-season] body:not([class*="c-"]) nav{border-bottom:3px solid #1f6b3a!important}</style>' +
-      '<div class="season-bar" style="background:#14532d;text-align:center;padding:8px 16px;font:600 13px/1.3 Roboto,Arial,sans-serif"><a href="' + href + '" style="color:#fff;text-decoration:underline;text-underline-offset:2px">' + label + '</a>' + santa + '</div>';
+      '<div class="season-bar" style="background:#14532d;text-align:center;padding:10px 16px;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px 12px;font:600 15px/1.5 Roboto,Arial,sans-serif"><a href="' + href + '" style="color:#fff;text-decoration:underline;text-underline-offset:2px">' + label + '</a>' + santa + '</div>';
   }
   // Snow on the home page and the Letter from Santa pages only (never on the order forms). ?snow=1 or ?snow=0 forces it on or off.
   (function () {
