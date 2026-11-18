@@ -1828,3 +1828,12 @@ test('a letter sent to the printer again tells the customer, and shows the retur
       ['Ann', '1 A St', 'Hull J8X 1A1', 'CA']);
   } finally { delete process.env.SMTP_HOST; }
 });
+
+test('admin order page shows Santa\'s return address for a Santa order placed before that rule', async () => {
+  const id = db.prepare("INSERT INTO orders (customer_email, recipient_name, recipient_street, recipient_city, recipient_province, recipient_postal, destination_country, letter_type, letter_body, skip_return, status, price_cents) VALUES ('old-santa@example.com', 'Zoe', '1 Rue Test', 'Montreal', 'QC', 'H2X 1Y4', 'CA', 'santa', 'Dear Zoe,', 1, 'paid', 1200)").run().lastInsertRowid;
+  const { cookie } = await loginAdmin();
+  const o = await (await fetch(`${base}/api/admin/orders/${id}`, { headers: { Cookie: cookie } })).json();
+  assert.equal(o.skip_return, 0);
+  assert.equal(o.sender_name, 'Santa Claus');
+  assert.equal(o.sender_postal, 'H0H 0H0');
+});

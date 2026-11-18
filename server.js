@@ -2397,6 +2397,11 @@ app.get('/api/admin/orders/:id', requireAdmin, (req, res) => {
   if (!order) return res.status(404).json({ error: 'Not found' });
   const dir   = orderDirPath(order.id, order.created_at);
   const files = fs.existsSync(dir) ? fs.readdirSync(dir) : [];
+  // A Letter from Santa always goes out with Santa's return address, even an order placed before that rule existed.
+  if (order.letter_type === 'santa') {
+    const R = SantaLetter.RETURN;
+    Object.assign(order, { skip_return: 0, sender_name: R.name, sender_street: R.street, sender_city: R.city, sender_province: R.province, sender_postal: R.postal, sender_country: R.country });
+  }
   res.json({ ...order, files,
     postgrid_configured: postgrid.isConfigured(), postgrid_api_mode: postgrid.mode(),
     postgrid_eligibility: order.postgrid_letter_id ? null : postgrid.eligibility(order) });
@@ -2540,7 +2545,9 @@ app.post('/api/admin/orders/:id/postgrid/rebuild-santa', requireAdmin, (req, res
   if (order.postgrid_letter_id && order.postgrid_status !== 'cancelled') return res.status(409).json({ error: 'This letter is at PostGrid. Cancel it there first.' });
   const text = SantaLetter.build(SantaLetter.parse(order.letter_body));
   if (!text) return res.status(422).json({ error: "Could not find the child's name in the letter." });
-  db.prepare('UPDATE orders SET letter_body = ?, colour_printing = 1 WHERE id = ?').run(text, id);
+  const R = SantaLetter.RETURN;
+  db.prepare('UPDATE orders SET letter_body = ?, colour_printing = 1, skip_return = 0, sender_name = ?, sender_street = ?, sender_city = ?, sender_province = ?, sender_postal = ?, sender_country = ? WHERE id = ?')
+    .run(text, R.name, R.street, R.city, R.province, R.postal, R.country, id);
   try { db.prepare('INSERT INTO order_notes (order_id, note) VALUES (?,?)').run(id, `Letter from Santa rewritten with the current wording and letterhead by ${req.session.admin.username}.`); } catch {}
   logAudit(req, 'order.santa_rebuild', 'order', id, {});
   res.json({ ok: true });
