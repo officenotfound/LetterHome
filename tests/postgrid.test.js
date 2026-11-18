@@ -375,3 +375,49 @@ test('return address in the letter body: printed when it adds no page, left out 
   b = await pg.buildLetterPdf(db.prepare('SELECT * FROM orders WHERE id = ?').get(long.id));
   assert.ok(b.pages <= Math.max(fill, 2), `pages ${b.pages} must not exceed paid ${Math.max(fill, 2)}`);
 });
+
+test('a Letter from Santa is always sent with Santa\'s return address, even when PostGrid cannot verify it, and never falls back to Letterhome', async () => {
+  calls.length = 0;
+  const o = seed({ skip: 1 });
+  db.prepare("UPDATE orders SET letter_type = 'santa' WHERE id = ?").run(o.id);
+  const unverified = createPostGrid({ db, getSetting: (k, f) => settings[k] ?? f, orderDirPath: () => os.tmpdir(), emojiImage: fakeEmoji,
+    fetchImpl: async (url, opts) => {
+      if (url.endsWith('/contacts') && JSON.parse(opts.body).addressLine1 === 'North Pole')
+        return { ok: true, status: 200, json: async () => ({ id: 'contact_santa', addressStatus: 'failed', addressErrors: 'unverifiable' }) };
+      calls.push({ url, opts });
+      return fakeFetch(url, opts);
+    } });
+  const r = await unverified.submitOrder(db.prepare('SELECT * FROM orders WHERE id = ?').get(o.id));
+  assert.equal(r.letter.id, 'letter_1');
+  assert.ok(!r.usedFallbackReturn);
+  const post = calls.find(c => c.url.endsWith('/letters') && c.opts.method === 'POST');
+  assert.equal(post.opts.body.get('from'), 'contact_santa');
+
+  // and when PostGrid refuses the Santa address outright, the order stops for a person instead of printing Letterhome's address
+  const o2 = seed({ skip: 1 });
+  db.prepare("UPDATE orders SET letter_type = 'santa' WHERE id = ?").run(o2.id);
+  const refusing = createPostGrid({ db, getSetting: (k, f) => settings[k] ?? f, orderDirPath: () => os.tmpdir(), emojiImage: fakeEmoji,
+    fetchImpl: async (url, opts) => {
+      if (url.endsWith('/contacts') && JSON.parse(opts.body).addressLine1 === 'North Pole')
+        return { ok: false, status: 400, json: async () => ({ error: { type: 'x', message: 'Return address not supported' } }) };
+      return fakeFetch(url, opts);
+    } });
+  await assert.rejects(() => refusing.submitOrder(db.prepare('SELECT * FROM orders WHERE id = ?').get(o2.id)), /Santa return address was not accepted/);
+  assert.equal(db.prepare('SELECT postgrid_letter_id FROM orders WHERE id = ?').get(o2.id).postgrid_letter_id, null);
+});
+
+test('an order whose letter was cancelled at PostGrid can be resubmitted, with new idempotency keys so the old letter and return address are not replayed', async () => {
+  calls.length = 0;
+  const o = seed({ skip: 1 });
+  db.prepare("UPDATE orders SET status = 'paid', postgrid_letter_id = 'letter_old', postgrid_status = 'cancelled', postgrid_mode = 'live' WHERE id = ?").run(o.id);
+  const r = await pg.submitOrder(db.prepare('SELECT * FROM orders WHERE id = ?').get(o.id));
+  assert.equal(r.letter.id, 'letter_1');
+  const post = calls.find(c => c.url.endsWith('/letters') && c.opts.method === 'POST');
+  assert.equal(post.opts.headers['Idempotency-Key'], `lh-order-${o.id}-after-letter_old`);
+  for (const c of calls.filter(c => c.url.endsWith('/contacts')))
+    assert.match(c.opts.headers['Idempotency-Key'], /-after-letter_old-/);
+  // a letter that is not cancelled is still refused
+  const o2 = seed({ skip: 1 });
+  db.prepare("UPDATE orders SET status = 'paid', postgrid_letter_id = 'letter_x', postgrid_status = 'ready' WHERE id = ?").run(o2.id);
+  await assert.rejects(() => pg.submitOrder(db.prepare('SELECT * FROM orders WHERE id = ?').get(o2.id)), /Already submitted/);
+});

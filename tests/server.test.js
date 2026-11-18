@@ -991,7 +991,12 @@ test('Santa order: own price, server-written letter, Canada only, colour add-on,
   let o = last();
   assert.equal(o.letter_type, 'santa');
   assert.equal(o.price_cents, 1200);
-  assert.equal(o.skip_return, 1);
+  // every Letter from Santa carries Santa's own return address (the one Canada Post publishes)
+  assert.equal(o.skip_return, 0);
+  assert.equal(o.sender_name, 'Santa Claus');
+  assert.equal(o.sender_street, 'North Pole');
+  assert.equal(o.sender_postal, 'H0H 0H0');
+  assert.equal(o.sender_country, 'CA');
   assert.match(o.letter_body, /Dear Emma,/);
   assert.match(o.letter_body, /Please give Biscuit a pat/);
   assert.doesNotMatch(o.letter_body, /IGNORED CLIENT TEXT/);

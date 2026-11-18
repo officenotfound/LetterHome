@@ -1603,7 +1603,10 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
     });
     if (!santaText) return res.status(400).json({ error: "Please enter the child's first name." });
     b['letter-body'] = santaText;
-    b['skip-return'] = '1';
+    // Every Letter from Santa goes out with Santa's own return address (the one Canada Post publishes), never the customer's or ours.
+    const R = SantaLetter.RETURN;
+    b['skip-return'] = '';
+    b['s-name'] = R.name; b['s-street'] = R.street; b['s-city'] = R.city; b['s-province'] = R.province; b['s-postal'] = R.postal; b['s-country'] = R.country;
     b['mail_service'] = '';
     b['registered_mail'] = '';
   }
@@ -3993,6 +3996,7 @@ async function fulfillOrder(sessionId) {
 
   try {
     const geo = await lookupCountry(order.customer_ip).catch(() => null);
+    const keep = order.letter_type === 'santa' ? {} : order;   // Santa's return address is not the customer's, so it is never saved on them
     db.prepare(`
       INSERT INTO customers (email, ip, country_code, country_name, sender_name, sender_street, sender_city, sender_province, sender_postal, sender_country)
       VALUES (?,?,?,?,?,?,?,?,?,?)
@@ -4012,12 +4016,12 @@ async function fulfillOrder(sessionId) {
       order.customer_ip    || null,
       geo?.country_code    || null,
       geo?.country_name    || null,
-      order.sender_name    || null,
-      order.sender_street  || null,
-      order.sender_city    || null,
-      order.sender_province || null,
-      order.sender_postal  || null,
-      order.sender_country || null,
+      keep.sender_name    || null,
+      keep.sender_street  || null,
+      keep.sender_city    || null,
+      keep.sender_province || null,
+      keep.sender_postal  || null,
+      keep.sender_country || null,
     );
   } catch (e) { console.error('[fulfillOrder] customer upsert failed:', e.message); }
 

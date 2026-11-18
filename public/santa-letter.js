@@ -55,5 +55,8 @@
     return lines.join('\n');
   }
 
-  return { build: build, clean: clean, fields: fields, MAX: MAX };
+  // The address on the envelope of every Letter from Santa: the one Canada Post publishes for Santa's mail.
+  var RETURN = { name: 'Santa Claus', street: 'North Pole', city: 'North Pole', province: '', postal: 'H0H 0H0', country: 'CA' };
+
+  return { build: build, clean: clean, fields: fields, MAX: MAX, RETURN: RETURN };
 });

@@ -95,6 +95,7 @@ async function fetchTwemoji(name) {
     return buf;
   } catch { return null; }
 }
+const SANTA_FROM = Object.assign({ role: 'return address' }, require('./public/santa-letter.js').RETURN);
 const FALLBACK_FROM = {
   name: 'Letterhome', street: '1515 Discovery St', city: 'Vancouver',
   province: 'BC', postal: 'V6R 4K5', country: 'CA',
@@ -398,7 +399,8 @@ function createPostGrid({ db, getSetting, orderDirPath, fetchImpl, convertWord =
   }
   const recipientOf = o => ({ role: 'recipient address', name: o.recipient_name, street: o.recipient_street, city: o.recipient_city,
     province: o.recipient_province, postal: o.recipient_postal, country: o.destination_country });
-  const senderOf = o => (o.skip_return || !o.sender_street)
+  const senderOf = o => o.letter_type === 'santa' ? SANTA_FROM      // a Letter from Santa always carries Santa's return address
+    : (o.skip_return || !o.sender_street)
     ? FALLBACK_FROM
     : { role: 'return address', name: o.sender_name || 'Sender', street: o.sender_street, city: o.sender_city,
         province: o.sender_province, postal: o.sender_postal, country: o.sender_country || 'CA' };
@@ -455,7 +457,7 @@ function createPostGrid({ db, getSetting, orderDirPath, fetchImpl, convertWord =
 
   function eligibility(order) {
     if (!isConfigured()) return 'PostGrid is not configured.';
-    if (order.postgrid_letter_id) return 'Already submitted to PostGrid.';
+    if (order.postgrid_letter_id && order.postgrid_status !== 'cancelled') return 'Already submitted to PostGrid.';
     if (order.status !== 'paid') return `Order status is "${order.status}", not "paid".`;
     if (!countries().includes(String(order.destination_country).toUpperCase()))
       return `Destination ${order.destination_country} is not enabled for PostGrid; fulfil manually.`;
@@ -492,7 +494,8 @@ function createPostGrid({ db, getSetting, orderDirPath, fetchImpl, convertWord =
     if (built.sheets > MAX_SHEETS)
       throw new PostGridError(`${built.sheets} sheets exceeds the ${MAX_SHEETS}-sheet envelope limit; fulfil manually.`, { manual: true });
 
-    const key = `lh-order-${order.id}`;
+    // After a cancelled letter, a resubmission needs fresh idempotency keys, or PostGrid hands back the cancelled letter and the old return address.
+    const key = order.postgrid_letter_id && order.postgrid_status === 'cancelled' ? `lh-order-${order.id}-after-${order.postgrid_letter_id}` : `lh-order-${order.id}`;
     // Idempotency keys only last 24 h; before creating, make sure no letter already exists for this order.
     const search = encodeURIComponent(JSON.stringify({ 'metadata.orderId': String(order.id) }));
     const existing = (await api('GET', `/letters?limit=5&search=${search}`))?.data?.find(l => l.status !== 'cancelled');
@@ -507,7 +510,10 @@ function createPostGrid({ db, getSetting, orderDirPath, fetchImpl, convertWord =
     // (a country it will not mail from, an address it rejects), fall back to the Letterhome return address and say so.
     const warnings = [...built.warnings, ...(built.notices || [])];
     let from, usedFallback = false;
+    const santa = order.letter_type === 'santa';
     const useFallback = async why => {
+      // Santa's return address is part of the product: never swap it for the Letterhome address, stop and say so.
+      if (santa) throw new PostGridError(`The Santa return address was not accepted (${String(why).slice(0, 160)}). The letter was not sent; the Letterhome address was not used.`, { manual: true });
       usedFallback = true;
       warnings.push(`The return address could not be used (${String(why).slice(0, 160)}); the Letterhome return address was printed instead.`);
       from = await api('POST', '/contacts', { json: contact(FALLBACK_FROM), idempotencyKey: `${key}-from-lh` });
@@ -515,7 +521,7 @@ function createPostGrid({ db, getSetting, orderDirPath, fetchImpl, convertWord =
     const customerReturn = senderOf(order) !== FALLBACK_FROM;
     try {
       from = await api('POST', '/contacts', { json: contact(senderOf(order)), idempotencyKey: `${key}-from` });
-      if (customerReturn && from.addressStatus === 'failed') await useFallback(`address check failed: ${from.addressErrors || 'no details'}`);
+      if (customerReturn && !santa && from.addressStatus === 'failed') await useFallback(`address check failed: ${from.addressErrors || 'no details'}`);
     } catch (e) {
       if (!customerReturn) throw e;
       await useFallback(e.message);
