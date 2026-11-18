@@ -10,14 +10,14 @@
   var ctx = c.getContext('2d'); if (!ctx) return;
   var w = 0, h = 0, flakes = [], raf = 0, dpr = Math.min(window.devicePixelRatio || 1, 2);
   function make(anywhere) {
-    var r = 1.3 + Math.random() * 2.2;
-    return { x: Math.random() * w, y: anywhere ? Math.random() * h : -4, r: r, v: 0.22 + r * 0.16, d: Math.random() * 6.28, s: 0.01 + Math.random() * 0.02, a: 0.55 + Math.random() * 0.45 };
+    var r = 1 + Math.random() * 1.5;
+    return { x: Math.random() * w, y: anywhere ? Math.random() * h : -4, r: r, v: 0.22 + r * 0.16, d: Math.random() * 6.28, s: 0.01 + Math.random() * 0.02, a: 0.4 + Math.random() * 0.45 };
   }
   function size() {
     w = bar.clientWidth; h = bar.clientHeight;
     c.width = Math.round(w * dpr); c.height = Math.round(h * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    var n = Math.round(Math.min(80, Math.max(24, w / 11)));
+    var n = Math.round(Math.min(46, Math.max(16, w / 24)));
     while (flakes.length < n) flakes.push(make(true));
     flakes.length = n;
   }
