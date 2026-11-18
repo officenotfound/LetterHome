@@ -33,36 +33,41 @@
     var lines = [];
     lines.push('Dear ' + f.child + ',');
     lines.push('');
-    lines.push('Ho, ho, ho! The snow is deep here at the North Pole, the cocoa is hot, and I have been reading through my Nice List this week. When I got to your name, ' + f.child + ', I stopped, smiled, and decided to write to you myself.');
+    lines.push('Ho, ho, ho! The snow is deep here at the North Pole, the cocoa is hot, and I have been reading through my Nice List. When I got to your name, ' + f.child + ', I stopped, smiled, and decided to write to you myself.');
     var mid = [];
-    if (f.nice)     mid.push('I heard that ' + f.nice + '. That is exactly the kind of thing that makes my whole list glow, and I wanted you to know how proud I am of you.');
-    if (f.interest) mid.push('Word around the workshop is that you love ' + f.interest + '. The elves love it too, and they have been talking about it all week. One of them even asked if there might be a little something about it in my sleigh, but I never give away my secrets.');
-    if (mid.length || f.pet || f.goal) { lines.push(''); lines.push('Mrs. Claus says I may not tell you everything the elves report about you, but I can share some of it.'); }
+    if (f.nice)     mid.push('I heard that ' + f.nice + '. That is exactly the kind of thing that makes my whole list glow, and I am very proud of you.');
+    if (f.interest) mid.push('Word around the workshop is that you love ' + f.interest + '. The elves love it too, and they have talked about nothing else all week.');
+    if (f.pet)      mid.push('Please give ' + f.pet + ' a gentle pat from me. Animals always know who has a kind heart.');
+    if (f.goal)     mid.push('This year I have one small thing to ask of you: ' + f.goal + '. It will not always be easy, but I know you can do it, and the elves will be cheering for you.');
     if (mid.length) { lines.push(''); lines.push(mid.join('\n\n')); }
-    if (f.pet) {
-      lines.push('');
-      lines.push('And please give ' + f.pet + ' a gentle pat from me. The reindeer say that animals always know who has a kind heart, and I think ' + f.pet + ' knows it about you.');
-    }
-    if (f.goal) {
-      lines.push('');
-      lines.push('This year I have one small thing to ask of you: ' + f.goal + '. It will not always be easy, but I have watched many children try hard things, and I know you can do it. Every little try counts, and the elves will be cheering for you.');
-    }
     lines.push('');
-    lines.push('Christmas is getting close. The reindeer are rested, the sleigh is polished, and the elves are wrapping at top speed. Remember to go to bed on time on Christmas Eve, because I do my best work when everyone is fast asleep. If you leave out a few cookies and some carrots, Rudolph and I will be very grateful.');
+    lines.push('Christmas is getting close, and the reindeer are rested and ready. Remember to go to bed on time on Christmas Eve, because I do my best work when everyone is fast asleep. Rudolph and I will be very grateful for a few cookies and carrots.');
     lines.push('');
-    lines.push('Thank you for being you, ' + f.child + '. Keep being kind, keep being curious, and most of all, keep believing. The magic of Christmas is strongest in the people who do.');
+    lines.push('Thank you for being you, ' + f.child + '. Keep being kind, keep being curious, and most of all, keep believing.');
     lines.push('');
     lines.push('With love, jingle bells, and a big Merry Christmas,');
     lines.push('');
     lines.push('Santa Claus');
-    lines.push('North Pole');
     lines.push('');
-    lines.push('P.S. Look up on a clear night. Rudolph\'s nose is easiest to spot when the sky is dark, and I may be flying by sooner than you think.');
+    lines.push('P.S. Look up on a clear night. Rudolph\'s nose is easiest to spot when the sky is dark.');
     return lines.join('\n');
+  }
+
+  // Recovers the fields from a letter written by any earlier version of this template (for rebuilding an order's letter).
+  function parse(text) {
+    text = String(text || '');
+    var m = function (re) { var r = re.exec(text); return r ? r[1] : ''; };
+    return fields({
+      child: m(/^(?:[\s\S]*?\n)?Dear ([^,\n]+),/),
+      nice: m(/I heard that ([\s\S]+?)\. That is exactly/),
+      interest: m(/you love ([\s\S]+?)\. The elves love it too/),
+      pet: m(/(?:Please|And please) give ([\s\S]+?) a (?:gentle )?pat from me/),
+      goal: m(/small thing to ask of you: ([\s\S]+?)\. (?:I know you can do it|It will not always)/),
+    });
   }
 
   // The address on the envelope of every Letter from Santa: the one Canada Post publishes for Santa's mail.
   var RETURN = { name: 'Santa Claus', street: 'North Pole', city: 'North Pole', province: '', postal: 'H0H 0H0', country: 'CA' };
 
-  return { build: build, clean: clean, fields: fields, MAX: MAX, RETURN: RETURN };
+  return { build: build, parse: parse, clean: clean, fields: fields, MAX: MAX, RETURN: RETURN };
 });

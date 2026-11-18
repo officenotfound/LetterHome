@@ -428,7 +428,7 @@ test('Letter from Santa: colour letterhead on every text page, address on its ow
   const santa = await buildLetterPdf({ letter_type: 'santa', letter_body: body, destination_country: 'CA' });
   assert.equal(santa.placement, 'insert_blank_page');
   assert.equal(santa.sheets, santa.pages + 1);
-  assert.ok(santa.pages >= 1 && santa.pages <= 2, 'a full Santa letter fits the two included pages');
+  assert.equal(santa.pages, 1, 'a full Santa letter fits one letterhead page');
   const plain = await buildLetterPdf({ letter_body: body, destination_country: 'CA' });
   assert.equal(plain.placement, 'top_first_page');
   const hasTemplate = async buf => { const d = await PDFDocument.load(buf); return d.getPages().every(p => (p.node.Resources()?.lookup(PDFName.of('XObject')) || { keys: () => [] }).keys().length > 0); };

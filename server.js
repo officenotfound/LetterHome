@@ -2530,6 +2530,22 @@ app.post('/api/admin/orders/:id/postgrid/cancel', requireAdmin, async (req, res)
   } catch (e) { res.status(502).json({ error: e.message }); }
 });
 
+// Rewrites a Letter from Santa with the current wording, using the child's details recovered from the letter already on the order.
+// Only before the letter is at the printer (never submitted, or cancelled there), so nothing already printed changes.
+app.post('/api/admin/orders/:id/postgrid/rebuild-santa', requireAdmin, (req, res) => {
+  const id = Number(req.params.id);
+  const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(id);
+  if (!order) return res.status(404).json({ error: 'Order not found' });
+  if (order.letter_type !== 'santa') return res.status(400).json({ error: 'This is not a Letter from Santa.' });
+  if (order.postgrid_letter_id && order.postgrid_status !== 'cancelled') return res.status(409).json({ error: 'This letter is at PostGrid. Cancel it there first.' });
+  const text = SantaLetter.build(SantaLetter.parse(order.letter_body));
+  if (!text) return res.status(422).json({ error: "Could not find the child's name in the letter." });
+  db.prepare('UPDATE orders SET letter_body = ?, colour_printing = 1 WHERE id = ?').run(text, id);
+  try { db.prepare('INSERT INTO order_notes (order_id, note) VALUES (?,?)').run(id, `Letter from Santa rewritten with the current wording and letterhead by ${req.session.admin.username}.`); } catch {}
+  logAudit(req, 'order.santa_rebuild', 'order', id, {});
+  res.json({ ok: true });
+});
+
 app.post('/api/admin/orders/:id/postgrid/clear-test', requireAdmin, (req, res) => {
   const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(Number(req.params.id));
   if (!order) return res.status(404).json({ error: 'Order not found' });

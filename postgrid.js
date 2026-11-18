@@ -22,7 +22,7 @@ const FONT_SIZE = 11;
 // Letter from Santa is printed in colour on a letterhead page (red border, "From the desk of Santa Claus").
 // Text goes between the header art and the bottom flourish; the address sits on its own sheet in front.
 const SANTA_LETTERHEAD = path.join(__dirname, 'print-assets', 'santa-letterhead.pdf');
-const SANTA_TEXT = { x: 78, top: 250, bottom: 118, size: 12, leading: 17 };
+const SANTA_TEXT = { x: 70, top: 246, bottom: 112, size: 11.5, leading: 15 };
 const LEADING = 15;
 const FREE_PAGES = 2;                         // pages included in the base price (matches server.js)
 const MAX_SHEETS = 5;                         // PostGrid: max 5 sheets per standard envelope

@@ -972,6 +972,8 @@ test('Santa letter template: uses only what is given, cleans input, empty withou
   assert.match(full, /one small thing to ask of you: keep reading\./);
   assert.doesNotMatch(full, /\.\./);
   assert.ok(!full.includes('—'), 'no em dashes');
+  assert.deepEqual(SantaLetter.parse(full), SantaLetter.fields({ child: 'Emma', nice: 'you learned to ride your bike!', interest: 'dinosaurs', pet: 'Biscuit', goal: 'keep reading' }));
+  assert.deepEqual(SantaLetter.parse("From Santa's Workshop\n\nDear Zoe,\n\nI heard that you won. That is exactly the kind of thing. Please give Rex a pat from me."), { child: 'Zoe', nice: 'you won', interest: '', pet: 'Rex', goal: '' });
   assert.equal(SantaLetter.fields({ child: 'x'.repeat(100) }).child.length, 40);
   assert.equal(SantaLetter.clean('a\n\tb\u0000c'), 'a b c');
 });
