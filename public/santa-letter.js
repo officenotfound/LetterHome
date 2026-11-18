@@ -31,12 +31,6 @@
     var f = fields(input);
     if (!f.child) return '';
     var lines = [];
-    lines.push('* * * * * * * * * * * * * * *');
-    lines.push('OFFICE OF SANTA CLAUS');
-    lines.push('Workshop Lane, The North Pole');
-    lines.push('Official Nice List Correspondence');
-    lines.push('* * * * * * * * * * * * * * *');
-    lines.push('');
     lines.push('Dear ' + f.child + ',');
     lines.push('');
     lines.push('Ho, ho, ho! The snow is deep here at the North Pole, the cocoa is hot, and I have been reading through my Nice List this week. When I got to your name, ' + f.child + ', I stopped, smiled, and decided to write to you myself.');

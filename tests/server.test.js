@@ -962,7 +962,7 @@ test('Santa letter template: uses only what is given, cleans input, empty withou
   assert.equal(SantaLetter.build({}), '');
   assert.equal(SantaLetter.build({ child: '   ' }), '');
   const bare = SantaLetter.build({ child: 'Emma' });
-  assert.match(bare, /OFFICE OF SANTA CLAUS/);
+  assert.match(bare, /^Dear Emma,\n/);
   assert.match(bare, /Dear Emma,/);
   assert.doesNotMatch(bare, /I heard that|Word around|give Biscuit|small thing to ask/);
   const full = SantaLetter.build({ child: ' Emma. ', nice: 'you learned to ride your bike!', interest: 'dinosaurs', pet: 'Biscuit', goal: 'keep reading' });
@@ -1002,7 +1002,8 @@ test('Santa order: own price, server-written letter, Canada only, colour add-on,
   assert.doesNotMatch(o.letter_body, /IGNORED CLIENT TEXT/);
 
   await send({ colour_printing: '1' });
-  assert.equal(last().price_cents, 1300);
+  assert.equal(last().price_cents, 1200);   // colour is always on for Santa (red letterhead) and included in the price
+  assert.equal(last().colour_printing, 1);
 
   const us = await send({ 'r-country': 'US' });
   assert.equal(us.res.status, 400);

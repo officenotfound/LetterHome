@@ -19,6 +19,10 @@ const TEXT_FONT_PATH = path.join(__dirname, 'assets', 'fonts', 'NotoSerif-Regula
 const TWEMOJI_URL = 'https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/72x72/';
 const EMOJI_CACHE = path.join(__dirname, '.cache', 'emoji');
 const FONT_SIZE = 11;
+// Letter from Santa is printed in colour on a letterhead page (red border, "From the desk of Santa Claus").
+// Text goes between the header art and the bottom flourish; the address sits on its own sheet in front.
+const SANTA_LETTERHEAD = path.join(__dirname, 'print-assets', 'santa-letterhead.pdf');
+const SANTA_TEXT = { x: 78, top: 250, bottom: 118, size: 12, leading: 17 };
 const LEADING = 15;
 const FREE_PAGES = 2;                         // pages included in the base price (matches server.js)
 const MAX_SHEETS = 5;                         // PostGrid: max 5 sheets per standard envelope
@@ -226,11 +230,11 @@ function createPostGrid({ db, getSetting, orderDirPath, fetchImpl, convertWord =
   }
 
   // Lays out tokenized paragraphs into lines no wider than maxWidth.
-  function layoutLines(paras, font, maxWidth) {
-    const EM = FONT_SIZE * 1.2;
-    const runW = r => r.emoji ? EM : font.widthOfTextAtSize(r.text, FONT_SIZE);
+  function layoutLines(paras, font, maxWidth, size = size) {
+    const EM = size * 1.2;
+    const runW = r => r.emoji ? EM : font.widthOfTextAtSize(r.text, size);
     const wordW = w => w.reduce((s, r) => s + runW(r), 0);
-    const space = font.widthOfTextAtSize(' ', FONT_SIZE);
+    const space = font.widthOfTextAtSize(' ', size);
     const lines = [];
     for (const words of paras) {
       if (!words.length) { lines.push([]); continue; }
@@ -274,6 +278,7 @@ function createPostGrid({ db, getSetting, orderDirPath, fetchImpl, convertWord =
 
     let attachments = [];
     try { attachments = JSON.parse(order.attachment_info || '[]'); } catch {}
+    const santa = order.letter_type === 'santa';
 
     // Text = typed body + any .txt attachments
     const textParts = [];
@@ -309,27 +314,39 @@ function createPostGrid({ db, getSetting, orderDirPath, fetchImpl, convertWord =
         if (png) { try { images.set(name, await doc.embedPng(png)); continue; } catch {} }
         warnings.add(`An emoji in the letter could not be loaded for printing (${name}).`);
       }
-      const lines = layoutLines(paras, font, PAGE.w - 2 * MARGIN);
-      const EM = FONT_SIZE * 1.2, space = font.widthOfTextAtSize(' ', FONT_SIZE);
-      let page = doc.addPage([PAGE.w, PAGE.h]);
-      let y = PAGE.h - ADDRESS_CLEARANCE;
+      const left = santa ? SANTA_TEXT.x : MARGIN;
+      const SIZE = santa ? SANTA_TEXT.size : FONT_SIZE, LEAD = santa ? SANTA_TEXT.leading : LEADING;
+      const lines = layoutLines(paras, font, PAGE.w - 2 * left, SIZE);
+      const EM = SIZE * 1.2, space = font.widthOfTextAtSize(' ', SIZE);
+      let letterhead = null;
+      if (santa) letterhead = (await doc.embedPdf(fs.readFileSync(SANTA_LETTERHEAD), [0]))[0];
+      const newPage = () => {
+        const pg = doc.addPage([PAGE.w, PAGE.h]);
+        if (letterhead) pg.drawPage(letterhead, { x: 0, y: 0, width: PAGE.w, height: PAGE.h });
+        return pg;
+      };
+      const firstY = santa ? PAGE.h - SANTA_TEXT.top : PAGE.h - ADDRESS_CLEARANCE;
+      const nextY = santa ? firstY : PAGE.h - MARGIN;
+      const floor = santa ? SANTA_TEXT.bottom : MARGIN;
+      let page = newPage();
+      let y = firstY;
       for (const line of lines) {
-        if (y < MARGIN) { page = doc.addPage([PAGE.w, PAGE.h]); y = PAGE.h - MARGIN; }
-        let x = MARGIN;
+        if (y < floor) { page = newPage(); y = nextY; }
+        let x = left;
         line.forEach((word, wi) => {
           if (wi) x += space;
           for (const r of word) {
             if (r.emoji) {
               const img = images.get(r.emoji);
-              if (img) page.drawImage(img, { x, y: y - FONT_SIZE * 0.22, width: EM, height: EM });
+              if (img) page.drawImage(img, { x, y: y - SIZE * 0.22, width: EM, height: EM });
               x += EM;
             } else {
-              page.drawText(r.text, { x, y, size: FONT_SIZE, font, color: rgb(0, 0, 0) });
-              x += font.widthOfTextAtSize(r.text, FONT_SIZE);
+              page.drawText(r.text, { x, y, size: SIZE, font, color: rgb(0, 0, 0) });
+              x += font.widthOfTextAtSize(r.text, SIZE);
             }
           }
         });
-        y -= LEADING;
+        y -= LEAD;
       }
     }
 
@@ -356,7 +373,7 @@ function createPostGrid({ db, getSetting, orderDirPath, fetchImpl, convertWord =
     }
 
     // Address goes on the top of page 1 only when we own page 1 (typed text). Uploaded PDFs get a blank address page.
-    const placement = hasText ? 'top_first_page' : 'insert_blank_page';
+    const placement = hasText && !santa ? 'top_first_page' : 'insert_blank_page';
     const pageCount = doc.getPageCount();
     const sheets = pageCount + (placement === 'insert_blank_page' ? 1 : 0);
     const bytes = Buffer.from(await doc.save({ addDefaultPage: false }));

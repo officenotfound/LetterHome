@@ -1561,7 +1561,7 @@ function requireCustomer(req, res, next) {
 let _convSlots = 2;                                        // LibreOffice is heavy: at most 2 conversions at once
 let _convWaiting = 0;
 const CONV_MAX_WAITING = 8;                                // beyond this, give up at once instead of queueing forever
-async function analyseLetter(bodyText, files) {
+async function analyseLetter(bodyText, files, letterType) {
   if (_convSlots <= 0) {
     if (_convWaiting >= CONV_MAX_WAITING) { console.error('[analyseLetter] queue full, skipping page count'); return null; }
     _convWaiting++;
@@ -1570,7 +1570,7 @@ async function analyseLetter(bodyText, files) {
   _convSlots--;
   try {
     const att = (files || []).map(f => ({ path: f.path, originalName: f.originalname, mimeType: f.mimetype }));
-    const b = await postgrid.buildLetterPdf({ letter_body: bodyText || '', attachment_info: JSON.stringify(att) });
+    const b = await postgrid.buildLetterPdf({ letter_body: bodyText || '', attachment_info: JSON.stringify(att), letter_type: letterType || 'standard' });
     const pages = b.pages + b.unsupported.length;          // a file we could not convert counts as at least 1 page
     const sheets = b.sheets + b.unsupported.length;
     const tooLong = sheets > MAX_SHEETS;
@@ -1670,6 +1670,7 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
     b['s-name'] = R.name; b['s-street'] = R.street; b['s-city'] = R.city; b['s-province'] = R.province; b['s-postal'] = R.postal; b['s-country'] = R.country;
     b['mail_service'] = '';
     b['registered_mail'] = '';
+    b['colour_printing'] = '1';   // the letterhead is red, so a Letter from Santa is always printed in colour (included in the price)
   }
   const letterType = isSanta ? 'santa' : 'standard';
 
@@ -1706,7 +1707,7 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
   if (!String(b['letter-body'] || '').trim() && !(req.files || []).length)
     return res.status(400).json({ error: 'Please type your letter or attach a file before paying.' });
 
-  const analysis = await analyseLetter(b['letter-body'], req.files || []);
+  const analysis = await analyseLetter(b['letter-body'], req.files || [], letterType);
   if (analysis?.tooLong) return res.status(400).json({ error: analysis.message });
   const pageCount = analysis ? analysis.pages : await countAttachmentPages(req.files || []);
   const colourPrinting    = b['colour_printing']    === '1' || b['colour_printing']    === 'true';
@@ -1723,7 +1724,7 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
     scheduledDate = d;
   }
   const addonCents = extraPageCents
-    + (colourPrinting   ? COLOUR_PRINTING_CENTS : 0)
+    + (colourPrinting && !isSanta ? COLOUR_PRINTING_CENTS : 0)
     + serviceCents
     + (largeEnvelope    ? LARGE_ENVELOPE_CENTS  : 0)
     + (scheduleForLater ? SCHEDULE_LATER_CENTS  : 0);

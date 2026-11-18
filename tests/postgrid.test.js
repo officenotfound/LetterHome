@@ -16,7 +16,7 @@ process.env.POSTGRID_API_KEY = 'test_abc123';
 
 const { db } = require('../server');
 const { createPostGrid } = require('../postgrid');
-const { PDFDocument } = require('pdf-lib');
+const { PDFDocument, PDFName } = require('pdf-lib');
 
 const calls = [];
 let letterStatus = 'ready';
@@ -420,4 +420,18 @@ test('an order whose letter was cancelled at PostGrid can be resubmitted, with n
   const o2 = seed({ skip: 1 });
   db.prepare("UPDATE orders SET status = 'paid', postgrid_letter_id = 'letter_x', postgrid_status = 'ready' WHERE id = ?").run(o2.id);
   await assert.rejects(() => pg.submitOrder(db.prepare('SELECT * FROM orders WHERE id = ?').get(o2.id)), /Already submitted/);
+});
+
+test('Letter from Santa: colour letterhead on every text page, address on its own first sheet', async () => {
+  const { buildLetterPdf } = pg;
+  const body = require('../public/santa-letter.js').build({ child: 'Emma', nice: 'you learned to ride your bike', interest: 'dinosaurs', pet: 'Biscuit', goal: 'read every night' });
+  const santa = await buildLetterPdf({ letter_type: 'santa', letter_body: body, destination_country: 'CA' });
+  assert.equal(santa.placement, 'insert_blank_page');
+  assert.equal(santa.sheets, santa.pages + 1);
+  assert.ok(santa.pages >= 1 && santa.pages <= 2, 'a full Santa letter fits the two included pages');
+  const plain = await buildLetterPdf({ letter_body: body, destination_country: 'CA' });
+  assert.equal(plain.placement, 'top_first_page');
+  const hasTemplate = async buf => { const d = await PDFDocument.load(buf); return d.getPages().every(p => (p.node.Resources()?.lookup(PDFName.of('XObject')) || { keys: () => [] }).keys().length > 0); };
+  assert.equal(await hasTemplate(santa.pdf), true);
+  assert.equal(await hasTemplate(plain.pdf), false);
 });
