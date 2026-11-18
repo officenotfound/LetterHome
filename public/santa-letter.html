@@ -216,7 +216,16 @@ footer{background:var(--ink);color:rgba(255,255,255,0.5);padding:40px 36px;margi
 .form-msg.err{color:#8a2a14}
 .form-msg.ok{color:#2c5a2c}
 .fineprint{font-size:13px;color:var(--ink-muted);line-height:1.6;margin-top:14px}
-.letter-preview{white-space:pre-wrap;font-family:'Noto Sans',Georgia,serif;font-size:14.5px;line-height:1.6;background:#fff;border:1px dashed var(--line);padding:20px;max-height:360px;overflow:auto;color:var(--ink-soft)}
+.paper-wrap{overflow-x:auto;margin-bottom:6px}
+.paper{container-type:inline-size;position:relative;aspect-ratio:612/792;background:#fff url(/santa-letterhead.png) center top/100% auto repeat-y;box-shadow:0 2px 14px rgba(0,0,0,.35);color:#111;font-family:'Noto Serif',Georgia,'Times New Roman',serif}
+.paper-text{padding:38.7% 11.4% 6%;white-space:pre-wrap;font-size:1.88cqw;line-height:1.304;text-align:left}
+.paper-cert div{position:absolute;left:0;right:0;text-align:center;line-height:1.1}
+.paper-read{margin:10px 0 0;font-size:14px;color:var(--ink-soft)}
+.paper-read summary{cursor:pointer;font-weight:600}
+.paper-read div{white-space:pre-wrap;margin-top:8px;line-height:1.6}
+.paper-label{font:600 12px Roboto,Arial,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#d98a85;margin:18px 0 8px}
+.paper-label:first-child{margin-top:0}
+.letter-preview{font-family:'Noto Sans',Georgia,serif;font-size:14.5px;line-height:1.6;color:var(--ink-soft)}
 .compare{width:100%;border-collapse:collapse;margin:20px 0;font-size:15px}
 .compare th,.compare td{text-align:left;padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:top}
 .compare th{font-family:'Roboto',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:var(--ink-muted);font-weight:500}
@@ -352,14 +361,33 @@ footer{background:var(--ink);color:rgba(255,255,255,0.5);padding:40px 36px;margi
     var pages = SantaLetter.pages({ children: children, certificate: $('cert').checked });
     box.textContent = '';
     if (!pages.length) { box.textContent = 'Enter a first name to see the letter.'; }
-    pages.forEach(function (p, i) {
-      var h = document.createElement('div');
-      h.style.cssText = 'font:600 12px Roboto,Arial,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#8f332f;margin:' + (i ? '18px' : '0') + ' 0 8px';
+    if (pages.length) { var note = document.createElement('p'); note.className = 'hint'; note.style.margin = '0 0 12px'; note.textContent = 'This is how each page prints, in colour on a Santa letterhead. Your address goes on a separate sheet at the front.'; box.appendChild(note); }
+    var year = new Date().getFullYear();
+    pages.forEach(function (p) {
+      var h = document.createElement('div'); h.className = 'paper-label';
       h.textContent = p.kind === 'letter' ? 'Letter for ' + p.child : 'Nice List certificate for ' + p.child;
       box.appendChild(h);
-      var t = document.createElement('div');
-      t.textContent = p.kind === 'letter' ? p.text : 'This certifies that ' + p.child + ' has been placed on the Nice List for Christmas, for being kind, curious, and a joy to everyone at the North Pole. Signed with love, Santa Claus.';
-      box.appendChild(t);
+      var wrap = document.createElement('div'); wrap.className = 'paper-wrap';
+      var paper = document.createElement('div');
+      if (p.kind === 'letter') {
+        paper.className = 'paper';
+        var t = document.createElement('div'); t.className = 'paper-text'; t.textContent = p.text; paper.appendChild(t);
+      } else {
+        paper.className = 'paper paper-cert';
+        // top and size are the printed page's positions, as a share of its width (612 pt) and height (792 pt)
+        [[257, 17, 'OFFICIAL NICE LIST CERTIFICATE', '#8f332f'], [310, 13, 'This certifies that', ''], [341, 34, p.child, '#8f332f'], [399, 14, 'has been placed on the Nice List', ''],
+         [421, 14, 'for Christmas ' + year, ''], [463, 12, 'for being kind, curious, and a joy to everyone', ''], [480, 12, 'at the North Pole.', ''],
+         [546, 12, 'Signed with love,', ''], [567, 22, 'Santa Claus', '#8f332f']].forEach(function (r) {
+          var d = document.createElement('div'); d.style.top = (r[0] / 792 * 100) + '%'; d.style.fontSize = (r[1] / 612 * 100) + 'cqw';
+          if (r[3]) d.style.color = r[3]; d.textContent = r[2]; paper.appendChild(d);
+        });
+      }
+      wrap.appendChild(paper); box.appendChild(wrap);
+      if (p.kind === 'letter') {
+        var rd = document.createElement('details'); rd.className = 'paper-read';
+        var sm = document.createElement('summary'); sm.textContent = 'Read the text'; rd.appendChild(sm);
+        var rt = document.createElement('div'); rt.textContent = p.text; rd.appendChild(rt); box.appendChild(rd);
+      }
     });
     var name = SantaLetter.fields(fields()).child;
     if (name && !$('r-name').dataset.touched) $('r-name').value = name;
