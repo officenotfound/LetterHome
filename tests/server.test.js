@@ -962,13 +962,13 @@ test('Santa letter template: uses only what is given, cleans input, empty withou
   assert.equal(SantaLetter.build({}), '');
   assert.equal(SantaLetter.build({ child: '   ' }), '');
   const bare = SantaLetter.build({ child: 'Emma' });
-  assert.match(bare, /^From Santa's Workshop\n/);
+  assert.match(bare, /OFFICE OF SANTA CLAUS/);
   assert.match(bare, /Dear Emma,/);
-  assert.doesNotMatch(bare, /I heard that|Word around|Please give|small thing to ask/);
+  assert.doesNotMatch(bare, /I heard that|Word around|give Biscuit|small thing to ask/);
   const full = SantaLetter.build({ child: ' Emma. ', nice: 'you learned to ride your bike!', interest: 'dinosaurs', pet: 'Biscuit', goal: 'keep reading' });
   assert.match(full, /I heard that you learned to ride your bike\. That is/);
   assert.match(full, /you love dinosaurs\./);
-  assert.match(full, /Please give Biscuit a pat from me\./);
+  assert.match(full, /please give Biscuit a gentle pat from me\./i);
   assert.match(full, /one small thing to ask of you: keep reading\./);
   assert.doesNotMatch(full, /\.\./);
   assert.ok(!full.includes('—'), 'no em dashes');
@@ -998,7 +998,7 @@ test('Santa order: own price, server-written letter, Canada only, colour add-on,
   assert.equal(o.sender_postal, 'H0H 0H0');
   assert.equal(o.sender_country, 'CA');
   assert.match(o.letter_body, /Dear Emma,/);
-  assert.match(o.letter_body, /Please give Biscuit a pat/);
+  assert.match(o.letter_body, /please give Biscuit a gentle pat/i);
   assert.doesNotMatch(o.letter_body, /IGNORED CLIENT TEXT/);
 
   await send({ colour_printing: '1' });
