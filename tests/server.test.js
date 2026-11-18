@@ -78,7 +78,7 @@ require.cache[stripeResolvePath] = {
 const sentMail = [];
 require('nodemailer').createTransport = () => ({ sendMail: async (o) => { sentMail.push(o); return {}; } });
 
-const { app, db, thankYouCouponJob, cartOfferJob, sendAtPrinterEmail, sendMailedNotification, fxRefreshJob, niceGbp } = require('../server');
+const { app, db, sendResentEmail, returnAddressLines, thankYouCouponJob, cartOfferJob, sendAtPrinterEmail, sendMailedNotification, fxRefreshJob, niceGbp } = require('../server');
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function webhookSig(payload) {
@@ -1802,4 +1802,26 @@ test('an order with no letter text and no files is refused before checkout, a re
   assert.equal((await post({})).status, 400);
   assert.equal(db.prepare("SELECT COUNT(*) AS n FROM orders WHERE customer_email = 'blank-letter@example.com'").get().n, 0, 'a refused order leaves no row');
   assert.equal((await post({ 'letter-body': 'Hello.' })).status, 200);
+});
+
+test('a letter sent to the printer again tells the customer, and shows the return address on the envelope (Santa\'s for a Letter from Santa)', async () => {
+  process.env.SMTP_HOST = 'smtp.test';
+  try {
+    const sid = seedOrder({ email: 'resent-santa@example.com', status: 'submitted_to_printer', recipientName: 'Viktoriia K' });
+    db.prepare("UPDATE orders SET letter_type = 'santa', skip_return = 1 WHERE stripe_session_id = ?").run(sid);
+    const id = db.prepare('SELECT id FROM orders WHERE stripe_session_id = ?').get(sid).id;
+    const before = sentMail.length;
+    sendResentEmail(id);
+    await new Promise(r => setTimeout(r, 50));
+    const sent = sentMail.slice(before);
+    assert.equal(sent.length, 1);
+    assert.equal(sent[0].to, 'resent-santa@example.com');
+    assert.match(sent[0].subject, new RegExp(`order #${id}.*sent to the printer again`));
+    assert.match(sent[0].text, /Santa Claus\nNorth Pole\nNorth Pole H0H 0H0\nCanada/);
+    assert.match(sent[0].html, /Return address on the envelope/);
+    assert.doesNotMatch(sent[0].text + sent[0].html, /postgrid/i);
+    assert.deepEqual(returnAddressLines({ letter_type: 'standard', skip_return: 1 }), []);
+    assert.deepEqual(returnAddressLines({ letter_type: 'standard', skip_return: 0, sender_name: 'Ann', sender_street: '1 A St', sender_city: 'Hull', sender_postal: 'J8X 1A1', sender_country: 'CA' }),
+      ['Ann', '1 A St', 'Hull J8X 1A1', 'CA']);
+  } finally { delete process.env.SMTP_HOST; }
 });

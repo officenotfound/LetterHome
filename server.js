@@ -701,6 +701,65 @@ function sendAtPrinterEmail(orderId) {
   });
 }
 
+// The return address that is printed on a letter's envelope, as lines (a Letter from Santa always has Santa's), or [] when none.
+function returnAddressLines(o) {
+  if (o.letter_type === 'santa') {
+    const R = SantaLetter.RETURN;
+    return [R.name, R.street, `${R.city} ${R.postal}`.trim(), 'Canada'];
+  }
+  if (o.skip_return || !o.sender_street) return [];
+  return [o.sender_name, o.sender_street, [o.sender_city, o.sender_province, o.sender_postal].filter(Boolean).join(' '), o.sender_country]
+    .map(x => String(x || '').trim()).filter(Boolean);
+}
+
+// A letter that was pulled back from the printer and sent again: tell the customer, and show the return address now on the envelope.
+function sendResentEmail(orderId) {
+  const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(orderId);
+  if (!order?.customer_email) return;
+  const es = order.order_lang === 'es';
+  const ret = returnAddressLines(order).join('\n');
+  const toAddr = [order.recipient_name, order.recipient_street,
+    `${order.recipient_city || ''} ${order.recipient_province || ''} ${order.recipient_postal || ''}`.trim(), order.destination_country].filter(Boolean).join('\n');
+  const T = es ? {
+    subj: `Actualización de su pedido n.º ${order.id}: su carta se envió de nuevo a la imprenta`,
+    h1: 'Su carta se envió de nuevo a la imprenta',
+    p: 'Hicimos una corrección en su pedido y enviamos la carta otra vez a la imprenta. No tiene que hacer nada.',
+    ret: 'Remitente en el sobre', to: 'Se entrega a', track: 'Siga su pedido', order: `Pedido n.º ${order.id}`,
+  } : {
+    subj: `Update on order #${order.id}: your letter was sent to the printer again`,
+    h1: 'Your letter was sent to the printer again',
+    p: 'We made a correction to your order and sent the letter to the printer again. There is nothing you need to do.',
+    ret: 'Return address on the envelope', to: 'Delivering to', track: 'Track your order', order: `Order #${order.id}`,
+  };
+  const esc = x => String(x || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const link = order.status_token ? `${orderBase(order)}/status/${order.status_token}` : '';
+  const html = `
+<!DOCTYPE html><html lang="${es ? 'es-US' : 'en-CA'}">
+<body style="font-family:Georgia,serif;background:#ede5d3;padding:40px 20px;color:#2a2a2a;margin:0">
+  <div style="max-width:520px;margin:0 auto;background:#faf6ec;border:1px solid rgba(42,42,42,0.12);padding:48px">
+    <h1 style="font-size:26px;font-weight:400;margin:0 0 10px;letter-spacing:-0.02em">${T.h1}</h1>
+    <p style="color:#6b6258;margin:0 0 28px;font-size:16px;line-height:1.6">${T.p}</p>
+    ${ret ? `<div style="background:#2a2a2a;color:#faf6ec;padding:24px;margin-bottom:16px">
+      <p style="font-size:11px;text-transform:uppercase;letter-spacing:0.15em;color:rgba(250,246,236,0.55);margin:0 0 10px">${T.ret}</p>
+      <p style="font-size:18px;line-height:1.5;white-space:pre-line;margin:0">${esc(ret)}</p>
+    </div>` : ''}
+    <div style="background:#2a2a2a;color:#faf6ec;padding:24px;margin-bottom:28px">
+      <p style="font-size:11px;text-transform:uppercase;letter-spacing:0.15em;color:rgba(250,246,236,0.55);margin:0 0 10px">${T.to}</p>
+      <p style="font-size:18px;line-height:1.5;white-space:pre-line;margin:0">${esc(toAddr)}</p>
+    </div>
+    <div style="border-top:1px solid rgba(42,42,42,0.1);padding-top:20px;font-size:13px;color:#6b6258">
+      <p style="margin:0 0 8px">${T.order}</p>
+      ${link ? `<p style="margin:0 0 8px">${T.track}: <a href="${link}" style="color:#a8472d">${link}</a></p>` : ''}
+      <p style="margin:12px 0 0;color:#968b7d;font-size:11px">Letterhome · ${MAILING_ADDRESS}</p>
+    </div>
+  </div>
+</body></html>`;
+  const text = [T.h1, '', T.p, '', ret ? `${T.ret}:\n${ret}\n` : '', `${T.to}:`, toAddr, '', T.order, link ? `${T.track}: ${link}` : '', '', `Letterhome · ${MAILING_ADDRESS}`].join('\n');
+  sendMail({ from: process.env.EMAIL_FROM, to: order.customer_email, replyTo: process.env.OPERATOR_EMAIL, subject: T.subj, html, text }, 'order_update', order.id)
+    .then(() => { try { db.prepare('INSERT INTO order_notes (order_id, note) VALUES (?,?)').run(orderId, 'Automatic: the customer was emailed that the letter was sent to the printer again, with its return address.'); } catch {} })
+    .catch(err => console.error(`[email] resent email failed for #${orderId}:`, err.message));
+}
+
 // True while a content-scan hit has not been marked safe by the owner.
 function contentHeld(o) {
   if (!o || !o.content_flags || o.content_cleared_at) return false;
@@ -718,8 +777,10 @@ async function postgridSubmit(orderId, opts) {
     return { ok: false, error: msg.replace(/^MANUAL: /, ''), manual: true };
   }
   try {
+    const wasCancelled = !!order.postgrid_letter_id && order.postgrid_status === 'cancelled';
     const r = await postgrid.submitOrder(order, opts);
     if (r.letter.live) sendAtPrinterEmail(orderId);
+    if (wasCancelled && r.letter.live && !r.reused) sendResentEmail(orderId);
     for (const w of r.warnings || []) {   // return-address fallbacks and the return-in-letter result are worth a note on the order
       try { db.prepare('INSERT INTO order_notes (order_id, note) VALUES (?,?)').run(orderId, `Automatic: ${w}`); } catch {}
     }
@@ -5118,4 +5179,4 @@ const PORT = process.env.PORT || 3000;
 if (!process.env.TEST_MODE) {
   app.listen(PORT, () => console.log(`Letterhome running on port ${PORT}`));
 }
-module.exports = { app, db, fxRefreshJob, niceGbp, thankYouCouponJob, cartOfferJob, postgrid, postgridSubmit, postgridSweep, sendAtPrinterEmail, sendMailedNotification };
+module.exports = { app, db, sendResentEmail, returnAddressLines, fxRefreshJob, niceGbp, thankYouCouponJob, cartOfferJob, postgrid, postgridSubmit, postgridSweep, sendAtPrinterEmail, sendMailedNotification };
