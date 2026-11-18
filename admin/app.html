@@ -1600,9 +1600,11 @@ function postgridCard(o) {
           ${o.postgrid_url ? `<a class="btn btn-outline btn-sm" href="${esc(o.postgrid_url)}" target="_blank" rel="noopener">PostGrid preview</a>` : ''}
           <button class="btn btn-outline btn-sm" onclick="pgAction(${o.id},'refresh')">Refresh status</button>
           ${canCancel ? `<button class="btn btn-outline btn-sm" style="color:#b42318;border-color:#b42318" onclick="pgAction(${o.id},'cancel')">Cancel letter</button>` : ''}
+          ${(o.postgrid_status === 'cancelled' && o.status === 'paid') ? `<button class="btn btn-primary btn-sm" onclick="pgAction(${o.id},'submit')">Send via PostGrid again</button>` : ''}
           ${o.postgrid_mode === 'test' && !['completed','cancelled'].includes(o.postgrid_status) ? `<button class="btn btn-outline btn-sm" onclick="pgAction(${o.id},'progress')">Advance test letter</button>` : ''}
           ${o.postgrid_mode === 'test' ? `<button class="btn btn-outline btn-sm" onclick="pgAction(${o.id},'clear-test')">Clear test letter</button>` : ''}
         </div>
+        ${(o.postgrid_status === 'cancelled' && o.status === 'paid') ? `<p style="font-size:12px;color:#6b6b6b;margin-top:10px;line-height:1.5">This letter was cancelled at PostGrid. Sending again creates a new letter with the order's current return address, and the customer gets an update email.</p>` : ''}
         ${o.postgrid_mode === 'test' ? `<p style="font-size:12px;color:#92400e;margin-top:10px;line-height:1.5">Test letter: nothing is mailed, and the customer's order status and emails are not affected. Clear it to send this order for real once the live key is in place.</p>` : ''}`;
   } else {
     const why = o.postgrid_eligibility;
