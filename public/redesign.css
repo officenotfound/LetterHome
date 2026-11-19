@@ -557,3 +557,20 @@ html[data-theme="dark"] body .related>a:not(.related-card),html[data-theme="dark
 /* Home closing band is cream: navy button */
 :root body:not(#x) .lh-home-cta a.btn{background:#1c2f45!important;color:#fff!important;border:1px solid #1c2f45!important}
 html[data-theme="dark"] body:not(#x) .lh-home-cta a.btn{background:#faf6ec!important;color:#1c2f45!important}
+
+/* About page: one centred column on one background */
+:root body main.ab{max-width:720px!important;margin:0 auto!important;padding:64px 24px 72px!important;background:none!important;display:block!important}
+:root body main.ab .ab-head{text-align:center!important;margin:0 0 40px!important}
+:root body main.ab h1{font:700 44px/1.1 'Archivo',sans-serif!important;margin:0 0 18px!important;color:var(--ds-ink)!important;text-align:center!important}
+:root body main.ab .ab-head p{font:400 19px/1.6 'Noto Sans',sans-serif!important;color:var(--ds-ink2)!important;margin:0 auto!important;max-width:600px!important;text-align:center!important}
+:root body main.ab .ab-founder{display:flex!important;gap:20px!important;align-items:flex-start!important;padding:24px!important;margin:0 0 40px!important;background:var(--ds-surface)!important;border:1px solid var(--ds-line)!important;border-radius:12px!important}
+:root body main.ab .ab-founder img{width:88px!important;height:88px!important;border-radius:50%!important;object-fit:cover!important;flex:none!important}
+:root body main.ab .ab-founder p{font:400 16px/1.65 'Noto Sans',sans-serif!important;color:var(--ds-ink)!important;margin:0!important;text-align:left!important}
+:root body main.ab .ab-founder .ab-sign{margin-top:10px!important;font-weight:600!important;color:var(--ds-ink2)!important;font-size:14px!important}
+:root body main.ab .ab-facts{margin:0 0 40px!important;padding:0!important;border-top:1px solid var(--ds-line)!important}
+:root body main.ab .ab-facts>div{display:grid!important;grid-template-columns:200px 1fr!important;gap:8px 32px!important;padding:20px 0!important;border-bottom:1px solid var(--ds-line)!important}
+:root body main.ab .ab-facts dt{font:600 16px/1.4 'Archivo',sans-serif!important;color:var(--ds-ink)!important;margin:0!important}
+:root body main.ab .ab-facts dd{font:400 16px/1.65 'Noto Sans',sans-serif!important;color:var(--ds-ink2)!important;margin:0!important}
+:root body main.ab .ab-facts dd a{color:var(--ds-link)!important;text-decoration:underline!important;text-underline-offset:3px}
+:root body main.ab .ab-actions{text-align:center!important;margin:0!important}
+@media(max-width:640px){:root body main.ab{padding:40px 20px 56px!important}:root body main.ab h1{font-size:34px!important}:root body main.ab .ab-head p{font-size:17px!important}:root body main.ab .ab-founder{flex-direction:column!important;align-items:center!important;text-align:center!important}:root body main.ab .ab-founder p{text-align:center!important}:root body main.ab .ab-facts>div{grid-template-columns:1fr!important;gap:4px!important}}
