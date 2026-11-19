@@ -81,7 +81,7 @@ footer{background:var(--ink);color:rgba(255,255,255,0.5);padding:40px 36px;margi
 <script>(function(){try{var m=window.matchMedia('(prefers-color-scheme: dark)'),s=function(){document.documentElement.setAttribute('data-theme',m.matches?'dark':'light');};s();if(m.addEventListener)m.addEventListener('change',s);}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
 <link rel="stylesheet" href="/theme.css?v=24">
 <link rel="stylesheet" href="/guide.css?v=8">
-<link rel="stylesheet" href="/redesign.css?v=60"><link rel="stylesheet" href="/inner.css?v=7">
+<link rel="stylesheet" href="/redesign.css?v=67"><link rel="stylesheet" href="/inner.css?v=7">
 </head>
 <body>
 <a href="#main-content" class="skip-link" style="position:absolute;left:-9999px;top:4px;z-index:9999;background:#a8472d;color:#faf6ec;padding:8px 16px;font-size:14px;font-family:'Noto Sans',system-ui,sans-serif;text-decoration:none;border-radius:2px" onfocus="this.style.left='4px'" onblur="this.style.left='-9999px'">Skip to main content</a>
@@ -95,340 +95,78 @@ footer{background:var(--ink);color:rgba(255,255,255,0.5);padding:40px 36px;margi
 </div>
 
 <div class="main">
+  <div class="g-find"><label for="gfilter" class="sr-only">Find a guide</label><input id="gfilter" type="search" placeholder="Find a guide: tax, landlord, passport, a country" autocomplete="off"></div>
+<p class="g-none" hidden>No guide matches that. Try one word, like “tax” or “visa”.</p>
   <p class="section-label">Legal notices</p>
   <div class="guide-list">
-    <a class="guide-card" href="/n4-notice">
-      <div class="guide-info">
-        <strong>Mail an N4 Notice from Outside Canada</strong>
-        <span>How to serve an N4 Notice to Terminate a Tenancy to your Ontario tenant when you're living abroad. Includes the 5-day mail rule and termination date calculation.</span>
-      </div>
-      <span class="guide-arrow">→</span>
-    </a>
-    <a class="guide-card" href="/ltb-forms">
-      <div class="guide-info">
-        <strong>Mail LTB Forms from Outside Canada</strong>
-        <span>A guide to all Ontario Landlord and Tenant Board forms. N4, N5, N8, N12, N13, L1, and how to serve them by mail when you're not in Canada.</span>
-      </div>
-      <span class="guide-arrow">→</span>
-    </a>
+    <a class="guide-card" href="/n4-notice" title="How to serve an N4 Notice to Terminate a Tenancy to your Ontario tenant when you&#x27;re living abroad. Includes the 5-day mail rule and termination date calculation.">Mail an N4 Notice from Outside Canada</a>
+    <a class="guide-card" href="/ltb-forms" title="A guide to all Ontario Landlord and Tenant Board forms. N4, N5, N8, N12, N13, L1, and how to serve them by mail when you&#x27;re not in Canada.">Mail LTB Forms from Outside Canada</a>
   </div>
 
   <p class="section-label">Holiday letters</p>
   <div class="guide-list">
-    <a class="guide-card" href="/send-a-christmas-letter-to-canada">
-      <div class="guide-info">
-        <strong>Send a Holiday Letter to Canada (2026 Order-By Dates)</strong>
-        <span>When to order so a Christmas letter arrives in time, from Canada or abroad, plus scheduling and pricing.</span>
-      </div>
-      <span class="guide-arrow">→</span>
-    </a>
-    <a class="guide-card" href="/santa-letter">
-      <div class="guide-info">
-        <strong>Personalized Letter From Santa</strong>
-        <span>Preview it, then we print and mail it to a child in Canada, from $12.</span>
-      </div>
-      <span class="guide-arrow">→</span>
-    </a>
-    <a class="guide-card" href="/letter-from-santa-canada">
-      <div class="guide-info">
-        <strong>Letters From Santa in Canada: Free and Paid Options</strong>
-        <span>Canada Post's free program, the address to use, and a surprise letter option.</span>
-      </div>
-      <span class="guide-arrow">→</span>
-    </a>
-    <a class="guide-card" href="/free-letter-from-santa-template">
-      <div class="guide-info">
-        <strong>Free Letter From Santa Template</strong>
-        <span>Copy it, fill in your child's details and print it.</span>
-      </div>
-      <span class="guide-arrow">→</span>
-    </a>
-    <a class="guide-card" href="/christmas-family-letter-template">
-      <div class="guide-info">
-        <strong>Christmas Family Letter Template</strong>
-        <span>A one-page structure and template for the yearly family letter.</span>
-      </div>
-      <span class="guide-arrow">→</span>
-    </a>
+    <a class="guide-card" href="/send-a-christmas-letter-to-canada" title="When to order so a Christmas letter arrives in time, from Canada or abroad, plus scheduling and pricing.">Send a Holiday Letter to Canada (2026 Order-By Dates)</a>
+    <a class="guide-card" href="/santa-letter" title="Preview it, then we print and mail it to a child in Canada, from $12.">Personalized Letter From Santa</a>
+    <a class="guide-card" href="/letter-from-santa-canada" title="Canada Post&#x27;s free program, the address to use, and a surprise letter option.">Letters From Santa in Canada: Free and Paid Options</a>
+    <a class="guide-card" href="/free-letter-from-santa-template" title="Copy it, fill in your child&#x27;s details and print it.">Free Letter From Santa Template</a>
+    <a class="guide-card" href="/christmas-family-letter-template" title="A one-page structure and template for the yearly family letter.">Christmas Family Letter Template</a>
   </div>
 
   <p class="section-label">Family and keeping in touch</p>
   <div class="guide-list">
-    <a class="guide-card" href="/what-to-write-in-a-letter-to-a-grandparent">
-      <div class="guide-info">
-        <strong>What to Write in a Letter to a Grandparent</strong>
-        <span>Prompts that always work, and how to send it from anywhere.</span>
-      </div>
-      <span class="guide-arrow">→</span>
-    </a>
-    <a class="guide-card" href="/keep-in-touch-with-family-abroad-by-mail">
-      <div class="guide-info">
-        <strong>Keep in Touch With Family Abroad by Mail</strong>
-        <span>A simple letter-writing habit across countries.</span>
-      </div>
-      <span class="guide-arrow">→</span>
-    </a>
-    <a class="guide-card" href="/monthly-letters">
-      <div class="guide-info">
-        <strong>Monthly Letters to Loved Ones (Join the List)</strong>
-        <span>A real letter every month. Not open yet.</span>
-      </div>
-      <span class="guide-arrow">→</span>
-    </a>
-    <a class="guide-card" href="/landlord-notices">
-      <div class="guide-info">
-        <strong>Mail a Landlord Notice From Anywhere</strong>
-        <span>Print and mail a notice to a tenant in Canada, from abroad.</span>
-      </div>
-      <span class="guide-arrow">→</span>
-    </a>
-    <a class="guide-card" href="/postcards">
-      <div class="guide-info">
-        <strong>Postcards Mailed From Canada (Join the List)</strong>
-        <span>Not open yet. One email when they are.</span>
-      </div>
-      <span class="guide-arrow">→</span>
-    </a>
-    <a class="guide-card" href="/send-a-letter-to-the-uk">
-      <div class="guide-info">
-        <strong>Send a Letter Home to the UK From Canada</strong>
-        <span>Post a letter to any UK address from Canada. Priced in CAD with an estimate in pounds, plus the UK address format.</span>
-      </div>
-      <span class="guide-arrow">→</span>
-    </a>
+    <a class="guide-card" href="/what-to-write-in-a-letter-to-a-grandparent" title="Prompts that always work, and how to send it from anywhere.">What to Write in a Letter to a Grandparent</a>
+    <a class="guide-card" href="/keep-in-touch-with-family-abroad-by-mail" title="A simple letter-writing habit across countries.">Keep in Touch With Family Abroad by Mail</a>
+    <a class="guide-card" href="/monthly-letters" title="A real letter every month. Not open yet.">Monthly Letters to Loved Ones (Join the List)</a>
+    <a class="guide-card" href="/landlord-notices" title="Print and mail a notice to a tenant in Canada, from abroad.">Mail a Landlord Notice From Anywhere</a>
+    <a class="guide-card" href="/postcards" title="Not open yet. One email when they are.">Postcards Mailed From Canada (Join the List)</a>
+    <a class="guide-card" href="/send-a-letter-to-the-uk" title="Post a letter to any UK address from Canada. Priced in CAD with an estimate in pounds, plus the UK address format.">Send a Letter Home to the UK From Canada</a>
   </div>
 
   <p class="section-label">By country</p>
   <div class="guide-list">
-    <a class="guide-card" href="/send-letters-between-countries">
-      <div class="guide-info">
-        <strong>Letters Between Canada, the US, the UK and Australia</strong>
-        <span>Pick your route and send a letter to family abroad. Twelve guides, one for each direction.</span>
-      </div>
-      <span class="guide-arrow">→</span>
-    </a>
-    <a class="guide-card" href="/us">
-      <div class="guide-info">
-        <strong>Letterhome USA</strong>
-        <span>Mail a letter from the U.S., priced in CAD with a U.S. dollar estimate.</span>
-      </div>
-      <span class="guide-arrow">→</span>
-    </a>
-    <a class="guide-card" href="/send-a-letter-online-in-the-usa">
-      <div class="guide-info">
-        <strong>Send a Letter Online in the USA</strong>
-        <span>We print and post it for you.</span>
-      </div>
-      <span class="guide-arrow">→</span>
-    </a>
-    <a class="guide-card" href="/au">
-      <div class="guide-info">
-        <strong>Letterhome Australia</strong>
-        <span>Post a letter from Australia, priced in CAD with an Australian dollar estimate.</span>
-      </div>
-      <span class="guide-arrow">→</span>
-    </a>
-    <a class="guide-card" href="/aussies-in-canada-send-a-letter-home">
-      <div class="guide-info">
-        <strong>Aussies in Canada: Send a Letter Home</strong>
-        <span>Working holiday makers posting letters to Australia.</span>
-      </div>
-      <span class="guide-arrow">→</span>
-    </a>
-    <a class="guide-card" href="/address-a-letter-to-canada-from-the-uk">
-      <div class="guide-info">
-        <strong>Addressing a Letter to Canada From the UK</strong>
-        <span>Postal codes, provinces and a worked example.</span>
-      </div>
-      <span class="guide-arrow">→</span>
-    </a>
+    <a class="guide-card" href="/send-letters-between-countries" title="Pick your route and send a letter to family abroad. Twelve guides, one for each direction.">Letters Between Canada, the US, the UK and Australia</a>
+    <a class="guide-card" href="/us" title="Mail a letter from the U.S., priced in CAD with a U.S. dollar estimate.">Letterhome USA</a>
+    <a class="guide-card" href="/send-a-letter-online-in-the-usa" title="We print and post it for you.">Send a Letter Online in the USA</a>
+    <a class="guide-card" href="/au" title="Post a letter from Australia, priced in CAD with an Australian dollar estimate.">Letterhome Australia</a>
+    <a class="guide-card" href="/aussies-in-canada-send-a-letter-home" title="Working holiday makers posting letters to Australia.">Aussies in Canada: Send a Letter Home</a>
+    <a class="guide-card" href="/address-a-letter-to-canada-from-the-uk" title="Postal codes, provinces and a worked example.">Addressing a Letter to Canada From the UK</a>
   </div>
 
   <p class="section-label">Government documents</p>
   <div class="guide-list">
-    <a class="guide-card" href="/ircc-documents">
-      <div class="guide-info">
-        <strong>Mail IRCC Documents from Outside Canada</strong>
-        <span>How to submit immigration documents to IRCC offices in Canada when you're outside the country. Sponsorship letters, supporting documents, applications, and more.</span>
-      </div>
-      <span class="guide-arrow">→</span>
-    </a>
-    <a class="guide-card" href="/cra-mail">
-      <div class="guide-info">
-        <strong>Mail CRA Documents from Outside Canada</strong>
-        <span>How to mail tax returns, objections, taxpayer relief requests, and audit responses to the Canada Revenue Agency when you're abroad.</span>
-      </div>
-      <span class="guide-arrow">→</span>
-    </a>
+    <a class="guide-card" href="/ircc-documents" title="How to submit immigration documents to IRCC offices in Canada when you&#x27;re outside the country. Sponsorship letters, supporting documents, applications, and more.">Mail IRCC Documents from Outside Canada</a>
+    <a class="guide-card" href="/cra-mail" title="How to mail tax returns, objections, taxpayer relief requests, and audit responses to the Canada Revenue Agency when you&#x27;re abroad.">Mail CRA Documents from Outside Canada</a>
   </div>
 
   <p class="section-label">Where to mail it</p>
   <div class="guide-list">
-    <a class="guide-card" href="/ircc-mailing-addresses-by-application-type">
-      <div class="guide-info">
-        <strong>IRCC Mailing Addresses by Application Type</strong>
-        <span>Citizenship, proof of citizenship, PR cards, and sponsorship, verified IRCC PO Box addresses with sources, in one place.</span>
-      </div>
-      <span class="guide-arrow">→</span>
-    </a>
-    <a class="guide-card" href="/where-to-mail-non-resident-tax-return-to-canada">
-      <div class="guide-info">
-        <strong>Where to Mail a Non-Resident Tax Return</strong>
-        <span>CRA Winnipeg and Sudbury tax centre addresses for non-resident filers, routed by country of residence.</span>
-      </div>
-      <span class="guide-arrow">→</span>
-    </a>
-    <a class="guide-card" href="/where-to-mail-cra-non-resident-withholding-forms">
-      <div class="guide-info">
-        <strong>Where to Mail NR73, NR74 & Withholding Forms</strong>
-        <span>The CRA's Non-Resident Withholding Section address in Sudbury, for residency determinations and NR4-related correspondence.</span>
-      </div>
-      <span class="guide-arrow">→</span>
-    </a>
-    <a class="guide-card" href="/where-to-mail-scotiabank-documents-canada">
-      <div class="guide-info">
-        <strong>Where to Mail Signed Bank Documents</strong>
-        <span>Verified Scotiabank and TD correspondence addresses for newcomers mailing signed account paperwork from abroad.</span>
-      </div>
-      <span class="guide-arrow">→</span>
-    </a>
-    <a class="guide-card" href="/where-to-mail-documents-university-of-toronto">
-      <div class="guide-info">
-        <strong>Where to Mail Documents to the University of Toronto</strong>
-        <span>The University Registrar's published mailing address for transcripts and supporting admissions documents.</span>
-      </div>
-      <span class="guide-arrow">→</span>
-    </a>
-    <a class="guide-card" href="/where-to-mail-documents-ubc-admissions">
-      <div class="guide-info">
-        <strong>Where to Mail Documents to UBC Admissions</strong>
-        <span>UBC Enrolment Services' published Vancouver-campus address, used for Vancouver and Okanagan applications alike.</span>
-      </div>
-      <span class="guide-arrow">→</span>
-    </a>
-    <a class="guide-card" href="/where-to-mail-transcripts-mcgill-university">
-      <div class="guide-info">
-        <strong>Where to Mail Transcripts to McGill University</strong>
-        <span>McGill's published Enrolment Services address for undergraduate admission documents.</span>
-      </div>
-      <span class="guide-arrow">→</span>
-    </a>
-    <a class="guide-card" href="/where-to-mail-documents-university-of-waterloo">
-      <div class="guide-info">
-        <strong>Where to Mail Documents to Waterloo Graduate Admissions</strong>
-        <span>Waterloo's GSPA courier address in Needles Hall, for graduate applicants whose documents can't go electronically.</span>
-      </div>
-      <span class="guide-arrow">→</span>
-    </a>
-    <a class="guide-card" href="/where-to-mail-documents-queens-university">
-      <div class="guide-info">
-        <strong>Where to Mail Documents to Queen's University</strong>
-        <span>The Office of the University Registrar's published Gordon Hall address for records and transcripts.</span>
-      </div>
-      <span class="guide-arrow">→</span>
-    </a>
-    <a class="guide-card" href="/where-to-mail-documents-university-of-victoria">
-      <div class="guide-info">
-        <strong>Where to Mail Documents to the University of Victoria</strong>
-        <span>UVic's published Office of the Registrar PO Box, shared by undergraduate records and graduate admissions.</span>
-      </div>
-      <span class="guide-arrow">→</span>
-    </a>
-    <a class="guide-card" href="/where-to-mail-documents-dalhousie-university">
-      <div class="guide-info">
-        <strong>Where to Mail Documents to Dalhousie University</strong>
-        <span>The Registrar's Office address in Halifax, from Dalhousie's own faculty and staff guide.</span>
-      </div>
-      <span class="guide-arrow">→</span>
-    </a>
-    <a class="guide-card" href="/where-to-mail-documents-simon-fraser-university">
-      <div class="guide-info">
-        <strong>Where to Mail Documents to Simon Fraser University</strong>
-        <span>SFU's Registrar and Information Services address on the Burnaby campus.</span>
-      </div>
-      <span class="guide-arrow">→</span>
-    </a>
-    <a class="guide-card" href="/where-to-mail-documents-wes-canada">
-      <div class="guide-info">
-        <strong>Where to Mail Documents to WES Canada</strong>
-        <span>World Education Services' published Newmarket PO Box for credential assessment documents.</span>
-      </div>
-      <span class="guide-arrow">→</span>
-    </a>
-    <a class="guide-card" href="/where-to-mail-documents-to-iqas-alberta">
-      <div class="guide-info">
-        <strong>Where to Mail Documents to IQAS Alberta</strong>
-        <span>The only way to reach IQAS for a credential assessment: Alberta's published mailroom address.</span>
-      </div>
-      <span class="guide-arrow">→</span>
-    </a>
-    <a class="guide-card" href="/where-to-mail-ontario-birth-certificate-application">
-      <div class="guide-info">
-        <strong>Where to Mail an Ontario Birth Certificate Application</strong>
-        <span>ServiceOntario's published Thunder Bay P.O. Box for the Office of the Registrar General.</span>
-      </div>
-      <span class="guide-arrow">→</span>
-    </a>
-    <a class="guide-card" href="/where-to-mail-ontario-name-change-application">
-      <div class="guide-info">
-        <strong>Where to Mail an Ontario Name Change Application</strong>
-        <span>The same Office of the Registrar General, a different Thunder Bay P.O. Box for name changes.</span>
-      </div>
-      <span class="guide-arrow">→</span>
-    </a>
-    <a class="guide-card" href="/where-to-mail-bc-vital-statistics-documents">
-      <div class="guide-info">
-        <strong>Where to Mail BC Vital Statistics Documents</strong>
-        <span>One Victoria P.O. Box for mailed birth, marriage, death, and name-change requests in BC.</span>
-      </div>
-      <span class="guide-arrow">→</span>
-    </a>
-    <a class="guide-card" href="/where-to-mail-quebec-vital-statistics-documents">
-      <div class="guide-info">
-        <strong>Where to Mail Quebec Vital Statistics Documents</strong>
-        <span>The Directeur de l'état civil's published Québec City address for birth, marriage, and death certificates.</span>
-      </div>
-      <span class="guide-arrow">→</span>
-    </a>
-    <a class="guide-card" href="/where-to-mail-manitoba-vital-statistics-documents">
-      <div class="guide-info">
-        <strong>Where to Mail Manitoba Vital Statistics Documents</strong>
-        <span>The Vital Statistics Branch's published Winnipeg address for mailed certificate requests.</span>
-      </div>
-      <span class="guide-arrow">→</span>
-    </a>
-    <a class="guide-card" href="/where-to-mail-a-canadian-passport-application">
-      <div class="guide-info">
-        <strong>Where to Mail a Canadian Passport Application</strong>
-        <span>Service Canada's domestic addresses by province, plus how it works when mailing from outside Canada.</span>
-      </div>
-      <span class="guide-arrow">→</span>
-    </a>
-    <a class="guide-card" href="/where-to-mail-documents-to-ices-bc">
-      <div class="guide-info">
-        <strong>Where to Mail Documents to ICES British Columbia</strong>
-        <span>BCIT's published mailing address for the International Credential Evaluation Service.</span>
-      </div>
-      <span class="guide-arrow">→</span>
-    </a>
-    <a class="guide-card" href="/where-to-mail-documents-federal-court-of-canada">
-      <div class="guide-info">
-        <strong>Where to Mail Documents to the Federal Court of Canada</strong>
-        <span>The Ottawa registry address for filings such as immigration judicial review applications.</span>
-      </div>
-      <span class="guide-arrow">→</span>
-    </a>
+    <a class="guide-card" href="/ircc-mailing-addresses-by-application-type" title="Citizenship, proof of citizenship, PR cards, and sponsorship, verified IRCC PO Box addresses with sources, in one place.">IRCC Mailing Addresses by Application Type</a>
+    <a class="guide-card" href="/where-to-mail-non-resident-tax-return-to-canada" title="CRA Winnipeg and Sudbury tax centre addresses for non-resident filers, routed by country of residence.">Where to Mail a Non-Resident Tax Return</a>
+    <a class="guide-card" href="/where-to-mail-cra-non-resident-withholding-forms" title="The CRA&#x27;s Non-Resident Withholding Section address in Sudbury, for residency determinations and NR4-related correspondence.">Where to Mail NR73, NR74 & Withholding Forms</a>
+    <a class="guide-card" href="/where-to-mail-scotiabank-documents-canada" title="Verified Scotiabank and TD correspondence addresses for newcomers mailing signed account paperwork from abroad.">Where to Mail Signed Bank Documents</a>
+    <a class="guide-card" href="/where-to-mail-documents-university-of-toronto" title="The University Registrar&#x27;s published mailing address for transcripts and supporting admissions documents.">Where to Mail Documents to the University of Toronto</a>
+    <a class="guide-card" href="/where-to-mail-documents-ubc-admissions" title="UBC Enrolment Services&#x27; published Vancouver-campus address, used for Vancouver and Okanagan applications alike.">Where to Mail Documents to UBC Admissions</a>
+    <a class="guide-card" href="/where-to-mail-transcripts-mcgill-university" title="McGill&#x27;s published Enrolment Services address for undergraduate admission documents.">Where to Mail Transcripts to McGill University</a>
+    <a class="guide-card" href="/where-to-mail-documents-university-of-waterloo" title="Waterloo&#x27;s GSPA courier address in Needles Hall, for graduate applicants whose documents can&#x27;t go electronically.">Where to Mail Documents to Waterloo Graduate Admissions</a>
+    <a class="guide-card" href="/where-to-mail-documents-queens-university" title="The Office of the University Registrar&#x27;s published Gordon Hall address for records and transcripts.">Where to Mail Documents to Queen's University</a>
+    <a class="guide-card" href="/where-to-mail-documents-university-of-victoria" title="UVic&#x27;s published Office of the Registrar PO Box, shared by undergraduate records and graduate admissions.">Where to Mail Documents to the University of Victoria</a>
+    <a class="guide-card" href="/where-to-mail-documents-dalhousie-university" title="The Registrar&#x27;s Office address in Halifax, from Dalhousie&#x27;s own faculty and staff guide.">Where to Mail Documents to Dalhousie University</a>
+    <a class="guide-card" href="/where-to-mail-documents-simon-fraser-university" title="SFU&#x27;s Registrar and Information Services address on the Burnaby campus.">Where to Mail Documents to Simon Fraser University</a>
+    <a class="guide-card" href="/where-to-mail-documents-wes-canada" title="World Education Services&#x27; published Newmarket PO Box for credential assessment documents.">Where to Mail Documents to WES Canada</a>
+    <a class="guide-card" href="/where-to-mail-documents-to-iqas-alberta" title="The only way to reach IQAS for a credential assessment: Alberta&#x27;s published mailroom address.">Where to Mail Documents to IQAS Alberta</a>
+    <a class="guide-card" href="/where-to-mail-ontario-birth-certificate-application" title="ServiceOntario&#x27;s published Thunder Bay P.O. Box for the Office of the Registrar General.">Where to Mail an Ontario Birth Certificate Application</a>
+    <a class="guide-card" href="/where-to-mail-ontario-name-change-application" title="The same Office of the Registrar General, a different Thunder Bay P.O. Box for name changes.">Where to Mail an Ontario Name Change Application</a>
+    <a class="guide-card" href="/where-to-mail-bc-vital-statistics-documents" title="One Victoria P.O. Box for mailed birth, marriage, death, and name-change requests in BC.">Where to Mail BC Vital Statistics Documents</a>
+    <a class="guide-card" href="/where-to-mail-quebec-vital-statistics-documents" title="The Directeur de l&#x27;état civil&#x27;s published Québec City address for birth, marriage, and death certificates.">Where to Mail Quebec Vital Statistics Documents</a>
+    <a class="guide-card" href="/where-to-mail-manitoba-vital-statistics-documents" title="The Vital Statistics Branch&#x27;s published Winnipeg address for mailed certificate requests.">Where to Mail Manitoba Vital Statistics Documents</a>
+    <a class="guide-card" href="/where-to-mail-a-canadian-passport-application" title="Service Canada&#x27;s domestic addresses by province, plus how it works when mailing from outside Canada.">Where to Mail a Canadian Passport Application</a>
+    <a class="guide-card" href="/where-to-mail-documents-to-ices-bc" title="BCIT&#x27;s published mailing address for the International Credential Evaluation Service.">Where to Mail Documents to ICES British Columbia</a>
+    <a class="guide-card" href="/where-to-mail-documents-federal-court-of-canada" title="The Ottawa registry address for filings such as immigration judicial review applications.">Where to Mail Documents to the Federal Court of Canada</a>
   </div>
 
   <p class="section-label">Working with professionals</p>
   <div class="guide-list">
-    <a class="guide-card" href="/for-professionals">
-      <div class="guide-info">
-        <strong>For Property Managers, RCICs, and Paralegals</strong>
-        <span>If you regularly mail documents on behalf of clients who are outside Canada, you can get a discount code. See how Letterhome works for professionals.</span>
-      </div>
-      <span class="guide-arrow">→</span>
-    </a>
+    <a class="guide-card" href="/for-professionals" title="If you regularly mail documents on behalf of clients who are outside Canada, you can get a discount code. See how Letterhome works for professionals.">For Property Managers, RCICs, and Paralegals</a>
   </div>
 
   <p class="section-label">More guides</p>
@@ -449,6 +187,14 @@ footer{background:var(--ink);color:rgba(255,255,255,0.5);padding:40px 36px;margi
   </div>
 </div>
 
+<script>
+(function(){var f=document.getElementById('gfilter');if(!f)return;var none=document.querySelector('.g-none');
+function run(){var q=f.value.trim().toLowerCase();var any=false;
+document.querySelectorAll('.main .section-label').forEach(function(l){var box=l.nextElementSibling;if(!box)return;var shown=0;
+box.querySelectorAll('a').forEach(function(a){var ok=!q||(a.textContent+' '+(a.title||'')).toLowerCase().indexOf(q)>-1;a.style.display=ok?'':'none';if(ok)shown++;});
+l.style.display=box.style.display=shown?'':'none';if(shown)any=true;});none.hidden=any||!q;}
+f.addEventListener('input',run);})();
+</script>
 <footer id="site-footer"><nav aria-label="Site links" style="padding:24px;font-size:14px"><a href="/about">About</a> · <a href="/careers">Careers</a> · <a href="/contact">Contact</a> · <a href="/guides">Mailing guides</a> · <a href="/business">Business mail</a> · <a href="/monthly-letters">Monthly letters</a> · <a href="/terms">Terms</a> · <a href="/privacy">Privacy</a> · <a href="/refunds">Refund policy</a> · <a href="https://letterhome.ca/">Canada</a> · <a href="/us">United States</a> · <a href="/uk">United Kingdom</a> · <a href="/au">Australia</a></nav></footer>
 <script src="/footer.js?v=26" defer></script>
 <script src="/theme.js?v=4" defer></script>
