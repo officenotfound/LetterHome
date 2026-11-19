@@ -1749,6 +1749,22 @@ test('careers application: accepts a real PDF resume, rejects fake or oversized 
     assert.ok(mail.attachments[0].path.includes(pathx.join('uploads', 'applications')));
     const row = db.prepare("SELECT message FROM contact_submissions WHERE email = 'sam-rep@example.com' ORDER BY id DESC").get();
     assert.match(row.message, /CAREERS APPLICATION: Independent Sales Representative/);
+    // The admin Applicants tab lists it and serves the saved resume, only to a signed-in admin.
+    assert.equal((await fetch(`${base}/api/admin/applicants`)).status, 401);
+    const { cookie } = await loginAdmin();
+    const ap = await (await fetch(`${base}/api/admin/applicants`, { headers: { Cookie: cookie } })).json();
+    const mine = ap.applicants.find(x => x.email === 'sam-rep@example.com');
+    assert.ok(mine, 'applicant listed');
+    assert.equal(mine.role, 'Independent Sales Representative');
+    assert.equal(mine.country, 'Canada');
+    assert.equal(mine.has_resume, true);
+    assert.match(mine.experience, /Five years selling/);
+    assert.match(mine.businesses, /Property managers/);
+    assert.equal((await fetch(`${base}/api/admin/applicants/${mine.id}/resume`)).status, 401);
+    const dl = await fetch(`${base}/api/admin/applicants/${mine.id}/resume`, { headers: { Cookie: cookie } });
+    assert.equal(dl.status, 200);
+    assert.match(dl.headers.get('content-disposition'), /resume-Sam-Rep\.pdf/);
+    assert.ok((await dl.text()).startsWith('%PDF-1.4'));
 
     const fake = new Blob([Buffer.from('MZ this is not a pdf')], { type: 'application/pdf' });
     assert.equal((await fetch(`${base}/api/careers/apply`, { method: 'POST', body: form({ blob: fake, name: 'resume.pdf' }) })).status, 400);

@@ -4524,6 +4524,40 @@ app.post('/api/admin/contacts/read-all', requireAdmin, (req, res) => {
   res.json({ ok: true });
 });
 
+// Job applicants: the career applications that arrive through /api/careers/apply, pulled out of the contact messages.
+function parseApplication(row) {
+  const m = String(row.message || '');
+  const line = k => ((m.match(new RegExp('^' + k + ': (.*)$', 'm')) || [])[1] || '').trim();
+  const block = (a, b) => { const i = m.indexOf(a); if (i < 0) return ''; const j = b ? m.indexOf(b, i) : -1; return m.slice(i + a.length, j < 0 ? undefined : j).trim(); };
+  const resumeLine = line('Resume');
+  const file = (resumeLine.match(/^(\d{4}-\d{2}-\d{2}-[0-9a-f-]{36}\.(?:pdf|docx?))\b/i) || [])[1] || null;
+  return {
+    id: row.id, created_at: row.created_at, read_at: row.read_at, name: row.name, email: row.email,
+    role: (m.match(/^CAREERS APPLICATION: (.*)$/m) || [])[1] || '',
+    country: line('Country'), link: line('LinkedIn or website'), has_resume: !!file,
+    experience: block('Sales experience:\n', '\n\nBusinesses they would approach:'),
+    businesses: block('Businesses they would approach:\n'),
+  };
+}
+
+app.get('/api/admin/applicants', requireAdmin, (req, res) => {
+  const rows = db.prepare("SELECT * FROM contact_submissions WHERE message LIKE 'CAREERS APPLICATION:%' ORDER BY created_at DESC LIMIT 500").all();
+  const applicants = rows.map(parseApplication);
+  res.json({ applicants, unread: applicants.filter(a => !a.read_at).length });
+});
+
+app.get('/api/admin/applicants/:id/resume', requireAdmin, (req, res) => {
+  const row = db.prepare("SELECT * FROM contact_submissions WHERE id = ? AND message LIKE 'CAREERS APPLICATION:%'").get(Number(req.params.id));
+  if (!row) return res.status(404).json({ error: 'Not found' });
+  const m = String(row.message || '').match(/^Resume: (\d{4}-\d{2}-\d{2}-[0-9a-f-]{36}\.(?:pdf|docx?))\b/mi);
+  if (!m) return res.status(404).json({ error: 'No resume was uploaded' });
+  const file = path.join(APPLICATION_DIR, m[1]);
+  if (path.dirname(file) !== APPLICATION_DIR || !fs.existsSync(file)) return res.status(404).json({ error: 'Resume file not found on the server' });
+  const safe = row.name.replace(/[^\w.-]+/g, '-').slice(0, 60) || 'applicant';
+  res.set('X-Content-Type-Options', 'nosniff');
+  res.download(file, `resume-${safe}${path.extname(file)}`);
+});
+
 app.post('/api/admin/contacts/:id/reply', requireAdmin, async (req, res) => {
   const { subject, body } = req.body;
   if (!subject?.trim() || !body?.trim()) return res.status(400).json({ error: 'Subject and body required' });

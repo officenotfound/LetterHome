@@ -519,6 +519,7 @@ function renderRoute(p) {
   if (p === '/admin/health')                        return showHealth();
   if (p === '/admin/seo-audit')                     return showSeoAudit();
   if (p === '/admin/contacts')                      return showContacts();
+  if (p === '/admin/applicants')                    return showApplicants();
   if (p === '/admin/templates')                     return showTemplates();
   if (p === '/admin/settings')                      return showSettings();
   if (p === '/admin/emails')                        return showEmails();
@@ -532,7 +533,7 @@ function renderRoute(p) {
 // Related sections share one menu item and show as tabs. Every address still works as before.
 const NAV_GROUPS = {
   orders:   { tabs: [['/admin/orders', 'Orders'], ['/admin/approvals', 'Approvals'], ['/admin/print-queue', 'Print queue']] },
-  people:   { tabs: [['/admin/customers', 'Customers'], ['/admin/accounts', 'Accounts'], ['/admin/contacts', 'Contacts'], ['/admin/businesses', 'Businesses']] },
+  people:   { tabs: [['/admin/customers', 'Customers'], ['/admin/accounts', 'Accounts'], ['/admin/contacts', 'Contacts'], ['/admin/applicants', 'Applicants'], ['/admin/businesses', 'Businesses']] },
   messages: { tabs: [['/admin/broadcast', 'Broadcast'], ['/admin/outreach', 'Outreach'], ['/admin/followups', 'Follow-ups'], ['/admin/templates', 'Templates'], ['/admin/emails', 'Emails']] },
   reports:  { tabs: [['/admin/insights', 'Insights'], ['/admin/visitors', 'Visitors'], ['/admin/growth', 'Search'], ['/admin/funnel', 'Funnel'], ['/admin/seo-audit', 'Content audit'], ['/admin/stripe', 'Stripe']] },
   system:   { tabs: [['/admin/settings', 'Settings'], ['/admin/health', 'Health'], ['/admin/codes', 'Codes'], ['/admin/audit-log', 'Audit log'], ['/admin/trash', 'Trash']] },
@@ -3884,6 +3885,62 @@ async function showContacts() {
         <tbody>${rows}</tbody>
       </table>
     </div>`);
+}
+
+async function showApplicants() {
+  setTitle('Applicants');
+  setMain('<div class="empty">Loading…</div>');
+  const data = await api('/api/admin/applicants');
+  if (!data) return;
+  const rows = (data.applicants || []).map(a => {
+    const unread = !a.read_at;
+    const link = a.link && a.link !== 'not given' ? (/^https?:\/\//i.test(a.link) ? `<a class="link" href="${esc(a.link)}" target="_blank" rel="noopener">${esc(a.link)}</a>` : esc(a.link)) : '<span style="color:#9a9a9a">none</span>';
+    return `
+    <tr>
+      <td style="white-space:nowrap;font-size:12px">${fmtDateTime(a.created_at)}</td>
+      <td style="${unread ? 'font-weight:600' : ''}">${esc(a.name)} ${unread ? '<span style="background:#e63946;color:#fff;font-size:9px;padding:1px 5px;vertical-align:middle">NEW</span>' : ''}</td>
+      <td><a href="mailto:${esc(a.email)}" class="link">${esc(a.email)}</a></td>
+      <td style="font-size:12px">${esc(a.role)}</td>
+      <td style="font-size:12px">${esc(a.country)}</td>
+      <td style="font-size:12px;max-width:220px;overflow-wrap:anywhere">${link}</td>
+      <td style="white-space:nowrap">
+        ${a.has_resume ? `<a class="btn btn-outline btn-sm" href="/api/admin/applicants/${a.id}/resume">Resume</a>` : '<span style="color:#9a9a9a;font-size:12px">no resume</span>'}
+        <button class="btn-ghost" onclick="toggleApplicant(${a.id})">View</button>
+        ${unread ? `<button class="btn-ghost" onclick="markApplicantRead(${a.id})">Mark read</button>` : ''}
+      </td>
+    </tr>
+    <tr id="applicant-${a.id}" style="display:none">
+      <td colspan="7" style="background:#f5f5f5;padding:16px 20px;font-size:13px;color:#2a2a2a;line-height:1.7;border-bottom:1px solid #ececec">
+        <div style="font-weight:600;margin-bottom:4px">Sales experience</div>
+        <div style="white-space:pre-wrap;margin-bottom:14px">${esc(a.experience)}</div>
+        <div style="font-weight:600;margin-bottom:4px">Businesses they would approach</div>
+        <div style="white-space:pre-wrap">${esc(a.businesses)}</div>
+        <div style="margin-top:14px"><a class="btn btn-primary btn-sm" href="mailto:${esc(a.email)}?subject=${encodeURIComponent('Letterhome: ' + a.role)}">Email ${esc(a.name)}</a></div>
+      </td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="7" class="empty">No applications yet.</td></tr>';
+  setMain(`
+    <div class="page-header"><div class="page-title">Applicants</div></div>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Job applications</div>
+        <div style="font-size:12px;color:#6b6b6b">${data.unread} unread · ${data.applicants.length} total</div>
+      </div>
+      <table>
+        <thead><tr><th>Date</th><th>Name</th><th>Email</th><th>Role</th><th>Country</th><th>Link</th><th></th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`);
+}
+
+function toggleApplicant(id) {
+  const row = document.getElementById('applicant-' + id);
+  if (row) row.style.display = row.style.display === 'none' ? '' : 'none';
+}
+
+async function markApplicantRead(id) {
+  await post(`/api/admin/contacts/${id}/read`, {});
+  showApplicants();
 }
 
 function toggleContactExpand(id) {
