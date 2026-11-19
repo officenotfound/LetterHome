@@ -1,7 +1,13 @@
 // Side column for guide and service pages on wide screens: a short call to action, the page's
 // "Updated" date, a contents list and the official sources it links to. Hidden below 1180px by CSS.
 (function () {
+  // On phones short intros are centred and long ones read better left-aligned; mark the long ones.
+  function markLong() {
+    var ps = document.querySelectorAll('.lede, .sub, .intro, .hero p, .page > p, .main > p, .hero-copy p');
+    for (var i = 0; i < ps.length; i++) if (ps[i].textContent.replace(/\s+/g, ' ').trim().length > 170) ps[i].classList.add('lh-long');
+  }
   function run() {
+  markLong();
   var body = document.body;
   if (!body || /\bc-/.test(body.className)) return;                 // country pages keep their own layout
   if ((document.documentElement.lang || 'en').slice(0, 2) !== 'en') return;

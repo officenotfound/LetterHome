@@ -348,10 +348,7 @@ html[data-theme="dark"] body .step-num-mark{color:#a9c6e6!important}
 html body footer .lh-f-social{display:flex!important}
 :root body .lh-f-id a{color:inherit!important;text-decoration:underline;text-underline-offset:3px}
 @media(max-width:700px){
-  :root body :is(.story-text,.story-quote,.usecase,.step,.trust-item,.faq-item) :is(p,blockquote,h3){text-align:left!important}
-  :root body :is(.story-quote figcaption,.story-quote cite){justify-content:flex-start!important;text-align:left!important}
-  :root body .usecases-grid,:root body .steps{text-align:left!important}
-  :root body .step-num{justify-content:flex-start!important}
+  :root body :is(.story-text p:not(.founder-intro),.story-quote blockquote,.faq-item p,.faq-item summary){text-align:left!important}
   :root body .rate-row{display:grid!important;grid-template-columns:1fr auto!important;align-items:center!important;text-align:left!important;gap:2px 12px!important}
   :root body .rate-row .rate-dest{text-align:left!important}
   :root body .rate-row .rate-name{justify-content:flex-start!important}
@@ -422,4 +419,65 @@ html[data-theme="dark"] body:not([class*="c-"]) :is(.step-circle.done,.step-circ
   :root body a.g-rating .g-stars{font-size:18px;letter-spacing:2px!important}
   :root body a.g-rating .g-src{font-size:15px}
   :root body a.g-rating .g-more{margin-left:0!important;flex-basis:100%;text-align:left!important}
+}
+
+/* Footer bar: both items sit on the same text baseline in every browser */
+footer .lh-f-bar .lh-f-in2{align-items:baseline!important;font-size:12.5px!important;letter-spacing:0!important;line-height:1.5!important;padding-top:14px!important;padding-bottom:14px!important}
+footer .lh-f-bar .lh-f-in2>*{line-height:1.5!important;display:inline-block}
+@media(max-width:760px){
+  footer .lh-f-bar .lh-f-in2{display:flex!important;flex-direction:column!important;align-items:center!important;gap:6px!important;text-align:center!important}
+  footer .lh-f-bar .lh-f-in2>*{white-space:normal!important;justify-self:center!important;text-align:center!important}
+  footer .lh-f-id{max-width:30ch}
+}
+/* Phones: centre the frame (headings, short intros, buttons, short cards), keep long reading text left */
+@media(max-width:700px){
+  :root body :is(.step,.usecase,.trust-item) :is(h3,p){text-align:center!important}
+  :root body .step-num{justify-content:center!important}
+  :root body .usecases-grid a.usecase{text-align:center!important}
+  :root body .story-text :is(h2,.founder-intro){text-align:center!important}
+  :root body .story-founder{justify-content:center!important}
+  :root body .story-quote :is(figcaption,cite){justify-content:flex-start!important}
+  :root body a.g-rating{justify-content:center!important}
+  :root body a.g-rating .g-more{text-align:center!important}
+  :root body :is(.hero,.lh-rail-hero,.page>.hero-copy) :is(h1,.lede,.sub,p:first-of-type){text-align:center}
+}
+@media(max-width:760px){
+  html body footer .lh-f-bar .lh-f-in2{display:block!important;height:auto!important;text-align:center!important;padding:14px 20px 18px!important}
+  html body footer .lh-f-bar .lh-f-in2>*{display:block!important;position:static!important;margin:0 auto 6px!important;white-space:normal!important;max-width:34ch}
+  html body footer .lh-f-bar .lh-f-in2>:last-child{margin-bottom:0!important}
+}
+@media(max-width:760px){html body footer .lh-f-bar .lh-f-in2>*{height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important}}
+@media(max-width:700px){:root body :is(.answer-capsule,.answer-box,.addr-card,.note,.warn-box,.price-desc,.faq-a,.faq-item p),:root body :is(.answer-capsule,.answer-box,.addr-card,.note,.warn-box) *{text-align:left!important}}
+@media(max-width:700px){:root body p.lh-long.lh-long{text-align:left!important}}
+@media(max-width:700px){:root body :is(.hero,.lh-rail-hero) a.hero-cta{margin-left:auto!important;margin-right:auto!important;display:flex!important;width:fit-content!important}}
+/* Compact footer (2026-11): one band plus a thin bar */
+html body footer.lh-footer .lh-f-in{display:flex!important;align-items:center!important;justify-content:space-between!important;flex-wrap:wrap!important;gap:12px 32px!important;padding:16px 32px!important;max-width:1200px!important;grid-template-columns:none!important;text-align:left!important}
+html body footer.lh-footer .lh-f-brand{display:flex!important;flex-direction:row!important;align-items:center!important;gap:20px!important;margin:0!important;grid-column:auto!important}
+html body footer.lh-footer .lh-f-logo{margin:0!important}
+html body footer.lh-footer .lh-f-social{display:flex!important;margin:0!important;gap:8px!important}
+html body footer.lh-footer .lh-f-social a{width:32px!important;height:32px!important}
+html body footer.lh-footer .lh-f-social svg{width:15px!important;height:15px!important}
+html body footer.lh-footer .lh-f-nav{display:flex!important;flex-direction:column!important;align-items:flex-end!important;gap:6px!important;margin:0!important;padding:0!important}
+html body footer.lh-footer .lh-f-row{display:flex!important;flex-wrap:wrap!important;justify-content:flex-end!important;gap:4px 18px!important;margin:0!important;padding:0!important;border:0!important}
+html body footer.lh-footer .lh-f-row a{font-size:13.5px!important;line-height:1.5!important;padding:0!important}
+html body footer.lh-footer .lh-f-bar .lh-f-in2{padding-top:10px!important;padding-bottom:10px!important}
+@media(max-width:760px){
+  html body footer.lh-footer .lh-f-in{flex-direction:column!important;align-items:center!important;padding:18px 16px 14px!important;gap:12px!important}
+  html body footer.lh-footer .lh-f-brand{justify-content:center!important;flex-wrap:wrap!important;gap:12px 16px!important}
+  html body footer.lh-footer .lh-f-nav{align-items:center!important;gap:8px!important}
+  html body footer.lh-footer .lh-f-row{justify-content:center!important;gap:4px 14px!important}
+  html body footer.lh-footer .lh-f-bar .lh-f-in2{padding:10px 16px 12px!important}
+}
+@media(max-width:760px){
+  html body footer.lh-footer .lh-f-brand{flex-wrap:nowrap!important;gap:12px!important}
+  html body footer.lh-footer .lh-f-word{font-size:26px!important}
+  html body footer.lh-footer .lh-f-stamp svg{width:24px!important;height:29px!important}
+  html body footer.lh-footer .lh-f-social{gap:6px!important}
+  html body footer.lh-footer .lh-f-social a{width:28px!important;height:28px!important}
+  html body footer.lh-footer .lh-f-social svg{width:13px!important;height:13px!important}
+  html body footer.lh-footer .lh-f-in{gap:10px!important;padding:14px 16px 12px!important}
+  html body footer.lh-footer .lh-f-nav{gap:4px!important}
+  html body footer.lh-footer .lh-f-row a{font-size:13px!important}
+  html body footer .lh-f-bar .lh-f-in2{display:flex!important;flex-wrap:wrap!important;justify-content:center!important;gap:2px 12px!important;padding:8px 16px 10px!important}
+  html body footer .lh-f-bar .lh-f-in2>*{display:inline!important;margin:0!important;max-width:none!important}
 }
