@@ -43,7 +43,8 @@
   var skip = /^(frequently asked|common questions|related|ready to|questions)/i;
   var heads = [].filter.call(host.querySelectorAll('h2'), function (h) { return h.offsetParent !== null && !skip.test(h.textContent.trim()); });
   if (heads.length >= 3) {
-    var toc = el('nav', 'lh-rail-toc');
+    var toc = el('div', 'lh-rail-toc');
+    toc.setAttribute('role', 'navigation');
     toc.setAttribute('aria-label', 'Contents');
     var list = '<p class="lh-rail-label">On this page</p><ol>';
     heads.slice(0, 8).forEach(function (h, n) {

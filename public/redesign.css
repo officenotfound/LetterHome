@@ -402,3 +402,24 @@ html[data-theme="dark"] body:not([class*="c-"]) :is(.step-circle.done,.step-circ
   :root body .rate-row .rate-price{align-self:center}
 }
 @media(max-width:700px){:root body .rate-row .rate-go::before{content:none!important;display:none!important}}
+/* Google rating row: same width and card as the reviews above it */
+:root body a.g-rating{display:flex!important;align-items:center;gap:14px;flex-wrap:wrap;margin:0!important;padding:18px 24px!important;background:var(--ds-surface)!important;border:1px solid var(--ds-line)!important;border-radius:10px!important;text-decoration:none!important;color:var(--ds-ink)!important;transition:border-color .15s}
+:root body a.g-rating:hover{border-color:rgba(26,26,26,.28)!important}
+:root body a.g-rating .g-logo{display:grid;place-items:center;width:40px;height:40px;border-radius:50%;border:1px solid var(--ds-line);color:var(--ds-ink2);flex-shrink:0}
+:root body a.g-rating .g-logo svg{width:18px;height:18px}
+:root body a.g-rating .g-score{display:flex;align-items:center;gap:10px}
+:root body a.g-rating .g-num{font:700 26px/1 'Archivo',sans-serif!important;color:var(--ds-ink)}
+:root body a.g-rating .g-stars{color:#d9a21b;font-size:22px;letter-spacing:3px!important;line-height:1}
+:root body a.g-rating .g-src{font-size:16px;font-weight:600;color:var(--ds-ink2)}
+:root body a.g-rating .g-more{margin-left:auto;color:var(--ds-link);font-size:15px;font-weight:600;text-decoration:underline;text-underline-offset:3px}
+@media(max-width:520px){:root body a.g-rating .g-more{margin-left:54px;flex-basis:100%}}
+:root body .story-reviews{align-content:start!important;grid-auto-rows:auto!important}
+:root body .story-reviews>*{flex-grow:0!important}
+@media(max-width:520px){
+  :root body a.g-rating{gap:10px!important;padding:16px 18px!important}
+  :root body a.g-rating .g-logo{width:34px;height:34px}
+  :root body a.g-rating .g-num{font-size:23px!important}
+  :root body a.g-rating .g-stars{font-size:18px;letter-spacing:2px!important}
+  :root body a.g-rating .g-src{font-size:15px}
+  :root body a.g-rating .g-more{margin-left:0!important;flex-basis:100%;text-align:left!important}
+}

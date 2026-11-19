@@ -163,4 +163,4 @@
 })();
 
 // Side column on guide and service pages (wide screens only).
-(function () { try { var s = document.createElement('script'); s.src = '/rail.js?v=1'; s.defer = true; document.head.appendChild(s); } catch (e) {} })();
+(function () { try { var s = document.createElement('script'); s.src = '/rail.js?v=2'; s.defer = true; document.head.appendChild(s); } catch (e) {} })();
