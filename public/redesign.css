@@ -637,3 +637,13 @@ html[data-theme="dark"]:not([data-country]) body main.ab h1.ab-logo .logo-accent
 @media(max-width:700px){nav .nav-biz{display:none!important}}
 @media(max-width:700px){.season-bar .season-santa{font-weight:700!important;font-size:17px!important;padding:0!important;background:none!important;color:#fff!important}}
 @media(max-width:700px){.season-bar .sb-t,.season-bar .season-santa{font:700 16px/1.35 Roboto,Arial,sans-serif!important}}
+
+/* Phone footer: logo above, social icons below as true circles */
+@media(max-width:760px){
+  html body footer.lh-footer .lh-f-brand{flex-direction:column!important;flex-wrap:nowrap!important;gap:14px!important}
+  html body footer.lh-footer .lh-f-social{gap:12px!important;justify-content:center!important}
+  html body footer.lh-footer .lh-f-social a{flex:0 0 44px!important;width:44px!important;height:44px!important;min-width:44px!important;min-height:44px!important;border-radius:50%!important}
+  html body footer.lh-footer .lh-f-social svg{width:18px!important;height:18px!important}
+  html body footer.lh-footer .lh-f-row a{font-size:14px!important}
+  html body footer.lh-footer .lh-f-row{gap:6px 14px!important;padding-left:8px!important;padding-right:8px!important}
+}
