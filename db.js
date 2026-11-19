@@ -74,6 +74,10 @@ try { db.exec(`ALTER TABLE orders ADD COLUMN order_lang TEXT`);          } catch
 try { db.exec(`ALTER TABLE orders ADD COLUMN charge_currency TEXT`);     } catch {}   // set for fixed-price US, UK and AU orders; empty means CAD
 try { db.exec(`ALTER TABLE orders ADD COLUMN charge_cents INTEGER`);    } catch {}   // what the customer paid in charge_currency; price_cents stays CAD for reports
 try { db.exec(`ALTER TABLE orders ADD COLUMN order_region TEXT`);     } catch {}   // which page family took the order: ca, au, us or uk (au = the Australian pages on letterhome.ca)
+try { db.exec(`ALTER TABLE orders ADD COLUMN addr_check_status TEXT`);   } catch {}   // verified, unverified or error: PostGrid's check of the recipient address
+try { db.exec(`ALTER TABLE orders ADD COLUMN addr_check_note TEXT`);     } catch {}
+try { db.exec(`ALTER TABLE orders ADD COLUMN addr_check_at DATETIME`);   } catch {}
+try { db.exec(`ALTER TABLE orders ADD COLUMN stuck_alert_sent_at DATETIME`); } catch {}   // set once the owner has been emailed that this order is waiting too long
 // Orders from before the tag: the site column says ca, us or uk, and a letterhome.ca order charged in AUD came from the Australian pages.
 try { db.exec(`UPDATE orders SET order_region = CASE WHEN COALESCE(NULLIF(order_site,''),'ca') = 'ca' AND UPPER(COALESCE(charge_currency,'')) = 'AUD' THEN 'au' ELSE COALESCE(NULLIF(order_site,''),'ca') END WHERE order_region IS NULL`); } catch {}
 try { db.exec(`ALTER TABLE orders ADD COLUMN content_flags TEXT`);        } catch {}   // JSON: categories and counts only, never the matched text

@@ -450,3 +450,15 @@ test('Letter from Santa with a second child and certificates: every page on the 
   const d = await PDFDocument.load(r.pdf);
   assert.ok(d.getPages().every(p => (p.node.Resources()?.lookup(PDFName.of('XObject')) || { keys: () => [] }).keys().length > 0));
 });
+
+test('checkAddress reports verified or unverified without creating a letter, and never throws', async () => {
+  calls.length = 0;
+  assert.equal((await pg.checkAddress(seed())).status, 'verified');
+  recipientStatus = 'failed';
+  try {
+    const r = await pg.checkAddress(seed());
+    assert.equal(r.status, 'unverified');
+    assert.match(r.note, /Unable to find a match/);
+    assert.ok(!calls.some(c => c.url.endsWith('/letters')), 'no letter created');
+  } finally { recipientStatus = 'verified'; }
+});

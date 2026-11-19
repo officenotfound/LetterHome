@@ -18,6 +18,7 @@ const { createDecipheriv, scryptSync, randomBytes } = require('node:crypto');
 const { DatabaseSync } = require('node:sqlite');
 const express = require('express');
 
+const { mailTags } = require('./opsAlerts');
 const SITES = ['ca', 'us', 'uk', 'au'];
 const MAX_UPLOAD = 6 * 1024 * 1024;
 const MAX_UNZIPPED = 25 * 1024 * 1024;
@@ -178,7 +179,7 @@ function parseUpload(buf, filename) {
 // Insights from stored snapshots
 // ---------------------------------------------------------------------------------------------
 
-function register(app, { db, requireAdmin, logAudit, getSetting, indexNow, backupDir, appRoot, baseUrl, submitOrder, contentHeld, printReady }) {
+function register(app, { db, requireAdmin, logAudit, getSetting, indexNow, backupDir, appRoot, baseUrl, submitOrder, contentHeld, printReady, ops, checkAddress }) {
   db.exec(`CREATE TABLE IF NOT EXISTS gsc_snapshots (
     id INTEGER PRIMARY KEY AUTOINCREMENT, site TEXT NOT NULL, imported_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     date_from TEXT, date_to TEXT, clicks INTEGER DEFAULT 0, impressions INTEGER DEFAULT 0, filename TEXT)`);
@@ -608,7 +609,7 @@ function register(app, { db, requireAdmin, logAudit, getSetting, indexNow, backu
       const today = new Date().toISOString().slice(0, 10);
       const rows = db.prepare(`SELECT id, created_at, paid_at, order_site, recipient_name, recipient_street, recipient_city, recipient_province, recipient_postal,
           destination_country, page_count, colour_printing, registered_mail, certified_mail, express_mail, large_envelope, price_cents, postgrid_error,
-          scheduled_date, content_flags, content_cleared_at, skip_return
+          scheduled_date, content_flags, content_cleared_at, skip_return, letter_type, addr_check_status, addr_check_note
         FROM orders WHERE status = 'paid' AND postgrid_letter_id IS NULL AND deleted_at IS NULL ORDER BY COALESCE(paid_at, created_at) ASC LIMIT 100`).all();
       const orders = rows.map(o => {
         const held = contentHeld ? !!contentHeld(o) : false;
@@ -624,6 +625,8 @@ function register(app, { db, requireAdmin, logAudit, getSetting, indexNow, backu
           country: o.destination_country, pages: o.page_count || null, colour: !!o.colour_printing, large_envelope: !!o.large_envelope,
           extras: [o.registered_mail && 'registered', o.certified_mail && 'certified', o.express_mail && 'express'].filter(Boolean),
           price_cents: o.price_cents, error: o.postgrid_error || null, scheduled, held, flags, issues, clean, no_return: !!o.skip_return,
+          tags: mailTags(o), addr_check: o.addr_check_status || null, addr_note: o.addr_check_note || null, santa: o.letter_type === 'santa',
+          waiting_hours: Math.max(0, Math.floor((Date.now() - Date.parse(String(o.paid_at || o.created_at).replace(' ', 'T') + 'Z')) / 3600000)) || 0,
         };
       });
       res.json({ orders, configured: printReady ? !!printReady() : false, max_batch: 10 });
@@ -650,6 +653,19 @@ function register(app, { db, requireAdmin, logAudit, getSetting, indexNow, backu
       res.json({ ok: results.every(r => r.ok), results });
     } catch (e) { res.status(500).json({ error: e.message, results }); }
     finally { approving = false; }
+  });
+
+  app.post('/api/admin/orders/:id/address-check', requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id, 10);
+      const r = checkAddress ? await checkAddress(id) : null;
+      if (!r) return res.status(404).json({ error: 'Order not found.' });
+      res.json(r);
+    } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+  app.post('/api/admin/daily-summary/send', requireAdmin, async (req, res) => {
+    try { const text = await ops.sendSummary(); logAudit(req, 'summary.send', 'summary', ''); res.json({ ok: true, text }); }
+    catch (e) { res.status(500).json({ error: e.message }); }
   });
 
   // -------------------------------------------------------------------------------------------

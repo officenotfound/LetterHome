@@ -516,6 +516,17 @@ function createPostGrid({ db, getSetting, orderDirPath, fetchImpl, convertWord =
     return null;
   }
 
+  // Asks PostGrid to check the recipient address now, using the same contact (and idempotency key) the send step uses,
+  // so checking early creates nothing extra and the send reuses the result. Never throws.
+  async function checkAddress(order) {
+    if (!isConfigured()) return { status: 'error', note: 'PostGrid is not configured.' };
+    try {
+      const c = await api('POST', '/contacts', { json: contact(recipientOf(order)), idempotencyKey: `lh-order-${order.id}-to` });
+      if (c.addressStatus === 'failed') return { status: 'unverified', note: String(c.addressErrors || 'no details').slice(0, 200) };
+      return { status: 'verified', note: '' };
+    } catch (e) { return { status: 'error', note: String(e.message).slice(0, 200) }; }
+  }
+
   // ---- actions -------------------------------------------------------------
   // Test-mode letters are never mailed, so they must not move the customer's order or trigger customer emails.
   function saveLetter(orderId, letter) {
@@ -655,7 +666,7 @@ function createPostGrid({ db, getSetting, orderDirPath, fetchImpl, convertWord =
     return refreshOrder(db.prepare('SELECT * FROM orders WHERE id = ?').get(order.id));
   }
 
-  return { isConfigured, mode, autoSubmit, countries, serviceOf, eligibility, buildLetterPdf, buildPreviewPdf, submitOrder, refreshOrder, cancelOrder, clearTestLetter, progressTestLetter, PostGridError };
+  return { isConfigured, mode, autoSubmit, countries, serviceOf, eligibility, buildLetterPdf, buildPreviewPdf, checkAddress, submitOrder, refreshOrder, cancelOrder, clearTestLetter, progressTestLetter, PostGridError };
 }
 
 module.exports = { createPostGrid, PostGridError, MAX_SHEETS, countryCodeOf };

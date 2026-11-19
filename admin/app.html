@@ -4186,6 +4186,23 @@ async function showApprovals() {
   _appr = { orders: d.orders, focus: 0, ticked: new Set(), open: new Set(), configured: d.configured, busy: false, max: d.max_batch };
   renderApprovals();
 }
+function addrBadge(o) {
+  const st = o.addr_check;
+  const btn = `<button class="btn btn-outline btn-sm" style="margin-left:8px" onclick="apprRecheck(${o.id})">Check again</button>`;
+  if (st === 'verified') return `<div style="font-size:12px;color:#15803d;margin-bottom:6px">Address verified by PostGrid ${btn}</div>`;
+  if (st === 'unverified') return `<div style="font-size:12px;color:#92400e;margin-bottom:6px">PostGrid could not verify this address (${esc(o.addr_note || 'no details')}). If you approve, it prints exactly as entered. ${btn}</div>`;
+  if (st === 'error') return `<div style="font-size:12px;color:#6b6b6b;margin-bottom:6px">Address check did not run (${esc(o.addr_note || 'error')}). ${btn}</div>`;
+  return `<div style="font-size:12px;color:#6b6b6b;margin-bottom:6px">Address check queued, runs within 10 minutes. ${btn}</div>`;
+}
+async function apprRecheck(id) {
+  const r = await api('/api/admin/orders/' + id + '/address-check', { method: 'POST', body: '{}' });
+  const o = _appr.orders.find(x => x.id === id);
+  if (o && r) { o.addr_check = r.status; o.addr_note = r.note || null; renderApprovals(); }
+}
+async function apprSummary() {
+  const r = await api('/api/admin/daily-summary/send', { method: 'POST', body: '{}' });
+  alert(r && r.ok ? 'Summary emailed to the owner address.' : ((r && r.error) || 'Could not send the summary.'));
+}
 function apprCard(o, i) {
   const tag = (txt, bad) => `<span style="display:inline-block;margin:0 6px 4px 0;padding:2px 8px;font-size:11px;border:1px solid ${bad ? '#c1121f' : '#d4d4d4'};color:${bad ? '#c1121f' : '#6b6b6b'}">${esc(txt)}</span>`;
   const status = o.clean ? '<span style="color:#15803d">Looks clean</span>' : '<span style="color:#c1121f">Needs a look</span>';
@@ -4204,11 +4221,14 @@ function apprCard(o, i) {
           <span>${status}</span></div>
         <div style="font-size:14px;line-height:1.7;font-weight:500;color:#111111;margin-bottom:10px">${o.to.map(esc).join('<br>')}</div>
         <div style="margin-bottom:8px">${tag(o.pages ? o.pages + (o.pages > 1 ? ' pages' : ' page') : 'pages unknown', !o.pages)}${tag(o.colour ? 'colour' : 'black and white')}${o.large_envelope ? tag('large envelope') : ''}${o.extras.map(x => tag(x)).join('')}${o.no_return ? tag('no return address') : ''}${tag((o.price_cents / 100).toLocaleString(undefined, { style: 'currency', currency: 'CAD' }))}</div>
+        ${addrBadge(o)}
+        ${(o.tags || []).map(t => `<div style="font-size:12px;color:#92400e;background:#fef3c7;padding:6px 10px;margin-bottom:6px;line-height:1.5"><strong>${esc(t.label)}.</strong> ${esc(t.hint)}</div>`).join('')}
+        ${o.waiting_hours >= (o.santa ? 12 : 24) ? `<div style="font-size:12px;color:#c1121f;margin-bottom:6px">Waiting ${o.waiting_hours} hours</div>` : ''}
         ${problems.length ? `<div style="font-size:12px;color:#c1121f;line-height:1.6;margin-bottom:8px">${problems.map(p => '• ' + esc(p)).join('<br>')}</div>` : ''}
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
           <button class="btn btn-outline btn-sm" onclick="apprPreview(${o.id})">${open ? 'Hide preview' : 'Preview letter'}</button>
           <a class="btn btn-outline btn-sm" href="/admin/orders/${o.id}" onclick="event.preventDefault();go('/admin/orders/${o.id}')">Open order</a>
-          <button class="btn btn-primary btn-sm" ${_appr.configured && !_appr.busy ? '' : 'disabled'} onclick="apprApprove([${o.id}])">Approve and send to print</button>
+          <button class="btn btn-primary btn-sm" ${_appr.configured && !_appr.busy ? '' : 'disabled'} onclick="apprApprove([${o.id}])">${o.addr_check === 'unverified' ? 'Approve and send as entered' : 'Approve and send to print'}</button>
         </div>
         <div id="appr-res-${o.id}" style="font-size:12px;margin-top:8px"></div>
       </div>
@@ -4224,6 +4244,7 @@ function renderApprovals() {
       <div style="font-size:12px;color:#6b6b6b;line-height:1.6">${a.orders.length} paid order${a.orders.length > 1 ? 's' : ''} waiting, ${cleanCount} look clean. Nothing is sent until you approve it.<br>
         Keys: <strong>j</strong> / <strong>k</strong> move, <strong>p</strong> preview, <strong>x</strong> tick, <strong>a</strong> approve this order, <strong>o</strong> open it.</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-outline btn-sm" onclick="apprSummary()">Email me the summary</button>
         <button class="btn btn-outline btn-sm" onclick="apprTickAll()">Tick all clean (up to ${a.max || 10})</button>
         <button class="btn btn-primary btn-sm" ${n && a.configured && !a.busy ? '' : 'disabled'} onclick="apprApprove([...(_appr.ticked)])">Approve ${n || ''} ticked</button>
       </div>

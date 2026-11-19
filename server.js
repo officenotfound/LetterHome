@@ -2186,6 +2186,7 @@ const indexNow = require('./indexnow').create({
   getSetting, setSetting, publicDir: path.join(__dirname, 'public'), baseUrl: process.env.BASE_URL,
   log: r => console.log(`IndexNow: ${r.submitted} pages sent, ${r.ok ? 'accepted' : 'failed, will retry'}`),
 });
+const ops = require('./opsAlerts').createOps({ db, sendOwnerMail: (...a) => sendOwnerMail(...a), contentHeld: o => contentHeld(o) });
 const adminTools = require('./adminTools').register(app, {
   db, requireAdmin, logAudit, getSetting, indexNow,
   backupDir: process.env.BACKUP_DIR || path.join(__dirname, 'backups'),
@@ -2194,6 +2195,8 @@ const adminTools = require('./adminTools').register(app, {
   submitOrder: id => postgridSubmit(id, { force: true }),
   contentHeld: o => contentHeld(o),
   printReady: () => postgrid.isConfigured(),
+  ops,
+  checkAddress: id => addressCheck(id),
 });
 
 app.get('/api/admin/me', requireAdmin, (req, res) =>
@@ -4792,6 +4795,11 @@ function sendErrorAlert(subject, body) {
   }).catch(() => {});
 }
 
+function sendOwnerMail(subject, text) {
+  if (!ADMIN_EMAIL) return Promise.resolve();
+  return transport.sendMail({ from: process.env.SMTP_FROM || process.env.EMAIL_FROM || ADMIN_EMAIL, to: ADMIN_EMAIL, subject: `[Letterhome] ${subject}`, text });
+}
+
 // Throttles repeat alert emails for the same recurring error so a bug that
 // fires on every request sends one email per window instead of flooding the
 // inbox. Keyed on method+path+error message, not the full stack, so the same
@@ -5211,6 +5219,28 @@ app.get('/api/admin/cart-offer-stats', requireAdmin, (req, res) => {
 });
 
 cron.schedule('15 * * * *', () => { thankYouCouponJob(); });
+// Asks PostGrid to check each paid, unsent order's recipient address (same contact the send step uses), so Approvals can show the result before the owner sends.
+async function addressCheck(id) {
+  const o = db.prepare('SELECT * FROM orders WHERE id = ? AND deleted_at IS NULL').get(id);
+  if (!o) return null;
+  const r = await postgrid.checkAddress(o);
+  db.prepare('UPDATE orders SET addr_check_status = ?, addr_check_note = ?, addr_check_at = CURRENT_TIMESTAMP WHERE id = ?').run(r.status, r.note || null, id);
+  return r;
+}
+let addressCheckRunning = false;
+async function addressCheckJob() {
+  if (addressCheckRunning || !postgrid.isConfigured()) return;
+  addressCheckRunning = true;
+  try {
+    const rows = db.prepare(`SELECT id FROM orders WHERE status = 'paid' AND postgrid_letter_id IS NULL AND deleted_at IS NULL
+      AND (addr_check_at IS NULL OR (addr_check_status = 'error' AND addr_check_at < datetime('now', '-1 hour'))) ORDER BY id LIMIT 5`).all();
+    for (const r of rows) { await addressCheck(r.id); await new Promise(x => setTimeout(x, 700)); }
+  } catch (e) { console.error('[address-check] failed:', e.message); }
+  finally { addressCheckRunning = false; }
+}
+cron.schedule('*/10 * * * *', () => { addressCheckJob(); });
+cron.schedule('*/30 * * * *', () => { ops.stuckJob().catch(e => console.error('[stuck-alert] failed:', e.message)); });
+cron.schedule('0 8 * * *', () => { if (getSetting('daily_summary', 'true') !== 'false') ops.sendSummary().catch(e => console.error('[summary] failed:', e.message)); });
 cron.schedule('*/15 * * * *', () => { postgridSweep(); });
 cron.schedule('30 6 * * 1', () => { fxRefreshJob({ force: true }); });   // weekly, Monday 06:30 server time
 if (!process.env.TEST_MODE && process.env.NODE_ENV !== 'test') setTimeout(() => { fxRefreshJob(); }, 20000);   // after a restart, refresh if older than a week
