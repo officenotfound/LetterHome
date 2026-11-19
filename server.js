@@ -1295,8 +1295,8 @@ app.use(express.static('public', {
 }));
 
 app.get('/ga.js', (req, res) => {
-  // The measurement ID is public (it appears in every page that loads the tag), so the site's own ID is the default.
-  const id = process.env.GA4_MEASUREMENT_ID || 'G-DF3XQ6ML41';
+  // The measurement ID is public (it appears in every page that loads the tag). Each site has its own GA4 stream.
+  const id = ga4.measurementIdFor(ga4.siteOfHost(req.hostname));
   res.setHeader('Content-Type', 'application/javascript');
   // Short cache: this file changes when the measurement ID is set or changed on the server.
   res.setHeader('Cache-Control', 'public, max-age=3600');
@@ -1934,9 +1934,10 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
 
   // Analytics ids from the visitor's own cookies (present only if they accepted analytics) so the sale can be credited later.
   try {
-    const ids = ga4.gaIdsFromCookie(req.headers.cookie);
+    const gaSite = ga4.siteOfHost(req.hostname);
+    const ids = ga4.gaIdsFromCookie(req.headers.cookie, gaSite);
     if (ids.clientId) {
-      db.prepare('UPDATE orders SET ga_client_id = ?, ga_session_id = ? WHERE id = ?').run(ids.clientId, ids.sessionId, orderId);
+      db.prepare('UPDATE orders SET ga_client_id = ?, ga_session_id = ?, ga_site = ? WHERE id = ?').run(ids.clientId, ids.sessionId, gaSite, orderId);
       ga4.sendOrderEvent(db.prepare('SELECT * FROM orders WHERE id = ?').get(orderId), 'begin_checkout').catch(() => {});
     }
   } catch (e) { console.error('[ga4] create-order:', e.message); }
