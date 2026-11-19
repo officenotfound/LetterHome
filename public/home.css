@@ -307,7 +307,7 @@ html,body{background:var(--w-cream)!important}
 @media(max-width:560px){.nav-track{display:inline!important;font-size:14px}.nav-cta{display:none!important}.lang-toggle{padding:5px 6px!important}}
 .v4-strip svg,.v4-proof svg{width:20px!important;height:20px!important;flex:none;fill:none;stroke:var(--airmail);stroke-width:1.6}
 #how .section-head,#usecases .section-head{text-align:left!important;margin-left:0!important;max-width:none!important}
-#how .section-head h2,#usecases .section-head h2{margin-left:0!important;text-align:left!important}
+#how .section-head h2,#usecases .section-head h2{margin-left:auto!important;margin-right:auto!important;text-align:center!important}
 #how .steps .step,#how .step h3,#how .step p,.usecase,.usecase h3,.usecase p{text-align:left!important}
 #how .step-num{justify-content:flex-start!important}
 #pricing .section-head{max-width:860px!important}

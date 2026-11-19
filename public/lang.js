@@ -164,7 +164,7 @@
       'usecases.h2': 'Anything that has to arrive on paper',
       'usecases.sub': 'Most of what we mail falls into one of these categories. All of it is printed in black & white by default (colour available).',
       'usecases.01.h3': 'Tax & government forms',
-      'usecases.01.p': 'CRA and Service Canada paperwork that has to arrive on paper.',
+      'usecases.01.p': 'CRA and Service Canada forms, notices and applications.',
       'usecases.02.h3': 'Letters home',
       'usecases.02.p': 'Birthdays, sympathy notes and printed photos for family.',
       'usecases.03.h3': 'Legal correspondence',

@@ -627,3 +627,8 @@ html[data-theme="dark"]:not([data-country]) body main.ab h1.ab-logo .logo-accent
 .biz-strip p{margin:0;max-width:60ch;font-size:16px;line-height:1.5;color:var(--ds-ink2,#4a5563)}
 .biz-strip .btn{white-space:nowrap}
 @media(max-width:560px){.biz-strip{padding:0 16px}.biz-strip-inner{padding:22px 20px}.biz-strip .btn{width:100%;text-align:center}}
+
+/* Home: centred section headings, three use cases */
+:root body #how .section-head,:root body #usecases .section-head{text-align:center}
+:root body #how .section-head h2,:root body #usecases .section-head h2{text-align:center;margin-left:auto;margin-right:auto}
+@media(min-width:900px){:root body #usecases .usecases-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
