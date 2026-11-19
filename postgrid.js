@@ -551,12 +551,19 @@ function createPostGrid({ db, getSetting, orderDirPath, fetchImpl, convertWord =
       saveLetter(order.id, existing);
       return { letter: existing, warnings: built.warnings, sheets: built.sheets, reused: true };
     }
-    const to   = await api('POST', '/contacts', { json: contact(recipientOf(order)), idempotencyKey: `${key}-to` });
-    if (to.addressStatus === 'failed')
-      throw new PostGridError(`Recipient address failed verification: ${to.addressErrors || 'no details'}. Check the address with the customer.`, { manual: true });
+    let to   = await api('POST', '/contacts', { json: contact(recipientOf(order)), idempotencyKey: `${key}-to` });
+    const warnings = [...built.warnings, ...(built.notices || [])];
+    if (to.addressStatus === 'failed') {
+      // PostGrid's check does not know every real address (PO Boxes at correctional centres, new streets, rural routes).
+      // The address is exactly what the customer typed, so print it as entered instead of blocking the order; the owner has already approved it.
+      const why = to.addressErrors || 'no details';
+      const r = recipientOf(order);
+      if (!r.street || !r.city) throw new PostGridError(`Recipient address failed verification: ${why}. The street or city is missing; check the address with the customer.`, { manual: true });
+      to = await api('POST', '/contacts', { json: { ...contact(r), skipVerification: true }, idempotencyKey: `${key}-to-asis` });
+      warnings.push(`PostGrid could not verify the recipient address (${String(why).slice(0, 120)}), so it was printed exactly as the customer entered it.`);
+    }
     // The customer's own return address must never stop a letter that is otherwise good: if PostGrid cannot take it
     // (a country it will not mail from, an address it rejects), fall back to the Letterhome return address and say so.
-    const warnings = [...built.warnings, ...(built.notices || [])];
     let from, usedFallback = false;
     const santa = order.letter_type === 'santa';
     const useFallback = async why => {

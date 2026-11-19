@@ -169,11 +169,16 @@ test('rotated source pages stay Letter-size; non-Latin text is refused instead o
   assert.deepEqual(cyr.warnings, []);                     // Cyrillic, Greek and symbols print with Noto Serif
 });
 
-test('a recipient address that fails verification goes to the manual queue instead of being mailed', async () => {
+test('a recipient address PostGrid cannot verify is sent as entered with a note; a missing street still stops', async () => {
   recipientStatus = 'failed';
   try {
     calls.length = 0;
-    await assert.rejects(pg.submitOrder(seed()), e => e.manual && /failed verification/.test(e.message));
+    const r = await pg.submitOrder(seed());
+    assert.ok(r.warnings.some(w => /could not verify the recipient address/.test(w)), 'note added');
+    assert.ok(calls.some(c => c.url.endsWith('/contacts') && /skipVerification/.test(String(c.opts.body || JSON.stringify(c.opts.json || '')))), 'retried without verification');
+    assert.ok(calls.some(c => c.url.endsWith('/letters') && c.opts.method === 'POST'), 'letter created');
+    calls.length = 0;
+    await assert.rejects(pg.submitOrder({ ...seed(), recipient_street: '' }), e => e.manual && /failed verification/.test(e.message));
     assert.ok(!calls.some(c => c.url.endsWith('/letters') && c.opts.method === 'POST'), 'no letter created');
   } finally { recipientStatus = 'verified'; }
 });
