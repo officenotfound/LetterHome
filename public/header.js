@@ -114,7 +114,7 @@
     return (m === 10 && d.getDate() >= 11) || m === 11 || (m === 0 && d.getDate() <= 2);
   })();
   var seasonBar = '';
-  if (season && !isFrench && !isSpanish) {
+  if (season && !isFrench && !isSpanish && country !== "uk" && country !== "us" && country !== "au") {   // Christmas bar is Canada-only: only Canada has the Santa letter
     document.documentElement.setAttribute('data-season', 'christmas');
     var onUs = location.hostname === 'letterhome.us';
     var href = country === 'us' ? (onUs ? '/christmas-mailing-deadlines-2026' : '/us/christmas-mailing-deadlines-2026')
