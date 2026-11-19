@@ -9,7 +9,9 @@
   function run() {
   markLong();
   var body = document.body;
-  if (!body || /\bc-/.test(body.className)) return;                 // country pages keep their own layout
+  if (!body) return;
+  var cm = /\bc-(uk|us|au)\b/.exec(body.className);
+  var country = cm ? cm[1] : (document.documentElement.getAttribute('data-country') || 'ca');
   if ((document.documentElement.lang || 'en').slice(0, 2) !== 'en') return;
   var path = location.pathname.replace(/\/$/, '') || '/';
   if (/^\/(send|santa-letter|track|order-success|contact|account|business|guides|about|careers|privacy|terms|refunds|uk|us|au|nz)?$/.test(path)) return;
@@ -31,11 +33,18 @@
   var label = cta ? cta.textContent.replace(/\s+/g, ' ').trim() : 'Send a letter';
   if (!label || label.length > 40) label = 'Send a letter';
 
+  var COPY = {
+    ca: { title: 'Mail it from inside Canada', text: 'We print it, put it in an envelope and mail it within two business days. From $6, postage included.' },
+    uk: { title: 'Post it without the post office', text: 'We print it, put it in an envelope and post it within two working days. Postage is included in the price.' },
+    au: { title: 'Post it without the post office', text: 'We print it, put it in an envelope and post it within two business days. Postage is included in the price.' },
+    us: { title: 'Mail it without the post office', text: 'We print it, put it in an envelope and mail it within two business days. Postage is included in the price.' }
+  };
+  var copy = COPY[country] || COPY.ca;
   var aside = el('aside', 'lh-rail');
   aside.setAttribute('aria-label', 'On this page');
   var card = el('div', 'lh-rail-card',
-    '<p class="lh-rail-title">Mail it from inside Canada</p>' +
-    '<p class="lh-rail-text">We print it, put it in an envelope and mail it within two business days. From $6, postage included.</p>' +
+    '<p class="lh-rail-title">' + copy.title + '</p>' +
+    '<p class="lh-rail-text">' + copy.text + '</p>' +
     '<a class="btn btn-red btn-large lh-rail-btn" href="' + esc(href) + '">' + esc(label) + '</a>' +
     '<p class="lh-rail-meta">Pay securely with Stripe. Cancel before printing for a full refund.</p>');
   aside.appendChild(card);
@@ -46,7 +55,7 @@
     for (var i = 0; i < cands.length && !upd; i++) if (/^\s*(Last )?updated\b/i.test(cands[i].textContent) && cands[i].textContent.length < 60) upd = cands[i];
   }
 
-  var skip = /^(frequently asked|common questions|related|ready to|questions)/i;
+  var skip = /^(frequently asked|common questions|related|ready to|questions|sources|got a|got something|need to send)/i;
   var heads = [].filter.call(host.querySelectorAll('h2'), function (h) { return h.offsetParent !== null && !skip.test(h.textContent.trim()); });
   if (heads.length >= 3) {
     var toc = el('div', 'lh-rail-toc');

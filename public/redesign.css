@@ -481,3 +481,22 @@ html body footer.lh-footer .lh-f-bar .lh-f-in2{padding-top:10px!important;paddin
   html body footer .lh-f-bar .lh-f-in2{display:flex!important;flex-wrap:wrap!important;justify-content:center!important;gap:2px 12px!important;padding:8px 16px 10px!important}
   html body footer .lh-f-bar .lh-f-in2>*{display:inline!important;margin:0!important;max-width:none!important}
 }
+/* Country pages: labels on the coloured hero stay readable; side column picks up the country colour */
+:root body[class*="c-"] .hero :is(.eyebrow,[class*="eyebrow"],[class*="kicker"]){color:inherit!important;opacity:.85}
+:root body[class*="c-"] .lh-rail-card{border-top:3px solid var(--cp,#1c2f45)}
+:root body[class*="c-"] .lh-rail .lh-rail-btn{background-color:var(--cp)!important;color:#fff!important}
+:root body[class*="c-"] .lh-rail-toc a:hover,:root body[class*="c-"] .lh-rail-src a:hover{color:var(--cp)!important}
+html[data-theme="dark"] body[class*="c-"] .lh-rail .lh-rail-btn{background-color:#fff!important;color:var(--cp)!important}
+/* A wrapper around hero buttons is never itself a button */
+:root body div.hero-cta,:root body div.hero-cta:hover{background:none!important;background-color:transparent!important;box-shadow:none!important;padding:0!important;min-height:0!important;border:0!important;transform:none!important}
+/* Santa hero: the short answer sits on dark green */
+:root body .hero:has(.hero-art) .answer-box{background:rgba(255,255,255,.07)!important;border:1px solid rgba(255,255,255,.18)!important;border-left:3px solid #f2c14e!important}
+:root body .hero:has(.hero-art) .answer-box,:root body .hero:has(.hero-art) .answer-box *{color:#f1eadb!important}
+/* A large outline button is the quiet second choice next to a primary button */
+:root body .btn-outline.btn-large,:root body:not([class*="c-"]) .btn-outline.btn-large{background:transparent!important;background-color:transparent!important;color:#1c2f45!important;border:1px solid rgba(28,47,69,.35)!important;box-shadow:none!important;text-decoration:none!important;padding:13px 24px!important}
+:root body .btn-outline.btn-large:hover{background:rgba(28,47,69,.06)!important;color:#1c2f45!important}
+html[data-theme="dark"] body .btn-outline.btn-large{color:#cfe0f2!important;border-color:rgba(207,224,242,.4)!important}
+:root body .btn-large+.btn-outline.btn-large{margin-left:12px!important}
+@media(max-width:520px){:root body .btn-large+.btn-outline.btn-large{margin-left:0!important;margin-top:10px!important}}
+:root body:not(#x) div.hero-cta,:root body:not(#x) div.hero-cta:hover{background:none!important;background-color:transparent!important;box-shadow:none!important;padding:0!important;min-height:0!important;border:0!important;transform:none!important;width:auto!important}
+@media(min-width:701px){:root body:not(#x) div.hero-cta{justify-content:flex-start!important;margin-left:0!important}}
