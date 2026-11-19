@@ -777,10 +777,9 @@ async function postgridSubmit(orderId, opts) {
     return { ok: false, error: msg.replace(/^MANUAL: /, ''), manual: true };
   }
   try {
-    const wasCancelled = !!order.postgrid_letter_id && order.postgrid_status === 'cancelled';
     const r = await postgrid.submitOrder(order, opts);
     if (r.letter.live) sendAtPrinterEmail(orderId);
-    if (wasCancelled && r.letter.live && !r.reused) sendResentEmail(orderId);
+    // No automatic customer email when a cancelled letter is sent again; the owner decides whether to write to the customer.
     for (const w of r.warnings || []) {   // return-address fallbacks and the return-in-letter result are worth a note on the order
       try { db.prepare('INSERT INTO order_notes (order_id, note) VALUES (?,?)').run(orderId, `Automatic: ${w}`); } catch {}
     }
