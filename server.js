@@ -9,6 +9,7 @@ if (process.env.SENTRY_DSN) {
   });
 }
 
+const ga4 = require('./ga4');
 const express      = require('express');
 const compression  = require('compression');
 const helmet       = require('helmet');
@@ -1310,6 +1311,7 @@ app.get('/ga.js', (req, res) => {
   function gtag(){dataLayer.push(arguments);}
   gtag('js',new Date());
   gtag('config','${id}');
+  document.addEventListener('click',function(e){var a=e.target.closest&&e.target.closest('a[href*="santa-letter"]');if(a)gtag('event','santa_cta_click',{link_url:a.getAttribute('href')});});
   (function(){var s=document.createElement('script');s.async=true;
   s.src='https://www.googletagmanager.com/gtag/js?id=${id}';
   document.head.appendChild(s);})();
@@ -1929,6 +1931,15 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
     }
     return res.status(502).json({ error: 'Payment service is temporarily unavailable. Please try again in a moment.' });
   }
+
+  // Analytics ids from the visitor's own cookies (present only if they accepted analytics) so the sale can be credited later.
+  try {
+    const ids = ga4.gaIdsFromCookie(req.headers.cookie);
+    if (ids.clientId) {
+      db.prepare('UPDATE orders SET ga_client_id = ?, ga_session_id = ? WHERE id = ?').run(ids.clientId, ids.sessionId, orderId);
+      ga4.sendOrderEvent(db.prepare('SELECT * FROM orders WHERE id = ?').get(orderId), 'begin_checkout').catch(() => {});
+    }
+  } catch (e) { console.error('[ga4] create-order:', e.message); }
 
   db.prepare('UPDATE orders SET stripe_session_id = ? WHERE id = ?')
     .run(stripeSession.id, orderId);
@@ -4042,6 +4053,7 @@ async function fulfillOrder(sessionId) {
   const result = db.prepare("UPDATE orders SET status = 'paid', paid_at = CURRENT_TIMESTAMP WHERE id = ? AND status = 'awaiting_payment'").run(order.id);
   if (result.changes === 0) return;
   if (order.discount_code) db.prepare('UPDATE discount_codes SET uses_count = uses_count + 1 WHERE code = ?').run(order.discount_code);
+  ga4.sendOrderEvent(order, 'purchase', { transaction_id: 'order-' + order.id }).catch(() => {});
 
   const paidCurrency = (order.charge_currency || 'CAD').toUpperCase();
   const paidAmount = ((order.charge_cents || session.amount_total) / 100).toFixed(2);
