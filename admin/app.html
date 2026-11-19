@@ -3890,8 +3890,10 @@ async function showContacts() {
 async function showApplicants() {
   setTitle('Applicants');
   setMain('<div class="empty">Loading…</div>');
-  const data = await api('/api/admin/applicants');
+  const [data, templates] = await Promise.all([api('/api/admin/applicants'), api('/api/admin/templates')]);
   if (!data) return;
+  const tmplOpts = ['<option value="">Choose a message…</option><option value="__call">Invite to a quick call</option>']
+    .concat((templates||[]).map(t => `<option value="${t.id}" data-subject="${esc(t.subject)}" data-body="${esc(t.body)}">${esc(t.name)}</option>`)).join('');
   const rows = (data.applicants || []).map(a => {
     const unread = !a.read_at;
     const link = a.link && a.link !== 'not given' ? (/^https?:\/\//i.test(a.link) ? `<a class="link" href="${esc(a.link)}" target="_blank" rel="noopener">${esc(a.link)}</a>` : esc(a.link)) : '<span style="color:#9a9a9a">none</span>';
@@ -3915,7 +3917,20 @@ async function showApplicants() {
         <div style="white-space:pre-wrap;margin-bottom:14px">${esc(a.experience)}</div>
         <div style="font-weight:600;margin-bottom:4px">Businesses they would approach</div>
         <div style="white-space:pre-wrap">${esc(a.businesses)}</div>
-        <div style="margin-top:14px"><a class="btn btn-primary btn-sm" href="mailto:${esc(a.email)}?subject=${encodeURIComponent('Letterhome: ' + a.role)}">Email ${esc(a.name)}</a></div>
+        <div style="margin-top:14px"><button class="btn btn-primary btn-sm" onclick="toggleApplicantMail(${a.id})">Email ${esc(a.name)}</button></div>
+      </td>
+    </tr>
+    <tr id="applicant-mail-${a.id}" style="display:none">
+      <td colspan="7" style="background:#f0f9ff;padding:16px 20px;border-bottom:1px solid #ececec">
+        <div style="max-width:640px">
+          <div style="margin-bottom:10px"><select onchange="loadApplicantTemplate(${a.id}, this, '${esc(a.name).replace(/'/g, '')}')" style="font-size:13px;padding:6px 10px;border:1px solid #ececec;border-radius:0;background:#fff">${tmplOpts}</select></div>
+          <div style="margin-bottom:8px"><input id="ap-subject-${a.id}" type="text" value="${esc('Letterhome: ' + a.role)}" style="width:100%;font-size:13px;padding:8px 10px;border:1px solid #ececec;border-radius:0"></div>
+          <div style="margin-bottom:10px"><textarea id="ap-body-${a.id}" rows="9" placeholder="Type your message…" style="width:100%;font-size:13px;padding:8px 10px;border:1px solid #ececec;border-radius:0;resize:vertical"></textarea></div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <button class="btn btn-primary btn-sm" onclick="sendApplicantMail(${a.id}, '${esc(a.email)}')">Send to ${esc(a.email)}</button>
+            <button class="btn btn-outline btn-sm" onclick="toggleApplicantMail(${a.id})">Cancel</button>
+          </div>
+        </div>
       </td>
     </tr>`;
   }).join('') || '<tr><td colspan="7" class="empty">No applications yet.</td></tr>';
@@ -3931,6 +3946,34 @@ async function showApplicants() {
         <tbody>${rows}</tbody>
       </table>
     </div>`);
+}
+
+function toggleApplicantMail(id) {
+  const row = document.getElementById('applicant-mail-' + id);
+  if (row) row.style.display = row.style.display === 'none' ? '' : 'none';
+}
+
+function loadApplicantTemplate(id, select, name) {
+  const opt = select.options[select.selectedIndex];
+  const subj = document.getElementById('ap-subject-' + id), body = document.getElementById('ap-body-' + id);
+  if (!opt.value || !subj || !body) return;
+  if (opt.value === '__call') {
+    const first = String(name || '').trim().split(/\s+/)[0] || 'there';
+    body.value = `Hi ${first},\n\nThanks for applying to be an independent sales representative with Letterhome. I read your application and would like to talk it through.\n\nCould we set up a quick call? It would take about 20 minutes. Let me know a few times that work for you this week or next, and your time zone.\n\nThanks again,\nJeffrey George\nLetterhome\nsupport@letterhome.ca`;
+    return;
+  }
+  subj.value = opt.dataset.subject || subj.value;
+  body.value = opt.dataset.body || '';
+}
+
+async function sendApplicantMail(id, email) {
+  const subject = document.getElementById('ap-subject-' + id)?.value.trim();
+  const body = document.getElementById('ap-body-' + id)?.value.trim();
+  if (!subject || !body) return alert('Subject and message are required.');
+  if (!confirm('Send this email to ' + email + '?')) return;
+  const r = await post(`/api/admin/contacts/${id}/reply`, { subject, body });
+  if (r?.ok) { alert('Email sent.'); showApplicants(); }
+  else alert('Error: ' + (r?.error || 'could not send the email'));
 }
 
 function toggleApplicant(id) {
