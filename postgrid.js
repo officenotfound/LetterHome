@@ -424,8 +424,14 @@ function createPostGrid({ db, getSetting, orderDirPath, fetchImpl, convertWord =
     const lines = String(p.street || '').split(/\r?\n/).map(s => s.trim()).filter(Boolean);
     // A unit written on its own first line ('Ap. 402' above the street) is not a street: PostGrid wants it on line 2.
     if (lines.length > 1 && /^(ap\.?|apt\.?|apto\.?|apartamento|apartment|unit|suite|ste\.?|piso|oficina|of\.?|#)\s*[\w-]+$/i.test(lines[0])) lines.push(lines.shift());
+    // 'P.O. Box 666' / 'Post Office Box 666' / 'GPO Box 1' are written 'PO Box 666' so PostGrid's address check recognises them.
+    lines.forEach((l, i) => { lines[i] = l.replace(/\b(?:p\.?\s?o\.?|post\s+office)\s+box\b/i, 'PO Box').replace(/\bg\.?p\.?o\.?\s+box\b/i, 'GPO Box'); });
+    // An inmate or reference number written after the name ('Nicholas Thew Min Number 547570') goes on its own line above the name, not into the name.
+    let ref = '';
+    const nm = String(p.name || '').match(/^(.*?\S)\s+((?:min(?:\.|\s+number)?|inmate(?:\s+(?:no\.?|number))?|id(?:\s+(?:no\.?|number))?|number|no\.?|#)\s*:?\s*\d[\w-]*)\s*$/i);
+    if (nm) ref = nm[2].trim();
     const c = {
-      ...splitName(p.name),
+      ...splitName(nm ? nm[1] : p.name),
       addressLine1: lines[0] || '',
       city: p.city || undefined,
       provinceOrState: provinceOf(p.province),
@@ -434,7 +440,8 @@ function createPostGrid({ db, getSetting, orderDirPath, fetchImpl, convertWord =
     };
     if (lines[1]) c.addressLine2 = lines.slice(1).join(', ');
     if (!c.countryCode) throw new PostGridError(`Country "${p.country}" in the ${p.role || 'address'} was not recognised; fix the address and resend.`, { manual: true });
-    if (!c.firstName) { delete c.firstName; c.companyName = 'Resident'; }   // PostGrid needs firstName or companyName
+    if (ref) c.companyName = ref;
+    if (!c.firstName) { delete c.firstName; c.companyName = c.companyName || 'Resident'; }   // PostGrid needs firstName or companyName
     if (!c.lastName) delete c.lastName;
     return c;
   }
