@@ -600,3 +600,11 @@ html[data-theme="dark"] body main.ab h1.ab-wordmark span{color:#ff8a7a!important
 :root body .bz-use .n{display:none!important}
 :root body .bz-grid{display:flex!important;flex-wrap:wrap!important;justify-content:center!important;gap:20px!important}
 :root body .bz-grid>.bz-card{flex:1 1 300px!important;max-width:360px!important}
+/* About page logo keeps dark letters on every site; "home" takes the site's colour */
+:root body main.ab h1.ab-logo .logo-wordmark{color:#2a2a2a!important}
+:root body main.ab h1.ab-logo .logo-accent{color:#bf2d3a!important}
+html[data-country="uk"] body main.ab h1.ab-logo .logo-accent{color:#c8202a!important}
+html[data-country="us"] body main.ab h1.ab-logo .logo-accent{color:#1f4f9a!important}
+html[data-country="au"] body main.ab h1.ab-logo .logo-accent{color:#c8202a!important}
+html[data-theme="dark"]:not([data-country]) body main.ab h1.ab-logo .logo-wordmark{color:#f1eadb!important}
+html[data-theme="dark"]:not([data-country]) body main.ab h1.ab-logo .logo-accent{color:#ff8a7a!important}
