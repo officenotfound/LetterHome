@@ -608,3 +608,14 @@ html[data-country="us"] body main.ab h1.ab-logo .logo-accent{color:#1f4f9a!impor
 html[data-country="au"] body main.ab h1.ab-logo .logo-accent{color:#c8202a!important}
 html[data-theme="dark"]:not([data-country]) body main.ab h1.ab-logo .logo-wordmark{color:#f1eadb!important}
 html[data-theme="dark"]:not([data-country]) body main.ab h1.ab-logo .logo-accent{color:#ff8a7a!important}
+
+/* One closing band on every page of every site; on country sites it takes the country colour */
+.lh-close{max-width:1080px;margin:48px auto 64px;padding:0 24px}
+:root body[class*="c-"] .cta-block{background:var(--cp)!important;border-radius:12px!important}
+:root body[class*="c-"] .cta-block h2,:root body[class*="c-"] .cta-block p{color:#fff!important}
+:root body[class*="c-"]:not(#x) .cta-block a{background:#fff!important;color:var(--cp)!important;border:1px solid #fff!important;border-radius:6px!important;font:700 16px/1 'Archivo',sans-serif!important;text-transform:none!important;letter-spacing:0!important;padding:14px 28px!important}
+
+/* Business pages on country sites use the country colour for their buttons and accents */
+:root body[class*="c-"]:not(#x) .bz-btn{background:var(--cp)!important;color:#fff!important;outline-color:var(--cp)!important}
+:root body[class*="c-"] .bz-kicker,:root body[class*="c-"] .bz-copy h1 em{color:var(--cp)!important}
+:root body[class*="c-"] .bz-form input:focus,:root body[class*="c-"] .bz-form select:focus,:root body[class*="c-"] .bz-form textarea:focus{outline-color:var(--cp)!important;border-color:var(--cp)!important}

@@ -36,3 +36,9 @@
     if (/Letterhome$/.test(t)) document.title = t.replace(/ from Canada/, '').replace(/\| Letterhome$/, '| Letterhome ' + NAME[c]);
   });
 })();
+
+// Info pages (About, Contact, Privacy, Terms...) wear the country's theme classes, so they match the country's own pages.
+document.addEventListener('DOMContentLoaded', function () {
+  var c = document.documentElement.getAttribute('data-country');
+  if (c && document.body && document.body.hasAttribute('data-info')) document.body.classList.add('c-' + c);
+});
