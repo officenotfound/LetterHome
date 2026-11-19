@@ -635,8 +635,6 @@ html[data-theme="dark"]:not([data-country]) body main.ab h1.ab-logo .logo-accent
 
 /* Phones: the Business link would crowd the language button out of the header */
 @media(max-width:700px){nav .nav-biz{display:none!important}}
-@media(max-width:700px){.season-bar .season-santa{font-weight:700!important;font-size:17px!important;padding:0!important;background:none!important;color:#fff!important}}
-@media(max-width:700px){.season-bar .sb-t,.season-bar .season-santa{font:700 16px/1.35 Roboto,Arial,sans-serif!important}}
 
 /* Phone footer: logo above, social icons below as true circles */
 @media(max-width:760px){
@@ -646,4 +644,11 @@ html[data-theme="dark"]:not([data-country]) body main.ab h1.ab-logo .logo-accent
   html body footer.lh-footer .lh-f-social svg{width:18px!important;height:18px!important}
   html body footer.lh-footer .lh-f-row a{font-size:14px!important}
   html body footer.lh-footer .lh-f-row{gap:6px 14px!important;padding-left:8px!important;padding-right:8px!important}
+}
+
+/* Phones: plain headline plus a white Santa button, no jumbled underlines */
+@media(max-width:700px){
+  .season-bar{padding:28px 12px 12px!important;gap:8px 12px!important}
+  html body .season-bar a.sb-t:not(.season-santa){font:700 14px/1.3 Roboto,Arial,sans-serif!important;text-decoration:none!important}
+  html body .season-bar a.season-santa{font:700 14px/1.3 Roboto,Arial,sans-serif!important;background:#fff!important;color:#14532d!important;text-decoration:none!important;padding:6px 12px!important;border-radius:6px!important}
 }
