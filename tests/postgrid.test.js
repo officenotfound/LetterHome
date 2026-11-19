@@ -462,11 +462,3 @@ test('checkAddress reports verified or unverified without creating a letter, and
     assert.ok(!calls.some(c => c.url.endsWith('/letters')), 'no letter created');
   } finally { recipientStatus = 'verified'; }
 });
-
-test('a return address outside Canada and the US is also printed at the top of the letter; Canadian ones are not', async () => {
-  const base = { ...seed({ skip: 0 }), sender_name: 'Jayde Wilson', sender_street: '3 Marsh Street', sender_city: 'Wellington', sender_province: 'NSW', sender_postal: '2820' };
-  const au = await pg.buildLetterPdf({ ...base, sender_country: 'Australia' });
-  assert.ok((au.notices || []).some(n => /printed at the top of the letter/.test(n)), 'AU sender printed in the letter');
-  const ca = await pg.buildLetterPdf({ ...base, sender_country: 'CA' });
-  assert.ok(!(ca.notices || []).some(n => /printed at the top of the letter/.test(n)), 'CA sender not added');
-});

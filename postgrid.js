@@ -283,9 +283,7 @@ function createPostGrid({ db, getSetting, orderDirPath, fetchImpl, convertWord =
     // Text = typed body + any .txt attachments
     const textParts = [];
     // Optional (set by the admin): the customer's return address printed at the top of the letter itself.
-    // A return address outside Canada and the US is also printed at the top of the letter: PostGrid has been seen leaving a foreign sender off the envelope.
-    const foreignSender = !santa && !order.skip_return && !!order.sender_street && !['CA', 'US'].includes(countryCodeOf(order.sender_country || 'CA') || 'CA');
-    const wantBlock = (!!order.return_in_body || foreignSender) && !!order.sender_street && !noReturnBlock;
+    const wantBlock = !!order.return_in_body && !!order.sender_street && !noReturnBlock;
     const returnBlock = wantBlock
       ? [order.sender_name, ...String(order.sender_street).split(/\r?\n/), [order.sender_city, provinceOf(order.sender_province), order.sender_postal].filter(Boolean).join(' '), order.sender_country]
           .map(x => String(x || '').trim()).filter(Boolean).join('\n')
