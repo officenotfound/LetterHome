@@ -632,3 +632,8 @@ html[data-theme="dark"]:not([data-country]) body main.ab h1.ab-logo .logo-accent
 :root body #how .section-head,:root body #usecases .section-head{text-align:center}
 :root body #how .section-head h2,:root body #usecases .section-head h2{text-align:center;margin-left:auto;margin-right:auto}
 @media(min-width:900px){:root body #usecases .usecases-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
+
+/* Phones: the Business link would crowd the language button out of the header */
+@media(max-width:700px){nav .nav-biz{display:none!important}}
+@media(max-width:700px){.season-bar .season-santa{font-weight:700!important;font-size:17px!important;padding:0!important;background:none!important;color:#fff!important}}
+@media(max-width:700px){.season-bar .sb-t,.season-bar .season-santa{font:700 16px/1.35 Roboto,Arial,sans-serif!important}}
