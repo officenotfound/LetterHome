@@ -619,6 +619,9 @@ function createPostGrid({ db, getSetting, orderDirPath, fetchImpl, convertWord =
       await useFallback(e.message);
       letter = await api('POST', '/letters', { form: buildForm(), idempotencyKey: `${key}-lh` });
     }
+    // Say on the order exactly which return address went to PostGrid, so a missing or swapped one is visible without opening PostGrid.
+    const fromOf = usedFallback ? FALLBACK_FROM : senderOf(order);
+    warnings.push(`Return address sent to PostGrid: ${[fromOf.name, String(fromOf.street || '').replace(/\s*\n\s*/g, ', '), fromOf.city, fromOf.province, fromOf.postal, fromOf.country].filter(Boolean).join(', ')} (PostGrid check: ${from.addressStatus || 'unknown'}).`);
     saveLetter(order.id, letter);
     return { letter, warnings, sheets: built.sheets, addressStatus: to.addressStatus, usedFallbackReturn: usedFallback };
   }
