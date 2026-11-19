@@ -239,3 +239,51 @@ html body footer .lh-f-bar .lh-f-in2>*{display:block!important;font:400 12px/20p
 /* footer identical on every page and country */
 html body footer .lh-f-row a{margin:0!important;letter-spacing:normal!important;text-transform:none!important}
 html body footer .lh-f-row{line-height:24.8px!important}
+
+/* Calm buttons (2026-11): plain rounded buttons, navy for steps, red kept for Pay. The stamp edge stays on the logo and the order confirmation. */
+html body :is(.btn-large,.hero-cta,.cta-block a,.rm-go,.btn-red,.btn-primary,.nav-cta){-webkit-mask:none!important;mask:none!important;background-image:none!important;border:0!important;border-radius:6px!important;text-transform:none!important;letter-spacing:0!important;box-shadow:0 2px 0 rgba(0,0,0,.28)!important;transition:background-color .15s ease,transform .15s ease!important}
+html body :is(.btn-large,.hero-cta,.cta-block a,.rm-go,.btn-red,.btn-primary){font:500 16px/1.25 'Roboto',sans-serif!important;padding:14px 26px!important;min-height:48px;display:inline-flex;align-items:center;justify-content:center;text-align:center}
+html body .nav-cta{font-weight:600!important}
+html body :is(.btn-large,.hero-cta,.cta-block a,.rm-go,.btn-red,.btn-primary,.nav-cta):hover{transform:translateY(-1px)!important;filter:none!important}
+/* Steps are navy; country pages keep their own postal colours */
+html body:not([class*="c-"]) :is(.btn-large,.hero-cta,.cta-block a,.rm-go,.btn-red,.btn-primary,.nav-cta){background-color:#1c2f45!important;color:#fff!important}
+html body:not([class*="c-"]) :is(.btn-large,.hero-cta,.cta-block a,.rm-go,.btn-red,.btn-primary,.nav-cta):hover{background-color:#142336!important;color:#fff!important}
+/* The one button that takes money stays red */
+html body #pay-btn{background-color:#a32431!important;color:#fff!important}
+html body #pay-btn:hover{background-color:#8f1f2a!important}
+/* Back and cancel are quiet text links */
+html body .btn-outline{border:0!important;background:none!important;box-shadow:none!important;border-radius:6px!important;color:#1c2f45!important;font:500 15px/1.2 'Roboto',sans-serif!important;text-transform:none!important;letter-spacing:0!important;text-decoration:underline;text-underline-offset:3px;padding:12px 10px!important}
+html body .btn-outline:hover{background:rgba(28,47,69,.06)!important;transform:none!important}
+html body :is(.btn-large,.hero-cta,.cta-block a,.rm-go,.btn-red,.btn-primary,.btn-outline,.nav-cta):focus-visible{outline:2px solid #2f5d8a!important;outline-offset:3px;-webkit-mask:none;mask:none}
+/* Dark mode: lighter blue steps so they read on the dark page, red Pay stays */
+html[data-theme="dark"] body:not([class*="c-"]) :is(.btn-large,.hero-cta,.cta-block a,.rm-go,.btn-red,.btn-primary,.nav-cta){background-color:#2f5d8a!important;color:#fff!important;box-shadow:0 2px 0 rgba(0,0,0,.5)!important}
+html[data-theme="dark"] body:not([class*="c-"]) :is(.btn-large,.hero-cta,.cta-block a,.rm-go,.btn-red,.btn-primary,.nav-cta):hover{background-color:#3a6c9f!important}
+html[data-theme="dark"] body #pay-btn{background-color:#bf2d3a!important}
+html[data-theme="dark"] body .btn-outline{color:#cfe0f2!important}
+html[data-theme="dark"] body .btn-outline:hover{background:rgba(207,224,242,.08)!important}
+/* Same family everywhere: other call-to-action buttons follow the same rules (6px corners, sentence case) */
+html body :is(.biz-btn,.btn-submit,button[onclick^="showAccountForm"]){-webkit-mask:none!important;mask:none!important;background-image:none!important;border-radius:6px!important;text-transform:none!important;letter-spacing:0!important;font:500 16px/1.25 'Roboto',sans-serif!important;padding:12px 22px!important;min-height:44px;box-shadow:0 2px 0 rgba(0,0,0,.28)!important}
+html body:not([class*="c-"]) .biz-btn{background-color:#1c2f45!important;color:#fff!important;border:0!important}
+html body .btn-submit{background-color:#a32431!important;color:#fff!important;border:0!important;padding:14px 26px!important}
+html body .btn-submit:hover{background-color:#8f1f2a!important}
+html body button[onclick="showAccountForm('register')"]{background-color:#1c2f45!important;color:#fff!important;border:0!important}
+html body button[onclick="showAccountForm('login')"]{background:none!important;box-shadow:none!important;border:0!important;color:#1c2f45!important;text-decoration:underline;text-underline-offset:3px}
+html[data-theme="dark"] body button[onclick="showAccountForm('register')"]{background-color:#2f5d8a!important}
+html[data-theme="dark"] body button[onclick="showAccountForm('login')"]{color:#cfe0f2!important}
+html[data-theme="dark"] body:not([class*="c-"]) .biz-btn{background-color:#2f5d8a!important}
+html[data-theme="dark"] body .btn-submit{background-color:#bf2d3a!important}
+/* One corner scale: controls 6px, cards 10px */
+html body :is(.lang-toggle,.season-santa.sb-t){border-radius:6px!important}
+html body .related-card{border-radius:10px!important}
+html body.c-uk .nav-cta,html body.c-us .nav-cta,html body.c-au .nav-cta{border-radius:6px!important}
+/* Buttons inside the dark call-to-action band are cream so they stand out from it */
+html body:not([class*="c-"]) .cta-block a{background-color:#faf6ec!important;color:#1c2f45!important}
+html body:not([class*="c-"]) .cta-block a:hover{background-color:#fff!important;color:#1c2f45!important}
+html[data-theme="dark"] body:not([class*="c-"]) .cta-block a{background-color:#faf6ec!important;color:#1c2f45!important}
+html[data-theme="dark"] body:not([class*="c-"]) .cta-block a:hover{background-color:#fff!important}
+/* Remaining button classes follow the same family */
+html body :is(.bz-btn,.rate-go,.submit-btn,.btn-ink,.btn-sm){-webkit-mask:none!important;mask:none!important;background-image:none!important;border-radius:6px!important;text-transform:none!important;letter-spacing:0!important;font-family:'Roboto',sans-serif!important;font-weight:500!important}
+html body:not([class*="c-"]) :is(.bz-btn,.submit-btn,.btn-ink){background-color:#1c2f45!important;color:#fff!important;border:0!important;box-shadow:0 2px 0 rgba(0,0,0,.28)!important}
+html[data-theme="dark"] body:not([class*="c-"]) :is(.bz-btn,.submit-btn,.btn-ink){background-color:#2f5d8a!important}
+html body .bz-btn{font-size:16px!important;line-height:1.25!important;padding:14px 26px!important;min-height:48px}
+html body[class*="c-"] .nav-cta.nav-cta{border-radius:6px!important}
