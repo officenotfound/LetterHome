@@ -588,3 +588,12 @@ html[data-theme="dark"] body main.ab h1.ab-wordmark span{color:#ff8a7a!important
 :root body main.ab h1.ab-logo .logo-stamp{margin-right:8px!important;display:inline-flex!important}
 :root body main.ab h1.ab-logo .logo-wordmark{font-size:54px!important}
 @media(max-width:640px){:root body main.ab h1.ab-logo .logo-wordmark{font-size:40px!important}}
+
+/* Country heroes: flat country colour, no gloss, no stripes, shorter */
+:root body .rm-hero{background:var(--cp)!important;padding:44px 24px 56px!important}
+:root body .rm-hero::before{display:none!important}
+:root body .rm-hero::after{height:4px!important}
+:root body .rm-hero h1{text-shadow:none!important;font:700 clamp(34px,4.6vw,52px)/1.08 'Archivo',sans-serif!important;text-transform:none!important;letter-spacing:-.01em!important;margin-bottom:20px!important}
+:root body .rm-hero h1 span{color:inherit!important;opacity:.92}
+@media(max-width:860px){:root body .rm-hero{padding:32px 20px 64px!important}}
+:root body[class*="c-au"] .rm-hero{padding-bottom:96px!important}
