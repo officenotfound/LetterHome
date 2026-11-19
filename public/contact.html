@@ -56,10 +56,10 @@ nav{position:sticky;top:0;z-index:100;background:rgba(241,235,222,0.94);backdrop
 h1{font-family:'Archivo',serif;font-size:clamp(40px,5vw,64px);font-weight:400;letter-spacing:-0.025em;margin-bottom:20px;line-height:1.05}
 h1 em{font-style:italic;color:var(--red)}
 .intro{font-size:17px;color:var(--ink-muted);line-height:1.7;margin-bottom:48px}
-.contact-meta{display:flex;flex-direction:column;gap:24px}
-.meta-item{display:flex;gap:20px;align-items:flex-start}
+.contact-meta{display:flex;flex-direction:column;gap:0;border-top:1px solid var(--line);margin-top:8px}
+.meta-item{display:block;padding:16px 0;border-bottom:1px solid var(--line)}
 .meta-icon{width:44px;flex-shrink:0;font-family:'Roboto',monospace;font-size:13px;font-weight:500;color:var(--red);letter-spacing:0.05em;padding-top:4px}
-.meta-item h2{font-family:'Roboto',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.15em;color:var(--ink-muted);margin-bottom:6px}
+.meta-item h2{margin-bottom:4px}
 .meta-item p{font-size:15px;color:var(--ink-soft);line-height:1.6}
 .meta-item a{color:var(--red);text-decoration:none}
 .form-card{background:var(--paper);border:1px solid var(--line);padding:48px;box-shadow:var(--shadow-card)}
@@ -80,43 +80,45 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:48px 36px 32px
 <script>(function(){try{var m=window.matchMedia('(prefers-color-scheme: dark)'),s=function(){document.documentElement.setAttribute('data-theme',m.matches?'dark':'light');};s();if(m.addEventListener)m.addEventListener('change',s);}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
 
 <link rel="stylesheet" href="/theme.css?v=24">
-<link rel="stylesheet" href="/redesign.css?v=36"><link rel="stylesheet" href="/inner.css?v=7">
+<link rel="stylesheet" href="/redesign.css?v=42"><link rel="stylesheet" href="/inner.css?v=7">
 </head>
 <body>
 <a data-i18n-html="x.cc367b544f" href="#main-content" class="skip-link" style="position:absolute;left:-9999px;top:4px;z-index:9999;background:#a8472d;color:#faf6ec;padding:8px 16px;font-size:14px;font-family:'Noto Sans',system-ui,sans-serif;text-decoration:none;border-radius:2px" onfocus="this.style.left='4px'" onblur="this.style.left='-9999px'">Skip to main content</a>
 <div id="site-header"><nav aria-label="Main"><a href="/">Letterhome</a> · <a href="/send">Send a letter</a> · <a href="/track">Track an order</a> · <a href="/guides">Guides</a> · <a href="/business">Business mail</a></nav></div>
-<script src="/header.js?v=28"></script>
+<script src="/header.js?v=29"></script>
 
 <div class="main" id="main-content">
   <div>
     <div class="eyebrow" data-i18n="contact.eyebrow">Contact</div>
-    <h1 data-i18n="contact.h1">Get in touch.</h1>
+    <h1 data-i18n="contact.h1">Get in touch</h1>
     <p class="intro" data-i18n="contact.intro">Order questions, email <a href="mailto:support@letterhome.ca">support@letterhome.ca</a> or use the form. Bulk &amp; business enquiries, <a href="mailto:sales@letterhome.ca">sales@letterhome.ca</a>. Replies within one business day.</p>
 
     <div class="contact-meta">
       <div class="meta-item">
-        <div class="meta-icon">01 /</div>
         <div>
           <h2 data-i18n="contact.meta1.h3">Support</h2>
           <p data-i18n-html="contact.meta1.p"><a href="mailto:support@letterhome.ca">support@letterhome.ca</a><br>Orders, order status, and general questions.</p>
         </div>
       </div>
       <div class="meta-item">
-        <div class="meta-icon">02 /</div>
         <div>
           <h2 data-i18n="contact.meta2.h3">Order support</h2>
           <p data-i18n="contact.meta2.p">Have your order number handy. We can cancel an order for a full refund before it's sent to the printer, fix address mistakes, and follow up on any letter that hasn't arrived in its expected window.</p>
         </div>
       </div>
       <div class="meta-item">
-        <div class="meta-icon">03 /</div>
         <div>
           <h2 data-i18n="contact.meta3.h3">Bulk &amp; business mail</h2>
           <p data-i18n-html="contact.meta3.p">Sending to multiple addresses or need volume pricing? Email <a href="mailto:sales@letterhome.ca">sales@letterhome.ca</a> and we'll quote it.</p>
         </div>
       </div>
       <div class="meta-item">
-        <div class="meta-icon">04 /</div>
+        <div>
+          <h2>Where we are</h2>
+          <p>Letterhome is run from Vancouver, British Columbia, Canada. We reply to every email within one business day.</p>
+        </div>
+      </div>
+      <div class="meta-item">
         <div>
           <h2 data-i18n="contact.meta4.h3">Find us on Google</h2>
           <p data-i18n-html="contact.meta4.p"><a href="https://www.google.com/maps?cid=17816876555793881554" target="_blank" rel="noopener">View our Google Business Profile</a></p>
@@ -148,7 +150,7 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:48px 36px 32px
 </div>
 
 <footer id="site-footer"><nav aria-label="Site links" style="padding:24px;font-size:14px"><a href="/about">About</a> · <a href="/careers">Careers</a> · <a href="/contact">Contact</a> · <a href="/guides">Mailing guides</a> · <a href="/business">Business mail</a> · <a href="/monthly-letters">Monthly letters</a> · <a href="/terms">Terms</a> · <a href="/privacy">Privacy</a> · <a href="/refunds">Refund policy</a> · <a href="https://letterhome.ca/">Canada</a> · <a href="/us">United States</a> · <a href="/uk">United Kingdom</a> · <a href="/au">Australia</a></nav></footer>
-<script src="/footer.js?v=22" defer></script>
+<script src="/footer.js?v=23" defer></script>
 
 <script>
 document.getElementById('contact-form').addEventListener('submit', async function(e) {
@@ -178,6 +180,6 @@ document.getElementById('contact-form').addEventListener('submit', async functio
 });
 </script>
 <script src="/theme.js?v=4" defer></script>
-<script src="/lang.js?v=60" defer></script>
+<script src="/lang.js?v=63" defer></script>
 </body>
 </html>

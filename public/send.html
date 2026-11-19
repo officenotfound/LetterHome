@@ -483,13 +483,13 @@ textarea.field-error { border-color: var(--red) !important; }
 <script>(function(){try{var m=window.matchMedia('(prefers-color-scheme: dark)'),s=function(){document.documentElement.setAttribute('data-theme',m.matches?'dark':'light');};s();if(m.addEventListener)m.addEventListener('change',s);}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
 
 <link rel="stylesheet" href="/theme.css?v=24">
-<link rel="stylesheet" href="/redesign.css?v=36"><link rel="stylesheet" href="/inner.css?v=7"><link rel="stylesheet" href="/country-order.css?v=4">
+<link rel="stylesheet" href="/redesign.css?v=42"><link rel="stylesheet" href="/inner.css?v=7"><link rel="stylesheet" href="/country-order.css?v=4">
 </head>
 <body>
 <a data-i18n-html="x.cc367b544f" href="#main-content" class="skip-link" style="position:absolute;left:-9999px;top:4px;z-index:9999;background:#a8472d;color:#faf6ec;padding:8px 16px;font-size:14px;font-family:'Noto Sans',system-ui,sans-serif;text-decoration:none;border-radius:2px" onfocus="this.style.left='4px'" onblur="this.style.left='-9999px'">Skip to main content</a>
 
 <div id="site-header"><nav aria-label="Main"><a href="/">Letterhome</a> · <a href="/send">Send a letter</a> · <a href="/track">Track an order</a> · <a href="/guides">Guides</a> · <a href="/business">Business mail</a></nav></div>
-<script src="/header.js?v=28"></script>
+<script src="/header.js?v=29"></script>
 
 <!-- PROGRESS -->
 <div class="progress-wrap" id="main-content" role="group" aria-label="Order form step 1 of 3">
@@ -507,14 +507,14 @@ textarea.field-error { border-color: var(--red) !important; }
           <div class="step-circle" id="circle-2">2</div>
           <div class="step-line" id="line-2"></div>
         </div>
-        <div class="step-label" id="label-2" data-i18n="send.step2.label">Your Letter</div>
+        <div class="step-label" id="label-2" data-i18n="send.step2.label">Your letter</div>
       </div>
       <div class="progress-step">
         <div class="progress-step-row">
           <div class="step-circle" id="circle-3">3</div>
           <div class="step-line" style="opacity:0"></div>
         </div>
-        <div class="step-label" id="label-3" data-i18n="send.step3.label">Review & Pay</div>
+        <div class="step-label" id="label-3" data-i18n="send.step3.label">Review and pay</div>
       </div>
     </div>
   </div>
@@ -798,7 +798,7 @@ textarea.field-error { border-color: var(--red) !important; }
   <!-- STEP 2: LETTER -->
   <div class="panel" id="panel-2">
     <div class="eyebrow" data-i18n="send.step2.eyebrow">Step 2 of 3</div>
-    <h2 class="panel-title serif" data-i18n="send.step2.title">Write your letter.</h2>
+    <h2 class="panel-title serif" data-i18n="send.step2.title">Write your letter</h2>
     <p class="panel-sub" data-i18n="send.step2.sub">Type your message below. Attach any PDF or Word documents you'd like printed alongside the letter.</p>
 
     <div class="form-group">
@@ -857,7 +857,7 @@ textarea.field-error { border-color: var(--red) !important; }
   <!-- STEP 3: PREVIEW & PAY -->
   <div class="panel" id="panel-3">
     <div class="eyebrow" data-i18n="send.step3.eyebrow">Step 3 of 3</div>
-    <h2 class="panel-title serif" data-i18n="send.step3.title">Review your order.</h2>
+    <h2 class="panel-title serif" data-i18n="send.step3.title">Review your order</h2>
     <p class="panel-sub" data-i18n="send.step3.sub" data-ship="canada">Have one last look before paying. After checkout, we verify the address, then your letter is printed in black & white by default (colour available) and mailed from Canada within two business days.</p><p class="panel-sub" style="display:none" data-i18n="send.step3.sub.local" data-ship="local">Have one last look before paying. After checkout, your letter is printed in black &amp; white by default (colour available) and mailed within two business days, printed and posted inside the destination country.</p>
 
     <div class="preview-envelope">
@@ -957,7 +957,7 @@ textarea.field-error { border-color: var(--red) !important; }
       <button class="btn btn-outline" onclick="goTo(2)" data-i18n="send.btn.editletter">Edit letter</button>
       <div style="text-align:right">
         <button id="pay-btn" class="btn btn-red btn-large" onclick="submitOrder()" data-i18n="send.btn.pay">Pay with Stripe</button>
-        <p style="font-size:11px;color:var(--ink-faint);margin-top:8px;font-family:'Roboto',monospace;letter-spacing:0.04em" data-i18n="send.stripe.secured">🔒 Secured by Stripe, we never see your card details</p>
+        <div class="pay-marks" aria-label="Accepted payment methods"><span>Visa</span><span>Mastercard</span><span>Amex</span><span>Apple Pay</span><span>Google Pay</span></div><p style="font-size:13px;color:var(--ink-faint);margin-top:8px" data-i18n="send.stripe.secured">Secured by Stripe, we never see your card details</p>
       </div>
     </div>
   </div>
@@ -965,7 +965,7 @@ textarea.field-error { border-color: var(--red) !important; }
 </div>
 
 <footer id="site-footer"><nav aria-label="Site links" style="padding:24px;font-size:14px"><a href="/about">About</a> · <a href="/careers">Careers</a> · <a href="/contact">Contact</a> · <a href="/guides">Mailing guides</a> · <a href="/business">Business mail</a> · <a href="/monthly-letters">Monthly letters</a> · <a href="/terms">Terms</a> · <a href="/privacy">Privacy</a> · <a href="/refunds">Refund policy</a> · <a href="https://letterhome.ca/">Canada</a> · <a href="/us">United States</a> · <a href="/uk">United Kingdom</a> · <a href="/au">Australia</a></nav></footer>
-<script src="/footer.js?v=22" defer></script>
+<script src="/footer.js?v=23" defer></script>
 
 <script>
 let currentStep = 1;
@@ -1976,8 +1976,8 @@ function fillSavedRecipient(sel) {
   } catch(e) {}
 }
 </script>
-<script src="/lang-es.js?v=4" defer></script>
-<script src="/lang.js?v=60" defer></script>
+<script src="/lang-es.js?v=5" defer></script>
+<script src="/lang.js?v=63" defer></script>
 <script type="module">
   import * as pdfjsLib from '/vendor/pdfjs/pdf.min.mjs';
   pdfjsLib.GlobalWorkerOptions.workerSrc = '/vendor/pdfjs/pdf.worker.min.mjs';

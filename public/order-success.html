@@ -38,7 +38,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(241,235,222,0.94);backdrop
 .logo-mark{width:38px;height:38px;background:var(--red);display:grid;place-items:center;border-radius:2px;color:var(--paper);font-family:'Archivo',serif;font-size:22px;position:relative;box-shadow:0 1px 3px rgba(0,0,0,0.15)}
 .logo-mark::before{content:'';position:absolute;inset:-3px;border:1px dashed var(--ink);border-radius:4px;opacity:0.5}
 .main{max-width:640px;margin:0 auto;padding:80px 36px;position:relative;z-index:2;text-align:center}
-.success-icon{width:72px;height:72px;background:var(--red);border-radius:50%;display:grid;place-items:center;margin:0 auto 32px;font-size:32px;color:var(--paper)}
+.success-icon{width:72px;height:72px;background:#1c2f45;border-radius:50%;display:grid;place-items:center;margin:0 auto 32px;font-size:32px;color:var(--paper)}
 h1{font-family:'Archivo',serif;font-size:clamp(36px,5vw,56px);font-weight:400;letter-spacing:-0.025em;margin-bottom:16px;line-height:1.05}
 h1 em{font-style:italic;color:var(--red)}
 .sub{font-size:18px;color:var(--ink-muted);margin-bottom:48px;line-height:1.6}
@@ -57,6 +57,15 @@ h1 em{font-style:italic;color:var(--red)}
 .share-bar p{font-size:13px;color:var(--ink-muted);margin-bottom:16px;font-family:'Roboto',monospace;text-transform:uppercase;letter-spacing:0.12em}
 .share-links{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
 .share-btn{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border-radius:2px;font-size:13px;font-weight:500;text-decoration:none;transition:all 0.2s;letter-spacing:0.03em;border:1.5px solid var(--line);color:var(--ink-soft);background:transparent}
+.next-steps{list-style:none;margin:0 0 28px;padding:0;display:grid;gap:0;counter-reset:ns;text-align:left;border:1px solid var(--line);border-radius:10px;background:#fffdf7}
+.next-steps li{display:grid;grid-template-columns:28px 1fr;column-gap:12px;padding:14px 18px;border-top:1px solid var(--line);counter-increment:ns}
+.next-steps li:first-child{border-top:0}
+.next-steps li::before{content:counter(ns);grid-row:1/3;width:24px;height:24px;border-radius:50%;background:#1c2f45;color:#fff;font-size:13px;font-weight:600;display:grid;place-items:center;margin-top:1px}
+.next-steps strong{font-size:15px}.next-steps span{font-size:14.5px;color:var(--ink-muted);line-height:1.5}
+[data-theme="dark"] .next-steps{background:#23262d}
+.share-bar{border-top:1px solid var(--line);padding-top:20px;margin-top:8px}
+.share-bar p{font-size:14px!important;color:var(--ink-muted)!important}
+.share-btn{border-radius:6px!important;letter-spacing:0!important}
 .share-btn:hover{border-color:var(--ink);background:var(--ink);color:var(--paper)}
 .share-btn svg{width:15px;height:15px;flex-shrink:0}
 .eyebrow{display:inline-flex;align-items:center;gap:12px;font-family:'Roboto',monospace;font-size:12px;text-transform:uppercase;letter-spacing:0.18em;color:var(--red);font-weight:500;margin-bottom:28px}
@@ -71,17 +80,17 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:40px 36px;posi
 <script>(function(){try{var m=window.matchMedia('(prefers-color-scheme: dark)'),s=function(){document.documentElement.setAttribute('data-theme',m.matches?'dark':'light');};s();if(m.addEventListener)m.addEventListener('change',s);}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
 
 <link rel="stylesheet" href="/theme.css?v=24">
-<link rel="stylesheet" href="/redesign.css?v=36"><link rel="stylesheet" href="/inner.css?v=7"><link rel="stylesheet" href="/country-order.css?v=4">
+<link rel="stylesheet" href="/redesign.css?v=42"><link rel="stylesheet" href="/inner.css?v=7"><link rel="stylesheet" href="/country-order.css?v=4">
 </head>
 <body>
 <a data-i18n-html="x.cc367b544f" href="#main-content" class="skip-link" style="position:absolute;left:-9999px;top:4px;z-index:9999;background:#a8472d;color:#faf6ec;padding:8px 16px;font-size:14px;font-family:'Noto Sans',system-ui,sans-serif;text-decoration:none;border-radius:2px" onfocus="this.style.left='4px'" onblur="this.style.left='-9999px'">Skip to main content</a>
 <div id="site-header"><nav aria-label="Main"><a href="/">Letterhome</a> · <a href="/send">Send a letter</a> · <a href="/track">Track an order</a> · <a href="/guides">Guides</a> · <a href="/business">Business mail</a></nav></div>
-<script src="/header.js?v=28"></script>
+<script src="/header.js?v=29"></script>
 
 <div class="main" id="main-content">
   <div class="eyebrow" data-i18n="success.eyebrow">Order confirmed</div>
-  <div class="success-icon">✓</div>
-  <h1 data-i18n="success.h1">Your letter is on its way.</h1>
+  <div class="success-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="1.5"/><path d="M3.5 7l8.5 6.5L20.5 7"/></svg></div>
+  <h1 data-i18n="success.h1">Your letter is on its way</h1>
   <p class="sub" data-i18n="success.sub" id="success-sub-canada">Payment received. We verify the address, then we will print your letter in black & white by default (colour available) and mail it from Canada within two business days. A confirmation has been sent to your email.</p>
   <p class="sub" data-i18n="success.sub.local" id="success-sub-local" style="display:none">Payment received. We'll print your letter in black &amp; white by default (colour available) and mail it inside the destination country within two business days. A confirmation has been sent to your email.</p>
 
@@ -89,14 +98,20 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:40px 36px;posi
     <div class="loading" data-i18n="success.loading">Loading order details…</div>
   </div>
 
+  <ol class="next-steps" aria-label="What happens next">
+    <li><strong>Address check</strong><span>We verify the recipient address before anything is printed.</span></li>
+    <li><strong>Printed and sealed</strong><span>Your letter is printed, folded and sealed in an envelope with postage.</span></li>
+    <li><strong>Mailed</strong><span>It goes into the mail within two business days. We email you when it does.</span></li>
+  </ol>
+
   <p id="track-note" style="font-size:13px;color:var(--ink-muted);margin-bottom:28px;line-height:1.6"></p>
   <div id="account-prompt"></div>
 
   <div class="share-bar">
-    <p data-i18n="success.share.heading">Spread the word</p>
+    <p data-i18n="success.share.heading">Know someone abroad who needs to mail something home?</p>
     <div class="share-links">
       <a class="share-btn" target="_blank" rel="noopener"
-         href="https://twitter.com/intent/tweet?text=Just+sent+a+real+letter+from+Canada+via+%40letterhomeca+%E2%80%94+no+post+office+required.+letterhome.ca">
+         href="https://twitter.com/intent/tweet?text=Just+sent+a+real+letter+from+Canada+with+%40letterhomeca%2C+no+post+office+needed.+letterhome.ca">
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
         <span data-i18n="success.share.x">Share on X</span>
       </a>
@@ -112,7 +127,7 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:40px 36px;posi
 </div>
 
 <footer id="site-footer"><nav aria-label="Site links" style="padding:24px;font-size:14px"><a href="/about">About</a> · <a href="/careers">Careers</a> · <a href="/contact">Contact</a> · <a href="/guides">Mailing guides</a> · <a href="/business">Business mail</a> · <a href="/monthly-letters">Monthly letters</a> · <a href="/terms">Terms</a> · <a href="/privacy">Privacy</a> · <a href="/refunds">Refund policy</a> · <a href="https://letterhome.ca/">Canada</a> · <a href="/us">United States</a> · <a href="/uk">United Kingdom</a> · <a href="/au">Australia</a></nav></footer>
-<script src="/footer.js?v=22" defer></script>
+<script src="/footer.js?v=23" defer></script>
 
 <script>
 try { localStorage.removeItem('lh-draft'); } catch (e) {}
@@ -208,7 +223,7 @@ function copyOrderNum(id) {
 })();
 </script>
 <script src="/theme.js?v=4" defer></script>
-<script src="/lang-es.js?v=4" defer></script>
-<script src="/lang.js?v=60" defer></script>
+<script src="/lang-es.js?v=5" defer></script>
+<script src="/lang.js?v=63" defer></script>
 </body>
 </html>

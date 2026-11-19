@@ -287,3 +287,118 @@ html body:not([class*="c-"]) :is(.bz-btn,.submit-btn,.btn-ink){background-color:
 html[data-theme="dark"] body:not([class*="c-"]) :is(.bz-btn,.submit-btn,.btn-ink){background-color:#2f5d8a!important}
 html body .bz-btn{font-size:16px!important;line-height:1.25!important;padding:14px 26px!important;min-height:48px}
 html body[class*="c-"] .nav-cta.nav-cta{border-radius:6px!important}
+
+/* ==========================================================================
+   Design system 2026-11 (see mockups/redesign-2026-11/design-audit-2026-11-19.md)
+   One heading face, one text face, three text colours, navy links, one card style.
+   ========================================================================== */
+:root{--ds-bg:#faf6ec;--ds-surface:#fffdf7;--ds-band:#ece3cf;--ds-ink:#1a1a1a;--ds-ink2:#3b3833;--ds-ink3:#5e574f;--ds-line:rgba(26,26,26,.12);--ds-navy:#1c2f45;--ds-navy2:#142336;--ds-red:#a32431;--ds-link:#1c2f45}
+html[data-theme="dark"]{--ds-bg:#16181d;--ds-surface:#23262d;--ds-band:#1e2127;--ds-ink:#f1eadb;--ds-ink2:#d8d0c1;--ds-ink3:#b9b1a2;--ds-line:rgba(239,230,212,.14);--ds-link:#a9c6e6}
+
+/* Type: Archivo for headings, Noto Sans for everything else. The wordmark and the drawings keep their own faces. */
+:root body :not(h1):not(h2):not(h3):not(h4):not(.logo-wordmark):not(.logo-wordmark *):not(.v4-letter *):not(.hero-art *):not(.lh-f-wordmark):not(.lh-f-wordmark *):not(svg):not(svg *):not(code):not(pre){font-family:'Noto Sans',system-ui,-apple-system,'Segoe UI',sans-serif!important}
+:root body :is(h1,h2,h3,h4):not(.hero-art *):not(.v4-letter *){font-family:'Archivo','Noto Sans',system-ui,sans-serif!important;text-transform:none!important}
+:root body h1:not(.hero-art *){font-weight:700!important;letter-spacing:-0.015em!important;font-size:clamp(34px,4.4vw,54px)!important;line-height:1.08!important}
+:root body h2:not(.hero-art *){font-weight:700!important;letter-spacing:-0.01em!important}
+:root body :is(h3,h4):not(.hero-art *){font-weight:600!important;letter-spacing:0!important}
+/* No shouting labels: sentence case everywhere except the postmark and seals inside the drawings */
+:root body :not(.v4-postmark):not(.v4-postmark *):not(.hero-tag):not(.hero-tag *):not(.hero-art *):not(.v4-letter *):not(.stamp-svg *):not(.logo-wordmark):not(.logo-wordmark *){text-transform:none!important}
+:root body :is(label,small,.eyebrow,.hero-eyebrow,.hero-meta,.trust-tag,.lbl,.bz-kicker,.bz-status,[class*="eyebrow"],[class*="kicker"],[class*="label"]):not(.v4-postmark *):not(.hero-art *){letter-spacing:0!important}
+:root body :is(.eyebrow,.hero-eyebrow,[class*="eyebrow"],[class*="kicker"]):not(.hero-art *){font-size:14px!important;font-weight:600!important;color:var(--ds-ink3)!important}
+body.c-uk .hero-eyebrow,body.c-us .hero-eyebrow,body.c-au .hero-eyebrow{color:inherit!important;opacity:.85}
+:root body :is(label,.lbl):not(.hero-art *){font-size:14px!important;font-weight:500!important}
+/* Body text: readable size on guide and service pages */
+:root body :is(.page,.main) :is(p,li):not(.lh-rail *):not(.faq-item *){font-size:17px;line-height:1.6}
+/* Script signature replaced by plain text */
+:root body .story-sign{font-family:'Noto Sans',sans-serif!important;font-size:15px!important;font-weight:600!important;color:var(--ds-ink)!important;letter-spacing:0!important}
+
+/* Links: navy and underlined in content, never browser blue or red */
+:root body:not([class*="c-"]) a:not([class]):not(nav a):not(footer a):not(.season-bar a):not(.cta-block a):not(#lh-cookie-banner a):not(.lh-footer a),
+:root body:not([class*="c-"]) :is(.page,.main,.story-text,.faq-item,.rates,.note,.addr-card,.answer-box,.answer-capsule) a:not(.btn):not(.hero-cta):not(.rate-go):not(.related-card):not(.lh-rail-btn){color:var(--ds-link)!important;text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px}
+:root body:not([class*="c-"]) :is(.rate-go,.extras-note a,.related-card,.related-card *){color:var(--ds-link)!important}
+:root body .rate-go{text-decoration:underline;text-underline-offset:3px}
+
+/* Cards and notes: one surface, one hairline, 10px corners */
+:root body :is(.addr-card,.note,.answer-box,.answer-capsule,.price-card,.story-quote,.trust-item,.related-card,.bz-card,.form-card,.rate-includes,.biz-band,.warn-box){border-radius:10px!important}
+:root body:not([class*="c-"]) :is(.addr-card,.note,.answer-box,.answer-capsule,.price-card,.story-quote,.related-card,.biz-band){background:var(--ds-surface)!important;border:1px solid var(--ds-line)!important}
+:root body:not([class*="c-"]) :is(.addr-card,.answer-box,.answer-capsule,.biz-band){border-left:3px solid var(--ds-navy)!important}
+html[data-theme="dark"] body:not([class*="c-"]) :is(.addr-card,.answer-box,.answer-capsule,.biz-band){border-left-color:#7fa6cf!important}
+:root body:not([class*="c-"]) .note{border-left:3px solid var(--ds-line)!important;color:var(--ds-ink2)!important}
+:root body .faq-item:first-child{border-top-left-radius:10px!important;border-top-right-radius:10px!important}
+:root body .faq-item:last-child{border-bottom-left-radius:10px!important;border-bottom-right-radius:10px!important}
+:root body :is(.cta-band,.cta-block){border-radius:12px!important}
+:root body:not([class*="c-"]) .cta-band:not(.lh-home-cta){background:var(--ds-navy)!important;border:0!important;color:#fff}
+:root body .skip-link{background:var(--ds-navy)!important;border-radius:6px!important}
+:root body .btn-paper{-webkit-mask:none!important;mask:none!important;border:0!important;border-radius:6px!important;background:#faf6ec!important;color:#1c2f45!important;font-weight:600!important;padding:14px 26px!important;box-shadow:0 2px 0 rgba(0,0,0,.28)!important}
+
+/* Home page */
+:root body .usecases-grid a.usecase{display:block;color:inherit!important;text-decoration:none!important;padding:16px 0;border-top:1px solid var(--ds-line)}
+:root body .usecases-grid a.usecase h3{color:var(--ds-ink)!important;text-decoration:underline;text-decoration-color:transparent;text-underline-offset:4px;transition:text-decoration-color .15s}
+:root body .usecases-grid a.usecase:hover h3{text-decoration-color:currentColor}
+:root body .usecases-grid a.usecase p{color:var(--ds-ink2)!important}
+:root body .step-num-mark{display:inline-grid!important;place-items:center;width:48px!important;height:48px!important;border-radius:50%!important;background:var(--ds-surface)!important;color:var(--ds-navy)!important;border:1px solid var(--ds-line)!important;font-size:0!important}
+html[data-theme="dark"] body .step-num-mark{color:#a9c6e6!important}
+:root body .step-num{color:var(--ds-ink3)!important;font-size:14px!important;font-weight:600!important;gap:12px}
+:root body .story-quote{padding:22px 24px!important}
+:root body .story-quote blockquote{color:var(--ds-ink2)!important}
+:root body .story-quote cite{color:var(--ds-ink)!important}
+:root body a.g-rating{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:6px;text-decoration:none!important;color:var(--ds-ink)!important;font-weight:600;font-size:15px}
+:root body a.g-rating .g-stars{color:#d9a21b;letter-spacing:2px;font-size:17px}
+:root body a.g-rating .g-more{color:var(--ds-link);font-weight:500;text-decoration:underline;text-underline-offset:3px}
+html body footer .lh-f-social{display:flex!important}
+:root body .lh-f-id a{color:inherit!important;text-decoration:underline;text-underline-offset:3px}
+@media(max-width:700px){
+  :root body :is(.story-text,.story-quote,.usecase,.step,.trust-item,.faq-item) :is(p,blockquote,h3){text-align:left!important}
+  :root body :is(.story-quote figcaption,.story-quote cite){justify-content:flex-start!important;text-align:left!important}
+  :root body .usecases-grid,:root body .steps{text-align:left!important}
+  :root body .step-num{justify-content:flex-start!important}
+  :root body .rate-row{display:grid!important;grid-template-columns:1fr auto!important;align-items:center!important;text-align:left!important;gap:2px 12px!important}
+  :root body .rate-row .rate-dest{text-align:left!important}
+  :root body .rate-row .rate-name{justify-content:flex-start!important}
+  :root body .rate-row .rate-go{grid-column:1/-1;justify-self:start}
+}
+
+/* Order form */
+:root body .progress-step .step-circle,:root body [class*="step-circle"]{border-radius:50%!important}
+:root body:not([class*="c-"]) :is(.step-circle.done,.step-circle.active,.progress-step.done .step-circle,.progress-step.active .step-circle){background:var(--ds-navy)!important;border-color:var(--ds-navy)!important;color:#fff!important}
+:root body :is(.form-group,.field) :is(input[type="text"],input[type="email"],input[type="tel"],input:not([type]),select,textarea){border:1px solid rgba(26,26,26,.22)!important;border-radius:8px!important;background:var(--ds-surface)!important;padding:11px 12px!important;min-height:44px;box-shadow:none!important}
+html[data-theme="dark"] body :is(.form-group,.field) :is(input,select,textarea){border-color:rgba(239,230,212,.25)!important}
+:root body :is(.form-group,.field) :is(input,select,textarea):focus{outline:2px solid #2f5d8a!important;outline-offset:1px;border-color:#2f5d8a!important}
+:root body .pay-marks{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;margin-top:10px}
+:root body .pay-marks span{font:600 11.5px/1 'Noto Sans',sans-serif!important;color:var(--ds-ink3);border:1px solid var(--ds-line);border-radius:4px;padding:5px 7px;background:var(--ds-surface)}
+
+/* Side column on guide and service pages */
+.lh-rail{display:none}
+@media(min-width:1180px){
+  body.lh-has-rail .lh-railwrap{display:grid;grid-template-columns:minmax(0,1fr) 288px;gap:56px;max-width:1080px;margin:0 auto;padding-left:max(24px,env(safe-area-inset-left,0px));padding-right:max(24px,env(safe-area-inset-right,0px));align-items:start}
+  body.lh-has-rail .lh-railwrap>.page,body.lh-has-rail .lh-railwrap>.main{max-width:none!important;width:auto!important;margin:0!important;padding-left:0!important;padding-right:0!important;min-width:0}
+  body.lh-has-rail .lh-rail-hero{padding-left:max(24px,calc((100% - 1032px)/2))!important;padding-right:max(24px,calc((100% - 1032px)/2 + 344px))!important;text-align:left!important}
+  body.lh-has-rail .lh-rail-hero>*{margin-left:0!important;margin-right:0!important;max-width:720px!important}
+  .lh-rail{display:flex;flex-direction:column;gap:20px;position:sticky;top:24px;margin-top:40px;font-size:15px}
+}
+.lh-rail-card{background:var(--ds-surface);border:1px solid var(--ds-line);border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:10px}
+.lh-rail-title{margin:0;font:600 18px/1.3 'Archivo',sans-serif!important;color:var(--ds-ink)}
+.lh-rail-text,.lh-rail-meta{margin:0;color:var(--ds-ink2);font-size:14.5px!important;line-height:1.5}
+.lh-rail-meta{color:var(--ds-ink3);font-size:13px!important}
+:root body .lh-rail .lh-rail-btn{width:100%;margin:4px 0}
+.lh-rail-label{margin:0 0 6px;font-size:13px!important;font-weight:600;color:var(--ds-ink3)}
+.lh-rail-toc ol,.lh-rail-src ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px}
+.lh-rail-toc a,.lh-rail-src a{color:var(--ds-ink2)!important;text-decoration:none!important;font-size:14.5px;line-height:1.4}
+.lh-rail-toc a:hover,.lh-rail-src a:hover{color:var(--ds-link)!important;text-decoration:underline!important}
+.lh-rail-toc,.lh-rail-src{padding:0 4px}
+:root body:not([class*="c-"]) .step-line.done{background:var(--ds-navy)!important}
+html[data-theme="dark"] body:not([class*="c-"]) :is(.step-circle.done,.step-circle.active){background:#2f5d8a!important;border-color:#2f5d8a!important}
+:root body .contact-meta .meta-item h2{font-size:17px!important;font-weight:600!important;letter-spacing:0!important;color:var(--ds-ink)!important;line-height:1.3!important}
+:root body .contact-meta .meta-item p{font-size:15.5px!important}
+:root body .faq-item summary::before{content:none!important;display:none!important}
+:root body .lh-home-cta{border-radius:0!important}
+:root body .lh-home-cta p{color:var(--ds-ink2)!important}
+:root body .faq-item summary{grid-template-columns:minmax(0,1fr) 20px!important}
+@media(max-width:700px){
+  :root body .rate-row{position:relative}
+  :root body .rate-row *{text-align:left!important}
+  :root body .rate-row .rate-go{font-size:0!important;position:static!important;padding:0!important;margin:0!important;grid-column:auto!important}
+  :root body .rate-row .rate-go::after{content:'';position:absolute;inset:0}
+  :root body .rate-row .rate-price{align-self:center}
+}
+@media(max-width:700px){:root body .rate-row .rate-go::before{content:none!important;display:none!important}}
