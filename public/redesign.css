@@ -549,3 +549,11 @@ html[data-theme="dark"] body .related>a:not(.related-card),html[data-theme="dark
 .g-none{color:var(--ds-ink2)}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 :root body .page-header{max-width:820px!important;margin-left:auto!important;margin-right:auto!important}
+
+/* Buttons on dark closing bands: always cream with navy text, so they never melt into the band */
+:root body:not(#x) :is(.cta,.cta-band,.cta-block,.cta-strip,.bz-cta,.biz-cta) a:is(.btn,.btn-red,.btn-large,.btn-outline,.hero-cta){background:#faf6ec!important;color:#1c2f45!important;border:1px solid #faf6ec!important;box-shadow:none!important;text-decoration:none!important}
+:root body:not(#x) :is(.cta,.cta-band,.cta-block,.cta-strip,.bz-cta,.biz-cta) a:is(.btn,.btn-red,.btn-large,.btn-outline,.hero-cta):hover{background:#fff!important;color:#1c2f45!important}
+
+/* Home closing band is cream: navy button */
+:root body:not(#x) .lh-home-cta a.btn{background:#1c2f45!important;color:#fff!important;border:1px solid #1c2f45!important}
+html[data-theme="dark"] body:not(#x) .lh-home-cta a.btn{background:#faf6ec!important;color:#1c2f45!important}

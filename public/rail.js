@@ -34,10 +34,10 @@
   if (!label || label.length > 40) label = 'Send a letter';
 
   var COPY = {
-    ca: { title: 'Mail it from inside Canada', text: 'We print it, put it in an envelope and mail it within two business days. From $6, postage included.' },
-    uk: { title: 'Post it without the post office', text: 'We print it, put it in an envelope and post it within two working days. Postage is included in the price.' },
-    au: { title: 'Post it without the post office', text: 'We print it, put it in an envelope and post it within two business days. Postage is included in the price.' },
-    us: { title: 'Mail it without the post office', text: 'We print it, put it in an envelope and mail it within two business days. Postage is included in the price.' }
+    ca: { title: 'We print and mail it', text: 'We print it, put it in an envelope and mail it within two business days. From $6, postage included.' },
+    uk: { title: 'We print and post it', text: 'We print it, put it in an envelope and post it within two working days. Postage is included in the price.' },
+    au: { title: 'We print and post it', text: 'We print it, put it in an envelope and post it within two business days. Postage is included in the price.' },
+    us: { title: 'We print and mail it', text: 'We print it, put it in an envelope and mail it within two business days. Postage is included in the price.' }
   };
   var copy = COPY[country] || COPY.ca;
   var aside = el('aside', 'lh-rail');
