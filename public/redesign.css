@@ -619,3 +619,11 @@ html[data-theme="dark"]:not([data-country]) body main.ab h1.ab-logo .logo-accent
 :root body[class*="c-"]:not(#x) .bz-btn{background:var(--cp)!important;color:#fff!important;outline-color:var(--cp)!important}
 :root body[class*="c-"] .bz-kicker,:root body[class*="c-"] .bz-copy h1 em{color:var(--cp)!important}
 :root body[class*="c-"] .bz-form input:focus,:root body[class*="c-"] .bz-form select:focus,:root body[class*="c-"] .bz-form textarea:focus{outline-color:var(--cp)!important;border-color:var(--cp)!important}
+
+/* Business strip on the home page and the header link */
+.biz-strip{padding:0 24px}
+.biz-strip-inner{max-width:1080px;margin:0 auto;padding:28px 32px;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;background:var(--ds-surface,#fff);border:1px solid var(--ds-line,#e4dccb);border-radius:10px}
+.biz-strip h2{margin:0 0 6px;font:600 22px/1.2 'Archivo',sans-serif;color:var(--ds-ink,#1c2f45)}
+.biz-strip p{margin:0;max-width:60ch;font-size:16px;line-height:1.5;color:var(--ds-ink2,#4a5563)}
+.biz-strip .btn{white-space:nowrap}
+@media(max-width:560px){.biz-strip{padding:0 16px}.biz-strip-inner{padding:22px 20px}.biz-strip .btn{width:100%;text-align:center}}

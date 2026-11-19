@@ -142,6 +142,7 @@
       '<div class="nav-inner">' +
         '<a href="' + (country === 'au' ? '/au' : '/') + '" class="logo" aria-label="Letterhome home"><span class="logo-stamp" aria-hidden="true">' + stamp + '</span><span class="logo-wordmark">Letter<span class="logo-accent">home</span></span></a>' +
         '<div class="nav-right">' +
+          '<a href="' + (/^(uk|us|au)$/.test(country) ? '/business-' + country : '/business') + '" class="nav-track nav-biz">Business</a>' +
           '<a href="/track" class="nav-track" data-i18n="nav.track">' + trackLabel + '</a>' +
           langToggle +
           '<a href="/send" class="btn btn-red nav-cta" data-i18n="nav.send">' + sendLabel + '</a>' +
