@@ -574,3 +574,7 @@ html[data-theme="dark"] body:not(#x) .lh-home-cta a.btn{background:#faf6ec!impor
 :root body main.ab .ab-facts dd a{color:var(--ds-link)!important;text-decoration:underline!important;text-underline-offset:3px}
 :root body main.ab .ab-actions{text-align:center!important;margin:0!important}
 @media(max-width:640px){:root body main.ab{padding:40px 20px 56px!important}:root body main.ab h1{font-size:34px!important}:root body main.ab .ab-head p{font-size:17px!important}:root body main.ab .ab-founder{flex-direction:column!important;align-items:center!important;text-align:center!important}:root body main.ab .ab-founder p{text-align:center!important}:root body main.ab .ab-facts>div{grid-template-columns:1fr!important;gap:4px!important}}
+:root body main.ab h1 .ab-word{font:italic 400 1.18em/1 'DM Serif Display',Georgia,serif!important;letter-spacing:-.02em!important;color:var(--ds-ink)!important}
+:root body main.ab h1 .ab-word span{color:#b3322e!important;font:inherit!important}
+html[data-theme="dark"] body main.ab h1 .ab-word{color:#f1eadb!important}
+html[data-theme="dark"] body main.ab h1 .ab-word span{color:#ff8a7a!important}
