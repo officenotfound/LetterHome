@@ -578,3 +578,13 @@ html[data-theme="dark"] body:not(#x) .lh-home-cta a.btn{background:#faf6ec!impor
 :root body main.ab h1 .ab-word span{color:#b3322e!important;font:inherit!important}
 html[data-theme="dark"] body main.ab h1 .ab-word{color:#f1eadb!important}
 html[data-theme="dark"] body main.ab h1 .ab-word span{color:#ff8a7a!important}
+:root body main.ab .ab-kicker{font:600 15px/1 'Noto Sans',sans-serif!important;color:var(--ds-ink2)!important;margin:0 0 10px!important;text-align:center!important;max-width:none!important}
+:root body main.ab h1.ab-wordmark{font:italic 400 76px/1 'DM Serif Display',Georgia,serif!important;letter-spacing:-.02em!important;color:#2a2a2a!important;margin:0 0 24px!important}
+:root body main.ab h1.ab-wordmark span{color:#b3322e!important;font:inherit!important}
+html[data-theme="dark"] body main.ab h1.ab-wordmark{color:#f1eadb!important}
+html[data-theme="dark"] body main.ab h1.ab-wordmark span{color:#ff8a7a!important}
+@media(max-width:640px){:root body main.ab h1.ab-wordmark{font-size:56px!important}}
+:root body main.ab h1.ab-logo{display:flex!important;align-items:center!important;justify-content:center!important;gap:0!important;margin:0 0 24px!important;font-size:inherit!important}
+:root body main.ab h1.ab-logo .logo-stamp{margin-right:8px!important;display:inline-flex!important}
+:root body main.ab h1.ab-logo .logo-wordmark{font-size:54px!important}
+@media(max-width:640px){:root body main.ab h1.ab-logo .logo-wordmark{font-size:40px!important}}
