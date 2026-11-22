@@ -295,10 +295,10 @@ function register(app, { db, requireAdmin, logAudit, getSetting, indexNow, backu
 
       const f = Object.fromEntries(db.prepare('SELECT step, COUNT(*) n FROM funnel_events WHERE day >= ? GROUP BY step').all(since).map(r => [r.step, r.n]));
       const views = db.prepare(`SELECT COUNT(*) n, COUNT(DISTINCT ip) u FROM page_views WHERE created_at >= datetime('now', ?)${pvSite}`).get(`-${days} days`);
-      const paidWhere = `status != 'awaiting_payment' AND deleted_at IS NULL AND created_at >= datetime('now', ?)${siteSql}`;
+      const paidWhere = `status != 'awaiting_payment' AND deleted_at IS NULL AND split_from IS NULL AND created_at >= datetime('now', ?)${siteSql}`;
       const paid = db.prepare(`SELECT COUNT(*) n, COALESCE(SUM(price_cents),0) cents FROM orders WHERE ${paidWhere}`).get(`-${days} days`);
       const unpaid = db.prepare(`SELECT COUNT(*) n FROM orders WHERE status = 'awaiting_payment' AND deleted_at IS NULL AND created_at >= datetime('now', ?)${siteSql}`).get(`-${days} days`).n;
-      const mailed = db.prepare(`SELECT COUNT(*) n FROM orders WHERE status IN ('mailed','delivered') AND deleted_at IS NULL AND created_at >= datetime('now', ?)${siteSql}`).get(`-${days} days`).n;
+      const mailed = db.prepare(`SELECT COUNT(*) n FROM orders WHERE status IN ('mailed','delivered') AND deleted_at IS NULL AND split_from IS NULL AND created_at >= datetime('now', ?)${siteSql}`).get(`-${days} days`).n;
       const refunded = db.prepare(`SELECT COUNT(*) n FROM orders WHERE status = 'refunded' AND deleted_at IS NULL AND created_at >= datetime('now', ?)${siteSql}`).get(`-${days} days`).n;
       const weekly = db.prepare(`SELECT strftime('%Y-W%W', created_at) week, COUNT(*) orders, COALESCE(SUM(price_cents),0) cents
         FROM orders WHERE ${paidWhere} GROUP BY week ORDER BY week`).all(`-${days} days`);

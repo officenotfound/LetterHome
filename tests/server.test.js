@@ -1054,6 +1054,46 @@ test('Santa order: own price, server-written letter, Canada only, colour add-on,
   assert.equal(po.price_cents, 600);
 });
 
+test('Santa order with two children: admin splits it into one order per child, each with its own letter and certificate', async () => {
+  const res = await fetch(`${base}/api/create-order`, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ product: 'santa', santa_child: 'Emma', santa_pet: 'Biscuit', santa2_child: 'Leo', santa2_interest: 'trucks', santa_cert: '1',
+      'r-email': 'split-check@example.com', 'r-name': 'The Tremblays', 'r-street': '1 Rue Test', 'r-city': 'Montreal', 'r-province': 'QC', 'r-postal': 'H2X 1Y4', 'r-country': 'CA' }).toString() });
+  assert.equal(res.status, 200);
+  const o = db.prepare("SELECT * FROM orders WHERE customer_email = 'split-check@example.com'").get();
+  assert.equal(o.price_cents, 1200 + 500 + 2 * 300);
+  db.prepare("UPDATE orders SET status = 'paid' WHERE id = ?").run(o.id);
+  const { cookie, csrfToken } = await loginAdmin();
+  const hdr = { 'Content-Type': 'application/json', Cookie: cookie, 'X-CSRF-Token': csrfToken };
+  const split = await fetch(`${base}/api/admin/orders/${o.id}/postgrid/split-santa`, { method: 'POST', headers: hdr, body: '{}' });
+  assert.equal(split.status, 200, await split.clone().text());
+  const { created } = await split.json();
+  assert.equal(created.length, 1);
+  const first = db.prepare('SELECT * FROM orders WHERE id = ?').get(o.id), second = db.prepare('SELECT * FROM orders WHERE id = ?').get(created[0]);
+  assert.match(first.letter_body, /Dear Emma,/); assert.match(first.letter_body, /#CERT#Emma/);
+  assert.doesNotMatch(first.letter_body, /Leo/);
+  assert.match(second.letter_body, /Dear Leo,/); assert.match(second.letter_body, /#CERT#Leo/);
+  assert.doesNotMatch(second.letter_body, /Emma/);
+  assert.equal(first.page_count, 2); assert.equal(second.page_count, 2);
+  assert.equal(first.price_cents, o.price_cents, 'the paid order keeps the whole price');
+  assert.equal(second.price_cents, 0);
+  assert.equal(second.split_from, o.id);
+  assert.equal(second.status, 'paid');
+  assert.equal(second.recipient_street, '1 Rue Test');
+  assert.equal(second.sender_name, 'Santa Claus');
+  assert.equal(second.postgrid_letter_id, null);
+  assert.notEqual(second.status_token, first.status_token);
+  // cannot be split twice, and a split-off order cannot be split
+  assert.equal((await fetch(`${base}/api/admin/orders/${o.id}/postgrid/split-santa`, { method: 'POST', headers: hdr, body: '{}' })).status, 409);
+  assert.equal((await fetch(`${base}/api/admin/orders/${created[0]}/postgrid/split-santa`, { method: 'POST', headers: hdr, body: '{}' })).status, 409);
+  // one child only: nothing to split
+  await fetch(`${base}/api/create-order`, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ product: 'santa', santa_child: 'Zoe', 'r-email': 'split-one@example.com', 'r-name': 'Z', 'r-street': '1 Rue Test', 'r-city': 'Montreal', 'r-province': 'QC', 'r-postal': 'H2X 1Y4', 'r-country': 'CA' }).toString() });
+  const one = db.prepare("SELECT id FROM orders WHERE customer_email = 'split-one@example.com'").get();
+  db.prepare("UPDATE orders SET status = 'paid' WHERE id = ?").run(one.id);
+  assert.equal((await fetch(`${base}/api/admin/orders/${one.id}/postgrid/split-santa`, { method: 'POST', headers: hdr, body: '{}' })).status, 400);
+  assert.equal((await fetch(`${base}/api/admin/orders/${o.id}/postgrid/split-santa`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })).status, 401);
+});
+
 test('pound estimate: rounds UP to the next 50p, never oddly precise', () => {
   const rate = 0.53156;                                     // GBP per CAD
   assert.equal(niceGbp(600, rate), 3.5);                    // 3.19

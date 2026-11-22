@@ -661,7 +661,7 @@ function reviewAskAllowed(order) {
 }
 
 function sendMailedNotification(order) {
-  if (!order?.customer_email) return;
+  if (!order?.customer_email || order.split_from) return;   // a split-off Santa letter: the paid order's emails cover the customer
   const deliveryText = order.estimated_delivery || mailFacts(order).defaultDelivery;
   const toAddr = [
     order.recipient_name, order.recipient_street,
@@ -683,7 +683,7 @@ function sendAtPrinterEmail(orderId) {
     WHERE id = ? AND printer_email_sent_at IS NULL AND postgrid_mode = 'live' AND status IN ('submitted_to_printer', 'printing')`).run(orderId);
   if (claim.changes !== 1) return;
   const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(orderId);
-  if (!order?.customer_email) return;
+  if (!order?.customer_email || order.split_from) return;
   const toAddr = [
     order.recipient_name, order.recipient_street,
     `${order.recipient_city || ''} ${order.recipient_province || ''} ${order.recipient_postal || ''}`.trim(),
@@ -2581,6 +2581,57 @@ app.post('/api/admin/orders/:id/postgrid/rebuild-santa', requireAdmin, (req, res
   try { db.prepare('INSERT INTO order_notes (order_id, note) VALUES (?,?)').run(id, `Letter from Santa rewritten with the current wording and letterhead by ${req.session.admin.username}.`); } catch {}
   logAudit(req, 'order.santa_rebuild', 'order', id, {});
   res.json({ ok: true });
+});
+
+// Splits a paid Letter from Santa that holds several children into one order per child, so each goes in its own envelope
+// and is approved and sent on its own. The paid order keeps the price and the first child; the extra orders cost nothing
+// (split_from points back) and send no customer emails of their own. Only before anything has gone to the printer.
+function santaGroups(body) {
+  const segs = String(body || '').split('\f').map(t => t.trim()).filter(Boolean);
+  const letters = segs.filter(t => !t.startsWith('#CERT#')), certs = segs.filter(t => t.startsWith('#CERT#'));
+  const used = new Set();
+  return letters.map(l => {
+    const child = SantaLetter.parse(l).child.toLowerCase();
+    const i = certs.findIndex((c, k) => !used.has(k) && c.slice(6).trim().toLowerCase() === child);
+    const pages = [l];
+    if (i >= 0) { used.add(i); pages.push(certs[i]); }
+    return pages;
+  });
+}
+app.post('/api/admin/orders/:id/postgrid/split-santa', requireAdmin, (req, res) => {
+  const id = Number(req.params.id);
+  const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(id);
+  if (!order) return res.status(404).json({ error: 'Order not found' });
+  if (order.letter_type !== 'santa') return res.status(400).json({ error: 'This is not a Letter from Santa.' });
+  if (order.status !== 'paid' || order.postgrid_letter_id || order.deleted_at) return res.status(409).json({ error: 'Only a paid order that has not gone to the printer can be split.' });
+  if (order.split_from) return res.status(409).json({ error: 'This order is already one of the split letters.' });
+  if (db.prepare('SELECT 1 FROM orders WHERE split_from = ? LIMIT 1').get(id)) return res.status(409).json({ error: 'This order was already split.' });
+  const groups = santaGroups(order.letter_body);
+  if (groups.length < 2) return res.status(400).json({ error: 'There is only one letter on this order.' });
+  const cols = db.prepare('PRAGMA table_info(orders)').all().map(c => c.name).filter(c => c !== 'id');
+  const blank = new Set(['postgrid_letter_id', 'postgrid_status', 'postgrid_mode', 'postgrid_error', 'postgrid_submitted_at', 'postgrid_tracking_number', 'postgrid_url', 'printer_email_sent_at', 'mailed_at', 'status_token', 'stripe_payment_intent', 'discount_code', 'discount_cents']);
+  const made = [];
+  db.exec('BEGIN');
+  try {
+    groups.slice(1).forEach((pages, n) => {
+      const row = db.prepare('SELECT * FROM orders WHERE id = ?').get(id);
+      Object.assign(row, { stripe_session_id: `${order.stripe_session_id || 'order' + id}-split-${n + 2}`, letter_body: pages.join('\n\f\n'), page_count: pages.length, price_cents: 0, extra_page_cents: 0, split_from: id, status_token: randomUUID() });
+      if ('charge_cents' in row) row.charge_cents = 0;
+      for (const c of blank) if (c in row && !['stripe_session_id', 'status_token'].includes(c)) row[c] = null;
+      const names = cols.filter(c => c in row);
+      const r = db.prepare(`INSERT INTO orders (${names.join(',')}) VALUES (${names.map(() => '?').join(',')})`).run(...names.map(c => row[c]));
+      made.push(Number(r.lastInsertRowid));
+    });
+    db.prepare('UPDATE orders SET letter_body = ?, page_count = ?, extra_page_cents = 0 WHERE id = ?').run(groups[0].join('\n\f\n'), groups[0].length, id);
+    db.exec('COMMIT');
+  } catch (e) { try { db.exec('ROLLBACK'); } catch {} console.error('[split-santa]', e.message); return res.status(500).json({ error: 'Could not split the order: ' + e.message }); }
+  const note = `Split into ${groups.length} orders, one envelope each (this one plus ${made.map(m => '#' + m).join(', ')}) by ${req.session.admin.username}. The customer paid once, on this order.`;
+  try {
+    db.prepare('INSERT INTO order_notes (order_id, note) VALUES (?,?)').run(id, note);
+    for (const m of made) db.prepare('INSERT INTO order_notes (order_id, note) VALUES (?,?)').run(m, `Own envelope for one child, split from order #${id}, which holds the payment. Approve and send it separately.`);
+  } catch {}
+  logAudit(req, 'order.santa_split', 'order', id, { created: made });
+  res.json({ ok: true, created: made });
 });
 
 app.post('/api/admin/orders/:id/postgrid/clear-test', requireAdmin, (req, res) => {
