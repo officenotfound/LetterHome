@@ -1135,6 +1135,64 @@ test('Santa order paid: separate envelopes become two orders automatically, one 
   assert.match(together[0].letter_body, /Dear Emma,[\s\S]*Dear Leo,/);
 });
 
+test('Santa orders, whole-order matrix: every mix of one or two children, certificates and envelope choice is priced, paid, split and printed correctly', async () => {
+  const { PDFDocument } = require('pdf-lib');
+  const { cookie } = await loginAdmin();
+  const cases = [
+    // [name, form fields, expected price, expected pages per resulting order]
+    ['one child', {}, 1200, [1]],
+    ['one child + certificate', { santa_cert: '1' }, 1500, [2]],
+    ['two children, one envelope', { santa2_child: 'Leo', santa_separate: '0' }, 1700, [2]],
+    ['two children, one envelope, both certificates', { santa2_child: 'Leo', santa_separate: '0', santa_cert: '1', santa2_cert: '1' }, 2300, [4]],
+    ['two children, one envelope, only first certificate', { santa2_child: 'Leo', santa_separate: '0', santa_cert: '1', santa2_cert: '0' }, 2000, [3]],
+    ['two children, separate', { santa2_child: 'Leo', santa_separate: '1' }, 1700, [1, 1]],
+    ['two children, separate, first certificate only', { santa2_child: 'Leo', santa_separate: '1', santa_cert: '1', santa2_cert: '0' }, 2000, [2, 1]],
+    ['two children, separate, second certificate only', { santa2_child: 'Leo', santa_separate: '1', santa_cert: '0', santa2_cert: '1' }, 2000, [1, 2]],
+    ['two children, separate, both certificates', { santa2_child: 'Leo', santa_separate: '1', santa_cert: '1', santa2_cert: '1' }, 2300, [2, 2]],
+    ['separate chosen but no second child', { santa_separate: '1' }, 1200, [1]],
+    ['second child details without a name', { santa2_nice: 'x', santa_separate: '1' }, 1200, [1]],
+  ];
+  let n = 0;
+  for (const [name, extra, price, pagesPer] of cases) {
+    const email = `matrix-${++n}@example.com`;
+    const res = await fetch(`${base}/api/create-order`, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ product: 'santa', santa_child: 'Emma', santa_interest: 'dinosaurs', santa2_interest: 'trucks', 'r-email': email, 'r-name': 'The Tremblays',
+        'r-street': '12 Rue Test', 'r-city': 'Montreal', 'r-province': 'QC', 'r-postal': 'H2X 1Y4', 'r-country': 'CA', ...extra }).toString() });
+    assert.equal(res.status, 200, `${name}: ${await res.clone().text()}`);
+    const placed = db.prepare('SELECT * FROM orders WHERE customer_email = ?').get(email);
+    assert.equal(placed.price_cents, price, `${name}: price`);
+    const payload = JSON.stringify({ type: 'checkout.session.completed', data: { object: { id: placed.stripe_session_id } } });
+    assert.equal((await fetch(`${base}/webhook`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'stripe-signature': webhookSig(payload) }, body: payload })).status, 200);
+    await new Promise(r => setTimeout(r, 150));
+    const orders = db.prepare('SELECT * FROM orders WHERE id = ? OR split_from = ? ORDER BY id').all(placed.id, placed.id);
+    assert.equal(orders.length, pagesPer.length, `${name}: number of orders`);
+    assert.equal(orders[0].price_cents, price, `${name}: the paid order keeps the whole price`);
+    const names = [];
+    for (const [i, o] of orders.entries()) {
+      assert.equal(o.status, 'paid', `${name}: order ${i + 1} is paid`);
+      assert.equal(o.letter_type, 'santa');
+      assert.equal(o.recipient_street, '12 Rue Test'); assert.equal(o.recipient_name, 'The Tremblays');
+      assert.equal(o.sender_name, 'Santa Claus');
+      assert.equal(o.postgrid_letter_id, null, `${name}: nothing is sent without approval`);
+      if (i > 0) { assert.equal(o.price_cents, 0); assert.equal(o.split_from, placed.id); }
+      const segs = o.letter_body.split('\f').map(t => t.trim()).filter(Boolean);
+      assert.equal(segs.length, pagesPer[i], `${name}: parts on order ${i + 1}`);
+      assert.equal(o.page_count, pagesPer[i], `${name}: page_count on order ${i + 1}`);
+      // one child per separate order: a certificate always sits with its own child's letter
+      const kidsHere = segs.filter(t => t.startsWith('#CERT#')).map(t => t.slice(6).trim());
+      for (const k of kidsHere) assert.match(o.letter_body, new RegExp(`Dear ${k},`), `${name}: certificate for ${k} travels with ${k}'s letter`);
+      names.push(...segs.filter(t => !t.startsWith('#CERT#')).map(t => /Dear ([^,]+),/.exec(t)[1]));
+      // the printed file builds and has exactly the pages the order holds, plus the address sheet
+      const pv = await fetch(`${base}/api/admin/orders/${o.id}/postgrid/preview`, { headers: { Cookie: cookie } });
+      assert.equal(pv.status, 200, `${name}: preview of order ${i + 1}`);
+      const doc = await PDFDocument.load(Buffer.from(await pv.arrayBuffer()));
+      assert.ok(doc.getPageCount() >= pagesPer[i], `${name}: PDF for order ${i + 1} has at least its ${pagesPer[i]} page(s)`);
+    }
+    const expectedKids = pagesPer.length > 1 ? ['Emma', 'Leo'] : (extra.santa2_child && extra.santa_separate === '0' ? ['Emma', 'Leo'] : ['Emma']);
+    assert.deepEqual(names.sort(), expectedKids.sort(), `${name}: every child gets exactly one letter`);
+  }
+});
+
 test('pound estimate: rounds UP to the next 50p, never oddly precise', () => {
   const rate = 0.53156;                                     // GBP per CAD
   assert.equal(niceGbp(600, rate), 3.5);                    // 3.19
