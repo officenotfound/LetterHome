@@ -1017,6 +1017,13 @@ test('Santa order: own price, server-written letter, Canada only, colour add-on,
   assert.equal(last().price_cents, 1200 + 500 + 2 * 300);
   assert.equal(last().page_count, 4);
   assert.match(last().letter_body, /#CERT#Emma[\s\S]*#CERT#Leo/);
+  // a certificate child by child: only the second child's, or only the first's
+  await send({ santa2_child: 'Leo', santa2_cert: '1' });
+  assert.equal(last().price_cents, 1200 + 500 + 300);
+  assert.match(last().letter_body, /#CERT#Leo/); assert.doesNotMatch(last().letter_body, /#CERT#Emma/);
+  await send({ santa2_child: 'Leo', santa_cert: '1', santa2_cert: '0' });
+  assert.equal(last().price_cents, 1200 + 500 + 300);
+  assert.match(last().letter_body, /#CERT#Emma/); assert.doesNotMatch(last().letter_body, /#CERT#Leo/);
   await send({ santa_cert: '1' });
   assert.equal(last().price_cents, 1500);
   assert.equal(last().page_count, 2);
@@ -1110,12 +1117,14 @@ test('Santa order paid: separate envelopes become two orders automatically, one 
     assert.equal(r.status, 200);
     await new Promise(r => setTimeout(r, 150));
   };
-  const sep = await place('auto-split@example.com', { santa_separate: '1' });
+  const sep = await place('auto-split@example.com', { santa_separate: '1', santa_cert: '0', santa2_cert: '1' });
   await pay(sep);
   const kids = db.prepare('SELECT * FROM orders WHERE id = ? OR split_from = ? ORDER BY id').all(sep.id, sep.id);
   assert.equal(kids.length, 2, 'two orders, one per child');
   assert.match(kids[0].letter_body, /Dear Emma,/); assert.doesNotMatch(kids[0].letter_body, /Leo/);
   assert.match(kids[1].letter_body, /Dear Leo,/); assert.doesNotMatch(kids[1].letter_body, /Emma/);
+  assert.doesNotMatch(kids[0].letter_body, /#CERT#/, 'the first child had no certificate');
+  assert.match(kids[1].letter_body, /#CERT#Leo/, 'the second child certificate goes with the second child letter');
   assert.equal(kids[0].status, 'paid'); assert.equal(kids[1].status, 'paid');
   assert.equal(kids[1].price_cents, 0);
 

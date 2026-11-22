@@ -57,9 +57,16 @@
   // children is a list of field sets (the first is required, a second is optional). Returns [{ kind: 'letter'|'certificate', child, text }].
   function pages(input) {
     input = input || {};
-    var kids = (input.children || []).map(fields).filter(function (f) { return f.child; });
+    // input.certificate adds a certificate for every child; input.certs (a list, one flag per child in order) chooses child by child.
+    var kids = [], flags = [];
+    (input.children || []).forEach(function (c, i) {
+      var f = fields(c);
+      if (!f.child) return;
+      kids.push(f);
+      flags.push(input.certs ? !!input.certs[i] : !!input.certificate);
+    });
     var out = kids.map(function (f) { return { kind: 'letter', child: f.child, text: build(f) }; });
-    if (input.certificate) kids.forEach(function (f) { out.push({ kind: 'certificate', child: f.child, text: '#CERT#' + f.child }); });
+    kids.forEach(function (f, i) { if (flags[i]) out.push({ kind: 'certificate', child: f.child, text: '#CERT#' + f.child }); });
     return out;
   }
   // The text stored on the order: pages separated by a form feed.

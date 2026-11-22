@@ -344,8 +344,9 @@ I heard that you learned to ride your bike. That is exactly the kind of thing th
       <div class="field"><label for="santa2_pet">A pet or sibling to mention</label><input id="santa2_pet" maxlength="40" autocomplete="off"></div>
       <div class="field"><label for="santa2_goal">One small thing to encourage</label><input id="santa2_goal" maxlength="120" autocomplete="off"></div>
     </div>
+    <label class="check"><input type="checkbox" id="cert2"><span>Add a Nice List certificate<span id="cert2-for"></span> (<span data-cert-price>+$3</span>). A printed colour page in the same envelope as that child's letter, signed by Santa.</span></label>
   </div>
-  <label class="check"><input type="checkbox" id="cert"><span>Add a Nice List certificate for each child (<span data-cert-price>+$3</span> each). A printed colour page in the same envelope, signed by Santa.</span></label>
+  <label class="check"><input type="checkbox" id="cert"><span>Add a Nice List certificate<span id="cert-for"></span> (<span data-cert-price>+$3</span>). A printed colour page in the same envelope as that child's letter, signed by Santa.</span></label>
 
   <div class="field"><span class="lbl">What Santa will send</span><div class="letter-preview" id="santa-preview" aria-live="polite">Enter a first name to see the letter.</div></div>
 
@@ -388,7 +389,7 @@ I heard that you learned to ride your bike. That is exactly the kind of thing th
 <script src="/footer.js?v=26" defer></script>
 <script src="/theme.js?v=4" defer></script>
 <script src="/lang.js?v=66" defer></script>
-<script src="/santa-letter.js?v=5"></script>
+<script src="/santa-letter.js?v=6"></script>
 <script>
 (function () {
   var $ = function (id) { return document.getElementById(id); };
@@ -396,7 +397,7 @@ I heard that you learned to ride your bike. That is exactly the kind of thing th
   var price = 1200, secondPrice = 500, certPrice = 300;
   function money(c) { return '$' + (c / 100).toFixed(2); }
   function kids() { return $('second').checked && $('santa2_child').value.trim() ? 2 : 1; }
-  function total() { return price + (kids() === 2 ? secondPrice : 0) + ($('cert').checked ? certPrice * kids() : 0); }
+  function total() { return price + (kids() === 2 ? secondPrice : 0) + ($('cert').checked ? certPrice : 0) + (kids() === 2 && $('cert2').checked ? certPrice : 0); }
   function priceLabels() {
     document.querySelectorAll('[data-second-price]').forEach(function (el) { el.textContent = '+' + money(secondPrice).replace('.00', ''); });
     document.querySelectorAll('[data-cert-price]').forEach(function (el) { el.textContent = '+' + money(certPrice).replace('.00', ''); });
@@ -412,7 +413,10 @@ I heard that you learned to ride your bike. That is exactly the kind of thing th
     var box = $('santa-preview');
     var children = [fields()];
     if ($('second').checked) children.push(fields2());
-    var pages = SantaLetter.pages({ children: children, certificate: $('cert').checked });
+    var pages = SantaLetter.pages({ children: children, certs: [$('cert').checked, $('cert2').checked] });
+    var n1 = SantaLetter.fields(fields()).child, n2 = SantaLetter.fields(fields2()).child;
+    $('cert-for').textContent = n1 && $('second').checked && n2 ? ' for ' + n1 : '';
+    $('cert2-for').textContent = n2 ? ' for ' + n2 : '';
     box.textContent = '';
     if (!pages.length) { box.textContent = 'Enter a first name to see the letter.'; }
     if (pages.length) { var note = document.createElement('p'); note.className = 'hint'; note.style.margin = '0 0 12px'; note.textContent = 'This is how each page prints, in colour on a Santa letterhead. Your address goes on a separate sheet at the front.'; box.appendChild(note); }
@@ -450,6 +454,7 @@ I heard that you learned to ride your bike. That is exactly the kind of thing th
   ['santa_child', 'santa_nice', 'santa_interest', 'santa_pet', 'santa_goal', 'santa2_child', 'santa2_nice', 'santa2_interest', 'santa2_pet', 'santa2_goal'].forEach(function (id) { $(id).addEventListener('input', preview); });
   $('second').addEventListener('change', function () { $('second-wrap').hidden = !this.checked; preview(); });
   $('cert').addEventListener('change', preview);
+  $('cert2').addEventListener('change', preview);
   $('r-name').addEventListener('input', function () { this.dataset.touched = '1'; });
   $('schedule').addEventListener('change', function () { $('schedule-wrap').hidden = !this.checked; });
   var tomorrow = new Date(Date.now() + 864e5);
@@ -495,6 +500,7 @@ I heard that you learned to ride your bike. That is exactly the kind of thing th
       var sep = document.querySelector('input[name="santa_envelopes"]:checked'); fd.append('santa_separate', sep && sep.value === 'separate' ? '1' : '0');
     }
     if ($('cert').checked) fd.append('santa_cert', '1');
+    if ($('second').checked && $('santa2_child').value.trim()) fd.append('santa2_cert', $('cert2').checked ? '1' : '0');
     fd.append('r-name', v('r-name')); fd.append('r-street', v('r-street')); fd.append('r-city', v('r-city'));
     fd.append('r-province', $('r-province').value); fd.append('r-postal', v('r-postal').toUpperCase());
     fd.append('r-country', 'CA'); fd.append('r-email', v('r-email'));

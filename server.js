@@ -1674,8 +1674,11 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
     const kid = (pre) => ({ child: b[pre + 'child'], nice: b[pre + 'nice'], interest: b[pre + 'interest'], pet: b[pre + 'pet'], goal: b[pre + 'goal'] });
     const children = [kid('santa_')];
     if (SantaLetter.fields(kid('santa2_')).child) children.push(kid('santa2_'));
-    const wantCert = b['santa_cert'] === '1' || b['santa_cert'] === 'true';
-    const santaText = SantaLetter.fields(children[0]).child ? SantaLetter.buildAll({ children, certificate: wantCert }) : '';
+    const flag = v => v === '1' || v === 'true';
+    // A certificate per child: santa_cert is the first child's, santa2_cert the second's. A form that sends only santa_cert gets one for every child, as before.
+    const certs = [flag(b['santa_cert'])];
+    if (children.length > 1) certs.push(b['santa2_cert'] === undefined ? flag(b['santa_cert']) : flag(b['santa2_cert']));
+    const santaText = SantaLetter.fields(children[0]).child ? SantaLetter.buildAll({ children, certs }) : '';
     b['letter-body'] = santaText;
     // Every Letter from Santa goes out with Santa's own return address (the one Canada Post publishes), never the customer's or ours.
     const R = SantaLetter.RETURN;
