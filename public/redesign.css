@@ -652,3 +652,7 @@ html[data-theme="dark"]:not([data-country]) body main.ab h1.ab-logo .logo-accent
   html body .season-bar a.sb-t:not(.season-santa){font:700 14px/1.3 Roboto,Arial,sans-serif!important;text-decoration:none!important}
   html body .season-bar a.season-santa{font:700 14px/1.3 Roboto,Arial,sans-serif!important;background:#fff!important;color:#14532d!important;text-decoration:none!important;padding:6px 12px!important;border-radius:6px!important}
 }
+/* Message boxes: the field rule above sets min-height 44px on every control, which collapsed the letter box to about three lines. */
+:root body :is(.form-group,.field) textarea{min-height:140px!important;line-height:1.55}
+:root body #letter-body{min-height:300px!important;line-height:1.6}
+@media(max-width:700px){:root body #letter-body{min-height:260px!important}}
