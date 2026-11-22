@@ -1096,6 +1096,36 @@ test('Santa order with two children: admin splits it into one order per child, e
   assert.equal((await fetch(`${base}/api/admin/orders/${o.id}/postgrid/split-santa`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })).status, 401);
 });
 
+test('Santa order paid: separate envelopes become two orders automatically, one envelope stays one order', async () => {
+  const place = async (email, extra) => {
+    const res = await fetch(`${base}/api/create-order`, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ product: 'santa', santa_child: 'Emma', santa2_child: 'Leo', 'r-email': email, 'r-name': 'The Tremblays', 'r-street': '1 Rue Test',
+        'r-city': 'Montreal', 'r-province': 'QC', 'r-postal': 'H2X 1Y4', 'r-country': 'CA', ...extra }).toString() });
+    assert.equal(res.status, 200, await res.clone().text());
+    return db.prepare('SELECT * FROM orders WHERE customer_email = ?').get(email);
+  };
+  const pay = async (o) => {
+    const payload = JSON.stringify({ type: 'checkout.session.completed', data: { object: { id: o.stripe_session_id } } });
+    const r = await fetch(`${base}/webhook`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'stripe-signature': webhookSig(payload) }, body: payload });
+    assert.equal(r.status, 200);
+    await new Promise(r => setTimeout(r, 150));
+  };
+  const sep = await place('auto-split@example.com', { santa_separate: '1' });
+  await pay(sep);
+  const kids = db.prepare('SELECT * FROM orders WHERE id = ? OR split_from = ? ORDER BY id').all(sep.id, sep.id);
+  assert.equal(kids.length, 2, 'two orders, one per child');
+  assert.match(kids[0].letter_body, /Dear Emma,/); assert.doesNotMatch(kids[0].letter_body, /Leo/);
+  assert.match(kids[1].letter_body, /Dear Leo,/); assert.doesNotMatch(kids[1].letter_body, /Emma/);
+  assert.equal(kids[0].status, 'paid'); assert.equal(kids[1].status, 'paid');
+  assert.equal(kids[1].price_cents, 0);
+
+  const one = await place('no-split@example.com', { santa_separate: '0' });
+  await pay(one);
+  const together = db.prepare('SELECT * FROM orders WHERE id = ? OR split_from = ?').all(one.id, one.id);
+  assert.equal(together.length, 1, 'one envelope stays one order');
+  assert.match(together[0].letter_body, /Dear Emma,[\s\S]*Dear Leo,/);
+});
+
 test('pound estimate: rounds UP to the next 50p, never oddly precise', () => {
   const rate = 0.53156;                                     // GBP per CAD
   assert.equal(niceGbp(600, rate), 3.5);                    // 3.19

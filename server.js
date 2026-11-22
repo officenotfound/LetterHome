@@ -2599,18 +2599,17 @@ function santaGroups(body) {
     return pages;
   });
 }
-app.post('/api/admin/orders/:id/postgrid/split-santa', requireAdmin, (req, res) => {
-  const id = Number(req.params.id);
+function splitSantaOrder(id, actor) {
   const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(id);
-  if (!order) return res.status(404).json({ error: 'Order not found' });
-  if (order.letter_type !== 'santa') return res.status(400).json({ error: 'This is not a Letter from Santa.' });
-  if (order.status !== 'paid' || order.postgrid_letter_id || order.deleted_at) return res.status(409).json({ error: 'Only a paid order that has not gone to the printer can be split.' });
-  if (order.split_from) return res.status(409).json({ error: 'This order is already one of the split letters.' });
-  if (db.prepare('SELECT 1 FROM orders WHERE split_from = ? LIMIT 1').get(id)) return res.status(409).json({ error: 'This order was already split.' });
+  if (!order) return { status: 404, error: 'Order not found' };
+  if (order.letter_type !== 'santa') return { status: 400, error: 'This is not a Letter from Santa.' };
+  if (order.status !== 'paid' || order.postgrid_letter_id || order.deleted_at) return { status: 409, error: 'Only a paid order that has not gone to the printer can be split.' };
+  if (order.split_from) return { status: 409, error: 'This order is already one of the split letters.' };
+  if (db.prepare('SELECT 1 FROM orders WHERE split_from = ? LIMIT 1').get(id)) return { status: 409, error: 'This order was already split.' };
   const groups = santaGroups(order.letter_body);
-  if (groups.length < 2) return res.status(400).json({ error: 'There is only one letter on this order.' });
+  if (groups.length < 2) return { status: 400, error: 'There is only one letter on this order.' };
   const cols = db.prepare('PRAGMA table_info(orders)').all().map(c => c.name).filter(c => c !== 'id');
-  const blank = new Set(['postgrid_letter_id', 'postgrid_status', 'postgrid_mode', 'postgrid_error', 'postgrid_submitted_at', 'postgrid_tracking_number', 'postgrid_url', 'printer_email_sent_at', 'mailed_at', 'status_token', 'stripe_payment_intent', 'discount_code', 'discount_cents']);
+  const blank = new Set(['postgrid_letter_id', 'postgrid_status', 'postgrid_mode', 'postgrid_error', 'postgrid_submitted_at', 'postgrid_tracking_number', 'postgrid_url', 'printer_email_sent_at', 'mailed_at', 'stripe_payment_intent', 'discount_code', 'discount_cents']);
   const made = [];
   db.exec('BEGIN');
   try {
@@ -2618,21 +2617,27 @@ app.post('/api/admin/orders/:id/postgrid/split-santa', requireAdmin, (req, res) 
       const row = db.prepare('SELECT * FROM orders WHERE id = ?').get(id);
       Object.assign(row, { stripe_session_id: `${order.stripe_session_id || 'order' + id}-split-${n + 2}`, letter_body: pages.join('\n\f\n'), page_count: pages.length, price_cents: 0, extra_page_cents: 0, split_from: id, status_token: randomUUID() });
       if ('charge_cents' in row) row.charge_cents = 0;
-      for (const c of blank) if (c in row && !['stripe_session_id', 'status_token'].includes(c)) row[c] = null;
+      for (const c of blank) if (c in row) row[c] = null;
       const names = cols.filter(c => c in row);
       const r = db.prepare(`INSERT INTO orders (${names.join(',')}) VALUES (${names.map(() => '?').join(',')})`).run(...names.map(c => row[c]));
       made.push(Number(r.lastInsertRowid));
     });
     db.prepare('UPDATE orders SET letter_body = ?, page_count = ?, extra_page_cents = 0 WHERE id = ?').run(groups[0].join('\n\f\n'), groups[0].length, id);
     db.exec('COMMIT');
-  } catch (e) { try { db.exec('ROLLBACK'); } catch {} console.error('[split-santa]', e.message); return res.status(500).json({ error: 'Could not split the order: ' + e.message }); }
-  const note = `Split into ${groups.length} orders, one envelope each (this one plus ${made.map(m => '#' + m).join(', ')}) by ${req.session.admin.username}. The customer paid once, on this order.`;
+  } catch (e) { try { db.exec('ROLLBACK'); } catch {} console.error('[split-santa]', e.message); return { status: 500, error: 'Could not split the order: ' + e.message }; }
+  const note = `Split into ${groups.length} orders, one envelope each (this one plus ${made.map(m => '#' + m).join(', ')}) by ${actor}. The customer paid once, on this order.`;
   try {
     db.prepare('INSERT INTO order_notes (order_id, note) VALUES (?,?)').run(id, note);
     for (const m of made) db.prepare('INSERT INTO order_notes (order_id, note) VALUES (?,?)').run(m, `Own envelope for one child, split from order #${id}, which holds the payment. Approve and send it separately.`);
   } catch {}
-  logAudit(req, 'order.santa_split', 'order', id, { created: made });
-  res.json({ ok: true, created: made });
+  return { ok: true, created: made };
+}
+app.post('/api/admin/orders/:id/postgrid/split-santa', requireAdmin, (req, res) => {
+  const id = Number(req.params.id);
+  const r = splitSantaOrder(id, req.session.admin.username);
+  if (!r.ok) return res.status(r.status).json({ error: r.error });
+  logAudit(req, 'order.santa_split', 'order', id, { created: r.created });
+  res.json({ ok: true, created: r.created });
 });
 
 app.post('/api/admin/orders/:id/postgrid/clear-test', requireAdmin, (req, res) => {
@@ -4107,6 +4112,8 @@ async function fulfillOrder(sessionId) {
   if (result.changes === 0) return;
   if (order.discount_code) db.prepare('UPDATE discount_codes SET uses_count = uses_count + 1 WHERE code = ?').run(order.discount_code);
   ga4.sendOrderEvent(order, 'purchase', { transaction_id: 'order-' + order.id }).catch(() => {});
+  // A Santa order where the customer chose a separate envelope per child becomes one order per child, so each is approved and sent on its own.
+  if (order.letter_type === 'santa' && order.santa_separate) { try { const sp = splitSantaOrder(order.id, 'the order form (the customer chose separate envelopes)'); if (sp.ok) console.log(`[santa] order #${order.id} split into ${sp.created.length + 1} orders`); } catch (e) { console.error('[santa] auto split failed:', e.message); } }
 
   const paidCurrency = (order.charge_currency || 'CAD').toUpperCase();
   const paidAmount = ((order.charge_cents || session.amount_total) / 100).toFixed(2);
