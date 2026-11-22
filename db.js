@@ -70,6 +70,7 @@ db.exec(`
 
 try { db.exec(`ALTER TABLE orders ADD COLUMN deleted_at DATETIME`);       } catch {}
 try { db.exec(`ALTER TABLE orders ADD COLUMN split_from INTEGER`);        } catch {}   // set on an extra order made by splitting a Santa order into one envelope per child; points at the paid order
+try { db.exec(`ALTER TABLE orders ADD COLUMN santa_separate INTEGER`); } catch {}   // 1 when the customer chose a separate envelope for each child on a Santa order with two letters
 try { db.exec(`ALTER TABLE orders ADD COLUMN order_site TEXT`);          } catch {}   // which site took the order: ca, us or uk
 try { db.exec(`ALTER TABLE orders ADD COLUMN order_lang TEXT`);          } catch {}   // 'es' when the order was placed in Spanish (emails and status page follow it)
 try { db.exec(`ALTER TABLE orders ADD COLUMN charge_currency TEXT`);     } catch {}   // set for fixed-price US, UK and AU orders; empty means CAD

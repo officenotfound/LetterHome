@@ -1838,6 +1838,7 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
   // checkout asking for AUD, so the requested currency (not the one charged) says they came through those pages.
   const siteKey  = sites.keyOf(req) || 'ca';
   db.prepare('UPDATE orders SET order_region = ? WHERE id = ?').run(siteKey === 'ca' && wantCurrency === 'AUD' ? 'au' : siteKey, orderId);
+  if (isSanta && santaParts(b['letter-body']).letters > 1 && String(b['santa_separate'] || '') === '1') db.prepare('UPDATE orders SET santa_separate = 1 WHERE id = ?').run(orderId);   // the customer asked for one envelope per child
   const now      = new Date();
   const orderDir = orderDirPath(orderId, now);
   fs.mkdirSync(orderDir, { recursive: true });
@@ -1969,7 +1970,7 @@ app.get('/resume/:token', trackLimiter, async (req, res) => {
     const extras = [];
     if (order.extra_page_cents > 0) extras.push(`${(order.page_count || 0) - FREE_PAGES} extra page(s)`);
     if (order.colour_printing && order.letter_type !== 'santa') extras.push('colour printing');
-    if (order.letter_type === 'santa') { const sp = santaParts(order.letter_body); if (sp.letters > 1) extras.push('second letter'); if (sp.certs) extras.push(sp.certs > 1 ? `${sp.certs} Nice List certificates` : 'Nice List certificate'); }
+    if (order.letter_type === 'santa') { const sp = santaParts(order.letter_body); if (sp.letters > 1) extras.push(order.santa_separate ? 'second letter (separate envelopes)' : 'second letter (same envelope)'); if (sp.certs) extras.push(sp.certs > 1 ? `${sp.certs} Nice List certificates` : 'Nice List certificate'); }
     if (order.registered_mail)   extras.push('registered mail');
     if (order.certified_mail)    extras.push('certified mail');
     if (order.express_mail)      extras.push('express delivery');

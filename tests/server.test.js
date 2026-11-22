@@ -1056,11 +1056,12 @@ test('Santa order: own price, server-written letter, Canada only, colour add-on,
 
 test('Santa order with two children: admin splits it into one order per child, each with its own letter and certificate', async () => {
   const res = await fetch(`${base}/api/create-order`, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ product: 'santa', santa_child: 'Emma', santa_pet: 'Biscuit', santa2_child: 'Leo', santa2_interest: 'trucks', santa_cert: '1',
+    body: new URLSearchParams({ product: 'santa', santa_child: 'Emma', santa_pet: 'Biscuit', santa2_child: 'Leo', santa2_interest: 'trucks', santa_cert: '1', santa_separate: '1',
       'r-email': 'split-check@example.com', 'r-name': 'The Tremblays', 'r-street': '1 Rue Test', 'r-city': 'Montreal', 'r-province': 'QC', 'r-postal': 'H2X 1Y4', 'r-country': 'CA' }).toString() });
   assert.equal(res.status, 200);
   const o = db.prepare("SELECT * FROM orders WHERE customer_email = 'split-check@example.com'").get();
   assert.equal(o.price_cents, 1200 + 500 + 2 * 300);
+  assert.equal(o.santa_separate, 1, 'the customer asked for separate envelopes');
   db.prepare("UPDATE orders SET status = 'paid' WHERE id = ?").run(o.id);
   const { cookie, csrfToken } = await loginAdmin();
   const hdr = { 'Content-Type': 'application/json', Cookie: cookie, 'X-CSRF-Token': csrfToken };
@@ -1088,7 +1089,8 @@ test('Santa order with two children: admin splits it into one order per child, e
   // one child only: nothing to split
   await fetch(`${base}/api/create-order`, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({ product: 'santa', santa_child: 'Zoe', 'r-email': 'split-one@example.com', 'r-name': 'Z', 'r-street': '1 Rue Test', 'r-city': 'Montreal', 'r-province': 'QC', 'r-postal': 'H2X 1Y4', 'r-country': 'CA' }).toString() });
-  const one = db.prepare("SELECT id FROM orders WHERE customer_email = 'split-one@example.com'").get();
+  const one = db.prepare("SELECT id, santa_separate FROM orders WHERE customer_email = 'split-one@example.com'").get();
+  assert.equal(one.santa_separate, null, 'one child: no envelope choice stored');
   db.prepare("UPDATE orders SET status = 'paid' WHERE id = ?").run(one.id);
   assert.equal((await fetch(`${base}/api/admin/orders/${one.id}/postgrid/split-santa`, { method: 'POST', headers: hdr, body: '{}' })).status, 400);
   assert.equal((await fetch(`${base}/api/admin/orders/${o.id}/postgrid/split-santa`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })).status, 401);
