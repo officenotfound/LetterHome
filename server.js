@@ -5401,6 +5401,17 @@ async function addressCheckJob() {
 }
 cron.schedule('*/10 * * * *', () => { addressCheckJob(); });
 cron.schedule('*/30 * * * *', () => { ops.stuckJob().catch(e => console.error('[stuck-alert] failed:', e.message)); });
+// The morning before an approved scheduled order goes out, remind the owner so it can be checked by eye. Runs once a day.
+cron.schedule('5 8 * * *', () => {
+  try {
+    const d = new Date(Date.now() + 86400000).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' });
+    const rows = db.prepare(`SELECT id, recipient_name FROM orders WHERE status = 'paid' AND deleted_at IS NULL AND send_approved_at IS NOT NULL
+      AND (postgrid_letter_id IS NULL OR postgrid_status = 'cancelled') AND scheduled_date = ?`).all(d);
+    if (!rows.length) return;
+    sendOwnerMail(`${rows.length} scheduled order${rows.length > 1 ? 's' : ''} go to print tomorrow`,
+      `These approved orders go to print automatically tomorrow (${d}):\n\n${rows.map(o => `  Order #${o.id}: ${o.recipient_name || 'no name'}`).join('\n')}\n\nTo stop one, open Admin, Orders, Approvals and press Withdraw approval. You will get another email when each one is sent.`);
+  } catch (e) { console.error('[scheduled-reminder] failed:', e.message); }
+});
 cron.schedule('0 8 * * *', () => { if (getSetting('daily_summary', 'true') !== 'false') ops.sendSummary().catch(e => console.error('[summary] failed:', e.message)); });
 cron.schedule('*/15 * * * *', () => { postgridSweep(); });
 cron.schedule('30 6 * * 1', () => { fxRefreshJob({ force: true }); });   // weekly, Monday 06:30 server time
