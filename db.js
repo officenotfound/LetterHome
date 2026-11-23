@@ -99,6 +99,14 @@ try { db.exec(`ALTER TABLE orders ADD COLUMN postgrid_status TEXT`); } catch {}
 try { db.exec(`ALTER TABLE orders ADD COLUMN postgrid_url TEXT`); } catch {}
 try { db.exec(`ALTER TABLE orders ADD COLUMN postgrid_error TEXT`); } catch {}
 try { db.exec(`ALTER TABLE orders ADD COLUMN send_approved_at DATETIME`); } catch {}   // owner approved a scheduled order: the sweep sends it on its date
+
+try { db.exec(`CREATE TABLE IF NOT EXISTS admin_users (
+  username TEXT PRIMARY KEY COLLATE NOCASE,
+  password_hash TEXT NOT NULL,
+  totp_secret TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  created_by TEXT
+)`); } catch (e) { console.error('[init] admin_users table:', e.message); }   // extra admin accounts added from the admin screen; the first two still come from .env
 try { db.exec(`ALTER TABLE orders ADD COLUMN postgrid_submitted_at DATETIME`); } catch {}
 try { db.exec(`ALTER TABLE orders ADD COLUMN postgrid_mode TEXT`); } catch {}
 try { db.exec(`ALTER TABLE orders ADD COLUMN postgrid_tracking_number TEXT`); } catch {}

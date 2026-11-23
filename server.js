@@ -1571,7 +1571,24 @@ function loginFailed(email) {
 }
 
 const ADMIN_SESSION_MAX_AGE_MS = 12 * 60 * 60 * 1000;
+// The two owner accounts come from the server settings; more can be added on the Admin users screen.
+function envAdminAccounts() {
+  return [
+    { user: process.env.ADMIN_USERNAME,  hash: process.env.ADMIN_PASSWORD_HASH,  totpSecret: process.env.TOTP_SECRET },
+    { user: process.env.ADMIN2_USERNAME, hash: process.env.ADMIN2_PASSWORD_HASH, totpSecret: process.env.ADMIN2_TOTP_SECRET },
+  ].filter(a => a.user && a.hash);
+}
+let adminUsersApi = null;
+
 function requireAdmin(req, res, next) {
+  // An account that was removed (here or from the server settings) loses its open sessions at once, not after 30 days.
+  if (req.session?.admin && adminUsersApi && !adminUsersApi.stillValid(req.session.admin.username)) {
+    delete req.session.admin;
+    return req.session.save(() => {
+      if (req.path.startsWith('/api/')) return res.status(401).json({ error: 'This account no longer has access.' });
+      res.redirect('/admin/login');
+    });
+  }
   if (req.session?.admin) {
     const loginAt = req.session.admin.loginAt || 0;
     if (Date.now() - loginAt > ADMIN_SESSION_MAX_AGE_MS) {
@@ -2152,10 +2169,7 @@ app.post('/admin/login', loginLimiter, async (req, res) => {
   // Use Express's req.ip (derived from the trusted-proxy chain) rather than the
   // raw, client-spoofable X-Forwarded-For so the failed-login alert can't be evaded.
   const ip = (req.ip || '').replace(/^::ffff:/, '');
-  const accounts = [
-    { user: process.env.ADMIN_USERNAME,  hash: process.env.ADMIN_PASSWORD_HASH,  totpSecret: process.env.TOTP_SECRET },
-    { user: process.env.ADMIN2_USERNAME, hash: process.env.ADMIN2_PASSWORD_HASH, totpSecret: process.env.ADMIN2_TOTP_SECRET },
-  ].filter(a => a.user && a.hash);
+  const accounts = [...envAdminAccounts(), ...(adminUsersApi ? adminUsersApi.accountsForLogin() : [])];
   const account = accounts.find(a => a.user === username);
   // Always run a bcrypt compare even for unknown usernames so response timing
   // doesn't reveal which account names exist.
@@ -2183,7 +2197,7 @@ app.post('/admin/login', loginLimiter, async (req, res) => {
 
   req.session.regenerate(err => {
     if (err) return res.status(500).send('Session error');
-    req.session.admin = { username, loginAt: Date.now(), has2FA: !!account.totpSecret };
+    req.session.admin = { username: account.user, loginAt: Date.now(), has2FA: !!account.totpSecret };
     req.session.csrfToken = randomBytes(32).toString('hex');
     req.session.save(err2 => {
       if (err2) return res.status(500).send('Session error');
@@ -2233,6 +2247,7 @@ const indexNow = require('./indexnow').create({
 });
 const ops = require('./opsAlerts').createOps({ db, sendOwnerMail: (...a) => sendOwnerMail(...a), contentHeld: o => contentHeld(o) });
 traffic.register(app, { db, requireAdmin });
+adminUsersApi = require('./adminUsers').register(app, { db, requireAdmin, logAudit, envAccounts: envAdminAccounts });
 const adminTools = require('./adminTools').register(app, {
   db, requireAdmin, logAudit, getSetting, indexNow,
   backupDir: process.env.BACKUP_DIR || path.join(__dirname, 'backups'),
@@ -2245,6 +2260,8 @@ const adminTools = require('./adminTools').register(app, {
   checkAddress: id => addressCheck(id),
   today: () => torontoToday(),
 });
+
+require('./adminExtras').register(app, { db, requireAdmin, logAudit, getSetting, contentHeld: o => contentHeld(o), today: () => torontoToday(), ops });
 
 app.get('/api/admin/me', requireAdmin, (req, res) =>
   res.json({

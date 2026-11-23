@@ -431,6 +431,7 @@ html[data-theme="dark"] body [style*="solid #ececec"],html[data-theme="dark"] bo
     <button class="mob-menu-btn" onclick="toggleMobSidebar()" aria-label="Open menu">☰</button>
     <div class="topbar-title" id="topbar-title">Dashboard</div>
     <div style="display:flex;align-items:center;gap:16px">
+      <button class="btn btn-outline btn-sm" onclick="openSearch()" title="Press / anywhere">Search</button>
       <div class="notif-wrap">
         <button class="notif-btn" id="notif-btn" onclick="toggleNotifPanel()" aria-label="Notifications" aria-expanded="false">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
@@ -511,6 +512,8 @@ function renderRoute(p) {
   if (p === '/admin/followups')                     return showFollowups();
   if (p === '/admin/print-queue')                   return showPrintQueue();
   if (p === '/admin/approvals')                     return showApprovals();
+  if (p === '/admin/profit')                        return showProfit();
+  if (p === '/admin/admin-users')                   return showAdminUsers();
   if (p === '/admin/insights')                      return showInsights();
   if (p === '/admin/visitors')                      return showVisitors();
   if (p === '/admin/stripe')                        return showStripe();
@@ -536,8 +539,8 @@ const NAV_GROUPS = {
   orders:   { tabs: [['/admin/orders', 'Orders'], ['/admin/approvals', 'Approvals'], ['/admin/print-queue', 'Print queue']] },
   people:   { tabs: [['/admin/customers', 'Customers'], ['/admin/accounts', 'Accounts'], ['/admin/contacts', 'Contacts'], ['/admin/applicants', 'Applicants'], ['/admin/businesses', 'Businesses']] },
   messages: { tabs: [['/admin/broadcast', 'Broadcast'], ['/admin/outreach', 'Outreach'], ['/admin/followups', 'Follow-ups'], ['/admin/templates', 'Templates'], ['/admin/emails', 'Emails']] },
-  reports:  { tabs: [['/admin/insights', 'Insights'], ['/admin/visitors', 'Visitors'], ['/admin/traffic', 'Traffic'], ['/admin/growth', 'Search'], ['/admin/funnel', 'Funnel'], ['/admin/seo-audit', 'Content audit'], ['/admin/stripe', 'Stripe']] },
-  system:   { tabs: [['/admin/settings', 'Settings'], ['/admin/health', 'Health'], ['/admin/codes', 'Codes'], ['/admin/audit-log', 'Audit log'], ['/admin/trash', 'Trash']] },
+  reports:  { tabs: [['/admin/insights', 'Insights'], ['/admin/visitors', 'Visitors'], ['/admin/traffic', 'Traffic'], ['/admin/growth', 'Search'], ['/admin/funnel', 'Funnel'], ['/admin/seo-audit', 'Content audit'], ['/admin/profit', 'Profit'], ['/admin/stripe', 'Stripe']] },
+  system:   { tabs: [['/admin/settings', 'Settings'], ['/admin/health', 'Health'], ['/admin/codes', 'Codes'], ['/admin/admin-users', 'Admin users'], ['/admin/audit-log', 'Audit log'], ['/admin/trash', 'Trash']] },
 };
 function groupOf(p) {
   for (const [g, v] of Object.entries(NAV_GROUPS)) {
@@ -776,6 +779,7 @@ async function showDashboard() {
   if (!stats) return;
 
   renderDashboard(stats, paidOrders, submittedOrders, chartData, geoData, 'monthly', stripeOv, health);
+  loadTodayCard();
 }
 
 async function reloadDashChart(period) {
@@ -829,6 +833,7 @@ function renderDashboard(stats, paidOrders, submittedOrders, chartData, geoData,
   const geoToRows   = (geoData?.to   || []).slice(0,5).map(r => `<tr><td>${esc(r.country||'—')}</td><td>${r.orders}</td></tr>`).join('');
 
   setMain(`
+    <div id="today-card"></div>
     ${(() => {
       const toSubmit = (paidOrders||[]).length, atPrinter = (submittedOrders||[]).length;
       const unread = window._unreadContacts || 0;
@@ -1180,6 +1185,130 @@ async function showPrintQueue() {
     ${cards}`);
 }
 
+// ── Today card, send date edit, Profit, Admin users, search ─────────────────────────────────────────
+async function loadTodayCard() {
+  const box = document.getElementById('today-card'); if (!box) return;
+  const d = await api('/api/admin/today'); if (!d) return;
+  const link = (o, extra) => `<a class="link" href="/admin/orders/${o.id}" onclick="event.preventDefault();go('/admin/orders/${o.id}')">#${o.id}</a> ${esc(o.name)}${extra ? ' <span style="color:#6b6b6b">' + extra + '</span>' : ''}`;
+  const sect = (title, color, items, f) => items.length ? `<div style="margin-bottom:12px"><div style="font-size:12px;font-weight:600;color:${color};margin-bottom:4px">${title} (${items.length})</div>${items.slice(0, 6).map(o => `<div style="font-size:13px;line-height:1.8">${f(o)}</div>`).join('')}${items.length > 6 ? `<div style="font-size:12px;color:#6b6b6b">+${items.length - 6} more</div>` : ''}</div>` : '';
+  const parts = [
+    sect('Problems', '#c1121f', d.needs_attention, o => link(o, esc(o.why))),
+    sect('Due to go to print now', '#c1121f', d.due_today.filter(o => !d.needs_attention.some(n => n.id === o.id)), o => link(o, o.approved ? 'approved, sends on the next check' : 'not approved')),
+    sect('Go to print tomorrow', '#15803d', d.tomorrow, o => link(o, o.approved ? 'approved' : 'NOT approved yet')),
+    sect('Scheduled this week, not approved', '#92400e', d.unapproved_soon, o => link(o, 'sends ' + esc(o.date))),
+  ].join('');
+  const counts = `<button class="btn btn-outline btn-sm" onclick="go('/admin/approvals')">${d.approvals_waiting} waiting for approval</button> ${d.held ? `<button class="btn btn-outline btn-sm" onclick="go('/admin/approvals')">${d.held} held for content</button>` : ''} <button class="btn btn-outline btn-sm" onclick="go('/admin/print-queue')">Print queue and calendar</button>`;
+  box.innerHTML = `<div class="card" style="margin-bottom:20px"><div class="card-header"><div class="card-title">Today</div></div><div style="padding:14px 20px">
+    ${parts || '<div style="font-size:13px;color:#15803d;margin-bottom:12px">Nothing is stuck and nothing is due. You are caught up.</div>'}
+    <div style="display:flex;gap:8px;flex-wrap:wrap">${counts}</div></div></div>`;
+}
+
+async function saveSendDate(id, remove) {
+  const date = remove ? '' : (document.getElementById('sd-input') || {}).value || '';
+  if (!remove && !date) return alert('Choose a date first.');
+  if (!confirm(remove ? 'Remove the send date? The order will no longer be scheduled.' : `Change the send date to ${date}? Any approval is withdrawn, so approve it again after.`)) return;
+  const r = await pgCall(`/api/admin/orders/${id}/scheduled-date`, 'POST', { date });
+  if (!r.ok) return alert(r.error || 'Could not change the date.');
+  showOrder(id);
+}
+
+async function showProfit(days) {
+  setTitle('Profit');
+  days = days || 90;
+  const d = await api('/api/admin/profit?days=' + days);
+  if (!d) return setMain('<div class="empty">Could not load this section.</div>');
+  const cad = c => (c / 100).toLocaleString('en-CA', { style: 'currency', currency: 'CAD' });
+  const col = m => m < d.floor ? '#c1121f' : m < d.floor + 8 ? '#92400e' : '#15803d';
+  const table = (title, rows) => `<div class="card" style="margin-bottom:20px"><div class="card-header"><div class="card-title">${title}</div></div><div style="overflow-x:auto"><table style="width:100%"><thead><tr><th style="text-align:left">&nbsp;</th><th>Orders</th><th>Revenue</th><th>Est. cost</th><th>Est. profit</th><th>Margin</th></tr></thead><tbody>
+    ${rows.map(r => `<tr><td>${esc(r.key)}</td><td>${r.orders}</td><td>${cad(r.revenue_cents)}</td><td>${cad(r.cost_cents)}</td><td>${cad(r.profit_cents)}</td><td style="color:${col(r.margin)};font-weight:600">${r.margin}%</td></tr>`).join('') || '<tr><td colspan="6" style="color:#6b6b6b">No orders in this period.</td></tr>'}</tbody></table></div></div>`;
+  const bad = d.below_floor.length ? `<div class="card" style="margin-bottom:20px"><div class="card-header"><div class="card-title">Orders under the ${d.floor}% floor (${d.below_floor.length} worst shown)</div></div><div style="overflow-x:auto"><table style="width:100%"><thead><tr><th>Order</th><th>To</th><th>Revenue</th><th>Est. cost</th><th>Margin</th></tr></thead><tbody>
+    ${d.below_floor.map(o => `<tr><td><button class="link" onclick="go('/admin/orders/${o.id}')">#${o.id}</button> ${esc(o.name)}</td><td>${esc(o.country)}</td><td>${cad(o.revenue)}</td><td>${cad(o.cost)}</td><td style="color:#c1121f;font-weight:600">${o.margin}%</td></tr>`).join('')}</tbody></table></div></div>` : '';
+  setMain(`
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:16px">
+      ${[30, 90, 180, 365].map(n => `<button class="btn ${n === d.days ? 'btn-primary' : 'btn-outline'} btn-sm" onclick="showProfit(${n})">${n} days</button>`).join('')}
+      <span style="font-size:12px;color:#6b6b6b">Estimates, not accounting. Cost is PostGrid's published rate plus Stripe, at ${d.fx} CAD per USD.</span>
+    </div>
+    <div class="card" style="margin-bottom:20px;padding:18px 20px;display:flex;gap:32px;flex-wrap:wrap">
+      <div><div style="font-size:12px;color:#6b6b6b">Orders</div><div style="font-size:22px;font-weight:600">${d.total.orders}</div></div>
+      <div><div style="font-size:12px;color:#6b6b6b">Revenue</div><div style="font-size:22px;font-weight:600">${cad(d.total.revenue_cents)}</div></div>
+      <div><div style="font-size:12px;color:#6b6b6b">Est. profit</div><div style="font-size:22px;font-weight:600">${cad(d.total.profit_cents)}</div></div>
+      <div><div style="font-size:12px;color:#6b6b6b">Margin (floor ${d.floor}%)</div><div style="font-size:22px;font-weight:600;color:${col(d.total.margin)}">${d.total.margin}%</div></div>
+    </div>
+    ${table('By destination', d.by_country)}
+    ${table('By extra (an order with several extras counts under each)', d.by_addon)}
+    ${bad}
+    <div style="font-size:12px;color:#6b6b6b;line-height:1.7;max-width:760px">How this is worked out: ${esc(d.assumptions.pages_note)} Stripe is ${esc(d.assumptions.stripe)}. Destinations other than Canada, the US, the UK and Australia assume the Canada rate plus US$${d.assumptions.intl_surcharge_usd} for international delivery, which PostGrid has not confirmed. Registered, certified and express costs use PostGrid's list prices. Change the margin floor or exchange rate in Settings (profit_floor_pct, fx_usd_cad).</div>`);
+}
+
+async function showAdminUsers(secretInfo) {
+  setTitle('Admin users');
+  const d = await api('/api/admin/admin-users');
+  if (!d) return setMain('<div class="empty">Could not load this section.</div>');
+  const setup = secretInfo ? `<div class="card" style="margin-bottom:20px;padding:16px 20px;border-left:3px solid #15803d"><strong>Two-factor key for ${esc(secretInfo.username)}</strong> (shown once)
+    <div style="font-family:monospace;font-size:14px;margin:8px 0;word-break:break-all;user-select:all">${esc(secretInfo.secret)}</div>
+    <div style="font-size:12px;color:#6b6b6b;line-height:1.6">Give this key to ${esc(secretInfo.username)} privately. In an authenticator app choose "enter a setup key", paste it, and use a 6-digit time-based code at sign-in. Anyone with this key can generate codes, so do not send it with the password in one message.</div></div>` : '';
+  const rows = d.users.map(u => `<tr><td>${esc(u.username)}${u.username === d.me ? ' <span style="color:#6b6b6b;font-size:11px">(you)</span>' : ''}</td><td>${esc(u.source)}</td><td>${u.has2FA ? 'On' : '<span style="color:#c1121f">Off</span>'}</td><td>${u.created_at ? fmtDate(u.created_at) : ''}</td>
+    <td style="text-align:right;white-space:nowrap">${u.removable ? `<button class="btn btn-outline btn-sm" onclick="adminUserAct('password','${esc(u.username)}')">New password</button> <button class="btn btn-outline btn-sm" onclick="adminUserAct('reset-2fa','${esc(u.username)}')">New 2FA key</button> ${u.username === d.me ? '' : `<button class="btn btn-outline btn-sm" style="color:#b42318;border-color:#b42318" onclick="adminUserAct('remove','${esc(u.username)}')">Remove</button>`}` : '<span style="font-size:11px;color:#9a9a9a">set in server settings</span>'}</td></tr>`).join('');
+  setMain(`${setup}
+    <div class="card" style="margin-bottom:20px"><div class="card-header"><div class="card-title">People who can sign in to this admin</div></div><div style="overflow-x:auto"><table style="width:100%"><thead><tr><th>Username</th><th>Where it is set</th><th>2FA</th><th>Added</th><th></th></tr></thead><tbody>${rows}</tbody></table></div></div>
+    <div class="card" style="padding:18px 20px;max-width:560px"><div class="card-title" style="margin-bottom:10px">Add an admin</div>
+      <div class="field" style="margin-bottom:10px"><label>Username</label><input id="au-name" type="text" autocomplete="off"></div>
+      <div class="field" style="margin-bottom:10px"><label>Password (12 or more characters)</label><input id="au-pass" type="password" autocomplete="new-password"></div>
+      <div class="field" style="margin-bottom:12px"><label>Your password, to confirm</label><input id="au-me" type="password" autocomplete="current-password"></div>
+      <button class="btn btn-primary btn-sm" onclick="adminUserAdd()">Add admin</button>
+      <div id="au-msg" style="font-size:12px;color:#b42318;margin-top:8px"></div>
+      <div style="font-size:12px;color:#6b6b6b;margin-top:10px;line-height:1.6">A new admin can do everything you can, including approving orders and refunds. Removing an account signs it out straight away. The two owner accounts are set in the server settings and are not changed here.</div></div>`);
+}
+async function adminUserAdd() {
+  const v = id => document.getElementById(id).value;
+  const r = await pgCall('/api/admin/admin-users', 'POST', { username: v('au-name'), password: v('au-pass'), current_password: v('au-me') });
+  if (!r.ok) { document.getElementById('au-msg').textContent = r.error || 'Could not add.'; return; }
+  showAdminUsers({ username: r.username, secret: r.secret });
+}
+async function adminUserAct(action, username) {
+  const me = prompt(action === 'remove' ? `Remove ${username}? Enter your own password to confirm.` : 'Enter your own password to confirm.');
+  if (!me) return;
+  const body = { username, current_password: me };
+  if (action === 'password') { const pw = prompt('New password for ' + username + ' (12 or more characters):'); if (!pw) return; body.password = pw; }
+  const r = await pgCall('/api/admin/admin-users/' + action, 'POST', body);
+  if (!r.ok) return alert(r.error || 'Could not do that.');
+  showAdminUsers(action === 'reset-2fa' ? { username, secret: r.secret } : null);
+}
+
+// Search: press / anywhere (outside a text box) or click the topbar button.
+let _srchTimer = null;
+function openSearch() {
+  let o = document.getElementById('srch-overlay');
+  if (!o) {
+    o = document.createElement('div'); o.id = 'srch-overlay';
+    o.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:10000;display:flex;justify-content:center;align-items:flex-start;padding-top:12vh';
+    o.innerHTML = `<div style="background:#fff;width:min(640px,92vw);box-shadow:0 10px 40px rgba(0,0,0,.25)"><input id="srch-input" type="search" placeholder="Search orders by number, name, email, address or letter id" style="width:100%;padding:16px 18px;font-size:15px;border:0;border-bottom:1px solid #ececec;outline:0;box-sizing:border-box" autocomplete="off"><div id="srch-res" style="max-height:50vh;overflow:auto"></div><div style="padding:8px 14px;font-size:11px;color:#9a9a9a">Enter opens the first result. Esc closes.</div></div>`;
+    o.addEventListener('mousedown', e => { if (e.target === o) closeSearch(); });
+    document.body.appendChild(o);
+    const inp = o.querySelector('#srch-input');
+    inp.addEventListener('input', () => { clearTimeout(_srchTimer); _srchTimer = setTimeout(runSearch, 200); });
+    inp.addEventListener('keydown', e => { if (e.key === 'Escape') closeSearch(); if (e.key === 'Enter') { const a = document.querySelector('#srch-res a'); if (a) a.click(); } });
+  }
+  o.style.display = 'flex';
+  const inp = document.getElementById('srch-input'); inp.value = ''; document.getElementById('srch-res').innerHTML = ''; inp.focus();
+}
+function closeSearch() { const o = document.getElementById('srch-overlay'); if (o) o.style.display = 'none'; }
+async function runSearch() {
+  const q = document.getElementById('srch-input').value.trim();
+  const box = document.getElementById('srch-res');
+  if (q.length < 2) { box.innerHTML = ''; return; }
+  const r = await api('/api/admin/search?q=' + encodeURIComponent(q));
+  const list = (r && r.orders) || [];
+  box.innerHTML = list.length ? list.map(o => `<a href="/admin/orders/${o.id}" onclick="event.preventDefault();closeSearch();go('/admin/orders/${o.id}')" style="display:block;padding:10px 18px;border-bottom:1px solid #f3f3f3;text-decoration:none;color:#111;font-size:13px;line-height:1.5"><strong>#${o.id}</strong> ${esc(o.recipient_name || '')} <span style="color:#6b6b6b">· ${esc(o.recipient_city || '')} ${esc(o.destination_country || '')} · ${esc(o.customer_email || '')} · ${esc(o.status)}${o.scheduled_date ? ' · sends ' + esc(o.scheduled_date) : ''}</span></a>`).join('')
+    : '<div style="padding:16px 18px;font-size:13px;color:#6b6b6b">No orders found.</div>';
+}
+document.addEventListener('keydown', e => {
+  if (e.key !== '/' || e.metaKey || e.ctrlKey || e.altKey) return;
+  const tg = e.target && e.target.tagName;
+  if (tg === 'INPUT' || tg === 'TEXTAREA' || tg === 'SELECT' || (e.target && e.target.isContentEditable)) return;
+  e.preventDefault(); openSearch();
+});
+
 // ── Print Queue: send-date calendar and list for scheduled orders ───────────────────────────────
 let _pq = { today: '', orders: [] };
 function pqSchedule() {
@@ -1241,6 +1370,7 @@ async function showOrder(id) {
     api(`/api/admin/orders/${id}/notes`),
   ]);
   if (!o) return setMain('<div class="empty">Order not found.</div>');
+  _mergeOrder = o;
 
   const fromAddr = o.skip_return ? 'No return address'
     : [o.sender_name, o.sender_street,
@@ -1382,8 +1512,16 @@ async function loadMsgTemplates() {
 function applyMsgTemplate() {
   const t = _msgTemplates.find(x => String(x.id) === document.getElementById('msg-template').value);
   if (!t) return;
-  document.getElementById('msg-subject').value = t.subject;
-  document.getElementById('msg-body').value = t.body;
+  document.getElementById('msg-subject').value = fillMerge(t.subject);
+  document.getElementById('msg-body').value = fillMerge(t.body);
+}
+// Merge fields in templates: {name} {order} {recipient} {send_date} {country}
+let _mergeOrder = null;
+function fillMerge(text) {
+  const o = _mergeOrder; if (!o) return text;
+  const first = String(o.sender_name || '').trim().split(/\s+/)[0] || 'there';
+  const map = { name: first, order: '#' + o.id, recipient: o.recipient_name || '', send_date: o.scheduled_date || 'the next business day', country: o.destination_country || '' };
+  return String(text).replace(/\{(name|order|recipient|send_date|country)\}/g, (m, k) => map[k]);
 }
 
 async function loadMsgHistory(id) {
@@ -1564,11 +1702,11 @@ function fulfillmentCard(o, statusOpts) {
 
 // ---- PostGrid -------------------------------------------------------------
 // Like post(), but returns the server's error message instead of null so it can be shown.
-async function pgCall(url, method = 'POST') {
+async function pgCall(url, method = 'POST', payload) {
   try {
     const headers = { 'Content-Type': 'application/json' };
     if (_csrfToken) headers['X-CSRF-Token'] = _csrfToken;
-    const r = await fetch(url, { method, headers, body: method === 'GET' ? undefined : '{}' });
+    const r = await fetch(url, { method, headers, body: method === 'GET' ? undefined : JSON.stringify(payload || {}) });
     if (r.status === 401) { window.location.href = '/admin/login'; return { ok: false }; }
     const data = await r.json().catch(() => ({}));
     return r.ok ? { ok: true, ...data } : { ok: false, error: data.error || ('HTTP ' + r.status) };
@@ -1650,6 +1788,12 @@ function postgridCard(o) {
   const err = o.postgrid_error ? `<div style="background:#fef2f2;border:1px solid #fecaca;color:#991b1b;padding:10px 12px;font-size:13px;margin:10px 0;line-height:1.5">${esc(o.postgrid_error)}</div>` : '';
   const modeBadge = m => m === 'live' ? '<span class="badge badge-green">LIVE</span>' : '<span class="badge badge-amber">TEST</span>';
   const later = (o.scheduled_date && o.scheduled_date > (o.today_toronto || '')) ? { date: o.scheduled_date, approved: !!o.send_approved_at } : null;
+  const dateRow = (o.status === 'paid' && (!o.postgrid_letter_id || o.postgrid_status === 'cancelled'))
+    ? `<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:10px 0;font-size:13px"><span style="color:#6b6b6b">Send date</span>
+        <input type="date" id="sd-input" value="${esc(o.scheduled_date || '')}" min="${esc(o.today_toronto || '')}" style="width:auto;padding:4px 8px">
+        <button class="btn btn-outline btn-sm" onclick="saveSendDate(${o.id})">Save date</button>
+        ${o.scheduled_date ? `<button class="btn btn-outline btn-sm" onclick="saveSendDate(${o.id}, true)">Remove date</button>` : ''}
+        <span style="font-size:11px;color:#9a9a9a">Changing the date withdraws any approval.</span></div>` : '';
   let body;
   if (o.postgrid_letter_id) {
     const canCancel = o.postgrid_status === 'ready';
@@ -1659,6 +1803,7 @@ function postgridCard(o) {
       + row('Submitted', o.postgrid_submitted_at ? fmtDateTime(o.postgrid_submitted_at) : '—')
       + err
       + ((later && o.postgrid_status === 'cancelled' && o.status === 'paid') ? `<div style="font-size:13px;line-height:1.6;padding:10px 12px;margin:8px 0;background:${later.approved ? '#dcfce7' : '#fef3c7'};color:${later.approved ? '#166534' : '#92400e'}"><strong>${later.approved ? 'Approved.' : 'Scheduled.'}</strong> The customer chose <strong>${esc(later.date)}</strong> as the send date, but the first letter was already sent to print. ${later.approved ? 'A new letter goes to print automatically that day.' : 'Approve it and a new letter goes to print automatically that day.'}</div>` : '')
+      + (o.postgrid_status === 'cancelled' ? dateRow : '')
       + `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
           ${o.postgrid_url ? `<a class="btn btn-outline btn-sm" href="${esc(o.postgrid_url)}" target="_blank" rel="noopener">PostGrid preview</a>` : ''}
           <button class="btn btn-outline btn-sm" onclick="pgAction(${o.id},'refresh')">Refresh status</button>
@@ -1677,6 +1822,7 @@ function postgridCard(o) {
     const why = o.postgrid_eligibility;
     body = row('Mode', modeBadge(o.postgrid_api_mode))
       + (later ? `<div style="font-size:13px;line-height:1.6;padding:10px 12px;margin:8px 0;background:${later.approved ? '#dcfce7' : '#fef3c7'};color:${later.approved ? '#166534' : '#92400e'}"><strong>${later.approved ? 'Approved.' : 'Scheduled.'}</strong> The customer chose <strong>${esc(later.date)}</strong> as the send date. ${later.approved ? 'It goes to print automatically that day. Nothing is sent before then.' : 'Approve it now and it goes to print automatically that day.'}</div>` : '')
+      + dateRow
       + (why ? `<p style="font-size:13px;color:#6b6b6b;margin:8px 0;line-height:1.5">${esc(why)}</p>` : (later ? '' : `<p style="font-size:13px;color:#16a34a;margin:8px 0">Ready to send through PostGrid.</p>`))
       + err
       + `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
