@@ -808,7 +808,7 @@ async function postgridSweep() {
   try {
     // Scheduled orders the owner has approved are sent on their date even with automatic submitting off.
     // A content hold still wins (postgridSubmit checks it), and a failure is recorded on the order and alerts the owner.
-    const dueApproved = db.prepare(`SELECT id, scheduled_date FROM orders WHERE status = 'paid' AND postgrid_letter_id IS NULL AND deleted_at IS NULL
+    const dueApproved = db.prepare(`SELECT id, scheduled_date FROM orders WHERE status = 'paid' AND (postgrid_letter_id IS NULL OR postgrid_status = 'cancelled') AND deleted_at IS NULL
       AND send_approved_at IS NOT NULL AND scheduled_date IS NOT NULL AND scheduled_date <= ?
       AND (postgrid_error IS NULL OR postgrid_error LIKE 'RETRY:%' OR postgrid_error LIKE 'MANUAL: Scheduled for%') LIMIT 20`).all(torontoToday());
     for (const o of dueApproved) {
@@ -2581,7 +2581,7 @@ app.post('/api/admin/orders/:id/postgrid/submit', requireAdmin, async (req, res)
 app.post('/api/admin/orders/:id/postgrid/approve-scheduled', requireAdmin, (req, res) => {
   const id = Number(req.params.id);
   const o = db.prepare('SELECT * FROM orders WHERE id = ?').get(id);
-  if (!o || o.deleted_at || o.status !== 'paid' || o.postgrid_letter_id) return res.status(400).json({ error: 'This order is not waiting to be sent.' });
+  if (!o || o.deleted_at || o.status !== 'paid' || (o.postgrid_letter_id && o.postgrid_status !== 'cancelled')) return res.status(400).json({ error: 'This order is not waiting to be sent.' });
   if (!o.scheduled_date || o.scheduled_date <= torontoToday()) return res.status(400).json({ error: 'This order has no future send date. Use Send via PostGrid.' });
   if (contentHeld(o)) return res.status(422).json({ error: 'Held for content review. Mark it safe first.' });
   db.prepare("UPDATE orders SET send_approved_at = datetime('now'), postgrid_error = NULL WHERE id = ?").run(id);
@@ -2591,7 +2591,7 @@ app.post('/api/admin/orders/:id/postgrid/approve-scheduled', requireAdmin, (req,
 });
 app.post('/api/admin/orders/:id/postgrid/unapprove-scheduled', requireAdmin, (req, res) => {
   const id = Number(req.params.id);
-  const r = db.prepare('UPDATE orders SET send_approved_at = NULL WHERE id = ? AND postgrid_letter_id IS NULL').run(id);
+  const r = db.prepare("UPDATE orders SET send_approved_at = NULL WHERE id = ? AND (postgrid_letter_id IS NULL OR postgrid_status = 'cancelled')").run(id);
   if (!r.changes) return res.status(404).json({ error: 'Order not found or already sent.' });
   try { db.prepare('INSERT INTO order_notes (order_id, note) VALUES (?,?)').run(id, `Approval withdrawn by ${req.session.admin.username}. It will not be sent automatically.`); } catch {}
   logAudit(req, 'order.unapprove_scheduled', 'order', id, {});

@@ -610,7 +610,7 @@ function register(app, { db, requireAdmin, logAudit, getSetting, indexNow, backu
       const rows = db.prepare(`SELECT id, created_at, paid_at, order_site, recipient_name, recipient_street, recipient_city, recipient_province, recipient_postal,
           destination_country, page_count, colour_printing, registered_mail, certified_mail, express_mail, large_envelope, price_cents, postgrid_error,
           scheduled_date, send_approved_at, content_flags, content_cleared_at, skip_return, letter_type, addr_check_status, addr_check_note
-        FROM orders WHERE status = 'paid' AND postgrid_letter_id IS NULL AND deleted_at IS NULL ORDER BY COALESCE(paid_at, created_at) ASC LIMIT 100`).all();
+        FROM orders WHERE status = 'paid' AND (postgrid_letter_id IS NULL OR postgrid_status = 'cancelled') AND deleted_at IS NULL ORDER BY COALESCE(paid_at, created_at) ASC LIMIT 100`).all();
       const orders = rows.map(o => {
         const held = contentHeld ? !!contentHeld(o) : false;
         let flags = [];
@@ -645,7 +645,7 @@ function register(app, { db, requireAdmin, logAudit, getSetting, indexNow, backu
     try {
       for (const id of ids) {
         const o = db.prepare("SELECT * FROM orders WHERE id = ?").get(id);
-        if (!o || o.deleted_at || o.status !== 'paid' || o.postgrid_letter_id) { results.push({ id, ok: false, error: 'Not waiting for approval any more.' }); continue; }
+        if (!o || o.deleted_at || o.status !== 'paid' || (o.postgrid_letter_id && o.postgrid_status !== 'cancelled')) { results.push({ id, ok: false, error: 'Not waiting for approval any more.' }); continue; }
         if (o.scheduled_date && o.scheduled_date > (todayFn ? todayFn() : new Date().toISOString().slice(0, 10))) {
           // Future date: approve now, the sweep sends it on the day. Nothing goes to print today.
           if (contentHeld && contentHeld(o)) { results.push({ id, ok: false, error: 'Held for content review. Mark it safe first.' }); continue; }
@@ -667,7 +667,7 @@ function register(app, { db, requireAdmin, logAudit, getSetting, indexNow, backu
   app.post('/api/admin/approvals/unapprove', requireAdmin, (req, res) => {
     const id = Number(req.body && req.body.id);
     if (!Number.isInteger(id) || id < 1) return res.status(400).json({ error: 'No order chosen.' });
-    const r = db.prepare("UPDATE orders SET send_approved_at = NULL WHERE id = ? AND postgrid_letter_id IS NULL").run(id);
+    const r = db.prepare("UPDATE orders SET send_approved_at = NULL WHERE id = ? AND (postgrid_letter_id IS NULL OR postgrid_status = 'cancelled')").run(id);
     if (!r.changes) return res.status(404).json({ error: 'Order not found or already sent.' });
     try { db.prepare('INSERT INTO order_notes (order_id, note) VALUES (?,?)').run(id, 'Approval withdrawn by owner. It will not be sent automatically.'); } catch {}
     logAudit(req, 'order.unapprove_scheduled', 'order', id, {});

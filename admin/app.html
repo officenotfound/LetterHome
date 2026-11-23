@@ -1600,12 +1600,16 @@ function postgridCard(o) {
       + (o.postgrid_tracking_number ? row('Tracking number', esc(o.postgrid_tracking_number)) : '')
       + row('Submitted', o.postgrid_submitted_at ? fmtDateTime(o.postgrid_submitted_at) : '—')
       + err
+      + ((later && o.postgrid_status === 'cancelled' && o.status === 'paid') ? `<div style="font-size:13px;line-height:1.6;padding:10px 12px;margin:8px 0;background:${later.approved ? '#dcfce7' : '#fef3c7'};color:${later.approved ? '#166534' : '#92400e'}"><strong>${later.approved ? 'Approved.' : 'Scheduled.'}</strong> The customer chose <strong>${esc(later.date)}</strong> as the send date, but the first letter was already sent to print. ${later.approved ? 'A new letter goes to print automatically that day.' : 'Approve it and a new letter goes to print automatically that day.'}</div>` : '')
       + `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
           ${o.postgrid_url ? `<a class="btn btn-outline btn-sm" href="${esc(o.postgrid_url)}" target="_blank" rel="noopener">PostGrid preview</a>` : ''}
           <button class="btn btn-outline btn-sm" onclick="pgAction(${o.id},'refresh')">Refresh status</button>
           ${canCancel ? `<button class="btn btn-outline btn-sm" style="color:#b42318;border-color:#b42318" onclick="pgAction(${o.id},'cancel')">Cancel letter</button>` : ''}
           ${(o.postgrid_status === 'cancelled' && o.status === 'paid' && o.letter_type === 'santa') ? `<button class="btn btn-outline btn-sm" onclick="pgAction(${o.id},'rebuild-santa')" title="Rewrites the letter with the current wording, then it prints on the Santa letterhead">Rebuild Santa letter</button><a class="btn btn-outline btn-sm" href="/api/admin/orders/${o.id}/postgrid/preview" target="_blank" rel="noopener">Preview letter</a>` : ''}
-          ${(o.postgrid_status === 'cancelled' && o.status === 'paid') ? `<button class="btn btn-primary btn-sm" onclick="pgAction(${o.id},'submit')">Send via PostGrid again</button>` : ''}
+          ${(o.postgrid_status === 'cancelled' && o.status === 'paid' && later) ? (later.approved
+            ? `<button class="btn btn-outline btn-sm" onclick="pgAction(${o.id},'unapprove-scheduled')">Withdraw approval</button>`
+            : `<button class="btn btn-primary btn-sm" onclick="pgAction(${o.id},'approve-scheduled')">Approve, send on ${esc(later.date)}</button>`) : ''}
+          ${(o.postgrid_status === 'cancelled' && o.status === 'paid') ? `<button class="btn ${later ? 'btn-outline' : 'btn-primary'} btn-sm" onclick="pgAction(${o.id},'submit')">${later ? 'Send now instead' : 'Send via PostGrid again'}</button>` : ''}
           ${o.postgrid_mode === 'test' && !['completed','cancelled'].includes(o.postgrid_status) ? `<button class="btn btn-outline btn-sm" onclick="pgAction(${o.id},'progress')">Advance test letter</button>` : ''}
           ${o.postgrid_mode === 'test' ? `<button class="btn btn-outline btn-sm" onclick="pgAction(${o.id},'clear-test')">Clear test letter</button>` : ''}
         </div>
