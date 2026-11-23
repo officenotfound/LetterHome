@@ -767,7 +767,7 @@ let dashChartPeriod = 'monthly';
 
 async function showDashboard() {
   setTitle('Dashboard');
-  const [stats, paidOrders, submittedOrders, chartData, geoData, stripeOv, health] = await Promise.all([
+  const [stats, paidOrders, submittedOrders, chartData, geoData, stripeOv, health, sched] = await Promise.all([
     api('/api/admin/stats'),
     api('/api/admin/orders?status=paid'),
     api('/api/admin/orders?status=submitted_to_printer'),
@@ -775,8 +775,12 @@ async function showDashboard() {
     api('/api/admin/stats/geo'),
     api('/api/admin/stripe/overview'),
     api('/api/admin/server-health'),
+    api('/api/admin/print-queue/scheduled'),
   ]);
   if (!stats) return;
+  // Orders already approved for a future date are not waiting on you.
+  window._schedApproved = {};
+  ((sched && sched.orders) || []).forEach(o => { if (o.approved && o.date > (sched.today || '')) window._schedApproved[o.id] = o.date; });
 
   renderDashboard(stats, paidOrders, submittedOrders, chartData, geoData, 'monthly', stripeOv, health);
   loadTodayCard();
@@ -823,7 +827,7 @@ function renderDashboard(stats, paidOrders, submittedOrders, chartData, geoData,
       <td>${esc(o.recipient_name)}</td>
       <td>${o.destination_country || '—'}</td>
       <td>${statusBadge(o.status)}</td>
-      <td>${timeLeftHTML(o.created_at, o.status, handedOff(o))}</td>
+      <td>${(window._schedApproved || {})[o.id] ? `<span style="color:#15803d;font-size:12px">Approved, sends ${esc(window._schedApproved[o.id])}</span>` : timeLeftHTML(o.created_at, o.status, handedOff(o))}</td>
       <td>${fmtCharged(o)}</td>
       <td><button class="btn btn-primary btn-sm" onclick="go('/admin/orders/${o.id}')">Action →</button></td>
     </tr>`).join('');
@@ -835,7 +839,7 @@ function renderDashboard(stats, paidOrders, submittedOrders, chartData, geoData,
   setMain(`
     <div id="today-card"></div>
     ${(() => {
-      const toSubmit = (paidOrders||[]).length, atPrinter = (submittedOrders||[]).length;
+      const toSubmit = (paidOrders||[]).filter(o => !(window._schedApproved || {})[o.id]).length, atPrinter = (submittedOrders||[]).length;
       const unread = window._unreadContacts || 0;
       const disputes = stripeOv ? stripeOv.openDisputeCount : 0;
       const chip = (n, label, href, hot) => `<button class="need-chip${n && hot ? ' hot' : ''}" onclick="go('${href}')"><b>${n}</b><span>${label}</span></button>`;
@@ -844,7 +848,7 @@ function renderDashboard(stats, paidOrders, submittedOrders, chartData, geoData,
     <div class="card" style="margin-bottom:24px">
       <div class="card-header">
         <div class="card-title">Fulfillment Queue</div>
-        <span style="font-size:12px;color:#6b6b6b">${(paidOrders||[]).length} to submit &nbsp;·&nbsp; ${(submittedOrders||[]).length} awaiting mailed confirmation</span>
+        <span style="font-size:12px;color:#6b6b6b">${(paidOrders||[]).filter(o => !(window._schedApproved || {})[o.id]).length} to submit &nbsp;·&nbsp; ${Object.keys(window._schedApproved || {}).length} approved for a later date &nbsp;·&nbsp; ${(submittedOrders||[]).length} awaiting mailed confirmation</span>
       </div>
       <table>
         <thead><tr><th>#</th><th>Submitted</th><th>Recipient</th><th>Country</th><th>Status</th><th>Time Left</th><th>Price</th><th></th></tr></thead>
