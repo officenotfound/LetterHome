@@ -447,6 +447,49 @@ dict(c='us', slug='business-letter-format',
  sources=[('Purdue OWL: business letter format', 'https://owl.purdue.edu/owl/subject_specific_writing/professional_technical_writing/basic_business_letters/index.html')],
  related=[('/us/how-to-address-an-envelope', 'How to address an envelope', 'Where everything goes'), ('/us/what-is-certified-mail', 'What is Certified Mail?', 'Proof that a letter was mailed'), ('/us/debt-validation-letter', 'Debt validation letter', 'A letter that has to be mailed'), US_REL_STAMP]),
 
+dict(c='us', slug='registered-mail-vs-certified-mail',
+ title='Registered Mail vs Certified Mail: Cost and Differences',
+ desc='Registered Mail starts at $20.90 and Certified Mail costs $5.55. What each gives you, who it suits, and how to choose, using the USPS price list effective October 4, 2026.',
+ eyebrow='Everyday mail', h1='Registered Mail vs<br><em>Certified Mail</em>',
+ sub='Certified Mail proves you sent a letter. Registered Mail is a much more expensive service for items of value.',
+ answer='Certified Mail costs $5.55 on top of postage and gives you a mailing receipt and a record of delivery. Registered Mail starts at $20.90, is handed to a postal employee for a receipt, and can be insured up to $50,000.',
+ body='''
+<h2>The short version</h2>
+<p>For most letters, <strong>Certified Mail</strong> is the right choice when you need proof. It costs $5.55 on top of postage, and you can add a return receipt. <strong>Registered Mail</strong> is a different service, priced from $20.90, meant for items where the contents matter, such as valuable documents.</p>
+
+<h2>Side by side</h2>
+<div class="cost-wrap"><table class="cost"><thead><tr><th></th><th>Certified Mail</th><th>Registered Mail</th></tr></thead><tbody>
+<tr><td>Fee, on top of postage</td><td>$5.55</td><td>From $20.90 (no declared value); $21.50 for a declared value of $0.01 to $100</td></tr>
+<tr><td>Receipt</td><td>Postmarked mailing receipt if you hand it to a postal employee</td><td>Receipt issued when you hand it over</td></tr>
+<tr><td>Delivery record</td><td>Yes, and a signature record with Return Receipt</td><td>Yes</td></tr>
+<tr><td>Insurance</td><td>No</td><td>Up to $50,000 at a Post Office</td></tr>
+<tr><td>Return receipt</td><td>$2.91 electronic or $4.65 hard copy</td><td>Available as an extra</td></tr>
+</tbody></table></div>
+<p>Registered Mail fees rise with the declared value. USPS lists $25.00 for a value of $100.01 to $500 and $28.10 for $500.01 to $1,000, and $180.00 for values over $50,000.</p>
+
+<h2>How Certified Mail works</h2>
+<p>Certified Mail is an extra service added to First-Class Mail or Priority Mail. It moves through the mail as ordinary mail does, so it is no faster, but you get a record of delivery or a delivery attempt. Our guide to <a href="/us/what-is-certified-mail">Certified Mail</a> covers the receipt, the signature options and what it does not prove.</p>
+
+<h2>How Registered Mail works</h2>
+<p>Registered Mail must be handed to a postal employee, who issues a receipt. It can be insured at a Post Office, and the fee depends on the value you declare. It costs several times as much as Certified Mail, so it is worth it only when the item itself is valuable.</p>
+
+<h2>Which one to pick</h2>
+<ul>
+<li><strong>A formal notice, dispute or demand letter:</strong> Certified Mail, with a return receipt if you want a signature. The question is whether you can show you sent it, and that costs about $9 with the receipt.</li>
+<li><strong>Something that would be costly to lose,</strong> such as original documents or items with real value: ask at the counter about Registered Mail and insurance.</li>
+<li><strong>An ordinary letter:</strong> a stamp.</li>
+</ul>
+
+<h2>If you just need the letter sent</h2>
+<p>We do not offer Certified or Registered Mail. If you want a letter printed and mailed without a printer or a trip to the post office, we do that for $3.00 within the US. If you need proof of delivery, buy Certified Mail at the Post Office counter and keep the receipt.</p>
+''',
+ faq=[('What is the difference between Registered Mail and Certified Mail?', 'Certified Mail ($5.55 plus postage) gives a mailing receipt and a record of delivery. Registered Mail (from $20.90) is handed to a postal employee for a receipt and can be insured up to $50,000.'),
+      ('How much is Registered Mail?', 'It starts at $20.90 with no declared value, and $21.50 for a declared value of $0.01 to $100, plus postage. The fee rises with the declared value.'),
+      ('Is Registered Mail better than Certified Mail?', 'It offers insurance and costs several times as much. For a notice or a formal letter where you need proof of delivery, Certified Mail is usually enough.'),
+      ('Can I buy Registered Mail online?', 'Registered Mail must be presented to a postal employee, so it is bought at a Post Office counter.')],
+ sources=[US_SRC_N123, ('USPS: insurance and extra services', 'https://www.usps.com/ship/insurance-extra-services.htm'), ('USPS Domestic Mail Manual 503: extra services', 'https://pe.usps.com/text/dmm300/503.htm')],
+ related=[('/us/what-is-certified-mail', 'What is Certified Mail?', 'Cost, receipts and what it proves'), US_REL_RATES, US_REL_STAMP, ('/us/mail-a-letter-without-a-printer', 'Mail a letter without a printer', 'Three ways to get a letter sent')]),
+
 # ───────────────────────────── UK ─────────────────────────────
 dict(c='uk', slug='how-to-address-a-letter',
  title='How to Address a Letter in the UK',

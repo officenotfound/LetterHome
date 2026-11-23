@@ -52,6 +52,7 @@ An order can be cancelled for a full refund until it is sent to the printer; aft
 - [Business Letter Format (US)](https://letterhome.us/business-letter-format): The standard layout, part by part
 - [USPS Letter Postage Calculator](https://letterhome.us/postage-calculator): 2026 First-Class rates by weight, with Certified Mail fees
 - [US Address Formatter](https://letterhome.us/address-formatter): Lay out an address the USPS way and check ZIP and state
+- [Registered Mail vs Certified Mail](https://letterhome.us/registered-mail-vs-certified-mail): Fees, receipts, insurance and which to choose
 - [How to Address a Letter (UK)](https://letterhome.co.uk/how-to-address-a-letter): Layout with the postcode last, from Post Office guidance
 - [Post a Letter Without a Printer (UK)](https://letterhome.co.uk/post-a-letter-without-a-printer): Three ways to post a letter in the UK, £4.50 online
 - [How Many Sheets for One Stamp? (UK)](https://letterhome.co.uk/how-many-sheets-for-a-stamp): Standard letter limits and weight by number of sheets
