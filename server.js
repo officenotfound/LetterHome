@@ -2467,7 +2467,7 @@ app.get('/api/admin/orders/:id', requireAdmin, (req, res) => {
     Object.assign(order, { skip_return: 0, sender_name: R.name, sender_street: R.street, sender_city: R.city, sender_province: R.province, sender_postal: R.postal, sender_country: R.country });
   }
   res.json({ ...order, files,
-    postgrid_configured: postgrid.isConfigured(), postgrid_api_mode: postgrid.mode(),
+    postgrid_configured: postgrid.isConfigured(), postgrid_api_mode: postgrid.mode(), today_toronto: torontoToday(),
     postgrid_eligibility: order.postgrid_letter_id ? null : postgrid.eligibility(order) });
 });
 
@@ -2575,6 +2575,27 @@ app.post('/api/admin/orders/:id/postgrid/submit', requireAdmin, async (req, res)
   logAudit(req, 'order.postgrid_submit', 'order', id, { ok: r.ok, error: r.error, letter_id: r.letter_id });
   if (!r.ok) return res.status(r.manual ? 422 : 502).json({ error: r.error });
   res.json(r);
+});
+
+// Order page: approve a scheduled order now so it goes to print on its date, or withdraw that approval.
+app.post('/api/admin/orders/:id/postgrid/approve-scheduled', requireAdmin, (req, res) => {
+  const id = Number(req.params.id);
+  const o = db.prepare('SELECT * FROM orders WHERE id = ?').get(id);
+  if (!o || o.deleted_at || o.status !== 'paid' || o.postgrid_letter_id) return res.status(400).json({ error: 'This order is not waiting to be sent.' });
+  if (!o.scheduled_date || o.scheduled_date <= torontoToday()) return res.status(400).json({ error: 'This order has no future send date. Use Send via PostGrid.' });
+  if (contentHeld(o)) return res.status(422).json({ error: 'Held for content review. Mark it safe first.' });
+  db.prepare("UPDATE orders SET send_approved_at = datetime('now'), postgrid_error = NULL WHERE id = ?").run(id);
+  try { db.prepare('INSERT INTO order_notes (order_id, note) VALUES (?,?)').run(id, `Approved by ${req.session.admin.username}. Will be sent to print automatically on ${o.scheduled_date}.`); } catch {}
+  logAudit(req, 'order.approve_scheduled', 'order', id, { scheduled_date: o.scheduled_date });
+  res.json({ ok: true, scheduled_for: o.scheduled_date });
+});
+app.post('/api/admin/orders/:id/postgrid/unapprove-scheduled', requireAdmin, (req, res) => {
+  const id = Number(req.params.id);
+  const r = db.prepare('UPDATE orders SET send_approved_at = NULL WHERE id = ? AND postgrid_letter_id IS NULL').run(id);
+  if (!r.changes) return res.status(404).json({ error: 'Order not found or already sent.' });
+  try { db.prepare('INSERT INTO order_notes (order_id, note) VALUES (?,?)').run(id, `Approval withdrawn by ${req.session.admin.username}. It will not be sent automatically.`); } catch {}
+  logAudit(req, 'order.unapprove_scheduled', 'order', id, {});
+  res.json({ ok: true });
 });
 
 app.post('/api/admin/orders/:id/postgrid/refresh', requireAdmin, async (req, res) => {
