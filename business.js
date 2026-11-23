@@ -108,7 +108,7 @@ function templateFields(template) {
 const money = c => '$' + (c / 100).toFixed(2);
 
 // ── Registrars ─────────────────────────────────────────────────────────────────────────────────────────────────────
-function registerPortal(app, { db, getSetting, sendMail }) {
+function registerPortal(app, { db, getSetting, sendMail, notifyOwner }) {
   const enabled = () => getSetting('business_portal_enabled', 'true') === 'true';
   const router = express.Router();
 
@@ -165,6 +165,34 @@ function registerPortal(app, { db, getSetting, sendMail }) {
   });
 
   router.post('/logout', (req, res) => { req.session.destroy(() => res.json({ ok: true })); });
+
+  // Public: a business asks for access. Nothing is created here, the owner reviews each request and sets the account up by hand.
+  const VOLUMES = ['Under 50 a month', '50 to 200 a month', '200 to 1,000 a month', 'More than 1,000 a month', 'Not sure yet'];
+  const requestLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 5, skip: skipInTest, standardHeaders: true, legacyHeaders: false,
+    message: { error: 'Too many requests from this connection. Please try again later, or email us.' } });
+  router.post('/request-access', requestLimiter, express.json({ limit: '8kb' }), (req, res) => {
+    const b = req.body || {};
+    if (b.website) return res.json({ ok: true });   // hidden field: only automated forms fill it in
+    const f = {
+      company: clean(b.company, 120), contact_name: clean(b.name, 120), email: clean(b.email, 200).toLowerCase(),
+      phone: clean(b.phone, 40), industry: clean(b.industry, 80),
+      volume: VOLUMES.includes(b.volume) ? b.volume : '', message: cleanText(b.message, 1000).trim(),
+    };
+    if (!f.company) return res.status(400).json({ error: 'Enter your business name.' });
+    if (!f.contact_name) return res.status(400).json({ error: 'Enter your name.' });
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(f.email)) return res.status(400).json({ error: 'Enter an email address we can reply to.' });
+    // The same email asking again within a day is not stored twice, and the answer looks the same either way.
+    const dup = db.prepare("SELECT 1 FROM business_requests WHERE email = ? AND created_at > datetime('now','-1 day')").get(f.email);
+    if (!dup) {
+      db.prepare('INSERT INTO business_requests (company, contact_name, email, phone, industry, volume, message) VALUES (?,?,?,?,?,?,?)')
+        .run(f.company, f.contact_name, f.email, f.phone, f.industry, f.volume, f.message);
+      try {
+        if (notifyOwner) Promise.resolve(notifyOwner(`Business portal request: ${f.company}`,
+          `${f.contact_name} (${f.email}${f.phone ? ', ' + f.phone : ''}) asked for access to the business portal.\n\nBusiness: ${f.company}\nIndustry: ${f.industry || 'not given'}\nVolume: ${f.volume || 'not given'}\n\n${f.message || '(no message)'}\n\nReview it in Admin, People, Businesses.`)).catch(() => {});
+      } catch {}
+    }
+    res.json({ ok: true });
+  });
 
   // Everything below needs a signed-in business user whose business is still active.
   function requireBusiness(req, res, next) {
@@ -369,6 +397,19 @@ function registerAdmin(app, { db, requireAdmin, logAudit, getSetting, setSetting
     const queue = db.prepare(`SELECT x.id, x.name, x.piece_count, x.total_cents, x.submitted_at, b.id AS business_id, b.name AS business_name
       FROM business_batches x JOIN businesses b ON b.id = x.business_id WHERE x.status = 'pending_approval' ORDER BY x.submitted_at`).all();
     res.json({ businesses: rows, queue, portalEnabled: getSetting('business_portal_enabled', 'true') === 'true' });
+  });
+
+  app.get('/api/admin/business-requests', requireAdmin, (_req, res) => {
+    res.json({ requests: db.prepare(`SELECT * FROM business_requests WHERE status IN ('new','contacted') ORDER BY (status = 'new') DESC, id DESC LIMIT 100`).all() });
+  });
+  app.post('/api/admin/business-requests/:id/decision', requireAdmin, (req, res) => {
+    const id = Number(req.params.id);
+    const status = ['new', 'contacted', 'approved', 'declined'].includes(req.body?.status) ? req.body.status : null;
+    if (!status) return res.status(400).json({ error: 'Unknown status.' });
+    const r = db.prepare("UPDATE business_requests SET status = ?, note = COALESCE(?, note), handled_at = CURRENT_TIMESTAMP WHERE id = ?").run(status, req.body?.note ? cleanText(req.body.note, 500) : null, id);
+    if (!r.changes) return res.status(404).json({ error: 'Request not found.' });
+    logAudit(req, 'business.request_' + status, 'business_request', id, {});
+    res.json({ ok: true });
   });
 
   app.post('/api/admin/businesses/portal-switch', requireAdmin, (req, res) => {

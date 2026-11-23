@@ -1045,7 +1045,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
 
 // Business portal (test): has its own larger body parser for CSV batches, so it is mounted before the global 64 kB one.
 const business = require('./business');
-business.registerPortal(app, { db, getSetting, sendMail });
+business.registerPortal(app, { db, getSetting, sendMail, notifyOwner: (...a) => sendOwnerMail(...a) });
 
 app.use(express.json({ limit: '64kb' }));
 app.use(express.urlencoded({ limit: '64kb', extended: true }));

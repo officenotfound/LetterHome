@@ -1197,7 +1197,7 @@ async function loadTodayCard() {
     sect('Go to print tomorrow', '#15803d', d.tomorrow, o => link(o, o.approved ? 'approved' : 'NOT approved yet')),
     sect('Scheduled this week, not approved', '#92400e', d.unapproved_soon, o => link(o, 'sends ' + esc(o.date))),
   ].join('');
-  const counts = `<button class="btn btn-outline btn-sm" onclick="go('/admin/approvals')">${d.approvals_waiting} waiting for approval</button> ${d.held ? `<button class="btn btn-outline btn-sm" onclick="go('/admin/approvals')">${d.held} held for content</button>` : ''} <button class="btn btn-outline btn-sm" onclick="go('/admin/print-queue')">Print queue and calendar</button>`;
+  const counts = `${d.business_requests ? `<button class="btn btn-primary btn-sm" onclick="go('/admin/businesses')">${d.business_requests} new business request${d.business_requests > 1 ? 's' : ''}</button> ` : ''}<button class="btn btn-outline btn-sm" onclick="go('/admin/approvals')">${d.approvals_waiting} waiting for approval</button> ${d.held ? `<button class="btn btn-outline btn-sm" onclick="go('/admin/approvals')">${d.held} held for content</button>` : ''} <button class="btn btn-outline btn-sm" onclick="go('/admin/print-queue')">Print queue and calendar</button>`;
   box.innerHTML = `<div class="card" style="margin-bottom:20px"><div class="card-header"><div class="card-title">Today</div></div><div style="padding:14px 20px">
     ${parts || '<div style="font-size:13px;color:#15803d;margin-bottom:12px">Nothing is stuck and nothing is due. You are caught up.</div>'}
     <div style="display:flex;gap:8px;flex-wrap:wrap">${counts}</div></div></div>`;
@@ -3638,8 +3638,9 @@ function bizCopyLogin(btn) {
 
 async function showBusinesses() {
   setTitle('Businesses');
-  const d = await api('/api/admin/businesses');
+  const [d, rq] = await Promise.all([api('/api/admin/businesses'), api('/api/admin/business-requests')]);
   if (!d) return setMain('<div class="empty">Could not load businesses.</div>');
+  _bizReqs = (rq && rq.requests) || [];
   const rows = d.businesses.map(b => `<tr>
       <td><button class="link" onclick="go('/admin/businesses/${b.id}')">${esc(b.name)}</button>${b.status === 'paused' ? ' <span class="badge badge-gray">paused</span>' : ''}<div style="font-size:12px;color:#9a9a9a">${esc(b.industry || '')}</div></td>
       <td style="font-size:12px">${esc(b.contact_name || '')}<div style="color:#9a9a9a">${esc(b.contact_email || '')}</div></td>
@@ -3652,6 +3653,12 @@ async function showBusinesses() {
       <div style="font-size:13px;color:#6b6b6b">Test portal: ${d.portalEnabled ? '<b style="color:#1f7a45">ON</b>' : '<b style="color:#a4161f">OFF</b>'}
         &nbsp;<button class="btn btn-outline btn-sm" onclick="bizPortalSwitch(${!d.portalEnabled})">Turn ${d.portalEnabled ? 'off' : 'on'}</button></div></div>
     <div class="card" style="margin-bottom:20px"><div style="padding:12px 20px;font-size:13px;color:#6b6b6b">Businesses sign in at <b>${esc(location.origin)}/portal</b>, upload a CSV and submit batches. In this test, approving a batch only records the decision: nothing is printed or sent to PostGrid.</div></div>
+    ${_bizReqs.length ? `<div class="card" style="margin-bottom:20px"><div class="card-header"><span class="card-title">Access requests (${_bizReqs.filter(r => r.status === 'new').length} new)</span></div>
+      <div style="overflow-x:auto"><table><thead><tr><th>Business</th><th>Contact</th><th>Volume</th><th>Asked</th><th></th></tr></thead><tbody>${_bizReqs.map(r => `<tr>
+        <td><strong>${esc(r.company)}</strong> ${r.status === 'new' ? '<span class="badge badge-amber">new</span>' : '<span class="badge badge-gray">contacted</span>'}<div style="font-size:12px;color:#9a9a9a">${esc(r.industry || '')}</div>${r.message ? `<div style="font-size:12px;color:#444;max-width:360px;margin-top:4px;white-space:pre-wrap">${esc(r.message)}</div>` : ''}</td>
+        <td style="font-size:12px">${esc(r.contact_name)}<div style="color:#9a9a9a">${esc(r.email)}${r.phone ? ' · ' + esc(r.phone) : ''}</div></td>
+        <td style="font-size:12px">${esc(r.volume || '—')}</td><td style="font-size:12px;color:#6b6b6b">${fmtDateTime(r.created_at)}</td>
+        <td style="white-space:nowrap"><button class="btn btn-primary btn-sm" onclick="bizFromRequest(${r.id})">Create account</button> ${r.status === 'new' ? `<button class="btn btn-outline btn-sm" onclick="bizReqDecide(${r.id},'contacted')">Mark contacted</button> ` : ''}<button class="btn btn-outline btn-sm" onclick="bizReqDecide(${r.id},'declined')">Decline</button></td></tr>`).join('')}</tbody></table></div></div>` : ''}
     ${d.queue.length ? `<div class="card" style="margin-bottom:20px"><div class="card-header"><span class="card-title">Batches waiting for approval</span></div>
       <table><thead><tr><th>Business</th><th>Batch</th><th>Pieces</th><th>Total</th><th>Submitted</th><th></th></tr></thead><tbody>${queue}</tbody></table></div>` : ''}
     <div class="card" style="margin-bottom:20px"><div class="card-header"><span class="card-title">Businesses</span></div>
@@ -3669,6 +3676,20 @@ async function showBusinesses() {
       <div style="padding:0 20px 20px"><button class="btn btn-primary" onclick="bizCreate()">Create business and login</button><span id="nb-msg" style="font-size:12px;margin-left:12px;color:#a4161f"></span></div></div>`);
 }
 
+let _bizReqs = [], _bizReqId = null;
+async function bizReqDecide(id, status) {
+  if (status === 'declined' && !confirm('Decline this request? It disappears from this list (nothing is emailed to them).')) return;
+  const r = await post(`/api/admin/business-requests/${id}/decision`, { status });
+  if (r?.ok) showBusinesses(); else alert(r?.error || 'Could not update the request.');
+}
+function bizFromRequest(id) {
+  const r = _bizReqs.find(x => x.id === id); if (!r) return;
+  const set = (k, v) => { const el = document.getElementById(k); if (el) el.value = v || ''; };
+  set('nb-name', r.company); set('nb-industry', r.industry); set('nb-contact', r.contact_name); set('nb-cemail', r.email); set('nb-phone', r.phone); set('nb-owner', r.email);
+  set('nb-notes', ['Requested via the portal.', r.volume ? 'Volume: ' + r.volume : '', r.message || ''].filter(Boolean).join('\n'));
+  _bizReqId = id;
+  document.getElementById('nb-name').scrollIntoView({ block: 'center' });
+}
 async function bizPortalSwitch(on) {
   if (!on && !confirm('Turn the business portal off? Nobody will be able to sign in or use it until you turn it on again.')) return;
   const r = await post('/api/admin/businesses/portal-switch', { enabled: on });
@@ -3684,6 +3705,7 @@ async function bizCreate() {
   });
   if (!r?.ok) return document.getElementById('nb-msg').textContent = r?.error || 'Could not create the business.';
   window._bizLogin = r.login;
+  if (_bizReqId) { await post(`/api/admin/business-requests/${_bizReqId}/decision`, { status: 'approved' }); _bizReqId = null; }
   go('/admin/businesses/' + r.id);
 }
 

@@ -51,6 +51,7 @@ function register(app, { db, requireAdmin, logAudit, getSetting, contentHeld, to
         const why = ops && ops.reasonFor ? ops.reasonFor(o) : '';
         if (why) out.needs_attention.push({ ...item, why });
       }
+      try { out.business_requests = db.prepare("SELECT COUNT(*) n FROM business_requests WHERE status = 'new'").get().n; } catch { out.business_requests = 0; }
       for (const k of ['due_today', 'tomorrow', 'unapproved_soon']) out[k].sort((a, b) => String(a.date).localeCompare(String(b.date)));
       res.json(out);
     } catch (e) { res.status(500).json({ error: e.message }); }

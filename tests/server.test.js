@@ -1478,6 +1478,28 @@ test('async route errors reach the error handler instead of hanging the request'
   assert.ok(res.status < 600, "the request was answered");
 });
 
+test('business portal: a business can request access without signing in, and the owner sees and updates the request', async () => {
+  const ask = body => fetch(`${base}/api/portal/request-access`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'portal' }, body: JSON.stringify(body) });
+  const good = { company: 'Maple Rentals', name: 'Sam Roy', email: 'Sam@Maple.test', volume: '50 to 200 a month', message: 'Rent notices' };
+  assert.equal((await fetch(`${base}/api/portal/request-access`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(good) })).status, 403, 'needs the portal header');
+  assert.equal((await ask({ ...good, company: '' })).status, 400);
+  assert.equal((await ask({ ...good, email: 'not-an-email' })).status, 400);
+  assert.equal((await ask({ ...good, company: 'Bot Co', website: 'http://spam.test' })).status, 200);
+  assert.equal(db.prepare("SELECT COUNT(*) n FROM business_requests WHERE company = 'Bot Co'").get().n, 0, 'the hidden field stops bots');
+  assert.equal((await ask(good)).status, 200);
+  assert.equal((await ask(good)).status, 200);
+  assert.equal(db.prepare("SELECT COUNT(*) n FROM business_requests WHERE email = 'sam@maple.test'").get().n, 1, 'the same email twice in a day is stored once');
+  assert.equal((await fetch(`${base}/api/admin/business-requests`)).status, 401, 'the list is for admins only');
+  const { cookie, csrfToken } = await loginAdmin();
+  const list = await (await fetch(`${base}/api/admin/business-requests`, { headers: { Cookie: cookie } })).json();
+  const r = list.requests.find(x => x.company === 'Maple Rentals');
+  assert.ok(r && r.status === 'new' && r.volume === '50 to 200 a month');
+  const dec = await fetch(`${base}/api/admin/business-requests/${r.id}/decision`, { method: 'POST', headers: { 'Content-Type': 'application/json', Cookie: cookie, 'X-CSRF-Token': csrfToken }, body: JSON.stringify({ status: 'declined' }) });
+  assert.equal(dec.status, 200);
+  const after = await (await fetch(`${base}/api/admin/business-requests`, { headers: { Cookie: cookie } })).json();
+  assert.ok(!after.requests.some(x => x.id === r.id), 'a declined request leaves the list');
+});
+
 // ── Business portal (test) ─────────────────────────────────────────────────────────────────────────────────────────
 test('business portal: onboarding, forced password change, batch checks, approval, isolation, switch', async () => {
   const { cookie, csrfToken } = await loginAdmin();

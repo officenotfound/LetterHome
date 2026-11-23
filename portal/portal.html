@@ -9,6 +9,7 @@
 <style>
 :root{--navy:#17293d;--ink:#14202e;--muted:#586779;--line:#e1e6ed;--red:#c4202b;--bg:#f6f7f9;--card:#fff;--ok:#1f7a45;--okbg:#e6f4ec;--warn:#8a5a00;--warnbg:#fff4d6;--bad:#a4161f;--badbg:#fdecee}
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 'Noto Sans',system-ui,sans-serif}
 h1,h2,h3{font-family:'Archivo','Noto Sans',sans-serif;letter-spacing:-.01em;margin:0}
 a{color:var(--red)}
@@ -22,7 +23,7 @@ main{max-width:1040px;margin:0 auto;padding:24px 20px 64px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:22px;margin-bottom:18px}
 .login{max-width:400px;margin:56px auto}
 label{display:block;font-weight:600;font-size:13px;margin:14px 0 5px}
-input[type=text],input[type=email],input[type=password],textarea{width:100%;padding:10px 12px;border:1px solid #c9d1db;border-radius:8px;font:inherit;background:#fff;color:var(--ink)}
+input[type=text],input[type=email],input[type=tel],input[type=password],textarea{width:100%;padding:10px 12px;border:1px solid #c9d1db;border-radius:8px;font:inherit;background:#fff;color:var(--ink)}
 textarea{min-height:200px;resize:vertical;font-family:'Roboto',ui-monospace,monospace;font-size:14px;line-height:1.5}
 input:focus,textarea:focus,button:focus-visible{outline:2px solid #6b8bb0;outline-offset:1px}
 .btn{display:inline-block;background:var(--red);color:#fff;border:0;border-radius:8px;padding:10px 18px;font:600 14px 'Noto Sans',sans-serif;cursor:pointer}
@@ -53,12 +54,24 @@ tr.click{cursor:pointer}tr.click:hover{background:#f3f6fa}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
 @media(max-width:760px){.grid2{grid-template-columns:1fr}.hide-sm{display:none}}
 .scroll{overflow-x:auto}
+.landing{display:grid;grid-template-columns:1.25fr 1fr;gap:28px;align-items:start;margin-top:8px}
+@media(max-width:860px){.landing{grid-template-columns:1fr}}
+.landing .login{margin:0;max-width:none}
+.intro h1{font-size:28px;line-height:1.2;margin-bottom:12px}
+.intro p{margin:0 0 12px}
+.intro ul{margin:0 0 14px;padding-left:20px}.intro li{margin:5px 0}
+.intro .more{font-weight:600}
+.reqform{max-width:640px;margin:0 auto}
+.reqform select{width:100%;padding:10px 12px;border:1px solid #c9d1db;border-radius:8px;font:inherit;background:#fff;color:var(--ink)}
+.reqform textarea{min-height:90px;font-family:inherit;font-size:15px}
+.hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+button.textlink{background:none;border:0;padding:0;font:inherit;color:var(--red);text-decoration:underline;cursor:pointer}
 ul.issues{margin:4px 0 0;padding-left:18px;color:var(--bad);font-size:13px}
 </style>
 </head>
 <body>
 <header><div class="bar"><div class="brand">Letterhome <small>Business portal</small></div><div class="who" id="who"></div><button class="btn ghost" id="signout" hidden>Sign out</button></div></header>
-<div class="test">Test mode: approved batches are recorded but not printed or mailed yet.</div>
+<div class="test" id="testbar" hidden>Test mode: approved batches are recorded but not printed or mailed yet.</div>
 <main id="app"></main>
 
 <script>
@@ -103,14 +116,62 @@ function parseCSV(text) {
 const SAMPLE = 'name,street,city,province,postal,country,first_name,amount_due\nJane Smith,123 Main St Apt 4,Toronto,ON,M5V 2T6,Canada,Jane,$450.00\nRaj Patel,88 Granville St,Vancouver,BC,V6C 1T2,Canada,Raj,$1200.00\n';
 
 // ── Views ──
-function showLogin(note) {
+const INTRO = `<section class="intro">
+    <h1>Mail personalised letters to a whole list, without a print shop</h1>
+    <p>Upload a spreadsheet of recipients, write one letter, and we print and mail every copy from Canada. Each letter has its own name, address and details filled in.</p>
+    <ul>
+      <li>Rent and payment notices, invoices and reminders, appointment letters, member and donor letters</li>
+      <li>Addresses in Canada, the United States, the United Kingdom and Australia, each checked before printing</li>
+      <li>Every batch is read and approved by Letterhome before anything is printed, so a mistake is caught first</li>
+      <li>A price agreed with you for your business, with no minimum</li>
+    </ul>
+    <p class="muted">The portal is in early access. Accounts are set up by Letterhome after a short conversation, so you are not charged for anything by signing up.</p>
+    <p class="more"><a href="/business">Read more about Letterhome for business</a></p>
+  </section>`;
+
+function showRequest() {
   $('#who').textContent = ''; $('#signout').hidden = true;
-  app.innerHTML = `<form class="card login" id="lf" novalidate>
-    <h2>Sign in</h2><p class="muted">For businesses set up by Letterhome.</p>
-    <label for="em">Email</label><input id="em" type="email" autocomplete="username" required>
-    <label for="pw">Password</label><input id="pw" type="password" autocomplete="current-password" required>
-    <div id="lm">${note ? `<div class="msg ok">${esc(note)}</div>` : ''}</div>
-    <p><button class="btn" type="submit">Sign in</button></p></form>`;
+  app.innerHTML = `<form class="card reqform" id="rf" novalidate>
+    <h2>Request access</h2>
+    <p class="muted">Tell us a little about your business. We reply within one business day, usually with a few questions and a price. Nothing is created or charged until you agree.</p>
+    <label for="rc">Business name</label><input id="rc" type="text" autocomplete="organization" maxlength="120" required>
+    <div class="grid2"><div><label for="rn">Your name</label><input id="rn" type="text" autocomplete="name" maxlength="120" required></div>
+    <div><label for="re">Work email</label><input id="re" type="email" autocomplete="email" maxlength="200" required></div></div>
+    <div class="grid2"><div><label for="rp">Phone (optional)</label><input id="rp" type="tel" autocomplete="tel" maxlength="40"></div>
+    <div><label for="ri">What kind of business (optional)</label><input id="ri" type="text" maxlength="80" placeholder="Property management"></div></div>
+    <label for="rv">How many letters a month, roughly</label>
+    <select id="rv"><option value="">Choose one</option><option>Under 50 a month</option><option>50 to 200 a month</option><option>200 to 1,000 a month</option><option>More than 1,000 a month</option><option>Not sure yet</option></select>
+    <label for="rm">What would you like to send (optional)</label><textarea id="rm" maxlength="1000" placeholder="For example: monthly rent increase notices to about 80 tenants"></textarea>
+    <div class="hp" aria-hidden="true"><label for="rw">Leave this empty</label><input id="rw" type="text" tabindex="-1" autocomplete="off"></div>
+    <div id="rmsg"></div>
+    <p class="row"><button class="btn" type="submit">Send request</button><button class="btn alt" type="button" id="rb">Back to sign in</button></p>
+  </form>`;
+  $('#rb').onclick = () => showLogin();
+  $('#rf').onsubmit = async e => {
+    e.preventDefault();
+    const btn = e.target.querySelector('button[type=submit]'); btn.disabled = true;
+    const r = await api('/request-access', { method: 'POST', body: { company: $('#rc').value, name: $('#rn').value, email: $('#re').value, phone: $('#rp').value, industry: $('#ri').value, volume: $('#rv').value, message: $('#rm').value, website: $('#rw').value } });
+    btn.disabled = false;
+    if (!r.ok) return msg($('#rmsg'), r.error || 'Could not send your request. Please try again.');
+    app.innerHTML = `<div class="card reqform"><h2>Thank you, we have your request</h2>
+      <p>We will email <b>${esc($('#re').value)}</b> within one business day. If you do not see it, check your spam folder.</p>
+      <p class="muted">Nothing has been created or charged. In the meantime you can read more about <a href="/business">Letterhome for business</a>.</p>
+      <p><button class="btn alt" type="button" id="rb2">Back to sign in</button></p></div>`;
+    $('#rb2').onclick = () => showLogin();
+  };
+}
+
+function showLogin(note) {
+  $('#who').textContent = ''; $('#signout').hidden = true; $('#testbar').hidden = true;
+  app.innerHTML = `<div class="landing">${INTRO}
+    <div><form class="card login" id="lf" novalidate>
+      <h2>Sign in</h2><p class="muted">For businesses already set up with Letterhome.</p>
+      <label for="em">Email</label><input id="em" type="email" autocomplete="username" required>
+      <label for="pw">Password</label><input id="pw" type="password" autocomplete="current-password" required>
+      <div id="lm">${note ? `<div class="msg ok">${esc(note)}</div>` : ''}</div>
+      <p><button class="btn" type="submit">Sign in</button></p></form>
+      <div class="card"><b>New here?</b><p class="muted" style="margin:6px 0 12px">Ask for access and we will set your business up.</p><button class="btn alt" type="button" id="rq">Request access</button></div></div></div>`;
+  $('#rq').onclick = showRequest;
   $('#lf').onsubmit = async e => {
     e.preventDefault();
     const btn = e.target.querySelector('button'); btn.disabled = true;
@@ -275,11 +336,11 @@ async function showBatch(id, note) {
 
 async function boot() {
   const m = await api('/me');
-  if (m.status === 503) { app.innerHTML = `<div class="card login"><h2>Portal unavailable</h2><p class="muted">${esc(m.error)}</p></div>`; return; }
+  if (m.status === 503) { app.innerHTML = `<div class="landing">${INTRO}<div class="card login"><h2>Portal unavailable</h2><p class="muted">The portal is switched off right now. Please come back later, or <a href="/contact">contact us</a> and we will help.</p></div></div>`; return; }
   if (!m.ok && m.status !== 403) return showLogin();
   if (m.status === 403 && m.mustChangePassword) { $('#signout').hidden = false; return showChangePassword(true); }
   me = m;
-  $('#who').textContent = m.user.email; $('#signout').hidden = false;
+  $('#who').textContent = m.user.email; $('#signout').hidden = false; $('#testbar').hidden = false;
   if (m.user.mustChangePassword) return showChangePassword(true);
   showDashboard();
 }

@@ -100,6 +100,14 @@ try { db.exec(`ALTER TABLE orders ADD COLUMN postgrid_url TEXT`); } catch {}
 try { db.exec(`ALTER TABLE orders ADD COLUMN postgrid_error TEXT`); } catch {}
 try { db.exec(`ALTER TABLE orders ADD COLUMN send_approved_at DATETIME`); } catch {}   // owner approved a scheduled order: the sweep sends it on its date
 
+try { db.exec(`CREATE TABLE IF NOT EXISTS business_requests (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  company TEXT NOT NULL, contact_name TEXT NOT NULL, email TEXT NOT NULL COLLATE NOCASE,
+  phone TEXT, industry TEXT, volume TEXT, message TEXT,
+  status TEXT NOT NULL DEFAULT 'new',   -- new, contacted, approved (account created), declined
+  note TEXT, handled_at DATETIME
+)`); } catch (e) { console.error('[init] business_requests table:', e.message); }
 try { db.exec(`CREATE TABLE IF NOT EXISTS admin_users (
   username TEXT PRIMARY KEY COLLATE NOCASE,
   password_hash TEXT NOT NULL,
