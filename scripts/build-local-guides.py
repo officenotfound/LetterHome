@@ -279,7 +279,8 @@ def build(p):
 {tail}'''
 
 
-for p in PAGES:
+if __name__ == '__main__':
+  for p in PAGES:
     out = f"public/{p['c']}-{p['slug']}.html"
     open(out, 'w', encoding='utf-8').write(build(p))
     print('wrote', out)

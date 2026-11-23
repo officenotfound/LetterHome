@@ -1172,7 +1172,9 @@ const LOCAL_GUIDES = [
   'us/how-long-does-mail-take', 'us/how-much-is-a-stamp', 'us/return-address-on-a-letter',
   'us/postage-rates-2026', 'us/what-is-certified-mail', 'us/christmas-mailing-deadlines-2026', 'us/christmas-card-postage-2026',
   'us/debt-validation-letter', 'us/request-medical-records-by-mail', 'us/donor-thank-you-letters',
+  'us/how-to-address-an-envelope', 'us/mail-a-letter-without-a-printer', 'us/how-many-stamps-does-a-letter-need', 'us/postage-calculator', 'us/address-formatter', 'us/business-letter-format',
   'uk/how-long-does-post-take', 'uk/how-much-is-a-stamp', 'uk/return-address-on-a-letter',
+  'uk/how-to-address-a-letter', 'uk/post-a-letter-without-a-printer', 'uk/how-many-sheets-for-a-stamp', 'uk/postage-calculator', 'uk/address-formatter', 'uk/how-to-write-a-formal-letter',
 ];
 const COUNTRY_GUIDES = {
   'us/how-to-send-mail-to-canada-from-us': 'send-a-letter-from-the-us-to-canada',
