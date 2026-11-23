@@ -2498,7 +2498,7 @@
       'x.6af9a019f4': 'Timbre à 1,24–1,44 $ + enveloppe, papier, encre et déplacement au bureau de poste',
       'x.778e81847a': 'Pareil, plus votre impression',
       'x.ecf99917b7': 'Impossible, il faut être au Canada',
-      'x.868d7ea36a': 'Services à la page (p. ex. Online-Post)',
+      'x.868d7ea36a': 'Services à la page',
       'x.49b87e10b1': 'À partir d\'environ 3 $ + impression à la page (couleur ~0,80 $/page)',
       'x.4650beaf33': '~7 $ et plus, selon les options',
       'x.08fd40ce08': 'Conçus surtout pour les expéditeurs au Canada',

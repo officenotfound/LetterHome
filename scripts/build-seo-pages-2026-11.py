@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Builds the late-November 2026 search pages:
   public/send-mail-in-canada.html
-  public/online-letter-mailing-services-canada.html
   public/mail-a-letter-without-a-printer.html
   public/letter-templates.html
   public/tools.html
@@ -266,7 +265,6 @@ body1 = f'''
   <p class="body">Sometimes the usual route does not work. You are travelling or living abroad and the letter has to go out from a Canadian address. You do not own a printer. The document only exists on your phone. Or you would rather not spend an hour on one letter.</p>
   <p class="body">Letterhome handles those cases. You type the letter, or attach a PDF or Word file, and enter the two addresses. We check the address, print the letter, put it in an envelope with Canadian postage and give it to Canada Post within two business days. It is $6 to any Canadian address, including the first two pages in black and white. Colour is $1 more, and each extra page is $0.55.</p>
   <div class="callout"><strong>When a stamp is the better deal.</strong> If you are in Canada, already have a printer, paper and envelopes, and are mailing one letter, a $1.44 stamp is cheaper than any service. The online route earns its price when printing, envelopes, the trip or being outside Canada are the problem.</div>
-  <p class="body">If you are comparing online services, <a href="/online-letter-mailing-services-canada">this side-by-side comparison</a> sets out the prices of Letterhome, Online-Post, PostPal and the post office counter.</p>
 
   <h2>Sending mail to Canada from another country</h2>
   <p class="body">International postage into Canada is slower and costs more than a domestic stamp. From the United States, a letter to Canada takes about 7 to 21 days, and from the UK about 7 to 14 business days. A letter posted from inside Canada travels as domestic mail instead. The guides for each country cover the details: <a href="/us/how-to-send-mail-to-canada-from-us">from the United States</a>, <a href="/uk/how-to-send-mail-to-canada-from-uk">from the UK</a>, <a href="/au/how-to-send-mail-to-canada-from-au">from Australia</a> and <a href="/how-to-send-a-letter-to-canada-from-abroad">from anywhere</a>.</p>
@@ -292,106 +290,6 @@ page('send-mail-in-canada',
      'Send Mail in Canada: Every Way, With 2026 Prices | Letterhome',
      'How to send mail in Canada in 2026: stamp prices, delivery times, tracking, and how to mail a letter online without a printer or a post office trip.',
      'Send mail in Canada: every way to do it, with 2026 prices', 'Send mail in Canada', body1, FAQ1)
-
-# ═════════════════════════════ 2. Comparison ═════════════════════════════
-FAQ2 = [
-    ('What is the cheapest way to send a letter online in Canada?',
-     'For a single black-and-white page, Online-Post lists the lowest price: $3.00 delivery plus $0.25 printing, $3.25 before tax. Letterhome and PostPal are both $6.00 with two pages included. Doing it yourself with a $1.44 stamp is cheaper still if you already own a printer, paper and envelopes.'),
-    ('Can I send registered mail online in Canada?',
-     'Online-Post lists Registered Mail at $25 plus printing within Canada, and PostPal lists it at $31 all in. Letterhome does not offer registered mail or Xpresspost. Canada Post sells both at its counters.'),
-    ('Do these services need an account?',
-     'Letterhome does not need an account for a single letter. PostPal says no account is required. Online-Post offers accounts for teams, bulk mailing and prepaid credit; check its checkout for what a single letter needs.'),
-    ('Which online mailing service is best for business mail?',
-     'It depends on volume. Online-Post lists bulk mailing up to 50,000 letters and team accounts. PostPal lists bulk prices of $5.75, $5.50 and $4.75 a letter at 3 to 4, 5 to 9 and 10 or more letters. Letterhome quotes business mail from a spreadsheet, including formats such as postcards, self mailers and snap packs.'),
-    ('Is mail sent through an online service tracked?',
-     'Standard mail is not. Tracking comes with Registered Mail or Xpresspost, which the services above sell as add-ons where they offer them. Letterhome sends standard Lettermail and emails you the date it was handed to Canada Post.'),
-]
-rows2 = [
-    ('One black-and-white page to a Canadian address', '$6.00, two pages included', '$3.25 before tax ($3.00 plus $0.25 printing)', '$6.00, two pages included', '$1.44 stamp, plus paper, envelope and printing'),
-    ('Extra pages', '$0.55 each, $0.75 in colour', '$0.25 each (free packaging for 1 to 5 sheets), $0.30 double-sided', '$0.35 each up to 48 pages', 'Your own printer'),
-    ('Colour', '$1.00 more per order', '$0.80 per sheet, single-sided', '$1.00 more per order', 'Your own printer'),
-    ('Registered Mail within Canada', 'Not offered', '$25 plus printing', '$31 ($6 plus $25)', 'At a post office counter'),
-    ('Express', 'Not offered', '$39 plus printing', 'Not listed', 'Xpresspost at a post office counter'),
-    ('To the United States', '$6.00, printed and posted in the US', 'From $4.50', '$12, its international rate', 'Set by Canada Post'),
-    ('To other countries', '$9 UK and Australia, $15 elsewhere', 'From $8', '$12', 'Set by Canada Post'),
-    ('Time to print and mail', 'Within 2 business days', '1 to 3 business days', '1 to 2 business days', 'Same day'),
-    ('Scheduled send', 'Free', 'Not listed', '$1, up to 18 months ahead', 'Not available'),
-    ('Business and bulk mail', 'Quote from a spreadsheet', 'Bulk up to 50,000 letters, team accounts, prepaid credit', 'Bulk prices from $4.75 a letter at 10 or more', 'Commercial services'),
-]
-tbl2 = '\n'.join('      <tr><td>' + '</td><td>'.join(r) + '</td></tr>' for r in rows2)
-body2 = f'''
-  <p class="updated">Prices checked {MONTH}</p>
-  <div class="capsule"><strong>Three online services will print and mail a letter in Canada: Letterhome, Online-Post and PostPal.</strong> For one page, Online-Post lists the lowest price ($3.25). Letterhome and PostPal are $6 with two pages included. Online-Post and PostPal also sell registered mail. We run Letterhome, so check each price on the linked pages before you decide.</div>
-
-  <h2>The prices side by side</h2>
-  <div class="cost-wrap"><table class="cost">
-    <thead><tr><th></th><th>Letterhome</th><th>Online-Post</th><th>PostPal</th><th>Do it yourself</th></tr></thead>
-    <tbody>
-{tbl2}
-    </tbody>
-  </table></div>
-  <p class="caption">Sources, checked {MONTH}: <a href="https://www.online-post.ca/pricing" rel="noopener noreferrer" style="color:inherit">Online-Post pricing</a>, <a href="https://postpal.ca/pricing" rel="noopener noreferrer" style="color:inherit">PostPal pricing</a>, {SRC_CP}. Prices are in Canadian dollars. Services change their prices, so confirm before you pay. The Letterhome column is our own price list.</p>
-
-  <h2>What a letter costs in practice</h2>
-  <p class="body">Starting prices hide the effect of page count and colour. These totals are worked out from the prices listed above, in Canadian dollars before any tax. They assume Online-Post sheets printed on one side.</p>
-  <div class="cost-wrap"><table class="cost">
-    <thead><tr><th>Letter</th><th>Letterhome</th><th>Online-Post</th><th>PostPal</th></tr></thead>
-    <tbody>
-      <tr><td>1 page, black and white</td><td>$6.00</td><td class="best">$3.25</td><td>$6.00</td></tr>
-      <tr><td>5 pages, black and white</td><td>$7.65</td><td class="best">$4.25</td><td>$7.05</td></tr>
-      <tr><td>5 pages, colour</td><td>$9.25</td><td class="best">$7.00</td><td>$8.05</td></tr>
-    </tbody>
-  </table></div>
-  <p class="caption">Letterhome: $6, plus $0.55 for each page after the second ($0.75 in colour), plus $1 for colour. Online-Post: $3.00 delivery plus $0.25 a black-and-white sheet or $0.80 a colour sheet. PostPal: $6, plus $0.35 for each page after the second, plus $1 for colour. Online-Post lists its prices before tax.</p>
-  <p class="body">On price alone, Online-Post is the cheapest of the three in every case here. The reasons to pay more are the things a price table does not show: who checks the address, what happens when something goes wrong, what you need to set up, and which extras you want.</p>
-
-  <h2>What each one is good at</h2>
-  <h3>Online-Post</h3>
-  <p class="body">The lowest price for a single page, and the most developed account features: teams, prepaid credit with discounts and bulk mailing in large volumes. It sells Registered Mail and Express with tracking, and it publishes free tools such as a postage calculator. If you want registered mail from your desk, or you send a lot, it is a strong option.</p>
-  <h3>PostPal</h3>
-  <p class="body">The same $6 starting price as Letterhome with a cheaper extra page ($0.35 against our $0.55), no account and registered mail at $31 all in. It also publishes a large library of letter templates and a directory of mailing addresses.</p>
-  <h3>Letterhome</h3>
-  <p class="body">One flat price with the envelope and postage included, no account, and a person looks over every order and the address is checked before anything is printed. You can send a letter on a date you pick at no extra cost, and the same service covers the United States, the UK and Australia. We also do business mail by quote. What we do not do: registered mail, Xpresspost or tracking, and we cannot promise a resend or a refund once a letter has been mailed.</p>
-  <h3>The post office counter</h3>
-  <p class="body">The right choice when you need proof of delivery from Canada Post itself, or when you are in Canada, have the letter printed and only need a stamp.</p>
-
-  <h2>How to choose</h2>
-  <ul class="tips">
-    <li>You are sending one page and price matters most: <strong>Online-Post</strong> lists the lowest price.</li>
-    <li>You need Registered Mail without going to the post office: <strong>Online-Post or PostPal</strong>.</li>
-    <li>You want a flat price, nothing to set up and someone checking the address: <strong>Letterhome</strong>.</li>
-    <li>You are sending a long letter, many pages: compare the per-page price, <strong>Online-Post</strong> is the lowest per sheet.</li>
-    <li>You are already in Canada with a printer and one letter: <strong>a stamp</strong>.</li>
-  </ul>
-
-  <h2>Questions to ask any mailing service</h2>
-  <ul class="tips">
-    <li><strong>Where is the letter printed and posted?</strong> A letter posted from inside Canada travels as domestic mail. One posted from abroad takes international delivery times.</li>
-    <li><strong>Is the address checked before printing?</strong> A letter sent to a bad address is usually not refunded once it has been mailed.</li>
-    <li><strong>What does it say about tracking?</strong> Standard mail has none. If a service shows a tracking number, find out which Canada Post product it is.</li>
-    <li><strong>How long does it keep your letter?</strong> Look for a stated retention period in the privacy policy. Online-Post says it deletes files after 30 days, and PostPal says 30 days after mailing.</li>
-    <li><strong>Who is behind it?</strong> A registered business name, a contact address and a support email are the minimum. Letterhome is a registered Canadian business, BN 787294073.</li>
-    <li><strong>What is the total at checkout?</strong> Compare the final amount, not the starting price.</li>
-  </ul>
-
-  <h2>Frequently asked questions</h2>
-{faq_block(FAQ2)}
-
-  <h2>Related guides</h2>
-  {related([
-      ('/send-mail-in-canada', 'Send mail in Canada: every way, with 2026 prices'),
-      ('/how-much-does-it-cost-to-mail-a-letter-to-canada', 'How much it costs to mail a letter to Canada'),
-      ('/registered-mail-vs-xpresspost', 'Registered mail vs Xpresspost vs regular mail'),
-      ('/mail-a-letter-online', 'Mail a letter online in Canada'),
-      ('/proof-of-mailing', 'How to keep proof you sent an important letter'),
-  ])}
-
-{cta_band('Send a letter for $6', 'Type it or attach a file. Two pages, the envelope and postage are included.')}
-'''
-page('online-letter-mailing-services-canada',
-     'Online Letter Mailing Services in Canada Compared (2026)',
-     'Letterhome, Online-Post, PostPal and the post office counter compared: price for one page, extra pages, registered mail, speed and business mail. Prices checked November 2026.',
-     'Online letter mailing services in Canada, compared', 'Online letter mailing services compared', body2, FAQ2, eyebrow='Comparison')
 
 # ═════════════════════════════ 3. Mail a letter without a printer ═════════════════════════════
 FAQ3 = [
@@ -455,7 +353,7 @@ body3 = f'''
 
   <h2>What it costs and what is included</h2>
   <p class="body">$6 to any address in Canada or the United States. That covers two pages printed in black and white, the envelope and the postage. Colour is $1 more per order. Each page after the second is $0.55, or $0.75 in colour. A letter can run to five pages. Sending to the UK or Australia is $9, and $15 to other countries.</p>
-  <div class="callout"><strong>The honest comparison.</strong> If you can print at home and have a stamp, mailing the letter yourself costs less. The online route is for the cases where there is no printer, no envelope, no time for the trip, or you are not in Canada. Other online services are compared in <a href="/online-letter-mailing-services-canada">this comparison</a>.</div>
+  <div class="callout"><strong>The honest comparison.</strong> If you can print at home and have a stamp, mailing the letter yourself costs less. The online route is for the cases where there is no printer, no envelope, no time for the trip, or you are not in Canada.</div>
 
   <h2>Frequently asked questions</h2>
 {faq_block(FAQ3)}
