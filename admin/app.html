@@ -4347,7 +4347,7 @@ function apprCard(o, i) {
   const status = o.clean ? '<span style="color:#15803d">Looks clean</span>' : '<span style="color:#c1121f">Needs a look</span>';
   const problems = [
     ...(o.held ? ['Held for content review' + (o.flags.length ? ': ' + o.flags.join(', ') : '') + '. Open the order and mark it safe first.'] : []),
-    ...o.issues, ...(o.scheduled ? ['Scheduled for ' + o.scheduled] : []),
+    ...o.issues,
     ...(o.error && /^MANUAL/.test(o.error) && !o.held && !o.scheduled ? [o.error.replace(/^MANUAL: /, '')] : []),
   ];
   const focus = i === _appr.focus;
@@ -4356,18 +4356,20 @@ function apprCard(o, i) {
     <div style="display:grid;grid-template-columns:${open ? 'minmax(260px,1fr) minmax(300px,1.4fr)' : '1fr'};gap:0">
       <div style="padding:16px 20px;min-width:0">
         <div style="display:flex;justify-content:space-between;gap:10px;font-size:11px;color:#6b6b6b;font-family:monospace;margin-bottom:10px">
-          <label style="display:flex;gap:8px;align-items:center;cursor:${o.clean ? 'pointer' : 'not-allowed'}"><input type="checkbox" ${_appr.ticked.has(o.id) ? 'checked' : ''} ${o.clean ? '' : 'disabled'} onchange="apprTick(${o.id}, this.checked)"> ORDER #${o.id} · ${fmtDate(o.paid_at || o.created_at)} · ${esc(o.site)}</label>
+          <label style="display:flex;gap:8px;align-items:center;cursor:${o.clean ? 'pointer' : 'not-allowed'}"><input type="checkbox" ${_appr.ticked.has(o.id) ? 'checked' : ''} ${o.clean && !o.approved_for ? '' : 'disabled'} onchange="apprTick(${o.id}, this.checked)"> ORDER #${o.id} · ${fmtDate(o.paid_at || o.created_at)} · ${esc(o.site)}</label>
           <span>${status}</span></div>
         <div style="font-size:14px;line-height:1.7;font-weight:500;color:#111111;margin-bottom:10px">${o.to.map(esc).join('<br>')}</div>
         <div style="margin-bottom:8px">${tag(o.pages ? o.pages + (o.pages > 1 ? ' pages' : ' page') : 'pages unknown', !o.pages)}${tag(o.colour ? 'colour' : 'black and white')}${o.large_envelope ? tag('large envelope') : ''}${o.extras.map(x => tag(x)).join('')}${o.no_return ? tag('no return address') : ''}${tag((o.price_cents / 100).toLocaleString(undefined, { style: 'currency', currency: 'CAD' }))}</div>
         ${addrBadge(o)}
         ${(o.tags || []).map(t => `<div style="font-size:12px;color:#92400e;background:#fef3c7;padding:6px 10px;margin-bottom:6px;line-height:1.5"><strong>${esc(t.label)}.</strong> ${esc(t.hint)}</div>`).join('')}
         ${o.waiting_hours >= (o.santa ? 12 : 24) ? `<div style="font-size:12px;color:#c1121f;margin-bottom:6px">Waiting ${o.waiting_hours} hours</div>` : ''}
+        ${o.scheduled ? `<div style="font-size:12px;color:${o.approved_for ? '#15803d' : '#92400e'};background:${o.approved_for ? '#dcfce7' : '#fef3c7'};padding:6px 10px;margin-bottom:6px;line-height:1.5"><strong>${o.approved_for ? 'Approved.' : 'Scheduled.'}</strong> ${o.approved_for ? 'Goes to print automatically on ' + esc(o.scheduled) + '.' : 'The customer chose ' + esc(o.scheduled) + ' as the send date. Approve now and it goes to print that day.'}</div>` : ''}
         ${problems.length ? `<div style="font-size:12px;color:#c1121f;line-height:1.6;margin-bottom:8px">${problems.map(p => '• ' + esc(p)).join('<br>')}</div>` : ''}
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
           <button class="btn btn-outline btn-sm" onclick="apprPreview(${o.id})">${open ? 'Hide preview' : 'Preview letter'}</button>
           <a class="btn btn-outline btn-sm" href="/admin/orders/${o.id}" onclick="event.preventDefault();go('/admin/orders/${o.id}')">Open order</a>
-          <button class="btn btn-primary btn-sm" ${_appr.configured && !_appr.busy ? '' : 'disabled'} onclick="apprApprove([${o.id}])">${o.addr_check === 'unverified' ? 'Approve and send as entered' : 'Approve and send to print'}</button>
+          ${o.approved_for ? `<button class="btn btn-outline btn-sm" ${_appr.busy ? 'disabled' : ''} onclick="apprUnapprove(${o.id})">Withdraw approval</button>`
+            : `<button class="btn btn-primary btn-sm" ${_appr.configured && !_appr.busy ? '' : 'disabled'} onclick="apprApprove([${o.id}])">${o.scheduled ? 'Approve, send on ' + esc(o.scheduled) : (o.addr_check === 'unverified' ? 'Approve and send as entered' : 'Approve and send to print')}</button>`}
         </div>
         <div id="appr-res-${o.id}" style="font-size:12px;margin-top:8px"></div>
       </div>
@@ -4392,26 +4394,35 @@ function renderApprovals() {
     ${a.orders.map(apprCard).join('')}`);
 }
 function apprTick(id, on) { on ? _appr.ticked.add(id) : _appr.ticked.delete(id); if (_appr.ticked.size > (_appr.max || 10)) { _appr.ticked.delete(id); } renderApprovals(); }
-function apprTickAll() { _appr.ticked = new Set(_appr.orders.filter(o => o.clean).slice(0, _appr.max || 10).map(o => o.id)); renderApprovals(); }
+function apprTickAll() { _appr.ticked = new Set(_appr.orders.filter(o => o.clean && !o.approved_for).slice(0, _appr.max || 10).map(o => o.id)); renderApprovals(); }
 function apprPreview(id) { _appr.open.has(id) ? _appr.open.delete(id) : _appr.open.add(id); renderApprovals(); }
 async function apprApprove(ids) {
   if (!ids.length || _appr.busy) return;
   const list = _appr.orders.filter(o => ids.includes(o.id));
   const warn = list.filter(o => !o.clean).length;
-  const msg = `Send ${ids.length} order${ids.length > 1 ? 's' : ''} to print (#${ids.join(', #')})?` + (warn ? `\n\n${warn} of them need a look. Send anyway?` : '') + '\n\nThis cannot be undone from here.';
+  const later = list.filter(o => o.scheduled);
+  const msg = (later.length === list.length ? `Approve ${ids.length} scheduled order${ids.length > 1 ? 's' : ''} (#${ids.join(', #')})? Each goes to print automatically on its chosen date, not today.` : `Send ${ids.length} order${ids.length > 1 ? 's' : ''} to print (#${ids.join(', #')})?` + (later.length ? `\n\n${later.length} of them are scheduled and will only be approved, then sent on their date.` : '')) + (warn ? `\n\n${warn} of them need a look. Send anyway?` : '') + '\n\nThis cannot be undone from here.';
   if (!confirm(msg)) return;
   _appr.busy = true; renderApprovals();
   const r = await api('/api/admin/approvals/approve', { method: 'POST', body: JSON.stringify({ ids }) });
   _appr.busy = false;
   if (!r || !r.results) { alert((r && r.error) || 'Nothing was sent. Check the order page.'); return renderApprovals(); }
   const failed = r.results.filter(x => !x.ok);
-  const sent = r.results.filter(x => x.ok).map(x => x.id);
+  const held = r.results.filter(x => x.ok && x.scheduled_for);
+  held.forEach(x => { const o = _appr.orders.find(y => y.id === x.id); if (o) { o.approved_for = x.scheduled_for; o.scheduled = x.scheduled_for; } });
+  const sent = r.results.filter(x => x.ok && !x.scheduled_for).map(x => x.id);
   _appr.orders = _appr.orders.filter(o => !sent.includes(o.id));
   sent.forEach(id => _appr.ticked.delete(id));
   _appr.focus = Math.min(_appr.focus, Math.max(0, _appr.orders.length - 1));
   renderApprovals();
   failed.forEach(f => { const el = document.getElementById('appr-res-' + f.id); if (el) { el.style.color = '#c1121f'; el.textContent = 'Not sent: ' + (f.error || 'unknown error'); } });
   if (sent.length) toastApproved(sent.length);
+  if (held.length) { const t = document.createElement('div'); t.textContent = held.length + ' scheduled order' + (held.length > 1 ? 's' : '') + ' approved. They go to print on their dates.'; t.style.cssText = 'position:fixed;bottom:24px;right:24px;background:#111111;color:#fff;padding:12px 18px;font-size:13px;z-index:9999'; document.body.appendChild(t); setTimeout(() => t.remove(), 3500); }
+}
+async function apprUnapprove(id) {
+  const r = await api('/api/admin/approvals/unapprove', { method: 'POST', body: JSON.stringify({ id }) });
+  const o = _appr.orders.find(x => x.id === id);
+  if (r && r.ok && o) { o.approved_for = null; renderApprovals(); } else alert((r && r.error) || 'Could not withdraw the approval.');
 }
 function toastApproved(n) {
   const t = document.createElement('div');
@@ -4429,7 +4440,7 @@ document.addEventListener('keydown', e => {
   if (e.key === 'j') move(1);
   else if (e.key === 'k') move(-1);
   else if (e.key === 'p') apprPreview(o.id);
-  else if (e.key === 'x' && o.clean) apprTick(o.id, !a.ticked.has(o.id));
+  else if (e.key === 'x' && o.clean && !o.approved_for) apprTick(o.id, !a.ticked.has(o.id));
   else if (e.key === 'a') apprApprove([o.id]);
   else if (e.key === 'o') go('/admin/orders/' + o.id);
 });

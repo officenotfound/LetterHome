@@ -98,6 +98,7 @@ try { db.exec(`ALTER TABLE orders ADD COLUMN postgrid_letter_id TEXT`); } catch 
 try { db.exec(`ALTER TABLE orders ADD COLUMN postgrid_status TEXT`); } catch {}
 try { db.exec(`ALTER TABLE orders ADD COLUMN postgrid_url TEXT`); } catch {}
 try { db.exec(`ALTER TABLE orders ADD COLUMN postgrid_error TEXT`); } catch {}
+try { db.exec(`ALTER TABLE orders ADD COLUMN send_approved_at DATETIME`); } catch {}   // owner approved a scheduled order: the sweep sends it on its date
 try { db.exec(`ALTER TABLE orders ADD COLUMN postgrid_submitted_at DATETIME`); } catch {}
 try { db.exec(`ALTER TABLE orders ADD COLUMN postgrid_mode TEXT`); } catch {}
 try { db.exec(`ALTER TABLE orders ADD COLUMN postgrid_tracking_number TEXT`); } catch {}

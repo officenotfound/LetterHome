@@ -179,7 +179,7 @@ function parseUpload(buf, filename) {
 // Insights from stored snapshots
 // ---------------------------------------------------------------------------------------------
 
-function register(app, { db, requireAdmin, logAudit, getSetting, indexNow, backupDir, appRoot, baseUrl, submitOrder, contentHeld, printReady, ops, checkAddress }) {
+function register(app, { db, requireAdmin, logAudit, getSetting, indexNow, backupDir, appRoot, baseUrl, submitOrder, contentHeld, printReady, ops, checkAddress, today: todayFn }) {
   db.exec(`CREATE TABLE IF NOT EXISTS gsc_snapshots (
     id INTEGER PRIMARY KEY AUTOINCREMENT, site TEXT NOT NULL, imported_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     date_from TEXT, date_to TEXT, clicks INTEGER DEFAULT 0, impressions INTEGER DEFAULT 0, filename TEXT)`);
@@ -606,10 +606,10 @@ function register(app, { db, requireAdmin, logAudit, getSetting, indexNow, backu
 
   app.get('/api/admin/approvals', requireAdmin, (req, res) => {
     try {
-      const today = new Date().toISOString().slice(0, 10);
+      const today = todayFn ? todayFn() : new Date().toISOString().slice(0, 10);
       const rows = db.prepare(`SELECT id, created_at, paid_at, order_site, recipient_name, recipient_street, recipient_city, recipient_province, recipient_postal,
           destination_country, page_count, colour_printing, registered_mail, certified_mail, express_mail, large_envelope, price_cents, postgrid_error,
-          scheduled_date, content_flags, content_cleared_at, skip_return, letter_type, addr_check_status, addr_check_note
+          scheduled_date, send_approved_at, content_flags, content_cleared_at, skip_return, letter_type, addr_check_status, addr_check_note
         FROM orders WHERE status = 'paid' AND postgrid_letter_id IS NULL AND deleted_at IS NULL ORDER BY COALESCE(paid_at, created_at) ASC LIMIT 100`).all();
       const orders = rows.map(o => {
         const held = contentHeld ? !!contentHeld(o) : false;
@@ -618,13 +618,13 @@ function register(app, { db, requireAdmin, logAudit, getSetting, indexNow, backu
         const issues = addressIssues(o);
         const scheduled = o.scheduled_date && o.scheduled_date > today ? o.scheduled_date : null;
         const manual = !!(o.postgrid_error && /^MANUAL/.test(o.postgrid_error)) && !/Scheduled for/.test(o.postgrid_error);
-        const clean = !held && !issues.length && !scheduled && !manual;
+        const clean = !held && !issues.length && !manual;
         return {
           id: o.id, created_at: o.created_at, paid_at: o.paid_at, site: o.order_site || 'ca',
           to: [o.recipient_name, o.recipient_street, [o.recipient_city, o.recipient_province, o.recipient_postal].filter(Boolean).join(' '), o.destination_country].filter(Boolean),
           country: o.destination_country, pages: o.page_count || null, colour: !!o.colour_printing, large_envelope: !!o.large_envelope,
           extras: [o.registered_mail && 'registered', o.certified_mail && 'certified', o.express_mail && 'express'].filter(Boolean),
-          price_cents: o.price_cents, error: o.postgrid_error || null, scheduled, held, flags, issues, clean, no_return: !!o.skip_return,
+          price_cents: o.price_cents, error: o.postgrid_error || null, scheduled, approved_for: scheduled && o.send_approved_at ? scheduled : null, held, flags, issues, clean, no_return: !!o.skip_return,
           tags: mailTags(o), addr_check: o.addr_check_status || null, addr_note: o.addr_check_note || null, santa: o.letter_type === 'santa',
           waiting_hours: Math.max(0, Math.floor((Date.now() - Date.parse(String(o.paid_at || o.created_at).replace(' ', 'T') + 'Z')) / 3600000)) || 0,
         };
@@ -644,8 +644,17 @@ function register(app, { db, requireAdmin, logAudit, getSetting, indexNow, backu
     const results = [];
     try {
       for (const id of ids) {
-        const o = db.prepare("SELECT id, status, postgrid_letter_id, deleted_at FROM orders WHERE id = ?").get(id);
+        const o = db.prepare("SELECT * FROM orders WHERE id = ?").get(id);
         if (!o || o.deleted_at || o.status !== 'paid' || o.postgrid_letter_id) { results.push({ id, ok: false, error: 'Not waiting for approval any more.' }); continue; }
+        if (o.scheduled_date && o.scheduled_date > (todayFn ? todayFn() : new Date().toISOString().slice(0, 10))) {
+          // Future date: approve now, the sweep sends it on the day. Nothing goes to print today.
+          if (contentHeld && contentHeld(o)) { results.push({ id, ok: false, error: 'Held for content review. Mark it safe first.' }); continue; }
+          db.prepare("UPDATE orders SET send_approved_at = datetime('now'), postgrid_error = NULL WHERE id = ?").run(id);
+          try { db.prepare('INSERT INTO order_notes (order_id, note) VALUES (?,?)').run(id, `Approved by owner. Will be sent to print automatically on ${o.scheduled_date}.`); } catch {}
+          logAudit(req, 'order.approve_scheduled', 'order', id, { scheduled_date: o.scheduled_date });
+          results.push({ id, ok: true, scheduled_for: o.scheduled_date });
+          continue;
+        }
         const r = await submitOrder(id);
         logAudit(req, 'order.approve_submit', 'order', id, { ok: r.ok, error: r.error, letter_id: r.letter_id, batch: ids.length > 1 });
         results.push({ id, ok: !!r.ok, error: r.ok ? null : r.error, letter_id: r.letter_id || null });
@@ -653,6 +662,16 @@ function register(app, { db, requireAdmin, logAudit, getSetting, indexNow, backu
       res.json({ ok: results.every(r => r.ok), results });
     } catch (e) { res.status(500).json({ error: e.message, results }); }
     finally { approving = false; }
+  });
+
+  app.post('/api/admin/approvals/unapprove', requireAdmin, (req, res) => {
+    const id = Number(req.body && req.body.id);
+    if (!Number.isInteger(id) || id < 1) return res.status(400).json({ error: 'No order chosen.' });
+    const r = db.prepare("UPDATE orders SET send_approved_at = NULL WHERE id = ? AND postgrid_letter_id IS NULL").run(id);
+    if (!r.changes) return res.status(404).json({ error: 'Order not found or already sent.' });
+    try { db.prepare('INSERT INTO order_notes (order_id, note) VALUES (?,?)').run(id, 'Approval withdrawn by owner. It will not be sent automatically.'); } catch {}
+    logAudit(req, 'order.unapprove_scheduled', 'order', id, {});
+    res.json({ ok: true });
   });
 
   app.post('/api/admin/orders/:id/address-check', requireAdmin, async (req, res) => {

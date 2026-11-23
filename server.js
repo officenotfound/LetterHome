@@ -800,9 +800,21 @@ async function postgridSubmit(orderId, opts) {
   }
 }
 
+// Calendar date in Toronto, so a letter scheduled for the 22nd goes out on the 22nd for the customer, not the evening of the 21st.
+function torontoToday() { return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Toronto' }); }
+
 async function postgridSweep() {
   if (!postgrid.isConfigured()) return;
   try {
+    // Scheduled orders the owner has approved are sent on their date even with automatic submitting off.
+    // A content hold still wins (postgridSubmit checks it), and a failure is recorded on the order and alerts the owner.
+    const dueApproved = db.prepare(`SELECT id, scheduled_date FROM orders WHERE status = 'paid' AND postgrid_letter_id IS NULL AND deleted_at IS NULL
+      AND send_approved_at IS NOT NULL AND scheduled_date IS NOT NULL AND scheduled_date <= ?
+      AND (postgrid_error IS NULL OR postgrid_error LIKE 'RETRY:%' OR postgrid_error LIKE 'MANUAL: Scheduled for%') LIMIT 20`).all(torontoToday());
+    for (const o of dueApproved) {
+      const r = await postgridSubmit(o.id, { force: true });
+      try { db.prepare('INSERT INTO order_notes (order_id, note) VALUES (?,?)').run(o.id, r.ok ? `Automatic: sent to print on its scheduled date (${o.scheduled_date}).` : `Automatic: scheduled send on ${o.scheduled_date} failed: ${r.error}`); } catch {}
+    }
     if (postgrid.autoSubmit()) {
       const today = new Date().toISOString().slice(0, 10);
       const due = db.prepare(`SELECT id FROM orders WHERE status = 'paid' AND postgrid_letter_id IS NULL AND deleted_at IS NULL
@@ -2229,6 +2241,7 @@ const adminTools = require('./adminTools').register(app, {
   printReady: () => postgrid.isConfigured(),
   ops,
   checkAddress: id => addressCheck(id),
+  today: () => torontoToday(),
 });
 
 app.get('/api/admin/me', requireAdmin, (req, res) =>

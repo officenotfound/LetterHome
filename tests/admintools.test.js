@@ -212,6 +212,35 @@ test('approving sends only what was chosen, and never an order that is not waiti
   assert.deepEqual(submitted, [b]);
 });
 
+test('a scheduled order is approved now but not sent until its date, and approval can be withdrawn', async () => {
+  const id = mkOrder('sch1@example.com', {});
+  db.prepare("UPDATE orders SET scheduled_date = '2999-12-22', schedule_for_later = 1 WHERE id = ?").run(id);
+  const post = (path, body) => fetch(`${base}/api/admin/approvals/${path}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+  let d = await (await fetch(`${base}/api/admin/approvals`)).json();
+  let o = d.orders.find(x => x.id === id);
+  assert.equal(o.scheduled, '2999-12-22');
+  assert.equal(o.clean, true, 'a scheduled order with nothing wrong is clean');
+  assert.equal(o.approved_for, null);
+  submitted.length = 0;
+  const r = await (await post('approve', { ids: [id] })).json();
+  assert.equal(r.ok, true);
+  assert.equal(r.results[0].scheduled_for, '2999-12-22');
+  assert.deepEqual(submitted, [], 'nothing goes to print before the date');
+  assert.ok(db.prepare('SELECT send_approved_at FROM orders WHERE id = ?').get(id).send_approved_at);
+  d = await (await fetch(`${base}/api/admin/approvals`)).json();
+  assert.equal(d.orders.find(x => x.id === id).approved_for, '2999-12-22');
+  assert.equal((await (await post('unapprove', { id })).json()).ok, true);
+  assert.equal(db.prepare('SELECT send_approved_at FROM orders WHERE id = ?').get(id).send_approved_at, null);
+});
+
+test('a scheduled order held for content cannot be approved', async () => {
+  const id = mkOrder('sch2@example.com', { flags: JSON.stringify({ hits: [{ label: 'threat' }] }) });
+  db.prepare("UPDATE orders SET scheduled_date = '2999-12-22' WHERE id = ?").run(id);
+  const r = await (await fetch(`${base}/api/admin/approvals/approve`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ids: [id] }) })).json();
+  assert.equal(r.results[0].ok, false);
+  assert.equal(db.prepare('SELECT send_approved_at FROM orders WHERE id = ?').get(id).send_approved_at, null);
+});
+
 test('approving needs a list of ids and caps a batch at 10', async () => {
   const post = body => fetch(`${base}/api/admin/approvals/approve`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
   assert.equal((await post({})).status, 400);
