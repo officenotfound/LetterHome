@@ -1095,6 +1095,8 @@ Object.entries(REGION_REDIRECTS).forEach(([from, to]) =>
  'how-to-mail-ircc-documents-from-outside-canada',
  'cheapest-way-to-send-a-letter-to-canada',
  'send-a-letter-to-canada-without-a-return-address',
+ 'send-mail-in-canada', 'online-letter-mailing-services-canada', 'mail-a-letter-without-a-printer', 'letter-templates',
+ 'tools', 'tools/postage-calculator', 'tools/how-many-pages-per-stamp', 'tools/canadian-address-formatter',
  'mail-a-letter-online', 'send-a-letter-from-home', 'what-is-lettermail', 'postage-for-a-large-letter-in-canada',
  'ircc-processing-times', 'n4-notice', 'ircc-documents', 'for-professionals', 'bulk-mailing',
  'cra-mail', 'cra-notice-of-objection', 'ltb-forms',

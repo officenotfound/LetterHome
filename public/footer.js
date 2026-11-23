@@ -40,7 +40,7 @@
       social + '</div>' +
       '<div class="lh-f-nav">' +
       row('Countries', [[caHome, 'Canada', 'footer.ca'], [usHome, 'United States', 'footer.us'], [ukHome, 'United Kingdom', 'footer.uk'], [auHome, 'Australia', 'footer.au']]) +
-      row('Information', [['/about', 'About', 'footer.about'], ['/careers', 'Careers', 'footer.careers'], ['/contact', 'Contact', 'nav.contact'], ['/guides', 'Mailing guides', 'footer.guides'], ['/terms', 'Terms', 'footer.terms'], ['/refunds', 'Refund policy', 'footer.refunds'], ['/accessibility', 'Accessibility', 'footer.accessibility']]) +
+      row('Information', [['/about', 'About', 'footer.about'], ['/careers', 'Careers', 'footer.careers'], ['/contact', 'Contact', 'nav.contact'], ['/guides', 'Mailing guides', 'footer.guides'], ['/tools', 'Free tools'], ['/terms', 'Terms', 'footer.terms'], ['/refunds', 'Refund policy', 'footer.refunds'], ['/accessibility', 'Accessibility', 'footer.accessibility']]) +
       '</div>' +
     '</div><div class="lh-f-bar"><div class="lh-f-in2"><span class="lh-f-id">© 2026 Letterhome</span>' + usDomain + '<a href="/privacy" data-i18n="footer.privacy">Privacy</a></div></div></footer>';
   // The "home" in the footer wordmark takes the exact colour of the header's, on every page, theme and country look.
