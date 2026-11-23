@@ -39,6 +39,25 @@ An order can be cancelled for a full refund until it is sent to the printer; aft
 
 - [Home](https://letterhome.ca/): Service overview and order form
 - [Send a letter](https://letterhome.ca/send): Order form, upload documents and mail a letter to Canada
+- [Send Mail in Canada: Every Way, With 2026 Prices](https://letterhome.ca/send-mail-in-canada): Canada Post Lettermail rates by weight with worked examples, plus online options
+- [Mail a Letter Without a Printer](https://letterhome.ca/mail-a-letter-without-a-printer): Three ways to mail a letter with no printer, envelope or stamps
+- [Letter Templates](https://letterhome.ca/letter-templates): Letters you can copy, with how to mail each one
+- [Free tools](https://letterhome.ca/tools): Postage calculator, pages-per-stamp and Canadian address formatter
+- [Canada Post letter postage calculator](https://letterhome.ca/tools/postage-calculator): Domestic letter rate from envelope size and weight
+- [How many pages per stamp](https://letterhome.ca/tools/how-many-pages-per-stamp): Sheets of paper that fit under each Lettermail weight step
+- [Canadian address formatter](https://letterhome.ca/tools/canadian-address-formatter): Lay out a Canadian address and check the postal code
+- [How to Address an Envelope (US)](https://letterhome.us/how-to-address-an-envelope): Where the return address, stamp and delivery address go, in USPS format
+- [Mail a Letter Without a Printer (US)](https://letterhome.us/mail-a-letter-without-a-printer): Three ways to mail a letter in the US, $3.00 online
+- [How Many Stamps Does a Letter Need?](https://letterhome.us/how-many-stamps-does-a-letter-need): Forever stamp, ounces and cost by number of sheets
+- [Business Letter Format (US)](https://letterhome.us/business-letter-format): The standard layout, part by part
+- [USPS Letter Postage Calculator](https://letterhome.us/postage-calculator): 2026 First-Class rates by weight, with Certified Mail fees
+- [US Address Formatter](https://letterhome.us/address-formatter): Lay out an address the USPS way and check ZIP and state
+- [How to Address a Letter (UK)](https://letterhome.co.uk/how-to-address-a-letter): Layout with the postcode last, from Post Office guidance
+- [Post a Letter Without a Printer (UK)](https://letterhome.co.uk/post-a-letter-without-a-printer): Three ways to post a letter in the UK, £4.50 online
+- [How Many Sheets for One Stamp? (UK)](https://letterhome.co.uk/how-many-sheets-for-a-stamp): Standard letter limits and weight by number of sheets
+- [How to Write a Formal Letter (UK)](https://letterhome.co.uk/how-to-write-a-formal-letter): Layout, and Yours sincerely versus Yours faithfully
+- [UK Letter Postage Calculator](https://letterhome.co.uk/postage-calculator): 2026 First and Second Class prices for letters and large letters
+- [UK Address Formatter and Postcode Check](https://letterhome.co.uk/address-formatter): Lay out an address and check the postcode shape
 - [Cancel a Gym Membership by Mail](https://letterhome.ca/cancel-gym-membership-by-mail): How to cancel a gym membership in writing: what to include, when to send it, and a letter you can copy. Keep a dated copy so you can show th
 - [Writing to a Child at Summer Camp](https://letterhome.ca/write-to-a-child-at-summer-camp): How to write to a child at summer camp: what to put on the envelope, when to send the first letter, and what to say. Works for grandparents 
 - [Mail to a University Student in Canada](https://letterhome.ca/mail-a-letter-to-a-university-student-in-canada): How to address a letter to a university student in Canada: residence or campus mailroom, mailbox numbers and what to ask the school. For par
