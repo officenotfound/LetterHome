@@ -2264,6 +2264,9 @@ const adminTools = require('./adminTools').register(app, {
   today: () => torontoToday(),
 });
 
+const contentPlanner = require('./contentPlanner').register(app, { db, requireAdmin, logAudit, getSetting, today: () => torontoToday() });
+// Monday morning: what is due this week and how outreach is going, to the owner only.
+cron.schedule('10 8 * * 1', () => { try { sendOwnerMail('Content and links: this week', contentPlanner.weeklyDigest()); } catch (e) { console.error('[content-digest] failed:', e.message); } });
 require('./adminExtras').register(app, { db, requireAdmin, logAudit, getSetting, contentHeld: o => contentHeld(o), today: () => torontoToday(), ops });
 
 app.get('/api/admin/me', requireAdmin, (req, res) =>

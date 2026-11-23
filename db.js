@@ -108,6 +108,24 @@ try { db.exec(`CREATE TABLE IF NOT EXISTS business_requests (
   status TEXT NOT NULL DEFAULT 'new',   -- new, contacted, approved (account created), declined
   note TEXT, handled_at DATETIME
 )`); } catch (e) { console.error('[init] business_requests table:', e.message); }
+try { db.exec(`CREATE TABLE IF NOT EXISTS content_items (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  kind TEXT NOT NULL,            -- article, social, outreach, other
+  title TEXT NOT NULL,
+  planned_date TEXT,             -- YYYY-MM-DD, empty for an idea with no day yet
+  status TEXT NOT NULL DEFAULT 'idea',   -- idea, drafted, scheduled, done
+  platform TEXT, url TEXT, notes TEXT,
+  done_at DATETIME
+)`); db.exec(`CREATE INDEX IF NOT EXISTS idx_content_items_date ON content_items(planned_date)`);
+  db.exec(`CREATE TABLE IF NOT EXISTS backlinks (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  source_name TEXT NOT NULL, source_url TEXT, target_page TEXT,
+  found_date TEXT, from_outreach INTEGER DEFAULT 0,
+  status TEXT NOT NULL DEFAULT 'live',   -- live, pending, lost
+  notes TEXT
+)`); } catch (e) { console.error('[init] content planner tables:', e.message); }
 try { db.exec(`CREATE TABLE IF NOT EXISTS admin_users (
   username TEXT PRIMARY KEY COLLATE NOCASE,
   password_hash TEXT NOT NULL,

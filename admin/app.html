@@ -513,6 +513,7 @@ function renderRoute(p) {
   if (p === '/admin/print-queue')                   return showPrintQueue();
   if (p === '/admin/approvals')                     return showApprovals();
   if (p === '/admin/profit')                        return showProfit();
+  if (p === '/admin/content')                       return showContent();
   if (p === '/admin/admin-users')                   return showAdminUsers();
   if (p === '/admin/insights')                      return showInsights();
   if (p === '/admin/visitors')                      return showVisitors();
@@ -538,7 +539,7 @@ function renderRoute(p) {
 const NAV_GROUPS = {
   orders:   { tabs: [['/admin/orders', 'Orders'], ['/admin/approvals', 'Approvals'], ['/admin/print-queue', 'Print queue']] },
   people:   { tabs: [['/admin/customers', 'Customers'], ['/admin/accounts', 'Accounts'], ['/admin/contacts', 'Contacts'], ['/admin/applicants', 'Applicants'], ['/admin/businesses', 'Businesses']] },
-  messages: { tabs: [['/admin/broadcast', 'Broadcast'], ['/admin/outreach', 'Outreach'], ['/admin/followups', 'Follow-ups'], ['/admin/templates', 'Templates'], ['/admin/emails', 'Emails']] },
+  messages: { tabs: [['/admin/broadcast', 'Broadcast'], ['/admin/outreach', 'Outreach'], ['/admin/followups', 'Follow-ups'], ['/admin/content', 'Content and links'], ['/admin/templates', 'Templates'], ['/admin/emails', 'Emails']] },
   reports:  { tabs: [['/admin/insights', 'Insights'], ['/admin/visitors', 'Visitors'], ['/admin/traffic', 'Traffic'], ['/admin/growth', 'Search'], ['/admin/funnel', 'Funnel'], ['/admin/seo-audit', 'Content audit'], ['/admin/profit', 'Profit'], ['/admin/stripe', 'Stripe']] },
   system:   { tabs: [['/admin/settings', 'Settings'], ['/admin/health', 'Health'], ['/admin/codes', 'Codes'], ['/admin/admin-users', 'Admin users'], ['/admin/audit-log', 'Audit log'], ['/admin/trash', 'Trash']] },
 };
@@ -1312,6 +1313,136 @@ document.addEventListener('keydown', e => {
   if (tg === 'INPUT' || tg === 'TEXTAREA' || tg === 'SELECT' || (e.target && e.target.isContentEditable)) return;
   e.preventDefault(); openSearch();
 });
+
+// ── Content and links: calendar of planned articles, social posts and outreach, plus the backlink log ──
+let _ct = { month: '', items: [], ideas: [], summary: null, links: [], editing: null, tab: 'calendar' };
+const CT_KIND = { article: ['Article', '#1d4ed8', '#dbeafe'], social: ['Social', '#7c3aed', '#ede9fe'], outreach: ['Outreach', '#b45309', '#fef3c7'], other: ['Other', '#374151', '#e5e7eb'] };
+const CT_STATUS = ['idea', 'drafted', 'scheduled', 'done'];
+function ctShift(m, n) { let [y, mo] = m.split('-').map(Number); mo += n; while (mo > 12) { mo -= 12; y++; } while (mo < 1) { mo += 12; y--; } return `${y}-${String(mo).padStart(2, '0')}`; }
+
+async function showContent(month, tab) {
+  setTitle('Content and links');
+  if (tab) _ct.tab = tab;
+  const d = await api('/api/admin/content' + (month ? '?month=' + month : ''));
+  if (!d) return setMain('<div class="empty">Could not load this section.</div>');
+  const l = await api('/api/admin/backlinks');
+  _ct = { ..._ct, month: d.month, items: d.items, ideas: d.ideas, summary: d.summary, links: (l && l.links) || [] };
+  renderContent();
+}
+function ctBar(done, target, color) {
+  const pct = Math.min(100, Math.round(done / Math.max(1, target) * 100));
+  return `<div style="height:6px;background:#ececec;margin-top:6px"><div style="height:6px;width:${pct}%;background:${color}"></div></div>`;
+}
+function ctChip(i) {
+  const k = CT_KIND[i.kind] || CT_KIND.other, done = i.status === 'done', over = !done && i.planned_date && i.planned_date < _ct.summary.today;
+  return `<button onclick="ctEdit(${i.id})" title="${esc(k[0] + ': ' + i.title + ' (' + i.status + ')')}" style="display:block;width:100%;text-align:left;border:0;cursor:pointer;font:inherit;font-size:10px;line-height:1.4;margin-top:2px;padding:1px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:${done ? '#dcfce7' : over ? '#fee2e2' : k[2]};color:${done ? '#166534' : over ? '#991b1b' : k[1]};${done ? 'text-decoration:line-through;' : ''}">${done ? '✓ ' : ''}${esc(i.title)}</button>`;
+}
+function ctGrid() {
+  const [y, m] = _ct.month.split('-').map(Number), today = _ct.summary.today, pad = n => String(n).padStart(2, '0');
+  const start = new Date(Date.UTC(y, m - 1, 1)).getUTCDay(), days = new Date(Date.UTC(y, m, 0)).getUTCDate();
+  const by = {}; _ct.items.forEach(i => (by[i.planned_date] = by[i.planned_date] || []).push(i));
+  let cells = '';
+  for (let i = 0; i < start; i++) cells += '<div style="background:#fafafa"></div>';
+  for (let d = 1; d <= days; d++) {
+    const key = `${y}-${pad(m)}-${pad(d)}`, items = by[key] || [];
+    cells += `<div style="min-height:72px;padding:4px 6px;border:1px solid #ececec;margin:0 -1px -1px 0;background:${key === today ? '#f4f4f4' : '#fff'};min-width:0;cursor:pointer" onclick="if(event.target===this||event.target.tagName==='DIV')ctNew('${key}')">
+      <div style="font-size:11px;color:${key < today ? '#b0b0b0' : '#6b6b6b'};${key === today ? 'font-weight:700;color:#111' : ''}">${d}</div>${items.slice(0, 3).map(ctChip).join('')}${items.length > 3 ? `<div style="font-size:10px;color:#6b6b6b;margin-top:2px">+${items.length - 3} more</div>` : ''}</div>`;
+  }
+  const name = new Date(Date.UTC(y, m - 1, 1)).toLocaleString('en-CA', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+  return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><button class="btn btn-outline btn-sm" onclick="showContent('${ctShift(_ct.month, -1)}')">←</button><div style="font-size:14px;font-weight:600;min-width:140px;text-align:center">${name}</div><button class="btn btn-outline btn-sm" onclick="showContent('${ctShift(_ct.month, 1)}')">→</button><button class="btn btn-outline btn-sm" onclick="showContent('${today.slice(0, 7)}')">Today</button><span style="font-size:11px;color:#9a9a9a">Click a day to add something</span></div>
+    <div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));font-size:10px;color:#9a9a9a;margin-bottom:2px">${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(x => `<div>${x}</div>`).join('')}</div>
+    <div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));border-top:1px solid #ececec;border-left:1px solid #ececec">${cells}</div>`;
+}
+function renderContent() {
+  const s = _ct.summary, tab = _ct.tab;
+  const stat = (label, val, sub, bar) => `<div style="min-width:150px;flex:1"><div style="font-size:12px;color:#6b6b6b">${label}</div><div style="font-size:22px;font-weight:600">${val}</div><div style="font-size:11px;color:#9a9a9a">${sub}</div>${bar || ''}</div>`;
+  const tabBtn = (k, label) => `<button class="btn ${tab === k ? 'btn-primary' : 'btn-outline'} btn-sm" onclick="_ct.tab='${k}';renderContent()">${label}</button>`;
+  setMain(`
+    <div class="card" style="margin-bottom:20px;padding:16px 20px;display:flex;gap:24px;flex-wrap:wrap">
+      ${stat('Outreach this week', `${s.outreach_done} / ${s.outreach_target}`, 'sent, against your weekly target', ctBar(s.outreach_done, s.outreach_target, s.outreach_done >= s.outreach_target ? '#15803d' : '#b45309'))}
+      ${stat('Articles this week', `${s.articles_done} / ${s.articles_planned}`, 'done of planned')}
+      ${stat('Social posts this week', `${s.social_done} / ${s.social_planned}`, 'done of planned')}
+      ${stat('Links found', s.links_30d, `in the last 30 days, ${s.links_total} in total${s.links_total ? ', ' + s.links_from_outreach + ' from outreach' : ''}`)}
+    </div>
+    ${s.overdue.length ? `<div class="card" style="margin-bottom:20px;padding:12px 20px;border-left:3px solid #c1121f"><div style="font-size:12px;font-weight:600;color:#c1121f;margin-bottom:4px">Overdue (${s.overdue.length})</div>${s.overdue.slice(0, 6).map(o => `<div style="font-size:13px;line-height:1.8"><button class="link" onclick="ctEdit(${o.id})">${esc(o.title)}</button> <span style="color:#6b6b6b">${esc(o.kind)}, was due ${esc(o.planned_date)}</span> <button class="btn btn-outline btn-sm" onclick="ctDone(${o.id})">Done</button></div>`).join('')}</div>` : ''}
+    <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">${tabBtn('calendar', 'Calendar')}${tabBtn('ideas', `Ideas (${_ct.ideas.length})`)}${tabBtn('links', 'Backlinks')}<button class="btn btn-outline btn-sm" onclick="ctNew('')" style="margin-left:auto">+ Add</button></div>
+    <div id="ct-form"></div>
+    ${tab === 'calendar' ? `<div class="card" style="padding:16px 20px;margin-bottom:20px">${ctGrid()}<div style="font-size:11px;color:#6b6b6b;margin-top:10px">${Object.entries(CT_KIND).map(([k, v]) => `<span style="background:${v[2]};color:${v[1]};padding:1px 6px;margin-right:6px">${v[0]}</span>`).join('')}<span style="background:#dcfce7;color:#166534;padding:1px 6px;margin-right:6px">done</span><span style="background:#fee2e2;color:#991b1b;padding:1px 6px">overdue</span></div></div>` : ''}
+    ${tab === 'ideas' ? ctIdeas() : ''}
+    ${tab === 'links' ? ctLinks() : ''}`);
+}
+function ctIdeas() {
+  if (!_ct.ideas.length) return '<div class="card" style="padding:24px;color:#6b6b6b;font-size:13px">No loose ideas. Add something without a date and it lands here until you give it a day.</div>';
+  return `<div class="card"><div class="card-header"><div class="card-title">Ideas with no date yet</div></div><div style="padding:6px 20px 14px">${_ct.ideas.map(i => { const k = CT_KIND[i.kind] || CT_KIND.other; return `<div style="padding:8px 0;border-bottom:1px solid #f0f0f0;display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span style="background:${k[2]};color:${k[1]};font-size:11px;padding:1px 6px">${k[0]}</span><span style="flex:1;min-width:160px;font-size:13px">${esc(i.title)}</span><button class="btn btn-outline btn-sm" onclick="ctEdit(${i.id})">Edit and date</button></div>`; }).join('')}</div></div>`;
+}
+function ctLinks() {
+  const stCol = { live: '#166534', pending: '#92400e', lost: '#991b1b' };
+  return `<div class="card" style="margin-bottom:20px"><div class="card-header"><div class="card-title">Backlinks earned</div><button class="btn btn-outline btn-sm" onclick="ctLinkForm()">+ Log a link</button></div>
+    <div id="ct-link-form"></div>
+    <div style="overflow-x:auto"><table style="width:100%"><thead><tr><th>Found</th><th>From</th><th>Linking to</th><th>Source</th><th>Status</th><th></th></tr></thead><tbody>
+    ${_ct.links.map(k => `<tr><td style="white-space:nowrap">${esc(k.found_date || '')}</td><td>${k.source_url ? `<a class="link" href="${esc(k.source_url)}" target="_blank" rel="noopener">${esc(k.source_name)}</a>` : esc(k.source_name)}${k.notes ? `<div style="font-size:11px;color:#9a9a9a">${esc(k.notes)}</div>` : ''}</td><td style="font-size:12px">${esc(k.target_page || '')}</td><td style="font-size:12px">${k.from_outreach ? 'Outreach' : 'On its own'}</td><td style="color:${stCol[k.status] || '#111'};font-size:12px">${esc(k.status)}</td>
+      <td style="white-space:nowrap"><button class="btn btn-outline btn-sm" onclick="ctLinkForm(${k.id})">Edit</button></td></tr>`).join('') || '<tr><td colspan="6" style="color:#6b6b6b;padding:20px">No links logged yet. When you see a new link to your site (Search Console, Bing, or a reply to an outreach email), log it here.</td></tr>'}
+    </tbody></table></div>
+    <div style="padding:10px 20px 16px;font-size:12px;color:#6b6b6b">To see which links actually send visitors, open <button class="link" onclick="go('/admin/traffic')">Traffic</button> and look at other sites.</div></div>`;
+}
+function ctNew(date) { _ct.editing = { id: null, date: date || '' }; ctForm(); }
+async function ctEdit(id) { const i = _ct.items.find(x => x.id === id) || _ct.ideas.find(x => x.id === id) || await api('/api/admin/content/' + id); if (!i) return; _ct.editing = { ...i, date: i.planned_date || '' }; ctForm(); }
+function ctForm() {
+  const e = _ct.editing, isNew = !e.id;
+  const opt = (arr, cur) => arr.map(x => `<option value="${x}" ${x === cur ? 'selected' : ''}>${x[0].toUpperCase() + x.slice(1)}</option>`).join('');
+  const box = document.getElementById('ct-form'); if (!box) return;
+  box.innerHTML = `<div class="card" style="margin-bottom:20px;padding:16px 20px"><div class="card-title" style="margin-bottom:10px">${isNew ? 'Add to the calendar' : 'Edit item'}</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px">
+      <div class="field"><label>Kind</label><select id="ct-kind">${opt(Object.keys(CT_KIND), e.kind || 'article')}</select></div>
+      <div class="field"><label>Date (blank = idea)</label><input id="ct-date" type="date" value="${esc(e.date || '')}"></div>
+      <div class="field"><label>Status</label><select id="ct-status">${opt(CT_STATUS, e.status || 'idea')}</select></div>
+      <div class="field"><label>Where (social only)</label><input id="ct-platform" type="text" maxlength="40" value="${esc(e.platform || '')}" placeholder="Facebook, LinkedIn"></div>
+    </div>
+    <div class="field" style="margin-top:10px"><label>Title</label><input id="ct-title" type="text" maxlength="200" value="${esc(e.title || '')}" placeholder="Dining guide: Granada"></div>
+    <div class="field" style="margin-top:10px"><label>Link (the live page or post)</label><input id="ct-url" type="text" maxlength="500" value="${esc(e.url || '')}" placeholder="https://"></div>
+    <div class="field" style="margin-top:10px"><label>Notes, or the post text to copy</label><textarea id="ct-notes" rows="3" maxlength="2000">${esc(e.notes || '')}</textarea></div>
+    ${isNew ? `<div class="field" style="margin-top:10px;max-width:260px"><label>Repeat weekly for</label><select id="ct-repeat"><option value="0">Just this once</option>${[3, 5, 7, 11].map(n => `<option value="${n}">${n + 1} weeks in total</option>`).join('')}</select></div>` : ''}
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button class="btn btn-primary btn-sm" onclick="ctSave()">Save</button>
+      ${!isNew ? `<button class="btn btn-outline btn-sm" onclick="ctDone(${e.id})">Mark done</button>${e.url || e.notes ? `<button class="btn btn-outline btn-sm" onclick="ctCopy()">Copy post text</button>` : ''}<button class="btn btn-outline btn-sm" style="color:#b42318;border-color:#b42318" onclick="ctDelete(${e.id})">Delete</button>` : ''}
+      <button class="btn btn-outline btn-sm" onclick="document.getElementById('ct-form').innerHTML=''">Cancel</button><span id="ct-msg" style="font-size:12px;color:#b42318;align-self:center"></span></div></div>`;
+  box.scrollIntoView({ block: 'nearest' });
+}
+async function ctSave() {
+  const v = id => (document.getElementById(id) || {}).value || '';
+  const body = { kind: v('ct-kind'), planned_date: v('ct-date'), status: v('ct-status'), platform: v('ct-platform'), title: v('ct-title'), url: v('ct-url'), notes: v('ct-notes') };
+  const e = _ct.editing;
+  if (e.id) { const r = await pgCall('/api/admin/content/' + e.id, 'POST', body); if (!r.ok) return document.getElementById('ct-msg').textContent = r.error || 'Could not save.'; }
+  else { body.repeat_weeks = v('ct-repeat'); const r = await pgCall('/api/admin/content', 'POST', body); if (!r.ok) return document.getElementById('ct-msg').textContent = r.error || 'Could not save.'; }
+  showContent(body.planned_date ? body.planned_date.slice(0, 7) : _ct.month);
+}
+async function ctDone(id) { const r = await pgCall('/api/admin/content/' + id, 'POST', { status: 'done' }); if (!r.ok) return alert(r.error || 'Could not update.'); showContent(_ct.month); }
+async function ctDelete(id) { if (!confirm('Delete this item?')) return; const r = await pgCall(`/api/admin/content/${id}/delete`); if (!r.ok) return alert(r.error || 'Could not delete.'); showContent(_ct.month); }
+async function ctCopy() {
+  const e = _ct.editing, text = [(document.getElementById('ct-notes') || {}).value || e.title, (document.getElementById('ct-url') || {}).value || ''].filter(Boolean).join('\n\n');
+  try { await navigator.clipboard.writeText(text); document.getElementById('ct-msg').style.color = '#15803d'; document.getElementById('ct-msg').textContent = 'Copied. Paste it into the post.'; }
+  catch { document.getElementById('ct-msg').textContent = 'Could not copy. Select the notes box and copy by hand.'; }
+}
+function ctLinkForm(id) {
+  const k = id ? _ct.links.find(x => x.id === id) : { found_date: _ct.summary.today, status: 'live' };
+  const box = document.getElementById('ct-link-form'); if (!box || !k) return;
+  box.innerHTML = `<div style="padding:14px 20px;border-bottom:1px solid #ececec"><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px">
+    <div class="field"><label>Who linked (site or person)</label><input id="kl-name" type="text" maxlength="160" value="${esc(k.source_name || '')}"></div>
+    <div class="field"><label>Address of the page with the link</label><input id="kl-url" type="text" maxlength="500" value="${esc(k.source_url || '')}" placeholder="https://"></div>
+    <div class="field"><label>Page of yours they link to</label><input id="kl-target" type="text" maxlength="200" value="${esc(k.target_page || '')}" placeholder="/send-mail-in-canada"></div>
+    <div class="field"><label>Found on</label><input id="kl-date" type="date" value="${esc(k.found_date || '')}"></div>
+    <div class="field"><label>Status</label><select id="kl-status">${['live', 'pending', 'lost'].map(x => `<option ${x === k.status ? 'selected' : ''}>${x}</option>`).join('')}</select></div>
+    <div class="field"><label>How did it happen</label><select id="kl-out"><option value="0" ${k.from_outreach ? '' : 'selected'}>On its own</option><option value="1" ${k.from_outreach ? 'selected' : ''}>After my outreach</option></select></div></div>
+    <div class="field" style="margin-top:10px"><label>Notes</label><input id="kl-notes" type="text" maxlength="1000" value="${esc(k.notes || '')}"></div>
+    <div style="display:flex;gap:8px;margin-top:10px;align-items:center"><button class="btn btn-primary btn-sm" onclick="ctLinkSave(${id || 0})">Save</button>${id ? `<button class="btn btn-outline btn-sm" style="color:#b42318;border-color:#b42318" onclick="ctLinkDelete(${id})">Delete</button>` : ''}<button class="btn btn-outline btn-sm" onclick="document.getElementById('ct-link-form').innerHTML=''">Cancel</button><span id="kl-msg" style="font-size:12px;color:#b42318"></span></div></div>`;
+}
+async function ctLinkSave(id) {
+  const v = x => (document.getElementById(x) || {}).value || '';
+  const body = { source_name: v('kl-name'), source_url: v('kl-url'), target_page: v('kl-target'), found_date: v('kl-date'), status: v('kl-status'), from_outreach: v('kl-out') === '1', notes: v('kl-notes') };
+  const r = await pgCall(id ? '/api/admin/backlinks/' + id : '/api/admin/backlinks', 'POST', body);
+  if (!r.ok) return document.getElementById('kl-msg').textContent = r.error || 'Could not save.';
+  showContent(_ct.month, 'links');
+}
+async function ctLinkDelete(id) { if (!confirm('Delete this link record?')) return; const r = await pgCall(`/api/admin/backlinks/${id}/delete`); if (!r.ok) return alert(r.error || 'Could not delete.'); showContent(_ct.month, 'links'); }
 
 // ── Print Queue: send-date calendar and list for scheduled orders ───────────────────────────────
 let _pq = { today: '', orders: [] };
