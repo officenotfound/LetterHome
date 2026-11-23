@@ -812,6 +812,9 @@ async function postgridSweep() {
       AND send_approved_at IS NOT NULL AND scheduled_date IS NOT NULL AND scheduled_date <= ?
       AND (postgrid_error IS NULL OR postgrid_error LIKE 'RETRY:%' OR postgrid_error LIKE 'MANUAL: Scheduled for%') LIMIT 20`).all(torontoToday());
     for (const o of dueApproved) {
+      // If a first letter was cancelled, the customer already got an "at the printer" email back then. Clear it so they
+      // get one on the day the letter is actually sent.
+      db.prepare("UPDATE orders SET printer_email_sent_at = NULL WHERE id = ? AND postgrid_status = 'cancelled'").run(o.id);
       const r = await postgridSubmit(o.id, { force: true });
       try { db.prepare('INSERT INTO order_notes (order_id, note) VALUES (?,?)').run(o.id, r.ok ? `Automatic: sent to print on its scheduled date (${o.scheduled_date}).` : `Automatic: scheduled send on ${o.scheduled_date} failed: ${r.error}`); } catch {}
       try { sendOwnerMail(r.ok ? `Scheduled order #${o.id} sent to print` : `Scheduled order #${o.id} FAILED to send`,
