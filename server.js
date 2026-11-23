@@ -814,6 +814,8 @@ async function postgridSweep() {
     for (const o of dueApproved) {
       const r = await postgridSubmit(o.id, { force: true });
       try { db.prepare('INSERT INTO order_notes (order_id, note) VALUES (?,?)').run(o.id, r.ok ? `Automatic: sent to print on its scheduled date (${o.scheduled_date}).` : `Automatic: scheduled send on ${o.scheduled_date} failed: ${r.error}`); } catch {}
+      try { sendOwnerMail(r.ok ? `Scheduled order #${o.id} sent to print` : `Scheduled order #${o.id} FAILED to send`,
+        r.ok ? `Order #${o.id} was approved for ${o.scheduled_date} and has now gone to print automatically.` : `Order #${o.id} was approved to send on ${o.scheduled_date} but did not go to print: ${r.error}\n\nOpen the order in Admin and send it by hand.`); } catch {}
     }
     if (postgrid.autoSubmit()) {
       const today = new Date().toISOString().slice(0, 10);

@@ -8,8 +8,8 @@ const money = c => '$' + ((c || 0) / 100).toFixed(2);
 
 function createOps({ db, sendOwnerMail, contentHeld, now = () => new Date() }) {
   const waiting = () => db.prepare(`SELECT id, recipient_name, letter_type, paid_at, created_at, postgrid_error, scheduled_date, content_flags, content_cleared_at,
-      addr_check_status, addr_check_note, stuck_alert_sent_at, price_cents
-    FROM orders WHERE status = 'paid' AND postgrid_letter_id IS NULL AND deleted_at IS NULL ORDER BY COALESCE(paid_at, created_at) ASC`).all();
+      addr_check_status, addr_check_note, stuck_alert_sent_at, price_cents, send_approved_at
+    FROM orders WHERE status = 'paid' AND (postgrid_letter_id IS NULL OR (postgrid_status = 'cancelled' AND paid_at > datetime('now','-30 days'))) AND deleted_at IS NULL ORDER BY COALESCE(paid_at, created_at) ASC`).all();
 
   const hoursSince = (ts, at) => {
     const t = Date.parse(String(ts || '').replace(' ', 'T') + (/Z|[+-]\d\d:?\d\d$/.test(String(ts || '')) ? '' : 'Z'));
@@ -68,6 +68,8 @@ function createOps({ db, sendOwnerMail, contentHeld, now = () => new Date() }) {
     out.push('Waiting for you');
     out.push(`  ${wait.length} paid order${wait.length === 1 ? '' : 's'} not yet sent to print${santaWait ? `, ${santaWait} of them Santa` : ''}`);
     if (needs.length) { out.push(`  ${needs.length} need${needs.length === 1 ? 's' : ''} attention:`); needs.slice(0, 15).forEach(({ o, why }) => out.push(`    #${o.id} ${o.recipient_name || ''}: ${why}`)); }
+    const approved = wait.filter(o => o.send_approved_at && o.scheduled_date && o.scheduled_date >= at.toISOString().slice(0, 10)).sort((a, b) => a.scheduled_date.localeCompare(b.scheduled_date));
+    if (approved.length) { out.push(''); out.push('Approved and scheduled (go to print on their own)'); approved.slice(0, 15).forEach(o => out.push(`  #${o.id} ${o.recipient_name || ''}: ${o.scheduled_date}`)); }
     if (unverified.length) out.push(`  ${unverified.length} with an address PostGrid could not verify (#${unverified.map(o => o.id).join(', #')}); they will print as entered.`);
     if (daysLeft > 0 && daysLeft <= 30) { out.push(''); out.push(`Santa cut-off (December 5): ${daysLeft} day${daysLeft === 1 ? '' : 's'} left.`); }
     out.push('');

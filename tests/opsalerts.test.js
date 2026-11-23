@@ -7,7 +7,7 @@ function makeDb() {
   const db = new DatabaseSync(':memory:');
   db.exec(`CREATE TABLE orders (id INTEGER PRIMARY KEY AUTOINCREMENT, status TEXT, postgrid_letter_id TEXT, deleted_at TEXT, recipient_name TEXT, recipient_street TEXT,
     letter_type TEXT, paid_at TEXT, created_at TEXT, postgrid_error TEXT, scheduled_date TEXT, content_flags TEXT, content_cleared_at TEXT, addr_check_status TEXT,
-    addr_check_note TEXT, stuck_alert_sent_at TEXT, price_cents INTEGER, mailed_at TEXT)`);
+    addr_check_note TEXT, stuck_alert_sent_at TEXT, price_cents INTEGER, mailed_at TEXT, postgrid_status TEXT, send_approved_at TEXT)`);
   return db;
 }
 const ago = h => new Date(Date.now() - h * 3600000).toISOString().slice(0, 19).replace('T', ' ');
@@ -45,4 +45,19 @@ test('mail tags spot prison, PO Box, rural and care-of addresses', () => {
   assert.deepEqual(keys({ recipient_name: 'Ada', recipient_street: 'RR 2 Site 4' }), ['rural']);
   assert.deepEqual(keys({ recipient_name: 'Ada', recipient_street: 'c/o Sunrise Nursing Home\n5 Main St' }), ['careof']);
   assert.deepEqual(keys({ recipient_name: 'Ada', recipient_street: '1 Main St' }), []);
+});
+
+test('approved scheduled orders are listed in the summary, and a cancelled letter is still watched', async () => {
+  const db = makeDb();
+  const soon = new Date(Date.now() + 2 * 86400000).toISOString().slice(0, 10);
+  const id = add(db, { age: 3, sched: soon });
+  db.prepare("UPDATE orders SET send_approved_at = datetime('now'), postgrid_letter_id = 'l1', postgrid_status = 'cancelled' WHERE id = ?").run(id);
+  const mails = [];
+  const ops = createOps({ db, sendOwnerMail: async (s, t) => mails.push([s, t]), contentHeld: () => false });
+  const text = ops.summaryText();
+  assert.match(text, new RegExp(`Approved and scheduled[\\s\\S]*#${id}[^\\n]*${soon}`));
+  const late = add(db, { age: 40 });
+  db.prepare("UPDATE orders SET postgrid_letter_id = 'l2', postgrid_status = 'cancelled' WHERE id = ?").run(late);
+  const r = await ops.stuckJob();
+  assert.equal(r.sent, 1, 'the cancelled letter waiting 40 hours is flagged, the future scheduled one is not');
 });
