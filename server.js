@@ -2412,6 +2412,15 @@ app.get('/api/admin/orders', requireAdmin, (req, res) => {
   res.json(rows);
 });
 
+// Print Queue: paid orders with a send date that have not gone to print (or whose first letter was cancelled), for the calendar and list.
+app.get('/api/admin/print-queue/scheduled', requireAdmin, (req, res) => {
+  const rows = db.prepare(`SELECT id, recipient_name, destination_country, scheduled_date, send_approved_at, content_flags, content_cleared_at, postgrid_error, letter_type, created_at
+    FROM orders WHERE status = 'paid' AND deleted_at IS NULL AND scheduled_date IS NOT NULL AND scheduled_date != ''
+      AND (postgrid_letter_id IS NULL OR postgrid_status = 'cancelled') ORDER BY scheduled_date, id LIMIT 500`).all();
+  res.json({ today: torontoToday(), orders: rows.map(o => ({ id: o.id, name: o.recipient_name, country: o.destination_country, date: o.scheduled_date,
+    approved: !!o.send_approved_at, held: !!contentHeld(o), santa: o.letter_type === 'santa', error: o.postgrid_error || null })) });
+});
+
 app.get('/api/admin/orders/csv', requireAdmin, (req, res) => {
   const orders = db.prepare(`
     SELECT id, created_at, status, customer_email,
