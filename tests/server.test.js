@@ -230,6 +230,26 @@ test('POST /api/create-order persists order and returns checkoutUrl', async () =
   assert.equal(row.price_cents, 600);
 });
 
+test('an order is tagged with where the visitor first came from (ChatGPT link), and crawler visits do not count', async () => {
+  db.prepare('DELETE FROM page_views').run();
+  const human = { 'User-Agent': 'Mozilla/5.0 (Macintosh) AppleWebKit/537.36 Chrome/120 Safari/537.36' };
+  await fetch(`${base}/how-to-send-a-letter-to-canada-from-abroad`, { headers: { 'User-Agent': 'Mozilla/5.0 (compatible; GPTBot/1.1; +https://openai.com/gptbot)' } });
+  await fetch(`${base}/about?utm_source=chatgpt.com`, { headers: human });
+  await fetch(`${base}/send`, { headers: human });
+  await new Promise(r => setTimeout(r, 150));
+  const form = new URLSearchParams({
+    'r-email': 'source@example.com', 'r-name': 'Jane Doe', 'r-street': '123 Main St', 'r-city': 'Toronto',
+    'r-province': 'ON', 'r-postal': 'M5V 1A1', 'r-country': 'CA', 'letter-body': 'Hello.', 'letter-type': 'standard',
+  });
+  const res = await fetch(`${base}/api/create-order`, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: form.toString() });
+  assert.equal(res.status, 200);
+  const row = db.prepare("SELECT traffic_source, landing_path FROM orders WHERE customer_email = 'source@example.com' ORDER BY id DESC LIMIT 1").get();
+  assert.equal(row.traffic_source, 'ai');
+  assert.equal(row.landing_path, '/about');
+  const crawl = db.prepare("SELECT bot_name FROM page_views WHERE path = '/how-to-send-a-letter-to-canada-from-abroad'").get();
+  assert.match(crawl.bot_name, /OpenAI/);
+});
+
 test('pricing: rest-of-world base plus colour and free scheduling; retired large envelope is ignored', async () => {
   const form = new URLSearchParams({
     'r-email':    'pricing@example.com',

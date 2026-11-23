@@ -516,6 +516,7 @@ function renderRoute(p) {
   if (p === '/admin/stripe')                        return showStripe();
   if (p === '/admin/growth')                        return showGrowth();
   if (p === '/admin/funnel')                        return showFunnel();
+  if (p === '/admin/traffic')                       return showTraffic();
   if (p === '/admin/health')                        return showHealth();
   if (p === '/admin/seo-audit')                     return showSeoAudit();
   if (p === '/admin/contacts')                      return showContacts();
@@ -535,7 +536,7 @@ const NAV_GROUPS = {
   orders:   { tabs: [['/admin/orders', 'Orders'], ['/admin/approvals', 'Approvals'], ['/admin/print-queue', 'Print queue']] },
   people:   { tabs: [['/admin/customers', 'Customers'], ['/admin/accounts', 'Accounts'], ['/admin/contacts', 'Contacts'], ['/admin/applicants', 'Applicants'], ['/admin/businesses', 'Businesses']] },
   messages: { tabs: [['/admin/broadcast', 'Broadcast'], ['/admin/outreach', 'Outreach'], ['/admin/followups', 'Follow-ups'], ['/admin/templates', 'Templates'], ['/admin/emails', 'Emails']] },
-  reports:  { tabs: [['/admin/insights', 'Insights'], ['/admin/visitors', 'Visitors'], ['/admin/growth', 'Search'], ['/admin/funnel', 'Funnel'], ['/admin/seo-audit', 'Content audit'], ['/admin/stripe', 'Stripe']] },
+  reports:  { tabs: [['/admin/insights', 'Insights'], ['/admin/visitors', 'Visitors'], ['/admin/traffic', 'Traffic'], ['/admin/growth', 'Search'], ['/admin/funnel', 'Funnel'], ['/admin/seo-audit', 'Content audit'], ['/admin/stripe', 'Stripe']] },
   system:   { tabs: [['/admin/settings', 'Settings'], ['/admin/health', 'Health'], ['/admin/codes', 'Codes'], ['/admin/audit-log', 'Audit log'], ['/admin/trash', 'Trash']] },
 };
 function groupOf(p) {
@@ -4187,6 +4188,43 @@ async function showFunnel(days, site) {
     `<div class="card"><div class="card-header"><div class="card-title">By destination</div></div>${tbl(['Country', 'Orders', 'Revenue'], f.byCountry.map(c => `<tr><td>${esc(c.country)}</td><td style="text-align:right">${nf(c.orders)}</td><td style="text-align:right">${cad(c.cents)}</td></tr>`), 'None yet.')}</div>` +
     `<div class="card"><div class="card-header"><div class="card-title">By site</div></div>${tbl(['Site', 'Orders', 'Revenue'], f.bySite.map(c => `<tr><td>${esc(SITE_LABELS[c.site] || c.site)}</td><td style="text-align:right">${nf(c.orders)}</td><td style="text-align:right">${cad(c.cents)}</td></tr>`), 'None yet.')}</div>` +
     `<div class="card"><div class="card-header"><div class="card-title">Most visited pages</div></div>${tbl(['Page', 'Views'], f.topPages.map(c => `<tr><td style="font-family:monospace;font-size:12px">${esc(c.path)}</td><td style="text-align:right">${nf(c.n)}</td></tr>`), 'No visits recorded.')}</div>`);
+}
+
+let trafficDays = 30, trafficSite = 'all';
+async function showTraffic(days, site) {
+  if (days) trafficDays = days;
+  if (site) trafficSite = site;
+  setTitle('Traffic sources');
+  setMain('<div class="empty">Loading…</div>');
+  const t = await api(`/api/admin/traffic?days=${trafficDays}&site=${trafficSite}`);
+  if (!t) return setMain('<div class="empty">Could not load this section.</div>');
+  const ctl = `<div style="display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap;align-items:center">
+    ${[7, 30, 90].map(d => `<button class="filter-btn ${trafficDays === d ? 'active' : ''}" onclick="showTraffic(${d})">${d} days</button>`).join('')}
+    <span style="width:12px"></span>
+    ${['all', 'ca', 'us', 'uk', 'au'].map(x => `<button class="filter-btn ${trafficSite === x ? 'active' : ''}" onclick="showTraffic(null,'${x}')">${x === 'all' ? 'All sites' : esc(SITE_LABELS[x])}</button>`).join('')}</div>`;
+  const visitors = t.sources.reduce((a, x) => a + x.visitors, 0);
+  const ai = t.sources.find(x => x.source === 'ai') || { visitors: 0, orders: 0 };
+  const orders = t.sources.reduce((a, x) => a + x.orders, 0);
+  const botShare = t.people_views + t.bot_views ? t.bot_views / (t.people_views + t.bot_views) : 0;
+  const kpis = `<div class="stats-grid">
+    ${statCard('Visitors', nf(visitors), 'people, crawlers left out')}
+    ${statCard('From AI assistants', nf(ai.visitors), ai.orders ? nf(ai.orders) + ' paid order' + (ai.orders === 1 ? '' : 's') : 'no orders yet')}
+    ${statCard('Paid orders tagged', nf(orders), t.untagged_orders ? nf(t.untagged_orders) + ' older order' + (t.untagged_orders === 1 ? ' has' : 's have') + ' no source' : (orders ? 'every order has a source' : 'no paid orders in this period'))}
+    ${statCard('Crawler share', pf(botShare, 0), nf(t.bot_views) + ' crawler page views')}
+  </div>`;
+  const vmax = Math.max(1, ...t.sources.map(x => x.visitors));
+  const rows = t.sources.map(x => `<tr><td>${esc(x.label)}</td><td style="text-align:right">${nf(x.visitors)}</td><td style="width:30%"><div style="background:#2563eb;height:12px;width:${Math.max(1, Math.round(x.visitors / vmax * 100))}%"></div></td><td style="text-align:right">${nf(x.orders)}</td><td style="text-align:right">${cad(x.revenue_cents)}</td><td style="text-align:right">${x.visitors ? pf(x.orders / x.visitors, 1) : '–'}</td></tr>`);
+  const lands = t.sources.filter(x => (t.landing[x.source] || []).length).map(x =>
+    `<details style="margin-bottom:8px"${x.source === 'ai' ? ' open' : ''}><summary style="cursor:pointer;font-weight:600">${esc(x.label)} <span style="color:#6b6b6b;font-weight:400">(${nf(x.visitors)} visitor${x.visitors === 1 ? '' : 's'})</span></summary>` +
+    `<table style="margin-top:6px"><tbody>${t.landing[x.source].map(l => `<tr><td style="font-family:monospace;font-size:12px">${esc(l.path)}</td><td style="text-align:right;width:70px">${nf(l.visitors)}</td></tr>`).join('')}</tbody></table></details>`).join('');
+  const crawl = t.crawlers.map(c => `<tr><td>${esc(c.bot)}${c.ai ? ' <span style="color:#15803d;font-size:11px">AI</span>' : ''}</td><td style="text-align:right">${nf(c.hits)}</td><td style="font-family:monospace;font-size:11px;color:#555">${c.pages.slice(0, 3).map(p => esc(p.path) + ' (' + p.hits + ')').join('<br>')}</td></tr>`);
+  const recent = t.recent_ai.map(r => `<tr><td style="font-size:12px;white-space:nowrap">${esc(String(r.created_at).slice(0, 16))}</td><td style="font-family:monospace;font-size:12px">${esc(r.path)}</td><td>${esc(r.country_name || '')}</td><td style="font-size:12px;color:#666">${esc(r.referrer || 'tagged link')}</td></tr>`);
+  const note = `<div style="font-size:12px;color:#6b6b6b;margin-bottom:20px">A visitor is counted once, by the page they opened first in this period and how they got there. Visitors are told apart by internet address, so two people on one network count as one. Source tracking started ${t.since ? esc(String(t.since).slice(0, 10)) : 'when this was deployed'}. Earlier visits are sorted by referring site only, so an AI visit that carried no referrer shows as Direct. Orders are tagged from the day this was deployed.</div>`;
+  setMain(ctl + kpis + note +
+    `<div class="card"><div class="card-header"><div class="card-title">Where visitors came from, last ${t.days} days</div></div>${tbl(['Source', 'Visitors', '', 'Orders', 'Revenue', 'Orders per visitor'], rows, 'No visits in this period.')}</div>` +
+    `<div class="card"><div class="card-header"><div class="card-title">First page opened, by source</div></div><div style="padding:12px 16px">${lands || '<div class="empty">No visits yet.</div>'}</div></div>` +
+    `<div class="card"><div class="card-header"><div class="card-title">Latest visits from AI assistants</div></div>${tbl(['Time (UTC)', 'Page', 'Country', 'Came from'], recent, 'None in this period.')}</div>` +
+    `<div class="card"><div class="card-header"><div class="card-title">Crawlers and what they read</div></div>${tbl(['Crawler', 'Hits', 'Top pages'], crawl, 'No crawler visits recorded yet.')}</div>`);
 }
 
 async function showHealth() {

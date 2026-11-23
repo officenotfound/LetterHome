@@ -121,6 +121,11 @@ app.use((req, res, next) => {
 
     const { device, browser } = parseUA(ua);
     const visitedPath = String(req.originalUrl || req.path).split('?')[0];
+    // Where the visit came from (the referrer, or the utm_source tag that AI assistants and email links add), and
+    // whether it is a crawler. Crawlers are logged too, but kept out of the visitor numbers.
+    const utm = typeof req.query.utm_source === 'string' ? req.query.utm_source.slice(0, 60) : '';
+    const trafficSource = traffic.classify(referrer, utm);
+    const botName = traffic.botName(ua);
     const site = sites.keyOf(req);
 
     // Count it only once the page was actually served (no redirects, 404s or errors).
@@ -129,8 +134,8 @@ app.use((req, res, next) => {
       let rowId;
       try {
         rowId = db.prepare(
-          'INSERT INTO page_views (path, ip, referrer, device_type, browser, site) VALUES (?, ?, ?, ?, ?, ?)'
-        ).run(visitedPath, ip, referrer, device, browser, site).lastInsertRowid;
+          'INSERT INTO page_views (path, ip, referrer, device_type, browser, site, source, bot_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+        ).run(visitedPath, ip, referrer, device, browser, site, trafficSource, botName).lastInsertRowid;
       } catch (e) { console.error('[pageview]', e.message); return; }
       if (rowId && ip && !isPrivateIp(ip)) {
         lookupCountry(ip).then(r => {
@@ -236,6 +241,8 @@ app.use((req, res, next) => {
 });
 
 const db = require('./db');
+const traffic = require('./trafficSources');
+traffic.ensureSchema(db);
 
 function logAudit(req, action, target_type, target_id, details) {
   try {
@@ -1837,6 +1844,11 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
     b.lang === 'es' ? 'es' : null
   );
   const orderId  = row.lastInsertRowid;
+  // Remember where this customer first came from (from our own visit log), for the admin Traffic screen.
+  try {
+    const src = traffic.sourceForIp(db, getClientIp(req));
+    db.prepare('UPDATE orders SET traffic_source = ?, landing_path = ? WHERE id = ?').run(src.source, src.path, orderId);
+  } catch (e) { console.error('[traffic] order tag:', e.message); }
   // Tag the order with the page it went through. The Australian pages sit on letterhome.ca and send visitors to
   // checkout asking for AUD, so the requested currency (not the one charged) says they came through those pages.
   const siteKey  = sites.keyOf(req) || 'ca';
@@ -2202,6 +2214,7 @@ const indexNow = require('./indexnow').create({
   log: r => console.log(`IndexNow: ${r.submitted} pages sent, ${r.ok ? 'accepted' : 'failed, will retry'}`),
 });
 const ops = require('./opsAlerts').createOps({ db, sendOwnerMail: (...a) => sendOwnerMail(...a), contentHeld: o => contentHeld(o) });
+traffic.register(app, { db, requireAdmin });
 const adminTools = require('./adminTools').register(app, {
   db, requireAdmin, logAudit, getSetting, indexNow,
   backupDir: process.env.BACKUP_DIR || path.join(__dirname, 'backups'),
