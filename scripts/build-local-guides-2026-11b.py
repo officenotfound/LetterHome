@@ -37,7 +37,7 @@ US_CALC = tool_shell('''
       <option value="1020">Certified Mail with hard copy return receipt (+$10.20)</option></select></div>
   </div>
   <div class="result" id="result" aria-live="polite"></div>
-  <h3 style="margin-top:22px">Estimate the weight from the number of sheets</h3>
+  <h2 style="margin-top:22px">Estimate the weight from the number of sheets</h2>
   <div class="grid">
     <div class="field"><label for="sheets">Sheets of paper</label><input id="sheets" type="number" min="0" step="1" placeholder="e.g. 3" inputmode="numeric"></div>
     <div class="field"><label for="env">Envelope</label><select id="env"><option value="6">Plain #10 envelope, about 6 g</option><option value="4">Light envelope, about 4 g</option><option value="9">Heavy or padded, about 9 g</option></select></div>
@@ -138,7 +138,7 @@ UK_CALC = tool_shell('''
     <div class="field"><label for="wt">Weight of the sealed envelope (g)</label><input id="wt" type="number" min="0" step="1" value="25" inputmode="numeric"></div>
   </div>
   <div class="result" id="result" aria-live="polite"></div>
-  <h3 style="margin-top:22px">Estimate the weight from the number of sheets</h3>
+  <h2 style="margin-top:22px">Estimate the weight from the number of sheets</h2>
   <div class="grid">
     <div class="field"><label for="sheets">Sheets of A4 paper</label><input id="sheets" type="number" min="0" step="1" placeholder="e.g. 3" inputmode="numeric"></div>
     <div class="field"><label for="env">Envelope</label><select id="env"><option value="5">Plain C5 or DL envelope, about 5 g</option><option value="3">Light envelope, about 3 g</option><option value="9">Heavy or padded, about 9 g</option></select></div>

@@ -287,7 +287,7 @@ body1 = f'''
 {cta_band('No printer, no stamps, no trip', 'Type your letter or attach a document. We print it, add postage and mail it from Canada, $6 all in.')}
 '''
 page('send-mail-in-canada',
-     'Send Mail in Canada: Every Way, With 2026 Prices | Letterhome',
+     'Send Mail in Canada: Every Way, 2026 Prices | Letterhome',
      'How to send mail in Canada in 2026: stamp prices, delivery times, tracking, and how to mail a letter online without a printer or a post office trip.',
      'Send mail in Canada: every way to do it, with 2026 prices', 'Send mail in Canada', body1, FAQ1)
 
@@ -431,8 +431,8 @@ body4 = f'''
 {cta_band('Write it, we mail it', 'Type your letter or attach a file. We print it and mail it from Canada, $6 all in.')}
 '''
 page('letter-templates',
-     'Letter Templates for Canada: Notices, Demands, Personal | Letterhome',
-     'Letter guides and templates for Canada: demand letters, tenancy notices, cancellations, resignation, condolence and holiday letters, with where to send each one.',
+     'Letter Templates for Canada: Notices and Demands | Letterhome',
+     'Letter guides and templates for Canada: demand letters, tenancy notices, cancellations, resignation and holiday letters, and where to send each.',
      'Letter templates and guides for Canada', 'Letter templates', body4, None, eyebrow='Templates')
 
 # ═════════════════════════════ 5. Tools hub ═════════════════════════════
@@ -457,7 +457,7 @@ body5 = f'''
 {cta_band('Skip the post office', 'Type a letter or attach a file. We print it and mail it, $6 all in.')}
 '''
 page('tools', 'Free Mailing Tools for Canada | Letterhome',
-     'Free tools for mailing in Canada: a Canada Post letter postage calculator, a pages-per-stamp weight chart and a Canadian address formatter with postal code check.',
+     'Free mailing tools for Canada: a Canada Post postage calculator, a pages-per-stamp chart and an address formatter with postal code check.',
      'Free mailing tools for Canada', 'Tools', body5, None, eyebrow='Tools', app=True)
 
 # ═════════════════════════════ 6. Postage calculator ═════════════════════════════
@@ -535,7 +535,7 @@ body6 = f'''
       <div class="field"><label for="thk">Thickness (mm)</label><input id="thk" type="number" min="0" step="0.5" value="3" inputmode="decimal"></div>
     </div>
     <div class="result" id="result" aria-live="polite"></div>
-    <h3 style="margin-top:22px">Estimate the weight from the number of sheets</h3>
+    <h2 style="margin-top:22px">Estimate the weight from the number of sheets</h2>
     <div class="grid">
       <div class="field"><label for="sheets">Sheets of paper</label><input id="sheets" type="number" min="0" step="1" placeholder="e.g. 3" inputmode="numeric"></div>
       <div class="field"><label for="paper">Paper</label><select id="paper"><option value="4.5">US Letter, 20 lb (75 gsm), 4.5 g a sheet</option><option value="5.4">US Letter, 24 lb (90 gsm), 5.4 g a sheet</option><option value="4.7">A4, 75 gsm, 4.7 g a sheet</option></select></div>
@@ -567,7 +567,7 @@ ld_tool = lambda name, desc, url: {'@type': 'WebApplication', 'name': name, 'des
     'offers': {'@type': 'Offer', 'price': '0', 'priceCurrency': 'CAD'},
     'publisher': {'@type': 'Organization', 'name': 'Letterhome', 'url': BASE + '/'}}
 page('tools/postage-calculator', 'Canada Post Letter Postage Calculator (2026 Rates)',
-     'Work out the Canada Post domestic letter rate from your envelope size and weight. Standard letters from $1.44, large letters from $2.61. Rates checked November 2026.',
+     'Work out the Canada Post letter rate from envelope size and weight. Standard letters from $1.44, large from $2.61. Rates checked November 2026.',
      'Canada Post letter postage calculator', 'Postage calculator', body6, FAQ6, eyebrow='Tool', app=True,
      extra_ld=ld_tool('Canada Post letter postage calculator', 'Domestic Canada Post letter rates by envelope size and weight.', BASE + '/tools/postage-calculator'),
      extra_script=calc_js)
@@ -702,7 +702,7 @@ body8 = f'''
     </div>
     <p style="margin-top:14px"><label style="display:flex;gap:8px;align-items:center;font-weight:500"><input type="checkbox" id="abroad" style="width:auto"> I am mailing from another country (adds CANADA)</label></p>
     <div class="result" id="msg" style="display:none" aria-live="polite"></div>
-    <h3 style="margin-top:20px">Address for the envelope</h3>
+    <h2 style="margin-top:20px">Address for the envelope</h2>
     <div class="addr" id="out" aria-live="polite">Your address appears here.</div>
     <button class="mini-btn" id="copy" type="button">Copy address</button>
   </div>
