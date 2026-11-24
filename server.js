@@ -3288,7 +3288,7 @@ app.get('/api/admin/events', requireAdmin, (req, res) => {
     } catch (e) { console.error('[events] tick failed:', e.message); }
   };
   const timer = setInterval(tick, 5000);
-  const onMail = ev => { try { send({ type: 'mail', box: ev.box, label: ev.label, id: ev.id, from: ev.from, subject: ev.subject }); } catch {} };
+  const onMail = ev => { try { send({ type: 'mail', box: ev.box, label: ev.label, id: ev.id, folderId: ev.folderId || '', from: ev.from, subject: ev.subject }); } catch {} };
   mailbox.events.on('mail', onMail);
   req.on('close', () => { clearInterval(timer); mailbox.events.off('mail', onMail); });
 });

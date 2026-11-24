@@ -1777,9 +1777,9 @@ async function pollNotifications() {
   const items = [];
   (seen ? d.orders : []).forEach(o => items.push({ key: 'o' + o.id, path: `/admin/orders/${o.id}`,
     html: `<strong>New order #${o.id}</strong> · $${(o.price_cents / 100).toFixed(2)} CAD<br>${esc(o.recipient_name || '')} (${esc(o.destination_country || '')})`, when: fmtDateTime(o.paid_at) }));
-  (seen ? (d.mail || []) : []).forEach(m => items.push({ key: 'm' + m.box + m.id, path: '/admin/mail',
+  (seen ? (d.mail || []) : []).forEach(m => items.push({ key: 'm' + m.box + m.id, path: '/admin/mail?box=' + encodeURIComponent(m.box) + '&id=' + encodeURIComponent(m.id) + '&folder=' + encodeURIComponent(m.folderId || ''),
     html: `<strong>New email (${esc(m.label || m.box)})</strong><br>${esc(String(m.from || '').replace(/<[^>]*>/g, '').trim())}: ${esc(m.subject || '')}`, when: fmtDateTime(new Date(m.at).toISOString().slice(0, 19).replace('T', ' ')) }));
-  (seen ? d.contacts : []).forEach(c => items.push({ key: 'c' + c.id, path: '/admin/contacts',
+  (seen ? d.contacts : []).forEach(c => items.push({ key: 'c' + c.id, path: '/admin/contacts?id=' + c.id,
     html: `<strong>Message from ${esc(c.name)}</strong><br>${esc(c.preview)}`, when: fmtDateTime(c.created_at) }));
   const readNow = readKeys();
   const unreadItems = items.filter(i => !readNow.has(i.key));
@@ -1853,10 +1853,19 @@ async function showMail() {
   if (!r.configured) return setMain(`<div class="card" style="padding:24px;line-height:1.7"><div class="card-title" style="margin-bottom:10px">Mail is not connected yet</div>
     The mailbox keys have not been added to the server. Follow the setup steps, then restart the app on the server.</div>`);
   MAIL.boxes = r.mailboxes;
+  const qp = new URLSearchParams(location.search);
+  if (qp.get('box') && r.mailboxes.find(b => b.key === qp.get('box'))) MAIL.box = qp.get('box');
   if (!MAIL.box || !MAIL.boxes.find(b => b.key === MAIL.box)) MAIL.box = MAIL.boxes[0].key;
   setMain(mailCss + '<div class="ml-top" id="ml-top"></div><div id="ml-body"></div>');
   mailTop();
   await mailOpenBox(MAIL.box);
+  const wantId = qp.get('id');
+  if (wantId && /^\d+$/.test(wantId)) {
+    history.replaceState({}, '', '/admin/mail');
+    let i = MAIL.msgs.findIndex(m => m.id === wantId);
+    if (i < 0) { MAIL.msgs.unshift({ id: wantId, folderId: qp.get('folder') || MAIL.folderId, unread: false, subject: '', from: '', summary: '', hasAttachment: false }); i = 0; mailRenderList(); }
+    mailOpen(i);
+  }
   clearInterval(_mailTimer);
   _mailTimer = setInterval(async () => {
     if (location.pathname !== '/admin/mail') return clearInterval(_mailTimer);
@@ -4644,6 +4653,12 @@ async function showContacts() {
         <tbody>${rows}</tbody>
       </table>
     </div>`);
+  const want = new URLSearchParams(location.search).get('id');
+  if (want) {
+    history.replaceState({}, '', '/admin/contacts');
+    const row = document.getElementById('contact-row-' + want);
+    if (row) { row.scrollIntoView({ block: 'center' }); row.style.outline = '2px solid #b42318'; row.style.background = '#fff6f3'; }
+  }
 }
 
 async function showApplicants() {
