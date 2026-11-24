@@ -116,7 +116,8 @@ function register(app, deps) {
     for (const b of boxes) {
       let address = '', from = [];
       try { const a = await b.account(); address = a.address; from = a.from; b.state.error = null; } catch (e) { b.state.error = e.message; }
-      out.push({ key: b.key, label: b.label, address, from, unread: b.state.unread, error: b.state.error });
+      out.push({ key: b.key, label: b.label, address, from, unread: b.state.unread, error: b.state.error,
+        watch: { checkedAt: b.state.checkedAt || 0, cursor: b.state.cursor || 0, listed: b.state.listed || 0, parsed: b.state.parsed || 0, pollError: b.state.pollError || null } });
     }
     res.json({ configured: boxes.length > 0, mailboxes: out });
   }));
@@ -252,6 +253,7 @@ function register(app, deps) {
     const msgs = ((j && j.data) || []).map(m => normMsg(m, { has: () => true })).filter(m => m.at);
     b.state.unread = msgs.length; b.state.error = null;
     const cursor = cursorGet(b.key);
+    b.state.checkedAt = Date.now(); b.state.cursor = cursor || 0; b.state.listed = (j && j.data || []).length; b.state.parsed = msgs.length;
     const newest = msgs.reduce((n, m) => Math.max(n, m.at), 0);
     if (!cursor) { cursorSet(b.key, newest || Date.now()); return; }          // first run: start from now, no flood
     const fresh = msgs.filter(m => m.at > cursor).sort((x, y) => x.at - y.at);
@@ -266,7 +268,7 @@ function register(app, deps) {
   async function pollAll() {
     let worst = 60000;
     for (const b of boxes) {
-      try { await pollBox(b); } catch (e) { b.state.error = e.message; worst = e.status === 429 ? 600000 : Math.max(worst, 120000); }
+      try { await pollBox(b); b.state.pollError = null; } catch (e) { b.state.pollError = e.message; b.state.error = e.message; worst = e.status === 429 ? 600000 : Math.max(worst, 120000); }
     }
     delay = worst;
   }

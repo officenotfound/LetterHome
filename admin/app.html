@@ -1866,8 +1866,12 @@ async function showMail() {
 }
 function mailTop() {
   const el = document.getElementById('ml-top'); if (!el) return;
+  const cur = MAIL.boxes.find(b => b.key === MAIL.box);
+  const wt = cur && cur.watch ? cur.watch : null;
+  const fmt = ms => ms ? new Date(ms).toLocaleTimeString('en-CA') : 'never';
   el.innerHTML = MAIL.boxes.map(b => `<button class="ml-box ${b.key === MAIL.box ? 'on' : ''}" onclick="mailOpenBox('${b.key}')" title="${esc(b.address || b.error || '')}">${esc(b.label)}${b.unread ? `<b>${b.unread}</b>` : ''}</button>`).join('')
     + `<span style="flex:1"></span><button class="btn btn-outline btn-sm" onclick="mailTestAlert(this)">Send test alert</button><button class="btn btn-primary btn-sm" onclick="mailCompose()">Write email</button>`
+    + (wt ? `<div style="flex-basis:100%;color:#888;font-size:12px">New-mail check: last ran ${fmt(wt.checkedAt)}, watching for mail after ${fmt(wt.cursor)}, ${wt.listed} unread seen${wt.pollError ? ', problem: ' + esc(wt.pollError) : ''}</div>` : '')
     + (MAIL.boxes.find(b => b.key === MAIL.box && b.error) ? `<div style="flex-basis:100%;color:#b42318;font-size:13px">${esc(MAIL.boxes.find(b => b.key === MAIL.box).error)}</div>` : '');
 }
 async function mailOpenBox(key) {
