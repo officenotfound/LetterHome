@@ -1311,7 +1311,7 @@ section, .pricing-wrap { scroll-margin-top: 72px; }
   .rate-go::after { content: ''; position: absolute; inset: 0; }
 }
 </style>
-<link rel="stylesheet" href="/redesign.css?v=98"><link rel="stylesheet" href="/home.css?v=8">
+<link rel="stylesheet" href="/redesign.css?v=98"><link rel="stylesheet" href="/home.css?v=9">
 </head>
 <body>
 <a data-i18n-html="x.cc367b544f" href="#main-content" class="skip-link" style="position:absolute;left:-9999px;top:4px;z-index:9999;background:#a8472d;color:#faf6ec;padding:8px 16px;font-size:14px;font-family:'Noto Sans',system-ui,sans-serif;text-decoration:none;border-radius:2px" onfocus="this.style.left='4px'" onblur="this.style.left='-9999px'">Skip to main content</a>
@@ -1386,6 +1386,21 @@ section, .pricing-wrap { scroll-margin-top: 72px; }
   </div>
 </section>
 
+<style>
+:root body #usecases .section-head{text-align:center!important;display:block!important}
+:root body #usecases .section-head h2{text-align:center!important;margin-left:auto!important;margin-right:auto!important}
+:root body #usecases .usecases-grid{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:20px!important;max-width:1040px!important;margin:32px auto 0!important;padding:0!important;border:0!important}
+:root body #usecases .usecases-grid a.usecase{display:flex!important;flex-direction:column!important;align-items:center!important;text-align:center!important;padding:30px 22px 28px!important;background:var(--surface,#fffdf8)!important;border:1px solid var(--line)!important;border-radius:14px;text-decoration:none;color:inherit;transition:transform .15s,box-shadow .15s}
+:root body #usecases .usecases-grid a.usecase:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(43,38,34,.08)}
+:root body #usecases .usecases-grid a.usecase>div{display:flex;flex-direction:column;align-items:center;text-align:center}
+:root body #usecases .uc-ic{display:inline-flex;align-items:center;justify-content:center;width:48px;height:48px;border-radius:50%;background:rgba(168,71,45,.09);color:#a8472d;margin-bottom:16px}
+:root body #usecases .usecases-grid a.usecase h3{font-size:19px!important;text-align:center!important;margin:0 0 8px!important}
+:root body #usecases .usecases-grid a.usecase p{font-size:15px!important;line-height:1.55!important;text-align:center!important;margin:0!important;max-width:30ch}
+html[data-theme="dark"] body #usecases .usecases-grid a.usecase{background:#231e19!important}
+html[data-theme="dark"] body #usecases .uc-ic{background:rgba(239,160,130,.12);color:#e9a58f}
+@media(max-width:1000px){:root body #usecases .usecases-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+@media(max-width:560px){:root body #usecases .usecases-grid{grid-template-columns:1fr!important}}
+</style>
 <!-- USE CASES -->
 <section id="usecases">
   <div class="section-inner">
@@ -1395,16 +1410,19 @@ section, .pricing-wrap { scroll-margin-top: 72px; }
 
     <div class="usecases-grid">
       <a class="usecase" href="/cra-mail"><div>
+          <span class="uc-ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg></span>
           <h3 data-i18n="usecases.01.h3">Tax &amp; government forms</h3>
           <p data-i18n="usecases.01.p">CRA and Service Canada forms, notices and applications.</p>
         </div></a>
 
       <a class="usecase" href="/send-a-letter-from-home"><div>
+          <span class="uc-ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg></span>
           <h3 data-i18n="usecases.02.h3">Letters home</h3>
           <p data-i18n="usecases.02.p">Birthday letters, sympathy notes and printed photos for family.</p>
         </div></a>
 
       <a class="usecase" href="/guides"><div>
+          <span class="uc-ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v16M5 8l7-3 7 3"/><path d="M5 8l-3 7a3.5 3.5 0 0 0 6 0zM19 8l-3 7a3.5 3.5 0 0 0 6 0z"/></svg></span>
           <h3 data-i18n="usecases.03.h3">Legal correspondence</h3>
           <p data-i18n="usecases.03.p">Demand letters, formal notices, immigration and estate papers.</p>
         </div></a>
@@ -1512,11 +1530,22 @@ section, .pricing-wrap { scroll-margin-top: 72px; }
       <h2 data-i18n="trust.h2">How we protect your letter</h2>
     </div>
     <div class="trust-grid">
-      <div class="trust-item"><h3 data-i18n="trust.v4.h1">Every address is verified</h3><p data-i18n="trust.review.p">We check each address before printing.</p></div>
-      <div class="trust-item"><h3 data-i18n="trust.pay.h3">Secure payment</h3><p data-i18n="trust.pay.p">Payments go through Stripe. We never see card details.</p></div>
-      <div class="trust-item"><h3 data-i18n="trust.v4.h3">Encrypted, then printed in audited facilities</h3><p data-i18n="trust.v4.p3">Files travel encrypted to the print and mail facility that produces your letter, which holds a SOC 2 Type II report and PCI DSS 3.2.1 certification.</p></div>
+      <div class="trust-item"><span class="trust-ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><path d="m9 10 2 2 4-4"/></svg></span><h3 data-i18n="trust.v4.h1">Every address is verified</h3><p data-i18n="trust.review.p">We check each address before printing.</p></div>
+      <div class="trust-item"><span class="trust-ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M7 15h4"/></svg></span><h3 data-i18n="trust.pay.h3">Secure payment</h3><p data-i18n="trust.pay.p">Payments go through Stripe. We never see card details.</p></div>
+      <div class="trust-item"><span class="trust-ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span><h3 data-i18n="trust.v4.h3">Encrypted, then printed in audited facilities</h3><p data-i18n="trust.v4.p3">Files travel encrypted to the print and mail facility that produces your letter, which holds a SOC 2 Type II report and PCI DSS 3.2.1 certification.</p></div>
     </div>
-    <p class="trust-more"><a href="/privacy#data-handling" data-i18n="trust.more">Read our privacy policy →</a></p>
+    <style>
+:root body #trust .trust-grid{background:transparent!important;box-shadow:none!important;border-radius:0!important;align-items:stretch!important;grid-auto-rows:1fr;grid-template-columns:repeat(3,minmax(0,1fr))!important;max-width:1040px!important;gap:20px!important;border:0!important;margin:36px auto 0!important}
+:root body #trust .trust-item{box-shadow:0 1px 2px rgba(43,38,34,.05)!important;justify-content:flex-start!important;display:flex!important;flex-direction:column!important;align-items:center!important;text-align:center!important;gap:0!important;padding:34px 28px 32px!important;background:var(--surface,#fffdf8)!important;border:1px solid var(--line)!important;border-radius:14px}
+:root body #trust .trust-ic{display:inline-flex;align-items:center;justify-content:center;width:48px;height:48px;border-radius:50%;background:rgba(168,71,45,.09);color:#a8472d;margin-bottom:16px}
+:root body #trust .trust-item h3{font-size:20px!important;text-align:center!important;margin:0 0 10px!important;text-wrap:balance}
+:root body #trust .trust-item p{font-size:15px!important;line-height:1.6!important;text-align:center!important;max-width:30ch;margin:0 auto!important}
+:root body #trust .trust-more{text-align:center!important;margin-top:28px!important}
+html[data-theme="dark"] body #trust .trust-item{background:#231e19!important}
+html[data-theme="dark"] body #trust .trust-ic{background:rgba(239,160,130,.12);color:#e9a58f}
+@media (max-width:900px){:root body #trust .trust-grid{grid-template-columns:1fr!important;max-width:520px!important}}
+</style>
+<p class="trust-more"><a href="/privacy#data-handling" data-i18n="trust.more">Read our privacy policy →</a></p>
   </div>
 </section>
 
