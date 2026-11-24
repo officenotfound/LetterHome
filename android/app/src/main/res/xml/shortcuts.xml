@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut android:shortcutId="approvals" android:enabled="true" android:icon="@drawable/sc_approvals" android:shortcutShortLabel="@string/sc_approvals" android:shortcutLongLabel="@string/sc_approvals">
+        <intent android:action="android.intent.action.VIEW" android:targetPackage="ca.letterhome.admin" android:targetClass="ca.letterhome.admin.MainActivity">
+            <extra android:name="path" android:value="/admin/approvals" />
+        </intent>
+    </shortcut>
+    <shortcut android:shortcutId="inbox" android:enabled="true" android:icon="@drawable/sc_inbox" android:shortcutShortLabel="@string/sc_inbox" android:shortcutLongLabel="@string/sc_inbox">
+        <intent android:action="android.intent.action.VIEW" android:targetPackage="ca.letterhome.admin" android:targetClass="ca.letterhome.admin.MainActivity">
+            <extra android:name="path" android:value="/admin/mail" />
+        </intent>
+    </shortcut>
+    <shortcut android:shortcutId="orders" android:enabled="true" android:icon="@drawable/sc_orders" android:shortcutShortLabel="@string/sc_orders" android:shortcutLongLabel="@string/sc_orders">
+        <intent android:action="android.intent.action.VIEW" android:targetPackage="ca.letterhome.admin" android:targetClass="ca.letterhome.admin.MainActivity">
+            <extra android:name="path" android:value="/admin/orders" />
+        </intent>
+    </shortcut>
+</shortcuts>

@@ -38,6 +38,9 @@ public class MainActivity extends Activity {
     private long leftAt = 0;
     private boolean unlocking = false, unlocked = false;
     private float downY = -1;
+    private android.widget.ImageView ind;
+    private boolean reached = false, refreshing = false;
+    private android.animation.ObjectAnimator spin;
 
     private static final String OFFLINE = "<meta name='viewport' content='width=device-width,initial-scale=1'><body style='font-family:sans-serif;background:#f6f4ef;color:#222;text-align:center;padding:30vh 24px 0'>"
             + "<h2 style='margin:0 0 8px'>No connection</h2><p style='color:#666;margin:0 0 22px'>Letterhome Admin cannot reach the server right now.</p>"
@@ -72,21 +75,36 @@ public class MainActivity extends Activity {
             }
         } catch (Throwable ignored) { }
         Window w = getWindow();
-        w.setStatusBarColor(Color.parseColor("#1a1a1a"));
-        w.setNavigationBarColor(Color.parseColor("#1a1a1a"));
+        w.setStatusBarColor(Color.parseColor("#17293d"));
+        w.setNavigationBarColor(Color.parseColor("#17293d"));
 
         FrameLayout root = new FrameLayout(this);
+        root.setBackgroundColor(Color.parseColor("#17293d"));
         web = new WebView(this);
+        web.setBackgroundColor(Color.TRANSPARENT);
         bar = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
         bar.setMax(100);
         root.addView(web, new FrameLayout.LayoutParams(-1, -1));
         root.addView(bar, new FrameLayout.LayoutParams(-1, 8));
+        float dp = getResources().getDisplayMetrics().density;
+        ind = new android.widget.ImageView(this);
+        ind.setImageResource(R.drawable.ic_refresh);
+        ind.setPadding((int) (8 * dp), (int) (8 * dp), (int) (8 * dp), (int) (8 * dp));
+        android.graphics.drawable.GradientDrawable ig = new android.graphics.drawable.GradientDrawable();
+        ig.setShape(android.graphics.drawable.GradientDrawable.OVAL); ig.setColor(Color.WHITE); ind.setBackground(ig);
+        ind.setElevation(6 * dp); ind.setAlpha(0f);
+        FrameLayout.LayoutParams ilp = new FrameLayout.LayoutParams((int) (40 * dp), (int) (40 * dp)); ilp.gravity = android.view.Gravity.TOP | android.view.Gravity.CENTER_HORIZONTAL;
+        root.addView(ind, ilp);
+        ind.setTranslationY(-48 * dp);
         setContentView(root);
         root.setFitsSystemWindows(true);
 
         WebSettings s = web.getSettings();
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);
+        s.setSupportZoom(false);
+        s.setBuiltInZoomControls(false);
+        s.setDisplayZoomControls(false);
         s.setAllowFileAccess(false);
         s.setAllowContentAccess(false);
         s.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
@@ -106,7 +124,7 @@ public class MainActivity extends Activity {
                 try { startActivity(new Intent(Intent.ACTION_VIEW, u)); } catch (Exception ignored) {}
                 return true;
             }
-            @Override public void onPageFinished(WebView v, String url) { CookieManager.getInstance().flush(); }
+            @Override public void onPageFinished(WebView v, String url) { CookieManager.getInstance().flush(); if (refreshing) endRefresh(); }
             @Override public void onReceivedError(WebView v, WebResourceRequest r, WebResourceError e) {
                 if (r.isForMainFrame()) v.loadDataWithBaseURL("https://letterhome.ca/admin", OFFLINE, "text/html", "UTF-8", null);
             }
@@ -135,9 +153,29 @@ public class MainActivity extends Activity {
         web.setOverScrollMode(View.OVER_SCROLL_NEVER);   // no stretch: the fixed bottom bar must not move with the page
         web.setOnTouchListener((v, ev) -> {
             try {
-                if (ev.getAction() == MotionEvent.ACTION_DOWN) downY = web.getScrollY() == 0 ? ev.getY() : -1;
-                else if (ev.getAction() == MotionEvent.ACTION_UP) { if (downY >= 0 && ev.getY() - downY > 320 && web.getScrollY() == 0) web.reload(); downY = -1; }
-                else if (ev.getAction() == MotionEvent.ACTION_CANCEL) downY = -1;
+                float d = getResources().getDisplayMetrics().density;
+                float max = 72 * d, need = 90 * d;
+                switch (ev.getAction()) {
+                    case MotionEvent.ACTION_DOWN: downY = web.getScrollY() == 0 ? ev.getY() : -1; reached = false; break;
+                    case MotionEvent.ACTION_MOVE:
+                        if (downY >= 0 && !refreshing && web.getScrollY() == 0) {
+                            float dy = ev.getY() - downY;
+                            if (dy > 0) {
+                                float pull = Math.min(dy * 0.5f, max);
+                                ind.setTranslationY(pull - 48 * d);
+                                ind.setAlpha(Math.min(1f, dy / need));
+                                ind.setRotation(dy * 1.2f);
+                                if (!reached && dy > need) { reached = true; web.performHapticFeedback(android.view.HapticFeedbackConstants.CLOCK_TICK); }
+                                else if (reached && dy < need) reached = false;
+                            }
+                        }
+                        break;
+                    case MotionEvent.ACTION_UP:
+                        if (downY >= 0 && reached && web.getScrollY() == 0 && !refreshing) { startRefresh(d); }
+                        else resetIndicator(d);
+                        downY = -1; reached = false; break;
+                    case MotionEvent.ACTION_CANCEL: resetIndicator(d); downY = -1; reached = false; break;
+                }
             } catch (Throwable ignored) { }
             return false;
         });
@@ -156,6 +194,24 @@ public class MainActivity extends Activity {
                 js.schedule(new JobInfo.Builder(1, new ComponentName(this, PollJob.class))
                         .setPeriodic(15 * 60 * 1000L).setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY).setPersisted(true).build());
         } catch (Throwable ignored) { }
+    }
+
+    private void startRefresh(float d) {
+        refreshing = true;
+        ind.setAlpha(1f); ind.setTranslationY(24 * d);
+        spin = android.animation.ObjectAnimator.ofFloat(ind, "rotation", 0f, 360f);
+        spin.setDuration(700); spin.setRepeatCount(android.animation.ValueAnimator.INFINITE); spin.setInterpolator(new android.view.animation.LinearInterpolator()); spin.start();
+        web.reload();
+        ind.postDelayed(() -> { if (refreshing) endRefresh(); }, 8000);
+    }
+    private void endRefresh() {
+        refreshing = false;
+        if (spin != null) { spin.cancel(); spin = null; }
+        resetIndicator(getResources().getDisplayMetrics().density);
+    }
+    private void resetIndicator(float d) {
+        if (refreshing) return;
+        ind.animate().translationY(-48 * d).alpha(0f).setDuration(180).start();
     }
 
     private String startUrl(Intent i) {

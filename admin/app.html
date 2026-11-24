@@ -9,7 +9,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap">
 <link rel="stylesheet" href="/fonts.css">
 <script src="/sla-clock.js"></script>
-<script>(function(){try{var t=localStorage.getItem('lh-admin-theme')||'light';document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+<script>(function(){try{var st=localStorage.getItem('lh-admin-theme');var mq=window.matchMedia&&matchMedia('(prefers-color-scheme: dark)');var t=st||(mq&&mq.matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);if(!st&&mq&&mq.addEventListener)mq.addEventListener('change',function(){if(!localStorage.getItem('lh-admin-theme'))document.documentElement.setAttribute('data-theme',mq.matches?'dark':'light');});}catch(e){}})();</script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Inter',system-ui,sans-serif;background:#fafafa;color:#111111;min-height:100vh;display:flex;font-size:14px;line-height:1.5}
@@ -203,7 +203,7 @@ html[data-theme="dark"] .mob-menu-btn{color:#f5f5f5}
 .dash-grid-2{display:grid;gap:20px;margin-bottom:24px;grid-template-columns:1fr 1fr}
 html[data-theme="dark"] .dash-grid-5{background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.08)}
 
-@media(max-width:767px){
+@media(max-width:860px){
   .sidebar{transform:translateX(-100%);transition:transform 0.22s ease;z-index:999}
   .sidebar.mob-open{transform:translateX(0)}
   .sidebar-overlay{display:block}
@@ -231,7 +231,7 @@ html[data-theme="dark"] .subtabs{background:#0a0a0a;border-bottom-color:rgba(255
 html[data-theme="dark"] .subtab{color:#9a9a9a}
 html[data-theme="dark"] .subtab:hover{color:#f5f5f5}
 html[data-theme="dark"] .subtab.active{color:#ff7a82;border-bottom-color:#ff7a82}
-@media(max-width:767px){.subtabs{padding:0 8px}}
+@media(max-width:860px){.subtabs{padding:0 8px}}
 .need-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px}
 .need-chip{display:flex;align-items:baseline;gap:10px;padding:14px 18px;background:#fff;border:1px solid #ececec;border-left:3px solid #ececec;cursor:pointer;text-align:left;font-family:'DM Mono',ui-monospace,monospace}
 .need-chip b{font-family:'DM Serif Display',Georgia,serif;font-size:26px;font-weight:400;color:#111}
@@ -245,7 +245,7 @@ html[data-theme="dark"] .need-chip.hot{background:#2a1416;border-left-color:#ff7
 html[data-theme="dark"] .need-chip.hot b{color:#ff7a82}
 .twofa-badge{display:none;align-items:center;gap:6px;background:#7d3220;color:#faf6ec;border:0;padding:6px 10px;font:500 10px 'DM Mono',ui-monospace,monospace;letter-spacing:.1em;text-transform:uppercase;cursor:pointer}
 .nav-label{margin-top:18px}
-@media(max-width:767px){
+@media(max-width:860px){
   .need-strip{grid-template-columns:repeat(2,1fr)}
   .twofa-badge span.long{display:none}
   table.stack,table.stack tbody,table.stack tr,table.stack td{display:block;width:100%}
@@ -388,7 +388,7 @@ html[data-theme="dark"] body [style*="color:#6b6b6b"],html[data-theme="dark"] bo
 html[data-theme="dark"] body [style*="background:#fff"],html[data-theme="dark"] body [style*="background:#ffffff"]{background:var(--a-surface)!important}
 html[data-theme="dark"] body [style*="background:#fafafa"],html[data-theme="dark"] body [style*="background:#f5f5f5"]{background:var(--a-hover)!important}
 html[data-theme="dark"] body [style*="solid #ececec"],html[data-theme="dark"] body [style*="solid #fafafa"],html[data-theme="dark"] body [style*="solid #eee"]{border-color:var(--a-line)!important}
-@media(max-width:767px){
+@media(max-width:860px){
   html[data-theme] body .content{margin-left:0!important}
   html[data-theme] body .topbar{height:56px;padding:0 12px}
   html[data-theme] body .subtabs{padding:0 6px}
@@ -397,7 +397,7 @@ html[data-theme="dark"] body [style*="solid #ececec"],html[data-theme="dark"] bo
 
 /* Phone bottom bar: same navy and red as the sidebar */
 .mob-tabs{display:none}
-@media(max-width:767px){
+@media(max-width:860px){
   html[data-theme] body .mob-tabs{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;left:0;right:0;bottom:0;z-index:900;background:var(--a-nav);border-top:1px solid rgba(255,255,255,.08);padding:0 4px env(safe-area-inset-bottom,0px);box-shadow:0 -6px 18px rgba(10,20,34,.18)}
   html[data-theme] body .mob-tab{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:58px;padding:8px 2px 6px;border:0;background:none;font:600 11px 'Archivo',system-ui,sans-serif;letter-spacing:.01em;text-transform:none;color:rgba(255,255,255,.62);cursor:pointer;-webkit-tap-highlight-color:transparent}
   html[data-theme] body .mob-tab svg{display:block}
@@ -589,6 +589,22 @@ html[data-theme] body input:hover,html[data-theme] body select:hover,html[data-t
   html[data-theme] body .card:has(table.stack){background:transparent;border:0;box-shadow:none}
   html[data-theme] body .card:has(table.stack) .card-header{background:transparent;padding-left:2px}
 }
+
+/* ===== App feel + tablets and foldables ===== */
+html{-webkit-tap-highlight-color:transparent;touch-action:manipulation;-webkit-text-size-adjust:100%}
+.btn,.nav-link,.mob-tab,.filter-btn,.subtab,.need-chip,th,.card-header,.sidebar,.topbar,.mob-tabs{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+@media(min-width:601px) and (max-width:860px){
+  html[data-theme] body .main{max-width:760px;margin-left:auto;margin-right:auto;padding-left:24px;padding-right:24px}
+  html[data-theme] body .mob-tabs{left:50%;right:auto;transform:translateX(-50%);width:min(640px,100%);border-radius:18px 18px 0 0}
+  html[data-theme] body .stat-grid,html[data-theme] body .need-strip{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media(min-width:861px) and (max-width:1180px){
+  html[data-theme] body .sidebar{width:200px}
+  html[data-theme] body .content{margin-left:200px}
+  html[data-theme] body .main{padding-left:24px;padding-right:24px}
+}
+@media(min-width:1181px){html[data-theme] body .main{margin-left:auto;margin-right:auto}}
+@media(orientation:landscape) and (max-height:520px){html[data-theme] body .mob-tabs{height:48px}html[data-theme] body .mob-tab span{display:none}}
 </style>
 </head>
 <body>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="sc_approvals">Approvals</string>
+    <string name="sc_inbox">Inbox</string>
+    <string name="sc_orders">Orders</string>
+</resources>
