@@ -2504,7 +2504,7 @@ app.get('/api/admin/orders/:id', requireAdmin, (req, res) => {
   const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(Number(req.params.id));
   if (!order) return res.status(404).json({ error: 'Not found' });
   const dir   = orderDirPath(order.id, order.created_at);
-  const files = fs.existsSync(dir) ? fs.readdirSync(dir) : [];
+  const files = fs.existsSync(dir) ? fs.readdirSync(dir, { withFileTypes: true }).filter(e => e.isFile()).map(e => e.name) : [];   // the 'removed' folder is not a file
   // A Letter from Santa always goes out with Santa's return address, even an order placed before that rule existed.
   if (order.letter_type === 'santa') {
     const R = SantaLetter.RETURN;
@@ -2611,6 +2611,114 @@ app.post('/api/admin/orders/:id/addresses', requireAdmin, async (req, res) => {
     return res.json({ ok: true, changed: Object.keys(changes), resend: r });
   }
   res.json({ ok: true, changed: Object.keys(changes) });
+});
+
+// ---- Edit the letter text and attachments before the order goes to print ------------------------
+// Same lock as the address editor: not once a letter is live at PostGrid, and not after mailing.
+function orderEditLock(order) {
+  if (!order || order.deleted_at) return 'Order not found.';
+  if (order.letter_type === 'santa') return 'A Letter from Santa is written from the order form. Use "Rebuild Santa letter" instead of editing the text.';
+  if (order.postgrid_letter_id && order.postgrid_status !== 'cancelled') return 'This order already has a letter at PostGrid. Cancel that letter first, then edit it.';
+  if (['mailed', 'delivered', 'refunded', 'awaiting_payment'].includes(order.status)) return `The letter cannot be edited while the order is "${order.status}".`;
+  return null;
+}
+function orderAttachmentList(order) { try { const a = JSON.parse(order.attachment_info || '[]'); return Array.isArray(a) ? a : []; } catch { return []; } }
+const asUploadShape = list => list.map(a => ({ path: a.path, originalname: a.originalName, mimetype: a.mimeType }));
+function orderRemovedDir(order) { const d = path.join(orderDirPath(order.id, order.created_at), 'removed'); fs.mkdirSync(d, { recursive: true }); return d; }
+function syncOrderJson(order, atts) {
+  try {
+    const f = path.join(orderDirPath(order.id, order.created_at), 'order.json');
+    const j = JSON.parse(fs.readFileSync(f, 'utf8')); j.attachments = atts.map(a => path.basename(a.path));
+    fs.writeFileSync(f, JSON.stringify(j, null, 2), 'utf8');
+  } catch {}
+}
+// Re-run the local content check on the new text and files. New hits hold the order again until it is marked safe.
+function rescanOrder(orderId, body, atts) {
+  try {
+    const scan = contentscan.scanOrder({ body, files: atts.map(a => ({ path: a.path, originalName: a.originalName })), extraTerms: getSetting('content_scan_terms') });
+    db.prepare('UPDATE orders SET content_flags = ? WHERE id = ?').run(JSON.stringify({ hits: scan.hits, notScanned: scan.notScanned }), orderId);
+    if (scan.hits.length) db.prepare('UPDATE orders SET content_cleared_at = NULL WHERE id = ?').run(orderId);
+    return scan;
+  } catch (e) { console.error(`[contentscan] edit of order #${orderId} failed:`, e.message); return null; }
+}
+// Shared tail of every edit: page count, notes, audit, scan. `change` is a short sentence for the order notes.
+async function finishOrderEdit(req, order, body, atts, change, audit) {
+  const analysis = await analyseLetter(body, asUploadShape(atts), order.letter_type);
+  const scan = rescanOrder(order.id, body, atts);
+  const sets = ['postgrid_error = NULL'], vals = [];
+  if (analysis && order.page_count != null) { sets.push('page_count = ?'); vals.push(analysis.pages); }
+  db.prepare(`UPDATE orders SET ${sets.join(', ')} WHERE id = ?`).run(...vals, order.id);
+  const pages = analysis ? analysis.pages : null;
+  const pageNote = pages != null && order.page_count != null && pages !== order.page_count ? ` Pages: ${order.page_count} to ${pages}.` : '';
+  try { db.prepare('INSERT INTO order_notes (order_id, note) VALUES (?,?)').run(order.id, `${change} (by ${req.session.admin.username}).${pageNote}${scan && scan.hits.length ? ' The content check flagged it, so it is held until marked safe.' : ''}`); } catch {}
+  logAudit(req, audit.action, 'order', order.id, { ...audit.details, pages });
+  return { ok: true, pages, previous_pages: order.page_count, paid_pages: order.page_count, flagged: !!(scan && scan.hits.length) };
+}
+
+app.post('/api/admin/orders/:id/letter', requireAdmin, async (req, res) => {
+  const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(Number(req.params.id));
+  const lock = orderEditLock(order);
+  if (lock) return res.status(order ? 409 : 404).json({ error: lock });
+  const text = String(req.body?.letter_body ?? '').replace(/\u0000/g, '').replace(/\r\n/g, '\n');
+  if (text.length > 40000) return res.status(400).json({ error: 'The letter text is too long.' });
+  const atts = orderAttachmentList(order);
+  if (!text.trim() && !atts.length) return res.status(400).json({ error: 'The letter would be empty. Add text or an attachment.' });
+  if (text === String(order.letter_body || '').replace(/\r\n/g, '\n')) return res.json({ ok: true, unchanged: true });
+  const analysis = await analyseLetter(text, asUploadShape(atts), order.letter_type);
+  if (analysis?.tooLong) return res.status(400).json({ error: analysis.message });
+  try {   // keep the old text so it can always be put back
+    fs.writeFileSync(path.join(orderRemovedDir(order), `letter_${new Date().toISOString().replace(/[:.]/g, '-')}.txt`), String(order.letter_body || ''), 'utf8');
+    fs.writeFileSync(path.join(orderDirPath(order.id, order.created_at), 'letter.txt'), text, 'utf8');
+  } catch (e) { return res.status(500).json({ error: 'Could not save the letter: ' + e.message }); }
+  db.prepare('UPDATE orders SET letter_body = ? WHERE id = ?').run(text, order.id);
+  res.json(await finishOrderEdit(req, order, text, atts, `Letter text edited, ${String(order.letter_body || '').length} to ${text.length} characters`,
+    { action: 'order.edit_letter', details: { previous_text: String(order.letter_body || '').slice(0, 20000) } }));
+});
+
+app.post('/api/admin/orders/:id/attachments', requireAdmin, uploadAttachments, async (req, res) => {
+  const temp = req.files || [];
+  const cleanup = () => { for (const f of temp) { try { fs.unlinkSync(f.path); } catch {} } };
+  const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(Number(req.params.id));
+  const lock = orderEditLock(order);
+  if (lock) { cleanup(); return res.status(order ? 409 : 404).json({ error: lock }); }
+  if (!temp.length) return res.status(400).json({ error: 'Choose at least one file.' });
+  const existing = orderAttachmentList(order);
+  if (existing.length + temp.length > 5) { cleanup(); return res.status(400).json({ error: `An order can have up to 5 attachments. It has ${existing.length}; remove one first.` }); }
+  const dir = orderDirPath(order.id, order.created_at);
+  const moved = [];
+  try {
+    fs.mkdirSync(dir, { recursive: true });
+    for (const f of temp) {
+      const dest = safeFilePath(dir, f.originalname);
+      fs.renameSync(f.path, dest);
+      moved.push({ path: dest, originalName: f.originalname, mimeType: f.mimetype });
+    }
+  } catch (e) { cleanup(); for (const m of moved) { try { fs.unlinkSync(m.path); } catch {} } return res.status(500).json({ error: 'Could not save the files: ' + e.message }); }
+  const atts = [...existing, ...moved];
+  const analysis = await analyseLetter(order.letter_body || '', asUploadShape(atts), order.letter_type);
+  if (analysis?.tooLong) { for (const m of moved) { try { fs.unlinkSync(m.path); } catch {} } return res.status(400).json({ error: analysis.message }); }
+  db.prepare('UPDATE orders SET attachment_info = ? WHERE id = ?').run(JSON.stringify(atts), order.id);
+  syncOrderJson(order, atts);
+  res.json(await finishOrderEdit(req, order, order.letter_body || '', atts, `Attachment added: ${moved.map(m => m.originalName).join(', ')}`,
+    { action: 'order.add_attachment', details: { files: moved.map(m => m.originalName) } }));
+});
+
+app.delete('/api/admin/orders/:id/attachments/:filename', requireAdmin, async (req, res) => {
+  const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(Number(req.params.id));
+  const lock = orderEditLock(order);
+  if (lock) return res.status(order ? 409 : 404).json({ error: lock });
+  const name = path.basename(req.params.filename);
+  const existing = orderAttachmentList(order);
+  const target = existing.find(a => path.basename(a.path) === name);
+  if (!target) return res.status(404).json({ error: 'That attachment is not on this order.' });
+  const atts = existing.filter(a => a !== target);
+  if (!atts.length && !String(order.letter_body || '').trim()) return res.status(400).json({ error: 'The letter would be empty. Add text or another attachment first.' });
+  try { if (fs.existsSync(target.path)) fs.renameSync(target.path, safeFilePath(orderRemovedDir(order), name)); }   // moved aside, not deleted
+  catch (e) { return res.status(500).json({ error: 'Could not remove the file: ' + e.message }); }
+  db.prepare('UPDATE orders SET attachment_info = ? WHERE id = ?').run(JSON.stringify(atts), order.id);
+  syncOrderJson(order, atts);
+  res.json(await finishOrderEdit(req, order, order.letter_body || '', atts, `Attachment removed: ${target.originalName}`,
+    { action: 'order.remove_attachment', details: { file: target.originalName } }));
 });
 
 app.post('/api/admin/orders/:id/postgrid/submit', requireAdmin, async (req, res) => {

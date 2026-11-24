@@ -1631,6 +1631,7 @@ async function showOrder(id) {
       <div class="card-header"><div class="card-title">Letter Content</div></div>
       <div style="padding:20px"><div class="letter-body">${esc(o.letter_body)}</div></div>
     </div>` : ''}
+    ${letterEditCard(o)}
     ${fileItems ? `
     <div class="card" style="margin-bottom:24px">
       <div class="card-header">
@@ -1895,6 +1896,79 @@ async function clearContentFlag(id) {
 }
 
 // Edit the recipient and return address when something is wrong (a wrong country, a return address PostGrid will not take).
+function letterEditCard(o) {
+  const lockReason = o.letter_type === 'santa' ? 'A Letter from Santa is written from the order form. Use "Rebuild Santa letter" in the PostGrid box instead.'
+    : (o.postgrid_letter_id && o.postgrid_status !== 'cancelled') ? 'Locked: a letter is already with PostGrid. Cancel it first, then edit.'
+    : ['mailed', 'delivered', 'refunded', 'awaiting_payment'].includes(o.status) ? 'Locked: the order is ' + String(o.status).replace(/_/g, ' ') + '.' : '';
+  const locked = !!lockReason;
+  let atts = []; try { atts = JSON.parse(o.attachment_info || '[]'); } catch {}
+  const files = atts.map(a => { const n = String(a.path || '').split('/').pop(); return { n, label: a.originalName || n }; });
+  const rows = files.map(f => `<div class="file-item"><span class="file-name">📄 ${esc(f.label)}</span>
+      <span style="display:flex;gap:8px"><a class="btn btn-outline btn-sm" href="/api/admin/orders/${o.id}/files/${encodeURIComponent(f.n)}" target="_blank">Download</a>
+      ${locked ? '' : `<button class="btn btn-outline btn-sm" style="color:#b42318" onclick="removeAttachment(${o.id}, ${esc(JSON.stringify(f.n))}, ${esc(JSON.stringify(f.label))})">Remove</button>`}</span></div>`).join('');
+  return `<details class="card" style="margin-bottom:24px">
+    <summary class="card-header" style="cursor:pointer"><span class="card-title">Edit letter text and attachments</span><span style="font-size:12px;color:#6b6b6b;font-weight:400">${locked ? esc(lockReason) : 'Change what gets printed before it goes out'}</span></summary>
+    <div style="padding:16px 20px">
+      ${locked ? '' : `<div style="font-weight:600;margin-bottom:8px">Letter text</div>
+      <textarea id="le-text" style="width:100%;min-height:200px;font-family:inherit;font-size:14px;line-height:1.5;padding:10px;border:1px solid #d9d9d9;border-radius:6px;box-sizing:border-box">${esc(o.letter_body || '')}</textarea>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+        <button class="btn btn-primary btn-sm" onclick="saveLetterText(${o.id})">Save letter text</button>
+        <a class="btn btn-outline btn-sm" href="/api/admin/orders/${o.id}/postgrid/preview" target="_blank" rel="noopener">Preview letter (with addresses)</a>
+      </div>`}
+      <div style="font-weight:600;margin:${locked ? 0 : 20}px 0 8px">Attachments (${files.length} of 5)</div>
+      <div class="files-list">${rows || '<div style="color:#6b6b6b;font-size:13px">No attachments.</div>'}</div>
+      ${locked ? '' : `<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px">
+        <input type="file" id="le-files" multiple accept=".pdf,.doc,.docx,.txt">
+        <button class="btn btn-outline btn-sm" onclick="addAttachments(${o.id})">Add files</button>
+      </div>`}
+      <div id="le-msg" style="font-size:13px;margin-top:12px;line-height:1.5"></div>
+      <p style="font-size:12px;color:#6b6b6b;margin:12px 0 0;line-height:1.5">Nothing here changes what the customer paid. If the page count goes up, you will see it here and in the order notes, and you can ask the customer for the difference. Old text and removed files are kept on the server, and every change is saved to the order notes and the audit log. New text and files go through the content check again.</p>
+    </div>
+  </details>`;
+}
+function leShow(r, fallback) {
+  const m = document.getElementById('le-msg'); if (!m) return;
+  if (!r || r.ok === false || r.error) { m.style.color = '#b42318'; m.textContent = (r && r.error) || fallback; return false; }
+  return true;
+}
+async function leDone(id, r) {
+  const bits = [];
+  if (r.pages != null) bits.push(r.pages + (r.pages === 1 ? ' page' : ' pages') + (r.paid_pages != null && r.pages > r.paid_pages ? ` (the customer paid for ${r.paid_pages}; ${r.pages - r.paid_pages} more than paid)` : ''));
+  if (r.flagged) bits.push('flagged by the content check, so it is held until you mark it safe');
+  const warn = (r.paid_pages != null && r.pages > r.paid_pages) || r.flagged;
+  await showOrder(id);
+  const m = document.getElementById('le-msg'); const d = m && m.closest('details'); if (d) d.open = true;
+  if (m) { m.style.color = warn ? '#b54708' : '#067647'; m.textContent = 'Saved.' + (bits.length ? ' Now ' + bits.join('; ') + '.' : ''); }
+}
+async function saveLetterText(id) {
+  const t = document.getElementById('le-text'); const m = document.getElementById('le-msg');
+  if (m) { m.style.color = '#6b6b6b'; m.textContent = 'Saving…'; }
+  const r = await post(`/api/admin/orders/${id}/letter`, { letter_body: t.value });
+  if (!leShow(r, 'Could not save')) return;
+  if (r.unchanged) { m.style.color = '#6b6b6b'; m.textContent = 'No changes to save.'; return; }
+  leDone(id, r);
+}
+async function addAttachments(id) {
+  const inp = document.getElementById('le-files'); const m = document.getElementById('le-msg');
+  if (!inp.files.length) { m.style.color = '#b42318'; m.textContent = 'Choose at least one file.'; return; }
+  const fd = new FormData(); [...inp.files].forEach(f => fd.append('attachments', f));
+  m.style.color = '#6b6b6b'; m.textContent = 'Uploading and checking…';
+  let r;
+  try {
+    const resp = await fetch(`/api/admin/orders/${id}/attachments`, { method: 'POST', body: fd, headers: { 'X-CSRF-Token': _csrfToken || '' } });
+    if (resp.status === 401) { window.location.href = '/admin/login'; return; }
+    r = await resp.json().catch(() => ({ error: 'HTTP ' + resp.status }));
+  } catch (e) { r = { error: 'Network error' }; }
+  if (!leShow(r, 'Could not add the files')) return;
+  leDone(id, r);
+}
+async function removeAttachment(id, name, label) {
+  if (!confirm('Remove "' + label + '" from this order? The file is kept on the server, not deleted.')) return;
+  const r = await del(`/api/admin/orders/${id}/attachments/${encodeURIComponent(name)}`);
+  if (!leShow(r, 'Could not remove the file')) return;
+  leDone(id, r);
+}
+
 function addressCard(o) {
   const locked = (o.postgrid_letter_id && o.postgrid_status !== 'cancelled') || ['mailed', 'delivered', 'refunded', 'awaiting_payment'].includes(o.status);
   const f = (id, label, val, wide) => `<div class="field" style="margin:0;${wide ? 'grid-column:1/-1' : ''}"><label for="ad-${id}">${label}</label><input type="text" id="ad-${id}" value="${esc(val || '')}"${locked ? ' disabled' : ''}></div>`;

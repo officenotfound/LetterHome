@@ -2061,3 +2061,58 @@ test('admin order page shows Santa\'s return address for a Santa order placed be
   assert.equal(o.sender_name, 'Santa Claus');
   assert.equal(o.sender_postal, 'H0H 0H0');
 });
+
+test('admin can edit an order\'s letter text and add or remove attachments before it goes to print; each change is noted, audited and re-checked, and it is locked once the letter is at PostGrid or mailed', async () => {
+  const { cookie, csrfToken } = await loginAdmin();
+  const id = db.prepare('SELECT id FROM orders WHERE stripe_session_id = ?').get(seedOrder({ status: 'paid' })).id;
+  db.prepare("UPDATE orders SET letter_body = 'Dear Anna, the first version.', page_count = 1, attachment_info = '[]' WHERE id = ?").run(id);
+  const hdr = { Cookie: cookie, 'X-CSRF-Token': csrfToken };
+  const json = (url, method, body) => fetch(`${base}${url}`, { method, headers: { 'Content-Type': 'application/json', ...hdr }, body: body ? JSON.stringify(body) : undefined });
+  const notes = () => db.prepare('SELECT note FROM order_notes WHERE order_id = ? ORDER BY id').all(id).map(n => n.note).join('\n');
+
+  assert.equal((await json(`/api/admin/orders/${id}/letter`, 'POST', { letter_body: '   ' })).status, 400, 'an empty letter with no attachment is refused');
+  let res = await json(`/api/admin/orders/${id}/letter`, 'POST', { letter_body: 'Dear Anna, the NEW version with more to say.' });
+  assert.equal(res.status, 200);
+  const edited = await res.json();
+  assert.equal(edited.ok, true);
+  assert.equal(db.prepare('SELECT letter_body FROM orders WHERE id = ?').get(id).letter_body, 'Dear Anna, the NEW version with more to say.');
+  assert.match(notes(), /Letter text edited/);
+  const audit = db.prepare("SELECT details FROM audit_log WHERE action = 'order.edit_letter' AND target_id = ?").get(String(id));
+  assert.match(audit.details, /first version/, 'the old text is kept in the audit log');
+  assert.equal((await (await json(`/api/admin/orders/${id}/letter`, 'POST', { letter_body: 'Dear Anna, the NEW version with more to say.' })).json()).unchanged, true);
+
+  // add an attachment
+  const fd = new FormData();
+  fd.append('attachments', new Blob(['An extra page of text from the customer.'], { type: 'text/plain' }), 'extra.txt');
+  res = await fetch(`${base}/api/admin/orders/${id}/attachments`, { method: 'POST', headers: hdr, body: fd });
+  assert.equal(res.status, 200, await res.clone().text());
+  let atts = JSON.parse(db.prepare('SELECT attachment_info FROM orders WHERE id = ?').get(id).attachment_info);
+  assert.equal(atts.length, 1); assert.equal(atts[0].originalName, 'extra.txt'); assert.ok(fs.existsSync(atts[0].path));
+  assert.match(notes(), /Attachment added: extra\.txt/);
+  const detail = await (await fetch(`${base}/api/admin/orders/${id}`, { headers: hdr })).json();
+  assert.ok(detail.files.includes('extra.txt')); assert.ok(!detail.files.includes('removed'), 'the removed folder is not listed as a file');
+
+  // a bad word added by edit holds the order again
+  db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('content_scan_terms', 'zzblockedterm')").run();
+  res = await json(`/api/admin/orders/${id}/letter`, 'POST', { letter_body: 'Now it says zzblockedterm here.' });
+  assert.equal((await res.json()).flagged, true);
+  assert.equal(db.prepare('SELECT content_cleared_at FROM orders WHERE id = ?').get(id).content_cleared_at, null);
+  db.prepare("DELETE FROM settings WHERE key = 'content_scan_terms'").run();
+
+  // remove the attachment: moved aside, not deleted
+  const stored = atts[0].path;
+  res = await json(`/api/admin/orders/${id}/attachments/${encodeURIComponent('extra.txt')}`, 'DELETE');
+  assert.equal(res.status, 200);
+  assert.equal(JSON.parse(db.prepare('SELECT attachment_info FROM orders WHERE id = ?').get(id).attachment_info).length, 0);
+  assert.ok(!fs.existsSync(stored)); assert.ok(fs.existsSync(path.join(path.dirname(stored), 'removed', 'extra.txt')), 'kept in the removed folder');
+  assert.equal((await json(`/api/admin/orders/${id}/attachments/${encodeURIComponent('nope.txt')}`, 'DELETE')).status, 404);
+
+  // locked once at PostGrid, and once mailed
+  db.prepare("UPDATE orders SET postgrid_letter_id = 'letter_x', postgrid_status = 'ready' WHERE id = ?").run(id);
+  assert.equal((await json(`/api/admin/orders/${id}/letter`, 'POST', { letter_body: 'Too late' })).status, 409);
+  db.prepare("UPDATE orders SET postgrid_status = 'cancelled' WHERE id = ?").run(id);
+  assert.equal((await json(`/api/admin/orders/${id}/letter`, 'POST', { letter_body: 'After a cancelled letter it works' })).status, 200);
+  db.prepare("UPDATE orders SET status = 'mailed' WHERE id = ?").run(id);
+  assert.equal((await json(`/api/admin/orders/${id}/letter`, 'POST', { letter_body: 'Mailed' })).status, 409);
+  assert.equal((await fetch(`${base}/api/admin/orders/${id}/letter`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })).status, 401);
+});
