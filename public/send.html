@@ -526,23 +526,23 @@ textarea.field-error { border-color: var(--red) !important; }
 
   <div class="total-bar" id="total-bar" role="status">
     <span><strong data-i18n-html="x.a1d157120a" id="total-bar-amt">$6 CAD</strong><span data-i18n="send.totalbar.to">to send this letter</span></span>
-    <span class="tb-sub" data-i18n="send.totalbar.sub">Print, envelope and postage included. Mailed in 2 business days.</span>
+    <span class="tb-sub" data-i18n="send.totalbar.sub">Printing, envelope and postage included.</span>
   </div>
 
   <!-- STEP 1: ADDRESSES -->
   <div class="panel active" id="panel-1">
     <div class="eyebrow" data-i18n="send.step1.eyebrow">Step 1 of 3</div>
     <h2 class="panel-title serif" data-i18n="send.step1.title">Who is this going to?</h2>
-    <p class="panel-sub" data-i18n="send.step1.sub">Who it's from and who it's going to.</p>
-    <p class="panel-sub" data-i18n="send.help.line" style="font-weight:400;font-size:14px;color:var(--ink-muted,#8a8f98)">You only pay on the last step. Questions? support@letterhome.ca</p>
+    <p class="panel-sub" data-i18n="send.step1.sub">Sender and recipient.</p>
+    <p class="panel-sub" data-i18n="send.help.line" style="font-weight:400;font-size:14px;color:var(--ink-muted,#8a8f98)">You only pay at the end.</p>
 
     <div class="draft-banner" id="draft-banner" role="status">
       <div class="db-row">
-        <span data-i18n="send.draft.msg">You have an unfinished letter saved on this device.</span>
+        <span data-i18n="send.draft.msg">Unfinished letter saved on this device.</span>
         <button type="button" class="db-go" id="draft-resume" data-i18n="send.draft.resume">Resume</button>
         <button type="button" class="db-no" id="draft-discard" data-i18n="send.draft.discard">Start over</button>
       </div>
-      <span class="tb-sub" data-i18n="send.draft.note">Saved on this device. Re-add attachments.</span>
+      <span class="tb-sub" data-i18n="send.draft.note">Re-add attachments.</span>
     </div>
 
     <div id="account-banner" style="display:none"></div>
@@ -729,7 +729,7 @@ textarea.field-error { border-color: var(--red) !important; }
             <option value="VN">Vietnam, $15 CAD</option>
             <option value="ZM">Zambia, $15 CAD</option>
         </select>
-        <span class="field-note" data-i18n="send.dest.note">Canada and United States $6 · Everywhere else $15, all prices CAD</span>
+        <span class="field-note" data-i18n="send.dest.note">Canada and US $6 · Everywhere else $15 · CAD</span>
         <span class="field-note" id="dest-note-local" style="display:none"><span data-i18n="send.dest.local">Printed and mailed locally:</span> <span id="dest-note-local-list"></span></span>
         <p id="xmas-note" class="xmas-note" style="display:none" role="status"></p>
       </div>
@@ -743,7 +743,7 @@ textarea.field-error { border-color: var(--red) !important; }
           <input type="checkbox" id="skip-return" onchange="toggleReturn(this)">
           <label for="skip-return" data-i18n="send.from.anon">Skip return address (anonymous send)</label>
         </div>
-        <p class="field-note" style="margin-bottom:20px;padding-left:30px" data-i18n="send.anon.note">If it can't be delivered, it comes back to us, not you. Returned letters aren't re-mailed or refunded, so double-check the recipient's address.</p>
+        <p class="field-note" style="margin-bottom:20px;padding-left:30px" data-i18n="send.anon.note">Undeliverable letters return to us, not you, and aren't re-mailed or refunded.</p>
         <div id="sender-fields">
           <div class="form-group"><label for="s-name" data-i18n="send.from.name">Full Name</label><input id="s-name" type="text" placeholder="Margaret Tremblay" autocomplete="name" autocapitalize="words"></div>
           <div class="form-group"><label for="s-street" data-i18n="send.from.street">Street Address</label><input id="s-street" type="text" placeholder="123 Main Street" autocomplete="off"><span class="field-note" data-i18n="send.autocomplete.hint">Start typing for address suggestions</span></div>
@@ -760,7 +760,7 @@ textarea.field-error { border-color: var(--red) !important; }
 
       <div class="address-col">
         <h3 data-i18n="send.to.h3">To. Recipient</h3>
-        <span class="field-note hint" data-i18n="send.hint.recipient">Copy it exactly as they write it, including the postal code.</span>
+        <span class="field-note hint" data-i18n="send.hint.recipient">Exactly as they write it, with postal code.</span>
         <div class="form-group"><label for="r-name" data-i18n="send.from.name">Full Name</label><input id="r-name" type="text" placeholder="James Okafor" autocomplete="off" autocapitalize="words"></div>
         <div class="form-group"><label for="r-street" data-i18n="send.from.street">Street Address</label><input id="r-street" type="text" placeholder="456 Oak Avenue, Apt 3" autocomplete="off"><span class="field-note" data-i18n="send.autocomplete.hint">Start typing for address suggestions</span></div>
         <div class="form-grid-2">
@@ -786,7 +786,7 @@ textarea.field-error { border-color: var(--red) !important; }
     <div class="form-group" style="margin-top:32px;padding-top:28px;border-top:1px dashed var(--line);max-width:520px">
       <label for="r-email" data-i18n="send.email.label">Your Email (confirmation)</label>
       <input id="r-email" type="email" placeholder="you@example.com" autocomplete="email">
-      <span class="field-note" data-i18n="send.hint.email">Your receipt and order number go here.</span>
+      <span class="field-note" data-i18n="send.hint.email">For your receipt. Never shared or sold.</span>
     </div>
 
     <div class="panel-nav">
@@ -799,7 +799,7 @@ textarea.field-error { border-color: var(--red) !important; }
   <div class="panel" id="panel-2">
     <div class="eyebrow" data-i18n="send.step2.eyebrow">Step 2 of 3</div>
     <h2 class="panel-title serif" data-i18n="send.step2.title">Write your letter</h2>
-    <p class="panel-sub" data-i18n="send.step2.sub">Type your letter. Attach PDF or Word files if you like.</p>
+    <p class="panel-sub" data-i18n="send.step2.sub">Type your letter or attach a file.</p>
 
     <div class="form-group">
       <label for="letter-body" data-i18n="send.letter.label">Your Message</label>
@@ -813,7 +813,7 @@ textarea.field-error { border-color: var(--red) !important; }
     <div class="attach-zone" onclick="document.getElementById('file-input').click()">
       <div class="attach-icon">📎</div>
       <p><strong data-i18n="send.attach.title">Attach documents</strong><span data-i18n="send.attach.sub">, click to upload PDF, Word or TXT files</span></p>
-      <p style="font-size:12px; margin-top:4px;" data-i18n="send.attach.note">Up to 5 files · PDF, Word or TXT · 10 MB per file</p>
+      <p style="font-size:12px; margin-top:4px;" data-i18n="send.attach.note">PDF, Word or TXT · 5 files · 10 MB each</p>
       <input type="file" id="file-input" accept=".pdf,.doc,.docx,.txt" multiple style="display:none" onchange="handleFiles(this)">
     </div>
     <ul class="attach-list" id="attach-list"></ul>
@@ -827,7 +827,7 @@ textarea.field-error { border-color: var(--red) !important; }
         <input type="checkbox" id="opt-colour" style="margin-top:3px" onchange="updatePricing()">
         <span>
           <span style="display:block;font-weight:600"><span data-i18n="send.options.colour.title">Colour printing</span> <span style="color:var(--red);font-weight:500" id="opt-colour-price">+$1</span></span>
-          <span style="display:block;font-size:12px;color:var(--ink-muted)" data-i18n="send.options.colour.sub">Full colour printing. Extra pages $0.75 instead of $0.55.</span>
+          <span style="display:block;font-size:12px;color:var(--ink-muted)" data-i18n="send.options.colour.sub">Extra pages $0.75 instead of $0.55.</span>
         </span>
       </label>
 
@@ -840,7 +840,7 @@ textarea.field-error { border-color: var(--red) !important; }
         <input type="checkbox" id="opt-schedule" style="margin-top:3px" onchange="toggleSchedule(this)">
         <span>
           <span style="display:block;font-weight:600"><span data-i18n="send.options.schedule.title">Schedule for later</span> <span data-i18n-html="x.b24ce0cd39" style="color:var(--red);font-weight:500" id="opt-schedule-price">Free</span></span>
-          <span style="display:block;font-size:12px;color:var(--ink-muted)" data-i18n="send.options.schedule.sub">Pick a date. We print then and mail within two business days.</span>
+          <span style="display:block;font-size:12px;color:var(--ink-muted)" data-i18n="send.options.schedule.sub">Pick a send date.</span>
         </span>
       </label>
       <div id="schedule-date-wrap" style="display:none;margin:0 0 10px 0">
@@ -858,7 +858,7 @@ textarea.field-error { border-color: var(--red) !important; }
   <div class="panel" id="panel-3">
     <div class="eyebrow" data-i18n="send.step3.eyebrow">Step 3 of 3</div>
     <h2 class="panel-title serif" data-i18n="send.step3.title">Review your order</h2>
-    <p class="panel-sub" data-i18n="send.step3.sub" data-ship="canada">Check everything, then pay. We verify the address, print and mail within two business days.</p><p class="panel-sub" style="display:none" data-i18n="send.step3.sub.local" data-ship="local">Check everything, then pay. Printed and mailed inside the destination country within two business days.</p>
+    <p class="panel-sub" data-i18n="send.step3.sub" data-ship="canada">Check everything, then pay.</p><p class="panel-sub" style="display:none" data-i18n="send.step3.sub.local" data-ship="local">Check everything, then pay.</p>
 
     <div class="preview-envelope">
       <div data-i18n-html="x.0689ab6b19" class="preview-stamp">
@@ -881,11 +881,11 @@ textarea.field-error { border-color: var(--red) !important; }
         <span class="real-preview-sub" id="real-preview-count"></span>
       </div>
       <div class="real-preview-stage" id="real-preview-stage"></div>
-      <p class="real-preview-note" data-i18n="send.rp.note">Your letter as it will print. The top of page 1 stays blank for the address. Tap a sheet to zoom.</p>
+      <p class="real-preview-note" data-i18n="send.rp.note">Your letter as it will print. Tap a sheet to zoom.</p>
     </div>
 
     <div class="preview-letter-box">
-      <p id="preview-body-text" data-i18n="send.preview.empty">Your letter will appear here as you type it in Step 2.</p>
+      <p id="preview-body-text" data-i18n="send.preview.empty">Your letter appears here.</p>
     </div>
 
     <div id="attachment-preview-box" style="display:none;margin:16px 0;border:1.5px solid rgba(42,42,42,0.15);border-radius:2px;padding:16px">
@@ -913,15 +913,15 @@ textarea.field-error { border-color: var(--red) !important; }
     <div class="next-steps">
       <h3 data-i18n="send.next.title">What happens after you pay</h3>
       <ol>
-        <li><span class="n">1</span><span><strong data-i18n="send.next.1.t">Confirmation email</strong><span class="d" data-i18n="send.next.1.d">You get an email with your order number and a status link.</span></span></li>
-        <li><span class="n">2</span><span><strong data-i18n="send.next.2.t">Printed and mailed</strong><span class="d" data-i18n="send.next.2.d" data-ship="canada">We verify the address, print and mail it from inside Canada within two business days.</span><span class="d" style="display:none" data-i18n="send.next.2.d.local" data-ship="local">We print and mail it inside the destination country within two business days.</span></span></li>
+        <li><span class="n">1</span><span><strong data-i18n="send.next.1.t">Confirmation email</strong><span class="d" data-i18n="send.next.1.d">Order number and status link by email.</span></span></li>
+        <li><span class="n">2</span><span><strong data-i18n="send.next.2.t">Printed and mailed</strong><span class="d" data-i18n="send.next.2.d" data-ship="canada">Address verified, then printed and mailed within two business days.</span><span class="d" style="display:none" data-i18n="send.next.2.d.local" data-ship="local">Printed and mailed within two business days.</span></span></li>
         <li><span class="n">3</span><span><strong data-i18n="send.next.3.t">Delivered</strong><span class="d" data-i18n="send.next.3.d">Up to 2 weeks in Canada, up to 4 internationally.</span></span></li>
       </ol>
     </div>
 
     <div class="privacy-note">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--red);flex-shrink:0;margin-top:3px"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-      <p data-i18n="send.privacy">An automatic check looks for illegal content. We don't read or share your letter unless it's flagged. Ask us to delete it any time. We keep a basic order record for tax purposes. Payments go through Stripe, so we never see your card details.</p>
+      <p data-i18n="send.privacy">We don't read or share your letter unless an automatic content check flags it. We keep a basic order record for tax purposes. Payments go through Stripe. We never see your card.</p>
     </div>
 
     <div class="privacy-note">
@@ -950,14 +950,14 @@ textarea.field-error { border-color: var(--red) !important; }
 
     <div class="check-row">
       <input type="checkbox" id="agree-terms">
-      <label for="agree-terms" data-i18n-html="send.agree">I agree to the <a href="/terms" style="color:var(--red)">Terms of Service</a> and <a href="/privacy" style="color:var(--red)">Privacy Policy</a>. I confirm the letter doesn't contain threats, scams or illegal content.</label>
+      <label for="agree-terms" data-i18n-html="send.agree">I agree to the <a href="/terms" style="color:var(--red)">Terms</a> and <a href="/privacy" style="color:var(--red)">Privacy Policy</a>. My letter has no threats, scams or illegal content.</label>
     </div>
 
     <div class="panel-nav">
       <button class="btn btn-outline" onclick="goTo(2)" data-i18n="send.btn.editletter">Edit letter</button>
       <div style="text-align:right">
         <button id="pay-btn" class="btn btn-red btn-large" onclick="submitOrder()" data-i18n="send.btn.pay">Pay with Stripe</button>
-        <div class="pay-marks" aria-label="Accepted payment methods"><span>Visa</span><span>Mastercard</span><span>Amex</span><span>Apple Pay</span><span>Google Pay</span></div><p style="font-size:13px;color:var(--ink-faint);margin-top:8px" data-i18n="send.stripe.secured">Secured by Stripe, we never see your card details</p>
+        <div class="pay-marks" aria-label="Accepted payment methods"><span>Visa</span><span>Mastercard</span><span>Amex</span><span>Apple Pay</span><span>Google Pay</span></div><p style="font-size:13px;color:var(--ink-faint);margin-top:8px" data-i18n="send.stripe.secured">🔒 Secured by Stripe. We never see your card.</p>
       </div>
     </div>
   </div>
@@ -2144,11 +2144,11 @@ function fillSavedRecipient(sel) {
   <div class="lh-modal">
     <h2 id="noreturn-title" data-i18n="send.noreturn.title">Check the recipient's address</h2>
     <div id="noreturn-choice" style="display:none;margin:0 0 14px">
-      <p style="margin:0 0 10px" data-i18n="send.noreturn.q">If this letter can't be delivered, where should it go?</p>
-      <label style="display:flex;gap:10px;align-items:flex-start;margin:0 0 10px;cursor:pointer"><input type="radio" name="return-choice" value="letterhome" checked style="margin-top:4px"><span><strong data-i18n="send.noreturn.opt1">Use Letterhome's return address</strong><br><span style="font-size:13px" data-i18n="send.noreturn.opt1d">Printed so the post office can send it back to us. Returned letters aren't re-mailed or refunded.</span></span></label>
-      <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer"><input type="radio" name="return-choice" value="none" style="margin-top:4px"><span><strong data-i18n="send.noreturn.opt2">No return address at all</strong><br><span style="font-size:13px" data-i18n="send.noreturn.opt2d">Nothing printed in the corner. If it can't be delivered it may be lost, and we can't recover, re-mail or refund it.</span></span></label>
+      <p style="margin:0 0 10px" data-i18n="send.noreturn.q">If it can't be delivered, where should it go?</p>
+      <label style="display:flex;gap:10px;align-items:flex-start;margin:0 0 10px;cursor:pointer"><input type="radio" name="return-choice" value="letterhome" checked style="margin-top:4px"><span><strong data-i18n="send.noreturn.opt1">Use Letterhome's return address</strong><br><span style="font-size:13px" data-i18n="send.noreturn.opt1d">Returns to us. Not re-mailed or refunded.</span></span></label>
+      <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer"><input type="radio" name="return-choice" value="none" style="margin-top:4px"><span><strong data-i18n="send.noreturn.opt2">No return address at all</strong><br><span style="font-size:13px" data-i18n="send.noreturn.opt2d">May be lost. Can't be recovered, re-mailed or refunded.</span></span></label>
     </div>
-    <p data-i18n="send.noreturn.body">You chose to send without a return address. If this letter can't be delivered, it will be returned to Letterhome, not to you, and returned letters are not re-mailed or refunded. Please make sure the recipient's name and address are fully correct before you continue.</p>
+    <p data-i18n="send.noreturn.body">If it can't be delivered, it goes to Letterhome, not you. Returned letters aren't re-mailed or refunded. Check the recipient's address.</p>
     <div class="lh-modal-actions">
       <button type="button" id="noreturn-cancel" class="btn btn-outline" data-i18n="send.noreturn.cancel">Go back and check</button>
       <button type="button" id="noreturn-go" class="btn btn-red" data-i18n="send.noreturn.confirm">The address is correct, continue</button>
