@@ -2,9 +2,13 @@ package ca.letterhome.admin;
 
 import android.app.Activity;
 import android.app.DownloadManager;
+import android.app.job.JobInfo;
+import android.app.job.JobScheduler;
+import android.content.ComponentName;
 import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.view.View;
@@ -85,8 +89,23 @@ public class MainActivity extends Activity {
             ((DownloadManager) getSystemService(DOWNLOAD_SERVICE)).enqueue(q);
         });
 
-        if (b != null) web.restoreState(b); else web.loadUrl(HOME);
+        String start = startUrl(getIntent());
+        if (b != null) web.restoreState(b); else web.loadUrl(start);
+
+        if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission("android.permission.POST_NOTIFICATIONS") != android.content.pm.PackageManager.PERMISSION_GRANTED)
+            requestPermissions(new String[]{"android.permission.POST_NOTIFICATIONS"}, 5);
+        JobScheduler js = (JobScheduler) getSystemService(JOB_SCHEDULER_SERVICE);
+        if (js.getPendingJob(1) == null)
+            js.schedule(new JobInfo.Builder(1, new ComponentName(this, PollJob.class))
+                    .setPeriodic(15 * 60 * 1000L).setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY).setPersisted(true).build());
     }
+
+    private String startUrl(Intent i) {
+        String p = i == null ? null : i.getStringExtra("path");
+        return (p != null && p.startsWith("/admin")) ? "https://letterhome.ca" + p : HOME;
+    }
+
+    @Override protected void onNewIntent(Intent i) { super.onNewIntent(i); setIntent(i); if (i.getStringExtra("path") != null) web.loadUrl(startUrl(i)); }
 
     @Override protected void onActivityResult(int req, int res, Intent data) {
         if (req == 7 && picker != null) {
