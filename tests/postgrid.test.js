@@ -462,3 +462,35 @@ test('checkAddress reports verified or unverified without creating a letter, and
     assert.ok(!calls.some(c => c.url.endsWith('/letters')), 'no letter created');
   } finally { recipientStatus = 'verified'; }
 });
+
+test('no return address at all: only when the admin switch is on and the order chose it; otherwise the Letterhome address is printed', async () => {
+  const order = seed({ skip: 1 });
+  const fromOfPost = () => calls.find(c => c.url.endsWith('/letters') && c.opts.method === 'POST').opts.body.get('from');
+  const run = async o => { calls.length = 0; return pg.submitOrder(db.prepare('SELECT * FROM orders WHERE id = ?').get(o.id)); };
+
+  // chose none, switch off: still gets the Letterhome address
+  db.prepare('UPDATE orders SET blank_return = 1 WHERE id = ?').run(order.id);
+  delete settings.allow_blank_return;
+  await run(order);
+  assert.ok(fromOfPost(), 'a from contact is sent while the switch is off');
+
+  // switch on, customer chose none: no `from` is sent and the order says so
+  const second = seed({ skip: 1 });
+  db.prepare('UPDATE orders SET blank_return = 1 WHERE id = ?').run(second.id);
+  settings.allow_blank_return = '1';
+  const r = await run(second);
+  assert.equal(fromOfPost(), null, 'no from field at all');
+  assert.ok(r.warnings.some(w => /NO return address/.test(w)));
+  assert.ok(!r.usedFallbackReturn);
+  assert.equal(calls.filter(c => c.url.endsWith('/contacts')).length, 1, 'only the recipient contact is created');
+
+  // switch on but the customer did not choose none: Letterhome address
+  const third = seed({ skip: 1 });
+  await run(third);
+  assert.ok(fromOfPost(), 'a from contact is sent when the order did not choose none');
+
+  // the preview leaves the return corner empty too
+  const prev = await pg.buildPreviewPdf(db.prepare('SELECT * FROM orders WHERE id = ?').get(second.id));
+  assert.ok(prev.pdf.length > 0);
+  delete settings.allow_blank_return;
+});

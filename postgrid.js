@@ -449,7 +449,7 @@ function createPostGrid({ db, getSetting, orderDirPath, fetchImpl, convertWord =
     province: o.recipient_province, postal: o.recipient_postal, country: o.destination_country });
   const senderOf = o => o.letter_type === 'santa' ? SANTA_FROM      // a Letter from Santa always carries Santa's return address
     : (o.skip_return || !o.sender_street)
-    ? FALLBACK_FROM
+    ? ((o.skip_return && o.blank_return && getSetting('allow_blank_return', '0') === '1') ? null : FALLBACK_FROM)   // null = send with no return address at all
     : { role: 'return address', name: o.sender_name || 'Sender', street: o.sender_street, city: o.sender_city,
         province: o.sender_province, postal: o.sender_postal, country: o.sender_country || 'CA' };
 
@@ -480,7 +480,7 @@ function createPostGrid({ db, getSetting, orderDirPath, fetchImpl, convertWord =
       texts.forEach((t, i) => { page.drawText(t, { x, y, size: sizes[i], font, color: rgb(0.1, 0.1, 0.1) }); y -= lead; });
     };
     const d = destinationOf(order.destination_country) || destinationOf('CA');
-    const to = addr(recipientOf(order)), from = addr(senderOf(order));
+    const to = addr(recipientOf(order)), from = senderOf(order) ? addr(senderOf(order)) : [];
     if (opts.hideAddress) {
       // Customer preview: letter contents only. The address is added at the printer, so it is not drawn here.
     } else if (d.layout === 'ca_two_windows') {
@@ -493,7 +493,7 @@ function createPostGrid({ db, getSetting, orderDirPath, fetchImpl, convertWord =
     } else if (d.layout === 'uk_return_below') {
       const [x, y, w, h] = d.zones.block;
       block(to, [x, y, w, h * 0.55], { valign: 'top' });
-      block(['Return to:', ...from], [x, y + h * 0.5, w, h * 0.5], { valign: 'bottom' });
+      if (from.length) block(['Return to:', ...from], [x, y + h * 0.5, w, h * 0.5], { valign: 'bottom' });
     } else {
       block(to, d.zones.to, { center: true });   // Australia: return address goes on the envelope
     }
@@ -586,8 +586,12 @@ function createPostGrid({ db, getSetting, orderDirPath, fetchImpl, convertWord =
       warnings.push(`The return address could not be used (${String(why).slice(0, 160)}); the Letterhome return address was printed instead.`);
       from = await api('POST', '/contacts', { json: contact(FALLBACK_FROM), idempotencyKey: `${key}-from-lh` });
     };
-    const customerReturn = senderOf(order) !== FALLBACK_FROM;
-    try {
+    const noReturn = senderOf(order) === null;           // the customer chose no return address at all and the admin switch is on
+    const customerReturn = !noReturn && senderOf(order) !== FALLBACK_FROM;
+    if (noReturn) {
+      from = null;
+      warnings.push('Sent with NO return address: the letter has no sender on the envelope. If it cannot be delivered it may not come back.');
+    } else try {
       from = await api('POST', '/contacts', { json: contact(senderOf(order)), idempotencyKey: `${key}-from` });
       if (customerReturn && !santa && from.addressStatus === 'failed') await useFallback(`address check failed: ${from.addressErrors || 'no details'}`);
     } catch (e) {
@@ -598,7 +602,7 @@ function createPostGrid({ db, getSetting, orderDirPath, fetchImpl, convertWord =
     const buildForm = () => {
       const form = new FormData();
       form.append('to', to.id);
-      form.append('from', from.id);
+      if (from) form.append('from', from.id);
       form.append('addressPlacement', built.placement);
       form.append('color', order.colour_printing ? 'true' : 'false');
       form.append('doubleSided', 'false');
@@ -623,7 +627,7 @@ function createPostGrid({ db, getSetting, orderDirPath, fetchImpl, convertWord =
     }
     // Say on the order exactly which return address went to PostGrid, so a missing or swapped one is visible without opening PostGrid.
     const fromOf = usedFallback ? FALLBACK_FROM : senderOf(order);
-    warnings.push(`Return address sent to PostGrid: ${[fromOf.name, String(fromOf.street || '').replace(/\s*\n\s*/g, ', '), fromOf.city, fromOf.province, fromOf.postal, fromOf.country].filter(Boolean).join(', ')} (PostGrid check: ${from.addressStatus || 'unknown'}).`);
+    if (fromOf) warnings.push(`Return address sent to PostGrid: ${[fromOf.name, String(fromOf.street || '').replace(/\s*\n\s*/g, ', '), fromOf.city, fromOf.province, fromOf.postal, fromOf.country].filter(Boolean).join(', ')} (PostGrid check: ${from.addressStatus || 'unknown'}).`);
     saveLetter(order.id, letter);
     return { letter, warnings, sheets: built.sheets, addressStatus: to.addressStatus, usedFallbackReturn: usedFallback };
   }

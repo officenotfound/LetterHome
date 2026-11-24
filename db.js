@@ -93,6 +93,7 @@ try { db.exec(`CREATE TABLE IF NOT EXISTS order_charges (
   id INTEGER PRIMARY KEY AUTOINCREMENT, order_id INTEGER NOT NULL, amount_cents INTEGER NOT NULL, currency TEXT NOT NULL DEFAULT 'CAD',
   reason TEXT, stripe_link_id TEXT, url TEXT, status TEXT NOT NULL DEFAULT 'open', created_by TEXT,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP, paid_at DATETIME, stripe_session_id TEXT)`); } catch (e) { console.error('[init] order_charges:', e.message); }
+try { db.exec(`ALTER TABLE orders ADD COLUMN blank_return INTEGER DEFAULT 0`); } catch {}   // 1 = the customer chose no return address at all (only honoured while the admin switch is on)
 // Customer-facing order reference (LH-XXXX-XXXX). The sequential id stays admin-only.
 try { db.exec(`ALTER TABLE orders ADD COLUMN public_ref TEXT`);           } catch {}
 // Orders that existed before references were introduced keep working with their number on the track page.

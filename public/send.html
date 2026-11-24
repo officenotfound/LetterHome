@@ -1461,6 +1461,8 @@ function openNoReturnWarning(onConfirm) {
   const back = document.getElementById('noreturn-modal');
   const go = document.getElementById('noreturn-go');
   const cancel = document.getElementById('noreturn-cancel');
+  const choice = document.getElementById('noreturn-choice');
+  if (choice) choice.style.display = window.LH_BLANK_RETURN ? 'block' : 'none';
   const close = () => { back.style.display = 'none'; document.removeEventListener('keydown', onKey); };
   const onKey = e => { if (e.key === 'Escape') close(); };
   go.onclick = () => { close(); onConfirm(); };
@@ -1648,6 +1650,7 @@ async function submitOrder() {
     const el = document.getElementById(id);
     if (el) form.append(id, el.type === 'checkbox' ? (el.checked ? '1' : '') : el.value);
   });
+  if (window.LH_BLANK_RETURN && document.getElementById('skip-return').checked) form.append('return-choice', document.querySelector('input[name="return-choice"]:checked')?.value || 'letterhome');
   form.append('r-province', getRecipientProvince());
   if (_cur) form.append('currency', _cur);
   form.append('lang', document.documentElement.getAttribute('data-lang') || 'en');
@@ -1732,6 +1735,7 @@ async function applyDiscountCode() {
   for (let i = 0; i < 100 && typeof window.LH_T !== 'function'; i++) await new Promise(r => setTimeout(r, 50));
   try {
     const cfg = await fetch('/api/site-config').then(r => r.json());
+    window.LH_BLANK_RETURN = !!cfg.blank_return_allowed;
 
     // Announcement banner
     if (cfg.announcement) {
@@ -1976,8 +1980,8 @@ function fillSavedRecipient(sel) {
   } catch(e) {}
 }
 </script>
-<script src="/lang-es.js?v=5" defer></script>
-<script src="/lang.js?v=69" defer></script>
+<script src="/lang-es.js?v=6" defer></script>
+<script src="/lang.js?v=70" defer></script>
 <script type="module">
   import * as pdfjsLib from '/vendor/pdfjs/pdf.min.mjs';
   pdfjsLib.GlobalWorkerOptions.workerSrc = '/vendor/pdfjs/pdf.worker.min.mjs';
@@ -2139,6 +2143,11 @@ function fillSavedRecipient(sel) {
 <div id="noreturn-modal" class="lh-modal-back" style="display:none" role="dialog" aria-modal="true" aria-labelledby="noreturn-title">
   <div class="lh-modal">
     <h2 id="noreturn-title" data-i18n="send.noreturn.title">Check the recipient's address</h2>
+    <div id="noreturn-choice" style="display:none;margin:0 0 14px">
+      <p style="margin:0 0 10px" data-i18n="send.noreturn.q">If this letter can't be delivered, where should it go?</p>
+      <label style="display:flex;gap:10px;align-items:flex-start;margin:0 0 10px;cursor:pointer"><input type="radio" name="return-choice" value="letterhome" checked style="margin-top:4px"><span><strong data-i18n="send.noreturn.opt1">Use Letterhome's return address</strong><br><span style="font-size:13px" data-i18n="send.noreturn.opt1d">Our Vancouver address is printed so the post office can send it back to us. Returned letters are not re-mailed or refunded.</span></span></label>
+      <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer"><input type="radio" name="return-choice" value="none" style="margin-top:4px"><span><strong data-i18n="send.noreturn.opt2">No return address at all</strong><br><span style="font-size:13px" data-i18n="send.noreturn.opt2d">Nothing is printed in the return corner. Risk: if the letter can't be delivered it may be lost and never come back. We can't recover, re-mail or refund it.</span></span></label>
+    </div>
     <p data-i18n="send.noreturn.body">You chose to send without a return address. If this letter can't be delivered, it will be returned to Letterhome, not to you, and returned letters are not re-mailed or refunded. Please make sure the recipient's name and address are fully correct before you continue.</p>
     <div class="lh-modal-actions">
       <button type="button" id="noreturn-cancel" class="btn btn-outline" data-i18n="send.noreturn.cancel">Go back and check</button>
