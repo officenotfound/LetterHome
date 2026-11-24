@@ -524,3 +524,14 @@ footer .ft-credit { opacity: 0.6; }
 nav .nav-inner { padding-top: 4px !important; padding-bottom: 4px !important; min-height: 0 !important; }
 nav .logo, nav .logo-wordmark { line-height: 1 !important; }
 nav .logo-wordmark { font-size: 30px !important; }
+
+/* Alignment pass: one centred composition at every width (steps, use cases, trust row, business card). */
+body .steps .step { text-align: center; display: flex; flex-direction: column; align-items: center; }
+body .steps .step .step-num { justify-content: center; }
+body .usecase { text-align: center; flex-direction: column; align-items: center; gap: 6px; }
+body .usecase > div { margin-left: auto; margin-right: auto; }
+body .trust-item { text-align: center; }
+body .usecases-grid .usecase, body .usecases-grid .usecase * { text-align: center !important; }
+body .usecases-grid .usecase { align-items: center !important; justify-content: center; }
+body .biz-strip-inner { flex-direction: column; align-items: center; text-align: center; gap: 14px; }
+body .biz-strip-inner > * { text-align: center; }
