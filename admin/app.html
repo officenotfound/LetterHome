@@ -636,6 +636,7 @@ html[data-theme] body .subtab{padding-left:14px;padding-right:14px}
   html[data-theme] body #main table td .btn-sm{padding:6px 12px}
 }
 html[data-theme] body .need-strip>*{min-width:0}
+html[data-theme] body #main>.card[style*="max-width"],html[data-theme] body #main>p[style*="max-width"],html[data-theme] body #main>div[style*="max-width"]:not(.set-wrap){max-width:720px!important;margin-left:auto!important;margin-right:auto!important}
 
 /* Mac app: sidebar runs under the traffic lights, top bar drags the window */
 html.mac-app body .sidebar-logo{padding-top:44px}
@@ -1549,7 +1550,7 @@ async function showAdminUsers(secretInfo) {
   const rows = d.users.map(u => `<tr><td>${esc(u.username)}${u.username === d.me ? ' <span style="color:#6b6b6b;font-size:11px">(you)</span>' : ''}</td><td>${esc(u.source)}</td><td>${u.has2FA ? 'On' : '<span style="color:#c1121f">Off</span>'}</td><td>${u.created_at ? fmtDate(u.created_at) : ''}</td>
     <td style="text-align:right;white-space:nowrap">${u.removable ? `<button class="btn btn-outline btn-sm" onclick="adminUserAct('password','${esc(u.username)}')">New password</button> <button class="btn btn-outline btn-sm" onclick="adminUserAct('reset-2fa','${esc(u.username)}')">New 2FA key</button> ${u.username === d.me ? '' : `<button class="btn btn-outline btn-sm" style="color:#b42318;border-color:#b42318" onclick="adminUserAct('remove','${esc(u.username)}')">Remove</button>`}` : '<span style="font-size:11px;color:#9a9a9a">set in server settings</span>'}</td></tr>`).join('');
   setMain(`${setup}
-    <div class="card" style="margin-bottom:20px"><div class="card-header"><div class="card-title">People who can sign in to this admin</div></div><div style="overflow-x:auto"><table style="width:100%"><thead><tr><th>Username</th><th>Where it is set</th><th>2FA</th><th>Added</th><th></th></tr></thead><tbody>${rows}</tbody></table></div></div>
+    <div class="card" style="max-width:720px;margin:0 auto 20px"><div class="card-header"><div class="card-title">People who can sign in to this admin</div></div><div style="overflow-x:auto"><table style="width:100%"><thead><tr><th>Username</th><th>Where it is set</th><th>2FA</th><th>Added</th><th></th></tr></thead><tbody>${rows}</tbody></table></div></div>
     <div class="card" style="padding:18px 20px;max-width:560px"><div class="card-title" style="margin-bottom:10px">Add an admin</div>
       <div class="field" style="margin-bottom:10px"><label>Username</label><input id="au-name" type="text" autocomplete="off"></div>
       <div class="field" style="margin-bottom:10px"><label>Password (12 or more characters)</label><input id="au-pass" type="password" autocomplete="new-password"></div>
