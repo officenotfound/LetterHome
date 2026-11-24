@@ -1867,7 +1867,7 @@ async function showMail() {
 function mailTop() {
   const el = document.getElementById('ml-top'); if (!el) return;
   el.innerHTML = MAIL.boxes.map(b => `<button class="ml-box ${b.key === MAIL.box ? 'on' : ''}" onclick="mailOpenBox('${b.key}')" title="${esc(b.address || b.error || '')}">${esc(b.label)}${b.unread ? `<b>${b.unread}</b>` : ''}</button>`).join('')
-    + `<span style="flex:1"></span><button class="btn btn-primary btn-sm" onclick="mailCompose()">Write email</button>`
+    + `<span style="flex:1"></span><button class="btn btn-outline btn-sm" onclick="mailTestAlert(this)">Send test alert</button><button class="btn btn-primary btn-sm" onclick="mailCompose()">Write email</button>`
     + (MAIL.boxes.find(b => b.key === MAIL.box && b.error) ? `<div style="flex-basis:100%;color:#b42318;font-size:13px">${esc(MAIL.boxes.find(b => b.key === MAIL.box).error)}</div>` : '');
 }
 async function mailOpenBox(key) {
@@ -1989,6 +1989,7 @@ async function mailCompose(p = {}) {
   document.body.appendChild(wrap); window._mailTmpl = tmpl;
   const b = document.getElementById('mc-body'); b.focus(); b.setSelectionRange(0, 0);
 }
+async function mailTestAlert(btn) { btn.disabled = true; const r = await post('/api/admin/test-alert', {}); showToast(r && r.ok ? 'Test alert sent. Check your phone.' : 'Could not send the test alert'); setTimeout(() => { btn.disabled = false; }, 3000); }
 function mailTemplate(sel) { const t = (window._mailTmpl || [])[sel.value]; if (!t) return; const b = document.getElementById('mc-body'); b.value = t.body + (b.value ? '\n\n' + b.value : ''); const s = document.getElementById('mc-subject'); if (!s.value) s.value = t.subject; sel.value = ''; }
 async function mailSend(replyTo) {
   const g = id => document.getElementById(id).value; const msg = document.getElementById('mc-msg'), btn = document.getElementById('mc-send');

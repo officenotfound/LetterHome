@@ -32,6 +32,17 @@ public class MainActivity extends Activity {
 
     @Override protected void onCreate(Bundle b) {
         super.onCreate(b);
+        try {
+            android.content.SharedPreferences cp = getSharedPreferences("crash", MODE_PRIVATE);
+            String last = cp.getString("last", null);
+            if (last != null) {
+                cp.edit().remove("last").apply();
+                android.widget.TextView tv = new android.widget.TextView(this);
+                tv.setText(last); tv.setTextSize(11); tv.setTextIsSelectable(true); tv.setPadding(24, 24, 24, 24);
+                android.widget.ScrollView sv = new android.widget.ScrollView(this); sv.addView(tv);
+                new android.app.AlertDialog.Builder(this).setTitle("The app crashed last time").setView(sv).setPositiveButton("OK", null).show();
+            }
+        } catch (Throwable ignored) { }
         Window w = getWindow();
         w.setStatusBarColor(Color.parseColor("#1a1a1a"));
         w.setNavigationBarColor(Color.parseColor("#1a1a1a"));
@@ -94,11 +105,13 @@ public class MainActivity extends Activity {
 
         if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission("android.permission.POST_NOTIFICATIONS") != android.content.pm.PackageManager.PERMISSION_GRANTED)
             requestPermissions(new String[]{"android.permission.POST_NOTIFICATIONS"}, 5);
-        try { Intent live = new Intent(this, LiveService.class); if (Build.VERSION.SDK_INT >= 26) startForegroundService(live); else startService(live); } catch (Exception ignored) { }
-        JobScheduler js = (JobScheduler) getSystemService(JOB_SCHEDULER_SERVICE);
-        if (js.getPendingJob(1) == null)
-            js.schedule(new JobInfo.Builder(1, new ComponentName(this, PollJob.class))
-                    .setPeriodic(15 * 60 * 1000L).setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY).setPersisted(true).build());
+        if (Build.VERSION.SDK_INT < 33 || checkSelfPermission("android.permission.POST_NOTIFICATIONS") == android.content.pm.PackageManager.PERMISSION_GRANTED) startLive();
+        try {
+            JobScheduler js = (JobScheduler) getSystemService(JOB_SCHEDULER_SERVICE);
+            if (js.getPendingJob(1) == null)
+                js.schedule(new JobInfo.Builder(1, new ComponentName(this, PollJob.class))
+                        .setPeriodic(15 * 60 * 1000L).setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY).setPersisted(true).build());
+        } catch (Throwable ignored) { }
     }
 
     private String startUrl(Intent i) {
@@ -124,4 +137,13 @@ public class MainActivity extends Activity {
     @Override protected void onSaveInstanceState(Bundle o) { super.onSaveInstanceState(o); web.saveState(o); }
     @Override public void onBackPressed() { if (web.canGoBack()) web.goBack(); else super.onBackPressed(); }
     @Override protected void onPause() { super.onPause(); CookieManager.getInstance().flush(); }
+
+    private void startLive() {
+        try { Intent live = new Intent(this, LiveService.class); if (Build.VERSION.SDK_INT >= 26) startForegroundService(live); else startService(live); } catch (Throwable ignored) { }
+    }
+
+    @Override public void onRequestPermissionsResult(int code, String[] perms, int[] results) {
+        super.onRequestPermissionsResult(code, perms, results);
+        if (code == 5) startLive();
+    }
 }

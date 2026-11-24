@@ -3263,6 +3263,11 @@ app.get('/api/admin/notifications', requireAdmin, (req, res) => {
 });
 
 // Live alerts for the admin app: a stream that pushes a line the moment a new paid order, an unread message or an extra payment appears.
+app.post('/api/admin/test-alert', requireAdmin, (req, res) => {
+  mailbox.events.emit('mail', { box: 'test', label: 'Test', id: String(Date.now()), from: 'Letterhome Admin', subject: 'Test alert: if you see this on your phone, live alerts work', at: Date.now() });
+  res.json({ ok: true });
+});
+
 app.get('/api/admin/events', requireAdmin, (req, res) => {
   const stamp = () => db.prepare("SELECT strftime('%Y-%m-%d %H:%M:%S','now') AS t").get().t;
   let cursor = /^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}/.test(String(req.query.since || '')) ? String(req.query.since).replace('T', ' ').slice(0, 19) : stamp();

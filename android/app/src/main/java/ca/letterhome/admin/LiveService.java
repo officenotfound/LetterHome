@@ -33,7 +33,12 @@ public class LiveService extends Service {
             nm.createNotificationChannel(new NotificationChannel("live", "Live alerts connection", NotificationManager.IMPORTANCE_MIN));
         Notification.Builder b = Build.VERSION.SDK_INT >= 26 ? new Notification.Builder(this, "live") : new Notification.Builder(this);
         b.setSmallIcon(R.drawable.ic_stat).setContentTitle("Letterhome Admin").setContentText("Listening for new orders and messages").setOngoing(true);
-        try { startForeground(77, b.build()); } catch (Exception e) { stopSelf(); return START_NOT_STICKY; }
+        try {
+            try {
+                if (Build.VERSION.SDK_INT >= 29) startForeground(77, b.build(), android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC);
+                else startForeground(77, b.build());
+            } catch (Throwable first) { startForeground(77, b.build()); }
+        } catch (Throwable e) { stopSelf(); return START_NOT_STICKY; }
         if (worker == null || !worker.isAlive()) { running = true; worker = new Thread(this::loop, "live"); worker.start(); }
         return START_STICKY;
     }
@@ -44,7 +49,7 @@ public class LiveService extends Service {
         long backoff = 3000;
         while (running) {
             boolean ok = false;
-            try { ok = connect(); } catch (Exception ignored) { }
+            try { ok = connect(); } catch (Throwable ignored) { }
             lastAlive = 0;
             try { Thread.sleep(ok ? 2000 : backoff); } catch (InterruptedException e) { return; }
             backoff = ok ? 3000 : Math.min(backoff * 2, 60000);
