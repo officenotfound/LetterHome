@@ -1436,6 +1436,7 @@ app.get('/api/site-config', (req, res) => {
   const gbCents       = pub.destinations?.GB?.price_cents || priceIntl;
   res.json({
     orders_open:               getSetting('service_paused', 'false') !== 'true',
+    blank_return_allowed:      getSetting('allow_blank_return', '0') === '1',
     announcement:              getSetting('announcement', ''),
     price_domestic_cents:      priceDomestic,
     price_usa_cents:           priceUsa,
@@ -1935,6 +1936,8 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
 
   db.prepare('UPDATE orders SET attachment_info = ? WHERE id = ?')
     .run(JSON.stringify(movedFiles), orderId);
+  // The customer saw the risk and chose to send with no return address at all (only offered while the admin switch is on).
+  if (b['skip-return'] && b['return-choice'] === 'none' && getSetting('allow_blank_return', '0') === '1') db.prepare('UPDATE orders SET blank_return = 1 WHERE id = ?').run(orderId);
   if (chargeCurrency !== 'CAD') db.prepare('UPDATE orders SET charge_currency = ?, charge_cents = ? WHERE id = ?').run(chargeCurrency, chargeCents, orderId);
 
   // Local content scan (no third party). A hit holds the order for review after payment; see postgridSubmit.
@@ -2277,6 +2280,8 @@ const adminTools = require('./adminTools').register(app, {
 const contentPlanner = require('./contentPlanner').register(app, { db, requireAdmin, logAudit, getSetting, today: () => torontoToday() });
 // Monday morning: what is due this week and how outreach is going, to the owner only.
 cron.schedule('10 8 * * 1', () => { try { sendOwnerMail('Content and links: this week', contentPlanner.weeklyDigest()); } catch (e) { console.error('[content-digest] failed:', e.message); } });
+const mailbox = require('./mailbox').register(app, { db, requireAdmin, logAudit });
+if (process.env.NODE_ENV !== 'test') mailbox.start();
 require('./adminExtras').register(app, { db, requireAdmin, logAudit, getSetting, contentHeld: o => contentHeld(o), today: () => torontoToday(), ops });
 
 app.get('/api/admin/me', requireAdmin, (req, res) =>
@@ -2511,7 +2516,7 @@ app.get('/api/admin/orders/:id', requireAdmin, (req, res) => {
     const R = SantaLetter.RETURN;
     Object.assign(order, { skip_return: 0, sender_name: R.name, sender_street: R.street, sender_city: R.city, sender_province: R.province, sender_postal: R.postal, sender_country: R.country });
   }
-  res.json({ ...order, files,
+  res.json({ ...order, files, blank_return_allowed: getSetting('allow_blank_return', '0') === '1',
     postgrid_configured: postgrid.isConfigured(), postgrid_api_mode: postgrid.mode(), today_toronto: torontoToday(),
     postgrid_eligibility: order.postgrid_letter_id ? null : postgrid.eligibility(order) });
 });
@@ -2595,6 +2600,10 @@ app.post('/api/admin/orders/:id/addresses', requireAdmin, async (req, res) => {
   if ('return_in_body' in body) {
     const rb = body.return_in_body === true || body.return_in_body === 1 || body.return_in_body === '1' ? 1 : 0;
     if (rb !== (order.return_in_body ? 1 : 0)) { sets.push('return_in_body = ?'); vals.push(rb); changes.return_in_body = { from: order.return_in_body ? 1 : 0, to: rb }; }
+  }
+  if ('blank_return' in body) {
+    const br = body.blank_return === true || body.blank_return === 1 || body.blank_return === '1' ? 1 : 0;
+    if (br !== (order.blank_return ? 1 : 0)) { sets.push('blank_return = ?'); vals.push(br); changes.blank_return = { from: order.blank_return ? 1 : 0, to: br }; }
   }
   if ('skip_return' in body) {
     const sr = body.skip_return === true || body.skip_return === 1 || body.skip_return === '1' ? 1 : 0;
@@ -3249,7 +3258,8 @@ app.get('/api/admin/notifications', requireAdmin, (req, res) => {
     WHERE read_at IS NULL ${since ? 'AND created_at > ?' : ''}
     ORDER BY created_at DESC LIMIT 20`).all(...(since ? [since] : []));
   const unreadContacts = db.prepare('SELECT COUNT(*) AS n FROM contact_submissions WHERE read_at IS NULL').get().n;
-  res.json({ now, orders, contacts, unreadContacts });
+  const sinceMs = since ? Date.parse(since.replace(' ', 'T') + 'Z') : 0;
+  res.json({ now, orders, contacts, unreadContacts, mail: since ? mailbox.recentSince(sinceMs) : [] });
 });
 
 // Live alerts for the admin app: a stream that pushes a line the moment a new paid order, an unread message or an extra payment appears.
@@ -3273,7 +3283,9 @@ app.get('/api/admin/events', requireAdmin, (req, res) => {
     } catch (e) { console.error('[events] tick failed:', e.message); }
   };
   const timer = setInterval(tick, 5000);
-  req.on('close', () => clearInterval(timer));
+  const onMail = ev => { try { send({ type: 'mail', box: ev.box, label: ev.label, id: ev.id, from: ev.from, subject: ev.subject }); } catch {} };
+  mailbox.events.on('mail', onMail);
+  req.on('close', () => { clearInterval(timer); mailbox.events.off('mail', onMail); });
 });
 
 app.get('/api/admin/orders/:id/emails', requireAdmin, (req, res) => {
@@ -3858,7 +3870,7 @@ app.get('/api/admin/settings', requireAdmin, (req, res) => {
 const ALLOWED_SETTING_KEYS = new Set([
   'service_paused', 'announcement', 'price_domestic_cents', 'price_usa_cents', 'price_international_cents',
   'daily_order_cap', 'blocked_countries', 'away_mode', 'away_message',
-  'postgrid_auto_submit', 'postgrid_countries', 'services_enabled',
+  'postgrid_auto_submit', 'postgrid_countries', 'services_enabled', 'allow_blank_return',
   'price_uk_cents', 'price_au_cents', 'us_domain_live', 'uk_domain_live',
   'cart_offer_enabled', 'cart_offer_pct', 'cart_offer_valid_days',
   'svc_ca_registered_cents', 'svc_ca_express_cents', 'svc_us_certified_cents', 'svc_us_express_cents',

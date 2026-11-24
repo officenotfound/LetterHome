@@ -95,6 +95,10 @@ public class LiveService extends Service {
             Notify.show(this, 1000 + id, "New order #" + id, price + (name.isEmpty() ? "" : " · letter to " + name) + (dest.isEmpty() ? "" : " (" + dest + ")"), "/admin/orders/" + id);
         } else if (type.equals("message")) {
             Notify.show(this, 2000 + j.optInt("id"), "Message from " + j.optString("name", "a customer"), j.optString("preview", ""), "/admin/contacts");
+        } else if (type.equals("mail")) {
+            String from = j.optString("from", "").replaceAll("<[^>]*>", "").replace("\"", "").trim();
+            String label = j.optString("label", j.optString("box", ""));
+            Notify.show(this, 4000 + (Math.abs((j.optString("box") + j.optString("id")).hashCode()) % 900000), "New email (" + label + ")", (from.isEmpty() ? "" : from + ": ") + j.optString("subject", ""), "/admin/mail");
         } else if (type.equals("extra")) {
             int oid = j.optInt("order_id");
             String amt = String.format(Locale.CANADA, "$%.2f", j.optInt("amount_cents", 0) / 100.0) + " " + j.optString("currency", "");

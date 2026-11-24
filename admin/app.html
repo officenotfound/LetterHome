@@ -510,6 +510,7 @@ function renderRoute(p) {
   if (p === '/admin/broadcast')                     return showBroadcast();
   if (p === '/admin/outreach')                       return showOutreach();
   if (p === '/admin/followups')                     return showFollowups();
+  if (p === '/admin/mail')                          return showMail();
   if (p === '/admin/print-queue')                   return showPrintQueue();
   if (p === '/admin/approvals')                     return showApprovals();
   if (p === '/admin/profit')                        return showProfit();
@@ -539,7 +540,7 @@ function renderRoute(p) {
 const NAV_GROUPS = {
   orders:   { tabs: [['/admin/orders', 'Orders'], ['/admin/approvals', 'Approvals'], ['/admin/print-queue', 'Print queue']] },
   people:   { tabs: [['/admin/customers', 'Customers'], ['/admin/accounts', 'Accounts'], ['/admin/contacts', 'Contacts'], ['/admin/applicants', 'Applicants'], ['/admin/businesses', 'Businesses']] },
-  messages: { tabs: [['/admin/broadcast', 'Broadcast'], ['/admin/outreach', 'Outreach'], ['/admin/followups', 'Follow-ups'], ['/admin/content', 'Content and links'], ['/admin/templates', 'Templates'], ['/admin/emails', 'Emails']] },
+  messages: { tabs: [['/admin/mail', 'Mail'], ['/admin/broadcast', 'Broadcast'], ['/admin/outreach', 'Outreach'], ['/admin/followups', 'Follow-ups'], ['/admin/content', 'Content and links'], ['/admin/templates', 'Templates'], ['/admin/emails', 'Emails']] },
   reports:  { tabs: [['/admin/insights', 'Insights'], ['/admin/visitors', 'Visitors'], ['/admin/traffic', 'Traffic'], ['/admin/growth', 'Search'], ['/admin/funnel', 'Funnel'], ['/admin/seo-audit', 'Content audit'], ['/admin/profit', 'Profit'], ['/admin/stripe', 'Stripe']] },
   system:   { tabs: [['/admin/settings', 'Settings'], ['/admin/health', 'Health'], ['/admin/codes', 'Codes'], ['/admin/admin-users', 'Admin users'], ['/admin/audit-log', 'Audit log'], ['/admin/trash', 'Trash']] },
 };
@@ -1776,6 +1777,8 @@ async function pollNotifications() {
   const items = [];
   (seen ? d.orders : []).forEach(o => items.push({ key: 'o' + o.id, path: `/admin/orders/${o.id}`,
     html: `<strong>New order #${o.id}</strong> · $${(o.price_cents / 100).toFixed(2)} CAD<br>${esc(o.recipient_name || '')} (${esc(o.destination_country || '')})`, when: fmtDateTime(o.paid_at) }));
+  (seen ? (d.mail || []) : []).forEach(m => items.push({ key: 'm' + m.box + m.id, path: '/admin/mail',
+    html: `<strong>New email (${esc(m.label || m.box)})</strong><br>${esc(String(m.from || '').replace(/<[^>]*>/g, '').trim())}: ${esc(m.subject || '')}`, when: fmtDateTime(new Date(m.at).toISOString().slice(0, 19).replace('T', ' ')) }));
   (seen ? d.contacts : []).forEach(c => items.push({ key: 'c' + c.id, path: '/admin/contacts',
     html: `<strong>Message from ${esc(c.name)}</strong><br>${esc(c.preview)}`, when: fmtDateTime(c.created_at) }));
   const readNow = readKeys();
@@ -1798,6 +1801,205 @@ function startNotifications() {
   setInterval(() => { if (!document.hidden) pollNotifications(); }, 30000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) pollNotifications(); });
   document.addEventListener('click', e => { if (!e.target.closest('.notif-wrap')) document.getElementById('notif-panel').style.display = 'none'; });
+}
+
+// ───────────────────────── Mail ─────────────────────────
+const mailCss = `<style>
+.ml-top{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.ml-box{padding:8px 14px;border:1px solid #d9d9d9;border-radius:999px;background:#fff;cursor:pointer;font-size:14px;color:#2a2a2a}
+.ml-box.on{background:#2a2a2a;color:#fff;border-color:#2a2a2a}
+.ml-box b{display:inline-block;min-width:18px;margin-left:6px;padding:0 6px;border-radius:9px;background:#b42318;color:#fff;font-size:11px;line-height:18px;text-align:center}
+.ml-wrap{display:grid;grid-template-columns:170px 340px minmax(0,1fr);gap:0;border:1px solid #e3e3e3;border-radius:8px;background:#fff;height:calc(100vh - 230px);min-height:420px;overflow:hidden}
+.ml-folders{border-right:1px solid #eee;overflow:auto;padding:8px}
+.ml-folder{display:block;width:100%;text-align:left;padding:8px 10px;border:none;background:none;border-radius:6px;cursor:pointer;font-size:13px;color:#2a2a2a}
+.ml-folder.on{background:#f1ede4;font-weight:600}
+.ml-list{border-right:1px solid #eee;overflow:auto}
+.ml-search{display:flex;gap:6px;padding:8px;border-bottom:1px solid #eee;position:sticky;top:0;background:#fff;z-index:1}
+.ml-search input{flex:1;min-width:0;padding:7px 9px;border:1px solid #d9d9d9;border-radius:6px;font-size:13px}
+.ml-item{display:block;width:100%;text-align:left;padding:10px 12px;border:none;border-bottom:1px solid #f1f1f1;background:none;cursor:pointer;font-size:13px;line-height:1.4}
+.ml-item:hover{background:#faf8f4}.ml-item.on{background:#f1ede4}
+.ml-item.unread .ml-subj{font-weight:700}.ml-item.unread::before{content:'';display:inline-block;width:8px;height:8px;border-radius:50%;background:#b42318;margin-right:6px}
+.ml-from{color:#555;font-size:12px;display:flex;justify-content:space-between;gap:8px}.ml-sum{color:#888;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ml-read{overflow:auto;display:flex;flex-direction:column;min-width:0}
+.ml-empty{padding:30px;color:#888;font-size:14px;text-align:center}
+.ml-head{padding:14px 16px;border-bottom:1px solid #eee}.ml-head h3{margin:0 0 6px;font-size:17px;line-height:1.3;word-break:break-word}
+.ml-meta{font-size:12px;color:#666;line-height:1.6;word-break:break-word}
+.ml-acts{display:flex;gap:6px;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid #eee}
+.ml-frame{border:0;width:100%;flex:1;min-height:300px;background:#fff}
+.ml-att{display:flex;gap:6px;flex-wrap:wrap;padding:8px 16px;border-top:1px solid #eee}
+.ml-orders{padding:8px 16px;border-top:1px solid #eee;font-size:12px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.ml-back{display:none}
+.ml-modal{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;display:flex;align-items:flex-start;justify-content:center;padding:4vh 12px;overflow:auto}
+.ml-comp{background:#fff;border-radius:10px;width:min(720px,100%);padding:16px;box-shadow:0 12px 40px rgba(0,0,0,.25)}
+.ml-comp .field{margin:0 0 10px}.ml-comp input[type=text],.ml-comp select,.ml-comp textarea{width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid #d9d9d9;border-radius:6px;font:inherit;font-size:14px}
+.ml-comp textarea{min-height:240px;line-height:1.5}
+@media (max-width:900px){
+ .ml-wrap{grid-template-columns:1fr;height:calc(100vh - 210px)}
+ .ml-folders{display:flex;overflow-x:auto;border-right:none;border-bottom:1px solid #eee;padding:6px}
+ .ml-folder{width:auto;white-space:nowrap}
+ .ml-list{border-right:none}.ml-read{display:none}
+ .ml-wrap.reading .ml-list,.ml-wrap.reading .ml-folders{display:none}.ml-wrap.reading .ml-read{display:flex}
+ .ml-back{display:inline-block}
+}
+</style>`;
+let MAIL = { boxes: [], box: null, folders: [], folderId: '', msgs: [], next: null, q: '', filter: '', cur: null, images: false, loading: false };
+let _mailTimer = null;
+
+async function showMail() {
+  setTitle('Mail');
+  setMain('<div class="empty">Loading…</div>');
+  const r = await api('/api/admin/mail/mailboxes');
+  if (!r) return setMain('<div class="empty">Could not load the mailboxes.</div>');
+  if (!r.configured) return setMain(`<div class="card" style="padding:24px;line-height:1.7"><div class="card-title" style="margin-bottom:10px">Mail is not connected yet</div>
+    The mailbox keys have not been added to the server. Follow the setup steps, then restart the app on the server.</div>`);
+  MAIL.boxes = r.mailboxes;
+  if (!MAIL.box || !MAIL.boxes.find(b => b.key === MAIL.box)) MAIL.box = MAIL.boxes[0].key;
+  setMain(mailCss + '<div class="ml-top" id="ml-top"></div><div id="ml-body"></div>');
+  mailTop();
+  await mailOpenBox(MAIL.box);
+  clearInterval(_mailTimer);
+  _mailTimer = setInterval(async () => {
+    if (location.pathname !== '/admin/mail') return clearInterval(_mailTimer);
+    const r2 = await api('/api/admin/mail/mailboxes', { background: true });
+    if (r2) { MAIL.boxes = r2.mailboxes; mailTop(); }
+  }, 60000);
+}
+function mailTop() {
+  const el = document.getElementById('ml-top'); if (!el) return;
+  el.innerHTML = MAIL.boxes.map(b => `<button class="ml-box ${b.key === MAIL.box ? 'on' : ''}" onclick="mailOpenBox('${b.key}')" title="${esc(b.address || b.error || '')}">${esc(b.label)}${b.unread ? `<b>${b.unread}</b>` : ''}</button>`).join('')
+    + `<span style="flex:1"></span><button class="btn btn-primary btn-sm" onclick="mailCompose()">Write email</button>`
+    + (MAIL.boxes.find(b => b.key === MAIL.box && b.error) ? `<div style="flex-basis:100%;color:#b42318;font-size:13px">${esc(MAIL.boxes.find(b => b.key === MAIL.box).error)}</div>` : '');
+}
+async function mailOpenBox(key) {
+  MAIL.box = key; MAIL.folderId = ''; MAIL.q = ''; MAIL.filter = ''; MAIL.cur = null; MAIL.msgs = []; MAIL.next = null;
+  mailTop();
+  document.getElementById('ml-body').innerHTML = '<div class="empty">Loading…</div>';
+  const f = await api(`/api/admin/mail/${key}/folders`);
+  MAIL.folders = (f && f.folders) || [];
+  const inbox = MAIL.folders.find(x => String(x.name).toLowerCase() === 'inbox') || MAIL.folders[0];
+  MAIL.folderId = inbox ? inbox.id : '';
+  mailShell();
+  mailLoad(true);
+}
+function mailShell() {
+  const order = ['inbox', 'sent', 'drafts', 'spam', 'trash'];
+  const fs = [...MAIL.folders].sort((a, b) => { const x = order.indexOf(String(a.name).toLowerCase()), y = order.indexOf(String(b.name).toLowerCase()); return (x < 0 ? 99 : x) - (y < 0 ? 99 : y) || String(a.name).localeCompare(b.name); });
+  document.getElementById('ml-body').innerHTML = `<div class="ml-wrap" id="ml-wrap">
+    <div class="ml-folders">${fs.map(f => `<button class="ml-folder ${f.id === MAIL.folderId && !MAIL.q ? 'on' : ''}" onclick="mailPickFolder('${f.id}')">${esc(f.name)}</button>`).join('')}</div>
+    <div class="ml-list" id="ml-list"><div class="ml-search"><input id="ml-q" type="text" placeholder="Search this mailbox" value="${esc(MAIL.q)}" onkeydown="if(event.key==='Enter')mailSearch()"><button class="btn btn-outline btn-sm" onclick="mailSearch()">Search</button><button class="btn btn-outline btn-sm" onclick="mailToggleUnread()" id="ml-unread">${MAIL.filter ? 'All' : 'Unread'}</button></div><div id="ml-items"></div></div>
+    <div class="ml-read" id="ml-read"><div class="ml-empty">Pick an email to read it.</div></div></div>`;
+}
+function mailPickFolder(id) { MAIL.folderId = id; MAIL.q = ''; MAIL.cur = null; mailShell(); mailLoad(true); }
+function mailSearch() { MAIL.q = document.getElementById('ml-q').value.trim(); MAIL.cur = null; mailShell(); mailLoad(true); }
+function mailToggleUnread() { MAIL.filter = MAIL.filter ? '' : 'unread'; mailShell(); mailLoad(true); }
+function mailWhen(ms) { if (!ms) return ''; const d = new Date(ms), t = new Date(); return d.toDateString() === t.toDateString() ? d.toLocaleTimeString('en-CA', { hour: 'numeric', minute: '2-digit' }) : d.toLocaleDateString('en-CA', { month: 'short', day: 'numeric' }); }
+function mailWho(s) { const m = String(s || '').match(/^\s*"?([^"<]*?)"?\s*<([^>]+)>\s*$/); return m ? (m[1].trim() || m[2]) : String(s || ''); }
+function mailAddr(s) { const m = String(s || '').match(/<([^>]+)>/); return (m ? m[1] : String(s || '')).trim(); }
+async function mailLoad(reset) {
+  if (MAIL.loading) return; MAIL.loading = true;
+  const box = document.getElementById('ml-items'); if (!box) { MAIL.loading = false; return; }
+  if (reset) { MAIL.msgs = []; MAIL.next = null; box.innerHTML = '<div class="ml-empty">Loading…</div>'; }
+  const qs = new URLSearchParams({ folderId: MAIL.folderId, start: reset ? 1 : (MAIL.next || 1) });
+  if (MAIL.q) qs.set('q', MAIL.q); if (MAIL.filter) qs.set('filter', MAIL.filter);
+  const r = await api(`/api/admin/mail/${MAIL.box}/messages?${qs}`);
+  MAIL.loading = false;
+  if (!r || r.error) { box.innerHTML = `<div class="ml-empty" style="color:#b42318">${esc((r && r.error) || 'Could not load.')}</div>`; return; }
+  MAIL.msgs = reset ? r.messages : MAIL.msgs.concat(r.messages); MAIL.next = r.next;
+  mailRenderList();
+}
+function mailRenderList() {
+  const box = document.getElementById('ml-items'); if (!box) return;
+  box.innerHTML = MAIL.msgs.length ? MAIL.msgs.map((m, i) => `<button class="ml-item ${m.unread ? 'unread' : ''} ${MAIL.cur && MAIL.cur.id === m.id ? 'on' : ''}" onclick="mailOpen(${i})">
+      <div class="ml-from"><span class="ml-subj" style="color:#2a2a2a">${esc(mailWho(m.from))}</span><span>${m.hasAttachment ? '📎 ' : ''}${esc(mailWhen(m.at))}</span></div>
+      <div class="ml-subj" style="color:#2a2a2a">${esc(m.subject)}</div><div class="ml-sum">${esc(m.summary)}</div></button>`).join('')
+      + (MAIL.next ? '<button class="ml-item" style="text-align:center;color:#7d3220" onclick="mailLoad(false)">Load more</button>' : '')
+    : '<div class="ml-empty">Nothing here.</div>';
+}
+async function mailOpen(i) {
+  const m = MAIL.msgs[i]; if (!m) return;
+  MAIL.images = false;
+  document.getElementById('ml-wrap').classList.add('reading');
+  const rd = document.getElementById('ml-read'); rd.innerHTML = '<div class="ml-empty">Loading…</div>';
+  const r = await api(`/api/admin/mail/${MAIL.box}/message?folderId=${m.folderId}&id=${m.id}&markRead=1`);
+  if (!r || r.error) { rd.innerHTML = `<div class="ml-empty" style="color:#b42318">${esc((r && r.error) || 'Could not open this email.')}</div>`; return; }
+  const wasUnread = m.unread; m.unread = false; MAIL.cur = { ...r, folderId: m.folderId };
+  if (wasUnread) { const b = MAIL.boxes.find(x => x.key === MAIL.box); if (b && b.unread) { b.unread--; mailTop(); } }
+  mailRenderList(); mailRenderReader();
+  const em = mailAddr(r.from).toLowerCase();
+  const o = await api('/api/admin/mail/orders?email=' + encodeURIComponent(em), { background: true });
+  const slot = document.getElementById('ml-orders');
+  if (slot && o && o.orders && o.orders.length) slot.innerHTML = '<span style="color:#666">Their orders:</span> ' + o.orders.map(x => `<button class="btn btn-outline btn-sm" onclick="go('/admin/orders/${x.id}')">#${x.id} · ${esc(x.public_ref || '')} · ${esc(String(x.status).replace(/_/g, ' '))}</button>`).join('');
+}
+function mailFrameHtml(html, images) {
+  const csp = `default-src 'none'; img-src data: ${images ? 'https: http:' : ''}; style-src 'unsafe-inline'; font-src data:`;
+  return `<!doctype html><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="${csp}"><base target="_blank"><style>body{font:14px/1.55 -apple-system,Segoe UI,Arial,sans-serif;margin:14px;color:#222;word-break:break-word}img{max-width:100%;height:auto}blockquote{margin:8px 0 8px 4px;padding-left:10px;border-left:3px solid #ddd;color:#555}pre{white-space:pre-wrap}</style>${html}`;
+}
+function mailRenderReader() {
+  const c = MAIL.cur; const rd = document.getElementById('ml-read'); if (!c || !rd) return;
+  const hasImg = /<img[^>]+src=["']?https?:/i.test(c.html);
+  rd.innerHTML = `<div class="ml-head"><button class="btn btn-outline btn-sm ml-back" onclick="document.getElementById('ml-wrap').classList.remove('reading')">← Back</button>
+      <h3>${esc(c.subject)}</h3><div class="ml-meta"><strong>${esc(mailWho(c.from))}</strong> &lt;${esc(mailAddr(c.from))}&gt;<br>To: ${esc(c.to)}${c.cc ? '<br>Cc: ' + esc(c.cc) : ''}<br>${c.at ? esc(new Date(c.at).toLocaleString('en-CA')) : ''}</div></div>
+    <div class="ml-acts"><button class="btn btn-primary btn-sm" onclick="mailReply(false)">Reply</button><button class="btn btn-outline btn-sm" onclick="mailReply(true)">Reply all</button><button class="btn btn-outline btn-sm" onclick="mailForward()">Forward</button>
+      <button class="btn btn-outline btn-sm" onclick="mailAct('unread')">Mark unread</button>
+      <select onchange="mailMove(this)" style="padding:6px;border:1px solid #d9d9d9;border-radius:6px;font-size:13px"><option value="">Move to…</option>${MAIL.folders.filter(f => f.id !== c.folderId).map(f => `<option value="${f.id}">${esc(f.name)}</option>`).join('')}</select>
+      <button class="btn btn-outline btn-sm" style="color:#b42318" onclick="mailAct('trash')">Delete</button>
+      ${hasImg ? `<button class="btn btn-outline btn-sm" id="ml-imgbtn" onclick="mailImages()">Load images</button>` : ''}</div>
+    <div class="ml-orders" id="ml-orders"></div>
+    <iframe class="ml-frame" id="ml-frame" sandbox="allow-popups allow-popups-to-escape-sandbox" referrerpolicy="no-referrer"></iframe>
+    ${c.attachments.length ? `<div class="ml-att">${c.attachments.map(a => `<a class="btn btn-outline btn-sm" href="/api/admin/mail/${MAIL.box}/attachment?folderId=${c.folderId}&id=${c.id}&att=${encodeURIComponent(a.id)}&name=${encodeURIComponent(a.name)}">📎 ${esc(a.name)} (${a.size > 1048576 ? (a.size / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(a.size / 1024)) + ' KB'})</a>`).join('')}</div>` : ''}`;
+  document.getElementById('ml-frame').srcdoc = mailFrameHtml(c.html, MAIL.images);
+}
+function mailImages() { MAIL.images = true; document.getElementById('ml-frame').srcdoc = mailFrameHtml(MAIL.cur.html, true); const b = document.getElementById('ml-imgbtn'); if (b) b.remove(); }
+async function mailAct(action, dest) {
+  const c = MAIL.cur; if (!c) return;
+  if (action === 'trash' && !confirm('Delete this email?')) return;
+  const r = await post(`/api/admin/mail/${MAIL.box}/action`, { action, destFolderId: dest, items: [{ id: c.id, folderId: c.folderId }] });
+  if (!r || r.ok === false || r.error) return alert((r && r.error) || 'That did not work.');
+  if (action === 'unread') { const m = MAIL.msgs.find(x => x.id === c.id); if (m) m.unread = true; mailRenderList(); return; }
+  MAIL.msgs = MAIL.msgs.filter(x => x.id !== c.id); MAIL.cur = null;
+  document.getElementById('ml-wrap').classList.remove('reading');
+  document.getElementById('ml-read').innerHTML = '<div class="ml-empty">Pick an email to read it.</div>';
+  mailRenderList();
+}
+function mailMove(sel) { if (sel.value) mailAct('move', sel.value); }
+function mailQuote(c) { const body = String(c.html || '').replace(/<(br|\/p|\/div)\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/\n{3,}/g, '\n\n').trim();
+  return `\n\nOn ${c.at ? new Date(c.at).toLocaleString('en-CA') : ''}, ${mailWho(c.from)} wrote:\n` + body.split('\n').map(l => '> ' + l).join('\n'); }
+function mailReply(all) {
+  const c = MAIL.cur; const me = (MAIL.boxes.find(b => b.key === MAIL.box) || {});
+  const mine = new Set((me.from || []).map(x => x.toLowerCase()));
+  const to = [mailAddr(c.from)]; let cc = '';
+  if (all) cc = [...String(c.to).split(','), ...String(c.cc || '').split(',')].map(mailAddr).filter(x => x && !mine.has(x.toLowerCase()) && x.toLowerCase() !== to[0].toLowerCase()).join(', ');
+  const fromPick = (me.from || []).find(a => String(c.to).toLowerCase().includes(a.toLowerCase())) || me.address;
+  mailCompose({ to: to.join(', '), cc, subject: /^re:/i.test(c.subject) ? c.subject : 'Re: ' + c.subject, body: mailQuote(c), replyTo: all ? '' : c.id, from: fromPick });
+}
+function mailForward() { const c = MAIL.cur; mailCompose({ subject: /^fwd?:/i.test(c.subject) ? c.subject : 'Fwd: ' + c.subject, body: `\n\n---------- Forwarded message ----------\nFrom: ${c.from}\nTo: ${c.to}\nSubject: ${c.subject}\n` + mailQuote(c).replace(/^\n\nOn .*wrote:\n/, '\n') }); }
+async function mailCompose(p = {}) {
+  const me = MAIL.boxes.find(b => b.key === MAIL.box) || { from: [], address: '' };
+  const tmpl = (await api('/api/admin/templates', { background: true })) || [];
+  const wrap = document.createElement('div'); wrap.className = 'ml-modal'; wrap.id = 'ml-modal';
+  wrap.innerHTML = `<div class="ml-comp"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><strong>${p.replyTo ? 'Reply' : 'New email'}</strong><button class="btn btn-outline btn-sm" onclick="document.getElementById('ml-modal').remove()">Close</button></div>
+    <div class="field"><select id="mc-from">${(me.from.length ? me.from : [me.address]).map(a => `<option ${a === p.from ? 'selected' : ''}>${esc(a)}</option>`).join('')}</select></div>
+    <div class="field"><input type="text" id="mc-to" placeholder="To" value="${esc(p.to || '')}"></div>
+    <div class="field"><input type="text" id="mc-cc" placeholder="Cc (optional)" value="${esc(p.cc || '')}"></div>
+    <div class="field"><input type="text" id="mc-subject" placeholder="Subject" value="${esc(p.subject || '')}"></div>
+    ${tmpl.length ? `<div class="field"><select id="mc-tmpl" onchange="mailTemplate(this)"><option value="">Insert a saved reply…</option>${tmpl.map((t, i) => `<option value="${i}">${esc(t.name)}</option>`).join('')}</select></div>` : ''}
+    <div class="field"><textarea id="mc-body" placeholder="Write your message">${esc(p.body || '')}</textarea></div>
+    <div class="field"><input type="file" id="mc-files" multiple></div>
+    <div style="display:flex;gap:8px;align-items:center"><button class="btn btn-primary" id="mc-send" onclick="mailSend('${esc(p.replyTo || '')}')">Send</button><span id="mc-msg" style="font-size:13px"></span></div></div>`;
+  document.body.appendChild(wrap); window._mailTmpl = tmpl;
+  const b = document.getElementById('mc-body'); b.focus(); b.setSelectionRange(0, 0);
+}
+function mailTemplate(sel) { const t = (window._mailTmpl || [])[sel.value]; if (!t) return; const b = document.getElementById('mc-body'); b.value = t.body + (b.value ? '\n\n' + b.value : ''); const s = document.getElementById('mc-subject'); if (!s.value) s.value = t.subject; sel.value = ''; }
+async function mailSend(replyTo) {
+  const g = id => document.getElementById(id).value; const msg = document.getElementById('mc-msg'), btn = document.getElementById('mc-send');
+  const fd = new FormData(); fd.append('from', g('mc-from')); fd.append('to', g('mc-to')); fd.append('cc', g('mc-cc')); fd.append('subject', g('mc-subject')); fd.append('body', g('mc-body')); if (replyTo) fd.append('replyTo', replyTo);
+  [...document.getElementById('mc-files').files].forEach(f => fd.append('attachments', f));
+  btn.disabled = true; msg.style.color = '#6b6b6b'; msg.textContent = 'Sending…';
+  let r; try { const resp = await fetch(`/api/admin/mail/${MAIL.box}/send`, { method: 'POST', body: fd, headers: { 'X-CSRF-Token': _csrfToken || '' } }); if (resp.status === 401) { window.location.href = '/admin/login'; return; } r = await resp.json().catch(() => ({ error: 'HTTP ' + resp.status })); } catch { r = { error: 'Network error' }; }
+  btn.disabled = false;
+  if (!r || r.error) { msg.style.color = '#b42318'; msg.textContent = (r && r.error) || 'Could not send.'; return; }
+  document.getElementById('ml-modal').remove();
+  showToast('Email sent');
 }
 
 async function saveActualCost(id) {
@@ -2062,6 +2264,7 @@ function addressCard(o) {
       <div style="font-weight:600;margin:18px 0 8px">Return address</div>
       <label style="display:flex;gap:8px;align-items:center;font-size:13px;margin-bottom:10px"><input type="checkbox" id="ad-skip"${o.skip_return ? ' checked' : ''}${locked ? ' disabled' : ''} onchange="document.getElementById('ad-sender').style.opacity=this.checked?.45:1"> Use the Letterhome return address instead of the customer's</label>
       <label style="display:flex;gap:8px;align-items:flex-start;font-size:13px;margin:0 0 10px"><input type="checkbox" id="ad-inbody"${o.return_in_body ? ' checked' : ''}${locked ? ' disabled' : ''} style="margin-top:3px"> <span>Also print the customer's return address at the top of the letter<br><span style="color:#6b6b6b;font-size:12px">Only added if it does not push the letter past the pages they paid for (2 are included). If it would, it is left out and a note is added to the order.</span></span></label>
+      ${(o.blank_return_allowed || o.blank_return) ? `<label style="display:flex;gap:8px;align-items:flex-start;font-size:13px;margin:0 0 10px"><input type="checkbox" id="ad-blank"${o.blank_return ? ' checked' : ''}${locked || !o.blank_return_allowed ? ' disabled' : ''} style="margin-top:3px"><span><strong>Send with no return address at all</strong> (only when "Skip return address" is ticked). Nothing is printed in the return corner. Risk: if the letter cannot be delivered it may not come back, and returned letters are never re-mailed or refunded.${o.blank_return_allowed ? '' : ' <em>Switched off in Settings, PostGrid.</em>'}</span></label>` : ''}
       <div id="ad-sender" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;opacity:${o.skip_return ? .45 : 1}">
         ${f('s-name', 'Name', o.sender_name)}${f('s-street', 'Street', o.sender_street)}${f('s-city', 'City', o.sender_city)}
         ${f('s-province', 'Province / state', o.sender_province)}${f('s-postal', 'Postal code', o.sender_postal)}${f('s-country', 'Country', o.sender_country)}
@@ -2085,6 +2288,7 @@ async function saveAddresses(id, resend) {
     recipient_name: v('r-name'), recipient_street: v('r-street'), recipient_city: v('r-city'), recipient_province: v('r-province'), recipient_postal: v('r-postal'),
     destination_country: v('r-country'),
     sender_name: v('s-name'), sender_street: v('s-street'), sender_city: v('s-city'), sender_province: v('s-province'), sender_postal: v('s-postal'), sender_country: v('s-country'),
+    ...(document.getElementById('ad-blank') && !document.getElementById('ad-blank').disabled ? { blank_return: document.getElementById('ad-blank').checked ? 1 : 0 } : {}),
     skip_return: document.getElementById('ad-skip')?.checked ? 1 : 0, return_in_body: document.getElementById('ad-inbody')?.checked ? 1 : 0, resend: !!resend,
   });
   if (!r || r.ok === false || r.error) { if (msg) { msg.style.color = '#b42318'; msg.textContent = (r && r.error) || 'Could not save'; } return; }
@@ -3498,6 +3702,8 @@ async function renderPostgridSettings(settings) {
       <div class="field"><label>UK price (CAD cents)</label><input id="pg-price-uk" type="number" min="50" step="50" value="${cents('price_uk_cents', 900)}"></div>
       <div class="field"><label>Australia price (CAD cents)</label><input id="pg-price-au" type="number" min="50" step="50" value="${cents('price_au_cents', 900)}"></div>
     </div>
+    <div style="font-size:12px;font-weight:600;color:#111;margin:14px 0 4px;letter-spacing:.04em;text-transform:uppercase">Return address</div>
+    ${chk('pg-blank-return', settings['allow_blank_return'] === '1', 'Let customers (and me) send with no return address at all', 'Off: when a customer skips the return address, the Letterhome address is printed so returns come back to you. On: the order form asks them to choose, with the risk explained, and "no return address" sends the letter with nothing in the return corner. Test it with the test key first. A letter that cannot be delivered may then not come back at all, and returned letters are never re-mailed or refunded.')}
     <div style="font-size:12px;font-weight:600;color:#111;margin:14px 0 4px;letter-spacing:.04em;text-transform:uppercase">Extra mail services</div>
     <div style="font-size:12px;color:#6b6b6b;margin-bottom:6px">Offered at checkout only when ticked and the country's network is enabled. Test each one with the test key before turning it on.</div>
     ${PG_SERVICES.map(([key, name, pkey, def]) => `<div style="display:flex;align-items:center;gap:12px;justify-content:space-between">${chk('pg-svc-' + key.replace(':','-'), svcOn.includes(key), name)}<input id="pg-svcprice-${key.replace(':','-')}" type="number" min="0" step="100" value="${cents(pkey, def)}" style="width:110px" title="CAD cents"></div>`).join('')}
@@ -3512,6 +3718,7 @@ async function savePostgridSettings() {
   const svc = PG_SERVICES.map(([k]) => k).filter(k => document.getElementById('pg-svc-' + k.replace(':','-'))?.checked);
   const body = {
     postgrid_auto_submit: 'false',   // owner approves every order by hand
+    allow_blank_return: document.getElementById('pg-blank-return')?.checked ? '1' : '0',
     postgrid_countries: live.join(','),
     services_enabled: JSON.stringify(svc),
     price_uk_cents: String(parseInt(document.getElementById('pg-price-uk')?.value) || 900),
