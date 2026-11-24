@@ -624,6 +624,19 @@ html[data-theme] body .main{width:100%;margin-left:auto;margin-right:auto;box-si
 }
 html[data-theme] body .empty,html[data-theme] body .ml-empty{text-align:center;margin-left:auto;margin-right:auto}
 
+/* Admin v6: balance. Tabs, title and cards start on one line; nothing wraps that should not; sidebar edges line up. */
+html[data-theme] body #nav-inbox>span:first-child{gap:12px!important}
+html[data-theme] body .side-user{padding-left:12px;padding-right:12px}
+html[data-theme] body .subtab{padding-left:14px;padding-right:14px}
+@media(min-width:1181px){html[data-theme] body .subtabs{padding-left:max(18px,calc((100% - 1360px)/2 + 18px));padding-right:18px}}
+@media(min-width:861px) and (max-width:1180px){html[data-theme] body .subtabs{padding-left:10px;padding-right:10px}}
+@media(min-width:601px) and (max-width:860px){html[data-theme] body .subtabs{padding-left:max(10px,calc((100% - 760px)/2 + 10px))}}
+@media(min-width:861px){
+  html[data-theme] body #main table td .btn,html[data-theme] body #main table td .badge,html[data-theme] body #main table td:last-child,html[data-theme] body #main table td:nth-last-child(2),html[data-theme] body #main table td:nth-last-child(3){white-space:nowrap}
+  html[data-theme] body #main table td .btn-sm{padding:6px 12px}
+}
+html[data-theme] body .need-strip>*{min-width:0}
+
 /* Mac app: sidebar runs under the traffic lights, top bar drags the window */
 html.mac-app body .sidebar-logo{padding-top:44px}
 html.mac-app body .topbar{padding-left:28px}
