@@ -455,7 +455,7 @@ function createPostGrid({ db, getSetting, orderDirPath, fetchImpl, convertWord =
 
 
   // What the customer sees before paying: the exact print PDF, plus the address block where it will sit in the envelope window.
-  async function buildPreviewPdf(order) {
+  async function buildPreviewPdf(order, opts = {}) {
     const built = await buildLetterPdf(order);
     const doc = await PDFDocument.load(built.pdf);
     const font = await doc.embedFont(StandardFonts.Helvetica);
@@ -481,7 +481,9 @@ function createPostGrid({ db, getSetting, orderDirPath, fetchImpl, convertWord =
     };
     const d = destinationOf(order.destination_country) || destinationOf('CA');
     const to = addr(recipientOf(order)), from = addr(senderOf(order));
-    if (d.layout === 'ca_two_windows') {
+    if (opts.hideAddress) {
+      // Customer preview: letter contents only. The address is added at the printer, so it is not drawn here.
+    } else if (d.layout === 'ca_two_windows') {
       block(from, d.zones.from, { center: true });
       block(to, d.zones.to, { center: true });
     } else if (d.layout === 'us_stacked') {

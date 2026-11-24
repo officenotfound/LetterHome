@@ -1671,7 +1671,7 @@ app.post('/api/letter-preview', pageCheckLimiter, uploadAttachments, async (req,
       skip_return: b['skip-return'] ? 1 : 0, sender_name: b['s-name'], sender_street: b['s-street'],
       sender_city: b['s-city'], sender_province: b['s-province'], sender_postal: b['s-postal'], sender_country: b['s-country'],
     };
-    const r = await postgrid.buildPreviewPdf(order);
+    const r = await postgrid.buildPreviewPdf(order, { hideAddress: true });
     if (r.unsupported.length) return res.status(422).json({ error: `We could not read ${r.unsupported.join(', ')} for the preview. It will still be handled by hand.` });
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Cache-Control', 'no-store');
