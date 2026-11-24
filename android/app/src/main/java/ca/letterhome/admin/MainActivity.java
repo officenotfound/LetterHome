@@ -117,6 +117,8 @@ public class MainActivity extends Activity {
         s.setBuiltInZoomControls(false);
         s.setDisplayZoomControls(false);
         s.setAllowFileAccess(false);
+        if (android.os.Build.VERSION.SDK_INT >= 26) s.setSafeBrowsingEnabled(true);
+        s.setGeolocationEnabled(false);
         s.setAllowContentAccess(false);
         s.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
         CookieManager cm = CookieManager.getInstance();
@@ -252,10 +254,12 @@ public class MainActivity extends Activity {
 
     @Override protected void onSaveInstanceState(Bundle o) { super.onSaveInstanceState(o); web.saveState(o); }
     @Override public void onBackPressed() { if (android.os.Build.VERSION.SDK_INT < 33) { if (web.canGoBack()) web.goBack(); else super.onBackPressed(); } else super.onBackPressed(); }
-    @Override protected void onPause() { super.onPause(); CookieManager.getInstance().flush(); if (!unlocking) { leftAt = System.currentTimeMillis(); } }
+    @Override protected void onPause() { super.onPause(); web.onPause(); CookieManager.getInstance().flush(); if (!unlocking) { leftAt = System.currentTimeMillis(); } }
 
+    @Override protected void onDestroy() { try { web.stopLoading(); ((android.view.ViewGroup) web.getParent()).removeView(web); web.destroy(); } catch (Throwable ignored) { } super.onDestroy(); }
     @Override protected void onResume() {
         super.onResume();
+        web.onResume();
         try {
             SharedPreferences sp = getSharedPreferences("ui", MODE_PRIVATE);
             boolean need = sp.getBoolean("lock_on", false) && secure() && !unlocking && (!unlocked || (leftAt > 0 && System.currentTimeMillis() - leftAt > 60000));

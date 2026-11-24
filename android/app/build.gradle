@@ -6,8 +6,8 @@ android {
         applicationId 'ca.letterhome.admin'
         minSdk 24
         targetSdk 35
-        versionCode 12
-        versionName '1.11'
+        versionCode 13
+        versionName '1.12'
     }
     signingConfigs {
         release {
@@ -18,6 +18,6 @@ android {
             }
         }
     }
-    buildTypes { release { minifyEnabled false; signingConfig signingConfigs.release } }
+    buildTypes { release { minifyEnabled true; shrinkResources true; proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'; signingConfig signingConfigs.release } }
     compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
 }

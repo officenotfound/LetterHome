@@ -12,6 +12,7 @@
         android:icon="@mipmap/ic_launcher"
         android:allowBackup="false"
         android:usesCleartextTraffic="false"
+        android:networkSecurityConfig="@xml/network_security"
         android:theme="@style/AppTheme"
         android:enableOnBackInvokedCallback="true">
         <activity android:name=".MainActivity" android:exported="true"
