@@ -1933,9 +1933,10 @@ async function mailOpen(i) {
   MAIL.images = false;
   document.getElementById('ml-wrap').classList.add('reading');
   const rd = document.getElementById('ml-read'); rd.innerHTML = '<div class="ml-empty">Loading…</div>';
-  const r = await api(`/api/admin/mail/${MAIL.box}/message?folderId=${m.folderId}&id=${m.id}&markRead=1`);
+  const r = await api(`/api/admin/mail/${MAIL.box}/message?folderId=${m.folderId}&id=${m.id}`);
   if (!r || r.error) { rd.innerHTML = `<div class="ml-empty" style="color:#b42318">${esc((r && r.error) || 'Could not open this email.')}</div>`; return; }
-  const wasUnread = m.unread; m.unread = false; MAIL.cur = { ...r, folderId: m.folderId };
+  const wasUnread = m.unread || r.unread; m.unread = false; MAIL.cur = { ...r, folderId: m.folderId };
+  if (wasUnread) post(`/api/admin/mail/${MAIL.box}/action`, { action: 'read', items: [{ id: m.id, folderId: m.folderId }] });
   if (wasUnread) { const b = MAIL.boxes.find(x => x.key === MAIL.box); if (b && b.unread) { b.unread--; mailTop(); } }
   mailRenderList(); mailRenderReader();
   const em = mailAddr(r.from).toLowerCase();
@@ -1945,6 +1946,7 @@ async function mailOpen(i) {
 }
 function mailFrameHtml(html, images) {
   const csp = `default-src 'none'; img-src data: ${images ? 'https: http:' : ''}; style-src 'unsafe-inline'; font-src data:`;
+  html = String(html || '').replace(/<meta\b[^>]*http-equiv\s*=\s*["']?\s*(refresh|set-cookie|content-security-policy)[^>]*>/gi, '').replace(/<base\b[^>]*>/gi, '').replace(/<link\b[^>]*>/gi, '');
   return `<!doctype html><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="${csp}"><base target="_blank"><style>body{font:14px/1.55 -apple-system,Segoe UI,Arial,sans-serif;margin:14px;color:#222;word-break:break-word}img{max-width:100%;height:auto}blockquote{margin:8px 0 8px 4px;padding-left:10px;border-left:3px solid #ddd;color:#555}pre{white-space:pre-wrap}</style>${html}`;
 }
 function mailRenderReader() {

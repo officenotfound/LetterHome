@@ -90,14 +90,16 @@ test('the message list picks the real Inbox (not a custom folder of type Inbox),
   assert.equal(search.messages.length, 1);
 });
 
-test('opening a message returns its text, attachments and who it is from, and marks it read with the id untouched', async () => {
+test('opening a message returns its text, attachments and who it is from, and and a plain page load never changes it', async () => {
   calls = [];
   const r = await (await get(`/api/admin/mail/support/message?folderId=10&id=${BIG_ID}&markRead=1`)).json();
   assert.equal(r.subject, 'Where is my letter & stamp');
   assert.equal(r.from, '"Ann Lee" <ann@example.com>');
   assert.match(r.html, /Hello/);
   assert.deepEqual(r.attachments, [{ id: 'att1', name: 'proof.pdf', size: 1234 }]);
-  assert.equal(r.unread, false);
+  assert.equal(calls.some(c => c.method === 'PUT'), false, 'opening by a GET link never marks anything read');
+  calls = [];
+  assert.equal((await post('/api/admin/mail/support/action', { action: 'read', items: [{ id: BIG_ID, folderId: '10' }] })).status, 200);
   const put = calls.find(c => c.method === 'PUT');
   assert.equal(put.body, `{"mode":"markAsRead","messageId":[${BIG_ID}]}`, 'a 19-digit id is sent exactly as written');
   assert.equal((await get('/api/admin/mail/support/message?folderId=10&id=abc')).status, 400, 'ids must be numbers');

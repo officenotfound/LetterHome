@@ -163,9 +163,6 @@ function register(app, deps) {
     ]);
     const d = (details && details.data) || {};
     const m = normMsg({ ...d, messageId: id, folderId: fid }, null);
-    if (req.query.markRead === '1' && m.unread) {
-      try { await b.call('PUT', `/accounts/${a.accountId}/updatemessage`, { rawJson: `{"mode":"markAsRead","messageId":[${id}]}` }); m.unread = false; } catch {}
-    }
     res.json({
       ...m, cc: decodeEntities(d.ccAddress || ''), html: String((content && content.data && content.data.content) || ''),
       attachments: (((atts && atts.data && atts.data.attachments) || [])).map(x => ({ id: String(x.attachmentId), name: x.attachmentName, size: Number(x.attachmentSize) || 0 })),

@@ -164,8 +164,9 @@ app.use(session({
     httpOnly: true,
     sameSite: 'lax',
     secure:   process.env.NODE_ENV === 'production',
-    maxAge:   30 * 24 * 60 * 60 * 1000,
+    maxAge:   14 * 24 * 60 * 60 * 1000,
   },
+  rolling: true,          // idle for two weeks signs you out; using the admin keeps you signed in
 }));
 
 app.disable('x-powered-by');   // don't announce the server software
