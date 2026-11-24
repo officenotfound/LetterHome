@@ -423,6 +423,7 @@ html[data-theme="dark"] body [style*="solid #ececec"],html[data-theme="dark"] bo
     <button class="nav-link" id="nav-orders" onclick="go('/admin/orders')"><span class="nav-icon">✉</span> Orders</button>
     <button class="nav-link" id="nav-inbox" onclick="go('/admin/mail')" style="justify-content:space-between"><span style="display:flex;align-items:center;gap:10px"><span class="nav-icon">✆</span> Inbox</span><span id="inbox-badge" style="display:none;background:#e63946;color:#fff;font-size:10px;font-weight:700;padding:1px 7px;min-width:18px;text-align:center"></span></button>
     <button class="nav-link" id="nav-people" onclick="go('/admin/customers')"><span class="nav-icon">◎</span> People</button>
+    <button class="nav-link" id="nav-applicants" onclick="go('/admin/applicants')"><span class="nav-icon">☺</span> Applicants</button>
     <button class="nav-link" id="nav-marketing" onclick="go('/admin/broadcast')"><span class="nav-icon">≋</span> Marketing</button>
     <button class="nav-link" id="nav-reports" onclick="go('/admin/insights')"><span class="nav-icon">◑</span> Reports</button>
     <button class="nav-link" id="nav-system" onclick="go('/admin/settings')"><span class="nav-icon">⚙</span> System</button>
@@ -561,7 +562,8 @@ function renderRoute(p) {
 // Related sections share one menu item and show as tabs. Every address still works as before.
 const NAV_GROUPS = {
   orders:   { tabs: [['/admin/orders', 'Orders'], ['/admin/approvals', 'Approvals'], ['/admin/print-queue', 'Print queue']] },
-  people:   { tabs: [['/admin/customers', 'Customers'], ['/admin/accounts', 'Accounts'], ['/admin/applicants', 'Applicants'], ['/admin/businesses', 'Businesses']] },
+  people:   { tabs: [['/admin/customers', 'Customers'], ['/admin/accounts', 'Accounts'], ['/admin/businesses', 'Businesses']] },
+  applicants: { tabs: [['/admin/applicants', 'Applicants']] },
   inbox:    { tabs: [['/admin/mail', 'Mail'], ['/admin/contacts', 'Contact form'], ['/admin/templates', 'Saved replies']] },
   marketing: { tabs: [['/admin/broadcast', 'Broadcast'], ['/admin/outreach', 'Outreach'], ['/admin/followups', 'Follow-ups'], ['/admin/content', 'Content and links'], ['/admin/emails', 'Sent emails']] },
   reports:  { tabs: [['/admin/insights', 'Insights'], ['/admin/visitors', 'Visitors'], ['/admin/traffic', 'Traffic'], ['/admin/growth', 'Search'], ['/admin/funnel', 'Funnel'], ['/admin/seo-audit', 'Content audit'], ['/admin/profit', 'Profit'], ['/admin/stripe', 'Stripe']] },
@@ -574,7 +576,7 @@ function groupOf(p) {
   return [null, null];
 }
 function setActiveNav(p) {
-  ['dashboard','orders','inbox','people','marketing','reports','system'].forEach(k => document.getElementById('nav-' + k)?.classList.remove('active'));
+  ['dashboard','orders','inbox','people','applicants','marketing','reports','system'].forEach(k => document.getElementById('nav-' + k)?.classList.remove('active'));
   const [g, tab] = groupOf(p);
   document.querySelectorAll('.mob-tab').forEach(t => t.classList.toggle('active', t.dataset.g === (g || 'dashboard')));
   const strip = document.getElementById('subtabs');
