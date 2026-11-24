@@ -743,7 +743,7 @@ function sendResentEmail(orderId) {
   const esc = x => String(x || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   const link = order.status_token ? `${orderBase(order)}/status/${order.status_token}` : '';
   const html = `
-<!DOCTYPE html><html lang="${es ? 'es-US' : 'en-CA'}">
+<!DOCTYPE html><html lang="${es ? 'es-US' : 'en-CA'}" data-theme="light">
 <body style="font-family:Georgia,serif;background:#ede5d3;padding:40px 20px;color:#2a2a2a;margin:0">
   <div style="max-width:520px;margin:0 auto;background:#faf6ec;border:1px solid rgba(42,42,42,0.12);padding:48px">
     <h1 style="font-size:26px;font-weight:400;margin:0 0 10px;letter-spacing:-0.02em">${T.h1}</h1>
@@ -1264,7 +1264,7 @@ function unsubPage(state, email = '') {
       <input type="hidden" name="token" value="${unsubscribeToken(email)}">
       <button type="submit" style="background:#a8472d;color:#faf6ec;border:none;padding:14px 28px;font-size:14px;font-weight:500;letter-spacing:0.02em;text-transform:uppercase;border-radius:2px;cursor:pointer;font-family:inherit">Confirm Unsubscribe</button>
     </form>` : '';
-  return `<!DOCTYPE html><html lang="en-CA"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  return `<!DOCTYPE html><html lang="en-CA" data-theme="light"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>${headings.title} | Letterhome</title>
 <meta name="robots" content="noindex,nofollow">
 <link rel="stylesheet" href="/fonts.css">
@@ -4577,7 +4577,7 @@ function buildCustomerEmail(o, toAddr, amountCAD, isDomestic) {
   const esc = s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   toAddr = esc(toAddr);
   return `
-<!DOCTYPE html><html lang="${L.htmlLang}">
+<!DOCTYPE html><html lang="${L.htmlLang}" data-theme="light">
 <body style="font-family:Georgia,serif;background:#ede5d3;padding:40px 20px;color:#2a2a2a;margin:0">
   <div style="max-width:520px;margin:0 auto;background:#faf6ec;border:1px solid rgba(42,42,42,0.12);padding:48px">
     <div style="width:38px;height:38px;background:#a8472d;display:inline-flex;align-items:center;justify-content:center;color:#faf6ec;font-size:20px;font-family:Georgia,serif;margin-bottom:28px">L</div>
@@ -4604,7 +4604,7 @@ function buildAtPrinterEmail(o, toAddr) {
   const esc = s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   const carrier = mailFacts(o).carrier;
   return `
-<!DOCTYPE html><html lang="${L.htmlLang}">
+<!DOCTYPE html><html lang="${L.htmlLang}" data-theme="light">
 <body style="font-family:Georgia,serif;background:#ede5d3;padding:40px 20px;color:#2a2a2a;margin:0">
   <div style="max-width:520px;margin:0 auto;background:#faf6ec;border:1px solid rgba(42,42,42,0.12);padding:48px">
     <div style="width:38px;height:38px;background:#a8472d;display:inline-flex;align-items:center;justify-content:center;color:#faf6ec;font-size:20px;font-family:Georgia,serif;margin-bottom:28px">L</div>
@@ -4649,7 +4649,7 @@ function buildMailedEmail(o, toAddr, deliveryText) {
   const esc = s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   toAddr = esc(toAddr);
   return `
-<!DOCTYPE html><html lang="${L.htmlLang}">
+<!DOCTYPE html><html lang="${L.htmlLang}" data-theme="light">
 <body style="font-family:Georgia,serif;background:#ede5d3;padding:40px 20px;color:#2a2a2a;margin:0">
   <div style="max-width:520px;margin:0 auto;background:#faf6ec;border:1px solid rgba(42,42,42,0.12);padding:48px">
     <div style="width:38px;height:38px;background:#a8472d;display:inline-flex;align-items:center;justify-content:center;color:#faf6ec;font-size:20px;font-family:Georgia,serif;margin-bottom:28px">L</div>
@@ -4731,7 +4731,7 @@ function buildStatusPage(order) {
     : L.trackWait;
 
   return `<!DOCTYPE html>
-<html lang="${L.htmlLang}">
+<html lang="${L.htmlLang}" data-theme="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -4760,7 +4760,7 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:48px 36px 32px
 @media(max-width:768px){.nav-links{display:none}}
 @media(max-width:600px){nav,.main{padding-left:20px!important;padding-right:20px!important}.main{padding-top:40px!important;padding-bottom:80px!important}}
 </style>
-<script>(function(){try{var m=window.matchMedia('(prefers-color-scheme: dark)'),s=function(){document.documentElement.setAttribute('data-theme',m.matches?'dark':'light');};s();if(m.addEventListener)m.addEventListener('change',s);}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
+<script>(function(){try{var m=window.matchMedia('(prefers-color-scheme: dark)'),s=function(){document.documentElement.setAttribute('data-theme','light');};s();if(m.addEventListener)m.addEventListener('change',s);}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
 <link rel="stylesheet" href="/theme.css?v=30"><script src="/order-country.js?v=2"></script><link rel="stylesheet" href="/country-order.css?v=4">
 </head>
 <body>
@@ -4796,7 +4796,7 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:48px 36px 32px
 
 function buildStatusNotFound() {
   return `<!DOCTYPE html>
-<html lang="en-CA"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<html lang="en-CA" data-theme="light"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Not Found | Letterhome</title>
 <style>body{font-family:Georgia,serif;background:#ede5d3;color:#2a2a2a;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}
 .box{text-align:center;padding:40px}h1{font-size:32px;font-weight:400;margin-bottom:12px}p{color:#6b6258;margin-bottom:24px}

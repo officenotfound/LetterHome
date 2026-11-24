@@ -1833,7 +1833,7 @@ test('Spanish orders: the order remembers its language, and the status page and 
   db.prepare("UPDATE orders SET order_lang = 'es' WHERE stripe_session_id = ?").run(sid);
   const o = db.prepare('SELECT * FROM orders WHERE stripe_session_id = ?').get(sid);
   const page = await (await fetch(`${base}/status/${o.status_token}`)).text();
-  assert.match(page, /<html lang="es-US">/);
+  assert.match(page, /<html lang="es-US"/);
   assert.match(page, /Carta para María López/);
   assert.match(page, /Pedido recibido/);
   assert.doesNotMatch(page, /Order Received|Being Prepared|Letter to /);
