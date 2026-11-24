@@ -132,6 +132,7 @@ public class MainActivity extends Activity {
             ((DownloadManager) getSystemService(DOWNLOAD_SERVICE)).enqueue(q);
         });
 
+        web.setOverScrollMode(View.OVER_SCROLL_NEVER);   // no stretch: the fixed bottom bar must not move with the page
         web.setOnTouchListener((v, ev) -> {
             try {
                 if (ev.getAction() == MotionEvent.ACTION_DOWN) downY = web.getScrollY() == 0 ? ev.getY() : -1;
