@@ -137,7 +137,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         let un = UNUserNotificationCenter.current()
         un.delegate = self
         un.setNotificationCategories([UNNotificationCategory(identifier: "mailreply", actions: [UNTextInputNotificationAction(identifier: "reply", title: "Reply", options: [], textInputButtonTitle: "Send", textInputPlaceholder: "Reply")], intentIdentifiers: [], options: [])])
-        un.requestAuthorization(options: [.alert, .sound, .badge]) { _, _ in }
+        un.requestAuthorization(options: [.alert, .sound, .badge]) { _, _ in self.refreshNotifState() }
 
         showWindow(nil)
         startStream()
@@ -227,6 +227,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         }
         let head = NSMenuItem(title: lastBadge > 0 ? "\(lastBadge) unread" : "Nothing unread", action: nil, keyEquivalent: ""); head.isEnabled = false
         menu.addItem(head)
+        refreshNotifState()
+        for t in ["Live alerts: \(streamState)", "Notifications: \(notifState)"] { let r = NSMenuItem(title: t, action: nil, keyEquivalent: ""); r.isEnabled = false; menu.addItem(r) }
+        add("Send Test Notification", #selector(sendTestNotification))
+        if notifState.contains("Off") || notifState.contains("Banners") { add("Open Notification Settings…", #selector(openNotificationSettings)) }
         menu.addItem(.separator())
         add("Open Letterhome Admin", #selector(openFromMenu(_:)), "/admin")
         add("Orders", #selector(openFromMenu(_:)), "/admin/orders")
@@ -288,6 +292,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
     }
 
     // MARK: live alert connection (plain network stream, no web view)
+    var streamState = "Connecting…"
+    var notifState = "Checking…"
+    func refreshNotifState() {
+        UNUserNotificationCenter.current().getNotificationSettings { st in
+            let t: String
+            switch st.authorizationStatus {
+            case .authorized, .provisional, .ephemeral: t = st.alertSetting == .disabled ? "Banners are off in System Settings" : "On"
+            case .denied: t = "Off in System Settings"
+            default: t = "Not asked yet"
+            }
+            DispatchQueue.main.async { self.notifState = t }
+        }
+    }
+    @objc func sendTestNotification() {
+        notify("Test notification", "If you can read this, Mac alerts are working.", "/admin", loud: true)
+    }
+    @objc func openNotificationSettings() {
+        if let u = URL(string: "x-apple.systempreferences:com.apple.Notifications-Settings.extension") { NSWorkspace.shared.open(u) }
+    }
     func withCookies(_ done: @escaping (String?) -> Void) {
         let host = URL(string: HOST)!.host!
         WKWebsiteDataStore.default().httpCookieStore.getAllCookies { cs in
@@ -301,7 +324,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         withCookies { cookie in
             DispatchQueue.main.async {
                 guard !self.streamStopped, self.streamTask == nil else { return }
-                guard let cookie = cookie else { self.retryStream(); return }
+                guard let cookie = cookie else { self.streamState = "Sign in to the app to start live alerts"; self.retryStream(); return }
                 var comps = URLComponents(string: HOST + "/api/admin/events")!
                 if let s = self.defaults.string(forKey: "evSince") { comps.queryItems = [URLQueryItem(name: "since", value: s)] }
                 var req = URLRequest(url: comps.url!)
@@ -328,7 +351,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
     func urlSession(_ s: URLSession, dataTask: URLSessionDataTask, didReceive r: URLResponse, completionHandler: @escaping (URLSession.ResponseDisposition) -> Void) {
         streamCode = (r as? HTTPURLResponse)?.statusCode ?? 0
         completionHandler(streamCode == 200 ? .allow : .cancel)
-        if streamCode == 200 { backoff = 3; defaults.set(false, forKey: "signedOutShown") }
+        if streamCode == 200 { backoff = 3; streamState = "Connected"; defaults.set(false, forKey: "signedOutShown") }
     }
     func urlSession(_ s: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
         guard let t = String(data: data, encoding: .utf8) else { return }
@@ -346,7 +369,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
     func urlSession(_ s: URLSession, task: URLSessionTask, didCompleteWithError e: Error?) {
         guard task === streamTask else { return }
         DispatchQueue.main.async {
-            if self.streamCode == 401 || self.streamCode == 403 || (self.streamCode >= 300 && self.streamCode < 400) { self.liveEvent(["type": "signedout"]) }
+            if self.streamCode == 401 || self.streamCode == 403 || (self.streamCode >= 300 && self.streamCode < 400) { self.streamState = "Signed out, open the app and sign in"; self.liveEvent(["type": "signedout"]) }
+            else if self.streamCode != 200 { self.streamState = "Reconnecting…" }
             self.retryStream()
         }
     }

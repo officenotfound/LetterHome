@@ -2251,12 +2251,14 @@ function mailWhen(ms) { if (!ms) return ''; const d = new Date(ms), t = new Date
 function mailWho(s) { const m = String(s || '').match(/^\s*"?([^"<]*?)"?\s*<([^>]+)>\s*$/); return m ? (m[1].trim() || m[2]) : String(s || ''); }
 function mailAddr(s) { const m = String(s || '').match(/<([^>]+)>/); return (m ? m[1] : String(s || '')).trim(); }
 async function mailLoad(reset) {
-  if (MAIL.loading) return; MAIL.loading = true;
+  if (MAIL.loading && !reset) return;
+  const seq = MAIL.seq = (MAIL.seq || 0) + 1; MAIL.loading = true;   // a fresh load always wins, so a request that never came back can't leave the list blank
   const box = document.getElementById('ml-items'); if (!box) { MAIL.loading = false; return; }
   if (reset) { MAIL.msgs = []; MAIL.next = null; box.innerHTML = MAIL.cache[MAIL.box+'|'+MAIL.folderId] ? '' : MAILSK; if (MAIL.cache[MAIL.box+'|'+MAIL.folderId]) { MAIL.msgs = MAIL.cache[MAIL.box+'|'+MAIL.folderId]; mailRenderList(); } }
   const qs = new URLSearchParams({ folderId: MAIL.folderId, start: reset ? 1 : (MAIL.next || 1) });
   if (MAIL.q) qs.set('q', MAIL.q); if (MAIL.filter) qs.set('filter', MAIL.filter);
   const r = await api(`/api/admin/mail/${MAIL.box}/messages?${qs}`);
+  if (seq !== MAIL.seq) return;
   MAIL.loading = false;
   if (!r || r.error) { box.innerHTML = `<div class="ml-empty" style="color:#b42318">${esc((r && r.error) || 'Could not load.')}</div>`; return; }
   MAIL.msgs = reset ? r.messages : MAIL.msgs.concat(r.messages); MAIL.next = r.next;
