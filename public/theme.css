@@ -514,3 +514,13 @@ footer .ft-credit { opacity: 0.6; }
   footer .ft-credit { justify-self: end; }
   footer .footer-social { grid-column: 1 / -1; grid-row: 2; justify-self: center; }
 }
+
+/* Slimmer header (2026-11): shorter bar, smaller stamp */
+.nav-inner { height: 62px !important; }
+.logo-stamp .stamp-svg { width: 34px !important; height: 41px !important; }
+@media (min-width: 561px) { header .logo-stamp .stamp-svg { width: 34px !important; height: 41px !important; } }
+@media (max-width: 900px) { .nav-inner { height: 56px !important; } }
+@media (max-width: 480px) { .nav-inner { height: 52px !important; } }
+nav .nav-inner { padding-top: 4px !important; padding-bottom: 4px !important; min-height: 0 !important; }
+nav .logo, nav .logo-wordmark { line-height: 1 !important; }
+nav .logo-wordmark { font-size: 30px !important; }

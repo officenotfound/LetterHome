@@ -4761,11 +4761,11 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:48px 36px 32px
 @media(max-width:600px){nav,.main{padding-left:20px!important;padding-right:20px!important}.main{padding-top:40px!important;padding-bottom:80px!important}}
 </style>
 <script>(function(){try{var m=window.matchMedia('(prefers-color-scheme: dark)'),s=function(){document.documentElement.setAttribute('data-theme',m.matches?'dark':'light');};s();if(m.addEventListener)m.addEventListener('change',s);}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
-<link rel="stylesheet" href="/theme.css?v=24"><script src="/order-country.js?v=2"></script><link rel="stylesheet" href="/country-order.css?v=4">
+<link rel="stylesheet" href="/theme.css?v=26"><script src="/order-country.js?v=2"></script><link rel="stylesheet" href="/country-order.css?v=4">
 </head>
 <body>
 <div id="site-header"></div>
-<script src="/header.js?v=26"></script>
+<script src="/header.js?v=27"></script>
 <div class="main" style="max-width:580px;margin:0 auto;padding:64px 36px 100px">
   <div style="display:inline-flex;align-items:center;gap:10px;font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.18em;color:#a8472d;margin-bottom:20px">
     <span style="width:28px;height:1px;background:#a8472d;display:inline-block"></span>${L.order.replace(/\d+$/, '')}${esc(String(order.id))}
