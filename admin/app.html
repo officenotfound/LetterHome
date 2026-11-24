@@ -130,7 +130,7 @@ tr:hover td{background:#fafafa}
 .link:hover{text-decoration:underline}
 
 
-.badge{display:inline-flex;align-items:center;padding:3px 8px;border-radius:0;font-size:10px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;border:1px solid #111111;background:transparent;color:#111111;font-family:'DM Mono',ui-monospace,monospace}
+.badge{white-space:nowrap;display:inline-flex;align-items:center;padding:3px 8px;border-radius:0;font-size:10px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;border:1px solid #111111;background:transparent;color:#111111;font-family:'DM Mono',ui-monospace,monospace}
 .badge-gray{color:#6b6b6b;border-color:#9a9a9a}
 .badge-blue,.badge-amber,.badge-violet{color:#111111;border-color:#111111}
 .badge-green{color:#e63946;border-color:#e63946}
@@ -328,7 +328,7 @@ html[data-theme] body .link{color:var(--a-accent);font-weight:600}
 html[data-theme] body .empty{font:400 14px 'Noto Sans',sans-serif;text-transform:none;letter-spacing:0;color:var(--a-muted)}
 
 /* badges and tags */
-html[data-theme] body .badge{border:0;border-radius:999px;font:600 12px 'Noto Sans',sans-serif;text-transform:none;letter-spacing:0;padding:4px 11px;background:#eef1f5;color:#344054}
+html[data-theme] body .badge{white-space:nowrap;line-height:1.3;border:0;border-radius:999px;font:600 12px 'Noto Sans',sans-serif;text-transform:none;letter-spacing:0;padding:4px 11px;background:#eef1f5;color:#344054}
 html[data-theme] body .badge-gray{background:#eef1f5;color:#475467}
 html[data-theme] body .badge-blue{background:#e3effd;color:#1849a9}
 html[data-theme] body .badge-amber{background:#fdf0d5;color:#8a4b08}
@@ -708,10 +708,25 @@ function slaStart(o) {
   const sched = o.scheduled_date + ' 14:00:00';
   return String(o.created_at) > sched ? o.created_at : sched;
 }
-function schedLater(o) { return !!(o && o.scheduled_date && o.scheduled_date > new Date().toLocaleDateString('en-CA', { timeZone: 'America/Toronto' }) && !o.postgrid_letter_id) ? o.scheduled_date : ''; }
-function timeLeftHTML(createdAt, status, out, sched) {
-  if (sched && status !== 'mailed' && status !== 'delivered' && status !== 'awaiting_payment' && !out && sched > new Date().toLocaleDateString('en-CA', { timeZone: 'America/Toronto' }))
-    return `<span data-countdown-created="${createdAt}" data-countdown-status="${status}" data-sched="${sched}" style="color:#15803d;font-size:12px">Sends ${sched}</span>`;
+const torontoDay = () => new Date().toLocaleDateString('en-CA', { timeZone: 'America/Toronto' });
+// A paid order waiting for a future send date (its first letter, if any, was cancelled).
+function schedState(o) {
+  if (!o || o.status !== 'paid' || !o.scheduled_date || o.scheduled_date <= torontoDay()) return null;
+  if (o.postgrid_letter_id && o.postgrid_status !== 'cancelled') return null;
+  return { date: o.scheduled_date, approved: !!o.send_approved_at };
+}
+function schedLater(o) { const s = schedState(o); return s ? s.date : ''; }
+const niceDay = d => new Date(d + 'T12:00:00Z').toLocaleDateString('en-CA', { month: 'short', day: 'numeric', timeZone: 'UTC' });
+// Status pill for a whole order: a scheduled order says so, instead of a plain "Paid".
+function orderBadge(o) {
+  const s = schedState(o);
+  if (!s) return statusBadge(o.status);
+  return s.approved ? `<span class="badge badge-green" title="Approved. Goes to print automatically on ${esc(s.date)}">Scheduled ${niceDay(s.date)}</span>`
+    : `<span class="badge badge-amber" title="Scheduled for ${esc(s.date)}. Approve it to send then">Approve for ${niceDay(s.date)}</span>`;
+}
+function timeLeftHTML(createdAt, status, out, sched, approved) {
+  if (sched && status !== 'mailed' && status !== 'delivered' && status !== 'awaiting_payment' && !out && sched > torontoDay())
+    return `<span data-countdown-created="${createdAt}" data-countdown-status="${status}" data-sched="${sched}" data-appr="${approved ? 1 : 0}" style="color:${approved ? '#15803d' : '#92400e'};font-size:12px;white-space:nowrap">${approved ? 'Sends ' + niceDay(sched) : 'Needs approval'}</span>`;
   if (out && status !== 'mailed' && status !== 'delivered' && status !== 'awaiting_payment')
     return `<span data-countdown-created="${createdAt}" data-countdown-status="${status}" data-out="1" style="color:#6b6b6b;font-size:12px">With the printer</span>`;
   if (status === 'mailed' || status === 'delivered')
@@ -734,11 +749,10 @@ function timeLeftHTML(createdAt, status, out, sched) {
   return `<span data-countdown-created="${createdAt}" data-countdown-status="${status}" style="color:${color};font-weight:600;font-size:12px">${text}</span>`;
 }
 
-function slaBanner(createdAt, status, out, sched) {
+function slaBanner(createdAt, status, out, sched, approved) {
   if (out) return '';
-  if (sched && status !== 'mailed' && status !== 'delivered' && status !== 'awaiting_payment' && sched > new Date().toLocaleDateString('en-CA', { timeZone: 'America/Toronto' }))
-    return `<div data-sla-created="${createdAt}" data-sla-status="${status}" data-sched="${sched}" style="background:#f0fdf4;color:#166534;padding:14px 20px;margin-bottom:20px;font-size:14px"><strong>Scheduled.</strong> The customer chose ${sched} as the send date, so the 24-hour clock starts then.</div>`;
-  if (status === 'mailed' || status === 'delivered' || status === 'awaiting_payment') return '';
+  if (sched && status !== 'mailed' && status !== 'delivered' && status !== 'awaiting_payment' && sched > torontoDay())
+    return `<div data-sla-created="${createdAt}" data-sla-status="${status}" data-sched="${sched}" data-appr="${approved ? 1 : 0}" style="background:${approved ? '#f0fdf4' : '#fffbeb'};color:${approved ? '#166534' : '#92400e'};padding:14px 20px;margin-bottom:20px;font-size:14px"><strong>${approved ? 'Approved and scheduled.' : 'Scheduled, not approved yet.'}</strong> ${approved ? 'It goes to print automatically on ' + sched + '. No action is needed.' : 'The customer chose ' + sched + '. Approve it below and it goes to print that day.'} The 24-hour clock starts on that day.</div>`;
   const ck = LHSla.clock(parseDbDate(createdAt).getTime(), Date.now());
   const remaining = ck.deadline - Date.now();
   const h = Math.floor(Math.abs(remaining) / 3600000);
@@ -762,14 +776,14 @@ function startCountdownTicker() {
       const created = el.dataset.countdownCreated;
       const status  = el.dataset.countdownStatus;
       const tmp = document.createElement('div');
-      tmp.innerHTML = timeLeftHTML(created, status, el.dataset.out === '1', el.dataset.sched || '');
+      tmp.innerHTML = timeLeftHTML(created, status, el.dataset.out === '1', el.dataset.sched || '', el.dataset.appr === '1');
       el.replaceWith(tmp.firstElementChild);
     });
     document.querySelectorAll('[data-sla-created]').forEach(el => {
       const created = el.dataset.slaCreated;
       const status  = el.dataset.slaStatus;
       const tmp = document.createElement('div');
-      tmp.innerHTML = slaBanner(created, status, el.dataset.out === '1', el.dataset.sched || '');
+      tmp.innerHTML = slaBanner(created, status, el.dataset.out === '1', el.dataset.sched || '', el.dataset.appr === '1');
       if (tmp.firstElementChild) el.replaceWith(tmp.firstElementChild);
     });
   }, 60000);
@@ -838,10 +852,10 @@ function renderDashboard(stats, paidOrders, submittedOrders, chartData, geoData,
       <td>${fmtDateTime(o.created_at)}${siteTag(o)}</td>
       <td>${esc(o.recipient_name)}</td>
       <td>${o.destination_country || '—'}</td>
-      <td>${statusBadge(o.status)}</td>
-      <td>${(window._schedApproved || {})[o.id] ? `<span style="color:#15803d;font-size:12px">Approved, sends ${esc(window._schedApproved[o.id])}</span>` : timeLeftHTML(slaStart(o), o.status, handedOff(o), schedLater(o))}</td>
+      <td>${orderBadge(o)}</td>
+      <td>${timeLeftHTML(slaStart(o), o.status, handedOff(o), schedLater(o), !!o.send_approved_at)}</td>
       <td>${fmtCharged(o)}</td>
-      <td><button class="btn btn-primary btn-sm" onclick="go('/admin/orders/${o.id}')">Action →</button></td>
+      <td><button class="btn ${(schedState(o) || {}).approved ? 'btn-outline' : 'btn-primary'} btn-sm" onclick="go('/admin/orders/${o.id}')">${(schedState(o) || {}).approved ? 'View' : 'Action →'}</button></td>
     </tr>`).join('');
 
   const seg = stats.segments || {};
@@ -1068,8 +1082,8 @@ function renderOrdersTable() {
       <td>${fmtDateTime(o.created_at)}${siteTag(o)}</td>
       <td>${esc(o.recipient_name)}${(() => { const f = contentFlags(o); return f && (f.hits || []).length && !o.content_cleared_at ? '<div><span class="badge badge-red" style="margin-top:3px">FLAGGED: ' + esc(f.hits.map(h => h.label).join(', ')) + '</span></div>' : ''; })()}${o.postgrid_error !== undefined ? `<div style="font-size:12px;color:#b42318;margin-top:3px;max-width:360px;line-height:1.4">${esc((o.postgrid_error || 'Waiting for your approval: check the letter, then Send via PostGrid').replace(/^(MANUAL|RETRY): /, ''))}</div>` : ''}</td>
       <td>${esc(o.recipient_city||'')}${o.recipient_city&&o.destination_country?', ':''}${o.destination_country||''}</td>
-      <td>${statusBadge(o.status)}</td>
-      <td>${timeLeftHTML(slaStart(o), o.status, handedOff(o), schedLater(o))}</td>
+      <td>${orderBadge(o)}</td>
+      <td>${timeLeftHTML(slaStart(o), o.status, handedOff(o), schedLater(o), !!o.send_approved_at)}</td>
       <td>${fmtCharged(o)}</td>
       <td><button class="link" onclick="go('/admin/orders/${o.id}')">View →</button></td>
     </tr>`).join('');
@@ -1542,7 +1556,7 @@ async function showOrder(id) {
     <div class="page-header">
       <div class="page-title">Order #${o.id}</div>
       <div style="display:flex;align-items:center;gap:12px">
-        ${statusBadge(o.status)}
+        ${orderBadge(o)}
         <button class="btn btn-outline btn-sm" onclick="toggleMessageForm(${o.id})">Message Customer</button>
         <button class="btn btn-outline btn-sm" onclick="deleteOrder(${o.id})">Move to Trash</button>
       </div>
@@ -1570,7 +1584,7 @@ async function showOrder(id) {
         <div class="email-hist"><div style="font-size:12px;color:#777;margin-bottom:4px;text-transform:uppercase;letter-spacing:.08em">Emails sent for this order</div><div id="msg-history"><div class="notif-empty" style="padding:6px 0">Loading…</div></div></div>
       </div>
     </div>
-    ${slaBanner(slaStart(o), o.status, handedOff(o), schedLater(o))}
+    ${slaBanner(slaStart(o), o.status, handedOff(o), schedLater(o), !!o.send_approved_at)}
     <div class="detail-grid">
       <div class="detail-card">
         <div class="detail-card-title">From</div>

@@ -2428,8 +2428,9 @@ app.get('/api/admin/orders', requireAdmin, (req, res) => {
     return res.json(db.prepare(`SELECT id, stripe_session_id, customer_email, recipient_name, recipient_street, recipient_city, recipient_province, recipient_postal,
         destination_country, letter_type, attachment_info, price_cents, charge_currency, charge_cents, order_site, order_region, status, status_token, created_at, recovery_sent_at, postgrid_error, postgrid_mode, postgrid_letter_id, scheduled_date, send_approved_at, content_flags, content_cleared_at
       FROM orders WHERE status = 'paid' AND deleted_at IS NULL
-        AND (postgrid_letter_id IS NULL OR postgrid_mode = 'test')      -- every paid order waits for the owner's approval
-      ORDER BY created_at`).all().map(o => o.postgrid_mode === 'test' && !o.postgrid_error ? { ...o, postgrid_error: 'Only a TEST letter exists (not mailed). Clear it and send for real.' } : o));
+        AND (postgrid_letter_id IS NULL OR postgrid_mode = 'test' OR postgrid_status = 'cancelled')      -- every paid order waits for the owner's approval
+        AND NOT (send_approved_at IS NOT NULL AND scheduled_date IS NOT NULL AND scheduled_date > ?)     -- unless it is approved and waiting for its send date
+      ORDER BY created_at`).all(torontoToday()).map(o => o.postgrid_mode === 'test' && !o.postgrid_error ? { ...o, postgrid_error: 'Only a TEST letter exists (not mailed). Clear it and send for real.' } : o));
   }
   const rows = status
     ? db.prepare("SELECT id, stripe_session_id, customer_email, recipient_name, recipient_street, recipient_city, recipient_province, recipient_postal, destination_country, letter_type, attachment_info, price_cents, charge_currency, charge_cents, order_site, order_region, postgrid_letter_id, scheduled_date, send_approved_at, postgrid_mode, postgrid_status, status, status_token, created_at, recovery_sent_at, content_flags, content_cleared_at FROM orders WHERE status = ? AND deleted_at IS NULL ORDER BY created_at DESC").all(status)
@@ -2547,7 +2548,8 @@ app.get('/api/admin/postgrid/status', requireAdmin, (req, res) => {
     countries: postgrid.countries(),
     in_flight: db.prepare("SELECT COUNT(*) n FROM orders WHERE postgrid_letter_id IS NOT NULL AND COALESCE(postgrid_status,'') NOT IN ('completed','cancelled')").get().n,
     needs_manual: db.prepare(`SELECT COUNT(*) n FROM orders WHERE status = 'paid' AND deleted_at IS NULL
-      AND (postgrid_letter_id IS NULL OR postgrid_mode = 'test')`).get().n,
+      AND (postgrid_letter_id IS NULL OR postgrid_mode = 'test')
+      AND NOT (send_approved_at IS NOT NULL AND scheduled_date IS NOT NULL AND scheduled_date > ?)`).get(torontoToday()).n,
   });
 });
 
