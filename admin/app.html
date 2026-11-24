@@ -1715,6 +1715,10 @@ let _notifItems = [];
 let _notifSince = null;
 let _notifFirst = true;
 
+const NOTIF_READ_KEY = 'lh-admin-notif-read';   // notifications clicked one by one
+let _notifUnreadContacts = 0;
+function readKeys() { try { return new Set(JSON.parse(localStorage.getItem(NOTIF_READ_KEY) || '[]')); } catch { return new Set(); } }
+function writeKeys(set) { try { localStorage.setItem(NOTIF_READ_KEY, JSON.stringify([...set].slice(-300))); } catch {} }
 function readSeen() { try { return localStorage.getItem(NOTIF_KEY); } catch { return null; } }
 function writeSeen(v) { try { localStorage.setItem(NOTIF_KEY, v); } catch {} }
 
@@ -1740,7 +1744,12 @@ function renderNotifs(unreadContacts) {
 function openNotif(i) {
   const it = _notifItems[i];
   document.getElementById('notif-panel').style.display = 'none';
-  if (it) go(it.path);
+  if (!it) return;
+  // Clicking one marks just that one as read; the rest stay until they are clicked or "Mark all read" is used.
+  const keys = readKeys(); keys.add(it.key); writeKeys(keys);
+  _notifItems = _notifItems.filter(x => x.key !== it.key);
+  renderNotifs(_notifUnreadContacts);
+  go(it.path);
 }
 
 function toggleNotifPanel() {
@@ -1753,7 +1762,8 @@ function toggleNotifPanel() {
 
 function markNotifsRead() {
   if (_notifSince) writeSeen(_notifSince);
-  _notifItems = []; renderNotifs(0);
+  try { localStorage.removeItem(NOTIF_READ_KEY); } catch {}   // everything before now is read, so the single-item list can start over
+  _notifItems = []; renderNotifs(_notifUnreadContacts);
   document.getElementById('notif-panel').style.display = 'none';
 }
 
@@ -1768,15 +1778,18 @@ async function pollNotifications() {
     html: `<strong>New order #${o.id}</strong> · $${(o.price_cents / 100).toFixed(2)} CAD<br>${esc(o.recipient_name || '')} (${esc(o.destination_country || '')})`, when: fmtDateTime(o.paid_at) }));
   (seen ? d.contacts : []).forEach(c => items.push({ key: 'c' + c.id, path: '/admin/contacts',
     html: `<strong>Message from ${esc(c.name)}</strong><br>${esc(c.preview)}`, when: fmtDateTime(c.created_at) }));
+  const readNow = readKeys();
+  const unreadItems = items.filter(i => !readNow.has(i.key));
   const known = new Set(_notifItems.map(i => i.key));
-  const fresh = items.filter(i => !known.has(i.key));
-  _notifItems = items;
+  const fresh = unreadItems.filter(i => !known.has(i.key));
+  _notifItems = unreadItems;
   if (!_notifFirst) fresh.forEach(i => {
     const plain = i.html.replace(/<br>/g, ' · ').replace(/<[^>]+>/g, '');
     showToast(plain, () => go(i.path));
     try { if ('Notification' in window && Notification.permission === 'granted' && document.hidden) new Notification('Letterhome', { body: plain }); } catch {}
   });
   _notifFirst = false;
+  _notifUnreadContacts = d.unreadContacts;
   renderNotifs(d.unreadContacts);
 }
 
