@@ -765,7 +765,6 @@ html.mac-app ::-webkit-scrollbar{width:0;height:0}
           <div class="notif-foot" id="notif-foot"></div>
         </div>
       </div>
-      <button class="twofa-badge" id="twofa-badge" onclick="showToast('This server has no 2FA code set for your account, so sign-in only asks for a password.')" title="No 2FA code is set for this account on the server" aria-label="No 2FA code is set for this account"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 5 6v6c0 4.5 3 7.5 7 9 4-1.5 7-4.5 7-9V6z"/><path d="M12 8.5v4"/><path d="M12 15.6v.01"/></svg></button>
       <div class="topbar-user" id="topbar-user"></div>
     </div>
   </div>
@@ -785,7 +784,6 @@ async function init() {
   _csrfToken = me.csrfToken || null;
   currentUser = me.username;
   document.getElementById('topbar-user').textContent = me.username;
-  if (!me.has2FA) document.getElementById('twofa-badge').style.display = 'inline-flex';
   if (me.deploy) {
     const bootAgo = Math.round((Date.now() - new Date(me.deploy.bootAt).getTime()) / 60000);
     const bootStr = bootAgo < 60 ? bootAgo + 'm ago' : Math.round(bootAgo / 60) + 'h ago';
