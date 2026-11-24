@@ -56,10 +56,29 @@ public class MainActivity extends Activity {
         @JavascriptInterface public void setQuiet(boolean on, int start, int end) {
             getSharedPreferences("ui", MODE_PRIVATE).edit().putBoolean("quiet_on", on).putInt("quiet_start", Math.max(0, Math.min(23, start))).putInt("quiet_end", Math.max(0, Math.min(23, end))).apply();
         }
+        /** The page tells the app its top and bottom colours so the system bars blend in (and get light or dark icons). */
+        @JavascriptInterface public void setChrome(String top, String bottom) {
+            try { final int t = Color.parseColor(top), b = Color.parseColor(bottom); runOnUiThread(() -> applyChrome(t, b)); } catch (Throwable ignored) { }
+        }
         @JavascriptInterface public void setLock(boolean on) { getSharedPreferences("ui", MODE_PRIVATE).edit().putBoolean("lock_on", on).apply(); }
     }
     private String BuildConfigVersion() { try { return getPackageManager().getPackageInfo(getPackageName(), 0).versionName; } catch (Throwable e) { return ""; } }
     private boolean secure() { try { return ((KeyguardManager) getSystemService(KEYGUARD_SERVICE)).isDeviceSecure(); } catch (Throwable e) { return false; } }
+
+    private View topStrip, bottomStrip;
+    private void applyChrome(int top, int bottom) {
+        if (topStrip == null) return;
+        topStrip.setBackgroundColor(top); bottomStrip.setBackgroundColor(bottom);
+        ((FrameLayout) topStrip.getParent()).setBackgroundColor(top);
+        if (android.os.Build.VERSION.SDK_INT >= 30) {
+            android.view.WindowInsetsController c = getWindow().getInsetsController();
+            if (c != null) {
+                c.setSystemBarsAppearance(isLight(top) ? android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS : 0, android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS);
+                c.setSystemBarsAppearance(isLight(bottom) ? android.view.WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS : 0, android.view.WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS);
+            }
+        }
+    }
+    private static boolean isLight(int c) { return (0.299 * Color.red(c) + 0.587 * Color.green(c) + 0.114 * Color.blue(c)) > 160; }
 
     @Override protected void onCreate(Bundle b) {
         super.onCreate(b);
@@ -96,12 +115,21 @@ public class MainActivity extends Activity {
         FrameLayout.LayoutParams ilp = new FrameLayout.LayoutParams((int) (40 * dp), (int) (40 * dp)); ilp.gravity = android.view.Gravity.TOP | android.view.Gravity.CENTER_HORIZONTAL;
         root.addView(ind, ilp);
         ind.setTranslationY(-48 * dp);
+        topStrip = new View(this); bottomStrip = new View(this);
+        topStrip.setBackgroundColor(Color.parseColor("#17293d")); bottomStrip.setBackgroundColor(Color.parseColor("#17293d"));
+        root.addView(topStrip, new FrameLayout.LayoutParams(-1, 0, android.view.Gravity.TOP));
+        root.addView(bottomStrip, new FrameLayout.LayoutParams(-1, 0, android.view.Gravity.BOTTOM));
         setContentView(root);
         if (android.os.Build.VERSION.SDK_INT >= 30) {
             // Android 15+ draws edge to edge: pad for status bar, nav bar, camera cutout and keyboard ourselves.
             root.setOnApplyWindowInsetsListener((v, wi) -> {
                 android.graphics.Insets i = wi.getInsets(android.view.WindowInsets.Type.systemBars() | android.view.WindowInsets.Type.displayCutout() | android.view.WindowInsets.Type.ime());
                 v.setPadding(i.left, i.top, i.right, i.bottom);
+                // the coloured strips sit behind the status bar and the gesture bar; the page sits between them
+                topStrip.getLayoutParams().height = i.top; bottomStrip.getLayoutParams().height = i.bottom;
+                topStrip.setTranslationX(-i.left); bottomStrip.setTranslationX(-i.left);
+                topStrip.getLayoutParams().width = v.getWidth(); bottomStrip.getLayoutParams().width = v.getWidth();
+                topStrip.requestLayout(); bottomStrip.requestLayout();
                 return android.view.WindowInsets.CONSUMED;
             });
             root.requestApplyInsets();

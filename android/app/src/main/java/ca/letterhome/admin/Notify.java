@@ -64,6 +64,7 @@ final class Notify {
             Notification.Builder b = Build.VERSION.SDK_INT >= 26 ? new Notification.Builder(c, channel) : new Notification.Builder(c);
             b.setSmallIcon(R.drawable.ic_stat).setContentTitle(title).setContentText(text)
                     .setStyle(new Notification.BigTextStyle().bigText(text)).setContentIntent(pi).setAutoCancel(true);
+            b.setColor(0xFFC4202B).setCategory(order ? Notification.CATEGORY_EVENT : Notification.CATEGORY_MESSAGE).setShowWhen(true);
             if (Build.VERSION.SDK_INT < 26) b.setPriority(order ? Notification.PRIORITY_HIGH : Notification.PRIORITY_DEFAULT);
             // the number on the app icon: how many alerts are waiting
             try { b.setNumber(nm.getActiveNotifications().length + 1); } catch (Throwable ignored) { }

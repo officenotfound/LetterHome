@@ -678,6 +678,10 @@ html[data-theme] body .sidebar-footer small,html[data-theme] body .sidebar-foote
 }
 @media(min-width:601px) and (max-width:860px){html[data-theme] body .topbar{display:grid;grid-template-columns:1fr auto 1fr}html[data-theme] body .topbar-title{grid-column:2;text-align:center}}
 html[data-theme] body .topbar>*{grid-row:1}
+/* Tile rows: wrap and stretch so every row is full, with no gap on the right at any width. */
+html[data-theme] body .need-strip,html[data-theme] body .dash-grid-5,html[data-theme] body .stat-grid,html[data-theme] body .stats-grid{display:flex!important;flex-wrap:wrap;gap:12px}
+html[data-theme] body .need-strip>*,html[data-theme] body .dash-grid-5>*,html[data-theme] body .stat-grid>*,html[data-theme] body .stats-grid>*{flex:1 1 150px;min-width:0;grid-column:auto!important}
+@media(min-width:601px) and (max-width:860px){html[data-theme] body .need-strip>*{flex-basis:200px}}
 html[data-theme] body .subtabs{justify-content:center}
 @media(min-width:601px) and (max-width:860px){html[data-theme] body .need-strip{grid-template-columns:repeat(5,minmax(0,1fr))}html[data-theme] body .need-chip{padding:14px 6px;font-size:12px}}
 html[data-theme] body .need-chip{flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center;padding:16px 12px}
@@ -4830,11 +4834,25 @@ async function deleteOrder(id) {
   go('/admin/orders');
 }
 
+// Phone app: tell the app the top and bottom colours so the system bars blend in with the page.
+function syncChrome() {
+  try {
+    if (!(window.LHApp && window.LHApp.setChrome)) return;
+    const px = c => { const k = document.createElement('canvas').getContext('2d'); k.fillStyle = '#17293d'; k.fillStyle = c; k.fillRect(0, 0, 1, 1); const d = k.getImageData(0, 0, 1, 1).data; return '#' + [d[0], d[1], d[2]].map(v => v.toString(16).padStart(2, '0')).join(''); };
+    const tb = document.querySelector('.topbar'), mt = document.querySelector('.mob-tabs');
+    const top = px(getComputedStyle(tb || document.body).backgroundColor);
+    const bot = mt && getComputedStyle(mt).display !== 'none' ? px(getComputedStyle(mt).backgroundColor) : px(getComputedStyle(document.body).backgroundColor);
+    window.LHApp.setChrome(top, bot);
+  } catch (e) { }
+}
+window.addEventListener('load', () => setTimeout(syncChrome, 300));
+window.addEventListener('resize', () => setTimeout(syncChrome, 200));
 function toggleAdminTheme() {
   const cur = document.documentElement.getAttribute('data-theme');
   const next = cur === 'dark' ? 'light' : 'dark';
   document.documentElement.setAttribute('data-theme', next);
   try { localStorage.setItem('lh-admin-theme', next); } catch {}
+  setTimeout(syncChrome, 120);
 }
 
 async function showStripe() {
