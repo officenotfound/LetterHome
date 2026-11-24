@@ -962,7 +962,9 @@ async function slaAlerts() {
         -- live PostGrid letters run on PostGrid's own 2-business-day clock; the 15-minute sync tracks them
         AND NOT (postgrid_mode = 'live' AND COALESCE(postgrid_status, '') != 'cancelled')
     `).all().filter(o => {
-      const created = Date.parse(String(o.created_at).replace(' ', 'T') + (/Z|[+-]\d\d:?\d\d$/.test(o.created_at) ? '' : 'Z'));
+      let created = Date.parse(String(o.created_at).replace(' ', 'T') + (/Z|[+-]\d\d:?\d\d$/.test(o.created_at) ? '' : 'Z'));
+      // A scheduled order's 24 hours start on its send date (9 a.m. Eastern), not when it was placed.
+      if (o.scheduled_date) { const sched = Date.parse(o.scheduled_date + 'T14:00:00Z'); if (Number.isFinite(sched) && sched > created) created = sched; }
       return Number.isFinite(created) && SlaClock.clock(created, now).deadline - 4 * 3600000 < now;
     });
     if (overdue.length) {
@@ -2424,14 +2426,14 @@ app.get('/api/admin/orders', requireAdmin, (req, res) => {
   // "Needs you": paid orders not yet sent to PostGrid for real (waiting for approval, refused, or only a test letter).
   if (status === 'needs_you') {
     return res.json(db.prepare(`SELECT id, stripe_session_id, customer_email, recipient_name, recipient_street, recipient_city, recipient_province, recipient_postal,
-        destination_country, letter_type, attachment_info, price_cents, charge_currency, charge_cents, order_site, order_region, status, status_token, created_at, recovery_sent_at, postgrid_error, postgrid_mode, content_flags, content_cleared_at
+        destination_country, letter_type, attachment_info, price_cents, charge_currency, charge_cents, order_site, order_region, status, status_token, created_at, recovery_sent_at, postgrid_error, postgrid_mode, postgrid_letter_id, scheduled_date, send_approved_at, content_flags, content_cleared_at
       FROM orders WHERE status = 'paid' AND deleted_at IS NULL
         AND (postgrid_letter_id IS NULL OR postgrid_mode = 'test')      -- every paid order waits for the owner's approval
       ORDER BY created_at`).all().map(o => o.postgrid_mode === 'test' && !o.postgrid_error ? { ...o, postgrid_error: 'Only a TEST letter exists (not mailed). Clear it and send for real.' } : o));
   }
   const rows = status
-    ? db.prepare("SELECT id, stripe_session_id, customer_email, recipient_name, recipient_street, recipient_city, recipient_province, recipient_postal, destination_country, letter_type, attachment_info, price_cents, charge_currency, charge_cents, order_site, order_region, postgrid_letter_id, postgrid_mode, postgrid_status, status, status_token, created_at, recovery_sent_at, content_flags, content_cleared_at FROM orders WHERE status = ? AND deleted_at IS NULL ORDER BY created_at DESC").all(status)
-    : db.prepare("SELECT id, stripe_session_id, customer_email, recipient_name, recipient_street, recipient_city, recipient_province, recipient_postal, destination_country, letter_type, attachment_info, price_cents, charge_currency, charge_cents, order_site, order_region, postgrid_letter_id, postgrid_mode, postgrid_status, status, status_token, created_at, recovery_sent_at, content_flags, content_cleared_at FROM orders WHERE deleted_at IS NULL ORDER BY created_at DESC").all();
+    ? db.prepare("SELECT id, stripe_session_id, customer_email, recipient_name, recipient_street, recipient_city, recipient_province, recipient_postal, destination_country, letter_type, attachment_info, price_cents, charge_currency, charge_cents, order_site, order_region, postgrid_letter_id, scheduled_date, send_approved_at, postgrid_mode, postgrid_status, status, status_token, created_at, recovery_sent_at, content_flags, content_cleared_at FROM orders WHERE status = ? AND deleted_at IS NULL ORDER BY created_at DESC").all(status)
+    : db.prepare("SELECT id, stripe_session_id, customer_email, recipient_name, recipient_street, recipient_city, recipient_province, recipient_postal, destination_country, letter_type, attachment_info, price_cents, charge_currency, charge_cents, order_site, order_region, postgrid_letter_id, scheduled_date, send_approved_at, postgrid_mode, postgrid_status, status, status_token, created_at, recovery_sent_at, content_flags, content_cleared_at FROM orders WHERE deleted_at IS NULL ORDER BY created_at DESC").all();
   res.json(rows);
 });
 
