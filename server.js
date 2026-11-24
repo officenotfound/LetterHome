@@ -2132,11 +2132,16 @@ app.post('/api/track', trackLimiter, (req, res) => {
     return res.status(429).json({ error: 'Too many failed attempts. Please try again in an hour or contact support.' });
   }
 
-  const ref = String(order_id).toUpperCase().replace(/[^A-Z0-9]/g, '').replace(/^LH/, '');
+  const raw = String(order_id).trim();
+  const ref = raw.toUpperCase().replace(/[^A-Z0-9]/g, '').replace(/^LH/, '');
   const refKey = ref.length === 8 ? 'LH-' + ref.slice(0, 4) + '-' + ref.slice(4) : '';
-  const order = refKey ? db.prepare(
-    "SELECT * FROM orders WHERE public_ref = ? AND customer_email = ? AND status != 'awaiting_payment'"
-  ).get(refKey, normalizedEmail) : null;
+  let order = null;
+  if (refKey) {
+    order = db.prepare("SELECT * FROM orders WHERE public_ref = ? AND customer_email = ? AND status != 'awaiting_payment'").get(refKey, normalizedEmail);
+  } else if (/^#?\d{1,9}$/.test(raw)) {
+    // Old orders (placed before references existed) still work with the number from their old emails.
+    order = db.prepare("SELECT * FROM orders WHERE id = ? AND legacy_number_ok = 1 AND customer_email = ? AND status != 'awaiting_payment'").get(Number(raw.replace('#', '')), normalizedEmail);
+  }
 
   if (!order) {
     recordTrackFailure(normalizedEmail);

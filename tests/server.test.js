@@ -473,7 +473,11 @@ test('POST /api/track returns order data for valid email + order_id', async () =
   assert.match(row.public_ref, /^LH-[0-9A-F]{4}-[0-9A-F]{4}$/);
 
   const numeric = await fetch(`${base}/api/track`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: 'track@example.com', order_id: row.id }) });
-  assert.equal(numeric.status, 404, 'the sequential number no longer works for customers');
+  assert.equal(numeric.status, 404, 'new orders cannot be looked up by the sequential number');
+  db.prepare('UPDATE orders SET legacy_number_ok = 1 WHERE id = ?').run(row.id);
+  const legacy = await fetch(`${base}/api/track`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: 'track@example.com', order_id: '#' + row.id }) });
+  assert.equal(legacy.status, 200, 'orders from before references keep working with their number');
+  db.prepare('UPDATE orders SET legacy_number_ok = 0 WHERE id = ?').run(row.id);
 
   const res  = await fetch(`${base}/api/track`, {
     method:  'POST',

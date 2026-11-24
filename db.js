@@ -90,6 +90,9 @@ try { db.exec(`ALTER TABLE orders ADD COLUMN estimated_delivery TEXT`);   } catc
 try { db.exec(`ALTER TABLE orders ADD COLUMN status_token TEXT`);         } catch {}
 // Customer-facing order reference (LH-XXXX-XXXX). The sequential id stays admin-only.
 try { db.exec(`ALTER TABLE orders ADD COLUMN public_ref TEXT`);           } catch {}
+// Orders that existed before references were introduced keep working with their number on the track page.
+try { db.exec(`ALTER TABLE orders ADD COLUMN legacy_number_ok INTEGER DEFAULT 0`); } catch {}
+try { db.exec(`UPDATE orders SET legacy_number_ok = 1 WHERE public_ref IS NULL`); } catch {}
 try {
   const refExpr = "'LH-' || substr(upper(hex(randomblob(4))),1,4) || '-' || substr(upper(hex(randomblob(4))),5,4)";
   db.exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_orders_public_ref ON orders(public_ref)`);
