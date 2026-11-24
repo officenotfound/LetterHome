@@ -682,6 +682,7 @@ html[data-theme] body .topbar>*{grid-row:1}
 html[data-theme] body .need-strip,html[data-theme] body .dash-grid-5,html[data-theme] body .stat-grid,html[data-theme] body .stats-grid{display:flex!important;flex-wrap:wrap;gap:12px}
 html[data-theme] body .need-strip>*,html[data-theme] body .dash-grid-5>*,html[data-theme] body .stat-grid>*,html[data-theme] body .stats-grid>*{flex:1 1 150px;min-width:0;grid-column:auto!important}
 @media(min-width:601px) and (max-width:860px){html[data-theme] body .need-strip>*{flex-basis:200px}}
+.today-actions{display:flex;gap:8px;flex-wrap:wrap}.today-actions .btn{flex:1 1 200px;justify-content:center;text-align:center;white-space:normal}
 html[data-theme] body .subtabs{justify-content:center}
 @media(min-width:601px) and (max-width:860px){html[data-theme] body .need-strip{grid-template-columns:repeat(5,minmax(0,1fr))}html[data-theme] body .need-chip{padding:14px 6px;font-size:12px}}
 html[data-theme] body .need-chip{flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center;padding:16px 12px}
@@ -1558,7 +1559,7 @@ async function loadTodayCard() {
   const counts = `${d.business_requests ? `<button class="btn btn-primary btn-sm" onclick="go('/admin/businesses')">${d.business_requests} new business request${d.business_requests > 1 ? 's' : ''}</button> ` : ''}<button class="btn btn-outline btn-sm" onclick="go('/admin/approvals')">${d.approvals_waiting} waiting for approval</button> ${d.held ? `<button class="btn btn-outline btn-sm" onclick="go('/admin/approvals')">${d.held} held for content</button>` : ''} <button class="btn btn-outline btn-sm" onclick="go('/admin/print-queue')">Print queue and calendar</button>`;
   box.innerHTML = `<div class="card" style="margin-bottom:20px"><div class="card-header"><div class="card-title">Today</div></div><div style="padding:14px 20px">
     ${parts || '<div style="font-size:13px;color:#15803d;margin-bottom:12px">Nothing is stuck and nothing is due. You are caught up.</div>'}
-    <div style="display:flex;gap:8px;flex-wrap:wrap">${counts}</div></div></div>`;
+    <div class="today-actions">${counts}</div></div></div>`;
 }
 
 async function saveSendDate(id, remove) {

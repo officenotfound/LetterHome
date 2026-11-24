@@ -44,10 +44,29 @@ final class LockView: NSView {
         stack.spacing = 14
         stack.setCustomSpacing(26, after: sub)
         stack.translatesAutoresizingMaskIntoConstraints = false
-        addSubview(stack)
+        let pad = NSView(); pad.translatesAutoresizingMaskIntoConstraints = false
+        pad.addSubview(stack)
+        NSLayoutConstraint.activate([stack.leadingAnchor.constraint(equalTo: pad.leadingAnchor, constant: 56), stack.trailingAnchor.constraint(equalTo: pad.trailingAnchor, constant: -56),
+                                     stack.topAnchor.constraint(equalTo: pad.topAnchor, constant: 44), stack.bottomAnchor.constraint(equalTo: pad.bottomAnchor, constant: -40)])
+        var card: NSView = pad
+        if #available(macOS 26.0, *) {      // Liquid Glass card on the newest macOS
+            let g = NSGlassEffectView()
+            g.contentView = pad
+            g.cornerRadius = 28
+            g.tintColor = NSColor.white.withAlphaComponent(0.06)
+            card = g
+        } else {
+            let v = NSVisualEffectView(); v.material = .hudWindow; v.blendingMode = .withinWindow; v.state = .active
+            v.wantsLayer = true; v.layer?.cornerRadius = 24; v.layer?.masksToBounds = true
+            v.addSubview(pad)
+            NSLayoutConstraint.activate([pad.leadingAnchor.constraint(equalTo: v.leadingAnchor), pad.trailingAnchor.constraint(equalTo: v.trailingAnchor), pad.topAnchor.constraint(equalTo: v.topAnchor), pad.bottomAnchor.constraint(equalTo: v.bottomAnchor)])
+            card = v
+        }
+        card.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(card)
         NSLayoutConstraint.activate([
-            stack.centerXAnchor.constraint(equalTo: centerXAnchor),
-            stack.centerYAnchor.constraint(equalTo: centerYAnchor, constant: -20)
+            card.centerXAnchor.constraint(equalTo: centerXAnchor),
+            card.centerYAnchor.constraint(equalTo: centerYAnchor, constant: -10)
         ])
     }
     required init?(coder: NSCoder) { fatalError() }
@@ -85,6 +104,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         window.title = "Letterhome Admin"
         window.titlebarAppearsTransparent = true
         window.titleVisibility = .hidden
+        window.titlebarSeparatorStyle = .none
         window.backgroundColor = NAVY
         window.minSize = NSSize(width: 900, height: 600)
         window.isReleasedWhenClosed = false
@@ -124,6 +144,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         pollTimer = Timer.scheduledTimer(withTimeInterval: 180, repeats: true) { [weak self] _ in self?.poll() }
         pollTimer?.tolerance = 60
         DispatchQueue.main.asyncAfter(deadline: .now() + 6) { [weak self] in self?.poll() }
+        if let out = ENV["LH_LOCKSNAP"] {   // test only: save a picture of the lock screen and quit
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                let v = self.window.contentView!
+                if let r = v.bitmapImageRepForCachingDisplay(in: v.bounds) { v.cacheDisplay(in: v.bounds, to: r); try? r.representation(using: .png, properties: [:])?.write(to: URL(fileURLWithPath: out)) }
+                NSApp.terminate(nil)
+            }
+        }
         if ENV["LH_CLOSE"] != nil { DispatchQueue.main.asyncAfter(deadline: .now() + 5) { self.window.close() } }
         if ENV["LH_FAKE"] != nil {   // test only: pretend the server sent one of each alert
             DispatchQueue.main.asyncAfter(deadline: .now() + 4) {
@@ -205,7 +232,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         add("Orders", #selector(openFromMenu(_:)), "/admin/orders")
         add("Inbox", #selector(openFromMenu(_:)), "/admin/mail")
         menu.addItem(.separator())
-        let q = NSMenuItem(title: "Silence Email Alerts 10 pm to 7 am", action: #selector(toggleQuiet(_:)), keyEquivalent: ""); q.target = self
+        let si = NSMenuItem(title: "Settings…", action: #selector(showSettings), keyEquivalent: ","); si.target = self; menu.addItem(si)
+        let q = NSMenuItem(title: "Silence Email Alerts", action: #selector(toggleQuiet(_:)), keyEquivalent: ""); q.target = self
         q.state = defaults.bool(forKey: "quietOn") ? .on : .off; menu.addItem(q)
         let l = NSMenuItem(title: "Open at Login", action: #selector(toggleLogin(_:)), keyEquivalent: ""); l.target = self
         l.state = SMAppService.mainApp.status == .enabled ? .on : .off; menu.addItem(l)
@@ -213,6 +241,43 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         let qi = NSMenuItem(title: "Quit Letterhome Admin", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"); menu.addItem(qi)
     }
     @objc func openFromMenu(_ i: NSMenuItem) { showWindow(i.representedObject as? String) }
+    var settingsWin: NSWindow?
+    @objc func showSettings() {
+        if let w = settingsWin { w.makeKeyAndOrderFront(nil); NSApp.activate(ignoringOtherApps: true); return }
+        func label(_ t: String) -> NSTextField { let l = NSTextField(labelWithString: t); l.font = .systemFont(ofSize: 13); return l }
+        func check(_ t: String, _ on: Bool, _ sel: Selector) -> NSButton { let b = NSButton(checkboxWithTitle: t, target: self, action: sel); b.state = on ? .on : .off; return b }
+        func hours(_ sel: Int, _ act: Selector) -> NSPopUpButton {
+            let p = NSPopUpButton(frame: .zero, pullsDown: false); p.target = self; p.action = act
+            for h in 0..<24 { p.addItem(withTitle: String(format: "%02d:00", h)) }
+            p.selectItem(at: sel); return p
+        }
+        let st = defaults.object(forKey: "quietStart") as? Int ?? 22, en = defaults.object(forKey: "quietEnd") as? Int ?? 7
+        let hdr1 = NSTextField(labelWithString: "Security"); hdr1.font = .systemFont(ofSize: 11, weight: .semibold); hdr1.textColor = .secondaryLabelColor
+        let hdr2 = NSTextField(labelWithString: "Alerts"); hdr2.font = .systemFont(ofSize: 11, weight: .semibold); hdr2.textColor = .secondaryLabelColor
+        let hdr3 = NSTextField(labelWithString: "General"); hdr3.font = .systemFont(ofSize: 11, weight: .semibold); hdr3.textColor = .secondaryLabelColor
+        let quietRow = NSStackView(views: [label("From"), hours(st, #selector(quietStartChanged(_:))), label("until"), hours(en, #selector(quietEndChanged(_:)))])
+        quietRow.spacing = 8
+        let note = NSTextField(wrappingLabelWithString: "New orders and extra payments always make sound.")
+        note.font = .systemFont(ofSize: 11); note.textColor = .secondaryLabelColor
+        let stack = NSStackView(views: [hdr1, check("Require Touch ID or password to open", lockEnabled, #selector(settingsLock(_:))),
+            hdr2, check("Make email and message alerts silent during these hours", defaults.bool(forKey: "quietOn"), #selector(settingsQuiet(_:))), quietRow, note,
+            hdr3, check("Open at login", SMAppService.mainApp.status == .enabled, #selector(settingsLogin(_:)))])
+        stack.orientation = .vertical; stack.alignment = .leading; stack.spacing = 10
+        stack.setCustomSpacing(18, after: stack.views[1]); stack.setCustomSpacing(18, after: note)
+        stack.edgeInsets = NSEdgeInsets(top: 24, left: 28, bottom: 28, right: 28)
+        let w = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 420, height: 100), styleMask: [.titled, .closable], backing: .buffered, defer: false)
+        w.title = "Settings"; w.isReleasedWhenClosed = false
+        if #available(macOS 11.0, *) { w.toolbarStyle = .preference }
+        w.contentView = stack
+        w.setContentSize(stack.fittingSize)
+        w.center(); w.makeKeyAndOrderFront(nil); NSApp.activate(ignoringOtherApps: true)
+        settingsWin = w
+    }
+    @objc func settingsLock(_ b: NSButton) { defaults.set(b.state == .on, forKey: "lockEnabled"); if b.state == .off { setLocked(false) } }
+    @objc func settingsQuiet(_ b: NSButton) { defaults.set(b.state == .on, forKey: "quietOn") }
+    @objc func settingsLogin(_ b: NSButton) { do { if b.state == .on { try SMAppService.mainApp.register() } else { try SMAppService.mainApp.unregister() } } catch { NSSound.beep() } }
+    @objc func quietStartChanged(_ p: NSPopUpButton) { defaults.set(p.indexOfSelectedItem, forKey: "quietStart") }
+    @objc func quietEndChanged(_ p: NSPopUpButton) { defaults.set(p.indexOfSelectedItem, forKey: "quietEnd") }
     @objc func toggleLogin(_ i: NSMenuItem) {
         do { if SMAppService.mainApp.status == .enabled { try SMAppService.mainApp.unregister() } else { try SMAppService.mainApp.register() } } catch { NSSound.beep() }
     }
@@ -531,6 +596,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         let c = UNMutableNotificationContent()
         c.title = title; c.body = body; c.sound = loud ? .default : nil; c.userInfo = extra ?? ["path": path]
         if extra?["reply"] != nil { c.categoryIdentifier = "mailreply" }
+        c.threadIdentifier = path.hasPrefix("/admin/orders") ? "orders" : (path.hasPrefix("/admin/mail") ? "mail" : "messages")
+        if path.hasPrefix("/admin/orders") { c.interruptionLevel = .timeSensitive }
         UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: UUID().uuidString, content: c, trigger: nil))
     }
     func userNotificationCenter(_ c: UNUserNotificationCenter, willPresent n: UNNotification, withCompletionHandler h: @escaping (UNNotificationPresentationOptions) -> Void) {
@@ -562,9 +629,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         let app = sub("Letterhome Admin")
         _ = add(app, "About Letterhome Admin", #selector(NSApplication.orderFrontStandardAboutPanel(_:)), target: NSApp)
         app.addItem(.separator())
+        _ = add(app, "Settings…", #selector(showSettings), ",")
+        app.addItem(.separator())
         let lockItem = add(app, "Require Touch ID or Password", #selector(toggleLock(_:)))
         lockItem.state = lockEnabled ? .on : .off
-        let quietItem = add(app, "Silence Email Alerts 10 pm to 7 am", #selector(toggleQuiet(_:)))
+        let quietItem = add(app, "Silence Email Alerts", #selector(toggleQuiet(_:)))
         quietItem.state = defaults.bool(forKey: "quietOn") ? .on : .off
         _ = add(app, "Lock Now", #selector(lockNow), "l", [.command, .control])
         app.addItem(.separator())
