@@ -697,6 +697,9 @@ html[data-theme] body .twofa-badge{white-space:nowrap;display:inline-flex;align-
 html[data-theme] body #main>.filter-row{flex-direction:column;align-items:center!important;gap:12px}
 html[data-theme] body #main>.filter-row>div:first-child{justify-content:center;flex-wrap:wrap}
 html[data-theme] body #main>.filter-row>input{width:100%;max-width:360px;text-align:center}
+html[data-theme] body .twofa-badge{width:36px;height:36px;padding:0!important;border-radius:10px;background:transparent!important;color:#b45309;border:1px solid var(--a-line);justify-content:center}
+html[data-theme] body .twofa-badge:hover{background:var(--a-accent-soft)!important}
+html[data-theme="dark"] body .twofa-badge{color:#fbbf24}
 html[data-theme] body #main>h1,html[data-theme] body #main>.page-title,html[data-theme] body #main>.page-head{text-align:center}
 
 /* Mac app: sidebar runs under the traffic lights, top bar drags the window */
@@ -762,7 +765,7 @@ html.mac-app ::-webkit-scrollbar{width:0;height:0}
           <div class="notif-foot" id="notif-foot"></div>
         </div>
       </div>
-      <button class="twofa-badge" id="twofa-badge" onclick="alert('Your account has no 2FA code set up. Ask whoever manages the server to add one for you. Until then your login only needs a password.')" title="No 2FA code set up">⚠ <span class="long">No 2FA</span></button>
+      <button class="twofa-badge" id="twofa-badge" onclick="showToast('This server has no 2FA code set for your account, so sign-in only asks for a password.')" title="No 2FA code is set for this account on the server" aria-label="No 2FA code is set for this account"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 5 6v6c0 4.5 3 7.5 7 9 4-1.5 7-4.5 7-9V6z"/><path d="M12 8.5v4"/><path d="M12 15.6v.01"/></svg></button>
       <div class="topbar-user" id="topbar-user"></div>
     </div>
   </div>
