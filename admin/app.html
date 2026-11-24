@@ -429,9 +429,7 @@ html[data-theme] body input[type=text],html[data-theme] body input[type=number],
 html[data-theme] body thead th{position:sticky;top:0;background:var(--a-surface);font-weight:500}
 html[data-theme] body td.num,html[data-theme] body .num{font-variant-numeric:tabular-nums;text-align:right}
 html[data-theme] body tbody tr:hover{background:var(--a-hover)}
-.content>*{animation:lhfade .22s ease both}
 @keyframes lhfade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
-@media(prefers-reduced-motion:reduce){.content>*{animation:none}}
 ::selection{background:rgba(196,32,43,.18)}
 
 /* Settings */
@@ -505,6 +503,32 @@ html[data-theme=dark] .sw{background:#3b4656}
   .set-main{gap:32px}
   .set-sec{scroll-margin-top:60px}
 }
+
+/* ===== Admin v3: SaaS shell ===== */
+html[data-theme] body .nav-icon{display:inline-flex;width:20px;height:20px;font-size:0}
+html[data-theme] body .nav-ico{display:block}
+html[data-theme] body .sidebar-logo{position:relative;border-bottom:0;padding:26px 24px 22px}
+html[data-theme] body .sidebar-logo::after{content:"";position:absolute;left:24px;right:24px;bottom:0;height:4px;border-radius:2px;background:repeating-linear-gradient(135deg,#c4202b 0 8px,#f4f1ea 8px 14px,#2b4a73 14px 22px);opacity:.9}
+html[data-theme] body .sidebar-nav{padding:20px 12px}
+html[data-theme] body .nav-link{padding:9px 12px;font-size:14px;position:relative}
+html[data-theme] body .nav-link.active::before{content:"";position:absolute;left:-12px;top:8px;bottom:8px;width:3px;border-radius:0 3px 3px 0;background:#ff6b74}
+html[data-theme] body .topbar{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--a-surface) 86%,transparent);backdrop-filter:saturate(1.4) blur(10px)}
+html[data-theme] body .topbar-title{font:600 18px Archivo,sans-serif}
+html[data-theme] body .stat-card{padding:18px 20px 16px;transition:box-shadow .15s,border-color .15s}
+html[data-theme] body .stat-card:hover{border-color:color-mix(in srgb,var(--a-accent) 30%,var(--a-line))}
+html[data-theme] body .stat-label{font:500 13px 'Noto Sans',sans-serif;text-transform:none;letter-spacing:0;color:var(--a-muted)}
+html[data-theme] body .stat-value{font:600 24px/1.1 Archivo,sans-serif;white-space:nowrap;font-variant-numeric:tabular-nums;letter-spacing:-.02em;margin:6px 0 4px}
+html[data-theme] body .stat-sub{font-size:12.5px;color:var(--a-muted)}
+html[data-theme] body .card-header{padding:16px 20px}
+html[data-theme] body .card-title{font:600 15px Archivo,sans-serif;letter-spacing:0;text-transform:none}
+html[data-theme] body th{font:500 12px 'Noto Sans',sans-serif;text-transform:none;letter-spacing:.02em;color:var(--a-muted);padding:11px 16px;border-bottom:1px solid var(--a-line)}
+html[data-theme] body td{padding:13px 16px;font-size:14px}
+html[data-theme] body .need-chip{border-radius:12px;transition:transform .12s,box-shadow .15s}
+html[data-theme] body .need-chip:hover{transform:translateY(-1px);box-shadow:0 8px 22px -12px rgba(23,41,61,.3)}
+html[data-theme] body .main{padding:28px 32px 48px}
+html[data-theme] body ::-webkit-scrollbar{width:10px;height:10px}
+html[data-theme] body ::-webkit-scrollbar-thumb{background:color-mix(in srgb,var(--a-muted) 35%,transparent);border-radius:8px;border:2px solid transparent;background-clip:content-box}
+@media(max-width:860px){html[data-theme] body .main{padding:18px 14px 90px}}
 </style>
 </head>
 <body>
@@ -518,21 +542,21 @@ html[data-theme=dark] .sw{background:#3b4656}
   </div>
   <nav class="sidebar-nav">
     <div class="nav-label">Menu</div>
-    <button class="nav-link" id="nav-dashboard" onclick="go('/admin')"><span class="nav-icon">◈</span> Dashboard</button>
-    <button class="nav-link" id="nav-orders" onclick="go('/admin/orders')"><span class="nav-icon">✉</span> Orders</button>
-    <button class="nav-link" id="nav-inbox" onclick="go('/admin/mail')" style="justify-content:space-between"><span style="display:flex;align-items:center;gap:10px"><span class="nav-icon">✆</span> Inbox</span><span id="inbox-badge" style="display:none;background:#e63946;color:#fff;font-size:10px;font-weight:700;padding:1px 7px;min-width:18px;text-align:center"></span></button>
-    <button class="nav-link" id="nav-people" onclick="go('/admin/customers')"><span class="nav-icon">◎</span> People</button>
-    <button class="nav-link" id="nav-marketing" onclick="go('/admin/broadcast')"><span class="nav-icon">≋</span> Marketing</button>
-    <button class="nav-link" id="nav-reports" onclick="go('/admin/insights')"><span class="nav-icon">◑</span> Reports</button>
-    <button class="nav-link" id="nav-system" onclick="go('/admin/settings')"><span class="nav-icon">⚙</span> System</button>
+    <button class="nav-link" id="nav-dashboard" onclick="go('/admin')"><span class="nav-icon"><svg class="nav-ico" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7.5" height="9" rx="1.5"/><rect x="13.5" y="3" width="7.5" height="5" rx="1.5"/><rect x="13.5" y="11" width="7.5" height="10" rx="1.5"/><rect x="3" y="15" width="7.5" height="6" rx="1.5"/></svg></span> Dashboard</button>
+    <button class="nav-link" id="nav-orders" onclick="go('/admin/orders')"><span class="nav-icon"><svg class="nav-ico" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="m3 8 9 5 9-5"/><path d="M12 13v8"/></svg></span> Orders</button>
+    <button class="nav-link" id="nav-inbox" onclick="go('/admin/mail')" style="justify-content:space-between"><span style="display:flex;align-items:center;gap:10px"><span class="nav-icon"><svg class="nav-ico" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 13 6.5 5h11L20 13"/><path d="M4 13v6h16v-6h-4.5l-1 2h-5l-1-2z"/></svg></span> Inbox</span><span id="inbox-badge" style="display:none;background:#e63946;color:#fff;font-size:10px;font-weight:700;padding:1px 7px;min-width:18px;text-align:center"></span></button>
+    <button class="nav-link" id="nav-people" onclick="go('/admin/customers')"><span class="nav-icon"><svg class="nav-ico" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7"/><path d="M18 14.3c2 .7 3.5 2.4 3.5 5.7"/></svg></span> People</button>
+    <button class="nav-link" id="nav-marketing" onclick="go('/admin/broadcast')"><span class="nav-icon"><svg class="nav-ico" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 11 17-7v16L3 13z"/><path d="M7 14.5V19a1.5 1.5 0 0 0 3 0v-3.2"/></svg></span> Marketing</button>
+    <button class="nav-link" id="nav-reports" onclick="go('/admin/insights')"><span class="nav-icon"><svg class="nav-ico" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/></svg></span> Reports</button>
+    <button class="nav-link" id="nav-system" onclick="go('/admin/settings')"><span class="nav-icon"><svg class="nav-ico" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></span> System</button>
   </nav>
   <div class="sidebar-footer">
     <button type="button" class="admin-theme-toggle" onclick="toggleAdminTheme()">
-      <span class="label-light">☾ &nbsp;Dark mode</span>
-      <span class="label-dark">☀ &nbsp;Light mode</span>
+      <span class="label-light">Dark mode</span>
+      <span class="label-dark">Light mode</span>
     </button>
     <form method="POST" action="/admin/logout" style="margin:0">
-      <button class="logout-btn" type="submit">⎋ &nbsp;Sign out</button>
+      <button class="logout-btn" type="submit">Sign out</button>
     </form>
     <div id="deploy-info" style="font-size:10px;color:#9a9a9a;font-family:'DM Mono',ui-monospace,monospace;padding:8px 4px 0;line-height:1.5"></div>
   </div>
