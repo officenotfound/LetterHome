@@ -67,7 +67,7 @@ public class PollJob extends JobService {
             JSONArray contacts = j.optJSONArray("contacts");
             for (int i = 0; contacts != null && i < Math.min(contacts.length(), 5); i++) {
                 JSONObject m = contacts.getJSONObject(i);
-                Notify.show(this, 2000 + m.getInt("id"), "Message from " + m.optString("name", "a customer"), m.optString("preview", ""), "/admin/contacts?id=" + m.getInt("id"));
+                Notify.showMail(this, 2000 + m.getInt("id"), "Message from " + m.optString("name", "a customer"), m.optString("preview", ""), "/admin/contacts?id=" + m.getInt("id"), null);
             }
         }
         sp.edit().putString("since", j.getString("now")).apply();

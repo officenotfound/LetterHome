@@ -3874,7 +3874,7 @@ app.get('/api/admin/settings', requireAdmin, (req, res) => {
 
 const ALLOWED_SETTING_KEYS = new Set([
   'service_paused', 'announcement', 'price_domestic_cents', 'price_usa_cents', 'price_international_cents',
-  'daily_order_cap', 'blocked_countries', 'away_mode', 'away_message',
+  'daily_order_cap', 'blocked_countries', 'away_mode', 'away_message', 'owner_alert_emails',
   'postgrid_auto_submit', 'postgrid_countries', 'services_enabled', 'allow_blank_return',
   'price_uk_cents', 'price_au_cents', 'us_domain_live', 'uk_domain_live',
   'cart_offer_enabled', 'cart_offer_pct', 'cart_offer_valid_days',
@@ -4074,7 +4074,7 @@ app.post('/api/contact', contactLimiter, async (req, res, next) => {
   } catch (e) { console.error('[contact] db log failed:', e.message); }
 
   try {
-    await sendMail({
+    if (getSetting('owner_alert_emails') !== 'false') await sendMail({
       from:    process.env.EMAIL_FROM,
       to:      process.env.OPERATOR_EMAIL,
       replyTo: safeEmail,
@@ -4456,7 +4456,7 @@ async function fulfillOrder(sessionId) {
     }, 'content_flag_alert', order.id).catch(err => console.error(`[email] content flag alert failed for #${order.id}:`, err.message));
   }
 
-  await sendMail({
+  if (getSetting('owner_alert_emails') !== 'false') await sendMail({
     from:        process.env.EMAIL_FROM,
     to:          process.env.OPERATOR_EMAIL,
     subject:     `[Letterhome] Order #${order.id}: ${order.recipient_name}`,

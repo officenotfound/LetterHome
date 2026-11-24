@@ -23,12 +23,40 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.FrameLayout;
 import android.widget.ProgressBar;
+import android.app.KeyguardManager;
+import android.content.SharedPreferences;
+import android.view.MotionEvent;
+import android.webkit.JavascriptInterface;
+import android.webkit.WebResourceError;
 
 public class MainActivity extends Activity {
     private static final String HOME = "https://letterhome.ca/admin";
     private WebView web;
     private ProgressBar bar;
     private ValueCallback<Uri[]> picker;
+    private View cover;
+    private long leftAt = 0;
+    private boolean unlocking = false, unlocked = false;
+    private float downY = -1;
+
+    private static final String OFFLINE = "<meta name='viewport' content='width=device-width,initial-scale=1'><body style='font-family:sans-serif;background:#f6f4ef;color:#222;text-align:center;padding:30vh 24px 0'>"
+            + "<h2 style='margin:0 0 8px'>No connection</h2><p style='color:#666;margin:0 0 22px'>Letterhome Admin cannot reach the server right now.</p>"
+            + "<a href='https://letterhome.ca/admin' style='display:inline-block;padding:12px 22px;background:#222;color:#fff;border-radius:8px;text-decoration:none'>Try again</a></body>";
+
+    /** What the admin's Settings screen can read and change inside the app. */
+    public class Bridge {
+        @JavascriptInterface public String get() {
+            SharedPreferences sp = getSharedPreferences("ui", MODE_PRIVATE);
+            return "{\"quietOn\":" + sp.getBoolean("quiet_on", true) + ",\"start\":" + sp.getInt("quiet_start", 22) + ",\"end\":" + sp.getInt("quiet_end", 7)
+                    + ",\"lock\":" + sp.getBoolean("lock_on", false) + ",\"canLock\":" + secure() + ",\"version\":\"" + BuildConfigVersion() + "\"}";
+        }
+        @JavascriptInterface public void setQuiet(boolean on, int start, int end) {
+            getSharedPreferences("ui", MODE_PRIVATE).edit().putBoolean("quiet_on", on).putInt("quiet_start", Math.max(0, Math.min(23, start))).putInt("quiet_end", Math.max(0, Math.min(23, end))).apply();
+        }
+        @JavascriptInterface public void setLock(boolean on) { getSharedPreferences("ui", MODE_PRIVATE).edit().putBoolean("lock_on", on).apply(); }
+    }
+    private String BuildConfigVersion() { try { return getPackageManager().getPackageInfo(getPackageName(), 0).versionName; } catch (Throwable e) { return ""; } }
+    private boolean secure() { try { return ((KeyguardManager) getSystemService(KEYGUARD_SERVICE)).isDeviceSecure(); } catch (Throwable e) { return false; } }
 
     @Override protected void onCreate(Bundle b) {
         super.onCreate(b);
@@ -66,6 +94,7 @@ public class MainActivity extends Activity {
         cm.setAcceptCookie(true);
         cm.setAcceptThirdPartyCookies(web, false);
 
+        web.addJavascriptInterface(new Bridge(), "LHApp");
         web.setWebViewClient(new WebViewClient() {
             @Override public boolean shouldOverrideUrlLoading(WebView v, WebResourceRequest r) {
                 Uri u = r.getUrl();
@@ -78,6 +107,9 @@ public class MainActivity extends Activity {
                 return true;
             }
             @Override public void onPageFinished(WebView v, String url) { CookieManager.getInstance().flush(); }
+            @Override public void onReceivedError(WebView v, WebResourceRequest r, WebResourceError e) {
+                if (r.isForMainFrame()) v.loadDataWithBaseURL("https://letterhome.ca/admin", OFFLINE, "text/html", "UTF-8", null);
+            }
         });
         web.setWebChromeClient(new WebChromeClient() {
             @Override public void onProgressChanged(WebView v, int p) {
@@ -99,6 +131,17 @@ public class MainActivity extends Activity {
             q.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, URLUtil.guessFileName(url, cd, mime));
             ((DownloadManager) getSystemService(DOWNLOAD_SERVICE)).enqueue(q);
         });
+
+        web.setOnTouchListener((v, ev) -> {
+            try {
+                if (ev.getAction() == MotionEvent.ACTION_DOWN) downY = web.getScrollY() == 0 ? ev.getY() : -1;
+                else if (ev.getAction() == MotionEvent.ACTION_UP) { if (downY >= 0 && ev.getY() - downY > 320 && web.getScrollY() == 0) web.reload(); downY = -1; }
+                else if (ev.getAction() == MotionEvent.ACTION_CANCEL) downY = -1;
+            } catch (Throwable ignored) { }
+            return false;
+        });
+        cover = new View(this); cover.setBackgroundColor(Color.parseColor("#1a1a1a")); cover.setVisibility(View.GONE);
+        root.addView(cover, new FrameLayout.LayoutParams(-1, -1));
 
         String start = startUrl(getIntent());
         if (b != null) web.restoreState(b); else web.loadUrl(start);
@@ -122,6 +165,11 @@ public class MainActivity extends Activity {
     @Override protected void onNewIntent(Intent i) { super.onNewIntent(i); setIntent(i); if (i.getStringExtra("path") != null) web.loadUrl(startUrl(i)); }
 
     @Override protected void onActivityResult(int req, int res, Intent data) {
+        if (req == 9) {
+            unlocking = false;
+            if (res == RESULT_OK) { unlocked = true; leftAt = 0; cover.setVisibility(View.GONE); } else finish();
+            return;
+        }
         if (req == 7 && picker != null) {
             Uri[] r = null;
             if (res == RESULT_OK && data != null) {
@@ -136,7 +184,20 @@ public class MainActivity extends Activity {
 
     @Override protected void onSaveInstanceState(Bundle o) { super.onSaveInstanceState(o); web.saveState(o); }
     @Override public void onBackPressed() { if (web.canGoBack()) web.goBack(); else super.onBackPressed(); }
-    @Override protected void onPause() { super.onPause(); CookieManager.getInstance().flush(); }
+    @Override protected void onPause() { super.onPause(); CookieManager.getInstance().flush(); if (!unlocking) { leftAt = System.currentTimeMillis(); } }
+
+    @Override protected void onResume() {
+        super.onResume();
+        try {
+            SharedPreferences sp = getSharedPreferences("ui", MODE_PRIVATE);
+            boolean need = sp.getBoolean("lock_on", false) && secure() && !unlocking && (!unlocked || (leftAt > 0 && System.currentTimeMillis() - leftAt > 60000));
+            if (need) {
+                unlocking = true; cover.setVisibility(View.VISIBLE);
+                Intent k = ((KeyguardManager) getSystemService(KEYGUARD_SERVICE)).createConfirmDeviceCredentialIntent("Letterhome Admin", "Unlock to open the admin");
+                if (k != null) startActivityForResult(k, 9); else { unlocking = false; cover.setVisibility(View.GONE); }
+            }
+        } catch (Throwable e) { unlocking = false; if (cover != null) cover.setVisibility(View.GONE); }
+    }
 
     private void startLive() {
         try { Intent live = new Intent(this, LiveService.class); if (Build.VERSION.SDK_INT >= 26) startForegroundService(live); else startService(live); } catch (Throwable ignored) { }

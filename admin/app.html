@@ -3765,6 +3765,7 @@ async function showSettings() {
   const dailyCap     = settings['daily_order_cap']           || '0';
   const blockedRaw   = settings['blocked_countries']         || '[]';
   const awayOn       = settings['away_mode'] === 'true';
+  const ownerMailOn  = settings['owner_alert_emails'] !== 'false';
   const awayMessage  = settings['away_message'] || '';
   const cartOfferOn   = settings['cart_offer_enabled'] !== 'false';
   const usLive = settings['us_domain_live'] === 'true', ukLive = settings['uk_domain_live'] === 'true';
@@ -3907,6 +3908,27 @@ async function showSettings() {
       </div>
     </div>
 
+    <div class="card" id="phone-card" style="max-width:640px;margin-bottom:20px;display:none">
+      <div class="card-header"><div class="card-title">This phone app</div></div>
+      <div style="padding:20px;display:grid;gap:16px;font-size:14px">
+        <label style="display:flex;gap:10px;align-items:center"><input type="checkbox" id="pq-on" onchange="savePhone()"> Quiet hours: email and message alerts arrive silently (new orders always make sound)</label>
+        <div style="display:flex;gap:10px;align-items:center">From <input type="number" id="pq-start" min="0" max="23" style="width:64px" onchange="savePhone()"> to <input type="number" id="pq-end" min="0" max="23" style="width:64px" onchange="savePhone()"> o'clock (24 hour, phone time)</div>
+        <label style="display:flex;gap:10px;align-items:center"><input type="checkbox" id="pl-on" onchange="savePhone()"> Ask for my fingerprint or phone PIN when I open the app (after 1 minute away)</label>
+        <div id="pl-note" style="font-size:12px;color:#6b6b6b"></div>
+      </div>
+    </div>
+
+    <div class="card" style="max-width:640px;margin-bottom:20px">
+      <div class="card-header"><div class="card-title">Alert emails to you</div></div>
+      <div style="padding:20px;display:flex;align-items:center;justify-content:space-between;gap:16px">
+        <div>
+          <div style="font-size:14px;font-weight:600;color:#111111;margin-bottom:3px">Email me for each new order and contact message</div>
+          <div style="font-size:12px;color:#6b6b6b">Off: the app and the bell alert you instead. Held-content warnings, delivery problems, security and backup emails always still come.</div>
+        </div>
+        <button class="btn ${ownerMailOn ? 'btn-primary' : 'btn-outline'}" onclick="toggleOwnerMail(${ownerMailOn})">${ownerMailOn ? 'On, click to turn off' : 'Off, click to turn on'}</button>
+      </div>
+    </div>
+
     <div class="card" style="max-width:640px;margin-bottom:20px">
       <div class="card-header"><div class="card-title">Away Auto-Reply</div></div>
       <div style="padding:20px">
@@ -3977,7 +3999,7 @@ async function showSettings() {
 
   window._blockedCountries = [...blocked];
   renderPostgridSettings(settings);
-  loadCartOfferStats();
+  loadCartOfferStats(); loadPhone();
 }
 
 function addBlockedCountry() {
@@ -4080,6 +4102,31 @@ async function loadCartOfferStats() {
   if (!s) { el.textContent = ''; return; }
   const rev = '$' + (s.revenue_cents / 100).toFixed(2);
   el.textContent = s.sent ? `${s.sent} sent so far, ${s.paid} paid afterwards (${rev} CAD in orders).` : 'None sent yet.';
+}
+
+function loadPhone() {
+  try {
+    if (!window.LHApp) return;
+    const g = JSON.parse(window.LHApp.get());
+    document.getElementById('phone-card').style.display = '';
+    document.getElementById('pq-on').checked = g.quietOn;
+    document.getElementById('pq-start').value = g.start;
+    document.getElementById('pq-end').value = g.end;
+    document.getElementById('pl-on').checked = g.lock && g.canLock;
+    document.getElementById('pl-on').disabled = !g.canLock;
+    document.getElementById('pl-note').textContent = (g.canLock ? '' : 'Set a screen lock on the phone first to use this. ') + 'App version ' + g.version;
+  } catch (e) { }
+}
+function savePhone() {
+  try {
+    window.LHApp.setQuiet(document.getElementById('pq-on').checked, parseInt(document.getElementById('pq-start').value, 10) || 0, parseInt(document.getElementById('pq-end').value, 10) || 0);
+    window.LHApp.setLock(document.getElementById('pl-on').checked);
+  } catch (e) { }
+}
+
+async function toggleOwnerMail(currentlyOn) {
+  const r = await saveSetting('owner_alert_emails', currentlyOn ? 'false' : 'true');
+  if (r?.ok) showSettings(); else alert('Error saving setting.');
 }
 
 async function toggleAwayMode(currentlyOn) {

@@ -6,9 +6,18 @@ android {
         applicationId 'ca.letterhome.admin'
         minSdk 24
         targetSdk 34
-        versionCode 8
-        versionName '1.7'
+        versionCode 9
+        versionName '1.8'
     }
-    buildTypes { release { minifyEnabled false } }
+    signingConfigs {
+        release {
+            def f = new File(System.getProperty('user.home'), 'letterhome-release.properties')
+            if (f.exists()) {
+                def p = new Properties(); f.withInputStream { p.load(it) }
+                storeFile file(p.storeFile); storePassword p.storePassword; keyAlias p.keyAlias; keyPassword p.keyPassword
+            }
+        }
+    }
+    buildTypes { release { minifyEnabled false; signingConfig signingConfigs.release } }
     compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
 }

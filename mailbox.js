@@ -264,9 +264,9 @@ function register(app, deps) {
     if (fresh.length) cursorSet(b.key, fresh[fresh.length - 1].at);
     while (recent.length && Date.now() - recent[0].at > 24 * 3600 * 1000) recent.shift();
   }
-  let delay = 60000, timer = null;
+  let delay = 30000, timer = null;
   async function pollAll() {
-    let worst = 60000;
+    let worst = 30000;
     for (const b of boxes) {
       try { await pollBox(b); b.state.pollError = null; } catch (e) { b.state.pollError = e.message; b.state.error = e.message; worst = e.status === 429 ? 600000 : Math.max(worst, 120000); }
     }
