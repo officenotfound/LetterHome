@@ -1433,45 +1433,6 @@ html[data-theme="dark"] body #usecases .uc-ic{background:rgba(239,160,130,.12);c
 
 
 
-<!-- BUSINESS -->
-<style>
-:root body .biz-strip-inner{max-width:960px!important;padding:30px 28px 26px!important;gap:0!important;align-items:center!important;text-align:center!important;display:flex!important;flex-direction:column!important}
-:root body .biz-strip-inner h2{font-size:23px!important;margin:0 0 8px!important}
-:root body .biz-strip-inner .bz-lead{max-width:52ch;font-size:15.5px!important;line-height:1.5!important;margin:0 auto 20px!important}
-:root body .biz-strip-inner .bz-grid{display:flex!important;flex-wrap:wrap;justify-content:center;gap:16px;width:100%;margin-bottom:24px}
-:root body .bz-item{flex:0 0 calc((100% - 40px)/3 - 1px);box-sizing:border-box;display:flex;flex-direction:column;align-items:center;text-align:center;padding:16px 14px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.55)}
-:root body .bz-ic{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;background:rgba(168,71,45,.09);color:#a8472d;margin-bottom:8px}
-:root body .bz-item h3{font-size:16px!important;margin:0 0 6px!important;text-align:center!important}
-:root body .bz-item p{font-size:14px!important;line-height:1.45!important;margin:0!important;text-align:center!important}
-:root body .bz-facts{list-style:none;display:flex;flex-wrap:wrap;justify-content:center;gap:6px 24px;margin:0 0 18px;padding:0;font-size:14px;color:var(--ds-ink2,#4a5563)}
-:root body .bz-facts li::before{content:"\2713";color:#a8472d;margin-right:8px;font-weight:700}
-:root body .bzs-cta{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:12px 24px}
-:root body .biz-strip .bzs-cta .btn{background:#1c2f45!important;color:#fff!important;border-color:#1c2f45!important}
-html[data-theme="dark"] body .biz-strip .bzs-cta .btn{background:#efe6d4!important;color:#1c2f45!important;border-color:#efe6d4!important}
-:root body .bz-link{font-size:15px;color:var(--ds-ink,#1c2f45);text-decoration:underline;text-underline-offset:4px}
-:root body .biz-strip-inner .bz-note{font-size:13px!important;margin:10px 0 0!important;color:var(--ink-muted,#6b6b6b)!important}
-html[data-theme="dark"] body .bz-item{background:rgba(255,255,255,.04)}
-html[data-theme="dark"] body .bz-ic{background:rgba(239,160,130,.12);color:#e9a58f}
-@media(max-width:700px){:root body .bz-item{flex-basis:calc((100% - 20px)/2 - 1px)}}
-@media(max-width:520px){:root body .bz-item{flex-basis:100%}:root body .biz-strip-inner{padding:28px 18px 26px!important}}
-</style>
-<section class="biz-strip">
-  <div class="biz-strip-inner">
-    <h2>Business mail</h2>
-    <p class="bz-lead">Letters and postcards printed and mailed in Canada. Send one list and every piece is checked and posted.</p>
-    <div class="bz-grid">
-      <div class="bz-item"><span class="bz-ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg></span><h3>Letters</h3><p>Your own PDF or Word files, in black and white or colour.</p></div>
-      <div class="bz-item"><span class="bz-ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M13 9h5M13 13h5M6 9h4v6H6z"/></svg></span><h3>Postcards</h3><p>Printed in a batch to your list, from your artwork or ours.</p></div>
-      <div class="bz-item"><span class="bz-ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 10h16M10 4v16"/></svg></span><h3>Mailing lists</h3><p>One spreadsheet row per recipient. We merge each name and check every address.</p></div>
-      <div class="bz-item"><span class="bz-ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></span><h3>Scheduled mailings</h3><p>Pick the day your batch goes to print.</p></div>
-      <div class="bz-item"><span class="bz-ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9 6 9-6"/><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M12 13v6"/></svg></span><h3>Self mailers and snap packs</h3><p>Folded and sealed with no envelope, for notices and statements. Quoted by size and quantity.</p></div>
-    </div>
-    <ul class="bz-facts"><li>A set price before anything prints</li><li>No minimum order</li><li>An email when your pieces go out</li></ul>
-    <div class="bzs-cta"><a class="btn btn-red" href="/business#quote">Request a quote</a><a class="bz-link" href="/business">See what we mail</a></div>
-    <p class="bz-note">We reply within one business day.</p>
-  </div>
-</section>
-
 <!-- STORY BAND -->
 <section class="story">
   <div class="story-inner">
@@ -1615,6 +1576,45 @@ html[data-theme="dark"] body #trust .trust-ic{background:rgba(239,160,130,.12);c
         <p data-i18n="faq.a6">Yes. An automatic check on our own server looks for illegal content, and we do not read or share what you wrote unless it flags something. You can ask us to delete your letter and personal information at any time. We keep a basic order record (date, amount, your email) for tax purposes.</p>
       </details>
     </div>
+  </div>
+</section>
+
+<!-- BUSINESS -->
+<style>
+:root body .biz-strip-inner{max-width:960px!important;padding:30px 28px 26px!important;gap:0!important;align-items:center!important;text-align:center!important;display:flex!important;flex-direction:column!important}
+:root body .biz-strip-inner h2{font-size:23px!important;margin:0 0 8px!important}
+:root body .biz-strip-inner .bz-lead{max-width:52ch;font-size:15.5px!important;line-height:1.5!important;margin:0 auto 20px!important}
+:root body .biz-strip-inner .bz-grid{display:flex!important;flex-wrap:wrap;justify-content:center;gap:16px;width:100%;margin-bottom:24px}
+:root body .bz-item{flex:0 0 calc((100% - 40px)/3 - 1px);box-sizing:border-box;display:flex;flex-direction:column;align-items:center;text-align:center;padding:16px 14px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.55)}
+:root body .bz-ic{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;background:rgba(168,71,45,.09);color:#a8472d;margin-bottom:8px}
+:root body .bz-item h3{font-size:16px!important;margin:0 0 6px!important;text-align:center!important}
+:root body .bz-item p{font-size:14px!important;line-height:1.45!important;margin:0!important;text-align:center!important}
+:root body .bz-facts{list-style:none;display:flex;flex-wrap:wrap;justify-content:center;gap:6px 24px;margin:0 0 18px;padding:0;font-size:14px;color:var(--ds-ink2,#4a5563)}
+:root body .bz-facts li::before{content:"\2713";color:#a8472d;margin-right:8px;font-weight:700}
+:root body .bzs-cta{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:12px 24px}
+:root body .biz-strip .bzs-cta .btn{background:#1c2f45!important;color:#fff!important;border-color:#1c2f45!important}
+html[data-theme="dark"] body .biz-strip .bzs-cta .btn{background:#efe6d4!important;color:#1c2f45!important;border-color:#efe6d4!important}
+:root body .bz-link{font-size:15px;color:var(--ds-ink,#1c2f45);text-decoration:underline;text-underline-offset:4px}
+:root body .biz-strip-inner .bz-note{font-size:13px!important;margin:10px 0 0!important;color:var(--ink-muted,#6b6b6b)!important}
+html[data-theme="dark"] body .bz-item{background:rgba(255,255,255,.04)}
+html[data-theme="dark"] body .bz-ic{background:rgba(239,160,130,.12);color:#e9a58f}
+@media(max-width:700px){:root body .bz-item{flex-basis:calc((100% - 20px)/2 - 1px)}}
+@media(max-width:520px){:root body .bz-item{flex-basis:100%}:root body .biz-strip-inner{padding:28px 18px 26px!important}}
+</style>
+<section class="biz-strip">
+  <div class="biz-strip-inner">
+    <h2>Business mail</h2>
+    <p class="bz-lead">Letters and postcards printed and mailed in Canada. Send one list and every piece is checked and posted.</p>
+    <div class="bz-grid">
+      <div class="bz-item"><span class="bz-ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg></span><h3>Letters</h3><p>Your own PDF or Word files, in black and white or colour.</p></div>
+      <div class="bz-item"><span class="bz-ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M13 9h5M13 13h5M6 9h4v6H6z"/></svg></span><h3>Postcards</h3><p>Printed in a batch to your list, from your artwork or ours.</p></div>
+      <div class="bz-item"><span class="bz-ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 10h16M10 4v16"/></svg></span><h3>Mailing lists</h3><p>One spreadsheet row per recipient. We merge each name and check every address.</p></div>
+      <div class="bz-item"><span class="bz-ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></span><h3>Scheduled mailings</h3><p>Pick the day your batch goes to print.</p></div>
+      <div class="bz-item"><span class="bz-ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9 6 9-6"/><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M12 13v6"/></svg></span><h3>Self mailers and snap packs</h3><p>Folded and sealed with no envelope, for notices and statements. Quoted by size and quantity.</p></div>
+    </div>
+    <ul class="bz-facts"><li>A set price before anything prints</li><li>No minimum order</li><li>An email when your pieces go out</li></ul>
+    <div class="bzs-cta"><a class="btn btn-red" href="/business#quote">Request a quote</a><a class="bz-link" href="/business">See what we mail</a></div>
+    <p class="bz-note">We reply within one business day.</p>
   </div>
 </section>
 
