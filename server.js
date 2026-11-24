@@ -3256,11 +3256,13 @@ app.get('/api/admin/notifications', requireAdmin, (req, res) => {
   const contacts = db.prepare(`
     SELECT id, name, email, substr(message,1,120) AS preview, created_at
     FROM contact_submissions
-    WHERE read_at IS NULL ${since ? 'AND created_at > ?' : ''}
+    WHERE read_at IS NULL AND message NOT LIKE 'CAREERS APPLICATION:%' ${since ? 'AND created_at > ?' : ''}
     ORDER BY created_at DESC LIMIT 20`).all(...(since ? [since] : []));
-  const unreadContacts = db.prepare('SELECT COUNT(*) AS n FROM contact_submissions WHERE read_at IS NULL').get().n;
+  const unreadContacts = db.prepare("SELECT COUNT(*) AS n FROM contact_submissions WHERE read_at IS NULL AND message NOT LIKE 'CAREERS APPLICATION:%'").get().n;
+  const unreadApplicants = db.prepare("SELECT COUNT(*) AS n FROM contact_submissions WHERE read_at IS NULL AND message LIKE 'CAREERS APPLICATION:%'").get().n;
+  const applicants = db.prepare(`SELECT id, name, substr(message,1,120) AS preview, created_at FROM contact_submissions WHERE read_at IS NULL AND message LIKE 'CAREERS APPLICATION:%' ${since ? 'AND created_at > ?' : ''} ORDER BY created_at DESC LIMIT 20`).all(...(since ? [since] : []));
   const sinceMs = since ? Date.parse(since.replace(' ', 'T') + 'Z') : 0;
-  res.json({ now, orders, contacts, unreadContacts, mailUnread: mailbox.unread(), mail: since ? mailbox.recentSince(sinceMs) : [] });
+  res.json({ now, orders, contacts, unreadContacts, unreadApplicants, applicants, mailUnread: mailbox.unread(), mail: since ? mailbox.recentSince(sinceMs) : [] });
 });
 
 // Live alerts for the admin app: a stream that pushes a line the moment a new paid order, an unread message or an extra payment appears.
@@ -4871,13 +4873,13 @@ function buildOccasionReminderEmail(occ, lastOrder) {
 }
 
 app.get('/api/admin/contacts/unread', requireAdmin, (req, res) => {
-  const n = db.prepare('SELECT COUNT(*) AS n FROM contact_submissions WHERE read_at IS NULL').get().n;
+  const n = db.prepare("SELECT COUNT(*) AS n FROM contact_submissions WHERE read_at IS NULL AND message NOT LIKE 'CAREERS APPLICATION:%'").get().n;
   res.json({ unread: n });
 });
 
 app.get('/api/admin/contacts', requireAdmin, (req, res) => {
-  const submissions = db.prepare('SELECT * FROM contact_submissions ORDER BY created_at DESC LIMIT 200').all();
-  const unread = db.prepare('SELECT COUNT(*) AS n FROM contact_submissions WHERE read_at IS NULL').get().n;
+  const submissions = db.prepare("SELECT * FROM contact_submissions WHERE message NOT LIKE 'CAREERS APPLICATION:%' ORDER BY created_at DESC LIMIT 200").all();
+  const unread = db.prepare("SELECT COUNT(*) AS n FROM contact_submissions WHERE read_at IS NULL AND message NOT LIKE 'CAREERS APPLICATION:%'").get().n;
   res.json({ submissions, unread });
 });
 
@@ -4888,7 +4890,7 @@ app.post('/api/admin/contacts/:id/read', requireAdmin, (req, res) => {
 });
 
 app.post('/api/admin/contacts/read-all', requireAdmin, (req, res) => {
-  db.prepare('UPDATE contact_submissions SET read_at = CURRENT_TIMESTAMP WHERE read_at IS NULL').run();
+  db.prepare("UPDATE contact_submissions SET read_at = CURRENT_TIMESTAMP WHERE read_at IS NULL AND message NOT LIKE 'CAREERS APPLICATION:%'").run();
   res.json({ ok: true });
 });
 

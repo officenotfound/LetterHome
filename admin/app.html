@@ -423,7 +423,6 @@ html[data-theme="dark"] body [style*="solid #ececec"],html[data-theme="dark"] bo
     <button class="nav-link" id="nav-orders" onclick="go('/admin/orders')"><span class="nav-icon">✉</span> Orders</button>
     <button class="nav-link" id="nav-inbox" onclick="go('/admin/mail')" style="justify-content:space-between"><span style="display:flex;align-items:center;gap:10px"><span class="nav-icon">✆</span> Inbox</span><span id="inbox-badge" style="display:none;background:#e63946;color:#fff;font-size:10px;font-weight:700;padding:1px 7px;min-width:18px;text-align:center"></span></button>
     <button class="nav-link" id="nav-people" onclick="go('/admin/customers')"><span class="nav-icon">◎</span> People</button>
-    <button class="nav-link" id="nav-applicants" onclick="go('/admin/applicants')"><span class="nav-icon">☺</span> Applicants</button>
     <button class="nav-link" id="nav-marketing" onclick="go('/admin/broadcast')"><span class="nav-icon">≋</span> Marketing</button>
     <button class="nav-link" id="nav-reports" onclick="go('/admin/insights')"><span class="nav-icon">◑</span> Reports</button>
     <button class="nav-link" id="nav-system" onclick="go('/admin/settings')"><span class="nav-icon">⚙</span> System</button>
@@ -563,8 +562,7 @@ function renderRoute(p) {
 const NAV_GROUPS = {
   orders:   { tabs: [['/admin/orders', 'Orders'], ['/admin/approvals', 'Approvals'], ['/admin/print-queue', 'Print queue']] },
   people:   { tabs: [['/admin/customers', 'Customers'], ['/admin/accounts', 'Accounts'], ['/admin/businesses', 'Businesses']] },
-  applicants: { tabs: [['/admin/applicants', 'Applicants']] },
-  inbox:    { tabs: [['/admin/mail', 'Mail'], ['/admin/contacts', 'Contact form'], ['/admin/templates', 'Saved replies']] },
+  inbox:    { tabs: [['/admin/mail', 'Mail'], ['/admin/contacts', 'Contact form'], ['/admin/applicants', 'Applicants'], ['/admin/templates', 'Saved replies']] },
   marketing: { tabs: [['/admin/broadcast', 'Broadcast'], ['/admin/outreach', 'Outreach'], ['/admin/followups', 'Follow-ups'], ['/admin/content', 'Content and links'], ['/admin/emails', 'Sent emails']] },
   reports:  { tabs: [['/admin/insights', 'Insights'], ['/admin/visitors', 'Visitors'], ['/admin/traffic', 'Traffic'], ['/admin/growth', 'Search'], ['/admin/funnel', 'Funnel'], ['/admin/seo-audit', 'Content audit'], ['/admin/profit', 'Profit'], ['/admin/stripe', 'Stripe']] },
   system:   { tabs: [['/admin/settings', 'Settings'], ['/admin/app-settings', 'Phone app'], ['/admin/health', 'Health'], ['/admin/codes', 'Codes'], ['/admin/admin-users', 'Admin users'], ['/admin/audit-log', 'Audit log'], ['/admin/trash', 'Trash']] },
@@ -576,7 +574,7 @@ function groupOf(p) {
   return [null, null];
 }
 function setActiveNav(p) {
-  ['dashboard','orders','inbox','people','applicants','marketing','reports','system'].forEach(k => document.getElementById('nav-' + k)?.classList.remove('active'));
+  ['dashboard','orders','inbox','people','marketing','reports','system'].forEach(k => document.getElementById('nav-' + k)?.classList.remove('active'));
   const [g, tab] = groupOf(p);
   document.querySelectorAll('.mob-tab').forEach(t => t.classList.toggle('active', t.dataset.g === (g || 'dashboard')));
   const strip = document.getElementById('subtabs');
@@ -589,9 +587,9 @@ function setActiveNav(p) {
   if (strip) {
     strip.style.display = 'flex';
     strip.innerHTML = NAV_GROUPS[g].tabs.map(([path, label]) =>
-      `<button class="subtab${path === tab ? ' active' : ''}" role="tab" aria-selected="${path === tab}" onclick="go('${path}')">${label}${path === '/admin/contacts' ? '<span class="contacts-tab-badge" style="display:none"></span>' : ''}${path === '/admin/mail' ? '<span class="mail-tab-badge contacts-tab-badge" style="display:none"></span>' : ''}</button>`).join('');
+      `<button class="subtab${path === tab ? ' active' : ''}" role="tab" aria-selected="${path === tab}" onclick="go('${path}')">${label}${path === '/admin/contacts' ? '<span class="contacts-tab-badge" style="display:none"></span>' : ''}${path === '/admin/mail' ? '<span class="mail-tab-badge contacts-tab-badge" style="display:none"></span>' : ''}${path === '/admin/applicants' ? '<span class="app-tab-badge contacts-tab-badge" style="display:none"></span>' : ''}</button>`).join('');
     const n = window._unreadContacts || 0;
-    strip.querySelectorAll('.contacts-tab-badge').forEach(b => { const v = b.classList.contains('mail-tab-badge') ? (window._unreadMail || 0) : n; b.textContent = v; b.style.display = v > 0 ? 'inline-block' : 'none'; });
+    strip.querySelectorAll('.contacts-tab-badge').forEach(b => { const v = b.classList.contains('mail-tab-badge') ? (window._unreadMail || 0) : b.classList.contains('app-tab-badge') ? (window._unreadApplicants || 0) : n; b.textContent = v; b.style.display = v > 0 ? 'inline-block' : 'none'; });
   }
 }
 
@@ -1807,13 +1805,17 @@ async function pollNotifications() {
   if (!d) return;
   _notifSince = d.now;
   if (d.mailUnread) updateMailBadge(d.mailUnread);
-  if (typeof d.unreadContacts === 'number') { window._unreadContacts = d.unreadContacts; refreshBadges(); }
+  if (typeof d.unreadApplicants === 'number') window._unreadApplicants = d.unreadApplicants;
+  if (typeof d.unreadContacts === 'number') { window._unreadContacts = d.unreadContacts; }
+  refreshBadges();
   if (!seen) { writeSeen(d.now); } // first ever visit: start counting from now, not the whole history
   const items = [];
   (seen ? d.orders : []).forEach(o => items.push({ key: 'o' + o.id, path: `/admin/orders/${o.id}`,
     html: `<strong>New order #${o.id}</strong> · $${(o.price_cents / 100).toFixed(2)} CAD<br>${esc(o.recipient_name || '')} (${esc(o.destination_country || '')})`, when: fmtDateTime(o.paid_at) }));
   (seen ? (d.mail || []) : []).forEach(m => items.push({ key: 'm' + m.box + m.id, path: '/admin/mail?box=' + encodeURIComponent(m.box) + '&id=' + encodeURIComponent(m.id) + '&folder=' + encodeURIComponent(m.folderId || ''),
     html: `<strong>New email (${esc(m.label || m.box)})</strong><br>${esc(String(m.from || '').replace(/<[^>]*>/g, '').trim())}: ${esc(m.subject || '')}`, when: fmtDateTime(new Date(m.at).toISOString().slice(0, 19).replace('T', ' ')) }));
+  (seen ? (d.applicants || []) : []).forEach(c => items.push({ key: 'a' + c.id, path: '/admin/applicants',
+    html: `<strong>New job application: ${esc(c.name)}</strong><br>${esc(String(c.preview || '').replace(/^CAREERS APPLICATION:\s*/, ''))}`, when: fmtDateTime(c.created_at) }));
   (seen ? d.contacts : []).forEach(c => items.push({ key: 'c' + c.id, path: '/admin/contacts?id=' + c.id,
     html: `<strong>Message from ${esc(c.name)}</strong><br>${esc(c.preview)}`, when: fmtDateTime(c.created_at) }));
   const readNow = readKeys();
@@ -4740,6 +4742,7 @@ async function showContacts() {
     history.replaceState({}, '', '/admin/contacts');
     const row = document.getElementById('contact-row-' + want);
     if (row) { row.scrollIntoView({ block: 'center' }); row.style.outline = '2px solid #b42318'; row.style.background = '#fff6f3'; }
+    else { go('/admin/applicants'); return; }
   }
 }
 
@@ -4894,8 +4897,8 @@ function updateMailBadge(list) {
   refreshBadges();
 }
 function refreshBadges() {
-  const c = window._unreadContacts || 0, m = window._unreadMail || 0, total = c + m;
-  document.querySelectorAll('.contacts-tab-badge').forEach(b => { const v = b.classList.contains('mail-tab-badge') ? m : c; b.textContent = v; b.style.display = v > 0 ? 'inline-block' : 'none'; });
+  const c = window._unreadContacts || 0, m = window._unreadMail || 0, ap = window._unreadApplicants || 0, total = c + m + ap;
+  document.querySelectorAll('.contacts-tab-badge').forEach(b => { const v = b.classList.contains('mail-tab-badge') ? m : b.classList.contains('app-tab-badge') ? ap : c; b.textContent = v; b.style.display = v > 0 ? 'inline-block' : 'none'; });
   const chipC = document.getElementById('need-contacts'), chipM = document.getElementById('need-mail');
   if (chipC) { chipC.querySelector('b').textContent = c; chipC.classList.toggle('hot', c > 0); }
   if (chipM) { chipM.querySelector('b').textContent = m; chipM.classList.toggle('hot', m > 0); }
