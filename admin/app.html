@@ -529,6 +529,65 @@ html[data-theme] body .main{padding:28px 32px 48px}
 html[data-theme] body ::-webkit-scrollbar{width:10px;height:10px}
 html[data-theme] body ::-webkit-scrollbar-thumb{background:color-mix(in srgb,var(--a-muted) 35%,transparent);border-radius:8px;border:2px solid transparent;background-clip:content-box}
 @media(max-width:860px){html[data-theme] body .main{padding:18px 14px 90px}}
+
+/* ===== Admin v4: finish ===== */
+html[data-theme="light"] body .content{background:radial-gradient(1200px 380px at 70% -120px,rgba(196,32,43,.045),transparent 70%),var(--a-bg)}
+html[data-theme] body .sidebar{background:linear-gradient(180deg,#1b2f46 0%,#142335 100%)}
+html[data-theme="dark"] body .sidebar{background:linear-gradient(180deg,#0e1620,#090e14)}
+html[data-theme] body .sidebar-footer{border-top:1px solid rgba(255,255,255,.07)}
+.side-user{display:flex;align-items:center;gap:10px;padding:8px 10px 12px}
+.side-av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#c4202b,#8f1620);color:#fff;font:600 12px Archivo,sans-serif;display:grid;place-items:center;box-shadow:0 0 0 2px rgba(255,255,255,.12)}
+.side-who{display:flex;flex-direction:column;line-height:1.25;min-width:0}
+.side-who b{color:#fff;font:600 13.5px 'Noto Sans',sans-serif}
+.side-who small{color:rgba(255,255,255,.5);font-size:12px}
+html[data-theme] body .nav-link{transition:background .15s,color .15s}
+html[data-theme] body .nav-link.active{background:linear-gradient(90deg,rgba(255,255,255,.16),rgba(255,255,255,.07));box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)}
+html[data-theme] body #deploy-info{font-size:10.5px!important}
+html[data-theme] body .topbar .btn-sm{display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 10px 0 12px;border-radius:10px;color:var(--a-muted);font-weight:500;min-width:190px;justify-content:flex-start}
+html[data-theme] body .topbar .btn-sm span{flex:1;text-align:left}
+.kc{font:500 11px 'Noto Sans',sans-serif;border:1px solid var(--a-line);border-bottom-width:2px;border-radius:6px;padding:1px 7px;color:var(--a-muted);background:var(--a-hover)}
+html[data-theme] body .topbar-user{display:none}
+html[data-theme] body .card,html[data-theme] body .detail-card,html[data-theme] body .stat-card,html[data-theme] body .need-chip{box-shadow:0 0 0 1px rgba(20,32,46,.025),0 1px 2px rgba(20,32,46,.04),0 12px 28px -18px rgba(20,32,46,.22)}
+html[data-theme="dark"] body .card,html[data-theme="dark"] body .detail-card,html[data-theme="dark"] body .stat-card{box-shadow:0 0 0 1px rgba(255,255,255,.02),0 12px 28px -18px rgba(0,0,0,.7)}
+html[data-theme] body .card-header{background:linear-gradient(180deg,var(--a-surface),var(--a-hover))}
+html[data-theme] body .card{overflow:hidden}
+html[data-theme] body .stat-card{position:relative;overflow:hidden}
+html[data-theme] body .stat-card::before{content:"";position:absolute;left:0;top:0;right:0;height:3px;background:linear-gradient(90deg,var(--a-accent),transparent 70%);opacity:0;transition:opacity .2s}
+html[data-theme] body .stat-card:hover::before{opacity:.9}
+html[data-theme] body .stat-label{font-size:12.5px;font-weight:500}
+html[data-theme] body .stat-value{font-size:26px}
+html[data-theme] body .need-chip{align-items:center;gap:12px;padding:14px 18px}
+html[data-theme] body .btn-primary{background:linear-gradient(180deg,#d02a35,#b81c27);border:1px solid #a3151f;box-shadow:0 1px 0 rgba(255,255,255,.22) inset,0 2px 6px -1px rgba(196,32,43,.4)}
+html[data-theme] body .btn-primary:hover{background:linear-gradient(180deg,#d9323d,#c0202b)}
+html[data-theme="dark"] body .btn-primary{background:linear-gradient(180deg,#ff8a91,#ff6e77);color:#2a0a0d;border-color:#ff6e77}
+html[data-theme] body .btn-outline{background:var(--a-surface);border:1px solid var(--a-line);color:var(--a-text);box-shadow:0 1px 2px rgba(20,32,46,.05)}
+html[data-theme] body .btn-outline:hover{background:var(--a-hover);border-color:color-mix(in srgb,var(--a-muted) 40%,var(--a-line))}
+html[data-theme] body th{text-transform:uppercase;font-size:11px;letter-spacing:.06em;font-weight:600}
+html[data-theme] body td{border-bottom:1px solid color-mix(in srgb,var(--a-line) 70%,transparent)}
+html[data-theme] body tbody tr:last-child td{border-bottom:0}
+html[data-theme] body .badge{display:inline-flex;align-items:center;gap:6px;padding:3px 10px 3px 9px;font-size:12px}
+html[data-theme] body .badge::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.8}
+html[data-theme] body input[type=text],html[data-theme] body input[type=email],html[data-theme] body input[type=number],html[data-theme] body input[type=search],html[data-theme] body select,html[data-theme] body textarea{background:var(--a-surface);border:1px solid var(--a-line);transition:border-color .15s,box-shadow .15s}
+html[data-theme] body input:hover,html[data-theme] body select:hover,html[data-theme] body textarea:hover{border-color:color-mix(in srgb,var(--a-muted) 45%,var(--a-line))}
+.skel{display:flex;flex-direction:column;gap:18px;max-width:1360px}
+.skel .sk,.skel .sk-row i{display:block;border-radius:12px;background:linear-gradient(90deg,var(--a-line) 25%,color-mix(in srgb,var(--a-line) 45%,var(--a-surface)) 50%,var(--a-line) 75%);background-size:300% 100%;animation:lhsk 1.4s ease-in-out infinite}
+.skel .w30{width:30%;height:22px}.skel .w100{width:100%}.skel .tall{height:110px}
+.skel .sk-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.skel .sk-row i{height:84px}
+@keyframes lhsk{0%{background-position:100% 0}100%{background-position:-100% 0}}
+@media(prefers-reduced-motion:reduce){.skel .sk,.skel .sk-row i{animation:none}}
+@media(max-width:860px){html[data-theme] body .topbar .btn-sm{min-width:0;padding:0 10px}html[data-theme] body .topbar .btn-sm span,.kc{display:none}}
+@media(max-width:860px){
+  html[data-theme] body table.stack tbody{padding:10px 12px;display:flex;flex-direction:column;gap:10px}
+  html[data-theme] body table.stack tr{border:1px solid var(--a-line);border-radius:12px;background:var(--a-surface);padding:8px 2px;box-shadow:0 1px 2px rgba(20,32,46,.04)}
+  html[data-theme] body table.stack tr:hover td{background:transparent}
+  html[data-theme] body table.stack td{padding:5px 14px;border:0;font-size:14px}
+  html[data-theme] body table.stack td:first-child{font:600 15px Archivo,sans-serif;padding-top:8px;justify-content:flex-start}
+  html[data-theme] body table.stack td:first-child::before{display:none}
+  html[data-theme] body table.stack td:last-child{padding-top:8px;padding-bottom:8px}
+  html[data-theme] body table.stack td:last-child .btn{width:100%;justify-content:center}
+  html[data-theme] body .card:has(table.stack){background:transparent;border:0;box-shadow:none}
+  html[data-theme] body .card:has(table.stack) .card-header{background:transparent;padding-left:2px}
+}
 </style>
 </head>
 <body>
@@ -551,6 +610,7 @@ html[data-theme] body ::-webkit-scrollbar-thumb{background:color-mix(in srgb,var
     <button class="nav-link" id="nav-system" onclick="go('/admin/settings')"><span class="nav-icon"><svg class="nav-ico" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></span> System</button>
   </nav>
   <div class="sidebar-footer">
+    <div class="side-user"><span class="side-av">JG</span><span class="side-who"><b>Jeffrey George</b><small>Owner</small></span></div>
     <button type="button" class="admin-theme-toggle" onclick="toggleAdminTheme()">
       <span class="label-light">Dark mode</span>
       <span class="label-dark">Light mode</span>
@@ -575,7 +635,7 @@ html[data-theme] body ::-webkit-scrollbar-thumb{background:color-mix(in srgb,var
     <button class="mob-menu-btn" onclick="toggleMobSidebar()" aria-label="Open menu">☰</button>
     <div class="topbar-title" id="topbar-title">Dashboard</div>
     <div style="display:flex;align-items:center;gap:16px">
-      <button class="btn btn-outline btn-sm" onclick="openSearch()" title="Press / anywhere">Search</button>
+      <button class="btn btn-outline btn-sm" onclick="openSearch()" title="Press / anywhere"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span>Search</span><kbd class="kc">/</kbd></button>
       <div class="notif-wrap">
         <button class="notif-btn" id="notif-btn" onclick="toggleNotifPanel()" aria-label="Notifications" aria-expanded="false">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
@@ -635,7 +695,7 @@ async function route() {
   window._lastApiError = null;
   const p = window.location.pathname;
   setActiveNav(p);
-  setMain('<div class="empty" id="route-loading">Loading…</div>');
+  setMain('<div id="route-loading" class="skel" aria-label="Loading"><i class="sk w30"></i><div class="sk-row"><i></i><i></i><i></i><i></i></div><i class="sk w100 tall"></i><i class="sk w100 tall"></i></div>');
   try { await renderRoute(p); } catch (e) { console.error(e); }
   if (nav === _navId && document.getElementById('route-loading')) {
     const le = window._lastApiError;
