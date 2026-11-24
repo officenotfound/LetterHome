@@ -116,7 +116,7 @@ html,body{background:var(--w-cream)!important}
 .story-quote::before{opacity:1!important}
 .story-text .story-sign{font-size:30px!important}
 .story-text .story-sign span{font-size:13px!important}
-@media(max-width:760px){#how .steps::before{bottom:84px!important}.story-text,.story-text h2,.story-text p{text-align:left!important}.story-text .eyebrow{justify-content:flex-start!important}.story-text{padding:24px 22px!important}.story-quote{font-size:18px!important;padding:26px 24px!important}}
+@media(max-width:760px){#how .steps::before{bottom:84px!important}.story-text,.story-text h2,.story-text p{text-align:center!important}.story-text .eyebrow{justify-content:center!important}.story-text{padding:24px 22px!important}.story-quote{font-size:18px!important;padding:26px 24px!important}}
 #pricing details.extras{max-width:none!important;width:100%;margin:0!important;background:var(--rd-paper)!important;border:1px solid var(--rd-edge)!important;border-radius:4px}
 
 /* Story: smaller, with a soft airmail-blue review card */
@@ -292,7 +292,7 @@ html,body{background:var(--w-cream)!important}
 #how .steps .step,#how .steps .step:first-child,#how .steps .step:last-child{padding:0 0 22px 64px!important;text-align:left!important;border:0!important}
 #how .step-num{position:absolute;left:0;top:0;margin:0!important}
 .story-inner{grid-template-columns:minmax(0,1fr)!important;gap:16px!important;padding-left:24px;padding-right:24px}
-.story-text,.story-text h2,.story-text p{text-align:left!important}
+.story-text,.story-text h2,.story-text p{text-align:center!important}
 .story-founder{margin-top:12px!important}
 .story-reviews{grid-auto-rows:auto}
 }

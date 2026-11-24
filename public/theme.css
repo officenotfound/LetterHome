@@ -535,3 +535,8 @@ body .usecases-grid .usecase, body .usecases-grid .usecase * { text-align: cente
 body .usecases-grid .usecase { align-items: center !important; justify-content: center; }
 body .biz-strip-inner { flex-direction: column; align-items: center; text-align: center; gap: 14px; }
 body .biz-strip-inner > * { text-align: center; }
+@media (max-width: 900px) {
+  body .story-text, body .story-text p, body .story-text h2 { text-align: center !important; }
+  body .story-founder { justify-content: center; flex-direction: column; align-items: center; text-align: center; gap: 10px; }
+  body .story-founder p { text-align: center !important; }
+}

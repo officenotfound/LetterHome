@@ -348,7 +348,7 @@ html[data-theme="dark"] body .step-num-mark{color:#a9c6e6!important}
 html body footer .lh-f-social{display:flex!important}
 :root body .lh-f-id a{color:inherit!important;text-decoration:underline;text-underline-offset:3px}
 @media(max-width:700px){
-  :root body :is(.story-text p:not(.founder-intro),.story-quote blockquote,.faq-item p,.faq-item summary){text-align:left!important}
+  :root body :is(.story-quote blockquote,.faq-item p,.faq-item summary){text-align:left!important}
   :root body .rate-row{display:grid!important;grid-template-columns:1fr auto!important;align-items:center!important;text-align:left!important;gap:2px 12px!important}
   :root body .rate-row .rate-dest{text-align:left!important}
   :root body .rate-row .rate-name{justify-content:flex-start!important}
