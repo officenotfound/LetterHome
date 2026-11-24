@@ -2047,6 +2047,7 @@ function startNotifications() {
 }
 
 // ───────────────────────── Mail ─────────────────────────
+const MAILSK = '<div class="ml-sk"><i></i><i></i><i></i></div>'.repeat(6);
 const mailCss = `<style>
 .ml-top{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
 .ml-box{padding:8px 14px;border:1px solid #d9d9d9;border-radius:999px;background:#fff;cursor:pointer;font-size:14px;color:#2a2a2a}
@@ -2064,6 +2065,7 @@ const mailCss = `<style>
 .ml-item.unread .ml-subj{font-weight:700}.ml-item.unread::before{content:'';display:inline-block;width:8px;height:8px;border-radius:50%;background:#b42318;margin-right:6px}
 .ml-from{color:#555;font-size:12px;display:flex;justify-content:space-between;gap:8px}.ml-sum{color:#888;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ml-read{overflow:auto;display:flex;flex-direction:column;min-width:0}
+.ml-sk{padding:14px 16px;border-bottom:1px solid #eee}.ml-sk i{display:block;height:11px;border-radius:6px;background:linear-gradient(90deg,#ececec,#f6f6f6,#ececec);background-size:200% 100%;animation:mlsk 1.2s linear infinite;margin:7px 0}.ml-sk i:nth-child(1){width:40%}.ml-sk i:nth-child(2){width:75%}.ml-sk i:nth-child(3){width:90%;opacity:.7}@keyframes mlsk{to{background-position:-200% 0}}
 .ml-empty{padding:30px;color:#888;font-size:14px;text-align:center}
 .ml-head{padding:14px 16px;border-bottom:1px solid #eee}.ml-head h3{margin:0 0 6px;font-size:17px;line-height:1.3;word-break:break-word}
 .ml-meta{font-size:12px;color:#666;line-height:1.6;word-break:break-word}
@@ -2077,15 +2079,15 @@ const mailCss = `<style>
 .ml-comp .field{margin:0 0 10px}.ml-comp input[type=text],.ml-comp select,.ml-comp textarea{width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid #d9d9d9;border-radius:6px;font:inherit;font-size:14px}
 .ml-comp textarea{min-height:240px;line-height:1.5}
 @media (max-width:900px){
- .ml-wrap{grid-template-columns:1fr;height:calc(100vh - 290px);height:calc(100dvh - 290px)}
- .ml-folders{display:flex;overflow-x:auto;border-right:none;border-bottom:1px solid #eee;padding:6px}
+ .ml-wrap{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr);height:calc(100vh - 290px);height:calc(100dvh - 290px)}
+ .ml-folders{display:flex;align-items:center;overflow-x:auto;border-right:none;border-bottom:1px solid #eee;padding:6px}
  .ml-folder{width:auto;white-space:nowrap}
  .ml-list{border-right:none}.ml-read{display:none}
  .ml-wrap.reading .ml-list,.ml-wrap.reading .ml-folders{display:none}.ml-wrap.reading .ml-read{display:flex}
  .ml-back{display:inline-block}
 }
 </style>`;
-let MAIL = { boxes: [], box: null, folders: [], folderId: '', msgs: [], next: null, q: '', filter: '', cur: null, images: false, loading: false };
+let MAIL = { boxes: [], box: null, folders: [], folderId: '', msgs: [], next: null, q: '', filter: '', cur: null, images: false, loading: false, cache: {}, fcache: {} };
 let _mailTimer = null;
 
 async function showMail() {
@@ -2129,9 +2131,12 @@ function mailTop() {
 async function mailOpenBox(key) {
   MAIL.box = key; MAIL.folderId = ''; MAIL.q = ''; MAIL.filter = ''; MAIL.cur = null; MAIL.msgs = []; MAIL.next = null;
   mailTop();
-  document.getElementById('ml-body').innerHTML = '<div class="empty">Loading…</div>';
+  const cf = MAIL.fcache[key];
+  if (cf) MAIL.folders = cf; else document.getElementById('ml-body').innerHTML = MAILSK;
+  if (cf) { const ib = cf.find(x => String(x.name).toLowerCase() === 'inbox') || cf[0]; MAIL.folderId = ib ? ib.id : ''; mailShell(); mailLoad(true); }
   const f = await api(`/api/admin/mail/${key}/folders`);
-  MAIL.folders = (f && f.folders) || [];
+  MAIL.folders = (f && f.folders) || []; MAIL.fcache[key] = MAIL.folders;
+  if (cf && MAIL.box === key && JSON.stringify(cf) === JSON.stringify(MAIL.folders)) return;
   const inbox = MAIL.folders.find(x => String(x.name).toLowerCase() === 'inbox') || MAIL.folders[0];
   MAIL.folderId = inbox ? inbox.id : '';
   mailShell();
@@ -2154,13 +2159,14 @@ function mailAddr(s) { const m = String(s || '').match(/<([^>]+)>/); return (m ?
 async function mailLoad(reset) {
   if (MAIL.loading) return; MAIL.loading = true;
   const box = document.getElementById('ml-items'); if (!box) { MAIL.loading = false; return; }
-  if (reset) { MAIL.msgs = []; MAIL.next = null; box.innerHTML = '<div class="ml-empty">Loading…</div>'; }
+  if (reset) { MAIL.msgs = []; MAIL.next = null; box.innerHTML = MAIL.cache[MAIL.box+'|'+MAIL.folderId] ? '' : MAILSK; if (MAIL.cache[MAIL.box+'|'+MAIL.folderId]) { MAIL.msgs = MAIL.cache[MAIL.box+'|'+MAIL.folderId]; mailRenderList(); } }
   const qs = new URLSearchParams({ folderId: MAIL.folderId, start: reset ? 1 : (MAIL.next || 1) });
   if (MAIL.q) qs.set('q', MAIL.q); if (MAIL.filter) qs.set('filter', MAIL.filter);
   const r = await api(`/api/admin/mail/${MAIL.box}/messages?${qs}`);
   MAIL.loading = false;
   if (!r || r.error) { box.innerHTML = `<div class="ml-empty" style="color:#b42318">${esc((r && r.error) || 'Could not load.')}</div>`; return; }
   MAIL.msgs = reset ? r.messages : MAIL.msgs.concat(r.messages); MAIL.next = r.next;
+  if (reset && !MAIL.q && !MAIL.filter) MAIL.cache[MAIL.box+'|'+MAIL.folderId] = MAIL.msgs;
   mailRenderList();
 }
 function mailRenderList() {

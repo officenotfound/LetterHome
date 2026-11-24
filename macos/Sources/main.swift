@@ -3,11 +3,13 @@ import WebKit
 import LocalAuthentication
 import UserNotifications
 
-let HOST = "https://letterhome.ca"
+let ENV = ProcessInfo.processInfo.environment
+let HOST = ENV["LH_HOST"] ?? "https://letterhome.ca"   // LH_HOST is only for testing against a local copy
 let NAVY = NSColor(srgbRed: 0x17/255.0, green: 0x29/255.0, blue: 0x3d/255.0, alpha: 1)
 let RED = NSColor(srgbRed: 0xc4/255.0, green: 0x20/255.0, blue: 0x2b/255.0, alpha: 1)
 
 func isMine(_ u: URL?) -> Bool {
+    if let t = ENV["LH_HOST"], let th = URL(string: t)?.host, u?.host == th { return true }
     guard let h = u?.host?.lowercased(), u?.scheme == "https" else { return false }
     return h == "letterhome.ca" || h.hasSuffix(".letterhome.ca") || h == "letterhome.us" || h.hasSuffix(".letterhome.us")
         || h == "letterhome.co.uk" || h.hasSuffix(".letterhome.co.uk")
@@ -104,7 +106,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         window.contentView = content
         window.makeKeyAndOrderFront(nil)
 
-        web.load(URLRequest(url: URL(string: HOST + "/admin")!))
+        var startPath = "/admin"
+        if let last = defaults.string(forKey: "lastPath"), last.hasPrefix("/admin"), !last.hasPrefix("/admin/login") { startPath = last }
+        web.load(URLRequest(url: URL(string: HOST + startPath)!))
         setLocked(lockEnabled)
         if lockEnabled { authenticate() }
 
@@ -210,6 +214,33 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         completionHandler(url)
     }
     func downloadDidFinish(_ d: WKDownload) { NSApp.dockTile.badgeLabel = NSApp.dockTile.badgeLabel }
+    func webView(_ w: WKWebView, didFinish n: WKNavigation!) {
+        if let u = w.url, isMine(u), u.path.hasPrefix("/admin"), !u.path.hasPrefix("/admin/login") { defaults.set(u.path, forKey: "lastPath") }
+        testHook(w)
+    }
+    // Test mode (LH_LOGIN=user:pass, LH_PATH, LH_SNAPSHOT): signs in to a local copy, opens a page, saves a picture of it and quits.
+    var testStep = 0
+    func testHook(_ w: WKWebView) {
+        guard let snap = ENV["LH_SNAPSHOT"], let login = ENV["LH_LOGIN"], let u = w.url else { return }
+        let parts = login.split(separator: ":", maxSplits: 1).map(String.init)
+        if u.path.hasPrefix("/admin/login"), testStep == 0, parts.count == 2 {
+            testStep = 1
+            let js = "const f=document.querySelector('form'); f.querySelector('[name=username]').value=\(jsq(parts[0])); f.querySelector('[type=password]').value=\(jsq(parts[1])); f.submit();"
+            w.evaluateJavaScript(js)
+        } else if !u.path.hasPrefix("/admin/login") {
+            if testStep < 2, let p = ENV["LH_PATH"], u.path != p { testStep = 2; DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { self.goTo(p) }; return }
+            testStep = 3
+            DispatchQueue.main.asyncAfter(deadline: .now() + 4) {
+                self.web.takeSnapshot(with: nil) { img, _ in
+                    if let img = img, let t = img.tiffRepresentation, let r = NSBitmapImageRep(data: t), let png = r.representation(using: .png, properties: [:]) {
+                        try? png.write(to: URL(fileURLWithPath: snap))
+                    }
+                    NSApp.terminate(nil)
+                }
+            }
+        }
+    }
+    func jsq(_ s: String) -> String { "'" + s.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "'", with: "\\'") + "'" }
     func webView(_ w: WKWebView, didFailProvisionalNavigation n: WKNavigation!, withError e: Error) { showOffline() }
     func showOffline() {
         let html = "<meta name='viewport' content='width=device-width,initial-scale=1'><body style='font-family:-apple-system,sans-serif;background:#17293d;color:#fff;text-align:center;padding:26vh 24px 0'><h2 style='font-weight:600;margin:0 0 8px'>No connection</h2><p style='opacity:.65;margin:0 0 22px'>Letterhome Admin cannot reach the server.</p><a href='\(HOST)/admin' style='display:inline-block;padding:10px 20px;background:#c4202b;color:#fff;border-radius:10px;text-decoration:none'>Try again</a></body>"
@@ -311,6 +342,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         _ = add(app, "Hide Others", #selector(NSApplication.hideOtherApplications(_:)), "h", [.command, .option], target: NSApp)
         app.addItem(.separator())
         _ = add(app, "Quit Letterhome Admin", #selector(NSApplication.terminate(_:)), "q", target: NSApp)
+
+        let file = sub("File")
+        _ = add(file, "Close Window", #selector(NSWindow.performClose(_:)), "w", target: nil)
 
         let edit = sub("Edit")
         _ = add(edit, "Undo", Selector(("undo:")), "z", target: nil)
