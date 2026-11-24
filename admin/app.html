@@ -631,6 +631,7 @@ let _navId = 0;
 
 async function route() {
   const nav = ++_navId;
+  closeMobSidebar();
   window._lastApiError = null;
   const p = window.location.pathname;
   setActiveNav(p);
