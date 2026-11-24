@@ -638,6 +638,31 @@ html[data-theme] body .subtab{padding-left:14px;padding-right:14px}
 html[data-theme] body .need-strip>*{min-width:0}
 html[data-theme] body #main>.card[style*="max-width"],html[data-theme] body #main>p[style*="max-width"],html[data-theme] body #main>div[style*="max-width"]:not(.set-wrap){max-width:720px!important;margin-left:auto!important;margin-right:auto!important}
 
+/* Admin v7: quiet chrome. Flat surfaces with hairlines, solid buttons, no gradients or glows. Colour is kept for the one thing that matters. */
+html[data-theme] body .card,html[data-theme] body .detail-card,html[data-theme] body .stat-card,html[data-theme] body .need-chip,html[data-theme] body .set-card{box-shadow:none!important;border:1px solid var(--a-line);border-radius:12px}
+html[data-theme] body .card-header{background:transparent}
+html[data-theme] body .stat-card::before{display:none}
+html[data-theme] body .need-chip:hover{transform:none;box-shadow:none;border-color:color-mix(in srgb,var(--a-text) 22%,var(--a-line))}
+html[data-theme] body .btn-primary,html[data-theme="dark"] body .btn-primary{background:var(--a-accent);border:1px solid var(--a-accent);box-shadow:none;color:#fff}
+html[data-theme] body .btn-primary:hover{background:color-mix(in srgb,var(--a-accent) 88%,#000)}
+html[data-theme="dark"] body .btn-primary{color:#1a0b0d}
+html[data-theme] body .btn-outline{box-shadow:none}
+html[data-theme="light"] body .content{background:var(--a-bg)}
+html[data-theme] body .sidebar{background:var(--a-nav)}
+html[data-theme] body .nav-link.active{background:rgba(255,255,255,.09);box-shadow:none}
+html[data-theme] body .side-av{background:var(--a-accent)}
+html[data-theme] body table.stack tr{box-shadow:none}
+html[data-theme] body .topbar{backdrop-filter:none;background:var(--a-surface)}
+html[data-theme] body th{font-weight:500;letter-spacing:.04em}
+html[data-theme] body #main table .btn-primary{background:var(--a-surface);color:var(--a-accent);border:1px solid var(--a-line)}
+html[data-theme] body #main table .btn-primary:hover{background:var(--a-accent-soft);border-color:var(--a-accent)}
+html[data-theme] body .sidebar-logo::after{opacity:.45}
+html[data-theme="dark"] body .btn-outline,html[data-theme="dark"] body #main table .btn-primary{background:var(--a-surface);border:1px solid var(--a-line);color:var(--a-text);opacity:1}
+html[data-theme="dark"] body #main table .btn-primary{color:var(--a-accent)}
+html[data-theme="dark"] body .btn-outline:hover{background:var(--a-hover)}
+html[data-theme="dark"] body .topbar .btn-sm,html[data-theme="dark"] body .topbar .btn-outline{background:var(--a-hover)!important;color:var(--a-muted)!important}
+html[data-theme] body .sidebar-footer small,html[data-theme] body .sidebar-footer .build{opacity:.5}
+
 /* Mac app: sidebar runs under the traffic lights, top bar drags the window */
 html.mac-app body .sidebar-logo{padding-top:44px}
 html.mac-app body .topbar{padding-left:28px}
