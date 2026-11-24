@@ -92,7 +92,7 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:48px 36px 32px
 <div class="main" id="main-content">
   <div class="eyebrow" data-i18n="track.eyebrow">Order tracking</div>
   <h1 data-i18n="track.h1">Check on your letter</h1>
-  <p class="intro" data-i18n="track.intro">Enter the order reference from your confirmation email and the email address you used at checkout. You'll see your order's status: payment received, at printer, printing, mailed. Canada Post lettermail has no delivery tracking once it's mailed.</p>
+  <p class="intro" data-i18n="track.intro">Enter your order number and checkout email. Canada Post lettermail has no delivery tracking once it's mailed.</p>
 
   <div id="error-msg" class="error-msg" role="alert" aria-live="assertive"></div>
 
@@ -101,7 +101,7 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:48px 36px 32px
       <div class="form-group">
         <label for="order-id" data-i18n="track.orderid.label">Order number</label>
         <input id="order-id" name="order_id" type="text" placeholder="e.g. LH-3F9A-72C1" data-i18n-placeholder="track.orderid.placeholder" required autocapitalize="characters" autocomplete="off">
-        <span class="field-note" data-i18n="track.orderid.note">Found in your confirmation email, subject line says "Order #…"</span>
+        <span class="field-note" data-i18n="track.orderid.note">In your confirmation email.</span>
       </div>
       <div class="form-group" style="margin-bottom:28px">
         <label for="email" data-i18n="track.email.label">Email address</label>
