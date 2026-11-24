@@ -74,6 +74,13 @@ final class LockView: NSView {
     func message(_ t: String) { status.stringValue = t }
 }
 
+func lhLog(_ m: String) {
+    let dir = NSHomeDirectory() + "/Library/Logs"; let f = dir + "/LetterhomeAdmin.log"
+    let line = ISO8601DateFormatter().string(from: Date()) + " " + m + "\n"
+    if let h = FileHandle(forWritingAtPath: f) { h.seekToEndOfFile(); h.write(line.data(using: .utf8)!); try? h.close()
+        if let sz = (try? FileManager.default.attributesOfItem(atPath: f)[.size] as? Int) ?? nil, sz > 200_000 { try? FileManager.default.removeItem(atPath: f) }
+    } else { try? line.write(toFile: f, atomically: true, encoding: .utf8) }
+}
 final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNavigationDelegate, WKUIDelegate, WKScriptMessageHandler, WKDownloadDelegate, UNUserNotificationCenterDelegate, NSMenuDelegate, URLSessionDataDelegate {
     var window: NSWindow!
     var web: WKWebView!
@@ -137,7 +144,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         let un = UNUserNotificationCenter.current()
         un.delegate = self
         un.setNotificationCategories([UNNotificationCategory(identifier: "mailreply", actions: [UNTextInputNotificationAction(identifier: "reply", title: "Reply", options: [], textInputButtonTitle: "Send", textInputPlaceholder: "Reply")], intentIdentifiers: [], options: [])])
-        un.requestAuthorization(options: [.alert, .sound, .badge]) { _, _ in self.refreshNotifState() }
+        un.requestAuthorization(options: [.alert, .sound, .badge]) { ok, err in lhLog("notification permission granted=\(ok) error=\(String(describing: err))"); self.refreshNotifState() }
 
         showWindow(nil)
         startStream()
@@ -302,7 +309,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
             case .denied: t = "Off in System Settings"
             default: t = "Not asked yet"
             }
-            DispatchQueue.main.async { self.notifState = t }
+            lhLog("notification status: \(t)"); DispatchQueue.main.async { self.notifState = t }
         }
     }
     @objc func sendTestNotification() {
@@ -324,7 +331,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         withCookies { cookie in
             DispatchQueue.main.async {
                 guard !self.streamStopped, self.streamTask == nil else { return }
-                guard let cookie = cookie else { self.streamState = "Sign in to the app to start live alerts"; self.retryStream(); return }
+                lhLog("stream start, cookie found=\(cookie != nil)"); guard let cookie = cookie else { self.streamState = "Sign in to the app to start live alerts"; self.retryStream(); return }
                 var comps = URLComponents(string: HOST + "/api/admin/events")!
                 if let s = self.defaults.string(forKey: "evSince") { comps.queryItems = [URLQueryItem(name: "since", value: s)] }
                 var req = URLRequest(url: comps.url!)
@@ -350,6 +357,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
     func urlSession(_ s: URLSession, task: URLSessionTask, willPerformHTTPRedirection r: HTTPURLResponse, newRequest q: URLRequest, completionHandler: @escaping (URLRequest?) -> Void) { completionHandler(nil) }
     func urlSession(_ s: URLSession, dataTask: URLSessionDataTask, didReceive r: URLResponse, completionHandler: @escaping (URLSession.ResponseDisposition) -> Void) {
         streamCode = (r as? HTTPURLResponse)?.statusCode ?? 0
+        lhLog("stream response \(streamCode)")
         completionHandler(streamCode == 200 ? .allow : .cancel)
         if streamCode == 200 { backoff = 3; streamState = "Connected"; defaults.set(false, forKey: "signedOutShown") }
     }
@@ -368,6 +376,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
     }
     func urlSession(_ s: URLSession, task: URLSessionTask, didCompleteWithError e: Error?) {
         guard task === streamTask else { return }
+        lhLog("stream ended code=\(streamCode) error=\(String(describing: e))")
         DispatchQueue.main.async {
             if self.streamCode == 401 || self.streamCode == 403 || (self.streamCode >= 300 && self.streamCode < 400) { self.streamState = "Signed out, open the app and sign in"; self.liveEvent(["type": "signedout"]) }
             else if self.streamCode != 200 { self.streamState = "Reconnecting…" }
@@ -559,6 +568,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
     var seenAlerts = Set<String>()
     func liveEvent(_ j: [String: Any]) {
         let type = j["type"] as? String ?? ""
+        if type != "tick" { lhLog("event \(type)") }
         if type == "tick" { return }
         if type == "signedout" {
             if !defaults.bool(forKey: "signedOutShown") { defaults.set(true, forKey: "signedOutShown"); notify("Signed out", "Open Letterhome Admin and sign in again to keep getting alerts.", "/admin", loud: false) }
@@ -622,7 +632,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         if extra?["reply"] != nil { c.categoryIdentifier = "mailreply" }
         c.threadIdentifier = path.hasPrefix("/admin/orders") ? "orders" : (path.hasPrefix("/admin/mail") ? "mail" : "messages")
         if path.hasPrefix("/admin/orders") { c.interruptionLevel = .timeSensitive }
-        UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: UUID().uuidString, content: c, trigger: nil))
+        UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: UUID().uuidString, content: c, trigger: nil)) { e in lhLog("notification posted title=\(title) error=\(String(describing: e))") }
     }
     func userNotificationCenter(_ c: UNUserNotificationCenter, willPresent n: UNNotification, withCompletionHandler h: @escaping (UNNotificationPresentationOptions) -> Void) {
         h(NSApp.isActive && !locked ? [] : [.banner, .list, .sound])

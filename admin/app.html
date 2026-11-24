@@ -2180,6 +2180,20 @@ const mailCss = `<style>
  .ml-wrap.reading .ml-list,.ml-wrap.reading .ml-folders{display:none}.ml-wrap.reading .ml-read{display:flex}
  .ml-back{display:inline-block}
 }
+html[data-theme="dark"] .ml-box,html[data-theme="dark"] .ml-wrap,html[data-theme="dark"] .ml-search,html[data-theme="dark"] .ml-comp{background:var(--a-surface);border-color:var(--a-line);color:var(--a-text)}
+html[data-theme="dark"] .ml-box.on{background:var(--a-text);color:var(--a-bg);border-color:var(--a-text)}
+html[data-theme="dark"] .ml-folders,html[data-theme="dark"] .ml-list,html[data-theme="dark"] .ml-head,html[data-theme="dark"] .ml-acts,html[data-theme="dark"] .ml-att,html[data-theme="dark"] .ml-orders,html[data-theme="dark"] .ml-sk,html[data-theme="dark"] .ml-search{border-color:var(--a-line)}
+html[data-theme="dark"] .ml-folder{color:var(--a-text)}
+html[data-theme="dark"] .ml-folder.on,html[data-theme="dark"] .ml-item.on{background:var(--a-hover,rgba(255,255,255,.08))}
+html[data-theme="dark"] .ml-item{border-bottom-color:var(--a-line)}
+html[data-theme="dark"] .ml-item:hover{background:var(--a-hover,rgba(255,255,255,.06))}
+html[data-theme="dark"] .ml-search input,html[data-theme="dark"] .ml-comp input[type=text],html[data-theme="dark"] .ml-comp select,html[data-theme="dark"] .ml-comp textarea{background:var(--a-bg);color:var(--a-text);border-color:var(--a-line)}
+html[data-theme="dark"] .ml-from,html[data-theme="dark"] .ml-meta{color:var(--a-muted)}
+html[data-theme="dark"] .ml-sum,html[data-theme="dark"] .ml-empty{color:var(--a-muted)}
+html[data-theme="dark"] .ml-sk i{background:linear-gradient(90deg,rgba(255,255,255,.06),rgba(255,255,255,.12),rgba(255,255,255,.06));background-size:200% 100%}
+.ml-item .ml-subj{color:#14202e!important}.ml-item .ml-from .ml-subj{font-weight:600}
+html[data-theme="dark"] .ml-item .ml-subj{color:var(--a-text)!important}
+.ml-sum{color:#5b6573}
 </style>`;
 let MAIL = { boxes: [], box: null, folders: [], folderId: '', msgs: [], next: null, q: '', filter: '', cur: null, images: false, loading: false, cache: {}, fcache: {} };
 let _mailTimer = null;
