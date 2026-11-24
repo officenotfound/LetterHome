@@ -2,6 +2,7 @@ import Cocoa
 import WebKit
 import LocalAuthentication
 import UserNotifications
+import ServiceManagement
 
 let ENV = ProcessInfo.processInfo.environment
 let HOST = ENV["LH_HOST"] ?? "https://letterhome.ca"   // LH_HOST is only for testing against a local copy
@@ -54,7 +55,7 @@ final class LockView: NSView {
     func message(_ t: String) { status.stringValue = t }
 }
 
-final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNavigationDelegate, WKUIDelegate, WKScriptMessageHandler, WKDownloadDelegate, UNUserNotificationCenterDelegate {
+final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNavigationDelegate, WKUIDelegate, WKScriptMessageHandler, WKDownloadDelegate, UNUserNotificationCenterDelegate, NSMenuDelegate, URLSessionDataDelegate {
     var window: NSWindow!
     var web: WKWebView!
     var lockView: LockView!
@@ -68,36 +69,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
 
     var lockEnabled: Bool { defaults.object(forKey: "lockEnabled") == nil ? true : defaults.bool(forKey: "lockEnabled") }
 
+    var status: NSStatusItem!
+    var session: URLSession!
+    var streamTask: URLSessionDataTask?
+    var streamBuf = ""
+    var streamCode = 0
+    var backoff = 3.0
+    var streamStopped = false
+
     func applicationDidFinishLaunching(_ n: Notification) {
         buildMenu()
-        let cfg = WKWebViewConfiguration()
-        cfg.websiteDataStore = .default()
-        cfg.applicationNameForUserAgent = "LetterhomeMac/1.0"
-        cfg.userContentController.add(self, name: "mac")
-        cfg.userContentController.addUserScript(WKUserScript(source: "document.documentElement.classList.add('mac-app');", injectionTime: .atDocumentStart, forMainFrameOnly: true))
-        let stream = """
-        (function(){ if(!/^\\/admin/.test(location.pathname)||/login/.test(location.pathname)||window.__lhEv)return; window.__lhEv=true;
-        var since=''; var sleep=function(ms){return new Promise(function(r){setTimeout(r,ms)})};
-        var post=function(o){try{webkit.messageHandlers.mac.postMessage(o)}catch(e){}};
-        (async function(){ var back=3000; for(;;){ try{
-          var r=await fetch('/api/admin/events'+(since?'?since='+encodeURIComponent(since):''),{credentials:'same-origin',redirect:'manual',headers:{Accept:'text/event-stream'}});
-          if(r.status!==200||!r.body){ post({ev:{type:'signedout'}}); await sleep(back); back=Math.min(back*2,60000); continue; }
-          back=3000; var rd=r.body.getReader(), dec=new TextDecoder(), buf='';
-          for(;;){ var x=await rd.read(); if(x.done)break; buf+=dec.decode(x.value,{stream:true}); var i;
-            while((i=buf.indexOf('\\n\\n'))>=0){ var blk=buf.slice(0,i); buf=buf.slice(i+2);
-              var l=blk.split('\\n').filter(function(t){return t.indexOf('data: ')===0})[0]; if(!l)continue;
-              var j=JSON.parse(l.slice(6)); if(j.at)since=j.at; post({ev:j}); } }
-        }catch(e){} await sleep(back); } })(); })();
-        """
-        cfg.userContentController.addUserScript(WKUserScript(source: stream, injectionTime: .atDocumentEnd, forMainFrameOnly: true))
-        web = WKWebView(frame: .zero, configuration: cfg)
-        web.navigationDelegate = self
-        web.uiDelegate = self
-        web.allowsBackForwardNavigationGestures = true
-        web.allowsMagnification = false
-        web.setValue(false, forKey: "drawsBackground")
-        web.autoresizingMask = [.width, .height]
-
+        makeStatusItem()
         let size = NSSize(width: 1280, height: 820)
         window = NSWindow(contentRect: NSRect(origin: .zero, size: size), styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView], backing: .buffered, defer: false)
         window.title = "Letterhome Admin"
@@ -112,37 +94,201 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
 
         let content = NSView(frame: NSRect(origin: .zero, size: size))
         content.wantsLayer = true
-        web.frame = content.bounds
-        content.addSubview(web)
         lockView = LockView(onUnlock: { [weak self] in self?.authenticate() })
         lockView.frame = content.bounds
         lockView.autoresizingMask = [.width, .height]
         content.addSubview(lockView)
         window.contentView = content
-        window.makeKeyAndOrderFront(nil)
 
-        var startPath = "/admin"
-        if let last = defaults.string(forKey: "lastPath"), last.hasPrefix("/admin"), !last.hasPrefix("/admin/login") { startPath = last }
-        web.load(URLRequest(url: URL(string: HOST + startPath)!))
-        setLocked(lockEnabled)
-        if lockEnabled { authenticate() }
+        let sc = URLSessionConfiguration.ephemeral
+        sc.timeoutIntervalForRequest = 45          // the server sends a line every 5 seconds, so silence means a dead link
+        sc.timeoutIntervalForResource = 24 * 3600
+        sc.waitsForConnectivity = true
+        sc.urlCache = nil; sc.httpCookieStorage = nil; sc.httpShouldSetCookies = false
+        session = URLSession(configuration: sc, delegate: self, delegateQueue: nil)
 
         let nc = NSWorkspace.shared.notificationCenter
         nc.addObserver(self, selector: #selector(systemLocked), name: NSWorkspace.screensDidSleepNotification, object: nil)
         nc.addObserver(self, selector: #selector(systemLocked), name: NSWorkspace.willSleepNotification, object: nil)
+        nc.addObserver(self, selector: #selector(systemSleeping), name: NSWorkspace.willSleepNotification, object: nil)
+        nc.addObserver(self, selector: #selector(systemWoke), name: NSWorkspace.didWakeNotification, object: nil)
         DistributedNotificationCenter.default().addObserver(self, selector: #selector(systemLocked), name: NSNotification.Name("com.apple.screenIsLocked"), object: nil)
 
         let un = UNUserNotificationCenter.current()
         un.delegate = self
         un.setNotificationCategories([UNNotificationCategory(identifier: "mailreply", actions: [UNTextInputNotificationAction(identifier: "reply", title: "Reply", options: [], textInputButtonTitle: "Send", textInputPlaceholder: "Reply")], intentIdentifiers: [], options: [])])
         un.requestAuthorization(options: [.alert, .sound, .badge]) { _, _ in }
-        pollTimer = Timer.scheduledTimer(withTimeInterval: 20, repeats: true) { [weak self] _ in self?.poll() }
+
+        showWindow(nil)
+        startStream()
+        pollTimer = Timer.scheduledTimer(withTimeInterval: 180, repeats: true) { [weak self] _ in self?.poll() }
+        pollTimer?.tolerance = 60
         DispatchQueue.main.asyncAfter(deadline: .now() + 6) { [weak self] in self?.poll() }
+        if ENV["LH_CLOSE"] != nil { DispatchQueue.main.asyncAfter(deadline: .now() + 5) { self.window.close() } }
+        if ENV["LH_FAKE"] != nil {   // test only: pretend the server sent one of each alert
+            DispatchQueue.main.asyncAfter(deadline: .now() + 4) {
+                self.liveEvent(["type": "order", "id": 901, "name": "Test Person", "dest": "CA", "price_cents": 1200])
+                self.liveEvent(["type": "message", "id": 902, "name": "Sam", "preview": "Hello there"])
+                self.liveEvent(["type": "extra", "id": 903, "order_id": 901, "amount_cents": 500, "currency": "CAD"])
+                self.liveEvent(["type": "mail", "box": "sales", "label": "Sales", "id": "77", "folderId": "1", "from": "Pat <pat@example.com>", "subject": "Question about a letter"])
+            }
+        }
+    }
+
+    // MARK: lightweight window. The web view only exists while the window is open, so closing it frees the memory
+    // and the app keeps running as a tiny menu bar item that listens for alerts with a plain network connection.
+    func makeWeb() {
+        let cfg = WKWebViewConfiguration()
+        cfg.websiteDataStore = .default()
+        cfg.applicationNameForUserAgent = "LetterhomeMac/1.0"
+        cfg.userContentController.add(self, name: "mac")
+        cfg.userContentController.addUserScript(WKUserScript(source: "document.documentElement.classList.add('mac-app');", injectionTime: .atDocumentStart, forMainFrameOnly: true))
+        web = WKWebView(frame: window.contentView!.bounds, configuration: cfg)
+        web.navigationDelegate = self
+        web.uiDelegate = self
+        web.allowsBackForwardNavigationGestures = true
+        web.allowsMagnification = false
+        web.setValue(false, forKey: "drawsBackground")
+        web.autoresizingMask = [.width, .height]
+        window.contentView!.addSubview(web, positioned: .below, relativeTo: lockView)
+    }
+    func dropWeb() {
+        guard web != nil else { return }
+        web.stopLoading()
+        web.configuration.userContentController.removeScriptMessageHandler(forName: "mac")
+        web.removeFromSuperview()
+        web = nil
+    }
+    func showWindow(_ path: String?) {
+        NSApp.setActivationPolicy(.regular)
+        if web == nil {
+            makeWeb()
+            var startPath = "/admin"
+            if let last = defaults.string(forKey: "lastPath"), last.hasPrefix("/admin"), !last.hasPrefix("/admin/login") { startPath = last }
+            if let p = path, p.hasPrefix("/admin") { startPath = p }
+            web.load(URLRequest(url: URL(string: HOST + startPath)!))
+            setLocked(lockEnabled)
+            if lockEnabled { authenticate() }
+        } else if let p = path { goTo(p) }
+        window.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+    }
+    func windowWillClose(_ n: Notification) {
+        dropWeb()
+        locked = lockEnabled
+        NSApp.setActivationPolicy(.accessory)      // no Dock icon while only the menu bar item is running
+        NSApp.dockTile.badgeLabel = nil
+    }
+
+    // MARK: menu bar item
+    func makeStatusItem() {
+        status = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        if let b = status.button {
+            let img = NSImage(systemSymbolName: "envelope.fill", accessibilityDescription: "Letterhome Admin")
+            img?.isTemplate = true
+            b.image = img
+            b.imagePosition = .imageLeft
+        }
+        let m = NSMenu()
+        m.delegate = self
+        status.menu = m
+    }
+    func menuNeedsUpdate(_ menu: NSMenu) {
+        menu.removeAllItems()
+        func add(_ t: String, _ sel: Selector, _ path: String? = nil) {
+            let i = NSMenuItem(title: t, action: sel, keyEquivalent: ""); i.target = self; i.representedObject = path; menu.addItem(i)
+        }
+        let head = NSMenuItem(title: lastBadge > 0 ? "\(lastBadge) unread" : "Nothing unread", action: nil, keyEquivalent: ""); head.isEnabled = false
+        menu.addItem(head)
+        menu.addItem(.separator())
+        add("Open Letterhome Admin", #selector(openFromMenu(_:)), "/admin")
+        add("Orders", #selector(openFromMenu(_:)), "/admin/orders")
+        add("Inbox", #selector(openFromMenu(_:)), "/admin/mail")
+        menu.addItem(.separator())
+        let q = NSMenuItem(title: "Silence Email Alerts 10 pm to 7 am", action: #selector(toggleQuiet(_:)), keyEquivalent: ""); q.target = self
+        q.state = defaults.bool(forKey: "quietOn") ? .on : .off; menu.addItem(q)
+        let l = NSMenuItem(title: "Open at Login", action: #selector(toggleLogin(_:)), keyEquivalent: ""); l.target = self
+        l.state = SMAppService.mainApp.status == .enabled ? .on : .off; menu.addItem(l)
+        menu.addItem(.separator())
+        let qi = NSMenuItem(title: "Quit Letterhome Admin", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"); menu.addItem(qi)
+    }
+    @objc func openFromMenu(_ i: NSMenuItem) { showWindow(i.representedObject as? String) }
+    @objc func toggleLogin(_ i: NSMenuItem) {
+        do { if SMAppService.mainApp.status == .enabled { try SMAppService.mainApp.unregister() } else { try SMAppService.mainApp.register() } } catch { NSSound.beep() }
+    }
+    func setBadge(_ n: Int) {
+        lastBadge = n
+        NSApp.dockTile.badgeLabel = n > 0 && window.isVisible ? String(n) : nil
+        status.button?.title = n > 0 ? " \(n)" : ""
+    }
+
+    // MARK: live alert connection (plain network stream, no web view)
+    func withCookies(_ done: @escaping (String?) -> Void) {
+        let host = URL(string: HOST)!.host!
+        WKWebsiteDataStore.default().httpCookieStore.getAllCookies { cs in
+            let mine = cs.filter { host == $0.domain.trimmingCharacters(in: CharacterSet(charactersIn: ".")) || host.hasSuffix("." + $0.domain.trimmingCharacters(in: CharacterSet(charactersIn: "."))) }
+            done(mine.isEmpty ? nil : mine.map { "\($0.name)=\($0.value)" }.joined(separator: "; "))
+        }
+    }
+    func startStream() {
+        streamStopped = false
+        guard streamTask == nil else { return }
+        withCookies { cookie in
+            DispatchQueue.main.async {
+                guard !self.streamStopped, self.streamTask == nil else { return }
+                guard let cookie = cookie else { self.retryStream(); return }
+                var comps = URLComponents(string: HOST + "/api/admin/events")!
+                if let s = self.defaults.string(forKey: "evSince") { comps.queryItems = [URLQueryItem(name: "since", value: s)] }
+                var req = URLRequest(url: comps.url!)
+                req.setValue(cookie, forHTTPHeaderField: "Cookie")
+                req.setValue("text/event-stream", forHTTPHeaderField: "Accept")
+                self.streamBuf = ""; self.streamCode = 0
+                self.streamTask = self.session.dataTask(with: req)
+                self.streamTask?.resume()
+            }
+        }
+    }
+    func stopStream() { streamStopped = true; streamTask?.cancel(); streamTask = nil }
+    func retryStream() {
+        streamTask = nil
+        guard !streamStopped else { return }
+        let d = backoff; backoff = min(backoff * 2, 120)
+        DispatchQueue.main.asyncAfter(deadline: .now() + d) { [weak self] in self?.startStream() }
+    }
+    @objc func systemSleeping() { stopStream() }
+    @objc func systemWoke() { backoff = 3; DispatchQueue.main.asyncAfter(deadline: .now() + 4) { self.startStream() } }
+
+    // URLSession delegate: only sends the cookie to our own host, never follows a redirect
+    func urlSession(_ s: URLSession, task: URLSessionTask, willPerformHTTPRedirection r: HTTPURLResponse, newRequest q: URLRequest, completionHandler: @escaping (URLRequest?) -> Void) { completionHandler(nil) }
+    func urlSession(_ s: URLSession, dataTask: URLSessionDataTask, didReceive r: URLResponse, completionHandler: @escaping (URLSession.ResponseDisposition) -> Void) {
+        streamCode = (r as? HTTPURLResponse)?.statusCode ?? 0
+        completionHandler(streamCode == 200 ? .allow : .cancel)
+        if streamCode == 200 { backoff = 3; defaults.set(false, forKey: "signedOutShown") }
+    }
+    func urlSession(_ s: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
+        guard let t = String(data: data, encoding: .utf8) else { return }
+        streamBuf += t
+        while let r = streamBuf.range(of: "\n\n") {
+            let blk = String(streamBuf[..<r.lowerBound]); streamBuf.removeSubrange(..<r.upperBound)
+            guard let line = blk.split(separator: "\n").first(where: { $0.hasPrefix("data: ") }),
+                  let d = String(line.dropFirst(6)).data(using: .utf8),
+                  let j = try? JSONSerialization.jsonObject(with: d) as? [String: Any] else { continue }
+            if let at = j["at"] as? String { defaults.set(at, forKey: "evSince") }
+            DispatchQueue.main.async { self.liveEvent(j) }
+        }
+        if streamBuf.count > 100_000 { streamBuf = "" }
+    }
+    func urlSession(_ s: URLSession, task: URLSessionTask, didCompleteWithError e: Error?) {
+        guard task === streamTask else { return }
+        DispatchQueue.main.async {
+            if self.streamCode == 401 || self.streamCode == 403 || (self.streamCode >= 300 && self.streamCode < 400) { self.liveEvent(["type": "signedout"]) }
+            self.retryStream()
+        }
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ app: NSApplication) -> Bool { false }
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
-        window.makeKeyAndOrderFront(nil); return true
+        showWindow(nil); return true
     }
     func applicationDidResignActive(_ n: Notification) { leftAt = Date() }
     func applicationDidBecomeActive(_ n: Notification) {
@@ -155,7 +301,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
     func setLocked(_ on: Bool) {
         locked = on
         lockView.isHidden = !on
-        web.isHidden = on
+        web?.isHidden = on
         if on { lockView.message("") }
     }
     func authenticate() {
@@ -191,20 +337,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
 
     // MARK: navigation
     func goTo(_ path: String) {
-        guard !locked else { return }
+        guard !locked, web != nil else { return }
         let js = "typeof go==='function' ? (go('\(path)'), true) : false"
         web.evaluateJavaScript(js) { r, _ in
             if (r as? Bool) != true, let u = URL(string: HOST + path) { self.web.load(URLRequest(url: u)) }
         }
     }
     @objc func menuGo(_ item: NSMenuItem) { if let p = item.representedObject as? String { goTo(p) } }
-    @objc func reload() { web.reload() }
-    @objc func back() { web.goBack() }
-    @objc func forward() { web.goForward() }
-    @objc func search() { web.evaluateJavaScript("typeof openSearch==='function' && openSearch()") }
-    @objc func zoomIn() { web.pageZoom = min(2, web.pageZoom + 0.1) }
-    @objc func zoomOut() { web.pageZoom = max(0.6, web.pageZoom - 0.1) }
-    @objc func zoomReset() { web.pageZoom = 1 }
+    @objc func reload() { web?.reload() }
+    @objc func back() { web?.goBack() }
+    @objc func forward() { web?.goForward() }
+    @objc func search() { web?.evaluateJavaScript("typeof openSearch==='function' && openSearch()") }
+    @objc func zoomIn() { web?.pageZoom = min(2, (web?.pageZoom ?? 1) + 0.1) }
+    @objc func zoomOut() { web?.pageZoom = max(0.6, (web?.pageZoom ?? 1) - 0.1) }
+    @objc func zoomReset() { web?.pageZoom = 1 }
     @objc func openSite() { NSWorkspace.shared.open(URL(string: HOST)!) }
 
     func webView(_ w: WKWebView, decidePolicyFor a: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
@@ -289,7 +435,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
 
     // page to app messages (window dragging from the page's top bar)
     func userContentController(_ c: WKUserContentController, didReceive m: WKScriptMessage) {
-        if let d = m.body as? [String: Any], let ev = d["ev"] as? [String: Any] { liveEvent(ev); return }
         guard let s = m.body as? String else { return }
         if s == "drag", let e = NSApp.currentEvent { window.performDrag(with: e) }
         else if s == "zoom" { window.zoom(nil) }
@@ -297,20 +442,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
 
     // MARK: alerts and Dock badge
     func poll() {
-        let js = "const r = await fetch('/api/admin/notifications' + (since ? '?since=' + encodeURIComponent(since) : ''), {credentials:'same-origin'}); if (!r.ok) return null; return await r.text();"
-        web.callAsyncJavaScript(js, arguments: ["since": since], in: nil, in: .page) { res in
-            guard case .success(let v) = res, let txt = v as? String, let d = txt.data(using: .utf8),
-                  let j = try? JSONSerialization.jsonObject(with: d) as? [String: Any] else { return }
-            self.handle(j)
+        withCookies { cookie in
+            guard let cookie = cookie else { return }
+            var req = URLRequest(url: URL(string: HOST + "/api/admin/notifications")!)
+            req.setValue(cookie, forHTTPHeaderField: "Cookie")
+            self.session.dataTask(with: req) { d, r, _ in
+                guard (r as? HTTPURLResponse)?.statusCode == 200, let d = d,
+                      let j = try? JSONSerialization.jsonObject(with: d) as? [String: Any] else { return }
+                DispatchQueue.main.async { self.handle(j) }
+            }.resume()
         }
     }
     func handle(_ j: [String: Any]) {
-        let firstRun = since.isEmpty
-        if let now = j["now"] as? String { since = now }
+        let firstRun = false
         let mailN = (j["mailUnread"] as? [[String: Any]] ?? []).reduce(0) { $0 + (($1["unread"] as? Int) ?? 0) }
         let badge = mailN + (j["unreadContacts"] as? Int ?? 0) + (j["unreadApplicants"] as? Int ?? 0)
-        NSApp.dockTile.badgeLabel = badge > 0 ? String(badge) : nil
-        lastBadge = badge
+        setBadge(badge)
         _ = firstRun
     }
     // Live alerts, the same set the Android app gives: orders, extra payments, customer messages, new email (with reply).
@@ -357,17 +504,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         }
     }
     func sendReply(_ info: [String: String], _ text: String) {
-        let js = """
-        const m = await (await fetch('/api/admin/me',{credentials:'same-origin'})).json();
-        const f = new FormData(); f.append('to', to); f.append('subject', /^re:/i.test(subject) ? subject : 'Re: ' + (subject||'')); f.append('body', text); if (mid) f.append('replyTo', mid);
-        const r = await fetch('/api/admin/mail/' + box + '/send', {method:'POST', credentials:'same-origin', headers:{'X-CSRF-Token': m.csrfToken||''}, body:f});
-        return r.ok;
-        """
-        let args: [String: Any] = ["box": info["box"] ?? "", "mid": info["mid"] ?? "", "to": info["to"] ?? "", "subject": info["subject"] ?? "", "text": text]
-        web.callAsyncJavaScript(js, arguments: args, in: nil, in: .page) { res in
-            var ok = false
-            if case .success(let v) = res, let b = v as? Bool { ok = b }
-            self.notify(ok ? "Reply sent" : "Reply not sent. Open the app to answer.", info["to"] ?? "", "/admin/mail", loud: false)
+        let done: (Bool) -> Void = { ok in
+            DispatchQueue.main.async { self.notify(ok ? "Reply sent" : "Reply not sent. Open the app to answer.", info["to"] ?? "", "/admin/mail", loud: false) }
+        }
+        withCookies { cookie in
+            guard let cookie = cookie, let box = info["box"], box.range(of: "^[A-Za-z0-9_-]+$", options: .regularExpression) != nil else { return done(false) }
+            var me = URLRequest(url: URL(string: HOST + "/api/admin/me")!); me.setValue(cookie, forHTTPHeaderField: "Cookie")
+            self.session.dataTask(with: me) { d, r, _ in
+                guard (r as? HTTPURLResponse)?.statusCode == 200, let d = d, let j = try? JSONSerialization.jsonObject(with: d) as? [String: Any] else { return done(false) }
+                let bd = "----lh" + UUID().uuidString.replacingOccurrences(of: "-", with: "")
+                let subj = info["subject"] ?? ""
+                var fields: [(String, String)] = [("to", info["to"] ?? ""), ("subject", subj.lowercased().hasPrefix("re:") ? subj : "Re: " + subj), ("body", text)]
+                if let mid = info["mid"], !mid.isEmpty { fields.append(("replyTo", mid)) }
+                var body = Data()
+                for (k, v) in fields where !v.isEmpty { body.append("--\(bd)\r\nContent-Disposition: form-data; name=\"\(k)\"\r\n\r\n\(v)\r\n".data(using: .utf8)!) }
+                body.append("--\(bd)--\r\n".data(using: .utf8)!)
+                var req = URLRequest(url: URL(string: HOST + "/api/admin/mail/" + box + "/send")!)
+                req.httpMethod = "POST"; req.httpBody = body
+                req.setValue(cookie, forHTTPHeaderField: "Cookie"); req.setValue(j["csrfToken"] as? String ?? "", forHTTPHeaderField: "X-CSRF-Token")
+                req.setValue("multipart/form-data; boundary=\(bd)", forHTTPHeaderField: "Content-Type")
+                self.session.dataTask(with: req) { _, r2, _ in done((r2 as? HTTPURLResponse)?.statusCode == 200) }.resume()
+            }.resume()
         }
     }
     func notify(_ title: String, _ body: String, _ path: String, loud: Bool = true, extra: [String: Any]? = nil) {
@@ -387,7 +544,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
             h(); return
         }
         let p = ui["path"] as? String ?? "/admin"
-        DispatchQueue.main.async { NSApp.activate(ignoringOtherApps: true); self.window.makeKeyAndOrderFront(nil); self.goTo(p) }
+        DispatchQueue.main.async { self.showWindow(p) }
         h()
     }
 
