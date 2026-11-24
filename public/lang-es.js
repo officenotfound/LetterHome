@@ -86,7 +86,7 @@ window.LH_ES = {
  "send.next.3.t": "Entregada",
  "send.next.3.d": "Hasta 2 semanas en Canadá, hasta 4 a nivel internacional.",
  "send.privacy": "No leemos ni compartimos su carta salvo que una revisión automática la marque. Guardamos un registro básico del pedido por razones fiscales. Pagos por Stripe. Nunca vemos su tarjeta.",
- "x.c58e97c387": "Cada dirección se verifica antes de imprimir. El correo estándar no incluye rastreo (<a href=\"/refunds\" style=\"color:var(--red)\">vea nuestra política de reembolsos</a>). ¿Tiene una pregunta antes de pagar o su tarjeta no pasa? Escriba a <a href=\"mailto:support@letterhome.ca\" style=\"color:var(--red)\">support@letterhome.ca</a>; respondemos en un día hábil.",
+ "x.c58e97c387": "Cada dirección se verifica antes de imprimir. El correo estándar no incluye rastreo (<a href=\"/refunds\" style=\"color:var(--red)\">vea nuestra política de reembolsos</a>). ¿Tiene una pregunta antes de pagar o su tarjeta no pasa? Use el <a href=\"/contact\" style=\"color:var(--red)\">formulario de contacto</a>; respondemos en un día hábil.",
  "x.d7c20c25e8": "Enviada en 2 días hábiles",
  "x.9ea94637fb": "Empresa canadiense registrada, BN 787294073",
  "send.agree": "Acepto los <a href=\"/terms\" style=\"color:var(--red)\">Términos</a> y la <a href=\"/privacy\" style=\"color:var(--red)\">Política de privacidad</a>. Mi carta no contiene amenazas, estafas ni contenido ilegal.",

@@ -632,7 +632,7 @@ function mailText(o) {
     s3: 'Entregada', s3d: 'Su carta fue entregada.',
     trackNo: (n, c) => `Número de rastreo: ${n}. Úselo en el sitio web de ${c} para seguir su carta.`, trackWait: 'Su número de rastreo aparecerá aquí cuando esté disponible.',
     estBox: 'Entrega estimada',
-    help: 'Si tiene preguntas sobre su carta, escriba a <a href="mailto:support@letterhome.ca" style="color:#a8472d">support@letterhome.ca</a> e incluya su número de pedido.',
+    help: 'Si tiene preguntas sobre su carta, use el <a href="https://letterhome.ca/contact" style="color:#a8472d">formulario de contacto</a> e incluya su número de pedido.',
   } : {
     es, dl, htmlLang: 'en-CA', dateLocale: 'en-CA',
     subjConfirmed: `Your Letterhome order is confirmed: letter to ${name}`,
@@ -655,7 +655,7 @@ function mailText(o) {
     s3: 'Delivered', s3d: 'Your letter has been delivered.',
     trackNo: (n, c) => `Tracking number: ${n}. Use it on the ${c} website to follow your letter.`, trackWait: 'Your tracking number will appear here once it is available.',
     estBox: 'Estimated delivery',
-    help: 'Questions about your letter? Email <a href="mailto:support@letterhome.ca" style="color:#a8472d">support@letterhome.ca</a> and include your order number.',
+    help: 'Questions about your letter? Use the <a href="https://letterhome.ca/contact" style="color:#a8472d">contact form</a> and include your order number.',
   };
 }
 const postgrid = createPostGrid({ db, getSetting, orderDirPath, destinations });
@@ -1255,7 +1255,7 @@ function unsubPage(state, email = '') {
   const headings = {
     invalid:    { title: 'Invalid unsubscribe link', body: "We couldn't verify this unsubscribe link. It may be malformed, or copied incompletely from an email. If you want to opt out, reply to any email from us and we'll handle it manually." },
     confirm:    { title: 'Unsubscribe from Letterhome emails?', body: `We'll stop sending marketing or update emails to <strong>${safeEmail}</strong>. You'll still receive transactional messages tied to orders you place (payment confirmations, status updates).` },
-    done:       { title: "You've been unsubscribed.", body: `We've removed <strong>${safeEmail}</strong> from our marketing list. You won't receive any more update emails from us. If you change your mind, email <a href="mailto:support@letterhome.ca">support@letterhome.ca</a>.` },
+    done:       { title: "You've been unsubscribed.", body: `We've removed <strong>${safeEmail}</strong> from our marketing list. You won't receive any more update emails from us. If you change your mind, use the <a href="https://letterhome.ca/contact">contact form</a>.` },
     already:    { title: "Already unsubscribed.", body: `<strong>${safeEmail}</strong> is already opted out of our marketing emails.` },
   }[state];
   const action = state === 'confirm' ? `
@@ -1764,7 +1764,7 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
   if (!mailService && (b['registered_mail'] === '1' || b['registered_mail'] === 'true')) mailService = 'registered';
   const offered = destinations.servicesFor(b['r-country']);
   if (mailService && !offered[mailService]) {
-    return res.status(400).json({ error: `${SERVICE_NAMES[mailService] || 'That mail service'} is not available for this destination. Please remove it and continue, or email support@letterhome.ca.` });
+    return res.status(400).json({ error: `${SERVICE_NAMES[mailService] || 'That mail service'} is not available for this destination. Please remove it and continue, or use the contact form at letterhome.ca/contact.` });
   }
   const serviceCents   = mailService ? offered[mailService].cents : 0;
   const registeredMail = mailService === 'registered';

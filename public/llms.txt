@@ -213,6 +213,6 @@ Verified mailing addresses (sourced from canada.ca, IRCC, and each bank's own si
 
 ## Contact
 
-- Email: support@letterhome.ca
+- Contact: https://letterhome.ca/contact
 - Website: https://letterhome.ca
 - Based in: Canada

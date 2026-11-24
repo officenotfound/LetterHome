@@ -29,7 +29,7 @@
         show('Thanks. You are on the list, and we will email you once when it opens.', 'ok');
       }).catch(function () {
         btn.disabled = false;
-        show('Something went wrong. Please email support@letterhome.ca and we will add you.', 'err');
+        show('Something went wrong. Please try again, or use the contact form at letterhome.ca/contact.', 'err');
       });
     });
   });

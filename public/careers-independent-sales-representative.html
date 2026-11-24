@@ -187,7 +187,7 @@ document.getElementById('apply-form').addEventListener('submit', function (e) {
   fetch('/api/careers/apply', { method: 'POST', body: data })
     .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { if (!r.ok) throw new Error(j.error || ''); }); })
     .then(function () { f.querySelectorAll('input,textarea,button').forEach(function (el) { el.disabled = true; }); msg.className = 'msg ok'; msg.textContent = 'Thanks. Your application was sent, and we will reply by email.'; })
-    .catch(function (err) { btn.disabled = false; msg.className = 'msg err'; msg.textContent = err.message || 'Something went wrong. Please email support@letterhome.ca instead.'; });
+    .catch(function (err) { btn.disabled = false; msg.className = 'msg err'; msg.textContent = err.message || 'Something went wrong. Please use the contact form instead.'; });
 });
 </script>
 <footer id="site-footer"><nav aria-label="Site links" style="padding:24px;font-size:14px"><a href="/about">About</a> · <a href="/careers">Careers</a> · <a href="/contact">Contact</a> · <a href="/guides">Mailing guides</a> · <a href="/business">Business mail</a> · <a href="/monthly-letters">Monthly letters</a> · <a href="/terms">Terms</a> · <a href="/privacy">Privacy</a> · <a href="/refunds">Refund policy</a> · <a href="https://letterhome.ca/">Canada</a> · <a href="/us">United States</a> · <a href="/uk">United Kingdom</a> · <a href="/au">Australia</a></nav></footer>
