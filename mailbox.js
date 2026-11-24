@@ -112,13 +112,12 @@ function register(app, deps) {
 
   // ---- which mailboxes exist, with unread counts ----
   app.get('/api/admin/mail/mailboxes', requireAdmin, wrap(async (req, res) => {
-    const out = [];
-    for (const b of boxes) {
+    const out = await Promise.all(boxes.map(async b => {
       let address = '', from = [];
       try { const a = await b.account(); address = a.address; from = a.from; b.state.error = null; } catch (e) { b.state.error = e.message; }
-      out.push({ key: b.key, label: b.label, address, from, unread: b.state.unread, error: b.state.error,
-        watch: { checkedAt: b.state.checkedAt || 0, cursor: b.state.cursor || 0, listed: b.state.listed || 0, parsed: b.state.parsed || 0, pollError: b.state.pollError || null } });
-    }
+      return { key: b.key, label: b.label, address, from, unread: b.state.unread, error: b.state.error,
+        watch: { checkedAt: b.state.checkedAt || 0, cursor: b.state.cursor || 0, listed: b.state.listed || 0, parsed: b.state.parsed || 0, pollError: b.state.pollError || null } };
+    }));
     res.json({ configured: boxes.length > 0, mailboxes: out });
   }));
 
@@ -276,7 +275,7 @@ function register(app, deps) {
   }
   const recentSince = ms => recent.filter(e => e.at > ms);
 
-  return { boxes, events, pollAll, start, recent: () => recent.slice(-20), recentSince };
+  return { boxes, events, pollAll, start, recent: () => recent.slice(-20), recentSince, unread: () => boxes.map(b => ({ key: b.key, label: b.label, unread: b.state.unread || 0 })) };
 }
 
 module.exports = { register, discoverBoxes, decodeEntities };

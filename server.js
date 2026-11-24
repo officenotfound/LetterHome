@@ -3260,7 +3260,7 @@ app.get('/api/admin/notifications', requireAdmin, (req, res) => {
     ORDER BY created_at DESC LIMIT 20`).all(...(since ? [since] : []));
   const unreadContacts = db.prepare('SELECT COUNT(*) AS n FROM contact_submissions WHERE read_at IS NULL').get().n;
   const sinceMs = since ? Date.parse(since.replace(' ', 'T') + 'Z') : 0;
-  res.json({ now, orders, contacts, unreadContacts, mail: since ? mailbox.recentSince(sinceMs) : [] });
+  res.json({ now, orders, contacts, unreadContacts, mailUnread: mailbox.unread(), mail: since ? mailbox.recentSince(sinceMs) : [] });
 });
 
 // Live alerts for the admin app: a stream that pushes a line the moment a new paid order, an unread message or an extra payment appears.

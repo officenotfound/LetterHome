@@ -232,7 +232,20 @@ html[data-theme="dark"] .subtab{color:#9a9a9a}
 html[data-theme="dark"] .subtab:hover{color:#f5f5f5}
 html[data-theme="dark"] .subtab.active{color:#ff7a82;border-bottom-color:#ff7a82}
 @media(max-width:767px){.subtabs{padding:0 8px}}
-.need-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.mob-tabs{display:none}
+@media(max-width:767px){
+  .mob-tabs{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;left:0;right:0;bottom:0;z-index:900;background:#fff;border-top:1px solid #e3e3e3;padding-bottom:env(safe-area-inset-bottom,0px)}
+  .mob-tab{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 2px 7px;border:0;background:none;font:600 10px 'DM Mono',ui-monospace,monospace;letter-spacing:.06em;text-transform:uppercase;color:#6b6b6b;cursor:pointer}
+  .mob-tab i{font-style:normal;font-size:19px;line-height:1}
+  .mob-tab.active{color:#e63946}
+  .mob-tab .mt-badge{position:absolute;top:3px;left:calc(50% + 6px);background:#e63946;color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:9px;display:none}
+  .main{padding-bottom:84px!important}
+  .mail-pad{padding-bottom:0}
+  html[data-theme="dark"] .mob-tabs{background:#0a0a0a;border-top-color:rgba(255,255,255,.1)}
+  html[data-theme="dark"] .mob-tab{color:#9a9a9a}
+  html[data-theme="dark"] .mob-tab.active{color:#ff7a82}
+}
+.need-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px}
 .need-chip{display:flex;align-items:baseline;gap:10px;padding:14px 18px;background:#fff;border:1px solid #ececec;border-left:3px solid #ececec;cursor:pointer;text-align:left;font-family:'DM Mono',ui-monospace,monospace}
 .need-chip b{font-family:'DM Serif Display',Georgia,serif;font-size:26px;font-weight:400;color:#111}
 .need-chip span{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:#6b6b6b}
@@ -408,8 +421,9 @@ html[data-theme="dark"] body [style*="solid #ececec"],html[data-theme="dark"] bo
     <div class="nav-label">Menu</div>
     <button class="nav-link" id="nav-dashboard" onclick="go('/admin')"><span class="nav-icon">◈</span> Dashboard</button>
     <button class="nav-link" id="nav-orders" onclick="go('/admin/orders')"><span class="nav-icon">✉</span> Orders</button>
-    <button class="nav-link" id="nav-people" onclick="go('/admin/customers')" style="justify-content:space-between"><span style="display:flex;align-items:center;gap:10px"><span class="nav-icon">◎</span> People</span><span id="contacts-badge" style="display:none;background:#e63946;color:#fff;font-size:10px;font-weight:700;padding:1px 7px;min-width:18px;text-align:center"></span></button>
-    <button class="nav-link" id="nav-messages" onclick="go('/admin/broadcast')"><span class="nav-icon">≋</span> Messages</button>
+    <button class="nav-link" id="nav-inbox" onclick="go('/admin/mail')" style="justify-content:space-between"><span style="display:flex;align-items:center;gap:10px"><span class="nav-icon">✆</span> Inbox</span><span id="inbox-badge" style="display:none;background:#e63946;color:#fff;font-size:10px;font-weight:700;padding:1px 7px;min-width:18px;text-align:center"></span></button>
+    <button class="nav-link" id="nav-people" onclick="go('/admin/customers')"><span class="nav-icon">◎</span> People</button>
+    <button class="nav-link" id="nav-marketing" onclick="go('/admin/broadcast')"><span class="nav-icon">≋</span> Marketing</button>
     <button class="nav-link" id="nav-reports" onclick="go('/admin/insights')"><span class="nav-icon">◑</span> Reports</button>
     <button class="nav-link" id="nav-system" onclick="go('/admin/settings')"><span class="nav-icon">⚙</span> System</button>
   </nav>
@@ -426,6 +440,13 @@ html[data-theme="dark"] body [style*="solid #ececec"],html[data-theme="dark"] bo
 </aside>
 <div id="sidebar-overlay" class="sidebar-overlay" onclick="closeMobSidebar()"></div>
 
+<nav class="mob-tabs" id="mob-tabs" aria-label="Main">
+  <button class="mob-tab" data-g="dashboard" onclick="go('/admin')"><i>◈</i>Home</button>
+  <button class="mob-tab" data-g="orders" onclick="go('/admin/orders')"><i>✉</i>Orders</button>
+  <button class="mob-tab" data-g="inbox" onclick="go('/admin/mail')"><i>✆</i>Inbox<span class="mt-badge" id="tab-inbox-badge"></span></button>
+  <button class="mob-tab" data-g="people" onclick="go('/admin/customers')"><i>◎</i>People</button>
+  <button class="mob-tab" data-g="more" onclick="toggleMobSidebar()"><i>☰</i>More</button>
+</nav>
 <div class="content">
   <div class="topbar">
     <button class="mob-menu-btn" onclick="toggleMobSidebar()" aria-label="Open menu">☰</button>
@@ -540,8 +561,9 @@ function renderRoute(p) {
 // Related sections share one menu item and show as tabs. Every address still works as before.
 const NAV_GROUPS = {
   orders:   { tabs: [['/admin/orders', 'Orders'], ['/admin/approvals', 'Approvals'], ['/admin/print-queue', 'Print queue']] },
-  people:   { tabs: [['/admin/customers', 'Customers'], ['/admin/accounts', 'Accounts'], ['/admin/contacts', 'Contacts'], ['/admin/applicants', 'Applicants'], ['/admin/businesses', 'Businesses']] },
-  messages: { tabs: [['/admin/mail', 'Mail'], ['/admin/broadcast', 'Broadcast'], ['/admin/outreach', 'Outreach'], ['/admin/followups', 'Follow-ups'], ['/admin/content', 'Content and links'], ['/admin/templates', 'Templates'], ['/admin/emails', 'Emails']] },
+  people:   { tabs: [['/admin/customers', 'Customers'], ['/admin/accounts', 'Accounts'], ['/admin/applicants', 'Applicants'], ['/admin/businesses', 'Businesses']] },
+  inbox:    { tabs: [['/admin/mail', 'Mail'], ['/admin/contacts', 'Contact form'], ['/admin/templates', 'Saved replies']] },
+  marketing: { tabs: [['/admin/broadcast', 'Broadcast'], ['/admin/outreach', 'Outreach'], ['/admin/followups', 'Follow-ups'], ['/admin/content', 'Content and links'], ['/admin/emails', 'Sent emails']] },
   reports:  { tabs: [['/admin/insights', 'Insights'], ['/admin/visitors', 'Visitors'], ['/admin/traffic', 'Traffic'], ['/admin/growth', 'Search'], ['/admin/funnel', 'Funnel'], ['/admin/seo-audit', 'Content audit'], ['/admin/profit', 'Profit'], ['/admin/stripe', 'Stripe']] },
   system:   { tabs: [['/admin/settings', 'Settings'], ['/admin/app-settings', 'Phone app'], ['/admin/health', 'Health'], ['/admin/codes', 'Codes'], ['/admin/admin-users', 'Admin users'], ['/admin/audit-log', 'Audit log'], ['/admin/trash', 'Trash']] },
 };
@@ -552,8 +574,9 @@ function groupOf(p) {
   return [null, null];
 }
 function setActiveNav(p) {
-  ['dashboard','orders','people','messages','reports','system'].forEach(k => document.getElementById('nav-' + k)?.classList.remove('active'));
+  ['dashboard','orders','inbox','people','marketing','reports','system'].forEach(k => document.getElementById('nav-' + k)?.classList.remove('active'));
   const [g, tab] = groupOf(p);
+  document.querySelectorAll('.mob-tab').forEach(t => t.classList.toggle('active', t.dataset.g === (g || 'dashboard')));
   const strip = document.getElementById('subtabs');
   if (!g || NAV_GROUPS[g].tabs.length < 2) {
     document.getElementById('nav-' + (g || 'dashboard'))?.classList.add('active');
@@ -564,9 +587,9 @@ function setActiveNav(p) {
   if (strip) {
     strip.style.display = 'flex';
     strip.innerHTML = NAV_GROUPS[g].tabs.map(([path, label]) =>
-      `<button class="subtab${path === tab ? ' active' : ''}" role="tab" aria-selected="${path === tab}" onclick="go('${path}')">${label}${path === '/admin/contacts' ? '<span class="contacts-tab-badge" style="display:none"></span>' : ''}</button>`).join('');
+      `<button class="subtab${path === tab ? ' active' : ''}" role="tab" aria-selected="${path === tab}" onclick="go('${path}')">${label}${path === '/admin/contacts' ? '<span class="contacts-tab-badge" style="display:none"></span>' : ''}${path === '/admin/mail' ? '<span class="mail-tab-badge contacts-tab-badge" style="display:none"></span>' : ''}</button>`).join('');
     const n = window._unreadContacts || 0;
-    strip.querySelectorAll('.contacts-tab-badge').forEach(b => { b.textContent = n; b.style.display = n > 0 ? 'inline-block' : 'none'; });
+    strip.querySelectorAll('.contacts-tab-badge').forEach(b => { const v = b.classList.contains('mail-tab-badge') ? (window._unreadMail || 0) : n; b.textContent = v; b.style.display = v > 0 ? 'inline-block' : 'none'; });
   }
 }
 
@@ -795,13 +818,14 @@ let dashChartPeriod = 'monthly';
 
 async function showDashboard() {
   setTitle('Dashboard');
-  const [stats, paidOrders, submittedOrders, chartData, geoData, stripeOv, health, sched] = await Promise.all([
+  // Stripe can be slow or down, so it is not allowed to hold the page back: it fills in when it arrives.
+  const stripeP = api('/api/admin/stripe/overview', { background: true });
+  const [stats, paidOrders, submittedOrders, chartData, geoData, health, sched] = await Promise.all([
     api('/api/admin/stats'),
     api('/api/admin/orders?status=paid'),
     api('/api/admin/orders?status=submitted_to_printer'),
     api('/api/admin/stats/chart?period=monthly'),
     api('/api/admin/stats/geo'),
-    api('/api/admin/stripe/overview'),
     api('/api/admin/server-health'),
     api('/api/admin/print-queue/scheduled'),
   ]);
@@ -810,8 +834,14 @@ async function showDashboard() {
   window._schedApproved = {};
   ((sched && sched.orders) || []).forEach(o => { if (o.approved && o.date > (sched.today || '')) window._schedApproved[o.id] = o.date; });
 
-  renderDashboard(stats, paidOrders, submittedOrders, chartData, geoData, 'monthly', stripeOv, health);
+  renderDashboard(stats, paidOrders, submittedOrders, chartData, geoData, 'monthly', null, health);
   loadTodayCard();
+  stripeP.then(ov => {
+    if (ov && location.pathname === '/admin' && document.getElementById('need-strip')) {
+      renderDashboard(stats, paidOrders, submittedOrders, chartData, geoData, 'monthly', ov, health);
+      loadTodayCard();
+    }
+  });
 }
 
 async function reloadDashChart(period) {
@@ -870,8 +900,8 @@ function renderDashboard(stats, paidOrders, submittedOrders, chartData, geoData,
       const toSubmit = (paidOrders||[]).filter(o => !(window._schedApproved || {})[o.id]).length, atPrinter = (submittedOrders||[]).length;
       const unread = window._unreadContacts || 0;
       const disputes = stripeOv ? stripeOv.openDisputeCount : 0;
-      const chip = (n, label, href, hot) => `<button class="need-chip${n && hot ? ' hot' : ''}" onclick="go('${href}')"><b>${n}</b><span>${label}</span></button>`;
-      return `<div class="need-strip" id="need-strip">${chip(toSubmit,'to approve &amp; send','/admin/orders',true)}${chip(atPrinter,'awaiting mailed','/admin/orders',false)}${chip(unread,'unread messages','/admin/contacts',true)}${chip(disputes,'open disputes','/admin/stripe',true)}</div>`;
+      const chip = (n, label, href, hot, id) => `<button${id ? ` id="${id}"` : ''} class="need-chip${n && hot ? ' hot' : ''}" onclick="go('${href}')"><b>${n}</b><span>${label}</span></button>`;
+      return `<div class="need-strip" id="need-strip">${chip(toSubmit,'to approve &amp; send','/admin/orders',true)}${chip(atPrinter,'awaiting mailed','/admin/orders',false)}${chip(window._unreadMail || 0,'unread emails','/admin/mail',true,'need-mail')}${chip(unread,'contact messages','/admin/contacts',true,'need-contacts')}${chip(disputes,'open disputes','/admin/stripe',true)}</div>`;
     })()}
     <div class="card" style="margin-bottom:24px">
       <div class="card-header">
@@ -1774,6 +1804,8 @@ async function pollNotifications() {
   const d = await api('/api/admin/notifications' + (seen ? `?since=${encodeURIComponent(seen)}` : ''), { background: true });
   if (!d) return;
   _notifSince = d.now;
+  if (d.mailUnread) updateMailBadge(d.mailUnread);
+  if (typeof d.unreadContacts === 'number') { window._unreadContacts = d.unreadContacts; refreshBadges(); }
   if (!seen) { writeSeen(d.now); } // first ever visit: start counting from now, not the whole history
   const items = [];
   (seen ? d.orders : []).forEach(o => items.push({ key: 'o' + o.id, path: `/admin/orders/${o.id}`,
@@ -1835,7 +1867,7 @@ const mailCss = `<style>
 .ml-comp .field{margin:0 0 10px}.ml-comp input[type=text],.ml-comp select,.ml-comp textarea{width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid #d9d9d9;border-radius:6px;font:inherit;font-size:14px}
 .ml-comp textarea{min-height:240px;line-height:1.5}
 @media (max-width:900px){
- .ml-wrap{grid-template-columns:1fr;height:calc(100vh - 210px)}
+ .ml-wrap{grid-template-columns:1fr;height:calc(100vh - 290px);height:calc(100dvh - 290px)}
  .ml-folders{display:flex;overflow-x:auto;border-right:none;border-bottom:1px solid #eee;padding:6px}
  .ml-folder{width:auto;white-space:nowrap}
  .ml-list{border-right:none}.ml-read{display:none}
@@ -1853,7 +1885,7 @@ async function showMail() {
   if (!r) return setMain('<div class="empty">Could not load the mailboxes.</div>');
   if (!r.configured) return setMain(`<div class="card" style="padding:24px;line-height:1.7"><div class="card-title" style="margin-bottom:10px">Mail is not connected yet</div>
     The mailbox keys have not been added to the server. Follow the setup steps, then restart the app on the server.</div>`);
-  MAIL.boxes = r.mailboxes;
+  MAIL.boxes = r.mailboxes; updateMailBadge(r.mailboxes);
   const qp = new URLSearchParams(location.search);
   if (qp.get('box') && r.mailboxes.find(b => b.key === qp.get('box'))) MAIL.box = qp.get('box');
   if (!MAIL.box || !MAIL.boxes.find(b => b.key === MAIL.box)) MAIL.box = MAIL.boxes[0].key;
@@ -1871,7 +1903,7 @@ async function showMail() {
   _mailTimer = setInterval(async () => {
     if (location.pathname !== '/admin/mail') return clearInterval(_mailTimer);
     const r2 = await api('/api/admin/mail/mailboxes', { background: true });
-    if (r2) { MAIL.boxes = r2.mailboxes; mailTop(); }
+    if (r2) { MAIL.boxes = r2.mailboxes; updateMailBadge(r2.mailboxes); mailTop(); }
   }, 60000);
 }
 function mailTop() {
@@ -4852,13 +4884,20 @@ async function markAllContactsRead() {
 
 function updateContactsBadge(unread) {
   window._unreadContacts = unread;
-  document.querySelectorAll('.contacts-tab-badge').forEach(b => { b.textContent = unread; b.style.display = unread > 0 ? 'inline-block' : 'none'; });
-  const ns = document.querySelector('#need-strip .need-chip:nth-child(3)');
-  if (ns) { ns.querySelector('b').textContent = unread; ns.classList.toggle('hot', unread > 0); }
-  const badge = document.getElementById('contacts-badge');
-  if (!badge) return;
-  if (unread > 0) { badge.textContent = unread; badge.style.display = 'inline'; }
-  else { badge.style.display = 'none'; }
+  refreshBadges();
+}
+function updateMailBadge(list) {
+  window._unreadMailBoxes = list || [];
+  window._unreadMail = (list || []).reduce((n, b) => n + (b.unread || 0), 0);
+  refreshBadges();
+}
+function refreshBadges() {
+  const c = window._unreadContacts || 0, m = window._unreadMail || 0, total = c + m;
+  document.querySelectorAll('.contacts-tab-badge').forEach(b => { const v = b.classList.contains('mail-tab-badge') ? m : c; b.textContent = v; b.style.display = v > 0 ? 'inline-block' : 'none'; });
+  const chipC = document.getElementById('need-contacts'), chipM = document.getElementById('need-mail');
+  if (chipC) { chipC.querySelector('b').textContent = c; chipC.classList.toggle('hot', c > 0); }
+  if (chipM) { chipM.querySelector('b').textContent = m; chipM.classList.toggle('hot', m > 0); }
+  document.querySelectorAll('#inbox-badge, #tab-inbox-badge').forEach(badge => { if (total > 0) { badge.textContent = total > 99 ? '99+' : total; badge.style.display = 'inline-block'; } else badge.style.display = 'none'; });
 }
 
 function esc(s) {
