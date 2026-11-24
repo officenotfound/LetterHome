@@ -469,18 +469,22 @@ test('POST /api/create-order with malformed email returns 400', async () => {
 
 test('POST /api/track returns order data for valid email + order_id', async () => {
   const sessionId = seedOrder({ email: 'track@example.com', status: 'paid', recipientName: 'Bob Track' });
-  const row = db.prepare('SELECT id FROM orders WHERE stripe_session_id = ?').get(sessionId);
+  const row = db.prepare('SELECT id, public_ref FROM orders WHERE stripe_session_id = ?').get(sessionId);
+  assert.match(row.public_ref, /^LH-[0-9A-F]{4}-[0-9A-F]{4}$/);
+
+  const numeric = await fetch(`${base}/api/track`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: 'track@example.com', order_id: row.id }) });
+  assert.equal(numeric.status, 404, 'the sequential number no longer works for customers');
 
   const res  = await fetch(`${base}/api/track`, {
     method:  'POST',
     headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify({ email: 'track@example.com', order_id: row.id }),
+    body:    JSON.stringify({ email: 'track@example.com', order_id: row.public_ref.toLowerCase().replace(/-/g, ' ') }),
   });
   const body = await res.json();
   assert.equal(res.status, 200, `Expected 200, got ${res.status}: ${JSON.stringify(body)}`);
   assert.equal(body.status, 'paid');
   assert.equal(body.recipientName, 'Bob Track');
-  assert.ok(body.orderId > 0);
+  assert.equal(body.orderId, row.public_ref);
 });
 
 test('POST /api/track returns 404 for wrong email', async () => {
@@ -2034,7 +2038,8 @@ test('a letter sent to the printer again tells the customer, and shows the retur
     const sent = sentMail.slice(before);
     assert.equal(sent.length, 1);
     assert.equal(sent[0].to, 'resent-santa@example.com');
-    assert.match(sent[0].subject, new RegExp(`order #${id}.*sent to the printer again`));
+    assert.match(sent[0].subject, /order LH-[0-9A-F]{4}-[0-9A-F]{4}.*sent to the printer again/);
+    assert.doesNotMatch(sent[0].subject + sent[0].text, new RegExp(`#${id}\\b`), 'customers never see the sequential number');
     assert.match(sent[0].text, /Santa Claus\nNorth Pole\nNorth Pole H0H 0H0\nCanada/);
     assert.match(sent[0].html, /Return address on the envelope/);
     assert.doesNotMatch(sent[0].text + sent[0].html, /postgrid/i);

@@ -88,6 +88,14 @@ try { db.exec(`ALTER TABLE orders ADD COLUMN customer_ip TEXT`);          } catc
 try { db.exec(`ALTER TABLE orders ADD COLUMN printer_ref TEXT`);          } catch {}
 try { db.exec(`ALTER TABLE orders ADD COLUMN estimated_delivery TEXT`);   } catch {}
 try { db.exec(`ALTER TABLE orders ADD COLUMN status_token TEXT`);         } catch {}
+// Customer-facing order reference (LH-XXXX-XXXX). The sequential id stays admin-only.
+try { db.exec(`ALTER TABLE orders ADD COLUMN public_ref TEXT`);           } catch {}
+try {
+  const refExpr = "'LH-' || substr(upper(hex(randomblob(4))),1,4) || '-' || substr(upper(hex(randomblob(4))),5,4)";
+  db.exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_orders_public_ref ON orders(public_ref)`);
+  db.exec(`CREATE TRIGGER IF NOT EXISTS orders_public_ref AFTER INSERT ON orders WHEN NEW.public_ref IS NULL BEGIN UPDATE orders SET public_ref = ${refExpr} WHERE id = NEW.id; END`);
+  db.exec(`UPDATE orders SET public_ref = ${refExpr} WHERE public_ref IS NULL`);
+} catch (e) { console.error('[init] public_ref:', e.message); }
 try { db.exec(`ALTER TABLE orders ADD COLUMN recovery_sent_at DATETIME`); } catch {}
 try { db.exec(`ALTER TABLE orders ADD COLUMN cart_offer_sent_at DATETIME`); } catch {}
 try { db.exec(`ALTER TABLE orders ADD COLUMN cart_offer_code TEXT`); } catch {}

@@ -106,9 +106,9 @@ function register(app, { db, requireAdmin, logAudit, getSetting, contentHeld, to
     const like = '%' + q.replace(/[\\%_]/g, m => '\\' + m) + '%';
     const orders = db.prepare(`SELECT id, created_at, status, customer_email, recipient_name, recipient_city, destination_country, scheduled_date, price_cents
       FROM orders WHERE deleted_at IS NULL AND status != 'awaiting_payment' AND (
-        id = ? OR customer_email LIKE ? ESCAPE '\\' OR recipient_name LIKE ? ESCAPE '\\' OR recipient_street LIKE ? ESCAPE '\\'
+        id = ? OR public_ref = ? OR customer_email LIKE ? ESCAPE '\\' OR recipient_name LIKE ? ESCAPE '\\' OR recipient_street LIKE ? ESCAPE '\\'
         OR recipient_city LIKE ? ESCAPE '\\' OR recipient_postal LIKE ? ESCAPE '\\' OR sender_name LIKE ? ESCAPE '\\' OR postgrid_letter_id LIKE ? ESCAPE '\\')
-      ORDER BY id DESC LIMIT 15`).all(num == null ? -1 : num, like, like, like, like, like, like, like);
+      ORDER BY id DESC LIMIT 15`).all(num == null ? -1 : num, q.toUpperCase(), like, like, like, like, like, like, like);
     res.json({ orders });
   });
 

@@ -607,26 +607,26 @@ function mailFacts(order) {
 // Customer-facing wording for emails and the status page, in the language the order was placed in (English or Spanish).
 function mailText(o) {
   const es = !!(o && o.order_lang === 'es');
-  const id = o && o.id, name = (o && o.recipient_name) || '';
+  const id = (o && (o.public_ref || o.id)), name = (o && o.recipient_name) || '';
   const dl = d => !es ? d : ({ 'within 2 weeks': 'en un plazo de 2 semanas', 'within 4 weeks': 'en un plazo de 4 semanas' }[d] || d);
   return es ? {
     es, dl, htmlLang: 'es-US', dateLocale: 'es-US',
     subjConfirmed: `Su pedido de Letterhome está confirmado: carta para ${name}`,
-    subjAtPrinter: `Su carta para ${name} está en la imprenta: pedido n.º ${id}`,
-    subjMailed:    `Su carta para ${name} ya se envió: pedido n.º ${id}`,
+    subjAtPrinter: `Su carta para ${name} está en la imprenta: pedido ${id}`,
+    subjMailed:    `Su carta para ${name} ya se envió: pedido ${id}`,
     order: `Pedido n.º ${id}`, deliveringTo: 'Se entrega a', track: 'Siga su carta', questions: '¿Preguntas? Responda a este correo.',
     estDelivery: 'Entrega estimada', estArrival: 'Llegada estimada',
     inH1: 'Recibimos su carta.', inP: 'Recibimos su pago. Su carta se imprimirá y se enviará por correo en un plazo de dos días hábiles.',
     printerH1: 'Su carta está en la imprenta.',
-    printerP: c => `Revisamos el pedido n.º ${id} y lo enviamos a imprimir. Se imprimirá, se cerrará y se entregará a ${c} en un plazo de dos días hábiles, y le escribiremos otra vez en cuanto esté en el correo.`,
+    printerP: c => `Revisamos el pedido ${id} y lo enviamos a imprimir. Se imprimirá, se cerrará y se entregará a ${c} en un plazo de dos días hábiles, y le escribiremos otra vez en cuanto esté en el correo.`,
     printerFix: '¿Ve un error en la dirección o en la carta? Responda a este correo de inmediato y haremos lo posible por detenerla antes de que se imprima.',
     mailedH1: 'Su carta va en camino.',
-    mailedP: c => `El pedido n.º ${id} se imprimió, se cerró y se entregó al correo. A partir de aquí está en manos de ${c}.`,
+    mailedP: c => `El pedido ${id} se imprimió, se cerró y se entregó al correo. A partir de aquí está en manos de ${c}.`,
     noTracking: 'El correo estándar no tiene rastreo, así que no podemos decirle el día exacto en que llegará. Si no la recibe después del plazo estimado, responda a este correo y lo resolvemos.',
     thanks: 'Gracias por confiarnos su carta.',
     reviewAsk: 'Si tiene un minuto cuando llegue, una reseña honesta ayuda a otras personas a encontrarnos.', reviewLink: 'Dejar una reseña en Google',
     statusTitle: 'Estado de la carta | Letterhome', letterTo: n => `Carta para ${n}`,
-    s0: 'Pedido recibido', s0d: n => `Pago confirmado &nbsp;·&nbsp; Pedido n.º ${n}`, s1: 'En preparación', s1d: 'Su carta se envió a imprimir.',
+    s0: 'Pedido recibido', s0d: n => `Pago confirmado &nbsp;·&nbsp; Pedido ${n}`, s1: 'En preparación', s1d: 'Su carta se envió a imprimir.',
     s2Mailed: 'Enviada', s2Way: 'En camino', s2Done: (c, d) => `Entregada a ${c}. Llegada estimada: ${d}`, s2Wait: 'Cuando se envíe, aquí aparecerá la entrega estimada.',
     s3: 'Entregada', s3d: 'Su carta fue entregada.',
     trackNo: (n, c) => `Número de rastreo: ${n}. Úselo en el sitio web de ${c} para seguir su carta.`, trackWait: 'Su número de rastreo aparecerá aquí cuando esté disponible.',
@@ -635,21 +635,21 @@ function mailText(o) {
   } : {
     es, dl, htmlLang: 'en-CA', dateLocale: 'en-CA',
     subjConfirmed: `Your Letterhome order is confirmed: letter to ${name}`,
-    subjAtPrinter: `Your letter to ${name} is at the printer: order #${id}`,
-    subjMailed:    `Your letter to ${name} has been mailed: order #${id}`,
-    order: `Order #${id}`, deliveringTo: 'Delivering to', track: 'Track your letter', questions: 'Questions? Reply to this email.',
+    subjAtPrinter: `Your letter to ${name} is at the printer: order ${id}`,
+    subjMailed:    `Your letter to ${name} has been mailed: order ${id}`,
+    order: `Order ${id}`, deliveringTo: 'Delivering to', track: 'Track your letter', questions: 'Questions? Reply to this email.',
     estDelivery: 'Estimated delivery', estArrival: 'Estimated arrival',
     inH1: 'Your letter is in.', inP: "We've received your payment. Your letter will be printed and mailed within two business days.",
     printerH1: 'Your letter is at the printer.',
-    printerP: c => `We've reviewed order #${id} and sent it to our print partner. It will be printed, sealed and handed to ${c} within two business days, and we'll email you again as soon as it's in the post.`,
+    printerP: c => `We've reviewed order ${id} and sent it to our print partner. It will be printed, sealed and handed to ${c} within two business days, and we'll email you again as soon as it's in the post.`,
     printerFix: "Spotted a mistake in the address or the letter? Reply to this email right away and we'll do our best to stop it before it prints.",
     mailedH1: 'Your letter is on its way.',
-    mailedP: c => `Order #${id} has been printed, sealed, and handed to the post office. From here, it's in ${c}'s hands.`,
+    mailedP: c => `Order ${id} has been printed, sealed, and handed to the post office. From here, it's in ${c}'s hands.`,
     noTracking: "Lettermail doesn't have tracking, so we can't tell you exactly when it'll land. If you don't see it after the estimated window, reply to this email and we'll work it out.",
     thanks: 'Thank you for trusting us with your letter.',
     reviewAsk: REVIEW_ASK, reviewLink: REVIEW_LINK_TEXT,
     statusTitle: 'Letter Status | Letterhome', letterTo: n => `Letter to ${n}`,
-    s0: 'Order Received', s0d: n => `Payment confirmed &nbsp;·&nbsp; Order #${n}`, s1: 'Being Prepared', s1d: 'Your letter has been submitted for printing.',
+    s0: 'Order Received', s0d: n => `Payment confirmed &nbsp;·&nbsp; Order ${n}`, s1: 'Being Prepared', s1d: 'Your letter has been submitted for printing.',
     s2Mailed: 'Mailed', s2Way: 'On Its Way', s2Done: (c, d) => `Dropped off with ${c}. Estimated arrival: ${d}`, s2Wait: 'Once mailed, your estimated delivery will appear here.',
     s3: 'Delivered', s3d: 'Your letter has been delivered.',
     trackNo: (n, c) => `Tracking number: ${n}. Use it on the ${c} website to follow your letter.`, trackWait: 'Your tracking number will appear here once it is available.',
@@ -729,15 +729,15 @@ function sendResentEmail(orderId) {
   const toAddr = [order.recipient_name, order.recipient_street,
     `${order.recipient_city || ''} ${order.recipient_province || ''} ${order.recipient_postal || ''}`.trim(), order.destination_country].filter(Boolean).join('\n');
   const T = es ? {
-    subj: `Actualización de su pedido n.º ${order.id}: su carta se envió de nuevo a la imprenta`,
+    subj: `Actualización de su pedido ${order.public_ref || order.id}: su carta se envió de nuevo a la imprenta`,
     h1: 'Su carta se envió de nuevo a la imprenta',
     p: 'Hicimos una corrección en su pedido y enviamos la carta otra vez a la imprenta. No tiene que hacer nada.',
-    ret: 'Remitente en el sobre', to: 'Se entrega a', track: 'Siga su pedido', order: `Pedido n.º ${order.id}`,
+    ret: 'Remitente en el sobre', to: 'Se entrega a', track: 'Siga su pedido', order: `Pedido ${order.public_ref || order.id}`,
   } : {
-    subj: `Update on order #${order.id}: your letter was sent to the printer again`,
+    subj: `Update on order ${order.public_ref || order.id}: your letter was sent to the printer again`,
     h1: 'Your letter was sent to the printer again',
     p: 'We made a correction to your order and sent the letter to the printer again. There is nothing you need to do.',
-    ret: 'Return address on the envelope', to: 'Delivering to', track: 'Track your order', order: `Order #${order.id}`,
+    ret: 'Return address on the envelope', to: 'Delivering to', track: 'Track your order', order: `Order ${order.public_ref || order.id}`,
   };
   const esc = x => String(x || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   const link = order.status_token ? `${orderBase(order)}/status/${order.status_token}` : '';
@@ -2081,7 +2081,7 @@ app.get('/api/order-status', trackLimiter, (req, res) => {
     .get(req.query.session_id || '');
   if (!order) return res.status(404).json({ error: 'Order not found.' });
   res.json({
-    id:                 order.id,
+    id:                 order.public_ref || order.id,
     status:             order.status,
     createdAt:          order.created_at,
     recipientName:      order.recipient_name,
@@ -2132,9 +2132,11 @@ app.post('/api/track', trackLimiter, (req, res) => {
     return res.status(429).json({ error: 'Too many failed attempts. Please try again in an hour or contact support.' });
   }
 
-  const order = db.prepare(
-    "SELECT * FROM orders WHERE id = ? AND customer_email = ? AND status != 'awaiting_payment'"
-  ).get(Number(order_id), normalizedEmail);
+  const ref = String(order_id).toUpperCase().replace(/[^A-Z0-9]/g, '').replace(/^LH/, '');
+  const refKey = ref.length === 8 ? 'LH-' + ref.slice(0, 4) + '-' + ref.slice(4) : '';
+  const order = refKey ? db.prepare(
+    "SELECT * FROM orders WHERE public_ref = ? AND customer_email = ? AND status != 'awaiting_payment'"
+  ).get(refKey, normalizedEmail) : null;
 
   if (!order) {
     recordTrackFailure(normalizedEmail);
@@ -2152,7 +2154,7 @@ app.post('/api/track', trackLimiter, (req, res) => {
   };
 
   res.json({
-    orderId:            order.id,
+    orderId:            order.public_ref,
     status:             order.status,
     statusText:         messages[order.status] || 'In progress.',
     recipientName:      order.recipient_name,
@@ -2425,7 +2427,7 @@ app.get('/api/admin/orders', requireAdmin, (req, res) => {
   const { status } = req.query;
   // "Needs you": paid orders not yet sent to PostGrid for real (waiting for approval, refused, or only a test letter).
   if (status === 'needs_you') {
-    return res.json(db.prepare(`SELECT id, stripe_session_id, customer_email, recipient_name, recipient_street, recipient_city, recipient_province, recipient_postal,
+    return res.json(db.prepare(`SELECT id, public_ref, stripe_session_id, customer_email, recipient_name, recipient_street, recipient_city, recipient_province, recipient_postal,
         destination_country, letter_type, attachment_info, price_cents, charge_currency, charge_cents, order_site, order_region, status, status_token, created_at, recovery_sent_at, postgrid_error, postgrid_mode, postgrid_letter_id, scheduled_date, send_approved_at, content_flags, content_cleared_at
       FROM orders WHERE status = 'paid' AND deleted_at IS NULL
         AND (postgrid_letter_id IS NULL OR postgrid_mode = 'test' OR postgrid_status = 'cancelled')      -- every paid order waits for the owner's approval
@@ -2433,8 +2435,8 @@ app.get('/api/admin/orders', requireAdmin, (req, res) => {
       ORDER BY created_at`).all(torontoToday()).map(o => o.postgrid_mode === 'test' && !o.postgrid_error ? { ...o, postgrid_error: 'Only a TEST letter exists (not mailed). Clear it and send for real.' } : o));
   }
   const rows = status
-    ? db.prepare("SELECT id, stripe_session_id, customer_email, recipient_name, recipient_street, recipient_city, recipient_province, recipient_postal, destination_country, letter_type, attachment_info, price_cents, charge_currency, charge_cents, order_site, order_region, postgrid_letter_id, scheduled_date, send_approved_at, postgrid_mode, postgrid_status, status, status_token, created_at, recovery_sent_at, content_flags, content_cleared_at FROM orders WHERE status = ? AND deleted_at IS NULL ORDER BY created_at DESC").all(status)
-    : db.prepare("SELECT id, stripe_session_id, customer_email, recipient_name, recipient_street, recipient_city, recipient_province, recipient_postal, destination_country, letter_type, attachment_info, price_cents, charge_currency, charge_cents, order_site, order_region, postgrid_letter_id, scheduled_date, send_approved_at, postgrid_mode, postgrid_status, status, status_token, created_at, recovery_sent_at, content_flags, content_cleared_at FROM orders WHERE deleted_at IS NULL ORDER BY created_at DESC").all();
+    ? db.prepare("SELECT id, public_ref, stripe_session_id, customer_email, recipient_name, recipient_street, recipient_city, recipient_province, recipient_postal, destination_country, letter_type, attachment_info, price_cents, charge_currency, charge_cents, order_site, order_region, postgrid_letter_id, scheduled_date, send_approved_at, postgrid_mode, postgrid_status, status, status_token, created_at, recovery_sent_at, content_flags, content_cleared_at FROM orders WHERE status = ? AND deleted_at IS NULL ORDER BY created_at DESC").all(status)
+    : db.prepare("SELECT id, public_ref, stripe_session_id, customer_email, recipient_name, recipient_street, recipient_city, recipient_province, recipient_postal, destination_country, letter_type, attachment_info, price_cents, charge_currency, charge_cents, order_site, order_region, postgrid_letter_id, scheduled_date, send_approved_at, postgrid_mode, postgrid_status, status, status_token, created_at, recovery_sent_at, content_flags, content_cleared_at FROM orders WHERE deleted_at IS NULL ORDER BY created_at DESC").all();
   res.json(rows);
 });
 
@@ -2700,7 +2702,7 @@ function splitSantaOrder(id, actor) {
   if (db.prepare('SELECT 1 FROM orders WHERE split_from = ? LIMIT 1').get(id)) return { status: 409, error: 'This order was already split.' };
   const groups = santaGroups(order.letter_body);
   if (groups.length < 2) return { status: 400, error: 'There is only one letter on this order.' };
-  const cols = db.prepare('PRAGMA table_info(orders)').all().map(c => c.name).filter(c => c !== 'id');
+  const cols = db.prepare('PRAGMA table_info(orders)').all().map(c => c.name).filter(c => c !== 'id' && c !== 'public_ref');
   const blank = new Set(['postgrid_letter_id', 'postgrid_status', 'postgrid_mode', 'postgrid_error', 'postgrid_submitted_at', 'postgrid_tracking_number', 'postgrid_url', 'printer_email_sent_at', 'mailed_at', 'stripe_payment_intent', 'discount_code', 'discount_cents']);
   const made = [];
   db.exec('BEGIN');
@@ -4554,7 +4556,7 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:48px 36px 32px
   <h1 style="font-family:'DM Serif Display',serif;font-size:clamp(28px,5vw,40px);font-weight:400;letter-spacing:-0.02em;margin-bottom:6px">${L.letterTo(esc(order.recipient_name))}</h1>
   <p style="font-family:'DM Mono',monospace;font-size:12px;color:#6b6258;letter-spacing:0.08em;margin-bottom:48px">${new Date(order.created_at).toLocaleDateString(L.dateLocale,{year:'numeric',month:'long',day:'numeric'})}</p>
   <div style="margin-bottom:40px">
-    ${stepHTML(0, L.s0, L.s0d(esc(String(order.id))))}
+    ${stepHTML(0, L.s0, L.s0d(esc(String(order.public_ref || order.id))))}
     ${stepHTML(1, L.s1, L.s1d)}
     <div style="border-bottom:none">${stepHTML(2, stageIndex >= 3 ? L.s2Mailed : L.s2Way, step3Desc)}</div>
     ${tracked ? `<div style="border-bottom:none">${stepHTML(3, L.s3, stageIndex >= 4 ? L.s3d : trackingLine)}</div>` : ''}

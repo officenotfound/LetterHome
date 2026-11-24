@@ -1554,7 +1554,7 @@ async function showOrder(id) {
   setMain(`
     <button class="back-link" onclick="go('/admin/orders')">← Back to Orders</button>
     <div class="page-header">
-      <div class="page-title">Order #${o.id}</div>
+      <div class="page-title">Order #${o.id}${o.public_ref ? ` <span style="font-size:13px;font-weight:400;color:#888;margin-left:8px" title="What the customer sees on emails and the track page">Customer ref ${esc(o.public_ref)}</span>` : ''}</div>
       <div style="display:flex;align-items:center;gap:12px">
         ${orderBadge(o)}
         <button class="btn btn-outline btn-sm" onclick="toggleMessageForm(${o.id})">Message Customer</button>
@@ -1570,7 +1570,7 @@ async function showOrder(id) {
         </div>
         <div class="field" style="margin-bottom:12px">
           <label>Subject</label>
-          <input id="msg-subject" type="text" value="Re: Letterhome order #${o.id}">
+          <input id="msg-subject" type="text" value="Re: Your Letterhome letter">
         </div>
         <div class="field" style="margin-bottom:12px">
           <label>Message</label>
@@ -1680,7 +1680,7 @@ let _mergeOrder = null;
 function fillMerge(text) {
   const o = _mergeOrder; if (!o) return text;
   const first = String(o.sender_name || '').trim().split(/\s+/)[0] || 'there';
-  const map = { name: first, order: '#' + o.id, recipient: o.recipient_name || '', send_date: o.scheduled_date || 'the next business day', country: o.destination_country || '' };
+  const map = { name: first, order: o.public_ref || ('#' + o.id), recipient: o.recipient_name || '', send_date: o.scheduled_date || 'the next business day', country: o.destination_country || '' };
   return String(text).replace(/\{(name|order|recipient|send_date|country)\}/g, (m, k) => map[k]);
 }
 
