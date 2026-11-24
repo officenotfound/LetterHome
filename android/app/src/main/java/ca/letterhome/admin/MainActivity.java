@@ -69,7 +69,6 @@ public class MainActivity extends Activity {
     private void applyChrome(int top, int bottom) {
         if (topStrip == null) return;
         topStrip.setBackgroundColor(top); bottomStrip.setBackgroundColor(bottom);
-        ((FrameLayout) topStrip.getParent()).setBackgroundColor(top);
         if (android.os.Build.VERSION.SDK_INT >= 30) {
             android.view.WindowInsetsController c = getWindow().getInsetsController();
             if (c != null) {
@@ -98,7 +97,7 @@ public class MainActivity extends Activity {
         w.setNavigationBarColor(Color.parseColor("#17293d"));
 
         FrameLayout root = new FrameLayout(this);
-        root.setBackgroundColor(Color.parseColor("#17293d"));
+        root.setBackgroundColor(Color.TRANSPARENT);
         web = new WebView(this);
         web.setBackgroundColor(Color.TRANSPARENT);
         bar = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
@@ -117,23 +116,24 @@ public class MainActivity extends Activity {
         ind.setTranslationY(-48 * dp);
         topStrip = new View(this); bottomStrip = new View(this);
         topStrip.setBackgroundColor(Color.parseColor("#17293d")); bottomStrip.setBackgroundColor(Color.parseColor("#17293d"));
-        root.addView(topStrip, new FrameLayout.LayoutParams(-1, 0, android.view.Gravity.TOP));
-        root.addView(bottomStrip, new FrameLayout.LayoutParams(-1, 0, android.view.Gravity.BOTTOM));
-        setContentView(root);
+        FrameLayout frame = new FrameLayout(this);
+        frame.setBackgroundColor(Color.parseColor("#17293d"));
+        frame.addView(topStrip, new FrameLayout.LayoutParams(-1, 0, android.view.Gravity.TOP));
+        frame.addView(bottomStrip, new FrameLayout.LayoutParams(-1, 0, android.view.Gravity.BOTTOM));
+        frame.addView(root, new FrameLayout.LayoutParams(-1, -1));   // the page sits on top, padded; the coloured strips show behind the system bars
+        setContentView(frame);
         if (android.os.Build.VERSION.SDK_INT >= 30) {
             // Android 15+ draws edge to edge: pad for status bar, nav bar, camera cutout and keyboard ourselves.
-            root.setOnApplyWindowInsetsListener((v, wi) -> {
+            frame.setOnApplyWindowInsetsListener((v, wi) -> {
                 android.graphics.Insets i = wi.getInsets(android.view.WindowInsets.Type.systemBars() | android.view.WindowInsets.Type.displayCutout() | android.view.WindowInsets.Type.ime());
-                v.setPadding(i.left, i.top, i.right, i.bottom);
+                root.setPadding(i.left, i.top, i.right, i.bottom);
                 // the coloured strips sit behind the status bar and the gesture bar; the page sits between them
                 topStrip.getLayoutParams().height = i.top; bottomStrip.getLayoutParams().height = i.bottom;
-                topStrip.setTranslationX(-i.left); bottomStrip.setTranslationX(-i.left);
-                topStrip.getLayoutParams().width = v.getWidth(); bottomStrip.getLayoutParams().width = v.getWidth();
                 topStrip.requestLayout(); bottomStrip.requestLayout();
                 return android.view.WindowInsets.CONSUMED;
             });
-            root.requestApplyInsets();
-        } else root.setFitsSystemWindows(true);
+            frame.requestApplyInsets();
+        } else frame.setFitsSystemWindows(true);
         if (android.os.Build.VERSION.SDK_INT >= 33) {
             getOnBackInvokedDispatcher().registerOnBackInvokedCallback(android.window.OnBackInvokedDispatcher.PRIORITY_DEFAULT, () -> { if (web.canGoBack()) web.goBack(); else finish(); });
         }

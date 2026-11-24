@@ -4844,11 +4844,11 @@ function syncChrome() {
     const px = c => { const k = document.createElement('canvas').getContext('2d'); k.fillStyle = '#17293d'; k.fillStyle = c; k.fillRect(0, 0, 1, 1); const d = k.getImageData(0, 0, 1, 1).data; return '#' + [d[0], d[1], d[2]].map(v => v.toString(16).padStart(2, '0')).join(''); };
     const tb = document.querySelector('.topbar'), mt = document.querySelector('.mob-tabs');
     const top = px(getComputedStyle(tb || document.body).backgroundColor);
-    const bot = mt && getComputedStyle(mt).display !== 'none' ? px(getComputedStyle(mt).backgroundColor) : px(getComputedStyle(document.body).backgroundColor);
+    const bot = mt && innerWidth <= 860 ? px(getComputedStyle(mt).backgroundColor) : px(getComputedStyle(document.body).backgroundColor);
     window.LHApp.setChrome(top, bot);
   } catch (e) { }
 }
-window.addEventListener('load', () => setTimeout(syncChrome, 300));
+window.addEventListener('load', () => { setTimeout(syncChrome, 300); setTimeout(syncChrome, 1500); });
 window.addEventListener('resize', () => setTimeout(syncChrome, 200));
 function toggleAdminTheme() {
   const cur = document.documentElement.getAttribute('data-theme');
