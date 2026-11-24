@@ -75,6 +75,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         cfg.applicationNameForUserAgent = "LetterhomeMac/1.0"
         cfg.userContentController.add(self, name: "mac")
         cfg.userContentController.addUserScript(WKUserScript(source: "document.documentElement.classList.add('mac-app');", injectionTime: .atDocumentStart, forMainFrameOnly: true))
+        let stream = """
+        (function(){ if(!/^\\/admin/.test(location.pathname)||/login/.test(location.pathname)||window.__lhEv)return; window.__lhEv=true;
+        var since=''; var sleep=function(ms){return new Promise(function(r){setTimeout(r,ms)})};
+        var post=function(o){try{webkit.messageHandlers.mac.postMessage(o)}catch(e){}};
+        (async function(){ var back=3000; for(;;){ try{
+          var r=await fetch('/api/admin/events'+(since?'?since='+encodeURIComponent(since):''),{credentials:'same-origin',redirect:'manual',headers:{Accept:'text/event-stream'}});
+          if(r.status!==200||!r.body){ post({ev:{type:'signedout'}}); await sleep(back); back=Math.min(back*2,60000); continue; }
+          back=3000; var rd=r.body.getReader(), dec=new TextDecoder(), buf='';
+          for(;;){ var x=await rd.read(); if(x.done)break; buf+=dec.decode(x.value,{stream:true}); var i;
+            while((i=buf.indexOf('\\n\\n'))>=0){ var blk=buf.slice(0,i); buf=buf.slice(i+2);
+              var l=blk.split('\\n').filter(function(t){return t.indexOf('data: ')===0})[0]; if(!l)continue;
+              var j=JSON.parse(l.slice(6)); if(j.at)since=j.at; post({ev:j}); } }
+        }catch(e){} await sleep(back); } })(); })();
+        """
+        cfg.userContentController.addUserScript(WKUserScript(source: stream, injectionTime: .atDocumentEnd, forMainFrameOnly: true))
         web = WKWebView(frame: .zero, configuration: cfg)
         web.navigationDelegate = self
         web.uiDelegate = self
@@ -119,6 +134,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
 
         let un = UNUserNotificationCenter.current()
         un.delegate = self
+        un.setNotificationCategories([UNNotificationCategory(identifier: "mailreply", actions: [UNTextInputNotificationAction(identifier: "reply", title: "Reply", options: [], textInputButtonTitle: "Send", textInputPlaceholder: "Reply")], intentIdentifiers: [], options: [])])
         un.requestAuthorization(options: [.alert, .sound, .badge]) { _, _ in }
         pollTimer = Timer.scheduledTimer(withTimeInterval: 20, repeats: true) { [weak self] _ in self?.poll() }
         DispatchQueue.main.asyncAfter(deadline: .now() + 6) { [weak self] in self?.poll() }
@@ -168,6 +184,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         item.state = on ? .on : .off
         if !on { setLocked(false) }
     }
+    @objc func toggleQuiet(_ item: NSMenuItem) {
+        let on = !defaults.bool(forKey: "quietOn"); defaults.set(on, forKey: "quietOn"); item.state = on ? .on : .off
+    }
     @objc func lockNow() { if lockEnabled { setLocked(true); authenticate() } else { NSSound.beep() } }
 
     // MARK: navigation
@@ -216,6 +235,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
     func downloadDidFinish(_ d: WKDownload) { NSApp.dockTile.badgeLabel = NSApp.dockTile.badgeLabel }
     func webView(_ w: WKWebView, didFinish n: WKNavigation!) {
         if let u = w.url, isMine(u), u.path.hasPrefix("/admin"), !u.path.hasPrefix("/admin/login") { defaults.set(u.path, forKey: "lastPath") }
+        if ENV["LH_SNAPSHOT"] != nil { FileHandle.standardError.write(("loaded " + (w.url?.absoluteString ?? "nil") + "\n").data(using: .utf8)!) }
         testHook(w)
     }
     // Test mode (LH_LOGIN=user:pass, LH_PATH, LH_SNAPSHOT): signs in to a local copy, opens a page, saves a picture of it and quits.
@@ -241,7 +261,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         }
     }
     func jsq(_ s: String) -> String { "'" + s.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "'", with: "\\'") + "'" }
-    func webView(_ w: WKWebView, didFailProvisionalNavigation n: WKNavigation!, withError e: Error) { showOffline() }
+    func webView(_ w: WKWebView, didFailProvisionalNavigation n: WKNavigation!, withError e: Error) { if ENV["LH_SNAPSHOT"] != nil { FileHandle.standardError.write("fail \(e)\n".data(using: .utf8)!) }; showOffline() }
     func showOffline() {
         let html = "<meta name='viewport' content='width=device-width,initial-scale=1'><body style='font-family:-apple-system,sans-serif;background:#17293d;color:#fff;text-align:center;padding:26vh 24px 0'><h2 style='font-weight:600;margin:0 0 8px'>No connection</h2><p style='opacity:.65;margin:0 0 22px'>Letterhome Admin cannot reach the server.</p><a href='\(HOST)/admin' style='display:inline-block;padding:10px 20px;background:#c4202b;color:#fff;border-radius:10px;text-decoration:none'>Try again</a></body>"
         web.loadHTMLString(html, baseURL: URL(string: HOST + "/admin"))
@@ -269,6 +289,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
 
     // page to app messages (window dragging from the page's top bar)
     func userContentController(_ c: WKUserContentController, didReceive m: WKScriptMessage) {
+        if let d = m.body as? [String: Any], let ev = d["ev"] as? [String: Any] { liveEvent(ev); return }
         guard let s = m.body as? String else { return }
         if s == "drag", let e = NSApp.currentEvent { window.performDrag(with: e) }
         else if s == "zoom" { window.zoom(nil) }
@@ -290,32 +311,82 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         let badge = mailN + (j["unreadContacts"] as? Int ?? 0) + (j["unreadApplicants"] as? Int ?? 0)
         NSApp.dockTile.badgeLabel = badge > 0 ? String(badge) : nil
         lastBadge = badge
-        if firstRun { return }
-        var items: [(String, String, String)] = []
-        for o in j["orders"] as? [[String: Any]] ?? [] {
-            let id = o["id"] as? Int ?? 0
-            let cents = o["price_cents"] as? Int ?? 0
-            items.append(("New order #\(id)", "\(o["recipient_name"] as? String ?? "") to \(o["destination_country"] as? String ?? "")  $\(String(format: "%.2f", Double(cents) / 100))", "/admin/orders/\(id)"))
-        }
-        for c in j["contacts"] as? [[String: Any]] ?? [] {
-            items.append(("Message from \(c["name"] as? String ?? "someone")", c["preview"] as? String ?? "", "/admin/contacts"))
-        }
-        for m in j["mail"] as? [[String: Any]] ?? [] {
-            items.append(("\(m["from"] as? String ?? "New email")", m["subject"] as? String ?? "", "/admin/mail"))
-        }
-        for (t, b, p) in items.prefix(4) { notify(t, b, p) }
-        if items.count > 4 { notify("\(items.count - 4) more", "Open Letterhome Admin to see them", "/admin") }
+        _ = firstRun
     }
-    func notify(_ title: String, _ body: String, _ path: String) {
+    // Live alerts, the same set the Android app gives: orders, extra payments, customer messages, new email (with reply).
+    var quietNow: Bool {
+        guard defaults.bool(forKey: "quietOn") else { return false }
+        let st = defaults.object(forKey: "quietStart") as? Int ?? 22, en = defaults.object(forKey: "quietEnd") as? Int ?? 7
+        let h = Calendar.current.component(.hour, from: Date())
+        return st == en ? false : (st < en ? (h >= st && h < en) : (h >= st || h < en))
+    }
+    var seenAlerts = Set<String>()
+    func liveEvent(_ j: [String: Any]) {
+        let type = j["type"] as? String ?? ""
+        if type == "tick" { return }
+        if type == "signedout" {
+            if !defaults.bool(forKey: "signedOutShown") { defaults.set(true, forKey: "signedOutShown"); notify("Signed out", "Open Letterhome Admin and sign in again to keep getting alerts.", "/admin", loud: false) }
+            return
+        }
+        defaults.set(false, forKey: "signedOutShown")
+        let key = type + ":" + String(describing: j["id"] ?? "")
+        if type != "mail" { if seenAlerts.contains(key) { return }; seenAlerts.insert(key) }
+        func money(_ c: Any?) -> String { String(format: "$%.2f", Double((c as? Int) ?? 0) / 100) }
+        switch type {
+        case "order":
+            let id = j["id"] as? Int ?? 0, name = j["name"] as? String ?? "", dest = j["dest"] as? String ?? ""
+            notify("New order #\(id)", money(j["price_cents"]) + (name.isEmpty ? "" : " · letter to \(name)") + (dest.isEmpty ? "" : " (\(dest))"), "/admin/orders/\(id)", loud: true)
+            NSApp.requestUserAttention(.informationalRequest)
+        case "message":
+            notify("Message from \(j["name"] as? String ?? "a customer")", j["preview"] as? String ?? "", "/admin/contacts?id=\(j["id"] as? Int ?? 0)", loud: !quietNow)
+        case "extra":
+            let oid = j["order_id"] as? Int ?? 0
+            notify("Extra payment received", money(j["amount_cents"]) + " " + (j["currency"] as? String ?? "") + " paid for order #\(oid)", "/admin/orders/\(oid)", loud: true)
+        case "mail":
+            let raw = j["from"] as? String ?? ""
+            let name = raw.replacingOccurrences(of: "<[^>]*>", with: "", options: .regularExpression).replacingOccurrences(of: "\"", with: "").trimmingCharacters(in: .whitespaces)
+            var addr = raw.trimmingCharacters(in: .whitespaces)
+            if let r = raw.range(of: "<[^>]*>", options: .regularExpression) { addr = String(raw[r]).trimmingCharacters(in: CharacterSet(charactersIn: "<>")) }
+            let box = j["box"] as? String ?? "", id = j["id"] as? String ?? "", folder = j["folderId"] as? String ?? ""
+            let subject = j["subject"] as? String ?? ""
+            func enc(_ t: String) -> String { t.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "" }
+            var info: [String: Any] = ["path": "/admin/mail?box=\(enc(box))&id=\(enc(id))&folder=\(enc(folder))"]
+            if box != "test", !addr.isEmpty { info["reply"] = ["box": box, "mid": id, "to": addr, "subject": subject] }
+            notify("New email (\(j["label"] as? String ?? box))", (name.isEmpty ? "" : name + ": ") + subject, info["path"] as! String, loud: !quietNow, extra: info)
+        default: break
+        }
+    }
+    func sendReply(_ info: [String: String], _ text: String) {
+        let js = """
+        const m = await (await fetch('/api/admin/me',{credentials:'same-origin'})).json();
+        const f = new FormData(); f.append('to', to); f.append('subject', /^re:/i.test(subject) ? subject : 'Re: ' + (subject||'')); f.append('body', text); if (mid) f.append('replyTo', mid);
+        const r = await fetch('/api/admin/mail/' + box + '/send', {method:'POST', credentials:'same-origin', headers:{'X-CSRF-Token': m.csrfToken||''}, body:f});
+        return r.ok;
+        """
+        let args: [String: Any] = ["box": info["box"] ?? "", "mid": info["mid"] ?? "", "to": info["to"] ?? "", "subject": info["subject"] ?? "", "text": text]
+        web.callAsyncJavaScript(js, arguments: args, in: nil, in: .page) { res in
+            var ok = false
+            if case .success(let v) = res, let b = v as? Bool { ok = b }
+            self.notify(ok ? "Reply sent" : "Reply not sent. Open the app to answer.", info["to"] ?? "", "/admin/mail", loud: false)
+        }
+    }
+    func notify(_ title: String, _ body: String, _ path: String, loud: Bool = true, extra: [String: Any]? = nil) {
         let c = UNMutableNotificationContent()
-        c.title = title; c.body = body; c.sound = .default; c.userInfo = ["path": path]
+        c.title = title; c.body = body; c.sound = loud ? .default : nil; c.userInfo = extra ?? ["path": path]
+        if extra?["reply"] != nil { c.categoryIdentifier = "mailreply" }
         UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: UUID().uuidString, content: c, trigger: nil))
     }
     func userNotificationCenter(_ c: UNUserNotificationCenter, willPresent n: UNNotification, withCompletionHandler h: @escaping (UNNotificationPresentationOptions) -> Void) {
-        h(NSApp.isActive ? [] : [.banner, .sound])
+        h(NSApp.isActive && !locked ? [] : [.banner, .list, .sound])
     }
     func userNotificationCenter(_ c: UNUserNotificationCenter, didReceive r: UNNotificationResponse, withCompletionHandler h: @escaping () -> Void) {
-        let p = r.notification.request.content.userInfo["path"] as? String ?? "/admin"
+        let ui = r.notification.request.content.userInfo
+        if let tr = r as? UNTextInputNotificationResponse, let rp = ui["reply"] as? [String: String] {
+            let t = tr.userText.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !t.isEmpty { DispatchQueue.main.async { self.sendReply(rp, t) } }
+            h(); return
+        }
+        let p = ui["path"] as? String ?? "/admin"
         DispatchQueue.main.async { NSApp.activate(ignoringOtherApps: true); self.window.makeKeyAndOrderFront(nil); self.goTo(p) }
         h()
     }
@@ -336,6 +407,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         app.addItem(.separator())
         let lockItem = add(app, "Require Touch ID or Password", #selector(toggleLock(_:)))
         lockItem.state = lockEnabled ? .on : .off
+        let quietItem = add(app, "Silence Email Alerts 10 pm to 7 am", #selector(toggleQuiet(_:)))
+        quietItem.state = defaults.bool(forKey: "quietOn") ? .on : .off
         _ = add(app, "Lock Now", #selector(lockNow), "l", [.command, .control])
         app.addItem(.separator())
         _ = add(app, "Hide Letterhome Admin", #selector(NSApplication.hide(_:)), "h", target: NSApp)
