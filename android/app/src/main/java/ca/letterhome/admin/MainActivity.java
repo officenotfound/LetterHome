@@ -97,7 +97,18 @@ public class MainActivity extends Activity {
         root.addView(ind, ilp);
         ind.setTranslationY(-48 * dp);
         setContentView(root);
-        root.setFitsSystemWindows(true);
+        if (android.os.Build.VERSION.SDK_INT >= 30) {
+            // Android 15+ draws edge to edge: pad for status bar, nav bar, camera cutout and keyboard ourselves.
+            root.setOnApplyWindowInsetsListener((v, wi) -> {
+                android.graphics.Insets i = wi.getInsets(android.view.WindowInsets.Type.systemBars() | android.view.WindowInsets.Type.displayCutout() | android.view.WindowInsets.Type.ime());
+                v.setPadding(i.left, i.top, i.right, i.bottom);
+                return android.view.WindowInsets.CONSUMED;
+            });
+            root.requestApplyInsets();
+        } else root.setFitsSystemWindows(true);
+        if (android.os.Build.VERSION.SDK_INT >= 33) {
+            getOnBackInvokedDispatcher().registerOnBackInvokedCallback(android.window.OnBackInvokedDispatcher.PRIORITY_DEFAULT, () -> { if (web.canGoBack()) web.goBack(); else finish(); });
+        }
 
         WebSettings s = web.getSettings();
         s.setJavaScriptEnabled(true);
@@ -240,7 +251,7 @@ public class MainActivity extends Activity {
     }
 
     @Override protected void onSaveInstanceState(Bundle o) { super.onSaveInstanceState(o); web.saveState(o); }
-    @Override public void onBackPressed() { if (web.canGoBack()) web.goBack(); else super.onBackPressed(); }
+    @Override public void onBackPressed() { if (android.os.Build.VERSION.SDK_INT < 33) { if (web.canGoBack()) web.goBack(); else super.onBackPressed(); } else super.onBackPressed(); }
     @Override protected void onPause() { super.onPause(); CookieManager.getInstance().flush(); if (!unlocking) { leftAt = System.currentTimeMillis(); } }
 
     @Override protected void onResume() {
