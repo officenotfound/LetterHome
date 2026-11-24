@@ -528,6 +528,7 @@ function renderRoute(p) {
   if (p === '/admin/applicants')                    return showApplicants();
   if (p === '/admin/templates')                     return showTemplates();
   if (p === '/admin/settings')                      return showSettings();
+  if (p === '/admin/app-settings')                  return showAppSettings();
   if (p === '/admin/emails')                        return showEmails();
   if (p === '/admin/audit-log')                     return showAuditLog();
   if (p === '/admin/codes')                         return showCodes();
@@ -542,7 +543,7 @@ const NAV_GROUPS = {
   people:   { tabs: [['/admin/customers', 'Customers'], ['/admin/accounts', 'Accounts'], ['/admin/contacts', 'Contacts'], ['/admin/applicants', 'Applicants'], ['/admin/businesses', 'Businesses']] },
   messages: { tabs: [['/admin/mail', 'Mail'], ['/admin/broadcast', 'Broadcast'], ['/admin/outreach', 'Outreach'], ['/admin/followups', 'Follow-ups'], ['/admin/content', 'Content and links'], ['/admin/templates', 'Templates'], ['/admin/emails', 'Emails']] },
   reports:  { tabs: [['/admin/insights', 'Insights'], ['/admin/visitors', 'Visitors'], ['/admin/traffic', 'Traffic'], ['/admin/growth', 'Search'], ['/admin/funnel', 'Funnel'], ['/admin/seo-audit', 'Content audit'], ['/admin/profit', 'Profit'], ['/admin/stripe', 'Stripe']] },
-  system:   { tabs: [['/admin/settings', 'Settings'], ['/admin/health', 'Health'], ['/admin/codes', 'Codes'], ['/admin/admin-users', 'Admin users'], ['/admin/audit-log', 'Audit log'], ['/admin/trash', 'Trash']] },
+  system:   { tabs: [['/admin/settings', 'Settings'], ['/admin/app-settings', 'Phone app'], ['/admin/health', 'Health'], ['/admin/codes', 'Codes'], ['/admin/admin-users', 'Admin users'], ['/admin/audit-log', 'Audit log'], ['/admin/trash', 'Trash']] },
 };
 function groupOf(p) {
   for (const [g, v] of Object.entries(NAV_GROUPS)) {
@@ -3910,16 +3911,6 @@ async function showSettings() {
       </div>
     </div>
 
-    <div class="card" id="phone-card" style="max-width:920px;margin-left:auto;margin-right:auto;margin-bottom:20px;display:none">
-      <div class="card-header"><div class="card-title">This phone app</div></div>
-      <div style="padding:20px;display:grid;gap:16px;font-size:14px">
-        <label style="display:flex;gap:10px;align-items:center"><input type="checkbox" id="pq-on" onchange="savePhone()"> Quiet hours: email and message alerts arrive silently (new orders always make sound)</label>
-        <div style="display:flex;gap:10px;align-items:center">From <input type="number" id="pq-start" min="0" max="23" style="width:64px" onchange="savePhone()"> to <input type="number" id="pq-end" min="0" max="23" style="width:64px" onchange="savePhone()"> o'clock (24 hour, phone time)</div>
-        <label style="display:flex;gap:10px;align-items:center"><input type="checkbox" id="pl-on" onchange="savePhone()"> Ask for my fingerprint or phone PIN when I open the app (after 1 minute away)</label>
-        <div id="pl-note" style="font-size:12px;color:#6b6b6b"></div>
-      </div>
-    </div>
-
     <div class="card" style="max-width:920px;margin-left:auto;margin-right:auto;margin-bottom:20px">
       <div class="card-header"><div class="card-title">Alert emails to you</div></div>
       <div style="padding:20px;display:flex;align-items:center;justify-content:space-between;gap:16px">
@@ -4001,7 +3992,7 @@ async function showSettings() {
 
   window._blockedCountries = [...blocked];
   renderPostgridSettings(settings);
-  loadCartOfferStats(); loadPhone();
+  loadCartOfferStats();
 }
 
 function addBlockedCountry() {
@@ -4106,23 +4097,31 @@ async function loadCartOfferStats() {
   el.textContent = s.sent ? `${s.sent} sent so far, ${s.paid} paid afterwards (${rev} CAD in orders).` : 'None sent yet.';
 }
 
-function loadPhone() {
-  try {
-    if (!window.LHApp) return;
-    const g = JSON.parse(window.LHApp.get());
-    document.getElementById('phone-card').style.display = '';
-    document.getElementById('pq-on').checked = g.quietOn;
-    document.getElementById('pq-start').value = g.start;
-    document.getElementById('pq-end').value = g.end;
-    document.getElementById('pl-on').checked = g.lock && g.canLock;
-    document.getElementById('pl-on').disabled = !g.canLock;
-    document.getElementById('pl-note').textContent = (g.canLock ? '' : 'Set a screen lock on the phone first to use this. ') + 'App version ' + g.version;
-  } catch (e) { }
+async function showAppSettings() {
+  setTitle('Phone app');
+  const inApp = !!window.LHApp;
+  let g = null;
+  try { if (inApp) g = JSON.parse(window.LHApp.get()); } catch (e) { }
+  const card = (title, body) => `<div class="card" style="max-width:720px;margin:0 auto 20px"><div class="card-header"><div class="card-title">${title}</div></div><div style="padding:20px;display:grid;gap:16px;font-size:14px;line-height:1.5">${body}</div></div>`;
+  if (!g) {
+    setMain(card('Phone app settings', `<div>These settings live inside the Letterhome Admin Android app, because they control that phone's notifications and lock. Open this page in the app to change them.</div><div style="color:#6b6b6b;font-size:12px">The app tells you about new orders, extra payments, customer messages and new email, and tapping an alert opens the exact item.</div>`));
+    return;
+  }
+  const hrs = sel => Array.from({ length: 24 }, (_, h) => `<option value="${h}" ${h === sel ? 'selected' : ''}>${String(h).padStart(2, '0')}:00</option>`).join('');
+  setMain(
+    card('Quiet hours', `<label style="display:flex;gap:10px;align-items:center"><input type="checkbox" id="pq-on" ${g.quietOn ? 'checked' : ''} onchange="savePhone()"> Make email and customer message alerts silent during these hours</label>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">From <select id="pq-start" onchange="savePhone()">${hrs(g.start)}</select> until <select id="pq-end" onchange="savePhone()">${hrs(g.end)}</select> <span style="color:#6b6b6b;font-size:12px">phone time</span></div>
+      <div style="color:#6b6b6b;font-size:12px">New orders and extra payments always make sound. Silent alerts still appear in the notification list. Off by default.</div>`) +
+    card('Lock', `<label style="display:flex;gap:10px;align-items:center"><input type="checkbox" id="pl-on" ${g.lock && g.canLock ? 'checked' : ''} ${g.canLock ? '' : 'disabled'} onchange="savePhone()"> Ask for my fingerprint or phone PIN when I open the app after a minute away</label>
+      <div style="color:#6b6b6b;font-size:12px">${g.canLock ? 'Uses the same lock as your phone screen.' : 'Set a screen lock (PIN, pattern or fingerprint) on the phone first.'}</div>`) +
+    card('About', `<div>Letterhome Admin version ${esc(g.version || '')}</div>`)
+  );
 }
 function savePhone() {
   try {
     window.LHApp.setQuiet(document.getElementById('pq-on').checked, parseInt(document.getElementById('pq-start').value, 10) || 0, parseInt(document.getElementById('pq-end').value, 10) || 0);
     window.LHApp.setLock(document.getElementById('pl-on').checked);
+    showToast('Saved');
   } catch (e) { }
 }
 
