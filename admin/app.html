@@ -1632,6 +1632,7 @@ async function showOrder(id) {
       <div style="padding:20px"><div class="letter-body">${esc(o.letter_body)}</div></div>
     </div>` : ''}
     ${letterEditCard(o)}
+    ${chargeCard(o)}
     ${fileItems ? `
     <div class="card" style="margin-bottom:24px">
       <div class="card-header">
@@ -1896,6 +1897,68 @@ async function clearContentFlag(id) {
 }
 
 // Edit the recipient and return address when something is wrong (a wrong country, a return address PostGrid will not take).
+function chargeCard(o) {
+  if (['awaiting_payment', 'refunded'].includes(o.status)) return '';
+  const cur = String(o.charge_currency || 'CAD').toUpperCase();
+  return `<details class="card" style="margin-bottom:24px" ontoggle="if(this.open)loadCharges(${o.id})">
+    <summary class="card-header" style="cursor:pointer"><span class="card-title">Ask for an extra payment</span><span style="font-size:12px;color:#6b6b6b;font-weight:400">For a longer letter or added pages. One-time payment link.</span></summary>
+    <div style="padding:16px 20px">
+      <div style="display:grid;grid-template-columns:140px 1fr;gap:10px;align-items:end">
+        <div class="field" style="margin:0"><label for="ch-amount">Amount (${esc(cur)})</label><input type="number" id="ch-amount" min="0.5" max="1000" step="0.01" placeholder="0.00"></div>
+        <div class="field" style="margin:0"><label for="ch-reason">What the customer sees</label><input type="text" id="ch-reason" maxlength="200" placeholder="e.g. 4 extra pages, colour printing"></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:12px"><button class="btn btn-primary btn-sm" onclick="createCharge(${o.id})">Create payment link</button></div>
+      <div id="ch-msg" style="font-size:13px;margin-top:10px;line-height:1.5"></div>
+      <div id="ch-list" style="margin-top:12px"></div>
+      <p style="font-size:12px;color:#6b6b6b;margin:12px 0 0;line-height:1.5">Nothing is charged until the customer opens the link and pays. The link works once and nothing is emailed automatically: use "Put in email" to prepare a message you send yourself. Extra payments are not counted in the order's price or the revenue reports, and refunds for them are done in Stripe.</p>
+    </div>
+  </details>`;
+}
+async function loadCharges(id) {
+  const box = document.getElementById('ch-list'); if (!box) return;
+  const rows = (await api(`/api/admin/orders/${id}/charges`)) || [];
+  const badge = { open: 'badge-amber', paid: 'badge-green', cancelled: 'badge-gray' };
+  box.innerHTML = rows.length ? rows.map(c => `<div class="file-item" style="align-items:flex-start;gap:12px">
+      <div style="min-width:0"><div><strong>${(c.amount_cents / 100).toFixed(2)} ${esc(c.currency)}</strong> <span class="badge ${badge[c.status] || 'badge-gray'}">${esc(c.status)}</span></div>
+      <div style="font-size:12px;color:#6b6b6b">${esc(c.reason || '')} · ${fmtDateTime(c.paid_at || c.created_at)}</div></div>
+      <span style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">${c.status === 'open' ? `
+        <button class="btn btn-outline btn-sm" onclick="copyChargeLink(${esc(JSON.stringify(c.url))})">Copy link</button>
+        <button class="btn btn-outline btn-sm" onclick="draftChargeEmail(${id}, ${c.id})">Put in email</button>
+        <button class="btn btn-outline btn-sm" style="color:#b42318" onclick="cancelCharge(${id}, ${c.id})">Cancel</button>` : ''}</span></div>`).join('')
+    : '<div style="color:#6b6b6b;font-size:13px">No extra payments requested.</div>';
+  window._charges = rows;
+}
+async function createCharge(id) {
+  const m = document.getElementById('ch-msg');
+  const amount = document.getElementById('ch-amount').value, reason = document.getElementById('ch-reason').value;
+  m.style.color = '#6b6b6b'; m.textContent = 'Creating…';
+  const r = await post(`/api/admin/orders/${id}/charges`, { amount, reason });
+  if (!r || r.ok === false || r.error) { m.style.color = '#b42318'; m.textContent = (r && r.error) || 'Could not create the link'; return; }
+  m.style.color = '#067647'; m.textContent = 'Link created. Copy it, or use "Put in email" below.';
+  document.getElementById('ch-amount').value = ''; document.getElementById('ch-reason').value = '';
+  loadCharges(id);
+}
+function copyChargeLink(url) {
+  const m = document.getElementById('ch-msg');
+  (navigator.clipboard ? navigator.clipboard.writeText(url) : Promise.reject()).then(() => { m.style.color = '#067647'; m.textContent = 'Link copied.'; })
+    .catch(() => { m.style.color = '#6b6b6b'; m.textContent = url; });
+}
+function draftChargeEmail(id, cid) {
+  const c = (window._charges || []).find(x => x.id === cid); if (!c) return;
+  const f = document.getElementById('message-form');
+  if (f.style.display === 'none') toggleMessageForm(id);
+  document.getElementById('msg-subject').value = 'Extra payment for your Letterhome letter';
+  document.getElementById('msg-body').value = `Hi,\n\nThanks for the update to your letter. The changes come to ${(c.amount_cents / 100).toFixed(2)} ${c.currency} more (${c.reason}). You can pay securely here:\n\n${c.url}\n\nOnce it's paid we'll print and send your letter with the changes.\n\nThank you,\nLetterhome`;
+  f.scrollIntoView({ block: 'center' });
+}
+async function cancelCharge(id, cid) {
+  if (!confirm('Cancel this payment request? The link stops working.')) return;
+  const r = await post(`/api/admin/orders/${id}/charges/${cid}/cancel`, {});
+  const m = document.getElementById('ch-msg');
+  if (!r || r.ok === false || r.error) { m.style.color = '#b42318'; m.textContent = (r && r.error) || 'Could not cancel'; return; }
+  loadCharges(id);
+}
+
 function letterEditCard(o) {
   const lockReason = o.letter_type === 'santa' ? 'A Letter from Santa is written from the order form. Use "Rebuild Santa letter" in the PostGrid box instead.'
     : (o.postgrid_letter_id && o.postgrid_status !== 'cancelled') ? 'Locked: a letter is already with PostGrid. Cancel it first, then edit.'

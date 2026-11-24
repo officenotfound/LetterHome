@@ -88,6 +88,11 @@ try { db.exec(`ALTER TABLE orders ADD COLUMN customer_ip TEXT`);          } catc
 try { db.exec(`ALTER TABLE orders ADD COLUMN printer_ref TEXT`);          } catch {}
 try { db.exec(`ALTER TABLE orders ADD COLUMN estimated_delivery TEXT`);   } catch {}
 try { db.exec(`ALTER TABLE orders ADD COLUMN status_token TEXT`);         } catch {}
+// Extra payments the owner asks a customer for (longer letter, added pages): a one-time Stripe payment link per request.
+try { db.exec(`CREATE TABLE IF NOT EXISTS order_charges (
+  id INTEGER PRIMARY KEY AUTOINCREMENT, order_id INTEGER NOT NULL, amount_cents INTEGER NOT NULL, currency TEXT NOT NULL DEFAULT 'CAD',
+  reason TEXT, stripe_link_id TEXT, url TEXT, status TEXT NOT NULL DEFAULT 'open', created_by TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP, paid_at DATETIME, stripe_session_id TEXT)`); } catch (e) { console.error('[init] order_charges:', e.message); }
 // Customer-facing order reference (LH-XXXX-XXXX). The sequential id stays admin-only.
 try { db.exec(`ALTER TABLE orders ADD COLUMN public_ref TEXT`);           } catch {}
 // Orders that existed before references were introduced keep working with their number on the track page.

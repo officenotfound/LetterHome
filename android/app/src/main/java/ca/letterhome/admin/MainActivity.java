@@ -94,6 +94,7 @@ public class MainActivity extends Activity {
 
         if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission("android.permission.POST_NOTIFICATIONS") != android.content.pm.PackageManager.PERMISSION_GRANTED)
             requestPermissions(new String[]{"android.permission.POST_NOTIFICATIONS"}, 5);
+        try { Intent live = new Intent(this, LiveService.class); if (Build.VERSION.SDK_INT >= 26) startForegroundService(live); else startService(live); } catch (Exception ignored) { }
         JobScheduler js = (JobScheduler) getSystemService(JOB_SCHEDULER_SERVICE);
         if (js.getPendingJob(1) == null)
             js.schedule(new JobInfo.Builder(1, new ComponentName(this, PollJob.class))

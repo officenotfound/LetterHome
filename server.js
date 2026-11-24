@@ -1036,6 +1036,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
   if (event.type === 'checkout.session.completed' ||
       event.type === 'checkout.session.async_payment_succeeded') {
     try {
+      if (recordExtraPayment(event.data.object)) return res.json({ received: true });
       await fulfillOrder(event.data.object.id);
     } catch (err) {
       console.error('[webhook] fulfillOrder failed:', err.message);
@@ -2613,6 +2614,65 @@ app.post('/api/admin/orders/:id/addresses', requireAdmin, async (req, res) => {
   res.json({ ok: true, changed: Object.keys(changes) });
 });
 
+
+// ---- Ask a customer to pay more (longer letter, extra pages): one-time Stripe payment link ----------
+app.get('/api/admin/orders/:id/charges', requireAdmin, (req, res) => {
+  res.json(db.prepare('SELECT id, amount_cents, currency, reason, url, status, created_by, created_at, paid_at FROM order_charges WHERE order_id = ? ORDER BY id DESC').all(Number(req.params.id)));
+});
+
+app.post('/api/admin/orders/:id/charges', requireAdmin, async (req, res) => {
+  const order = db.prepare('SELECT * FROM orders WHERE id = ? AND deleted_at IS NULL').get(Number(req.params.id));
+  if (!order) return res.status(404).json({ error: 'Order not found.' });
+  if (['awaiting_payment', 'refunded'].includes(order.status)) return res.status(409).json({ error: `An extra payment cannot be requested while the order is "${order.status}".` });
+  const cents = Math.round(Number(req.body?.amount) * 100);
+  if (!Number.isFinite(cents) || cents < 50 || cents > 100000) return res.status(400).json({ error: 'Enter an amount between 0.50 and 1000.' });
+  const reason = String(req.body?.reason || '').replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, 200);
+  if (!reason) return res.status(400).json({ error: 'Add a short reason the customer will see, such as "4 extra pages".' });
+  const currency = String(order.charge_currency || 'CAD').toUpperCase();
+  const ref = order.public_ref || ('#' + order.id);
+  let link;
+  try {
+    link = await stripe.paymentLinks.create({
+      line_items: [{ price_data: { currency: currency.toLowerCase(), product_data: { name: `Additional charge for your Letterhome letter (${ref})`, description: reason }, unit_amount: cents }, quantity: 1 }],
+      restrictions: { completed_sessions: { limit: 1 } },
+      after_completion: { type: 'redirect', redirect: { url: `${orderBase(order)}/status/${order.status_token}` } },
+      metadata: { order_id: String(order.id), kind: 'extra_charge' },
+    });
+  } catch (e) { console.error('[charge] Stripe error:', e.message); return res.status(502).json({ error: 'Stripe could not create the link: ' + e.message }); }
+  const r = db.prepare('INSERT INTO order_charges (order_id, amount_cents, currency, reason, stripe_link_id, url, created_by) VALUES (?,?,?,?,?,?,?)')
+    .run(order.id, cents, currency, reason, link.id, link.url, req.session.admin.username);
+  try { db.prepare('INSERT INTO order_notes (order_id, note) VALUES (?,?)').run(order.id, `Extra payment of ${(cents / 100).toFixed(2)} ${currency} requested (${reason}) by ${req.session.admin.username}.`); } catch {}
+  logAudit(req, 'order.charge_requested', 'order', order.id, { amount_cents: cents, currency, reason });
+  res.json({ ok: true, id: r.lastInsertRowid, url: link.url, amount_cents: cents, currency });
+});
+
+app.post('/api/admin/orders/:id/charges/:cid/cancel', requireAdmin, async (req, res) => {
+  const ch = db.prepare('SELECT * FROM order_charges WHERE id = ? AND order_id = ?').get(Number(req.params.cid), Number(req.params.id));
+  if (!ch) return res.status(404).json({ error: 'Not found.' });
+  if (ch.status !== 'open') return res.status(409).json({ error: `This request is already ${ch.status}.` });
+  try { if (ch.stripe_link_id) await stripe.paymentLinks.update(ch.stripe_link_id, { active: false }); }
+  catch (e) { return res.status(502).json({ error: 'Stripe could not switch the link off: ' + e.message }); }
+  db.prepare("UPDATE order_charges SET status = 'cancelled' WHERE id = ?").run(ch.id);
+  try { db.prepare('INSERT INTO order_notes (order_id, note) VALUES (?,?)').run(ch.order_id, `Extra payment request of ${(ch.amount_cents / 100).toFixed(2)} ${ch.currency} cancelled by ${req.session.admin.username}.`); } catch {}
+  logAudit(req, 'order.charge_cancelled', 'order', ch.order_id, { charge_id: ch.id });
+  res.json({ ok: true });
+});
+
+// Called by the Stripe webhook when a payment-link checkout finishes. Returns true when the session belonged to an extra-payment request.
+function recordExtraPayment(session) {
+  if (!session || !session.payment_link) return false;
+  const ch = db.prepare('SELECT * FROM order_charges WHERE stripe_link_id = ?').get(String(session.payment_link));
+  if (!ch) return false;
+  if (session.payment_status !== 'paid') return true;                       // an async method that has not settled yet
+  const r = db.prepare("UPDATE order_charges SET status = 'paid', paid_at = CURRENT_TIMESTAMP, stripe_session_id = ? WHERE id = ? AND status != 'paid'").run(String(session.id || ''), ch.id);
+  if (r.changes) {
+    const amt = `${(ch.amount_cents / 100).toFixed(2)} ${ch.currency}`;
+    try { db.prepare('INSERT INTO order_notes (order_id, note) VALUES (?,?)').run(ch.order_id, `Extra payment received: ${amt} (${ch.reason || 'no reason given'}).`); } catch {}
+    try { sendOwnerMail(`Extra payment received for order #${ch.order_id}`, `The customer paid the extra ${amt} (${ch.reason || ''}) for order #${ch.order_id}.\n\n${process.env.BASE_URL || ''}/admin/orders/${ch.order_id}`).catch(() => {}); } catch {}
+  }
+  return true;
+}
+
 // ---- Edit the letter text and attachments before the order goes to print ------------------------
 // Same lock as the address editor: not once a letter is live at PostGrid, and not after mailing.
 function orderEditLock(order) {
@@ -3190,6 +3250,30 @@ app.get('/api/admin/notifications', requireAdmin, (req, res) => {
     ORDER BY created_at DESC LIMIT 20`).all(...(since ? [since] : []));
   const unreadContacts = db.prepare('SELECT COUNT(*) AS n FROM contact_submissions WHERE read_at IS NULL').get().n;
   res.json({ now, orders, contacts, unreadContacts });
+});
+
+// Live alerts for the admin app: a stream that pushes a line the moment a new paid order, an unread message or an extra payment appears.
+app.get('/api/admin/events', requireAdmin, (req, res) => {
+  const stamp = () => db.prepare("SELECT strftime('%Y-%m-%d %H:%M:%S','now') AS t").get().t;
+  let cursor = /^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}/.test(String(req.query.since || '')) ? String(req.query.since).replace('T', ' ').slice(0, 19) : stamp();
+  res.writeHead(200, { 'Content-Type': 'text/event-stream; charset=utf-8', 'Cache-Control': 'no-cache, no-transform', Connection: 'keep-alive', 'X-Accel-Buffering': 'no' });
+  res.write('retry: 5000\n\n');
+  const send = o => res.write(`data: ${JSON.stringify(o)}\n\n`);
+  const tick = () => {
+    try {
+      const now = stamp();
+      for (const o of db.prepare(`SELECT id, recipient_name, destination_country, price_cents, paid_at FROM orders WHERE deleted_at IS NULL AND paid_at IS NOT NULL AND paid_at > ? AND paid_at <= ? ORDER BY paid_at LIMIT 20`).all(cursor, now))
+        send({ type: 'order', id: o.id, name: o.recipient_name, dest: o.destination_country, price_cents: o.price_cents, at: o.paid_at });
+      for (const m of db.prepare(`SELECT id, name, substr(message,1,120) AS preview, created_at FROM contact_submissions WHERE read_at IS NULL AND created_at > ? AND created_at <= ? ORDER BY created_at LIMIT 20`).all(cursor, now))
+        send({ type: 'message', id: m.id, name: m.name, preview: m.preview, at: m.created_at });
+      for (const c of db.prepare(`SELECT id, order_id, amount_cents, currency, paid_at FROM order_charges WHERE status = 'paid' AND paid_at > ? AND paid_at <= ? ORDER BY paid_at LIMIT 20`).all(cursor, now))
+        send({ type: 'extra', id: c.id, order_id: c.order_id, amount_cents: c.amount_cents, currency: c.currency, at: c.paid_at });
+      cursor = now;
+      send({ type: 'tick', at: now });                                   // keeps the connection alive and tells the app where it is up to
+    } catch (e) { console.error('[events] tick failed:', e.message); }
+  };
+  const timer = setInterval(tick, 5000);
+  req.on('close', () => clearInterval(timer));
 });
 
 app.get('/api/admin/orders/:id/emails', requireAdmin, (req, res) => {

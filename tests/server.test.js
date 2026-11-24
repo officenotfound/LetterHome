@@ -46,6 +46,10 @@ const mockStripe = function StripeClient(_key) {
         expire: async (sessionId) => ({ id: sessionId, status: 'expired' }),
       },
     },
+    paymentLinks: {
+      create: async (o) => ({ ...((globalThis.__lastPaymentLink = o), {}), id: 'plink_' + randomUUID().replace(/-/g, '').slice(0, 12), url: 'https://buy.stripe.com/test_' + randomUUID().slice(0, 8) }),
+      update: async (id, o) => ({ id, ...o }),
+    },
     webhooks: {
       constructEvent(body, sig, secret) {
         // Reproduce Stripe's t=<ts>,v1=<hmac> scheme for test isolation
@@ -2115,4 +2119,65 @@ test('admin can edit an order\'s letter text and add or remove attachments befor
   db.prepare("UPDATE orders SET status = 'mailed' WHERE id = ?").run(id);
   assert.equal((await json(`/api/admin/orders/${id}/letter`, 'POST', { letter_body: 'Mailed' })).status, 409);
   assert.equal((await fetch(`${base}/api/admin/orders/${id}/letter`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })).status, 401);
+});
+
+test('admin can ask a customer for an extra payment: a one-time Stripe link is made, the payment is recorded from the webhook and noted on the order, and the request can be cancelled', async () => {
+  const { cookie, csrfToken } = await loginAdmin();
+  const id = db.prepare('SELECT id FROM orders WHERE stripe_session_id = ?').get(seedOrder({ status: 'paid' })).id;
+  const call = (url, method, body) => fetch(`${base}${url}`, { method, headers: { 'Content-Type': 'application/json', Cookie: cookie, 'X-CSRF-Token': csrfToken }, body: body ? JSON.stringify(body) : undefined });
+  assert.equal((await call(`/api/admin/orders/${id}/charges`, 'POST', { amount: '0', reason: 'x' })).status, 400);
+  assert.equal((await call(`/api/admin/orders/${id}/charges`, 'POST', { amount: '5', reason: '  ' })).status, 400, 'a reason is required');
+  let res = await call(`/api/admin/orders/${id}/charges`, 'POST', { amount: '7.50', reason: '3 extra pages' });
+  assert.equal(res.status, 200);
+  const made = await res.json();
+  assert.match(made.url, /^https:\/\/buy\.stripe\.com\//);
+  assert.equal(made.amount_cents, 750);
+  const lp = globalThis.__lastPaymentLink;
+  assert.equal(lp.line_items[0].price_data.unit_amount, 750);
+  assert.equal(lp.restrictions.completed_sessions.limit, 1, 'the link can be paid once');
+  assert.match(lp.line_items[0].price_data.product_data.name, /LH-[0-9A-F]{4}-[0-9A-F]{4}/, 'the customer sees the reference, not the order number');
+  const row = db.prepare('SELECT * FROM order_charges WHERE id = ?').get(made.id);
+  assert.equal(row.status, 'open');
+
+  // the customer pays: webhook marks it paid and does not treat it as a new order
+  const before = db.prepare('SELECT status FROM orders WHERE id = ?').get(id).status;
+  const payload = JSON.stringify({ type: 'checkout.session.completed', data: { object: { id: 'cs_extra_1', payment_link: row.stripe_link_id, payment_status: 'paid' } } });
+  const wh = await fetch(`${base}/webhook`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'stripe-signature': webhookSig(payload) }, body: payload });
+  assert.equal(wh.status, 200);
+  assert.equal(db.prepare('SELECT status FROM order_charges WHERE id = ?').get(made.id).status, 'paid');
+  assert.equal(db.prepare('SELECT status FROM orders WHERE id = ?').get(id).status, before);
+  assert.match(db.prepare("SELECT group_concat(note, ' | ') AS n FROM order_notes WHERE order_id = ?").get(id).n, /Extra payment received: 7\.50 CAD/);
+  assert.equal((await call(`/api/admin/orders/${id}/charges/${made.id}/cancel`, 'POST')).status, 409, 'a paid request cannot be cancelled');
+
+  // cancel an open one
+  const second = await (await call(`/api/admin/orders/${id}/charges`, 'POST', { amount: '2', reason: 'one more page' })).json();
+  assert.equal((await call(`/api/admin/orders/${id}/charges/${second.id}/cancel`, 'POST')).status, 200);
+  assert.equal(db.prepare('SELECT status FROM order_charges WHERE id = ?').get(second.id).status, 'cancelled');
+  const list = await (await call(`/api/admin/orders/${id}/charges`, 'GET')).json();
+  assert.equal(list.length, 2);
+  db.prepare("UPDATE orders SET status = 'awaiting_payment' WHERE id = ?").run(id);
+  assert.equal((await call(`/api/admin/orders/${id}/charges`, 'POST', { amount: '5', reason: 'x' })).status, 409);
+});
+
+test('admin live event stream pushes a new paid order within seconds and requires an admin session', async () => {
+  assert.equal((await fetch(`${base}/api/admin/events`)).status, 401);
+  const { cookie } = await loginAdmin();
+  const ac = new AbortController();
+  const res = await fetch(`${base}/api/admin/events`, { headers: { Cookie: cookie }, signal: ac.signal });
+  assert.equal(res.status, 200);
+  assert.match(res.headers.get('content-type'), /text\/event-stream/);
+  const id = db.prepare('SELECT id FROM orders WHERE stripe_session_id = ?').get(seedOrder({ status: 'paid', recipientName: 'Live Recipient' })).id;
+  db.prepare("UPDATE orders SET paid_at = datetime('now', '+1 seconds') WHERE id = ?").run(id);
+  const reader = res.body.getReader(); const dec = new TextDecoder(); let buf = ''; let got = null;
+  const deadline = Date.now() + 12000;
+  while (!got && Date.now() < deadline) {
+    const { value, done } = await Promise.race([reader.read(), new Promise(r => setTimeout(() => r({ done: true }), 12000))]);
+    if (done) break;
+    buf += dec.decode(value);
+    const m = buf.match(/data: (\{"type":"order"[^\n]*)/);
+    if (m) got = JSON.parse(m[1]);
+  }
+  ac.abort();
+  assert.ok(got, 'an order event arrived');
+  assert.equal(got.id, id); assert.equal(got.name, 'Live Recipient');
 });

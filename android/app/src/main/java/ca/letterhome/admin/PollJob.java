@@ -30,6 +30,7 @@ public class PollJob extends JobService {
     @Override public boolean onStopJob(JobParameters p) { return true; }
 
     private void poll() throws Exception {
+        if (System.currentTimeMillis() - LiveService.lastAlive < 90000) return;      // the live connection is handling alerts
         String cookie = CookieManager.getInstance().getCookie(HOST);
         if (cookie == null || cookie.isEmpty()) return;               // never signed in
         SharedPreferences sp = getSharedPreferences("poll", MODE_PRIVATE);
