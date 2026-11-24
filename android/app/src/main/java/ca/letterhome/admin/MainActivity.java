@@ -47,7 +47,7 @@ public class MainActivity extends Activity {
     public class Bridge {
         @JavascriptInterface public String get() {
             SharedPreferences sp = getSharedPreferences("ui", MODE_PRIVATE);
-            return "{\"quietOn\":" + sp.getBoolean("quiet_on", true) + ",\"start\":" + sp.getInt("quiet_start", 22) + ",\"end\":" + sp.getInt("quiet_end", 7)
+            return "{\"quietOn\":" + sp.getBoolean("quiet_on", false) + ",\"start\":" + sp.getInt("quiet_start", 22) + ",\"end\":" + sp.getInt("quiet_end", 7)
                     + ",\"lock\":" + sp.getBoolean("lock_on", false) + ",\"canLock\":" + secure() + ",\"version\":\"" + BuildConfigVersion() + "\"}";
         }
         @JavascriptInterface public void setQuiet(boolean on, int start, int end) {

@@ -22,7 +22,7 @@ final class Notify {
     /** Quiet hours: everything except new orders is posted silently. */
     static boolean quietNow(Context c) {
         SharedPreferences sp = c.getSharedPreferences("ui", Context.MODE_PRIVATE);
-        if (!sp.getBoolean("quiet_on", true)) return false;
+        if (!sp.getBoolean("quiet_on", false)) return false;
         int s = sp.getInt("quiet_start", 22), e = sp.getInt("quiet_end", 7);
         int h = Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
         return s == e ? false : (s < e ? (h >= s && h < e) : (h >= s || h < e));
