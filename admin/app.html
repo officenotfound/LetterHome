@@ -605,6 +605,12 @@ html{-webkit-tap-highlight-color:transparent;touch-action:manipulation;-webkit-t
 }
 @media(min-width:1181px){html[data-theme] body .main{margin-left:auto;margin-right:auto}}
 @media(orientation:landscape) and (max-height:520px){html[data-theme] body .mob-tabs{height:48px}html[data-theme] body .mob-tab span{display:none}}
+
+/* Mac app: sidebar runs under the traffic lights, top bar drags the window */
+html.mac-app body .sidebar-logo{padding-top:44px}
+html.mac-app body .topbar{padding-left:28px}
+html.mac-app body .topbar,html.mac-app body .sidebar-logo{-webkit-user-select:none}
+html.mac-app ::-webkit-scrollbar{width:0;height:0}
 </style>
 </head>
 <body>
@@ -649,8 +655,7 @@ html{-webkit-tap-highlight-color:transparent;touch-action:manipulation;-webkit-t
 </nav>
 <div class="content">
   <div class="topbar">
-    <button class="mob-menu-btn" onclick="toggleMobSidebar()" aria-label="Open menu">☰</button>
-    <div class="topbar-title" id="topbar-title">Dashboard</div>
+        <div class="topbar-title" id="topbar-title">Dashboard</div>
     <div style="display:flex;align-items:center;gap:16px">
       <button class="btn btn-outline btn-sm" onclick="openSearch()" title="Press / anywhere"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span>Search</span><kbd class="kc">/</kbd></button>
       <div class="notif-wrap">
@@ -5091,6 +5096,18 @@ function closeMobSidebar() {
   document.querySelector('.sidebar')?.classList.remove('mob-open');
   const o = document.getElementById('sidebar-overlay');
   if (o) o.classList.remove('mob-open');
+}
+
+
+// Mac app: dragging the top bar moves the window, double-click zooms it.
+if (/LetterhomeMac/.test(navigator.userAgent) && window.webkit && webkit.messageHandlers && webkit.messageHandlers.mac) {
+  document.addEventListener('mousedown', e => {
+    if (e.button !== 0) return;
+    const t = e.target;
+    if (t.closest && t.closest('.topbar,.sidebar-logo') && !t.closest('button,a,input,select,textarea,.notif-wrap,.notif-panel')) {
+      webkit.messageHandlers.mac.postMessage(e.detail === 2 ? 'zoom' : 'drag');
+    }
+  });
 }
 
 init();
