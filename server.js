@@ -2382,6 +2382,7 @@ cron.schedule('10 8 * * 1', () => { try { sendOwnerMail('Content and links: this
 const mailbox = require('./mailbox').register(app, { db, requireAdmin, logAudit });
 if (process.env.NODE_ENV !== 'test') mailbox.start();
 require('./adminExtras').register(app, { db, requireAdmin, logAudit, getSetting, contentHeld: o => contentHeld(o), today: () => torontoToday(), ops });
+require('./indexHelper').register(app, { db, requireAdmin, logAudit, getSetting, indexNow, publicDir: path.join(__dirname, 'public'), pages: () => indexNow.plan(true).byHost });
 const reports = require('./reportsData').register(app, { db, requireAdmin, getSetting, setSetting, stripe, contentHeld: o => contentHeld(o), today: () => torontoToday() });
 if (process.env.NODE_ENV !== 'test') { reports.beat(); cron.schedule('*/5 * * * *', reports.beat); }
 

@@ -297,9 +297,9 @@
           + card(4, 'Index coverage', 'Pages Google has indexed, as of the last check.', q.index.checked ? `<div class="rp-big">${Math.round(q.index.indexed / q.index.checked * 100)}%</div><div class="rp-bar"><i style="--w:${q.index.indexed / q.index.checked * 100}%;--c:var(--rp-c3)"></i></div><div class="rp-key"><span>Indexed</span><b>${num(q.index.indexed)}</b></div><div class="rp-key"><span>Checked</span><b>${num(q.index.checked)}</b></div>` : none('Not checked yet. Run it from Health, Connections.'))
           + section('What to improve')
           + card(12, 'Ranking opportunities', 'Each circle is a page; height shows times shown. Pages ranked 8th to 20th are the easiest to move up.', scatter(q.pages), { id: 'pages', cols: ['Page', 'Position', 'Shown', 'Clicks'], rows: q.pages.map(p => [p.key, p.position, p.impressions, p.clicks]) })
-          + card(7, 'Search queries', 'Searches that showed your pages.', table(['Query', 'Shown', 'Clicks', 'Position'], q.queries.slice(0, 12).map(x => [x.key, x.impressions, x.clicks, x.position])), { id: 'queries', cols: ['Query', 'Shown', 'Clicks', 'Position'], rows: q.queries.map(x => [x.key, x.impressions, x.clicks, x.position]) })
-          + card(5, 'Not yet indexed', 'As of the last check. Google only accepts a request for one page inside Search Console.', q.missing.length
-            ? rows(q.missing.slice(0, 8).map(m => ({ name: m.url.replace(/^https?:\/\//, ''), sub: m.coverage, warn: true, button: link('Open', `https://search.google.com/search-console/inspect?resource_id=${encodeURIComponent('sc-domain:' + m.url.split('/')[2])}&id=${encodeURIComponent(m.url)}`) }))) + `<div class="rp-gap">${button('Send changed pages to Bing', 'data-run="indexnow"')}</div>`
+          + card(12, 'Search queries', 'Searches that showed your pages.', table(['Query', 'Shown', 'Clicks', 'Position'], q.queries.slice(0, 12).map(x => [x.key, x.impressions, x.clicks, x.position])), { id: 'queries', cols: ['Query', 'Shown', 'Clicks', 'Position'], rows: q.queries.map(x => [x.key, x.impressions, x.clicks, x.position]) })
+          + card(12, 'Not yet indexed', 'As of the last check. Press Why to see the reason and what to do.', q.missing.length
+            ? q.missing.map(m => rows([{ name: m.url.replace(/^https?:\/\//, ''), sub: m.coverage, warn: true, button: button(state.help?.url === m.url ? 'Close' : 'Why', `data-help="${e(m.url)}" aria-expanded="${state.help?.url === m.url}"`) }]) + (state.help?.url === m.url ? helpPanel(state.help) : '')).join('') + `<div class="rp-gap">${button('Send changed pages to Bing', 'data-run="indexnow"')}</div>`
             : none(q.index.checked ? 'Every checked page is indexed.' : 'Not checked yet.'), { id: 'missing', cols: ['Page', 'Google says'], rows: q.missing.map(m => [m.url, m.coverage]) })
           + section('Searchers')
           + card(6, 'Search clicks by country', 'From Google.', bars(q.countries.map(c => [c.key, c.clicks])), { id: 'countries', cols: ['Country', 'Clicks', 'Shown'], rows: q.countries.map(c => [c.key, c.clicks, c.impressions]) })
@@ -396,6 +396,40 @@
     },
   };
 
+  // The reason a page is missing from Google, our own checks on it, and what can be sent from here.
+  function helpPanel(h) {
+    const d = h.data;
+    if (!d) return `<div class="rp-help"><p class="rp-none">${e(h.error || 'Checking the page…')}</p></div>`;
+    const inspectLink = `https://search.google.com/search-console/inspect?resource_id=${encodeURIComponent('sc-domain:' + d.url.split('/')[2])}&id=${encodeURIComponent(d.url)}`;
+    return `<div class="rp-help"><p><b>${e(d.reason)}</b></p><p>${e(d.todo)}</p>
+      <ul class="rp-checks">${d.checks.map(c => `<li><span class="${c.ok ? 'rp-good' : 'rp-warn'}">${c.ok ? 'Fine' : 'Fix'}</span><div>${e(c.label)}${c.detail ? `<small>${e(c.detail)}</small>` : ''}</div></li>`).join('')}</ul>
+      ${d.suggest.length ? `<p>Good pages to add a link from: <b>${d.suggest.map(e).join(', ')}</b></p>` : ''}
+      <p class="rp-how">${d.lastVisit ? `Google last visited ${e(dayName(d.lastVisit))}. ` : 'Google has not visited. '}Checked ${e(ago(d.checkedAt).toLowerCase())}. A change to the page's words or links needs an edit and a deploy.</p>
+      <div class="rp-actions">${link('Request in Search Console', inspectLink)}${button('Check again', 'data-fix="recheck"')}${button('Send sitemap to Google', 'data-fix="sitemap"')}${button('Send page to Bing', 'data-fix="bing"')}</div>
+      ${h.message ? `<p class="${h.failed ? 'rp-bad' : 'rp-good'}" role="status">${e(h.message)}</p>` : ''}</div>`;
+  }
+
+  async function openHelp(url) {
+    if (state.help?.url === url) { state.help = null; return redraw(); }
+    const h = state.help = { url };
+    redraw();
+    const d = await api(`/api/admin/index-help?url=${encodeURIComponent(url)}`, { background: true });
+    if (state.help !== h) return;
+    if (d && !d.error) h.data = d; else h.error = 'Could not check this page. Close it and try again.';
+    redraw();
+  }
+
+  async function fixPage(kind, pressed) {
+    const h = state.help;
+    pressed.disabled = true; pressed.textContent = 'Working…';
+    const r = await post(`/api/admin/index-help/${kind}`, { url: h.url });
+    if (state.help !== h) return;
+    h.failed = !r || r.ok === false || !!r.error;
+    h.message = h.failed ? (r?.error || 'That did not work.') : r.message || 'Checked again.';
+    if (!h.failed && kind === 'recheck') h.data = r;
+    redraw();
+  }
+
   const TOOLS = [['/admin/insights', 'Insights', 'Order and customer totals'], ['/admin/visitors', 'Visitors', 'Cloudflare traffic, recent visits, cache purge'], ['/admin/traffic', 'Traffic', 'Sources, landing pages and crawlers'], ['/admin/growth', 'Search', 'Search keys, fetch and full search lists'], ['/admin/google', 'Google', 'Index check, speed check and Analytics setup'], ['/admin/funnel', 'Funnel', 'Checkout steps and weekly revenue'], ['/admin/seo-audit', 'Content audit', 'The full list of page issues'], ['/admin/profit', 'Profit', 'Estimated profit per order'], ['/admin/stripe', 'Stripe', 'Balance, payouts and disputes']];
 
   // ── Drawing and refreshing ─────────────────────────────────────────────────────────────────
@@ -435,8 +469,10 @@
   function bind() {
     const root = document.getElementById('rp');
     root.addEventListener('click', async ev => {
-      const t = ev.target.closest('[data-go],[data-days],[data-table],[data-run]');
+      const t = ev.target.closest('[data-go],[data-days],[data-table],[data-run],[data-help],[data-fix]');
       if (!t) return;
+      if (t.dataset.help) return openHelp(t.dataset.help);
+      if (t.dataset.fix) return fixPage(t.dataset.fix, t);
       if (t.dataset.go) return go(t.dataset.go);
       if (t.dataset.days) { const v = t.dataset.days === 'all' ? 'all' : Number(t.dataset.days); if (v !== state.days) { state.days = v; load(); } return; }
       if (t.dataset.table) {

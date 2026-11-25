@@ -59,6 +59,12 @@ html[data-theme] body .rp-head h3{font:700 14px Archivo,'Noto Sans',sans-serif;c
 .rp-row{display:flex;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--a-line);font-size:13.5px}
 .rp-row:first-child{border-top:0}.rp-row>div{min-width:0;flex:1;overflow-wrap:anywhere}.rp-row small{display:block;color:var(--a-muted);font-size:12px}
 .rp-dot{width:7px;height:7px;border-radius:99px;border:1px solid var(--a-muted);flex:none}.rp-dot.w{background:var(--rp-warn);border-color:var(--rp-warn)}
+.rp-help{border-left:3px solid var(--rp-c1);background:var(--rp-faint);border-radius:0 6px 6px 0;padding:12px 16px;margin:0 0 10px;font-size:13.5px;overflow-wrap:anywhere}
+.rp-help>p{margin:0 0 8px}
+.rp-checks{list-style:none;margin:10px 0;padding:0}
+.rp-checks li{display:grid;grid-template-columns:40px minmax(0,1fr);gap:10px;padding:6px 0;border-top:1px solid var(--a-line)}
+.rp-checks li>span{font-size:12px}.rp-checks small{display:block;color:var(--a-muted);font-size:12px}
+.rp-actions{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px}
 .rp-todo{list-style:none;margin:0;padding:0}
 .rp-todo li{display:grid;grid-template-columns:58px minmax(0,1fr) auto;gap:10px;align-items:start;padding:11px 0;border-top:1px solid var(--a-line);font-size:13.5px}
 .rp-todo li:first-child{border-top:0}.rp-todo li>span:first-child{font-size:12px}

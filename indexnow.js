@@ -77,13 +77,27 @@ function create({ getSetting, setSetting, publicDir, baseUrl, fetchImpl = fetch,
     return result;
   }
 
+  // One page, sent by hand from the admin.
+  async function send(urls) {
+    if (!enabled()) return { ok: false, message: 'Only the live site sends pages to Bing.' };
+    const host = new URL(urls[0]).host;
+    if (host !== PRIMARY && !SITES.some(s => s.host === host)) return { ok: false, message: 'That is not one of our sites.' };
+    try {
+      const r = await fetchImpl(ENDPOINT, {
+        method: 'POST', headers: { 'Content-Type': 'application/json; charset=utf-8' },
+        body: JSON.stringify({ host, key: KEY, keyLocation: `https://${host}/${KEY}.txt`, urlList: urls }),
+      });
+      return r.status === 200 || r.status === 202 ? { ok: true } : { ok: false, message: `Bing answered ${r.status}.` };
+    } catch { return { ok: false, message: 'Could not reach Bing.' }; }
+  }
+
   function status() {
     let last = null;
     try { last = JSON.parse(getSetting('indexnow_last', '') || 'null'); } catch {}
     return { enabled: enabled(), last };
   }
 
-  return { run, status, plan, enabled };
+  return { run, send, status, plan, enabled };
 }
 
 module.exports = { create, readSitemap, KEY };

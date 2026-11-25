@@ -16,10 +16,36 @@ const GA_WAIT_MS = 6 * 60 * 60 * 1000;
 
 function schema(db) {
   db.exec(`CREATE TABLE IF NOT EXISTS index_status (url TEXT PRIMARY KEY, site TEXT NOT NULL, verdict TEXT, coverage TEXT, last_crawl TEXT, checked_at TEXT NOT NULL)`);
+  try { db.exec('ALTER TABLE index_status ADD COLUMN detail TEXT'); } catch {}   // the rest of Google's answer, for the page helper
   db.exec(`CREATE TABLE IF NOT EXISTS speed_results (id INTEGER PRIMARY KEY AUTOINCREMENT, url TEXT NOT NULL, score INTEGER, lcp_ms INTEGER, cls REAL, tbt_ms INTEGER, error TEXT, checked_at TEXT NOT NULL)`);
 }
 
 const siteOfHost = host => (host === PRIMARY ? 'ca' : (SITES.find(s => s.host === host) || {}).key || null);
+
+const INSPECT = 'https://searchconsole.googleapis.com/v1/urlInspection/index:inspect';
+
+// Asks Google about one page and keeps the answer.
+async function inspect({ db, auth, property, site, url, fetchImpl, now }) {
+  const j = await call(fetchImpl, 'Google', INSPECT, {
+    method: 'POST', headers: { ...auth, 'Content-Type': 'application/json' }, body: JSON.stringify({ inspectionUrl: url, siteUrl: property }),
+  });
+  const s = j.inspectionResult?.indexStatusResult || {};
+  const detail = { robots: s.robotsTxtState, indexing: s.indexingState, fetch: s.pageFetchState, googleCanonical: s.googleCanonical, userCanonical: s.userCanonical };
+  db.prepare(`INSERT INTO index_status (url, site, verdict, coverage, last_crawl, checked_at, detail) VALUES (?,?,?,?,?,?,?)
+    ON CONFLICT(url) DO UPDATE SET site=excluded.site, verdict=excluded.verdict, coverage=excluded.coverage, last_crawl=excluded.last_crawl, checked_at=excluded.checked_at, detail=excluded.detail`)
+    .run(url, site, s.verdict || 'UNKNOWN', String(s.coverageState || '').slice(0, 200), String(s.lastCrawlTime || '').slice(0, 10) || null, now().toISOString(), JSON.stringify(detail).slice(0, 2000));
+}
+
+async function inspectPage({ db, getSetting, url, fetchImpl = fetch, now = () => new Date() }) {
+  const raw = getSetting('gsc_service_key', '');
+  if (!raw) throw new Error('Add the Google key file on the Search screen first.');
+  const auth = { Authorization: `Bearer ${await googleToken(fetchImpl, parseServiceKey(raw))}` };
+  const list = await call(fetchImpl, 'Google', 'https://www.googleapis.com/webmasters/v3/sites', { headers: auth });
+  const props = pickProperties((list.siteEntry || []).map(s => s.siteUrl));
+  const site = siteOfHost(new URL(url).host);
+  if (!site || !props[site]) throw new Error('This site is not in Search Console for this key.');
+  await inspect({ db, auth, property: props[site], site, url, fetchImpl, now });
+}
 
 // Which sitemap pages to look at next, per site: never checked first, then the ones checked longest ago.
 function duePages(db, byHost, limit = PER_SITE_PER_RUN) {
@@ -44,19 +70,13 @@ async function checkIndex({ db, getSetting, setSetting, pages, fetchImpl = fetch
   // Forget pages that left the sitemap.
   const live = new Set([...urls.values()].flat());
   for (const r of db.prepare('SELECT url FROM index_status').all()) if (!live.has(r.url)) db.prepare('DELETE FROM index_status WHERE url = ?').run(r.url);
-  const save = db.prepare(`INSERT INTO index_status (url, site, verdict, coverage, last_crawl, checked_at) VALUES (?,?,?,?,?,?)
-    ON CONFLICT(url) DO UPDATE SET site=excluded.site, verdict=excluded.verdict, coverage=excluded.coverage, last_crawl=excluded.last_crawl, checked_at=excluded.checked_at`);
   const messages = [];
   for (const [site, due] of Object.entries(duePages(db, urls))) {
     if (!props[site]) { messages.push(`${site}: no Search Console property for this key.`); continue; }
     let done = 0;
     for (const url of due) {
       try {
-        const j = await call(fetchImpl, 'Google', 'https://searchconsole.googleapis.com/v1/urlInspection/index:inspect', {
-          method: 'POST', headers: { ...auth, 'Content-Type': 'application/json' }, body: JSON.stringify({ inspectionUrl: url, siteUrl: props[site] }),
-        });
-        const s = j.inspectionResult?.indexStatusResult || {};
-        save.run(url, site, s.verdict || 'UNKNOWN', String(s.coverageState || '').slice(0, 200), String(s.lastCrawlTime || '').slice(0, 10) || null, now().toISOString());
+        await inspect({ db, auth, property: props[site], site, url, fetchImpl, now });
         done++;
       } catch (e) {
         messages.push(`${site}: ${/may not read/.test(e.message) ? 'Google refused. In Search Console this account may need Full instead of Restricted access.' : e.message}`);
@@ -228,4 +248,4 @@ function register(app, { db, requireAdmin, logAudit, getSetting, setSetting, pag
   return { start };
 }
 
-module.exports = { register, checkIndex, checkSpeed, analytics, pulse, duePages, schema };
+module.exports = { register, checkIndex, checkSpeed, analytics, pulse, duePages, schema, inspectPage };
