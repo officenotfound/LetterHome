@@ -342,7 +342,7 @@ def build(key):
 <footer id="site-footer"><nav aria-label="Site links" style="padding:24px;font-size:14px"><a href="/about">About</a> · <a href="/careers">Careers</a> · <a href="/contact">Contact</a> · <a href="/guides">Mailing guides</a> · <a href="/business">Business mail</a> · <a href="/monthly-letters">Monthly letters</a> · <a href="/terms">Terms</a> · <a href="/privacy">Privacy</a> · <a href="/refunds">Refund policy</a> · <a href="https://letterhome.ca/">Canada</a> · <a href="/us">United States</a> · <a href="/uk">United Kingdom</a> · <a href="/au">Australia</a></nav></footer>
 <script src="/footer.js?v=22" defer></script>
 <script src="/theme.js?v=4" defer></script>
-<script src="/lang.js?v=71" defer></script>
+<script src="/lang.js?v=72" defer></script>
 <script>
 async function submitBizForm() {{
   const v = id => document.getElementById(id).value.trim();

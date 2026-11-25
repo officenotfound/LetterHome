@@ -390,7 +390,7 @@
       'contact.meta2.h3': 'Order support',
       'contact.meta2.p': 'Have your order number ready. We can cancel for a full refund before it goes to print, and fix address mistakes.',
       'contact.meta3.h3': 'Bulk & business mail',
-      'contact.meta3.p': 'Volume pricing: send us the details through the form on this page.',
+      'contact.meta3.p': 'Volume pricing: <a href="/business#quote">ask for a quote</a>.',
       'contact.meta4.h3': 'Find us on Google',
       'contact.meta4.p': '<a href="https://www.google.com/maps?cid=17816876555793881554" target="_blank" rel="noopener">View our Google Business Profile</a>',
       'contact.success': 'Message sent. We\'ll get back to you within one business day.',

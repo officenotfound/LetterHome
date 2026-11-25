@@ -1093,7 +1093,7 @@ window.LH_FR = {
       'contact.meta2.h3': 'Soutien aux commandes',
       'contact.meta2.p': 'Gardez votre numéro de commande. Nous pouvons annuler avec remboursement complet avant l\'impression et corriger les erreurs d\'adresse.',
       'contact.meta3.h3': 'Envois en volume et courrier d\'affaires',
-      'contact.meta3.p': 'Tarifs de volume : envoyez-nous les détails par le formulaire de cette page.',
+      'contact.meta3.p': 'Tarifs de volume : <a href="/business#quote">demandez un devis</a>.',
       'contact.meta4.h3': 'Trouvez-nous sur Google',
       'contact.meta4.p': '<a href="https://www.google.com/maps?cid=17816876555793881554" target="_blank" rel="noopener">Voir notre profil d\'entreprise Google</a>',
       'contact.success': 'Message envoyé. Nous vous répondrons dans un jour ouvrable.',
