@@ -731,6 +731,10 @@ html.mac-app body .sidebar-logo{padding-top:44px}
 html.mac-app body .topbar{padding-left:28px}
 html.mac-app body .topbar,html.mac-app body .sidebar-logo{-webkit-user-select:none}
 html.mac-app ::-webkit-scrollbar{width:0;height:0}
+.keys-more>summary{cursor:pointer;color:var(--a-muted);font-size:12.5px;font-weight:600;padding:12px 0}
+.keys-more>summary:hover{color:var(--a-accent)}
+.set-card>.keys-more>summary{padding:14px 20px;border-top:1px solid var(--a-line)}
+@media(max-width:760px){.set-card>.keys-more>summary{padding:14px 16px}}
 </style>
 </head>
 <body>
@@ -1643,14 +1647,15 @@ async function showGoogle() {
   const speedCard = card('Speed on phones',
     tbl(['Page', 'Score out of 100', 'Main content shows after'], d.speed.map(r => `<tr><td>${path(r.url)}</td><td style="text-align:right;color:${r.error ? '#c1121f' : r.score >= 90 ? '#15803d' : r.score >= 50 ? '#b45309' : '#c1121f'}">${r.error ? esc(r.error) : r.score}</td><td style="text-align:right">${r.error ? '' : (r.lcp_ms / 1000).toFixed(1) + ' s'}</td></tr>`), 'Not checked yet.') +
     pad(`${d.speed[0] ? `<div style="color:#6b6b6b;margin-bottom:8px">Checked ${when(d.speed[0].checked_at)}. Runs every Monday.</div>` : ''}${d.has_speed_key ? btn('speed', 'Check now') : ''}
-      <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;align-items:center"><input type="password" id="speed-key" autocomplete="new-password" placeholder="${d.has_speed_key ? 'Key saved' : 'PageSpeed API key'}" style="max-width:100%"><button class="btn btn-outline btn-sm" onclick="saveGoogle({ speed_key: document.getElementById('speed-key').value }, 'speed-key')">Save key</button></div>`));
+      ${keyBox(d.has_speed_key, d.speed.length && d.speed.every(r => r.error), 'Replace the key', `<div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;align-items:center"><input type="password" id="speed-key" autocomplete="new-password" placeholder="PageSpeed API key" style="max-width:100%"><button class="btn btn-outline btn-sm" onclick="saveGoogle({ speed_key: document.getElementById('speed-key').value }, 'speed-key')">Save key</button></div>`)}`));
 
   const a = d.analytics;
   const props = (a.properties || []).map(p => p.error ? pad(`<span style="color:#c1121f">Property ${esc(p.id)}: ${esc(p.error)}</span>`) :
     `<table class="fit"><tbody>${['Visitors', 'Visits', 'Page views'].map((n, i) => `<tr><td>${n}, last 7 days</td><td style="text-align:right">${nf(p.week[i] || 0)} <span style="color:#6b6b6b">(${nf(p.before[i] || 0)} before)</span></td></tr>`).join('')}${p.channels.map(c => `<tr><td>${esc(c.name)}, 28 days</td><td style="text-align:right">${nf(c.sessions)}</td></tr>`).join('')}</tbody></table>`).join('');
+  const gaBroken = !!a.error || (a.properties || []).some(p => p.error);
   const gaCard = card('Google Analytics', (a.error ? pad(`<span style="color:#c1121f">${esc(a.error)}</span>`) : props) +
-    pad(`<div style="color:#6b6b6b">Needs the numeric property ID (Analytics, Admin, Property settings), and the same Google account added there as a Viewer.</div>
-      <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;align-items:center"><input type="text" id="ga-ids" inputmode="numeric" value="${esc(d.ga_ids)}" placeholder="Property ID" style="max-width:100%"><button class="btn btn-outline btn-sm" onclick="saveGoogle({ ga_ids: document.getElementById('ga-ids').value }, 'ga-ids')">Save</button></div>`));
+    keyBox(!!d.ga_ids, gaBroken, 'Change the property', pad(`<div style="color:#6b6b6b">Needs the numeric property ID (Analytics, Admin, Property settings), and the same Google account added there as a Viewer.</div>
+      <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;align-items:center"><input type="text" id="ga-ids" inputmode="numeric" value="${esc(d.ga_ids)}" placeholder="Property ID" style="max-width:100%"><button class="btn btn-outline btn-sm" onclick="saveGoogle({ ga_ids: document.getElementById('ga-ids').value }, 'ga-ids')">Save</button></div>`), true));
 
   setMain(indexCard + speedCard + gaCard + '<div id="google-msg" role="status" style="font-size:13px;color:#c1121f;margin-bottom:20px"></div>');
 }
@@ -4316,6 +4321,7 @@ async function showSettings() {
             <div class="set-txt"><h3>Google rating</h3><p>The score shown beside the reviews on the home and country pages. Update it when your Google profile changes.</p></div>
             <input id="setting-google-rating" type="number" min="1" max="5" step="0.1" value="${esc(settings['google_rating'] || '5.0')}" class="narrow">
           </div>
+          ${keyBox(!!(settings['clarity_project_id'] && settings['clarity_api_token_set'] === 'true'), false, 'Change the Microsoft Clarity connection', `
           <div class="set-row">
             <div class="set-txt"><h3>Microsoft Clarity project ID</h3><p>From clarity.microsoft.com. Turns on click maps and replays for information pages only. Leave empty to keep it off.</p></div>
             <input id="setting-clarity" type="text" maxlength="20" autocapitalize="off" autocomplete="off" spellcheck="false" value="${esc(settings['clarity_project_id'] || '')}" style="max-width:180px">
@@ -4323,7 +4329,7 @@ async function showSettings() {
           <div class="set-row">
             <div class="set-txt"><h3>Clarity API token</h3><p>Shows Clarity's numbers on the Traffic screen. In Clarity: Settings, Data Export, Generate new API token. ${settings['clarity_api_token_set'] === 'true' ? '<b>A token is saved.</b> Leave empty to keep it.' : 'No token saved.'}</p></div>
             <input id="setting-clarity-token" type="password" autocomplete="new-password" style="max-width:180px">
-          </div>
+          </div>`)}
           <div class="set-row">
             <div class="set-txt"><h3>Daily order cap</h3><p>Stop taking orders after this many a day. 0 means no limit.</p></div>
             <input id="setting-daily-cap" type="number" min="0" value="${dailyCap}" class="narrow">
@@ -5376,21 +5382,28 @@ const statCard = (label, value, sub, color) => `<div class="stat-card"><div clas
 const siteTabs = (cur, fn) => ['ca', 'us', 'uk'].map(s => `<button class="filter-btn ${cur === s ? 'active' : ''}" onclick="${fn}('${s}')">${esc(SITE_LABELS[s])}</button>`).join('');
 const deltaTxt = (now, before) => before == null ? '' : (now - before === 0 ? 'no change' : (now > before ? '+' : '') + nf(now - before) + ' vs last import');
 
+// Once a key is saved and working, its box is folded away; it opens by itself if the key stops working.
+function keyBox(saved, broken, label, body, pad) {
+  return saved && !broken ? `<details class="keys-more"${pad ? ' style="padding:0 24px"' : ''}><summary>${label}</summary>${body}</details>` : body;
+}
+
 let growthSite = 'ca';
 let growthEngine = 'google';
 function searchApiCard(a) {
   if (!a) return '';
   const when = a.last ? `<div style="margin-top:8px">Last fetch ${esc(new Date(a.last.at).toLocaleString())}: ${a.last.results.map(r => `<div style="color:${r.ok ? 'inherit' : '#c1121f'}">${r.engine === 'bing' ? 'Bing' : 'Google'}${r.site ? ' ' + esc(SITE_LABELS[r.site] || r.site) : ''}: ${esc(r.message)}</div>`).join('')}</div>` : '';
   const on = a.google || a.bing;
+  const failed = engine => !!a.last?.results.some(r => !r.ok && r.engine === engine);
   const row = (name, saved, input, button) => `<div style="margin-top:14px"><strong>${name}</strong> ${saved}<div style="margin-top:6px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">${input}${button}</div></div>`;
+  const google = row('Google key file', a.google ? 'saved, account ' + `<span style="overflow-wrap:anywhere">${esc(a.google_email)}</span>` : 'not added',
+    '<input type="file" id="gsc-key" accept=".json" style="font-size:12px;max-width:100%">',
+    `<button class="btn btn-outline btn-sm" onclick="saveSearchKey('google')">Save key file</button>${a.google ? `<button class="link" onclick="removeSearchKey('google')">Remove</button>` : ''}`);
+  const bing = row('Bing API key', a.bing ? 'saved' : 'not added',
+    '<input type="password" id="bing-key" autocomplete="new-password" placeholder="Paste the key" style="max-width:100%">',
+    `<button class="btn btn-outline btn-sm" onclick="saveSearchKey('bing')">Save key</button>${a.bing ? `<button class="link" onclick="removeSearchKey('bing')">Remove</button>` : ''}`);
   return `<div class="card"><div class="card-header"><div class="card-title">Automatic fetch from Google and Bing</div></div>
-    <div style="padding:12px 24px 16px;font-size:13px;color:#6b6b6b;line-height:1.7">Once a key is saved, results are fetched every morning. Keys are never shown again.
-    ${row('Google key file', a.google ? 'saved, account ' + `<span style="overflow-wrap:anywhere">${esc(a.google_email)}</span>` : 'not added',
-      '<input type="file" id="gsc-key" accept=".json" style="font-size:12px;max-width:100%">',
-      `<button class="btn btn-outline btn-sm" onclick="saveSearchKey('google')">Save key file</button>${a.google ? `<button class="link" onclick="removeSearchKey('google')">Remove</button>` : ''}`)}
-    ${row('Bing API key', a.bing ? 'saved' : 'not added',
-      '<input type="password" id="bing-key" autocomplete="new-password" placeholder="Paste the key" style="max-width:100%">',
-      `<button class="btn btn-outline btn-sm" onclick="saveSearchKey('bing')">Save key</button>${a.bing ? `<button class="link" onclick="removeSearchKey('bing')">Remove</button>` : ''}`)}
+    <div style="padding:12px 24px 16px;font-size:13px;color:#6b6b6b;line-height:1.7">Results are fetched every morning.
+    ${a.google && a.bing && !failed('google') && !failed('bing') ? keyBox(true, false, 'Replace a key', google + bing) : keyBox(a.google, failed('google'), 'Replace the Google key', google) + keyBox(a.bing, failed('bing'), 'Replace the Bing key', bing)}
     <div style="margin-top:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">${on ? '<button class="btn btn-primary btn-sm" onclick="fetchSearchNow()">Fetch now</button>' : ''}<span id="search-api-msg"></span></div>${when}</div></div>`;
 }
 function searchMsg(text, bad) { const m = document.getElementById('search-api-msg'); if (m) { m.style.color = bad ? '#c1121f' : '#6b6b6b'; m.textContent = text; } }
