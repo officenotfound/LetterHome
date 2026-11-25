@@ -35,6 +35,7 @@
 {
   "@context": "https://schema.org",
   "@graph": [
+    {"@type": "Organization", "@id": "https://letterhome.ca/#organization", "name": "Letterhome", "url": "https://letterhome.ca", "logo": {"@type": "ImageObject", "url": "https://letterhome.ca/icon-512.png", "width": 512, "height": 512}, "address": {"@type": "PostalAddress", "addressCountry": "CA"}, "sameAs": ["https://www.facebook.com/letterhomeca", "https://x.com/letterhomeca", "https://www.linkedin.com/company/letterhome", "https://www.google.com/maps?cid=17816876555793881554"]},
     {
       "@type": "FAQPage",
       "mainEntity": [
@@ -109,11 +110,7 @@
       "name": "Letterhome UK",
       "description": "Post a letter from the UK without a printer or stamps. Type it online and we print and post it, in the UK or to Canada, the US and Australia.",
       "url": "https://letterhome.ca/uk",
-      "provider": {
-        "@type": "Organization",
-        "name": "Letterhome",
-        "url": "https://letterhome.ca"
-      }
+      "provider": {"@id": "https://letterhome.ca/#organization"}
     },
     {
       "@type": "BreadcrumbList",

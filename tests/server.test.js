@@ -1725,6 +1725,9 @@ test('country domains: each country owns the guides written for its readers, and
     assert.equal(us.status, 200); assert.equal(canon(us.body), 'https://letterhome.us/send-a-letter-online-in-the-usa');
     const uk = await siteGet('letterhome.co.uk', '/address-a-letter-to-canada-from-the-uk');
     assert.equal(uk.status, 200); assert.equal(canon(uk.body), 'https://letterhome.co.uk/address-a-letter-to-canada-from-the-uk');
+    // Australia lives on letterhome.ca: link there directly, not through a redirect
+    assert.ok(!/href="\/au["/]/.test(uk.body), 'no relative Australia links on a country domain');
+    assert.match(uk.body, /href="https:\/\/letterhome\.ca\/au"/);
     // One address per page: the other domains and letterhome.ca send readers to the owner.
     assert.equal((await siteGet('letterhome.co.uk', '/send-a-letter-online-in-the-usa')).location, 'https://letterhome.us/send-a-letter-online-in-the-usa');
     assert.equal((await siteGet('letterhome.us', '/address-a-letter-to-canada-from-the-uk')).location, 'https://letterhome.co.uk/address-a-letter-to-canada-from-the-uk');

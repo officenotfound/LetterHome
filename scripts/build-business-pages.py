@@ -46,7 +46,7 @@ COUNTRIES = {
     single='/send?to=US&cur=USD', single_label='Send a single letter →'),
   'uk': dict(
     lang='en-GB', cc='uk', place='the UK', title='Business Mail in the UK: Volume Letters | Letterhome',
-    desc='Printed, addressed and posted for your UK business: letters and postcards at volume, address-checked. Request a quote.',
+    desc='Letters and postcards for UK businesses, printed, addressed and posted at volume, with every address checked before printing. Request a quote.',
     h1='Print and post at volume,<br><em>without a print shop.</em>',
     sub='Letters, postcards and more, printed, addressed and posted for you, in the UK and abroad. One list in, every piece checked and posted.',
     where='Where our UK printing is running, your pieces are printed and posted inside the UK. Otherwise they are printed in Canada and posted from there, which takes longer. Your quote says which applies.',

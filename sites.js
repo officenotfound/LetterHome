@@ -54,7 +54,10 @@ function createSites({ getSetting, localSlugs, publicDir }) {
   // For a page served on `onSite` (or the main domain when null): rewrite every live country domain's URLs.
   const own = new Map(SITES.map(s => [s.key, rewriteFor(s, { relative: true })]));
   const cross = new Map(SITES.map(s => [s.key, rewriteFor(s)]));
-  const transformFor = onSite => html => SITES.filter(isLive).reduce((h, s) => (onSite && onSite.key === s.key ? own : cross).get(s.key)(h), html);
+  // Australia has no domain of its own, so on a country domain its links go straight to letterhome.ca instead of
+  // being redirected there.
+  const toAu = html => html.replace(/(href=["'])(\/au(?:\/[^"'?#]*)?)(?=["'?#])/g, `$1https://${PRIMARY}$2`);
+  const transformFor = onSite => html => SITES.filter(isLive).reduce((h, s) => (onSite && onSite.key === s.key ? own : cross).get(s.key)(h), onSite ? toAu(html) : html);
 
   const isLocal = (site, p) => p === '/'
     || site.roots.some(r => p === r || p.startsWith(r + '/'))
