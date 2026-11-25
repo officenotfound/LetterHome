@@ -884,16 +884,30 @@ function safeFilePath(dir, originalName) {
   } catch (e) { console.error('[init] token backfill failed:', e.message); }
 })();
 
+// People often start an order more than once before it goes through. Neither reminder goes out if that email address
+// paid for something from a day before the unpaid attempt onwards: it was a retry, a double submit or an older attempt
+// they went back to. `orders` is the unpaid attempt being considered.
+const SQL_NOT_PAID_AROUND = `NOT EXISTS (
+  SELECT 1 FROM orders p
+  WHERE lower(trim(p.customer_email)) = lower(trim(orders.customer_email))
+    AND p.paid_at IS NOT NULL AND p.paid_at >= datetime(orders.created_at, '-24 hours')
+)`;
+// Nor while they are still trying: another attempt inside the waiting period means we are too early.
+const sqlNoAttemptSince = age => `NOT EXISTS (
+  SELECT 1 FROM orders n
+  WHERE lower(trim(n.customer_email)) = lower(trim(orders.customer_email))
+    AND n.deleted_at IS NULL AND n.created_at > datetime('now', '${age}')
+)`;
+
 async function abandonedOrderRecovery() {
   try {
-    const cutoff2h  = new Date(Date.now() -  2 * 3600 * 1000).toISOString();
-    const cutoff14d = new Date(Date.now() - 14 * 86400 * 1000).toISOString();
-    const cutoff30d = new Date(Date.now() - 30 * 86400 * 1000).toISOString();
+    // Times are compared in SQLite's own format: an ISO string ("...T...Z") sorts after every same-day timestamp.
+    // One email per address, about the latest attempt.
     const abandoned = db.prepare(`
-      SELECT * FROM orders
+      SELECT *, MAX(created_at) AS last_attempt FROM orders
       WHERE status = 'awaiting_payment'
-        AND created_at < ?
-        AND created_at > ?
+        AND created_at <= datetime('now', '-2 hours')
+        AND created_at > datetime('now', '-14 days')
         AND deleted_at IS NULL
         AND recovery_sent_at IS NULL
         AND customer_email IS NOT NULL
@@ -904,15 +918,18 @@ async function abandonedOrderRecovery() {
         )
         AND NOT EXISTS (
           SELECT 1 FROM orders o2
-          WHERE o2.customer_email = orders.customer_email
-            AND o2.recovery_sent_at > ?
+          WHERE lower(o2.customer_email) = lower(orders.customer_email)
+            AND o2.recovery_sent_at > datetime('now', '-30 days')
         )
         AND (
           SELECT COUNT(*) FROM orders o3
-          WHERE o3.customer_email = orders.customer_email
-            AND o3.created_at > ?
+          WHERE lower(o3.customer_email) = lower(orders.customer_email)
+            AND o3.created_at > datetime('now', '-14 days')
         ) <= 3
-    `).all(cutoff2h, cutoff14d, cutoff30d, cutoff14d);
+        AND ${SQL_NOT_PAID_AROUND}
+        AND ${sqlNoAttemptSince('-2 hours')}
+      GROUP BY lower(trim(customer_email))
+    `).all();
     for (const order of abandoned) {
       try {
         await sendMail(buildRecoveryEmail(order), 'recovery', order.id);
@@ -5663,7 +5680,7 @@ async function cartOfferJob() {
   let sent = 0;
   try {
     const due = db.prepare(`
-      SELECT * FROM orders
+      SELECT *, MAX(created_at) AS last_attempt FROM orders
       WHERE status = 'awaiting_payment' AND deleted_at IS NULL
         AND created_at <= datetime('now', ?) AND created_at > datetime('now', ?)
         AND cart_offer_sent_at IS NULL
@@ -5672,9 +5689,10 @@ async function cartOfferJob() {
         AND customer_email LIKE '%_@_%.__%'
         AND NOT EXISTS (SELECT 1 FROM customers c WHERE lower(c.email) = lower(orders.customer_email) AND c.unsubscribed_at IS NOT NULL)
         AND NOT EXISTS (SELECT 1 FROM orders o2 WHERE lower(o2.customer_email) = lower(orders.customer_email) AND o2.cart_offer_sent_at > datetime('now', '-30 days'))
-        AND NOT EXISTS (SELECT 1 FROM orders o3 WHERE lower(o3.customer_email) = lower(orders.customer_email) AND o3.paid_at IS NOT NULL AND o3.created_at >= orders.created_at)
-      GROUP BY lower(customer_email)
-      ORDER BY created_at
+        AND ${SQL_NOT_PAID_AROUND}
+        AND ${sqlNoAttemptSince(`-${CART_OFFER_AFTER_HOURS} hours`)}
+      GROUP BY lower(trim(customer_email))
+      ORDER BY last_attempt
       LIMIT 50
     `).all(`-${CART_OFFER_AFTER_HOURS} hours`, `-${CART_OFFER_MAX_AGE_HOURS} hours`);
     for (const order of due) {
@@ -5761,4 +5779,4 @@ const PORT = process.env.PORT || 3000;
 if (!process.env.TEST_MODE) {
   app.listen(PORT, () => console.log(`Letterhome running on port ${PORT}`));
 }
-module.exports = { app, db, sendResentEmail, returnAddressLines, fxRefreshJob, niceGbp, thankYouCouponJob, cartOfferJob, postgrid, postgridSubmit, postgridSweep, sendAtPrinterEmail, sendMailedNotification };
+module.exports = { app, db, abandonedOrderRecovery, sendResentEmail, returnAddressLines, fxRefreshJob, niceGbp, thankYouCouponJob, cartOfferJob, postgrid, postgridSubmit, postgridSweep, sendAtPrinterEmail, sendMailedNotification };

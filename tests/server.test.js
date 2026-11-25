@@ -82,7 +82,7 @@ require.cache[stripeResolvePath] = {
 const sentMail = [];
 require('nodemailer').createTransport = () => ({ sendMail: async (o) => { sentMail.push(o); return {}; } });
 
-const { app, db, sendResentEmail, returnAddressLines, thankYouCouponJob, cartOfferJob, sendAtPrinterEmail, sendMailedNotification, fxRefreshJob, niceGbp } = require('../server');
+const { app, db, abandonedOrderRecovery, sendResentEmail, returnAddressLines, thankYouCouponJob, cartOfferJob, sendAtPrinterEmail, sendMailedNotification, fxRefreshJob, niceGbp } = require('../server');
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function webhookSig(payload) {
@@ -863,6 +863,46 @@ test('abandoned cart offer: one email after 24 hours with a code that applies on
     mk('cart-off@example.com', 'awaiting_payment', '-26 hours');
     assert.equal((await cartOfferJob()).sent, 0);
     db.prepare("DELETE FROM settings WHERE key = 'cart_offer_enabled'").run();
+  } finally { delete process.env.SMTP_HOST; }
+});
+
+test('unpaid-order emails: none after the customer has paid, one per address, and not while they are still trying', async () => {
+  process.env.SMTP_HOST = 'smtp.test';
+  try {
+    const mk = (email, status, age) => {
+      const sid = seedOrder({ email, status, priceCents: 1000 });
+      const { id } = db.prepare('SELECT id FROM orders WHERE stripe_session_id = ?').get(sid);
+      db.prepare("UPDATE orders SET created_at = datetime('now', ?) WHERE id = ?").run(age, id);
+      return id;
+    };
+    const pay = (id, age) => db.prepare("UPDATE orders SET paid_at = datetime('now', ?) WHERE id = ?").run(age, id);
+    db.prepare("UPDATE orders SET recovery_sent_at = CURRENT_TIMESTAMP WHERE recovery_sent_at IS NULL").run();
+    // failed attempts, then success
+    mk('retry@example.com', 'awaiting_payment', '-5 hours'); mk('Retry@Example.com', 'awaiting_payment', '-4 hours');
+    pay(mk('retry@example.com', 'paid', '-3 hours'), '-3 hours');
+    // paid, then a stray duplicate afterwards
+    pay(mk('double@example.com', 'paid', '-5 hours'), '-5 hours'); mk('double@example.com', 'awaiting_payment', '-4 hours');
+    // went back and paid the older attempt, leaving a newer one unpaid
+    pay(mk('older@example.com', 'paid', '-6 hours'), '-3 hours'); mk('older@example.com', 'awaiting_payment', '-5 hours');
+    // still at it: the last attempt is minutes old
+    mk('busy@example.com', 'awaiting_payment', '-5 hours'); mk('busy@example.com', 'awaiting_payment', '-10 minutes');
+    // created minutes ago: too early
+    mk('new@example.com', 'awaiting_payment', '-10 minutes');
+    // gave up after two attempts: one email, about the latest
+    mk('gaveup@example.com', 'awaiting_payment', '-6 hours'); const latest = mk('gaveup@example.com', 'awaiting_payment', '-3 hours');
+    // paid long before, then abandoned something new: still reminded
+    pay(mk('regular@example.com', 'paid', '-10 days'), '-10 days'); mk('regular@example.com', 'awaiting_payment', '-3 hours');
+
+    sentMail.length = 0;
+    await abandonedOrderRecovery();
+    assert.deepEqual(sentMail.map(m => m.to.toLowerCase()).sort(), ['gaveup@example.com', 'regular@example.com']);
+    assert.ok(db.prepare('SELECT recovery_sent_at FROM orders WHERE id = ?').get(latest).recovery_sent_at);
+
+    // the same rules hold for the discount offer a day later
+    db.prepare("UPDATE orders SET created_at = datetime(created_at, '-24 hours'), paid_at = datetime(paid_at, '-24 hours') WHERE lower(customer_email) IN ('retry@example.com','double@example.com','older@example.com')").run();
+    db.prepare("UPDATE orders SET cart_offer_sent_at = CURRENT_TIMESTAMP WHERE lower(customer_email) NOT IN ('retry@example.com','double@example.com','older@example.com') AND cart_offer_sent_at IS NULL").run();
+    sentMail.length = 0;
+    assert.equal((await cartOfferJob()).sent, 0);
   } finally { delete process.env.SMTP_HOST; }
 });
 
