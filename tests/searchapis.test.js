@@ -18,7 +18,7 @@ const keyFile = JSON.stringify({ type: 'service_account', client_email: 'search-
 
 test('property addresses map to the right site, and other domains are ignored', () => {
   assert.deepEqual(api.pickProperties(['https://letterhome.ca/', 'sc-domain:letterhome.ca', 'https://www.letterhome.co.uk/', 'sc-domain:example.com', 'https://letterhome.ca/au/']),
-    { ca: 'sc-domain:letterhome.ca', uk: 'https://www.letterhome.co.uk/', au: 'https://letterhome.ca/au/' });
+    { ca: 'sc-domain:letterhome.ca', uk: 'https://www.letterhome.co.uk/' });   // /au counts as part of letterhome.ca
   assert.equal(api.siteOfProperty('https://letterhome.ca.evil.com/'), null);
   assert.throws(() => api.parseServiceKey('{"type":"x"}'), /not a service account/);
 });

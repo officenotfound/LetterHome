@@ -868,6 +868,7 @@ function renderRoute(p) {
   if (p === '/admin/insights')                      return showInsights();
   if (p === '/admin/visitors')                      return showVisitors();
   if (p === '/admin/stripe')                        return showStripe();
+  if (p === '/admin/google')                        return showGoogle();
   if (p === '/admin/growth')                        return showGrowth();
   if (p === '/admin/funnel')                        return showFunnel();
   if (p === '/admin/traffic')                       return showTraffic();
@@ -892,7 +893,7 @@ const NAV_GROUPS = {
   people:   { tabs: [['/admin/customers', 'Customers'], ['/admin/accounts', 'Accounts'], ['/admin/businesses', 'Businesses']] },
   inbox:    { tabs: [['/admin/mail', 'Mail'], ['/admin/contacts', 'Contact form'], ['/admin/applicants', 'Applicants'], ['/admin/templates', 'Saved replies']] },
   marketing: { tabs: [['/admin/broadcast', 'Broadcast'], ['/admin/outreach', 'Outreach'], ['/admin/followups', 'Follow-ups'], ['/admin/content', 'Content and links'], ['/admin/emails', 'Sent emails']] },
-  reports:  { tabs: [['/admin/insights', 'Insights'], ['/admin/visitors', 'Visitors'], ['/admin/traffic', 'Traffic'], ['/admin/growth', 'Search'], ['/admin/funnel', 'Funnel'], ['/admin/seo-audit', 'Content audit'], ['/admin/profit', 'Profit'], ['/admin/stripe', 'Stripe']] },
+  reports:  { tabs: [['/admin/insights', 'Insights'], ['/admin/visitors', 'Visitors'], ['/admin/traffic', 'Traffic'], ['/admin/growth', 'Search'], ['/admin/google', 'Google'], ['/admin/funnel', 'Funnel'], ['/admin/seo-audit', 'Content audit'], ['/admin/profit', 'Profit'], ['/admin/stripe', 'Stripe']] },
   system:   { tabs: [['/admin/settings', 'Settings'], ['/admin/app-settings', 'Phone app'], ['/admin/health', 'Health'], ['/admin/codes', 'Codes'], ['/admin/admin-users', 'Admin users'], ['/admin/audit-log', 'Audit log'], ['/admin/trash', 'Trash']] },
 };
 function groupOf(p) {
@@ -1166,10 +1167,12 @@ async function showDashboard() {
 
   renderDashboard(stats, paidOrders, submittedOrders, chartData, geoData, 'monthly', null, health);
   loadTodayCard();
+  loadPulseCard();
   stripeP.then(ov => {
     if (ov && location.pathname === '/admin' && document.getElementById('need-strip')) {
       renderDashboard(stats, paidOrders, submittedOrders, chartData, geoData, 'monthly', ov, health);
       loadTodayCard();
+      loadPulseCard();
     }
   });
 }
@@ -1226,6 +1229,7 @@ function renderDashboard(stats, paidOrders, submittedOrders, chartData, geoData,
 
   setMain(`
     <div id="today-card"></div>
+    <div id="pulse-card"></div>
     ${(() => {
       const toSubmit = (paidOrders||[]).filter(o => !(window._schedApproved || {})[o.id]).length, atPrinter = (submittedOrders||[]).length;
       const unread = window._unreadContacts || 0;
@@ -1593,6 +1597,67 @@ async function loadTodayCard() {
   box.innerHTML = `<div class="card" style="margin-bottom:20px"><div class="card-header"><div class="card-title">Today</div></div><div style="padding:14px 20px">
     ${parts || '<div style="font-size:13px;color:#15803d;margin-bottom:12px">Nothing is stuck and nothing is due. You are caught up.</div>'}
     <div class="today-actions">${counts}</div></div></div>`;
+}
+
+async function loadPulseCard() {
+  const box = document.getElementById('pulse-card'); if (!box) return;
+  const d = await api('/api/admin/pulse'); if (!d || d.error) return;
+  const change = (now, before) => before == null ? '' : now === before ? 'same as the week before' : `${now > before ? 'up' : 'down'} from ${nf(before)}`;
+  const g = d.search.find(x => x.engine === 'google') || {}, b = d.search.find(x => x.engine === 'bing') || {};
+  const money = c => (c / 100).toLocaleString('en-CA', { style: 'currency', currency: 'CAD' });
+  const todo = d.todo.map(t => {
+    const text = t.code ? `The most common order form problem this week: ${PROBLEM_LABELS[t.code] || t.code} (${t.count} times).` : t.text;
+    return `<div style="font-size:13px;line-height:1.8"><a class="link" href="${t.href}" onclick="event.preventDefault();go('${t.href}')">${esc(text)}</a></div>`;
+  }).join('');
+  box.innerHTML = `<div class="stats-grid">
+    ${statCard('Orders, 7 days', nf(d.orders.week.n), money(d.orders.week.cents) + (d.orders.before.n ? ', ' + change(d.orders.week.n, d.orders.before.n) : ''))}
+    ${statCard('Visitors, 7 days', nf(d.visitors.week), change(d.visitors.week, d.visitors.before || null))}
+    ${statCard('Google clicks, 4 weeks', nf(g.clicks || 0), nf(g.impressions || 0) + ' impressions' + (g.before_clicks != null ? ', ' + change(g.clicks, g.before_clicks) + ' clicks' : ''))}
+    ${statCard('Bing clicks, 4 weeks', nf(b.clicks || 0), nf(b.impressions || 0) + ' impressions' + (b.before_clicks != null ? ', ' + change(b.clicks, b.before_clicks) + ' clicks' : ''))}
+  </div>${todo ? `<div class="card" style="margin-bottom:20px"><div class="card-header"><div class="card-title">Worth doing next</div></div><div style="padding:14px 20px">${todo}</div></div>` : ''}`;
+}
+
+async function showGoogle() {
+  setTitle('Google');
+  setMain('<div class="empty">Loading…</div>');
+  const d = await api('/api/admin/google');
+  if (!d || d.error) return setMain('<div class="empty">Could not load this section.</div>');
+  const card = (title, body) => `<div class="card"><div class="card-header"><div class="card-title">${title}</div></div>${body}</div>`;
+  const pad = body => `<div style="padding:12px 24px 16px;font-size:13px;line-height:1.7">${body}</div>`;
+  const path = u => `<span style="font-family:monospace;font-size:12px;overflow-wrap:anywhere">${esc(u.replace(/^https:\/\//, ''))}</span>`;
+  const when = v => v ? esc(new Date(v).toLocaleString()) : '';
+  const btn = (kind, label) => d.running[kind] ? '<div style="color:#6b6b6b">Checking now. Reload this screen in a few minutes.</div>' : `<button class="btn btn-primary btn-sm" onclick="runGoogle('${kind}')">${label}</button>`;
+
+  const ix = d.index;
+  const indexCard = card('Pages Google has indexed',
+    tbl(['Site', 'Checked', 'Indexed'], ix.sites.map(s => `<tr><td>${esc(SITE_LABELS[s.site] || s.site)}</td><td style="text-align:right">${nf(s.checked)}</td><td style="text-align:right">${nf(s.indexed)}</td></tr>`), d.has_google_key ? 'Not checked yet.' : 'Add the Google key file on the Search screen first.') +
+    pad(`${ix.last ? `<div style="color:#6b6b6b;margin-bottom:8px">Last check ${when(ix.last.at)}<br>${ix.last.messages.map(esc).join('<br>')}</div>` : ''}${btn('index', 'Check now')}`)) +
+    (ix.missing.length ? card('Not indexed', tbl(['Page', 'What Google says', 'Last visit'], ix.missing.map(m => `<tr><td>${path(m.url)}</td><td>${esc(m.coverage || 'No detail')}</td><td>${esc(m.last_crawl || 'never')}</td></tr>`))) : '');
+
+  const speedCard = card('Speed on phones',
+    tbl(['Page', 'Score out of 100', 'Main content shows after'], d.speed.map(r => `<tr><td>${path(r.url)}</td><td style="text-align:right;color:${r.error ? '#c1121f' : r.score >= 90 ? '#15803d' : r.score >= 50 ? '#b45309' : '#c1121f'}">${r.error ? esc(r.error) : r.score}</td><td style="text-align:right">${r.error ? '' : (r.lcp_ms / 1000).toFixed(1) + ' s'}</td></tr>`), 'Not checked yet.') +
+    pad(`${d.speed[0] ? `<div style="color:#6b6b6b;margin-bottom:8px">Checked ${when(d.speed[0].checked_at)}. Runs every Monday.</div>` : ''}${d.has_speed_key ? btn('speed', 'Check now') : ''}
+      <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;align-items:center"><input type="password" id="speed-key" autocomplete="new-password" placeholder="${d.has_speed_key ? 'Key saved' : 'PageSpeed API key'}" style="max-width:100%"><button class="btn btn-outline btn-sm" onclick="saveGoogle({ speed_key: document.getElementById('speed-key').value }, 'speed-key')">Save key</button></div>`));
+
+  const a = d.analytics;
+  const props = (a.properties || []).map(p => p.error ? pad(`<span style="color:#c1121f">Property ${esc(p.id)}: ${esc(p.error)}</span>`) :
+    `<table class="fit"><tbody>${['Visitors', 'Visits', 'Page views'].map((n, i) => `<tr><td>${n}, last 7 days</td><td style="text-align:right">${nf(p.week[i] || 0)} <span style="color:#6b6b6b">(${nf(p.before[i] || 0)} before)</span></td></tr>`).join('')}${p.channels.map(c => `<tr><td>${esc(c.name)}, 28 days</td><td style="text-align:right">${nf(c.sessions)}</td></tr>`).join('')}</tbody></table>`).join('');
+  const gaCard = card('Google Analytics', (a.error ? pad(`<span style="color:#c1121f">${esc(a.error)}</span>`) : props) +
+    pad(`<div style="color:#6b6b6b">Needs the numeric property ID (Analytics, Admin, Property settings), and the same Google account added there as a Viewer.</div>
+      <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;align-items:center"><input type="text" id="ga-ids" inputmode="numeric" value="${esc(d.ga_ids)}" placeholder="Property ID" style="max-width:100%"><button class="btn btn-outline btn-sm" onclick="saveGoogle({ ga_ids: document.getElementById('ga-ids').value }, 'ga-ids')">Save</button></div>`));
+
+  setMain(indexCard + speedCard + gaCard + '<div id="google-msg" role="status" style="font-size:13px;color:#c1121f;margin-bottom:20px"></div>');
+}
+async function saveGoogle(body, field) {
+  if (field === 'speed-key' && !body.speed_key.trim()) return alert('Paste the key first.');
+  const r = await post('/api/admin/google/settings', body);
+  if (!r?.ok) return alert(r?.error || 'Could not save.');
+  showGoogle();
+}
+async function runGoogle(kind) {
+  const r = await post('/api/admin/google/run', { kind });
+  if (!r?.ok) return alert(r?.error || 'Could not start the check.');
+  showGoogle();
 }
 
 async function saveSendDate(id, remove) {
@@ -5294,7 +5359,7 @@ if (/LetterhomeMac/.test(navigator.userAgent) && window.webkit && webkit.message
 init();
 
 // ── Search growth, funnel and revenue, server health, content audit ───────────────────────────────
-const SITE_LABELS = { ca: 'letterhome.ca', us: 'letterhome.us', uk: 'letterhome.co.uk', au: 'letterhome.ca/au' };
+const SITE_LABELS = { ca: 'letterhome.ca', us: 'letterhome.us', uk: 'letterhome.co.uk' };
 const tbl = (head, rows, empty) => rows.length
   ? `<div style="overflow-x:auto"><table><thead><tr>${head.map((h, i) => `<th${i ? ' style="text-align:right"' : ''}>${esc(h)}</th>`).join('')}</tr></thead><tbody>${rows.join('')}</tbody></table></div>`
   : `<div class="empty" style="padding:28px">${esc(empty || 'Nothing here yet.')}</div>`;
@@ -5302,7 +5367,7 @@ const nf = n => Math.round(n || 0).toLocaleString();
 const pf = (n, d = 1) => (n * 100).toFixed(d) + '%';
 const cad = c => '$' + ((c || 0) / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const statCard = (label, value, sub, color) => `<div class="stat-card"><div class="stat-label">${esc(label)}</div><div class="stat-value"${color ? ` style="color:${color}"` : ''}>${value}</div>${sub ? `<div class="stat-sub">${sub}</div>` : ''}</div>`;
-const siteTabs = (cur, fn) => ['ca', 'us', 'uk', 'au'].map(s => `<button class="filter-btn ${cur === s ? 'active' : ''}" onclick="${fn}('${s}')">${esc(SITE_LABELS[s])}</button>`).join('');
+const siteTabs = (cur, fn) => ['ca', 'us', 'uk'].map(s => `<button class="filter-btn ${cur === s ? 'active' : ''}" onclick="${fn}('${s}')">${esc(SITE_LABELS[s])}</button>`).join('');
 const deltaTxt = (now, before) => before == null ? '' : (now - before === 0 ? 'no change' : (now > before ? '+' : '') + nf(now - before) + ' vs last import');
 
 let growthSite = 'ca';
@@ -5421,7 +5486,7 @@ async function showFunnel(days, site) {
   const ctl = `<div style="display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap;align-items:center">
     ${[7, 30, 90].map(d => `<button class="filter-btn ${funnelDays === d ? 'active' : ''}" onclick="showFunnel(${d})">${d} days</button>`).join('')}
     <span style="width:12px"></span>
-    ${['all', 'ca', 'us', 'uk', 'au'].map(x => `<button class="filter-btn ${funnelSite === x ? 'active' : ''}" onclick="showFunnel(null,'${x}')">${x === 'all' ? 'All sites' : esc(SITE_LABELS[x])}</button>`).join('')}</div>`;
+    ${['all', 'ca', 'us', 'uk'].map(x => `<button class="filter-btn ${funnelSite === x ? 'active' : ''}" onclick="showFunnel(null,'${x}')">${x === 'all' ? 'All sites' : esc(SITE_LABELS[x])}</button>`).join('')}</div>`;
   const rate = s.visitors && s.paid <= s.visitors ? pf(s.paid / s.visitors, 2) : '–';
   const kpis = `<div class="stats-grid">
     ${statCard('Revenue', cad(f.revenue_cents), 'Canadian dollars, paid orders')}
@@ -5491,7 +5556,7 @@ async function showTraffic(days, site) {
   const ctl = `<div style="display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap;align-items:center">
     ${[7, 30, 90].map(d => `<button class="filter-btn ${trafficDays === d ? 'active' : ''}" onclick="showTraffic(${d})">${d} days</button>`).join('')}
     <span style="width:12px"></span>
-    ${['all', 'ca', 'us', 'uk', 'au'].map(x => `<button class="filter-btn ${trafficSite === x ? 'active' : ''}" onclick="showTraffic(null,'${x}')">${x === 'all' ? 'All sites' : esc(SITE_LABELS[x])}</button>`).join('')}</div>`;
+    ${['all', 'ca', 'us', 'uk'].map(x => `<button class="filter-btn ${trafficSite === x ? 'active' : ''}" onclick="showTraffic(null,'${x}')">${x === 'all' ? 'All sites' : esc(SITE_LABELS[x])}</button>`).join('')}</div>`;
   const visitors = t.sources.reduce((a, x) => a + x.visitors, 0);
   const ai = t.sources.find(x => x.source === 'ai') || { visitors: 0, orders: 0 };
   const orders = t.sources.reduce((a, x) => a + x.orders, 0);

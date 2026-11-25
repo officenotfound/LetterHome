@@ -12,6 +12,7 @@ if (process.env.SENTRY_DSN) {
 const ga4 = require('./ga4');
 const tracking = require('./tracking');
 const searchApis = require('./searchApis');
+const googleExtras = require('./googleExtras');
 const express      = require('express');
 const compression  = require('compression');
 const helmet       = require('helmet');
@@ -2368,6 +2369,10 @@ const adminTools = require('./adminTools').register(app, {
 });
 
 searchApis.register(app, { db, requireAdmin, logAudit, getSetting, setSetting });
+const google = googleExtras.register(app, {
+  db, requireAdmin, logAudit, getSetting, setSetting,
+  pages: () => indexNow.plan(true).byHost,   // every sitemap page, under the domain it is served from
+});
 const contentPlanner = require('./contentPlanner').register(app, { db, requireAdmin, logAudit, getSetting, today: () => torontoToday() });
 // Monday morning: what is due this week and how outreach is going, to the owner only.
 cron.schedule('10 8 * * 1', () => { try { sendOwnerMail('Content and links: this week', contentPlanner.weeklyDigest()); } catch (e) { console.error('[content-digest] failed:', e.message); } });
@@ -3983,6 +3988,8 @@ app.get('/api/admin/settings', requireAdmin, (req, res) => {
   delete obj.clarity_cache;
   delete obj.gsc_service_key;   // search keys are write-only too (see searchApis.js)
   delete obj.bing_api_key;
+  delete obj.pagespeed_api_key;
+  delete obj.ga_cache;
   res.json(obj);
 });
 
@@ -5761,6 +5768,8 @@ cron.schedule('30 3 * * *', () => { try { adminTools.runAudit(); } catch (e) { c
 // Tell Bing about new and changed pages: two minutes after each start (so after a deploy) and every night
 setTimeout(() => indexNow.run().catch(e => console.error('IndexNow failed:', e.message)), 120000).unref();
 cron.schedule('20 5 * * *', () => searchApis.fetchAll({ db, getSetting, setSetting }).catch(e => console.error('[search-api] failed:', e.message)));
+cron.schedule('40 5 * * *', () => { if (getSetting('gsc_service_key', '')) google.start('index'); });
+cron.schedule('10 6 * * 1', () => { if (getSetting('pagespeed_api_key', '')) google.start('speed'); });
 cron.schedule('45 3 * * *', () => indexNow.run().catch(e => console.error('IndexNow failed:', e.message)));
 
 app.get('/api/admin/cart-offer-stats', requireAdmin, (req, res) => {

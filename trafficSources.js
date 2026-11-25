@@ -108,8 +108,8 @@ function register(app, { db, requireAdmin }) {
   app.get('/api/admin/traffic', requireAdmin, (req, res) => {
     try {
       const days = Math.min(365, Math.max(1, parseInt(req.query.days, 10) || 30));
-      const site = ['ca', 'us', 'uk', 'au'].includes(req.query.site) ? req.query.site : 'all';
-      const pv = site === 'all' ? '' : ` AND COALESCE(NULLIF(site, ''), 'ca') = '${site}'`;
+      const site = ['ca', 'us', 'uk'].includes(req.query.site) ? req.query.site : 'all';
+      const pv = site === 'all' ? '' : ` AND COALESCE(NULLIF(NULLIF(site, ''), 'au'), 'ca') = '${site}'`;
       const ord = site === 'all' ? '' : ` AND COALESCE(NULLIF(order_site, ''), 'ca') = '${site}'`;
       const win = `-${days} days`;
 

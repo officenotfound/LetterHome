@@ -14,9 +14,8 @@ const day = ms => new Date(ms).toISOString().slice(0, 10);
 
 // Which of our sites a property address belongs to.
 function siteOfProperty(url) {
-  const m = String(url || '').toLowerCase().match(/^(?:sc-domain:|https?:\/\/)?(?:www\.)?(letterhome\.(?:ca|us|co\.uk))(\/au\/?)?\/?$/);
+  const m = String(url || '').toLowerCase().match(/^(?:sc-domain:|https?:\/\/)?(?:www\.)?(letterhome\.(?:ca|us|co\.uk))\/?$/);
   if (!m) return null;
-  if (m[2]) return m[1] === 'letterhome.ca' ? 'au' : null;
   return { 'letterhome.ca': 'ca', 'letterhome.us': 'us', 'letterhome.co.uk': 'uk' }[m[1]];
 }
 
@@ -49,10 +48,10 @@ async function call(fetchImpl, who, url, opts = {}) {
   return r.json();
 }
 
-async function googleToken(fetchImpl, key) {
+async function googleToken(fetchImpl, key, scope = 'webmasters.readonly') {
   const b64 = o => Buffer.from(JSON.stringify(o)).toString('base64url');
   const now = Math.floor(Date.now() / 1000);
-  const head = b64({ alg: 'RS256', typ: 'JWT' }) + '.' + b64({ iss: key.client_email, scope: 'https://www.googleapis.com/auth/webmasters.readonly',
+  const head = b64({ alg: 'RS256', typ: 'JWT' }) + '.' + b64({ iss: key.client_email, scope: `https://www.googleapis.com/auth/${scope}`,
     aud: 'https://oauth2.googleapis.com/token', iat: now, exp: now + 3600 });
   const jwt = head + '.' + createSign('RSA-SHA256').update(head).sign(key.private_key).toString('base64url');
   const j = await call(fetchImpl, 'Google', 'https://oauth2.googleapis.com/token', {
@@ -194,4 +193,4 @@ function register(app, { db, requireAdmin, logAudit, getSetting, setSetting }) {
   });
 }
 
-module.exports = { register, fetchAll, status, siteOfProperty, pickProperties, parseServiceKey, bingRows };
+module.exports = { register, fetchAll, status, siteOfProperty, pickProperties, parseServiceKey, bingRows, googleToken, call };

@@ -1,5 +1,5 @@
 'use strict';
-// Admin tools: Search Console import and growth insights, checkout funnel and revenue, server health,
+// Admin tools: search growth insights, checkout funnel and revenue, server health,
 // backup restore drill, and the site content audit.
 //
 // Registered from server.js after the admin CSRF middleware, so every change here is protected.
@@ -11,169 +11,14 @@
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const zlib = require('node:zlib');
 const tls = require('node:tls');
 const { execFile } = require('node:child_process');
 const { createDecipheriv, scryptSync, randomBytes } = require('node:crypto');
 const { DatabaseSync } = require('node:sqlite');
-const express = require('express');
 
 const { mailTags } = require('./opsAlerts');
-const SITES = ['ca', 'us', 'uk', 'au'];
-const MAX_UPLOAD = 6 * 1024 * 1024;
-const MAX_UNZIPPED = 25 * 1024 * 1024;
+const SITES = ['ca', 'us', 'uk'];   // letterhome.ca/au is part of letterhome.ca here
 const KEEP_SNAPSHOTS = 12;
-
-// ---------------------------------------------------------------------------------------------
-// Reading Search Console exports (a .zip of CSV files, an .xlsx workbook, or a single CSV)
-// ---------------------------------------------------------------------------------------------
-
-// Minimal zip reader: stored and deflated entries only, which is all Search Console and Excel produce.
-function readZip(buf) {
-  let eocd = -1;
-  for (let i = buf.length - 22; i >= Math.max(0, buf.length - 65557); i--) {
-    if (buf.readUInt32LE(i) === 0x06054b50) { eocd = i; break; }
-  }
-  if (eocd < 0) throw new Error('Not a zip file');
-  const count = buf.readUInt16LE(eocd + 10);
-  let p = buf.readUInt32LE(eocd + 16);
-  if (count > 200) throw new Error('Zip has too many files');
-  const out = new Map();
-  let total = 0;
-  for (let n = 0; n < count; n++) {
-    if (buf.readUInt32LE(p) !== 0x02014b50) throw new Error('Zip is damaged');
-    const method = buf.readUInt16LE(p + 10);
-    const csize = buf.readUInt32LE(p + 20);
-    const usize = buf.readUInt32LE(p + 24);
-    const nlen = buf.readUInt16LE(p + 28);
-    const elen = buf.readUInt16LE(p + 30);
-    const clen = buf.readUInt16LE(p + 32);
-    const off = buf.readUInt32LE(p + 42);
-    const name = buf.toString('utf8', p + 46, p + 46 + nlen);
-    p += 46 + nlen + elen + clen;
-    if (name.endsWith('/')) continue;
-    total += usize;
-    if (total > MAX_UNZIPPED) throw new Error('Zip is too large');
-    const lnlen = buf.readUInt16LE(off + 26);
-    const lelen = buf.readUInt16LE(off + 28);
-    const data = buf.subarray(off + 30 + lnlen + lelen, off + 30 + lnlen + lelen + csize);
-    let content;
-    if (method === 0) content = data;
-    else if (method === 8) content = zlib.inflateRawSync(data, { maxOutputLength: MAX_UNZIPPED });
-    else continue;
-    out.set(name, content);
-  }
-  return out;
-}
-
-const xmlUnescape = s => s.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&amp;/g, '&');
-
-function readXlsx(files) {
-  const get = n => (files.get(n) ? files.get(n).toString('utf8') : '');
-  const shared = [];
-  for (const m of get('xl/sharedStrings.xml').matchAll(/<si>([\s\S]*?)<\/si>/g)) {
-    shared.push(xmlUnescape([...m[1].matchAll(/<t[^>]*>([\s\S]*?)<\/t>/g)].map(x => x[1]).join('')));
-  }
-  const names = [...get('xl/workbook.xml').matchAll(/<sheet [^>]*name="([^"]*)"/g)].map(m => xmlUnescape(m[1]));
-  const sheets = {};
-  names.forEach((name, i) => {
-    const xml = get(`xl/worksheets/sheet${i + 1}.xml`);
-    const rows = [];
-    for (const r of xml.matchAll(/<row[^>]*>([\s\S]*?)<\/row>/g)) {
-      const cells = [];
-      for (const c of r[1].matchAll(/<c ([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g)) {
-        const attrs = c[1], inner = c[2] || '';
-        const v = inner.match(/<v>([\s\S]*?)<\/v>/);
-        const t = inner.match(/<t[^>]*>([\s\S]*?)<\/t>/);
-        let val = '';
-        if (v) val = /t="s"/.test(attrs) ? (shared[parseInt(v[1], 10)] || '') : xmlUnescape(v[1]);
-        else if (t) val = xmlUnescape(t[1]);
-        cells.push(val);
-      }
-      rows.push(cells);
-    }
-    sheets[name] = rows;
-  });
-  return sheets;
-}
-
-function parseCsv(text) {
-  const rows = [];
-  let row = [], field = '', q = false;
-  text = text.replace(/^﻿/, '');
-  for (let i = 0; i < text.length; i++) {
-    const ch = text[i];
-    if (q) {
-      if (ch === '"') { if (text[i + 1] === '"') { field += '"'; i++; } else q = false; }
-      else field += ch;
-    } else if (ch === '"') q = true;
-    else if (ch === ',') { row.push(field); field = ''; }
-    else if (ch === '\n' || ch === '\r') {
-      if (ch === '\r' && text[i + 1] === '\n') i++;
-      row.push(field); field = '';
-      if (row.length > 1 || row[0] !== '') rows.push(row);
-      row = [];
-    } else field += ch;
-  }
-  if (field !== '' || row.length) { row.push(field); rows.push(row); }
-  return rows;
-}
-
-const num = v => {
-  if (v == null || v === '') return 0;
-  const n = parseFloat(String(v).replace('%', '').replace(/,/g, ''));
-  return Number.isFinite(n) ? n : 0;
-};
-
-// One normalized shape out of any of the three formats: { queries, pages, countries, devices, chart }
-function normalizeExport(sheets) {
-  const pick = (...names) => {
-    for (const n of names) {
-      const hit = Object.keys(sheets).find(k => k.toLowerCase().replace(/\.csv$/, '') === n);
-      if (hit) return sheets[hit];
-    }
-    return null;
-  };
-  const toRows = (rows, isDate) => {
-    if (!rows || rows.length < 2) return [];
-    return rows.slice(1).filter(r => r[0] !== '' && r[0] != null).map(r => {
-      const impressions = num(r[2]);
-      const clicks = num(r[1]);
-      let ctr = num(r[3]);
-      if (!isDate && String(r[3] || '').includes('%')) ctr = ctr / 100;
-      else if (ctr > 1) ctr = ctr / 100;
-      if (!ctr && impressions) ctr = clicks / impressions;
-      return { key: String(r[0]).slice(0, 500), clicks, impressions, ctr, position: num(r[4]) };
-    });
-  };
-  const out = {
-    queries: toRows(pick('queries'), false),
-    pages: toRows(pick('pages'), false),
-    countries: toRows(pick('countries'), false),
-    devices: toRows(pick('devices'), false),
-    chart: toRows(pick('chart', 'dates'), true),
-  };
-  if (!out.queries.length && !out.pages.length && !out.chart.length) throw new Error('No Search Console tables found in that file');
-  return out;
-}
-
-function parseUpload(buf, filename) {
-  const isZip = buf.length > 4 && buf.readUInt32LE(0) === 0x04034b50;
-  if (isZip) {
-    const files = readZip(buf);
-    if (files.has('xl/workbook.xml')) return normalizeExport(readXlsx(files));
-    const sheets = {};
-    for (const [name, content] of files) {
-      if (name.toLowerCase().endsWith('.csv')) sheets[path.basename(name)] = parseCsv(content.toString('utf8'));
-    }
-    return normalizeExport(sheets);
-  }
-  const rows = parseCsv(buf.toString('utf8'));
-  const head = String(rows[0] && rows[0][0] || '').toLowerCase();
-  const key = head.includes('quer') ? 'Queries' : head.includes('page') ? 'Pages' : head.startsWith('country') ? 'Countries' : head.startsWith('device') ? 'Devices' : head.startsWith('date') ? 'Chart' : null;
-  if (!key) throw new Error('Could not tell what that file is. Upload the .zip or .xlsx export from Search Console.');
-  return normalizeExport({ [key]: rows });
-}
 
 // ---------------------------------------------------------------------------------------------
 // Insights from stored snapshots
@@ -250,34 +95,6 @@ function register(app, { db, requireAdmin, logAudit, getSetting, indexNow, backu
     try { res.json(growthFor(site, req.query.engine === 'bing' ? 'bing' : 'google')); } catch (e) { res.status(500).json({ error: e.message }); }
   });
 
-  app.post('/api/admin/growth/import', requireAdmin, express.raw({ type: '*/*', limit: MAX_UPLOAD }), (req, res) => {
-    const site = String(req.headers['x-site'] || '');
-    if (!siteOk(site)) return res.status(400).json({ error: 'Choose which site this export is for.' });
-    if (!Buffer.isBuffer(req.body) || !req.body.length) return res.status(400).json({ error: 'No file received.' });
-    const filename = String(req.headers['x-filename'] || '').slice(0, 200);
-    let data;
-    try { data = parseUpload(req.body, filename); } catch (e) { return res.status(400).json({ error: e.message }); }
-    const dates = data.chart.map(r => r.key).sort();
-    const clicks = data.chart.length ? data.chart.reduce((a, r) => a + r.clicks, 0) : data.pages.reduce((a, r) => a + r.clicks, 0);
-    const impressions = data.chart.length ? data.chart.reduce((a, r) => a + r.impressions, 0) : data.pages.reduce((a, r) => a + r.impressions, 0);
-    db.exec('BEGIN');
-    try {
-      const id = Number(db.prepare('INSERT INTO gsc_snapshots (site, date_from, date_to, clicks, impressions, filename) VALUES (?,?,?,?,?,?)')
-        .run(site, dates[0] || null, dates[dates.length - 1] || null, Math.round(clicks), Math.round(impressions), filename).lastInsertRowid);
-      const ins = db.prepare('INSERT INTO gsc_rows (snapshot_id, kind, key, clicks, impressions, ctr, position) VALUES (?,?,?,?,?,?,?)');
-      const put = (kind, rows) => rows.slice(0, 2000).forEach(r => ins.run(id, kind, r.key, r.clicks, r.impressions, r.ctr, r.position));
-      put('query', data.queries); put('page', data.pages); put('country', data.countries); put('device', data.devices); put('date', data.chart);
-      const old = db.prepare("SELECT id FROM gsc_snapshots WHERE site = ? AND engine = 'google' ORDER BY id DESC LIMIT -1 OFFSET ?").all(site, KEEP_SNAPSHOTS);
-      for (const o of old) { db.prepare('DELETE FROM gsc_rows WHERE snapshot_id = ?').run(o.id); db.prepare('DELETE FROM gsc_snapshots WHERE id = ?').run(o.id); }
-      db.exec('COMMIT');
-      logAudit(req, 'growth.import', 'search-console', `${site} ${filename}`);
-      res.json({ ok: true, id, queries: data.queries.length, pages: data.pages.length });
-    } catch (e) {
-      try { db.exec('ROLLBACK'); } catch {}
-      res.status(500).json({ error: e.message });
-    }
-  });
-
   app.delete('/api/admin/growth/:id', requireAdmin, (req, res) => {
     const id = parseInt(req.params.id, 10);
     db.prepare('DELETE FROM gsc_rows WHERE snapshot_id = ?').run(id);
@@ -295,7 +112,7 @@ function register(app, { db, requireAdmin, logAudit, getSetting, indexNow, backu
       const site = siteOk(req.query.site) ? req.query.site : 'all';
       const since = new Date(Date.now() - days * 86400000).toISOString().slice(0, 10);
       const siteSql = site === 'all' ? '' : ` AND COALESCE(NULLIF(order_site, ''), 'ca') = '${site}'`;
-      const pvSite = site === 'all' ? '' : ` AND COALESCE(NULLIF(site, ''), 'ca') = '${site}'`;
+      const pvSite = site === 'all' ? '' : ` AND COALESCE(NULLIF(NULLIF(site, ''), 'au'), 'ca') = '${site}'`;
 
       const f = Object.fromEntries(db.prepare('SELECT step, COUNT(*) n FROM funnel_events WHERE day >= ? GROUP BY step').all(since).map(r => [r.step, r.n]));
       const views = db.prepare(`SELECT COUNT(*) n, COUNT(DISTINCT ip) u FROM page_views WHERE created_at >= datetime('now', ?)${pvSite}`).get(`-${days} days`);
@@ -732,4 +549,4 @@ function register(app, { db, requireAdmin, logAudit, getSetting, indexNow, backu
   return { runAudit };
 }
 
-module.exports = { register, parseUpload, readZip, parseCsv, normalizeExport };
+module.exports = { register };

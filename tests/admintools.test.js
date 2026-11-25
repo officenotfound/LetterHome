@@ -5,7 +5,6 @@ const assert = require('node:assert/strict');
 const os = require('node:os');
 const path = require('node:path');
 const fs = require('node:fs');
-const zlib = require('node:zlib');
 const { randomUUID } = require('node:crypto');
 
 process.env.DB_PATH = path.join(os.tmpdir(), `lh-admintools-${randomUUID()}.db`);
@@ -16,36 +15,13 @@ const express = require('express');
 const db = require('../db');
 const tools = require('../adminTools');
 
-// Builds a zip the way Search Console does (deflated entries), so the reader is tested on realistic input.
-function makeZip(files) {
-  const locals = [], centrals = [];
-  let offset = 0;
-  for (const [name, text] of Object.entries(files)) {
-    const nameBuf = Buffer.from(name);
-    const raw = Buffer.from(text);
-    const data = zlib.deflateRawSync(raw);
-    const lh = Buffer.alloc(30);
-    lh.writeUInt32LE(0x04034b50, 0); lh.writeUInt16LE(20, 4); lh.writeUInt16LE(8, 8);
-    lh.writeUInt32LE(data.length, 18); lh.writeUInt32LE(raw.length, 22); lh.writeUInt16LE(nameBuf.length, 26);
-    locals.push(lh, nameBuf, data);
-    const ch = Buffer.alloc(46);
-    ch.writeUInt32LE(0x02014b50, 0); ch.writeUInt16LE(20, 4); ch.writeUInt16LE(20, 6); ch.writeUInt16LE(8, 10);
-    ch.writeUInt32LE(data.length, 20); ch.writeUInt32LE(raw.length, 24); ch.writeUInt16LE(nameBuf.length, 28);
-    ch.writeUInt32LE(offset, 42);
-    centrals.push(ch, nameBuf);
-    offset += 30 + nameBuf.length + data.length;
-  }
-  const central = Buffer.concat(centrals);
-  const end = Buffer.alloc(22);
-  end.writeUInt32LE(0x06054b50, 0); end.writeUInt16LE(Object.keys(files).length, 8); end.writeUInt16LE(Object.keys(files).length, 10);
-  end.writeUInt32LE(central.length, 12); end.writeUInt32LE(offset, 16);
-  return Buffer.concat([...locals, central, end]);
+// A stored copy of search results, as the daily fetch writes it.
+function seed(date, { queries = [], pages = [], countries = [], impressions = 0 }) {
+  const id = Number(db.prepare('INSERT INTO gsc_snapshots (site, date_from, date_to, clicks, impressions) VALUES (?,?,?,?,?)').run('ca', date, date, 0, impressions).lastInsertRowid);
+  const ins = db.prepare('INSERT INTO gsc_rows (snapshot_id, kind, key, clicks, impressions, ctr, position) VALUES (?,?,?,?,?,?,?)');
+  for (const [kind, rows] of [['query', queries], ['page', pages], ['country', countries]]) for (const r of rows) ins.run(id, kind, ...r);
 }
-
-const QUERIES = 'Top queries,Clicks,Impressions,CTR,Position\n"how long does a letter take, in canada",0,46,0%,8.6\nletter mailing service,0,15,0%,14\n';
-const PAGES = 'Top pages,Clicks,Impressions,CTR,Position\nhttps://letterhome.ca/how-long,6,3672,0.16%,9.5\nhttps://letterhome.ca/,9,608,1.48%,56.8\n';
-const COUNTRIES = 'Country,Clicks,Impressions,CTR,Position\nCanada,19,5185,0.37%,15.6\nUnited Kingdom,0,278,0%,34.8\n';
-const CHART = 'Date,Clicks,Impressions,CTR,Position\n2026-10-01,1,133,0.75%,9\n2026-10-02,2,104,1.92%,8.4\n';
+const QUERIES = [['how long does a letter take, in canada', 0, 46, 0, 8.6], ['letter mailing service', 0, 15, 0, 14]];
 
 let server, base;
 const submitted = [];
@@ -73,32 +49,10 @@ after(() => {
   try { fs.rmSync(backupDir, { recursive: true, force: true }); } catch {}
 });
 
-test('csv parser keeps commas inside quotes', () => {
-  const rows = tools.parseCsv(QUERIES);
-  assert.equal(rows[1][0], 'how long does a letter take, in canada');
-  assert.equal(rows.length, 3);
-});
-
-test('a Search Console zip is read into queries, pages, countries and dates', () => {
-  const zip = makeZip({ 'Queries.csv': QUERIES, 'Pages.csv': PAGES, 'Countries.csv': COUNTRIES, 'Chart.csv': CHART });
-  const data = tools.parseUpload(zip, 'letterhome.ca.zip');
-  assert.equal(data.queries.length, 2);
-  assert.equal(data.pages[0].impressions, 3672);
-  assert.ok(Math.abs(data.pages[0].ctr - 0.0016) < 1e-9, 'percent strings become fractions');
-  assert.equal(data.chart.length, 2);
-});
-
-test('a file that is not a Search Console export is refused with a clear message', () => {
-  assert.throws(() => tools.parseUpload(Buffer.from('hello,world\n1,2\n'), 'x.csv'), /Could not tell/);
-  assert.throws(() => tools.parseUpload(makeZip({ 'readme.txt': 'hi' }), 'x.zip'), /No Search Console tables/);
-});
-
-test('import then growth: page-one pages with few clicks and near page-one queries are found', async () => {
-  const zip = makeZip({ 'Queries.csv': QUERIES, 'Pages.csv': PAGES, 'Countries.csv': COUNTRIES, 'Chart.csv': CHART });
-  const imp = await fetch(`${base}/api/admin/growth/import`, { method: 'POST', headers: { 'x-site': 'ca', 'x-filename': 'a.zip', 'content-type': 'application/octet-stream' }, body: zip });
-  assert.equal(imp.status, 200);
-  const j = await imp.json();
-  assert.equal(j.ok, true);
+test('growth: page-one pages with few clicks and near page-one queries are found', async () => {
+  seed('2026-10-02', { impressions: 237, queries: QUERIES,
+    pages: [['https://letterhome.ca/how-long', 6, 3672, 0.0016, 9.5], ['https://letterhome.ca/', 9, 608, 0.0148, 56.8]],
+    countries: [['Canada', 19, 5185, 0.0037, 15.6], ['United Kingdom', 0, 278, 0, 34.8]] });
   const g = await (await fetch(`${base}/api/admin/growth?site=ca`)).json();
   assert.equal(g.latest.impressions, 237);
   assert.equal(g.pageOneQuiet[0].key, '/how-long');
@@ -107,17 +61,8 @@ test('import then growth: page-one pages with few clicks and near page-one queri
   assert.ok(g.questions.some(q => q.key.startsWith('how long')));
 });
 
-test('import needs a site and a file', async () => {
-  const noSite = await fetch(`${base}/api/admin/growth/import`, { method: 'POST', headers: { 'content-type': 'application/octet-stream' }, body: Buffer.from('x') });
-  assert.equal(noSite.status, 400);
-  const bad = await fetch(`${base}/api/admin/growth/import`, { method: 'POST', headers: { 'x-site': 'ca', 'content-type': 'application/octet-stream' }, body: Buffer.from('not a real export') });
-  assert.equal(bad.status, 400);
-});
-
-test('a second import shows what moved since the first', async () => {
-  const pages2 = 'Top pages,Clicks,Impressions,CTR,Position\nhttps://letterhome.ca/how-long,9,3900,0.2%,8.5\nhttps://letterhome.ca/new-page,0,90,0%,12\n';
-  const zip = makeZip({ 'Queries.csv': QUERIES, 'Pages.csv': pages2, 'Chart.csv': CHART });
-  await fetch(`${base}/api/admin/growth/import`, { method: 'POST', headers: { 'x-site': 'ca', 'content-type': 'application/octet-stream' }, body: zip });
+test('a newer copy shows what moved since the one before', async () => {
+  seed('2026-10-12', { queries: QUERIES, pages: [['https://letterhome.ca/how-long', 9, 3900, 0.002, 8.5], ['https://letterhome.ca/new-page', 0, 90, 0, 12]] });
   const g = await (await fetch(`${base}/api/admin/growth?site=ca`)).json();
   assert.ok(g.previous);
   const m = g.movers.find(x => x.key === '/new-page');
