@@ -5306,13 +5306,51 @@ const siteTabs = (cur, fn) => ['ca', 'us', 'uk', 'au'].map(s => `<button class="
 const deltaTxt = (now, before) => before == null ? '' : (now - before === 0 ? 'no change' : (now > before ? '+' : '') + nf(now - before) + ' vs last import');
 
 let growthSite = 'ca';
-async function showGrowth(site) {
+let growthEngine = 'google';
+function searchApiCard(a) {
+  if (!a) return '';
+  const when = a.last ? `<div style="margin-top:8px">Last fetch ${esc(new Date(a.last.at).toLocaleString())}: ${a.last.results.map(r => `<div style="color:${r.ok ? 'inherit' : '#c1121f'}">${r.engine === 'bing' ? 'Bing' : 'Google'}${r.site ? ' ' + esc(SITE_LABELS[r.site] || r.site) : ''}: ${esc(r.message)}</div>`).join('')}</div>` : '';
+  const on = a.google || a.bing;
+  const row = (name, saved, input, button) => `<div style="margin-top:14px"><strong>${name}</strong> ${saved}<div style="margin-top:6px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">${input}${button}</div></div>`;
+  return `<div class="card"><div class="card-header"><div class="card-title">Automatic fetch from Google and Bing</div></div>
+    <div style="padding:12px 24px 16px;font-size:13px;color:#6b6b6b;line-height:1.7">Once a key is saved, results are fetched every morning. Keys are never shown again.
+    ${row('Google key file', a.google ? 'saved, account ' + `<span style="overflow-wrap:anywhere">${esc(a.google_email)}</span>` : 'not added',
+      '<input type="file" id="gsc-key" accept=".json" style="font-size:12px;max-width:100%">',
+      `<button class="btn btn-outline btn-sm" onclick="saveSearchKey('google')">Save key file</button>${a.google ? `<button class="link" onclick="removeSearchKey('google')">Remove</button>` : ''}`)}
+    ${row('Bing API key', a.bing ? 'saved' : 'not added',
+      '<input type="password" id="bing-key" autocomplete="new-password" placeholder="Paste the key" style="max-width:100%">',
+      `<button class="btn btn-outline btn-sm" onclick="saveSearchKey('bing')">Save key</button>${a.bing ? `<button class="link" onclick="removeSearchKey('bing')">Remove</button>` : ''}`)}
+    <div style="margin-top:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">${on ? '<button class="btn btn-primary btn-sm" onclick="fetchSearchNow()">Fetch now</button>' : ''}<span id="search-api-msg"></span></div>${when}</div></div>`;
+}
+function searchMsg(text, bad) { const m = document.getElementById('search-api-msg'); if (m) { m.style.color = bad ? '#c1121f' : '#6b6b6b'; m.textContent = text; } }
+async function fetchSearchNow() {
+  searchMsg('Fetching, this can take a minute…');
+  const r = await post('/api/admin/search-api/fetch', {});
+  if (!r?.ok) return searchMsg(r?.error || 'The fetch failed.', true);
+  showGrowth();
+}
+async function saveSearchKey(which) {
+  let value;
+  if (which === 'google') { const f = document.getElementById('gsc-key').files[0]; if (!f || f.size > 20000) return searchMsg('Choose the .json key file first.', true); value = await f.text(); }
+  else { value = document.getElementById('bing-key').value.trim(); if (!value) return searchMsg('Paste the key first.', true); }
+  const r = await post('/api/admin/search-api/keys', { [which]: value });
+  if (!r?.ok) return searchMsg(r?.error || 'Could not save the key.', true);
+  await fetchSearchNow();
+}
+async function removeSearchKey(which) {
+  if (!confirm('Remove this key? Results already fetched are kept.')) return;
+  await post('/api/admin/search-api/keys', { remove: which });
+  showGrowth();
+}
+
+async function showGrowth(site, engine) {
   if (site) growthSite = site;
+  if (engine) growthEngine = engine;
   setTitle('Search growth');
   setMain('<div class="empty">Loading…</div>');
-  const g = await api('/api/admin/growth?site=' + growthSite);
+  const [g, searchApi] = await Promise.all([api(`/api/admin/growth?site=${growthSite}&engine=${growthEngine}`), api('/api/admin/search-api')]);
   if (!g) return setMain('<div class="empty">Could not load this section.</div>');
-  const upload = `
+  const upload = searchApiCard(searchApi) + (growthEngine === 'bing' ? '' : `
     <div class="card"><div class="card-header"><div class="card-title">Import a Search Console export</div></div>
       <div style="padding:16px 24px;font-size:13px;color:#6b6b6b;line-height:1.7">
         In Search Console open <strong>Performance → Search results</strong>, choose a date range, then <strong>Export → Download Excel</strong> (or CSV, which comes as a .zip). Choose that file here for <strong>${esc(SITE_LABELS[growthSite])}</strong>.
@@ -5321,9 +5359,9 @@ async function showGrowth(site) {
           <input type="file" id="gsc-file" accept=".zip,.xlsx,.csv" style="font-size:12px">
           <button class="btn btn-primary btn-sm" onclick="importGrowth()">Import</button>
           <span id="gsc-msg" style="font-size:12px"></span>
-        </div></div></div>`;
-  const head = `<div style="display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap">${siteTabs(growthSite, 'showGrowth')}</div>`;
-  if (g.empty) return setMain(head + upload + '<div class="empty">No export imported for this site yet.</div>');
+        </div></div></div>`);
+  const head = `<div style="display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap;align-items:center">${['google', 'bing'].map(x => `<button class="filter-btn ${growthEngine === x ? 'active' : ''}" onclick="showGrowth(null,'${x}')">${x === 'google' ? 'Google' : 'Bing'}</button>`).join('')}<span style="width:12px"></span>${siteTabs(growthSite, 'showGrowth')}</div>`;
+  if (g.empty) return setMain(head + upload + `<div class="empty">No ${growthEngine === 'bing' ? 'Bing' : 'Google'} results for this site yet.</div>`);
 
   const l = g.latest, p = g.previous;
   const maxI = Math.max(1, ...g.chart.map(d => d.impressions));

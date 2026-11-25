@@ -11,6 +11,7 @@ if (process.env.SENTRY_DSN) {
 
 const ga4 = require('./ga4');
 const tracking = require('./tracking');
+const searchApis = require('./searchApis');
 const express      = require('express');
 const compression  = require('compression');
 const helmet       = require('helmet');
@@ -2366,6 +2367,7 @@ const adminTools = require('./adminTools').register(app, {
   today: () => torontoToday(),
 });
 
+searchApis.register(app, { db, requireAdmin, logAudit, getSetting, setSetting });
 const contentPlanner = require('./contentPlanner').register(app, { db, requireAdmin, logAudit, getSetting, today: () => torontoToday() });
 // Monday morning: what is due this week and how outreach is going, to the owner only.
 cron.schedule('10 8 * * 1', () => { try { sendOwnerMail('Content and links: this week', contentPlanner.weeklyDigest()); } catch (e) { console.error('[content-digest] failed:', e.message); } });
@@ -3979,6 +3981,8 @@ app.get('/api/admin/settings', requireAdmin, (req, res) => {
   obj.clarity_api_token_set = obj.clarity_api_token ? 'true' : 'false';
   delete obj.clarity_api_token;
   delete obj.clarity_cache;
+  delete obj.gsc_service_key;   // search keys are write-only too (see searchApis.js)
+  delete obj.bing_api_key;
   res.json(obj);
 });
 
@@ -5756,6 +5760,7 @@ cron.schedule('40 * * * *', () => { cartOfferJob(); });
 cron.schedule('30 3 * * *', () => { try { adminTools.runAudit(); } catch (e) { console.error('Content audit failed:', e.message); } });
 // Tell Bing about new and changed pages: two minutes after each start (so after a deploy) and every night
 setTimeout(() => indexNow.run().catch(e => console.error('IndexNow failed:', e.message)), 120000).unref();
+cron.schedule('20 5 * * *', () => searchApis.fetchAll({ db, getSetting, setSetting }).catch(e => console.error('[search-api] failed:', e.message)));
 cron.schedule('45 3 * * *', () => indexNow.run().catch(e => console.error('IndexNow failed:', e.message)));
 
 app.get('/api/admin/cart-offer-stats', requireAdmin, (req, res) => {

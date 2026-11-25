@@ -187,17 +187,20 @@ function register(app, { db, requireAdmin, logAudit, getSetting, indexNow, backu
     snapshot_id INTEGER NOT NULL, kind TEXT NOT NULL, key TEXT NOT NULL,
     clicks REAL, impressions REAL, ctr REAL, position REAL)`);
   db.exec('CREATE INDEX IF NOT EXISTS idx_gsc_rows_snap ON gsc_rows(snapshot_id, kind)');
+  try { db.exec("ALTER TABLE gsc_snapshots ADD COLUMN engine TEXT NOT NULL DEFAULT 'google'"); } catch {}   // google or bing
   for (const col of ['replied_at DATETIME', 'followup_note TEXT', 'followup_done_at DATETIME']) { try { db.exec(`ALTER TABLE outreach_contacts ADD COLUMN ${col}`); } catch {} }
   db.exec(`CREATE TABLE IF NOT EXISTS seo_audit_runs (id INTEGER PRIMARY KEY AUTOINCREMENT, ran_at DATETIME DEFAULT CURRENT_TIMESTAMP, result TEXT NOT NULL)`);
 
   const rowsOf = (id, kind) => db.prepare('SELECT key, clicks, impressions, ctr, position FROM gsc_rows WHERE snapshot_id = ? AND kind = ?').all(id, kind);
   const siteOk = s => SITES.includes(s);
 
-  function growthFor(site) {
-    const snaps = db.prepare('SELECT * FROM gsc_snapshots WHERE site = ? ORDER BY id DESC LIMIT ?').all(site, KEEP_SNAPSHOTS);
-    if (!snaps.length) return { site, snapshots: [], empty: true };
+  function growthFor(site, engine = 'google') {
+    const snaps = db.prepare('SELECT * FROM gsc_snapshots WHERE site = ? AND engine = ? ORDER BY id DESC LIMIT ?').all(site, engine, KEEP_SNAPSHOTS);
+    if (!snaps.length) return { site, engine, snapshots: [], empty: true };
     const latest = snaps[0];
-    const prev = snaps[1] || null;
+    // Compare with a copy at least six days older when there is one, so a fresh weekly copy is not compared with yesterday's.
+    const weekBefore = latest.date_to ? new Date(Date.parse(latest.date_to) - 6 * 86400000).toISOString().slice(0, 10) : '';
+    const prev = snaps.slice(1).find(s => s.date_to && s.date_to <= weekBefore) || snaps[1] || null;
     const pages = rowsOf(latest.id, 'page');
     const queries = rowsOf(latest.id, 'query');
     const countries = rowsOf(latest.id, 'country');
@@ -228,6 +231,7 @@ function register(app, { db, requireAdmin, logAudit, getSetting, indexNow, backu
 
     return {
       site,
+      engine,
       snapshots: snaps.map(s => ({ id: s.id, imported_at: s.imported_at, date_from: s.date_from, date_to: s.date_to, clicks: s.clicks, impressions: s.impressions })),
       latest: { id: latest.id, imported_at: latest.imported_at, date_from: latest.date_from, date_to: latest.date_to, clicks: latest.clicks, impressions: latest.impressions },
       previous: prev ? { id: prev.id, clicks: prev.clicks, impressions: prev.impressions, date_to: prev.date_to } : null,
@@ -243,7 +247,7 @@ function register(app, { db, requireAdmin, logAudit, getSetting, indexNow, backu
 
   app.get('/api/admin/growth', requireAdmin, (req, res) => {
     const site = siteOk(req.query.site) ? req.query.site : 'ca';
-    try { res.json(growthFor(site)); } catch (e) { res.status(500).json({ error: e.message }); }
+    try { res.json(growthFor(site, req.query.engine === 'bing' ? 'bing' : 'google')); } catch (e) { res.status(500).json({ error: e.message }); }
   });
 
   app.post('/api/admin/growth/import', requireAdmin, express.raw({ type: '*/*', limit: MAX_UPLOAD }), (req, res) => {
@@ -263,7 +267,7 @@ function register(app, { db, requireAdmin, logAudit, getSetting, indexNow, backu
       const ins = db.prepare('INSERT INTO gsc_rows (snapshot_id, kind, key, clicks, impressions, ctr, position) VALUES (?,?,?,?,?,?,?)');
       const put = (kind, rows) => rows.slice(0, 2000).forEach(r => ins.run(id, kind, r.key, r.clicks, r.impressions, r.ctr, r.position));
       put('query', data.queries); put('page', data.pages); put('country', data.countries); put('device', data.devices); put('date', data.chart);
-      const old = db.prepare('SELECT id FROM gsc_snapshots WHERE site = ? ORDER BY id DESC LIMIT -1 OFFSET ?').all(site, KEEP_SNAPSHOTS);
+      const old = db.prepare("SELECT id FROM gsc_snapshots WHERE site = ? AND engine = 'google' ORDER BY id DESC LIMIT -1 OFFSET ?").all(site, KEEP_SNAPSHOTS);
       for (const o of old) { db.prepare('DELETE FROM gsc_rows WHERE snapshot_id = ?').run(o.id); db.prepare('DELETE FROM gsc_snapshots WHERE id = ?').run(o.id); }
       db.exec('COMMIT');
       logAudit(req, 'growth.import', 'search-console', `${site} ${filename}`);
