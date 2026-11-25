@@ -331,3 +331,6 @@ html,body{background:var(--w-cream)!important}
 .story-founder img{width:96px;height:96px}
 .story-founder .story-sign{text-align:center!important}
 }
+
+/* Founder card and reviews: reviews sit centred beside the card */
+@media(min-width:761px){.story-inner{align-items:center!important}.story-reviews{align-self:center!important;justify-content:center!important}}
