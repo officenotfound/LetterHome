@@ -157,7 +157,8 @@ const stripe = Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2024-06-20' 
 
 app.use(session({
   store:             new FileStore({ path: './sessions', ttl: 30 * 24 * 60 * 60, retries: 1, reapInterval: 3600, reapAsync: true, fileMode: 0o600 }),
-  secret:            process.env.SESSION_SECRET || 'dev-secret-change-me',
+  // No built-in fallback: without SESSION_SECRET (production refuses to start) a random one lasts until restart.
+  secret:            process.env.SESSION_SECRET || randomBytes(32).toString('hex'),
   resave:            false,
   saveUninitialized: false,
   cookie: {
@@ -1710,7 +1711,7 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
   if (!rEmail || !rName || !rStreet)
     return res.status(400).json({ error: 'Missing required fields.' });
 
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(rEmail))
+  if (!/^[^\s@'"<>`\\(),;:]+@[^\s@'"<>`\\(),;:]+\.[^\s@'"<>`\\(),;:]+$/.test(rEmail))
     return res.status(400).json({ error: 'Please enter a valid email address.' });
 
   // Letter from Santa: same order, review and mailing flow as any letter, with its own price and a
@@ -2473,7 +2474,9 @@ app.get('/api/admin/orders/csv', requireAdmin, (req, res) => {
                 'recipient_city','recipient_province','recipient_postal','destination_country',
                 'sender_name','sender_country','price_cents','printer_ref',
                 'page_count','colour_printing','registered_mail','certified_mail','express_mail','large_envelope','schedule_for_later','scheduled_date'];
-  const rows = orders.map(o => cols.map(c => `"${String(o[c]??'').replace(/"/g,'""')}"`).join(','));
+  // A leading = + - @ tab or CR would run as a spreadsheet formula, so those cells get a leading space.
+  const cell = v => { const t = String(v ?? ''); return `"${(/^[=+\-@\t\r]/.test(t) ? ' ' + t : t).replace(/"/g, '""')}"`; };
+  const rows = orders.map(o => cols.map(c => cell(o[c])).join(','));
   res.setHeader('Content-Type', 'text/csv; charset=utf-8');
   res.setHeader('Content-Disposition', `attachment; filename="orders-${new Date().toISOString().slice(0,10)}.csv"`);
   res.send([cols.join(','), ...rows].join('\r\n'));
@@ -3029,7 +3032,7 @@ app.get('/api/admin/customers', requireAdmin, (req, res) => {
 app.post('/api/admin/customers', requireAdmin, (req, res) => {
   const email = (req.body.email || '').trim().toLowerCase();
   const name  = (req.body.display_name || '').trim() || null;
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: 'Valid email required' });
+  if (!/^[^\s@'"<>`\\(),;:]+@[^\s@'"<>`\\(),;:]+\.[^\s@'"<>`\\(),;:]+$/.test(email)) return res.status(400).json({ error: 'Valid email required' });
   try {
     db.prepare('INSERT INTO customers (email, display_name) VALUES (?,?)').run(email, name);
   } catch {
@@ -3290,7 +3293,18 @@ app.get('/api/admin/events', requireAdmin, (req, res) => {
       send({ type: 'tick', at: now });                                   // keeps the connection alive and tells the app where it is up to
     } catch (e) { console.error('[events] tick failed:', e.message); }
   };
-  const timer = setInterval(tick, 5000);
+  // The stream ends when the session is logged out, expires, or the account is removed.
+  const sid = req.sessionID, adminName = req.session.admin.username, startedAt = req.session.admin.loginAt || 0;
+  let ticks = 0;
+  const stopStream = () => { clearInterval(timer); mailbox.events.off('mail', onMail); try { res.end(); } catch {} };
+  const timer = setInterval(() => {
+    if (++ticks % 6 === 0) {
+      const dead = (adminUsersApi && !adminUsersApi.stillValid(adminName)) || Date.now() - startedAt > ADMIN_SESSION_MAX_AGE_MS;
+      if (dead) return stopStream();
+      return req.sessionStore.get(sid, (err, sess) => { if (!err && !sess?.admin) return stopStream(); tick(); });
+    }
+    tick();
+  }, 5000);
   const onMail = ev => { try { send({ type: 'mail', box: ev.box, label: ev.label, id: ev.id, folderId: ev.folderId || '', from: ev.from, subject: ev.subject }); } catch {} };
   mailbox.events.on('mail', onMail);
   req.on('close', () => { clearInterval(timer); mailbox.events.off('mail', onMail); });
@@ -3460,7 +3474,7 @@ app.post('/api/admin/outreach/contacts', requireAdmin, (req, res) => {
     try {
       for (const c of contacts) {
         const email = String(c?.email || '').trim().toLowerCase();
-        if (!/^[^\s@<>,;]+@[^\s@<>,;]+\.[^\s@<>,;]{2,}$/.test(email) || email.length > 200) { invalid++; continue; }
+        if (!/^[^\s@'"<>`\\(),;:]+@[^\s@'"<>`\\(),;:]+\.[^\s@'"<>`\\(),;:]{2,}$/.test(email) || email.length > 200) { invalid++; continue; }
         if (optedOut.get(email)) { unsubscribed++; continue; }   // never re-add someone who asked us to stop emailing
         const info = insert.run(campaign.trim().slice(0, 100), clean(c.business_name, 200), clean(c.contact_name, 200), email, clean(c.source_url, 500), clean(c.phone, 50), clean(c.notes, 1000));
         if (info.changes) added++; else duplicates++;
@@ -4062,7 +4076,7 @@ ${(order.page_count != null || order.colour_printing || order.registered_mail ||
 app.post('/api/contact', contactLimiter, async (req, res, next) => {
   const { name, email, message } = req.body;
   if (!name || !email || !message) return res.status(400).json({ error: 'All fields are required.' });
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(email))) return res.status(400).json({ error: 'Invalid email address.' });
+  if (!/^[^\s@'"<>`\\(),;:]+@[^\s@'"<>`\\(),;:]+\.[^\s@'"<>`\\(),;:]{2,}$/.test(String(email))) return res.status(400).json({ error: 'Invalid email address.' });
 
   // Strip CR/LF to prevent email header injection via name or email fields.
   const safeName  = String(name).slice(0, 200).replace(/[\r\n]/g, ' ');
@@ -4132,7 +4146,7 @@ app.post('/api/careers/apply', careersLimiter, (req, res, next) => {
     const name = clean(b.name, 200).replace(/[\r\n]/g, ' '), email = clean(b.email, 200).replace(/[\r\n]/g, '');
     const role = clean(b.role, 200).replace(/[\r\n]/g, ' ') || 'Not stated';
     const experience = clean(b.experience, 3000), businesses = clean(b.businesses, 3000);
-    if (!name || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email) || !experience || !businesses) { drop(); return res.status(400).json({ error: 'Please fill in your name, a valid email and both questions.' }); }
+    if (!name || !/^[^\s@'"<>`\\(),;:]+@[^\s@'"<>`\\(),;:]+\.[^\s@'"<>`\\(),;:]{2,}$/.test(email) || !experience || !businesses) { drop(); return res.status(400).json({ error: 'Please fill in your name, a valid email and both questions.' }); }
     let saved = null;
     if (req.file) {
       if (!checkMagicBytes(req.file.path, req.file.mimetype)) { drop(); return res.status(400).json({ error: 'That file does not look like a real PDF or Word document.' }); }
@@ -4163,7 +4177,7 @@ app.post('/api/account/register', accountLimiter, async (req, res) => {
     const email = (req.body.email || '').trim().toLowerCase();
     const { password } = req.body;
     if (!email || !password) return res.status(400).json({ error: 'Email and password are required.' });
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: 'Please enter a valid email address.' });
+    if (!/^[^\s@'"<>`\\(),;:]+@[^\s@'"<>`\\(),;:]+\.[^\s@'"<>`\\(),;:]+$/.test(email)) return res.status(400).json({ error: 'Please enter a valid email address.' });
 
     const pwErr = validateCustomerPassword(password);
     if (pwErr) return res.status(400).json({ error: pwErr });
@@ -4174,6 +4188,7 @@ app.post('/api/account/register', accountLimiter, async (req, res) => {
 
     const existing = db.prepare('SELECT email, password_hash, email_verified_at FROM customers WHERE email = ?').get(email);
     if (existing?.password_hash && existing.email_verified_at) {
+      await bcrypt.hash(password, 12);   // same work as a new sign-up, so the response time doesn't show the account exists
       // Don't reveal that the email is taken. Notify the rightful owner instead
       // and return the same shape we'd return on a successful new registration.
       sendMail({
@@ -4222,7 +4237,9 @@ app.get('/account/verify', accountLimiter, (req, res) => {
   const customer = db.prepare('SELECT email, password_hash, email_verified_at FROM customers WHERE email = ? AND deleted_at IS NULL').get(email);
   if (!customer?.password_hash || !verifyPasswordResetToken(email, customer.password_hash, req.query.token, VERIFY_MAX_AGE_MS, 'verify'))
     return res.redirect('/account/login?verify=expired');
-  if (!customer.email_verified_at) db.prepare('UPDATE customers SET email_verified_at = CURRENT_TIMESTAMP WHERE email = ?').run(email);
+  // The link works once. An already-confirmed account signs in with its password, so a forwarded or leaked link is useless afterwards.
+  if (customer.email_verified_at) return res.redirect('/account/login?verify=used');
+  db.prepare('UPDATE customers SET email_verified_at = CURRENT_TIMESTAMP WHERE email = ?').run(email);
   req.session.regenerate(err => {
     if (err) return res.redirect('/account/login');
     req.session.customer = { email };
@@ -4269,7 +4286,7 @@ app.post('/api/account/logout', (req, res) => {
 app.post('/api/account/forgot', accountLimiter, async (req, res) => {
   try {
     const email = (req.body.email || '').trim().toLowerCase();
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (!email || !/^[^\s@'"<>`\\(),;:]+@[^\s@'"<>`\\(),;:]+\.[^\s@'"<>`\\(),;:]+$/.test(email)) {
       // Same generic response regardless to prevent enumeration.
       return res.json({ ok: true });
     }
@@ -5285,6 +5302,11 @@ function snapshotDb(destPath) {
 }
 
 async function uploadToB2(filePath) {
+  // The database holds every customer's address and letter text, so only the encrypted file leaves the server.
+  if (!filePath.endsWith('.enc')) {
+    console.warn('[backup] B2 upload skipped: set BACKUP_PASSPHRASE so the off-site copy is encrypted');
+    return;
+  }
   if (!process.env.B2_KEY_ID || !process.env.B2_APPLICATION_KEY || !process.env.B2_BUCKET_ID) {
     return;
   }

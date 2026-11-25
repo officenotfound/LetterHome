@@ -2181,3 +2181,24 @@ test('admin live event stream pushes a new paid order within seconds and require
   assert.ok(got, 'an order event arrived');
   assert.equal(got.id, id); assert.equal(got.name, 'Live Recipient');
 });
+
+test('emails with quotes, brackets or backticks are refused at sign-up, checkout-style forms and careers, so they can never reach an admin button', async () => {
+  const bad = ["a'-alert(1)-'@b.co", 'a"x@b.co', 'a(b)@c.co', 'a`b@c.co', 'a\\b@c.co', 'a,b@c.co'];
+  for (const email of bad) {
+    const r = await fetch(`${base}/api/account/register`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password: 'Correct-Horse-Battery-9!' }) });
+    assert.equal(r.status, 400, `register should refuse ${email}`);
+    await r.text();
+  }
+  const ok = await fetch(`${base}/api/contact`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: 'T', email: "o'x@b.co", message: 'hello there' }) });
+  assert.equal(ok.status, 400);
+  await ok.text();
+});
+
+test('orders CSV export puts a space in front of cells that start with a formula character', async () => {
+  const { cookie } = await loginAdmin();
+  seedOrder({ status: 'paid', recipientName: '=HYPERLINK("http://x","y")' });
+  const r = await fetch(`${base}/api/admin/orders/csv`, { headers: { Cookie: cookie } });
+  const t = await r.text();
+  assert.ok(t.includes('" =HYPERLINK('), 'formula cell is neutralised');
+  assert.ok(!t.includes('"=HYPERLINK('), 'no cell starts with the formula');
+});

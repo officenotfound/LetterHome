@@ -169,7 +169,7 @@ function updateStrength(inputId, barId, labelId) {
 }
 
 (async () => {
-  if (path === '/account/login')    { renderLogin(); if (new URLSearchParams(location.search).get('verify') === 'expired') showErr('login-err', LH_T('account.verify.expired')); return; }
+  if (path === '/account/login')    { renderLogin(); { const v = new URLSearchParams(location.search).get('verify'); if (v === 'expired') showErr('login-err', LH_T('account.verify.expired')); else if (v === 'used') showErr('login-err', LH_T('account.verify.used')); } return; }
   if (path === '/account/register') { renderRegister(); return; }
   if (path === '/account/forgot')   { renderForgot();   return; }
   if (path === '/account/reset')    { renderReset();    return; }

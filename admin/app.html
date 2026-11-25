@@ -407,7 +407,8 @@ html[data-theme="dark"] body [style*="solid #ececec"],html[data-theme="dark"] bo
   html[data-theme] body .mob-tab:active{background:rgba(255,255,255,.06)}
   html[data-theme] body .mob-tab .mt-badge{position:absolute;top:5px;left:calc(50% + 6px);min-width:17px;padding:0 5px;border-radius:9px;background:#e0343f;color:#fff;font:700 10px/17px 'Archivo',sans-serif;text-align:center;display:none;box-shadow:0 0 0 2px var(--a-nav)}
   html[data-theme] body .main{padding-bottom:calc(86px + env(safe-area-inset-bottom,0px))!important}
-  html[data-theme] body .topbar{min-width:0;overflow:hidden}
+  html[data-theme] body .topbar{min-width:0;overflow:visible}
+  html[data-theme] body .notif-panel{position:fixed;left:12px;right:12px;top:calc(60px + env(safe-area-inset-top,0px));width:auto;max-width:none;max-height:70vh;overflow-y:auto;z-index:400}
   html[data-theme] body .card-header{flex-wrap:wrap;gap:6px 12px}
   html[data-theme] body .topbar-title{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   html[data-theme] body .topbar>div:last-child{gap:8px!important;flex:0 0 auto;min-width:0}
@@ -776,6 +777,12 @@ html.mac-app ::-webkit-scrollbar{width:0;height:0}
 </div>
 
 <script>
+// encodeURIComponent leaves ' ( ) ! * ~ alone, which lets an address like a'-x-'@b.co break out of an inline handler.
+// Encode them too; decodeURIComponent and the server both read them back unchanged.
+(function () {
+  const enc = window.encodeURIComponent;
+  window.encodeURIComponent = s => enc(s).replace(/[!'()*~]/g, c => '%' + c.charCodeAt(0).toString(16).toUpperCase());
+})();
 let currentUser = '';
 
 async function init() {
@@ -1610,7 +1617,7 @@ async function showAdminUsers(secretInfo) {
     <div style="font-family:monospace;font-size:14px;margin:8px 0;word-break:break-all;user-select:all">${esc(secretInfo.secret)}</div>
     <div style="font-size:12px;color:#6b6b6b;line-height:1.6">Give this key to ${esc(secretInfo.username)} privately. In an authenticator app choose "enter a setup key", paste it, and use a 6-digit time-based code at sign-in. Anyone with this key can generate codes, so do not send it with the password in one message.</div></div>` : '';
   const rows = d.users.map(u => `<tr><td>${esc(u.username)}${u.username === d.me ? ' <span style="color:#6b6b6b;font-size:11px">(you)</span>' : ''}</td><td>${esc(u.source)}</td><td>${u.has2FA ? 'On' : '<span style="color:#c1121f">Off</span>'}</td><td>${u.created_at ? fmtDate(u.created_at) : ''}</td>
-    <td style="text-align:right;white-space:nowrap">${u.removable ? `<button class="btn btn-outline btn-sm" onclick="adminUserAct('password','${esc(u.username)}')">New password</button> <button class="btn btn-outline btn-sm" onclick="adminUserAct('reset-2fa','${esc(u.username)}')">New 2FA key</button> ${u.username === d.me ? '' : `<button class="btn btn-outline btn-sm" style="color:#b42318;border-color:#b42318" onclick="adminUserAct('remove','${esc(u.username)}')">Remove</button>`}` : '<span style="font-size:11px;color:#9a9a9a">set in server settings</span>'}</td></tr>`).join('');
+    <td style="text-align:right;white-space:nowrap">${u.removable ? `<button class="btn btn-outline btn-sm" onclick="adminUserAct('password','${jsq(u.username)}')">New password</button> <button class="btn btn-outline btn-sm" onclick="adminUserAct('reset-2fa','${jsq(u.username)}')">New 2FA key</button> ${u.username === d.me ? '' : `<button class="btn btn-outline btn-sm" style="color:#b42318;border-color:#b42318" onclick="adminUserAct('remove','${jsq(u.username)}')">Remove</button>`}` : '<span style="font-size:11px;color:#9a9a9a">set in server settings</span>'}</td></tr>`).join('');
   setMain(`${setup}
     <div class="card" style="max-width:720px;margin:0 auto 20px"><div class="card-header"><div class="card-title">People who can sign in to this admin</div></div><div style="overflow-x:auto"><table style="width:100%"><thead><tr><th>Username</th><th>Where it is set</th><th>2FA</th><th>Added</th><th></th></tr></thead><tbody>${rows}</tbody></table></div></div>
     <div class="card" style="padding:18px 20px;max-width:560px"><div class="card-title" style="margin-bottom:10px">Add an admin</div>
@@ -2359,7 +2366,7 @@ async function mailCompose(p = {}) {
     ${tmpl.length ? `<div class="field"><select id="mc-tmpl" onchange="mailTemplate(this)"><option value="">Insert a saved reply…</option>${tmpl.map((t, i) => `<option value="${i}">${esc(t.name)}</option>`).join('')}</select></div>` : ''}
     <div class="field"><textarea id="mc-body" placeholder="Write your message">${esc(p.body || '')}</textarea></div>
     <div class="field"><input type="file" id="mc-files" multiple></div>
-    <div style="display:flex;gap:8px;align-items:center"><button class="btn btn-primary" id="mc-send" onclick="mailSend('${esc(p.replyTo || '')}')">Send</button><span id="mc-msg" style="font-size:13px"></span></div></div>`;
+    <div style="display:flex;gap:8px;align-items:center"><button class="btn btn-primary" id="mc-send" onclick="mailSend('${jsq(p.replyTo || '')}')">Send</button><span id="mc-msg" style="font-size:13px"></span></div></div>`;
   document.body.appendChild(wrap); window._mailTmpl = tmpl;
   const b = document.getElementById('mc-body'); b.focus(); b.setSelectionRange(0, 0);
 }
@@ -4301,7 +4308,7 @@ async function showSettings() {
                     <td class="mono">${esc(b.filename)}${i === 0 ? ' <span class="pill ok">latest</span>' : ''}</td>
                     <td class="muted-cell nowrap">${fmtBytes(b.size)}</td>
                     <td class="muted-cell nowrap">${fmtDateTime(b.created_at)}</td>
-                    <td class="bk-actions"><a href="/api/admin/backups/${encodeURIComponent(b.filename)}" class="link" download>Download</a><button class="btn-link danger" onclick="deleteBackup('${esc(b.filename)}')">Delete</button></td>
+                    <td class="bk-actions"><a href="/api/admin/backups/${encodeURIComponent(b.filename)}" class="link" download>Download</a><button class="btn-link danger" onclick="deleteBackup('${jsq(b.filename)}')">Delete</button></td>
                   </tr>`).join('')}</tbody></table></div>`}
             <div id="backup-status" class="muted-text"></div>
           </div>
@@ -5087,11 +5094,11 @@ async function showApplicants() {
     <tr id="applicant-mail-${a.id}" style="display:none">
       <td colspan="7" style="background:#f0f9ff;padding:16px 20px;border-bottom:1px solid #ececec">
         <div style="max-width:640px">
-          <div style="margin-bottom:10px"><select onchange="loadApplicantTemplate(${a.id}, this, '${esc(a.name).replace(/'/g, '')}')" style="font-size:13px;padding:6px 10px;border:1px solid #ececec;border-radius:0;background:#fff">${tmplOpts}</select></div>
+          <div style="margin-bottom:10px"><select onchange="loadApplicantTemplate(${a.id}, this, '${jsq(a.name)}')" style="font-size:13px;padding:6px 10px;border:1px solid #ececec;border-radius:0;background:#fff">${tmplOpts}</select></div>
           <div style="margin-bottom:8px"><input id="ap-subject-${a.id}" type="text" value="${esc('Letterhome: ' + a.role)}" style="width:100%;font-size:13px;padding:8px 10px;border:1px solid #ececec;border-radius:0"></div>
           <div style="margin-bottom:10px"><textarea id="ap-body-${a.id}" rows="9" placeholder="Type your message…" style="width:100%;font-size:13px;padding:8px 10px;border:1px solid #ececec;border-radius:0;resize:vertical"></textarea></div>
           <div style="display:flex;gap:8px;align-items:center">
-            <button class="btn btn-primary btn-sm" onclick="sendApplicantMail(${a.id}, '${esc(a.email)}')">Send to ${esc(a.email)}</button>
+            <button class="btn btn-primary btn-sm" onclick="sendApplicantMail(${a.id}, '${jsq(a.email)}')">Send to ${esc(a.email)}</button>
             <button class="btn btn-outline btn-sm" onclick="toggleApplicantMail(${a.id})">Cancel</button>
           </div>
         </div>
@@ -5211,7 +5218,12 @@ function refreshBadges() {
 }
 
 function esc(s) {
-  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+// For text placed inside a single-quoted JS string inside an HTML attribute (onclick="f('${jsq(x)}')").
+// Every character that could end the string or the attribute becomes a \uXXXX escape.
+function jsq(s) {
+  return esc(String(s == null ? '' : s).replace(/[\\'"<>&\r\n\u2028\u2029]/g, c => '\\u' + c.charCodeAt(0).toString(16).padStart(4, '0')));
 }
 
 

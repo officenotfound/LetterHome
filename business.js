@@ -180,7 +180,7 @@ function registerPortal(app, { db, getSetting, sendMail, notifyOwner }) {
     };
     if (!f.company) return res.status(400).json({ error: 'Enter your business name.' });
     if (!f.contact_name) return res.status(400).json({ error: 'Enter your name.' });
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(f.email)) return res.status(400).json({ error: 'Enter an email address we can reply to.' });
+    if (!/^[^\s@'"<>`\\(),;:]+@[^\s@'"<>`\\(),;:]+\.[^\s@'"<>`\\(),;:]{2,}$/.test(f.email)) return res.status(400).json({ error: 'Enter an email address we can reply to.' });
     // The same email asking again within a day is not stored twice, and the answer looks the same either way.
     const dup = db.prepare("SELECT 1 FROM business_requests WHERE email = ? AND created_at > datetime('now','-1 day')").get(f.email);
     if (!dup) {
@@ -366,7 +366,7 @@ function registerPortal(app, { db, getSetting, sendMail, notifyOwner }) {
 
 function registerAdmin(app, { db, requireAdmin, logAudit, getSetting, setSetting }) {
   const asInt = (v, lo, hi, dflt) => { const n = Math.round(Number(v)); return Number.isFinite(n) ? Math.min(hi, Math.max(lo, n)) : dflt; };
-  const emailOk = e => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e) && e.length <= 200;
+  const emailOk = e => /^[^\s@'"<>`\\(),;:]+@[^\s@'"<>`\\(),;:]+\.[^\s@'"<>`\\(),;:]{2,}$/.test(e) && e.length <= 200;
 
   function businessFields(b, existing) {
     const f = {

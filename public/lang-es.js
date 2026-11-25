@@ -222,6 +222,7 @@ window.LH_ES = {
  "account.pwd.strength.strong": "Fuerte",
  "account.pwd.strength.verystrong": "Muy fuerte",
  "account.verify.expired": "Ese enlace de confirmación venció. Inicie sesión y le enviaremos uno nuevo.",
+ "account.verify.used": "Ese enlace de confirmación ya se usó. Inicie sesión con su contraseña.",
  "account.eyebrow": "Cuenta de cliente",
  "account.login.h1": "Bienvenido <em>de nuevo.</em>",
  "account.login.sub": "Inicie sesión para administrar sus direcciones guardadas y su historial de pedidos.",
