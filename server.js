@@ -2317,6 +2317,9 @@ app.post('/admin/logout', (req, res) => {
   req.session.destroy(() => res.redirect('/admin/login'));
 });
 
+// The Reports screens' own script and styles (before the catch-all below, which answers with the admin page).
+app.get(['/admin/reports-ui.js', '/admin/reports-ui.css'], requireAdmin, (req, res) =>
+  res.sendFile(path.join(__dirname, 'admin', path.basename(req.path))));
 app.get('/admin', requireAdmin, (req, res) =>
   res.sendFile(path.join(__dirname, 'admin', 'app.html')));
 app.get('/admin/*', requireAdmin, (req, res) =>
@@ -2379,6 +2382,8 @@ cron.schedule('10 8 * * 1', () => { try { sendOwnerMail('Content and links: this
 const mailbox = require('./mailbox').register(app, { db, requireAdmin, logAudit });
 if (process.env.NODE_ENV !== 'test') mailbox.start();
 require('./adminExtras').register(app, { db, requireAdmin, logAudit, getSetting, contentHeld: o => contentHeld(o), today: () => torontoToday(), ops });
+const reports = require('./reportsData').register(app, { db, requireAdmin, getSetting, setSetting, stripe, contentHeld: o => contentHeld(o), today: () => torontoToday() });
+if (process.env.NODE_ENV !== 'test') { reports.beat(); cron.schedule('*/5 * * * *', reports.beat); }
 
 app.get('/api/admin/me', requireAdmin, (req, res) =>
   res.json({
@@ -4005,7 +4010,7 @@ const ALLOWED_SETTING_KEYS = new Set([
   'price_uk_cents', 'price_au_cents', 'us_domain_live', 'uk_domain_live',
   'cart_offer_enabled', 'cart_offer_pct', 'cart_offer_valid_days',
   'svc_ca_registered_cents', 'svc_ca_express_cents', 'svc_us_certified_cents', 'svc_us_express_cents',
-  'google_rating', 'clarity_project_id', 'clarity_api_token',
+  'google_rating', 'clarity_project_id', 'clarity_api_token', 'monthly_order_target',
 ]);
 
 app.post('/api/admin/settings', requireAdmin, (req, res) => {

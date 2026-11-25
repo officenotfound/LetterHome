@@ -72,18 +72,20 @@ async function checkIndex({ db, getSetting, setSetting, pages, fetchImpl = fetch
 async function checkSpeed({ db, getSetting, setSetting, fetchImpl = fetch, now = () => new Date(), urls = SPEED_PAGES }) {
   const key = getSetting('pagespeed_api_key', '');
   if (!key) throw new Error('Add the PageSpeed API key first.');
-  const save = db.prepare('INSERT INTO speed_results (url, score, lcp_ms, cls, tbt_ms, error, checked_at) VALUES (?,?,?,?,?,?,?)');
+  for (const col of ['a11y', 'practices', 'seo']) { try { db.exec(`ALTER TABLE speed_results ADD COLUMN ${col} INTEGER`); } catch {} }
+  const save = db.prepare('INSERT INTO speed_results (url, score, lcp_ms, cls, tbt_ms, error, checked_at, a11y, practices, seo) VALUES (?,?,?,?,?,?,?,?,?,?)');
   const at = now().toISOString();
   for (const url of urls) {
     try {
       let r;
-      try { r = await fetchImpl(`https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(url)}&strategy=mobile&category=performance&key=${encodeURIComponent(key)}`, { signal: AbortSignal.timeout(90000) }); }
+      try { r = await fetchImpl(`https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(url)}&strategy=mobile&category=performance&category=accessibility&category=best-practices&category=seo&key=${encodeURIComponent(key)}`, { signal: AbortSignal.timeout(90000) }); }
       catch { throw new Error('Could not reach PageSpeed.'); }   // no detail: the address carries the key
       if (!r.ok) throw new Error(r.status === 400 || r.status === 403 ? 'Google refused the key, or the PageSpeed Insights API is not enabled.' : `PageSpeed answered with error ${r.status}.`);
       const lh = (await r.json()).lighthouseResult || {};
       const val = id => lh.audits?.[id]?.numericValue;
-      save.run(url, Math.round((lh.categories?.performance?.score || 0) * 100), Math.round(val('largest-contentful-paint') || 0), Math.round((val('cumulative-layout-shift') || 0) * 1000) / 1000, Math.round(val('total-blocking-time') || 0), null, at);
-    } catch (e) { save.run(url, null, null, null, null, e.message, at); }
+      const mark = id => (lh.categories?.[id]?.score == null ? null : Math.round(lh.categories[id].score * 100));
+      save.run(url, Math.round((lh.categories?.performance?.score || 0) * 100), Math.round(val('largest-contentful-paint') || 0), Math.round((val('cumulative-layout-shift') || 0) * 1000) / 1000, Math.round(val('total-blocking-time') || 0), null, at, mark('accessibility'), mark('best-practices'), mark('seo'));
+    } catch (e) { save.run(url, null, null, null, null, e.message, at, null, null, null); }
   }
   db.prepare("DELETE FROM speed_results WHERE checked_at < ?").run(new Date(now().getTime() - 120 * 86400000).toISOString());
   setSetting('speed_check_last', at);

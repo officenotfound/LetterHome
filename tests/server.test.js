@@ -2349,4 +2349,15 @@ test('every admin report screen loads on the real server', async () => {
     const r = await fetch(`${base}/api/admin/${p}`, { headers: { Cookie: cookie } });
     assert.equal(r.status, 200, p);
   }
+  for (const p of ['reports', 'reports?days=7&site=uk', 'reports/live', 'reports/export?screen=overview', 'reports/export?screen=sales&table=journey']) {
+    const r = await fetch(`${base}/api/admin/${p}`, { headers: { Cookie: cookie } });
+    assert.equal(r.status, 200, p);
+  }
+  const csv = await fetch(`${base}/api/admin/reports/export?screen=audience`, { headers: { Cookie: cookie } });
+  assert.match(csv.headers.get('content-disposition'), /^attachment; filename="letterhome-audience-28d-/);
+  for (const p of ['/admin/reports-ui.js', '/admin/reports-ui.css']) {
+    const r = await fetch(base + p, { headers: { Cookie: cookie } });
+    assert.match(r.headers.get('content-type'), p.endsWith('js') ? /javascript/ : /css/, p);
+  }
+  assert.equal((await fetch(`${base}/api/admin/reports`)).status, 401);
 });

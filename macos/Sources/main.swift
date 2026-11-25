@@ -689,7 +689,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         _ = add(edit, "Select All", #selector(NSText.selectAll(_:)), "a", target: nil)
 
         let go = sub("Go")
-        let pages: [(String, String, String)] = [("Dashboard", "/admin", "1"), ("Orders", "/admin/orders", "2"), ("Inbox", "/admin/mail", "3"), ("People", "/admin/customers", "4"), ("Marketing", "/admin/broadcast", "5"), ("Reports", "/admin/insights", "6"), ("System", "/admin/settings", "7")]
+        let pages: [(String, String, String)] = [("Dashboard", "/admin", "1"), ("Orders", "/admin/orders", "2"), ("Inbox", "/admin/mail", "3"), ("People", "/admin/customers", "4"), ("Marketing", "/admin/broadcast", "5"), ("Reports", "/admin/reports/overview", "6"), ("System", "/admin/settings", "7")]
         for (t, p, k) in pages { add(go, t, #selector(menuGo(_:)), k).representedObject = p }
         go.addItem(.separator())
         _ = add(go, "Search", #selector(search), "k")

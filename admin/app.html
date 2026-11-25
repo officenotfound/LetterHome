@@ -9,6 +9,8 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap">
 <link rel="stylesheet" href="/fonts.css">
 <script src="/sla-clock.js"></script>
+<link rel="stylesheet" href="/admin/reports-ui.css">
+<script src="/admin/reports-ui.js"></script>
 <script>(function(){try{var st=localStorage.getItem('lh-admin-theme');var mq=window.matchMedia&&matchMedia('(prefers-color-scheme: dark)');var t=st||(mq&&mq.matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);if(!st&&mq&&mq.addEventListener)mq.addEventListener('change',function(){if(!localStorage.getItem('lh-admin-theme'))document.documentElement.setAttribute('data-theme',mq.matches?'dark':'light');});}catch(e){}})();</script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -747,7 +749,7 @@ html.mac-app ::-webkit-scrollbar{width:0;height:0}
     <button class="nav-link" id="nav-inbox" onclick="go('/admin/mail')" style="justify-content:space-between"><span style="display:flex;align-items:center;gap:10px"><span class="nav-icon"><svg class="nav-ico" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 13 6.5 5h11L20 13"/><path d="M4 13v6h16v-6h-4.5l-1 2h-5l-1-2z"/></svg></span> Inbox</span><span id="inbox-badge" style="display:none;background:#e63946;color:#fff;font-size:10px;font-weight:700;padding:1px 7px;min-width:18px;text-align:center"></span></button>
     <button class="nav-link" id="nav-people" onclick="go('/admin/customers')"><span class="nav-icon"><svg class="nav-ico" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7"/><path d="M18 14.3c2 .7 3.5 2.4 3.5 5.7"/></svg></span> People</button>
     <button class="nav-link" id="nav-marketing" onclick="go('/admin/broadcast')"><span class="nav-icon"><svg class="nav-ico" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 11 17-7v16L3 13z"/><path d="M7 14.5V19a1.5 1.5 0 0 0 3 0v-3.2"/></svg></span> Marketing</button>
-    <button class="nav-link" id="nav-reports" onclick="go('/admin/insights')"><span class="nav-icon"><svg class="nav-ico" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/></svg></span> Reports</button>
+    <button class="nav-link" id="nav-reports" onclick="go('/admin/reports/overview')"><span class="nav-icon"><svg class="nav-ico" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/></svg></span> Reports</button>
     <button class="nav-link" id="nav-system" onclick="go('/admin/settings')"><span class="nav-icon"><svg class="nav-ico" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></span> System</button>
   </nav>
   <div class="sidebar-footer">
@@ -850,6 +852,7 @@ async function route() {
 function renderRoute(p) {
   if (p === '/admin' || p === '/admin/')           return showDashboard();
   if (p === '/admin/orders')                        return showOrders();
+  if (p === '/admin/reports' || p.startsWith('/admin/reports/')) return showReports(p);
   if (p.match(/^\/admin\/orders\/\d+$/))            return showOrder(p.split('/').pop());
   if (p === '/admin/customers')                     return showCustomers();
   if (p.match(/^\/admin\/customers\/.+$/))          return showCustomer(decodeURIComponent(p.replace('/admin/customers/', '')));
@@ -893,12 +896,15 @@ const NAV_GROUPS = {
   people:   { tabs: [['/admin/customers', 'Customers'], ['/admin/accounts', 'Accounts'], ['/admin/businesses', 'Businesses']] },
   inbox:    { tabs: [['/admin/mail', 'Mail'], ['/admin/contacts', 'Contact form'], ['/admin/applicants', 'Applicants'], ['/admin/templates', 'Saved replies']] },
   marketing: { tabs: [['/admin/broadcast', 'Broadcast'], ['/admin/outreach', 'Outreach'], ['/admin/followups', 'Follow-ups'], ['/admin/content', 'Content and links'], ['/admin/emails', 'Sent emails']] },
-  reports:  { tabs: [['/admin/insights', 'Insights'], ['/admin/visitors', 'Visitors'], ['/admin/traffic', 'Traffic'], ['/admin/growth', 'Search'], ['/admin/google', 'Google'], ['/admin/funnel', 'Funnel'], ['/admin/seo-audit', 'Content audit'], ['/admin/profit', 'Profit'], ['/admin/stripe', 'Stripe']] },
+  // The detailed screens sit under "All tools" and keep that tab lit.
+  reports:  { tabs: [['/admin/reports/overview', 'Overview'], ['/admin/reports/audience', 'Audience'], ['/admin/reports/search', 'Search'], ['/admin/reports/sales', 'Sales'], ['/admin/reports/health', 'Health'], ['/admin/reports/tools', 'All tools']],
+    under: ['/admin/insights', '/admin/visitors', '/admin/traffic', '/admin/growth', '/admin/google', '/admin/funnel', '/admin/seo-audit', '/admin/profit', '/admin/stripe'] },
   system:   { tabs: [['/admin/settings', 'Settings'], ['/admin/app-settings', 'Phone app'], ['/admin/health', 'Health'], ['/admin/codes', 'Codes'], ['/admin/admin-users', 'Admin users'], ['/admin/audit-log', 'Audit log'], ['/admin/trash', 'Trash']] },
 };
 function groupOf(p) {
   for (const [g, v] of Object.entries(NAV_GROUPS)) {
     for (const [path] of v.tabs) if (p === path || p.startsWith(path + '/')) return [g, path];
+    if (v.under?.some(path => p === path || p.startsWith(path + '/'))) return [g, v.tabs[v.tabs.length - 1][0]];
   }
   return [null, null];
 }
