@@ -668,3 +668,8 @@ html[data-theme="dark"]:not([data-country]) body main.ab h1.ab-logo .logo-accent
 :root body:not(#x) .rate-includes ul + a.btn{margin-top:24px!important}
 /* Boxed notes need room between the text and the border. */
 :root body:not([class*="c-"]):not(#x) .note{padding:14px 18px!important}
+/* Careers: the no-fees notice. */
+:root body:not(#x) .fee-note{margin:32px 0 0;padding:22px 26px;background:var(--ds-surface);border:1px solid var(--ds-line);border-left:4px solid #1c2f45;border-radius:10px;text-align:left}
+:root body:not(#x) .fee-note strong{display:block;margin:0 0 6px;font:700 18px/1.35 'Archivo',sans-serif;color:var(--ds-ink)}
+:root body:not(#x) .fee-note p{margin:0!important;font-size:15px!important;line-height:1.65;color:var(--ds-ink2);text-align:left!important}
+@media(max-width:700px){:root body:not(#x) .fee-note{padding:18px 18px}}
