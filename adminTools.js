@@ -314,8 +314,11 @@ function register(app, { db, requireAdmin, logAudit, getSetting, indexNow, backu
       const mailedEmails = db.prepare(`SELECT COUNT(*) n FROM email_log WHERE type = 'mailed_notification' AND created_at >= datetime('now', ?)`).get(`-${days} days`).n;
       const topPages = db.prepare(`SELECT path, COUNT(*) n FROM page_views WHERE created_at >= datetime('now', ?)${pvSite} GROUP BY path ORDER BY n DESC LIMIT 8`).all(`-${days} days`);
 
+      const problems = db.prepare(`SELECT code, SUM(device = 'phone') phone, SUM(device = 'computer') computer
+        FROM form_problems WHERE day >= ? GROUP BY code ORDER BY COUNT(*) DESC LIMIT 20`).all(since);
+
       res.json({
-        days, site,
+        days, site, problems,
         steps: { visitors: views.u, views: views.n, send_view: f.send_view || 0, step2: f.step2 || 0, step3: f.step3 || 0, pay_click: f.pay_click || 0, paid: paid.n, mailed },
         resume_click: f.resume_click || 0, mailed_emails: mailedEmails,
         revenue_cents: paid.cents, orders: paid.n, unpaid, refunded,

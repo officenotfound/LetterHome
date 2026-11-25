@@ -74,6 +74,11 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:40px 36px;posi
 .footer-bottom a:hover{color:var(--red-stamp)}
 .footer-bottom-links{display:flex;gap:28px}
 @media(max-width:768px){.main{padding:48px 24px}.card{padding:28px 24px!important}.sub{font-size:16px}}
+.heard{margin:0 0 28px;text-align:center}
+.heard p{font-size:15px;font-weight:600;margin-bottom:12px}
+.heard-opts{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.heard-opts button{font:inherit;font-size:14px;min-height:44px;padding:8px 16px;border:1.5px solid var(--line);border-radius:6px;background:var(--paper);color:var(--ink);cursor:pointer}
+.heard-opts button:hover,.heard-opts button:focus-visible{border-color:var(--ink)}
 </style>
 <script>(function(){try{var m=window.matchMedia('(prefers-color-scheme: dark)'),s=function(){document.documentElement.setAttribute('data-theme','light');};s();if(m.addEventListener)m.addEventListener('change',s);}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
 
@@ -101,6 +106,18 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:40px 36px;posi
     <li><strong>Printed and sealed</strong><span>Your letter is printed, folded and sealed in an envelope with postage.</span></li>
     <li><strong>Mailed</strong><span>It goes into the mail within two business days. We email you when it does.</span></li>
   </ol>
+
+  <div class="heard" id="heard" hidden>
+    <p data-i18n="success.heard.q">How did you hear about us? (optional)</p>
+    <div class="heard-opts">
+      <button type="button" data-source="google">Google</button>
+      <button type="button" data-source="search" data-i18n="success.heard.search">Bing or another search</button>
+      <button type="button" data-source="ai" data-i18n="success.heard.ai">ChatGPT or another AI</button>
+      <button type="button" data-source="friend" data-i18n="success.heard.friend">Friend or family</button>
+      <button type="button" data-source="social" data-i18n="success.heard.social">Social media</button>
+      <button type="button" data-source="other" data-i18n="success.heard.other">Somewhere else</button>
+    </div>
+  </div>
 
   <p id="track-note" style="font-size:13px;color:var(--ink-muted);margin-bottom:28px;line-height:1.6"></p>
   <div id="account-prompt"></div>
@@ -181,10 +198,25 @@ function copyOrderNum(id) {
 
       <div class="detail-row"><span class="label">${LH_T('success.label.recipient')}</span><span class="val">${esc(data.recipientName)}${data.recipientCity ? ', ' + esc(data.recipientCity) : ''}</span></div>
       <div class="detail-row"><span class="label">${LH_T('success.label.destination')}</span><span class="val">${esc(destName)}</span></div>
-      <div class="detail-row"><span class="label">${LH_T('success.label.price')}</span><span class="val">${data.priceCents ? (data.priceCurrency === 'GBP' ? '£' : '$') + (data.priceCents / 100).toFixed(2) + (data.priceCurrency === 'GBP' ? '' : ' ' + (data.priceCurrency || 'CAD')) : '—'} CAD</span></div>
+      <div class="detail-row"><span class="label">${LH_T('success.label.price')}</span><span class="val">${data.priceCents ? (data.priceCurrency === 'GBP' ? '£' : '$') + (data.priceCents / 100).toFixed(2) + (data.priceCurrency === 'GBP' ? '' : ' ' + (data.priceCurrency || 'CAD')) : '—'}</span></div>
       <div class="detail-row"><span class="label">${LH_T('success.label.delivery')}</span><span class="val">${(isDomestic || isLocal) ? LH_T('success.dom.delivery') : LH_T('success.intl.delivery')}</span></div>
       <div class="detail-row"><span class="label">${LH_T('success.label.status')}</span><span class="val" style="color:var(--red)">${LH_T('success.status.val')}</span></div>
     `;
+
+    if (data.askHeardFrom) {
+      const box = document.getElementById('heard');
+      box.hidden = false;
+      box.querySelector('.heard-opts').addEventListener('click', e => {
+        const b = e.target.closest('button[data-source]');
+        if (!b) return;
+        fetch('/api/heard-from', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ session_id: sessionId, source: b.dataset.source }) }).catch(() => {});
+        box.innerHTML = '';
+        const thanks = document.createElement('p');
+        thanks.setAttribute('role', 'status');
+        thanks.textContent = LH_T('success.heard.thanks');
+        box.appendChild(thanks);
+      });
+    }
 
     const trackNote = document.getElementById('track-note');
     if (trackNote) trackNote.innerHTML = LH_T('success.track.note');
@@ -221,8 +253,8 @@ function copyOrderNum(id) {
 })();
 </script>
 <script src="/theme.js?v=4" defer></script>
-<script src="/lang-es.js?v=5" defer></script>
-<script src="/lang-fr.js?v=77" defer></script>
-<script src="/lang.js?v=77" defer></script>
+<script src="/lang-es.js?v=7" defer></script>
+<script src="/lang-fr.js?v=78" defer></script>
+<script src="/lang.js?v=78" defer></script>
 </body>
 </html>

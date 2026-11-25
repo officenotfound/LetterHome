@@ -2296,3 +2296,47 @@ test('site-config reports the owner-set Google rating and falls back to 5.0 for 
   assert.equal(await rating(), '5.0');
   db.prepare("DELETE FROM settings WHERE key = 'google_rating'").run();
 });
+
+test('tracking: order form problems are counted by code only, and only known codes', async () => {
+  const send = body => fetch(`${base}/api/funnel`, { method: 'POST', headers: { 'User-Agent': 'Mozilla/5.0 (iPhone) Mobile' }, body: JSON.stringify(body) });
+  const count = () => db.prepare("SELECT COUNT(*) n FROM form_problems").get().n;
+  const before = count();
+  assert.equal((await send({ problem: 'r-postal', country: 'CA' })).status, 204);
+  await send({ problem: 'jane@example.com' });
+  assert.equal(count(), before + 1);
+  assert.deepEqual({ ...db.prepare('SELECT code, device, country FROM form_problems ORDER BY id DESC LIMIT 1').get() }, { code: 'r-postal', device: 'phone', country: 'CA' });
+});
+
+test('tracking: heard-from is saved once, from the fixed list only', async () => {
+  db.prepare("INSERT INTO orders (customer_email, recipient_name, recipient_street, recipient_city, recipient_postal, destination_country, price_cents, status, stripe_session_id) VALUES ('h@example.com','R','1 St','Town','A1A 1A1','CA',600,'paid','cs_heard')").run();
+  const post = source => fetch(`${base}/api/heard-from`, { method: 'POST', headers: { 'Content-Type': 'application/json', Origin: base }, body: JSON.stringify({ session_id: 'cs_heard', source }) });
+  assert.equal((await post('<script>')).status, 400);
+  assert.deepEqual(await (await post('friend')).json(), { ok: true });
+  assert.deepEqual(await (await post('google')).json(), { ok: false });
+  assert.equal(db.prepare("SELECT heard_from FROM orders WHERE stripe_session_id = 'cs_heard'").get().heard_from, 'friend');
+});
+
+test('tracking: Clarity numbers are cached for four hours and a refused token is explained', async () => {
+  const { clarityInsights } = require('../tracking');
+  const store = { clarity_api_token: 't' };
+  const opts = { getSetting: (k, d) => store[k] ?? d, setSetting: (k, v) => { store[k] = v; } };
+  let calls = 0;
+  const ok = async () => { calls++; return { ok: true, json: async () => [{ metricName: 'Traffic', information: [{ totalSessionCount: '3' }] }] }; };
+  assert.equal((await clarityInsights({ ...opts, fetchImpl: ok, now: 1e12 })).metrics.length, 1);
+  await clarityInsights({ ...opts, fetchImpl: ok, now: 1e12 + 3600e3 });
+  assert.equal(calls, 1);
+  const refused = await clarityInsights({ ...opts, fetchImpl: async () => ({ ok: false, status: 401 }), now: 1e12 + 5 * 3600e3 });
+  assert.match(refused.error, /refused the API token/);
+  assert.equal(refused.metrics.length, 1);
+});
+
+test('tracking: Clarity loads only with a project ID and never for private pages', () => {
+  const { clarityLoader } = require('../tracking');
+  assert.equal(clarityLoader(''), '');
+  assert.equal(clarityLoader("x';alert(1)//"), '');
+  const js = clarityLoader('abcd1234ef');
+  assert.match(js, /clarity\.ms\/tag\//);
+  const priv = eval(js.match(/var PRIVATE=(\/.*\/);/)[1]);
+  for (const p of ['/send', '/uk/send', '/track', '/order-success', '/account', '/santa-letter', '/contact']) assert.ok(priv.test(p), p);
+  for (const p of ['/', '/send-a-letter-to-the-uk', '/guides', '/uk']) assert.ok(!priv.test(p), p);
+});

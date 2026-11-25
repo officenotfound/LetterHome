@@ -10,6 +10,7 @@ if (process.env.SENTRY_DSN) {
 }
 
 const ga4 = require('./ga4');
+const tracking = require('./tracking');
 const express      = require('express');
 const compression  = require('compression');
 const helmet       = require('helmet');
@@ -180,12 +181,16 @@ app.use(helmet({
                     'https://www.googletagmanager.com',
                     'https://www.google-analytics.com',
                     'https://static.cloudflareinsights.com',
-                    'https://analytics.ahrefs.com'],
+                    'https://analytics.ahrefs.com',
+                    'https://www.clarity.ms',
+                    'https://scripts.clarity.ms'],
       styleSrc:    ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
       fontSrc:     ["'self'", 'https://fonts.gstatic.com'],
       imgSrc:      ["'self'", 'data:',
                     'https://www.googletagmanager.com',
-                    'https://www.google-analytics.com'],
+                    'https://www.google-analytics.com',
+                    'https://*.clarity.ms',
+                    'https://c.bing.com'],
       connectSrc:  ["'self'",
                     'https://maps.googleapis.com',
                     'https://places.googleapis.com',
@@ -196,7 +201,9 @@ app.use(helmet({
                     'https://*.analytics.google.com',
                     'https://www.googletagmanager.com',
                     'https://cloudflareinsights.com',
-                    'https://analytics.ahrefs.com'],
+                    'https://analytics.ahrefs.com',
+                    'https://*.clarity.ms',
+                    'https://c.bing.com'],
       frameSrc:    ["'none'"],
       objectSrc:   ["'none'"],
       baseUri:     ["'self'"],
@@ -1376,7 +1383,8 @@ app.get('/ga.js', (req, res) => {
   // The measurement ID is public (it appears in every page that loads the tag). Each site has its own GA4 stream.
   const site = ga4.siteOfHost(req.hostname);
   const id = ga4.measurementIdFor(site);
-  const ahrefs = site === 'ca' ? ahrefsLoader : '';
+  // Ahrefs is letterhome.ca only; Clarity runs on every site once its project ID is saved in the admin settings.
+  const ahrefs = (site === 'ca' ? ahrefsLoader : '') + tracking.clarityLoader(getSetting('clarity_project_id', ''));
   res.setHeader('Content-Type', 'application/javascript');
   // Short cache: this file changes when the measurement ID is set or changed on the server.
   res.setHeader('Cache-Control', 'public, max-age=3600');
@@ -1755,7 +1763,7 @@ app.post('/api/letter-preview', pageCheckLimiter, uploadAttachments, async (req,
   } finally { for (const f of (req.files || [])) { try { fs.unlinkSync(f.path); } catch {} } }
 });
 
-app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) => {
+app.post('/api/create-order', tracking.countRefusals(db), orderLimiter, uploadAttachments, async (req, res) => {
   if (getSetting('service_paused', 'false') === 'true')
     return res.status(503).json({ error: 'Orders are currently paused. Please check back soon.' });
 
@@ -2148,6 +2156,7 @@ app.post('/api/funnel', funnelLimiter, express.text({ type: '*/*', limit: '1kb' 
   let body = req.body;
   if (typeof body === 'string') { try { body = JSON.parse(body); } catch { body = {}; } }
   if (body && FUNNEL_STEPS.has(body.step)) recordFunnel(body.step, body.country);
+  else if (body && tracking.CLIENT_PROBLEMS.has(body.problem)) tracking.recordProblem(db, req, body.problem, body.country);
   res.status(204).end();
 });
 
@@ -2164,7 +2173,16 @@ app.get('/api/order-status', trackLimiter, (req, res) => {
     destinationCountry: order.destination_country,
     priceCents:         order.charge_cents || order.price_cents,
     priceCurrency:      order.charge_currency || 'CAD',
+    askHeardFrom:       !order.heard_from,
   });
+});
+
+// "How did you hear about us?" on the confirmation page. One optional answer per order, from a fixed list.
+app.post('/api/heard-from', trackLimiter, (req, res) => {
+  const { session_id, source } = req.body || {};
+  if (typeof session_id !== 'string' || !session_id || !Object.hasOwn(tracking.HEARD_FROM, source)) return res.status(400).json({ error: 'Not saved.' });
+  const r = db.prepare('UPDATE orders SET heard_from = ? WHERE stripe_session_id = ? AND heard_from IS NULL').run(source, session_id);
+  res.json({ ok: r.changes > 0 });
 });
 
 app.post('/api/validate-code', trackLimiter, (req, res) => {
@@ -3957,7 +3975,16 @@ app.get('/api/admin/settings', requireAdmin, (req, res) => {
   const rows = db.prepare('SELECT key, value FROM settings').all();
   const obj = {};
   rows.forEach(r => { obj[r.key] = r.value; });
+  // The Clarity API token is write-only: the page is only told whether one is saved.
+  obj.clarity_api_token_set = obj.clarity_api_token ? 'true' : 'false';
+  delete obj.clarity_api_token;
+  delete obj.clarity_cache;
   res.json(obj);
+});
+
+app.get('/api/admin/clarity', requireAdmin, async (req, res) => {
+  try { res.json(await tracking.clarityInsights({ getSetting, setSetting })); }
+  catch (e) { console.error('[clarity]', e.message); res.status(500).json({ error: 'Could not load Clarity.' }); }
 });
 
 const ALLOWED_SETTING_KEYS = new Set([
@@ -3967,7 +3994,7 @@ const ALLOWED_SETTING_KEYS = new Set([
   'price_uk_cents', 'price_au_cents', 'us_domain_live', 'uk_domain_live',
   'cart_offer_enabled', 'cart_offer_pct', 'cart_offer_valid_days',
   'svc_ca_registered_cents', 'svc_ca_express_cents', 'svc_us_certified_cents', 'svc_us_express_cents',
-  'google_rating',
+  'google_rating', 'clarity_project_id', 'clarity_api_token',
 ]);
 
 app.post('/api/admin/settings', requireAdmin, (req, res) => {
@@ -3975,7 +4002,8 @@ app.post('/api/admin/settings', requireAdmin, (req, res) => {
   if (!key?.trim() || typeof value !== 'string') return res.status(400).json({ error: 'key and value are required' });
   if (!ALLOWED_SETTING_KEYS.has(key.trim())) return res.status(400).json({ error: 'Unknown setting key.' });
   setSetting(key.trim(), value);
-  logAudit(req, 'settings.change', 'settings', key.trim(), { value });
+  if (key.trim() === 'clarity_api_token') setSetting('clarity_cache', '{}');
+  logAudit(req, 'settings.change', 'settings', key.trim(), { value: key.trim() === 'clarity_api_token' ? '(hidden)' : value });
   res.json({ ok: true });
 });
 
@@ -3984,7 +4012,8 @@ app.post('/api/admin/settings/batch', requireAdmin, (req, res) => {
   for (const key of ALLOWED_SETTING_KEYS) {
     if (key in updates) setSetting(key, updates[key]);
   }
-  logAudit(req, 'settings.batch_update', 'settings', null, updates);
+  if ('clarity_api_token' in updates) setSetting('clarity_cache', '{}');   // a new token is tried at once
+  logAudit(req, 'settings.batch_update', 'settings', null, 'clarity_api_token' in updates ? { ...updates, clarity_api_token: '(hidden)' } : updates);
   res.json({ ok: true });
 });
 
@@ -4879,7 +4908,7 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:48px 36px 32px
 </div>
 <footer id="site-footer"></footer>
 <script src="/theme.js?v=4"></script>
-<script src="/lang.js?v=77" defer></script>
+<script src="/lang.js?v=78" defer></script>
 <script src="/footer.js?v=22" defer></script>
 </body>
 </html>`;

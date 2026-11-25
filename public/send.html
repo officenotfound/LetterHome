@@ -987,6 +987,14 @@ function track(step) {
   try { navigator.sendBeacon('/api/funnel', JSON.stringify({ step, country: document.getElementById('r-country')?.value || '' })); } catch (e) {}
 }
 
+// Counts what stops people (a field or file code only, never what was typed). Each is sent once per visit.
+const _reported = new Set();
+function reportProblem(problem) {
+  if (_reported.has(problem)) return;
+  _reported.add(problem);
+  try { navigator.sendBeacon('/api/funnel', JSON.stringify({ problem, country: document.getElementById('r-country')?.value || '' })); } catch (e) {}
+}
+
 function goTo(step) {
   document.getElementById('panel-' + currentStep).classList.remove('active');
   currentStep = step;
@@ -1289,14 +1297,17 @@ function handleFiles(input) {
     const ext  = ('.' + (f.name.split('.').pop() || '')).toLowerCase();
     const mime = f.type || '';
     if (!ALLOWED_EXT.includes(ext) || (mime && !ALLOWED_MIME.includes(mime))) {
+      reportProblem('file-type');
       rejected.push(`${f.name}: ${LH_T('send.file.badtype')}`);
       return;
     }
     if (f.size > MAX_FILE_BYTES) {
+      reportProblem('file-size');
       rejected.push(`${f.name}: ${LH_T('send.file.toobig')}`);
       return;
     }
     if (slotsLeft <= 0) {
+      reportProblem('file-count');
       rejected.push(`${f.name}: ${LH_T('send.file.limit')}`);
       return;
     }
@@ -1500,6 +1511,7 @@ function validateStep(step) {
       missing.push(LH_T('send.val.email'));
       markError('r-email');
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      reportProblem('r-email-invalid');
       missing.push(LH_T('send.val.email.valid'));
       markError('r-email');
     }
@@ -1509,14 +1521,18 @@ function validateStep(step) {
       missing.push(LH_T('send.val.letter'));
       markError('letter-body');
     }
-    if (window.letterTooLong && !missing.length) { showValidationBanner(window.letterTooLong, true); return false; }
+    if (window.letterTooLong && !missing.length) { reportProblem('letter-too-long'); showValidationBanner(window.letterTooLong, true); return false; }
   } else if (step === 3) {
     if (!document.getElementById('agree-terms').checked) {
+      reportProblem('agree-terms');
       missing.push(LH_T('send.val.terms'));
     }
   }
 
   if (missing.length) {
+    document.querySelectorAll('.field-error').forEach(el => {
+      if (!(el.id === 'r-email' && el.value.trim())) reportProblem(el.id);   // a filled but wrong email is counted above
+    });
     showValidationBanner(LH_T('send.val.prefix') + missing.join(' · '));
     const first = document.querySelector('.field-error');
     if (first) { first.scrollIntoView({ behavior: 'smooth', block: 'center' }); setTimeout(() => first.focus(), 400); }
@@ -1667,13 +1683,16 @@ async function submitOrder() {
   if (window.letterTooLong) {
     btn.disabled = false;
     btn.textContent = LH_T('send.btn.pay');
+    reportProblem('letter-too-long');
     showValidationBanner(window.letterTooLong);
     return;
   }
   track('pay_click');
+  let answered = false;   // refusals the server answers with are counted on the server
   try {
     const res  = await fetch('/api/create-order', { method: 'POST', body: form });
     const data = await res.json();
+    answered = true;
     if (data.checkoutUrl) {
       btn.innerHTML = `<span style="display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,0.4);border-top-color:#fff;border-radius:50%;animation:lh-spin 0.7s linear infinite;vertical-align:middle;margin-right:8px"></span>${LH_T('send.redirecting')}`;
       _leavingForCheckout = true;
@@ -1682,6 +1701,7 @@ async function submitOrder() {
       throw new Error(data.error || 'Unknown error');
     }
   } catch (err) {
+    if (!answered) reportProblem('network');
     btn.disabled = false;
     btn.textContent = LH_T('send.btn.pay');
     showValidationBanner(/pages|envelope|sheet/i.test(err.message || '') ? err.message : LH_T('send.err.submit'));
@@ -1979,9 +1999,9 @@ function fillSavedRecipient(sel) {
   } catch(e) {}
 }
 </script>
-<script src="/lang-es.js?v=6" defer></script>
-<script src="/lang-fr.js?v=77" defer></script>
-<script src="/lang.js?v=77" defer></script>
+<script src="/lang-es.js?v=7" defer></script>
+<script src="/lang-fr.js?v=78" defer></script>
+<script src="/lang.js?v=78" defer></script>
 <script type="module">
   import * as pdfjsLib from '/vendor/pdfjs/pdf.min.mjs';
   pdfjsLib.GlobalWorkerOptions.workerSrc = '/vendor/pdfjs/pdf.worker.min.mjs';

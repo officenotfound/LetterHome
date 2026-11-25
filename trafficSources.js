@@ -170,8 +170,24 @@ function register(app, { db, requireAdmin }) {
         `SELECT path, country_name, referrer, created_at FROM page_views
          WHERE COALESCE(bot_name, '') = '' AND source = 'ai' AND created_at >= datetime('now', ?)${pv} ORDER BY id DESC LIMIT 15`).all(win);
 
+      // Which first page led to paid orders, and what customers say when asked after paying.
+      const paid = `status != 'awaiting_payment' AND deleted_at IS NULL AND split_from IS NULL AND created_at >= datetime('now', ?)${ord}`;
+      const byPath = {};
+      const page = path => (byPath[path] = byPath[path] || { path, visitors: 0, orders: 0, revenue_cents: 0 });
+      for (const r of first) page(r.path).visitors++;
+      for (const o of db.prepare(`SELECT landing_path AS path, COUNT(*) AS n, COALESCE(SUM(price_cents), 0) AS cents
+          FROM orders WHERE ${paid} AND COALESCE(landing_path, '') != '' GROUP BY landing_path`).all(win)) {
+        Object.assign(page(o.path), { orders: o.n, revenue_cents: o.cents });
+      }
+      const pages = Object.values(byPath).sort((a, b) => b.orders - a.orders || b.revenue_cents - a.revenue_cents || b.visitors - a.visitors).slice(0, 25);
+      let heard = [];
+      try {
+        heard = db.prepare(`SELECT heard_from AS source, COUNT(*) AS n FROM orders WHERE ${paid} AND heard_from IS NOT NULL GROUP BY heard_from ORDER BY n DESC`).all(win)
+          .map(h => ({ ...h, label: require('./tracking').HEARD_FROM[h.source] || h.source }));
+      } catch {}
+
       res.json({
-        days, site, sources, landing: landingTop, untagged_orders: untagged,
+        days, site, pages, heard, sources, landing: landingTop, untagged_orders: untagged,
         people_views: totals.people || 0, bot_views: totals.bots || 0,
         crawlers: crawlerList, recent_ai: recentAi,
         since: db.prepare("SELECT MIN(created_at) AS t FROM page_views WHERE source IS NOT NULL AND bot_name IS NOT NULL").get().t,

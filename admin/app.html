@@ -4246,6 +4246,14 @@ async function showSettings() {
             <input id="setting-google-rating" type="number" min="1" max="5" step="0.1" value="${esc(settings['google_rating'] || '5.0')}" class="narrow">
           </div>
           <div class="set-row">
+            <div class="set-txt"><h3>Microsoft Clarity project ID</h3><p>From clarity.microsoft.com. Turns on click maps and replays for information pages only. Leave empty to keep it off.</p></div>
+            <input id="setting-clarity" type="text" maxlength="20" autocapitalize="off" autocomplete="off" spellcheck="false" value="${esc(settings['clarity_project_id'] || '')}" style="max-width:180px">
+          </div>
+          <div class="set-row">
+            <div class="set-txt"><h3>Clarity API token</h3><p>Shows Clarity's numbers on the Traffic screen. In Clarity: Settings, Data Export, Generate new API token. ${settings['clarity_api_token_set'] === 'true' ? '<b>A token is saved.</b> Leave empty to keep it.' : 'No token saved.'}</p></div>
+            <input id="setting-clarity-token" type="password" autocomplete="new-password" style="max-width:180px">
+          </div>
+          <div class="set-row">
             <div class="set-txt"><h3>Daily order cap</h3><p>Stop taking orders after this many a day. 0 means no limit.</p></div>
             <input id="setting-daily-cap" type="number" min="0" value="${dailyCap}" class="narrow">
           </div>
@@ -4395,7 +4403,9 @@ async function saveAllSettings() {
   const dailyCap     = parseInt(document.getElementById('setting-daily-cap')?.value) || 0;
   const blocked      = JSON.stringify(window._blockedCountries || []);
 
+  const clarityToken = (document.getElementById('setting-clarity-token')?.value || '').trim();
   const r = await post('/api/admin/settings/batch', {
+    ...(clarityToken ? { clarity_api_token: clarityToken } : {}),
     announcement,
     price_domestic_cents:      String(priceDom),
     price_usa_cents:           String(priceUsa),
@@ -4405,6 +4415,7 @@ async function saveAllSettings() {
     daily_order_cap:           String(dailyCap),
     blocked_countries:         blocked,
     google_rating:             document.getElementById('setting-google-rating')?.value || '5.0',
+    clarity_project_id:        (document.getElementById('setting-clarity')?.value || '').trim().toLowerCase(),
   });
   const msg = document.getElementById('settings-saved-msg');
   if (r?.ok && msg) {
@@ -5370,6 +5381,19 @@ async function deleteGrowth(id) {
 }
 
 let funnelDays = 30, funnelSite = 'all';
+const PROBLEM_LABELS = {
+  's-name': 'Sender name left empty', 's-street': 'Sender street left empty', 's-city': 'Sender city left empty', 's-province': 'Sender province left empty',
+  's-postal': 'Sender postal code left empty', 's-country': 'Sender country left empty', 'r-name': 'Recipient name left empty', 'r-street': 'Recipient street left empty',
+  'r-city': 'Recipient city left empty', 'r-postal': 'Recipient postal code left empty', 'r-province': 'Recipient province not picked', 'r-province-text': 'Recipient state left empty',
+  'r-email': 'Email left empty', 'r-email-invalid': 'Email typed wrong', 'letter-body': 'No letter written or attached', 'letter-too-long': 'Letter too long',
+  'agree-terms': 'Terms box not ticked', 'file-type': 'File type not accepted', 'file-size': 'File too big', 'file-count': 'Too many files', 'network': 'Pay failed: no answer from server',
+  'srv-paused': 'Refused: orders paused', 'srv-missing': 'Refused: fields missing', 'srv-email': 'Refused: bad email', 'srv-santa': 'Refused: Santa letter not available',
+  'srv-destination': 'Refused: country not served', 'srv-daily-limit': 'Refused: daily order limit', 'srv-service': 'Refused: mail service not offered there',
+  'srv-no-letter': 'Refused: no letter', 'srv-date': 'Refused: send date', 'srv-file-size': 'Upload refused: too big', 'srv-file-count': 'Upload refused: too many files',
+  'srv-file-virus': 'Upload refused: virus scan', 'srv-file-bad': 'Upload refused: file not readable', 'srv-too-long': 'Refused: too many pages', 'srv-rate-limit': 'Refused: too many tries',
+  'srv-error': 'Pay failed: server error', 'srv-other': 'Refused: other reason',
+};
+
 async function showFunnel(days, site) {
   if (days) funnelDays = days;
   if (site) funnelSite = site;
@@ -5402,13 +5426,42 @@ async function showFunnel(days, site) {
   }).join('');
   const wmax = Math.max(1, ...f.weekly.map(w => w.cents));
   const weekly = f.weekly.map(w => `<tr><td>${esc(w.week)}</td><td style="text-align:right">${nf(w.orders)}</td><td style="text-align:right">${cad(w.cents)}</td><td style="width:40%"><div style="background:#15803d;height:10px;width:${Math.max(1, Math.round(w.cents / wmax * 100))}%"></div></td></tr>`);
+  const stuck = (f.problems || []).map(x => `<tr><td>${esc(PROBLEM_LABELS[x.code] || x.code)}</td><td style="text-align:right">${nf(x.phone)}</td><td style="text-align:right">${nf(x.computer)}</td></tr>`);
+  const stuckCard = `<div class="card"><div class="card-header"><div class="card-title">Where people get stuck on the order form</div></div>${tbl(['Problem', 'Phone', 'Computer'], stuck, 'Nothing recorded yet. Counting starts when this is deployed.')}</div>`;
   const note = `<div style="font-size:12px;color:#6b6b6b;margin-bottom:20px">The "mailed" email, which carries the one quiet review line, went out ${nf(f.mailed_emails)} time${f.mailed_emails === 1 ? '' : 's'} in this period. Review counts live on your Google profile. Visitors are unique addresses seen by the site's own counter. The checkout steps are not split by site, so they stay the same whichever site you pick. A big drop between two steps is where to look first.</div>`;
   setMain(ctl + kpis + note +
-    `<div class="card"><div class="card-header"><div class="card-title">Checkout funnel, last ${f.days} days</div></div><table><tbody>${funnel}</tbody></table></div>` +
+    `<div class="card"><div class="card-header"><div class="card-title">Checkout funnel, last ${f.days} days</div></div><table><tbody>${funnel}</tbody></table></div>` + stuckCard +
     `<div class="card"><div class="card-header"><div class="card-title">Orders per week</div></div>${tbl(['Week', 'Orders', 'Revenue', ''], weekly, 'No paid orders in this period.')}</div>` +
     `<div class="card"><div class="card-header"><div class="card-title">By destination</div></div>${tbl(['Country', 'Orders', 'Revenue'], f.byCountry.map(c => `<tr><td>${esc(c.country)}</td><td style="text-align:right">${nf(c.orders)}</td><td style="text-align:right">${cad(c.cents)}</td></tr>`), 'None yet.')}</div>` +
     `<div class="card"><div class="card-header"><div class="card-title">By site</div></div>${tbl(['Site', 'Orders', 'Revenue'], f.bySite.map(c => `<tr><td>${esc(SITE_LABELS[c.site] || c.site)}</td><td style="text-align:right">${nf(c.orders)}</td><td style="text-align:right">${cad(c.cents)}</td></tr>`), 'None yet.')}</div>` +
     `<div class="card"><div class="card-header"><div class="card-title">Most visited pages</div></div>${tbl(['Page', 'Views'], f.topPages.map(c => `<tr><td style="font-family:monospace;font-size:12px">${esc(c.path)}</td><td style="text-align:right">${nf(c.n)}</td></tr>`), 'No visits recorded.')}</div>`);
+}
+
+// Clarity's metrics are shown as it sends them: one small table per metric.
+function clarityCard(c) {
+  const head = '<div class="card"><div class="card-header"><div class="card-title">Microsoft Clarity, last 3 days</div></div><div style="padding:12px 16px;font-size:13px">';
+  if (!c) return head + 'Could not load Clarity.</div></div>';
+  if (!c.configured) return head + (c.project
+    ? 'Clarity is recording. To see its numbers here, add the API token under <a href="/admin/settings" onclick="event.preventDefault();go(\'/admin/settings\')">Settings</a>.'
+    : 'Not set up yet. Add the project ID and API token under <a href="/admin/settings" onclick="event.preventDefault();go(\'/admin/settings\')">Settings</a>.') + '</div></div>';
+  const words = k => esc(String(k).replace(/([a-z])([A-Z])/g, '$1 $2').replace(/^./, x => x.toUpperCase()));
+  const blocks = (c.metrics || []).map(m => {
+    const rows = (m.information || []).slice(0, 8).map(row => Object.entries(row).filter(([, v]) => v !== null && v !== '')
+      .map(([k, v]) => `<tr><td>${words(k)}</td><td style="text-align:right;overflow-wrap:anywhere">${esc(String(v))}</td></tr>`).join('')).join('');
+    return rows ? `<details style="margin-bottom:8px"${m.metricName === 'Traffic' ? ' open' : ''}><summary style="cursor:pointer;font-weight:600">${words(m.metricName)}</summary><table class="fit" style="margin-top:6px"><tbody>${rows}</tbody></table></details>` : '';
+  }).join('');
+  const when = c.at ? `<div style="color:#6b6b6b;margin-top:8px">Fetched ${esc(new Date(c.at).toLocaleString())}. Updates at most every 4 hours.</div>` : '';
+  return head + (c.error ? `<p style="color:#c1121f;margin-bottom:8px">${esc(c.error)}</p>` : '') + (blocks || 'No data from Clarity yet.') + when + '</div></div>';
+}
+
+function dashboardLinks(project) {
+  const links = [
+    ['Clarity replays and heatmaps', /^[a-z0-9]{6,20}$/.test(project || '') ? `https://clarity.microsoft.com/projects/view/${project}/dashboard` : 'https://clarity.microsoft.com/'],
+    ['Google Analytics', 'https://analytics.google.com/'], ['Search Console', 'https://search.google.com/search-console'],
+    ['Bing Webmaster', 'https://www.bing.com/webmasters'], ['Ahrefs Web Analytics', 'https://app.ahrefs.com/web-analytics'],
+    ['Stripe', 'https://dashboard.stripe.com/'],
+  ];
+  return `<div class="card"><div class="card-header"><div class="card-title">Your other dashboards</div></div><div style="padding:12px 16px;display:flex;gap:8px;flex-wrap:wrap">${links.map(l => `<a class="btn btn-outline" href="${l[1]}" target="_blank" rel="noopener noreferrer">${l[0]}</a>`).join('')}</div></div>`;
 }
 
 let trafficDays = 30, trafficSite = 'all';
@@ -5417,7 +5470,7 @@ async function showTraffic(days, site) {
   if (site) trafficSite = site;
   setTitle('Traffic sources');
   setMain('<div class="empty">Loading…</div>');
-  const t = await api(`/api/admin/traffic?days=${trafficDays}&site=${trafficSite}`);
+  const [t, clarity] = await Promise.all([api(`/api/admin/traffic?days=${trafficDays}&site=${trafficSite}`), api('/api/admin/clarity')]);
   if (!t) return setMain('<div class="empty">Could not load this section.</div>');
   const ctl = `<div style="display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap;align-items:center">
     ${[7, 30, 90].map(d => `<button class="filter-btn ${trafficDays === d ? 'active' : ''}" onclick="showTraffic(${d})">${d} days</button>`).join('')}
@@ -5441,8 +5494,10 @@ async function showTraffic(days, site) {
   const crawl = t.crawlers.map(c => `<tr><td>${esc(c.bot)}${c.ai ? ' <span style="color:#15803d;font-size:11px">AI</span>' : ''}</td><td style="text-align:right">${nf(c.hits)}</td><td style="font-family:monospace;font-size:11px;color:#555">${c.pages.slice(0, 3).map(p => esc(p.path) + ' (' + p.hits + ')').join('<br>')}</td></tr>`);
   const recent = t.recent_ai.map(r => `<tr><td style="font-size:12px;white-space:nowrap">${esc(String(r.created_at).slice(0, 16))}</td><td style="font-family:monospace;font-size:12px">${esc(r.path)}</td><td>${esc(r.country_name || '')}</td><td style="font-size:12px;color:#666">${esc(r.referrer || 'tagged link')}</td></tr>`);
   const note = `<div style="font-size:12px;color:#6b6b6b;margin-bottom:20px">A visitor is counted once, by the page they opened first in this period and how they got there. Visitors are told apart by internet address, so two people on one network count as one. Source tracking started ${t.since ? esc(String(t.since).slice(0, 10)) : 'when this was deployed'}. Earlier visits are sorted by referring site only, so an AI visit that carried no referrer shows as Direct. Orders are tagged from the day this was deployed.</div>`;
-  setMain(ctl + kpis + note +
+  setMain(ctl + dashboardLinks(clarity?.project) + kpis + note +
     `<div class="card"><div class="card-header"><div class="card-title">Where visitors came from, last ${t.days} days</div></div>${tbl(['Source', 'Visitors', '', 'Orders', 'Revenue', 'Orders per visitor'], rows, 'No visits in this period.')}</div>` +
+    `<div class="card"><div class="card-header"><div class="card-title">Which first pages bring paying customers</div></div>${tbl(['Page', 'Visitors', 'Orders', 'Revenue'], (t.pages || []).map(p => `<tr><td style="font-family:monospace;font-size:12px;overflow-wrap:anywhere">${esc(p.path)}</td><td style="text-align:right">${nf(p.visitors)}</td><td style="text-align:right">${nf(p.orders)}</td><td style="text-align:right">${cad(p.revenue_cents)}</td></tr>`), 'No visits in this period.')}</div>` +
+    `<div class="card"><div class="card-header"><div class="card-title">How customers say they heard of us</div></div>${tbl(['Answer', 'Orders'], (t.heard || []).map(h => `<tr><td>${esc(h.label)}</td><td style="text-align:right">${nf(h.n)}</td></tr>`), 'No answers yet.')}</div>` + clarityCard(clarity) +
     `<div class="card"><div class="card-header"><div class="card-title">First page opened, by source</div></div><div style="padding:12px 16px">${lands || '<div class="empty">No visits yet.</div>'}</div></div>` +
     `<div class="card"><div class="card-header"><div class="card-title">Latest visits from AI assistants</div></div>${tbl(['Time (UTC)', 'Page', 'Country', 'Came from'], recent, 'None in this period.')}</div>` +
     `<div class="card"><div class="card-header"><div class="card-title">Crawlers and what they read</div></div>${tbl(['Crawler', 'Hits', 'Top pages'], crawl, 'No crawler visits recorded yet.')}</div>`);

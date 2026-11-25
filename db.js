@@ -73,6 +73,7 @@ try { db.exec(`ALTER TABLE orders ADD COLUMN split_from INTEGER`);        } catc
 try { db.exec(`ALTER TABLE orders ADD COLUMN santa_separate INTEGER`); } catch {}   // 1 when the customer chose a separate envelope for each child on a Santa order with two letters
 try { db.exec(`ALTER TABLE orders ADD COLUMN order_site TEXT`);          } catch {}   // which site took the order: ca, us or uk
 try { db.exec(`ALTER TABLE orders ADD COLUMN order_lang TEXT`);          } catch {}   // 'es' when the order was placed in Spanish (emails and status page follow it)
+try { db.exec(`ALTER TABLE orders ADD COLUMN heard_from TEXT`);          } catch {}   // optional answer to "How did you hear about us?" after payment
 try { db.exec(`ALTER TABLE orders ADD COLUMN charge_currency TEXT`);     } catch {}   // set for fixed-price US, UK and AU orders; empty means CAD
 try { db.exec(`ALTER TABLE orders ADD COLUMN charge_cents INTEGER`);    } catch {}   // what the customer paid in charge_currency; price_cents stays CAD for reports
 try { db.exec(`ALTER TABLE orders ADD COLUMN order_region TEXT`);     } catch {}   // which page family took the order: ca, au, us or uk (au = the Australian pages on letterhome.ca)
@@ -225,6 +226,15 @@ db.exec(`
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
   CREATE INDEX IF NOT EXISTS idx_funnel_day_step ON funnel_events(day, step);
+  CREATE TABLE IF NOT EXISTS form_problems (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    code       TEXT NOT NULL,
+    device     TEXT NOT NULL,
+    country    TEXT,
+    day        TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+  CREATE INDEX IF NOT EXISTS idx_form_problems_day ON form_problems(day);
 `);
 try { db.exec(`CREATE INDEX IF NOT EXISTS idx_orders_email      ON orders(customer_email)`); } catch {}
 try { db.exec(`CREATE INDEX IF NOT EXISTS idx_orders_status     ON orders(status)`);         } catch {}
