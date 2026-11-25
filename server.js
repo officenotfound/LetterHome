@@ -1182,6 +1182,16 @@ Object.entries(REGION_REDIRECTS).forEach(([from, to]) =>
  'where-to-mail-quebec-vital-statistics-documents',
  'where-to-mail-manitoba-vital-statistics-documents',
  'where-to-mail-a-canadian-passport-application',
+ 'where-to-mail-saskatchewan-birth-certificate-application',
+ 'where-to-mail-nova-scotia-birth-certificate-application',
+ 'where-to-mail-new-brunswick-birth-certificate-application',
+ 'where-to-mail-pei-birth-certificate-application',
+ 'where-to-mail-newfoundland-birth-certificate-application',
+ 'where-to-mail-documents-icas-canada',
+ 'where-to-mail-documents-york-university',
+ 'where-to-mail-documents-carleton-university',
+ 'where-to-mail-documents-university-of-calgary',
+ 'where-to-mail-documents-university-of-guelph',
 ].forEach(p =>
   app.get(`/${p}`, (req, res) =>
     res.sendFile(path.join(__dirname, 'public', `${p}.html`))
