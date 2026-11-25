@@ -659,3 +659,12 @@ html[data-theme="dark"]:not([data-country]) body main.ab h1.ab-logo .logo-accent
 
 /* Phone tap targets: at least 24px tall for footer links and the header tracking link. */
 @media(max-width:900px){html body footer.lh-footer .lh-f-row a,html body footer.lh-footer .lh-f-in2 a{min-height:24px!important;padding-block:2px!important;box-sizing:border-box}nav .nav-track{padding-block:10px!important}}
+
+/* Closing call-to-action boxes: the same clear space between the line of text and the button on every page. */
+:root body:not(#x) :is(.cta-block,.cta-band) p:has(+ a){margin-bottom:0!important}
+:root body:not(#x) :is(.cta-block,.cta-band) p + a{margin-top:28px!important}
+:root body:not(#x) .lh-rail-card .lh-rail-text{margin-bottom:0!important}
+:root body:not(#x) .lh-rail-card .lh-rail-text + a.lh-rail-btn{margin-top:24px!important}
+:root body:not(#x) .rate-includes ul + a.btn{margin-top:24px!important}
+/* Boxed notes need room between the text and the border. */
+:root body:not([class*="c-"]):not(#x) .note{padding:14px 18px!important}
