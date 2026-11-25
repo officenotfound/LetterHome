@@ -1053,7 +1053,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
 
 // Business portal (test): has its own larger body parser for CSV batches, so it is mounted before the global 64 kB one.
 const business = require('./business');
-business.registerPortal(app, { db, getSetting, sendMail, notifyOwner: (...a) => sendOwnerMail(...a) });
+business.registerPortal(app, { db, getSetting, sendMail, notifyOwner: (...a) => sendOwnerMail(...a), endSessions });
 
 app.use(express.json({ limit: '64kb' }));
 app.use(express.urlencoded({ limit: '64kb', extended: true }));
@@ -1588,6 +1588,21 @@ function envAdminAccounts() {
   ].filter(a => a.user && a.hash);
 }
 let adminUsersApi = null;
+
+// Ends every open session that matches, except the one in keepSid. Used when a password changes or is reset,
+// so a stolen or forgotten open session stops working at once.
+const SESSIONS_DIR = path.resolve('./sessions');
+function endSessions(match, keepSid) {
+  let ended = 0;
+  try {
+    for (const f of fs.readdirSync(SESSIONS_DIR)) {
+      if (!f.endsWith('.json') || (keepSid && f === keepSid + '.json')) continue;
+      const file = path.join(SESSIONS_DIR, f);
+      try { if (match(JSON.parse(fs.readFileSync(file, 'utf8')))) { fs.unlinkSync(file); ended++; } } catch {}
+    }
+  } catch {}
+  return ended;
+}
 
 function requireAdmin(req, res, next) {
   // An account that was removed (here or from the server settings) loses its open sessions at once, not after 30 days.
@@ -2256,7 +2271,7 @@ app.use('/api/admin', (req, res, next) => {
 });
 
 // Business accounts and batch approvals (after the admin CSRF middleware above, so every change is protected).
-business.registerAdmin(app, { db, requireAdmin, logAudit, getSetting, setSetting });
+business.registerAdmin(app, { db, requireAdmin, logAudit, getSetting, setSetting, endSessions });
 
 // Search Console import, funnel and revenue, server health, restore drill and the content audit.
 const indexNow = require('./indexnow').create({
@@ -2265,7 +2280,7 @@ const indexNow = require('./indexnow').create({
 });
 const ops = require('./opsAlerts').createOps({ db, sendOwnerMail: (...a) => sendOwnerMail(...a), contentHeld: o => contentHeld(o) });
 traffic.register(app, { db, requireAdmin });
-adminUsersApi = require('./adminUsers').register(app, { db, requireAdmin, logAudit, envAccounts: envAdminAccounts });
+adminUsersApi = require('./adminUsers').register(app, { db, requireAdmin, logAudit, envAccounts: envAdminAccounts, endSessions });
 const adminTools = require('./adminTools').register(app, {
   db, requireAdmin, logAudit, getSetting, indexNow,
   backupDir: process.env.BACKUP_DIR || path.join(__dirname, 'backups'),
@@ -3191,6 +3206,7 @@ app.post('/api/admin/customers/:email/reset-password', requireAdmin, async (req,
   if (pwErr) return res.status(400).json({ error: pwErr });
   const hash = await bcrypt.hash(new_password, 12);
   db.prepare('UPDATE customers SET password_hash = ? WHERE email = ?').run(hash, email);
+  endSessions(s => s.customer?.email === email);
   logAudit(req, 'customer.password_reset', 'customer', email);
   sendMail({
     from:    process.env.EMAIL_FROM,
@@ -3209,6 +3225,7 @@ app.post('/api/admin/customers/:email/remove-account', requireAdmin, (req, res) 
   if (!customer) return res.status(404).json({ error: 'Customer not found.' });
   if (!customer.password_hash) return res.status(400).json({ error: 'This customer does not have an account.' });
   db.prepare('UPDATE customers SET password_hash = NULL, account_created_at = NULL WHERE email = ?').run(email);
+  endSessions(s => s.customer?.email === email);
   db.prepare('DELETE FROM saved_recipients WHERE customer_email = ?').run(email);
   logAudit(req, 'customer.account_removed', 'customer', email);
   res.json({ ok: true });
@@ -4330,6 +4347,7 @@ app.post('/api/account/reset-password', accountLimiter, async (req, res) => {
 
     const hash = await bcrypt.hash(password, 12);
     db.prepare('UPDATE customers SET password_hash = ?, email_verified_at = COALESCE(email_verified_at, CURRENT_TIMESTAMP) WHERE email = ?').run(hash, email);
+    endSessions(s => s.customer?.email === email);
     sendMail({
       from:    process.env.EMAIL_FROM,
       to:      email,
@@ -4407,6 +4425,7 @@ app.put('/api/account/password', requireCustomer, accountLimiter, async (req, re
     }
     const hash = await bcrypt.hash(new_password, 12);
     db.prepare('UPDATE customers SET password_hash = ? WHERE email = ?').run(hash, email);
+    endSessions(s => s.customer?.email === email, req.sessionID);
     sendMail({
       from:    process.env.EMAIL_FROM,
       to:      email,
@@ -5538,6 +5557,12 @@ function applyCartOffer(order, rawCode) {
   const price = Math.max(50, gross - off);
   db.prepare('UPDATE orders SET discount_code = ?, discount_cents = ?, price_cents = ? WHERE id = ? AND status = \'awaiting_payment\'').run(dc.code, gross - price, price, order.id);
   order.discount_code = dc.code; order.discount_cents = gross - price; order.price_cents = price;
+  // A local-currency order is charged from charge_cents, so the same percentage comes off that amount too.
+  if (order.charge_cents && String(order.charge_currency || 'CAD').toUpperCase() !== 'CAD') {
+    const charge = Math.max(50, order.charge_cents - Math.round(order.charge_cents * dc.discount_pct / 100));
+    db.prepare('UPDATE orders SET charge_cents = ? WHERE id = ? AND status = \'awaiting_payment\'').run(charge, order.id);
+    order.charge_cents = charge;
+  }
   return true;
 }
 

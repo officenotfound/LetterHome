@@ -2202,3 +2202,37 @@ test('orders CSV export puts a space in front of cells that start with a formula
   assert.ok(t.includes('" =HYPERLINK('), 'formula cell is neutralised');
   assert.ok(!t.includes('"=HYPERLINK('), 'no cell starts with the formula');
 });
+
+test('resetting a customer password ends that customer\'s open sessions and leaves other people\'s alone', async () => {
+  const bcrypt = require('bcryptjs');
+  const dir = path.resolve('./sessions');
+  fs.mkdirSync(dir, { recursive: true });
+  const email = `sess-${randomUUID().slice(0, 8)}@example.com`;
+  db.prepare('INSERT INTO customers (email, password_hash, email_verified_at) VALUES (?,?,CURRENT_TIMESTAMP)').run(email, bcrypt.hashSync('Old-password-1234!', 4));
+  const mk = (sid, customerEmail) => fs.writeFileSync(path.join(dir, `${sid}.json`), JSON.stringify({ cookie: { originalMaxAge: 1000000 }, customer: { email: customerEmail } }));
+  const mine = `testsess-${randomUUID()}`, other = `testsess-${randomUUID()}`;
+  mk(mine, email); mk(other, 'someone-else@example.com');
+  const { cookie, csrfToken } = await loginAdmin();
+  const r = await fetch(`${base}/api/admin/customers/${encodeURIComponent(email)}/reset-password`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json', Cookie: cookie, 'X-CSRF-Token': csrfToken },
+    body: JSON.stringify({ new_password: 'A-brand-new-pass-9137!' }),
+  });
+  await r.text();
+  assert.equal(r.status, 200);
+  assert.equal(fs.existsSync(path.join(dir, `${mine}.json`)), false, 'the customer\'s old session is gone');
+  assert.equal(fs.existsSync(path.join(dir, `${other}.json`)), true, 'another customer\'s session is untouched');
+  fs.unlinkSync(path.join(dir, `${other}.json`));
+});
+
+test('a resumed local-currency order gets the cart offer discount on the amount that is charged', async () => {
+  const id = db.prepare('SELECT id FROM orders WHERE stripe_session_id = ?').get(seedOrder({ status: 'awaiting_payment' })).id;
+  db.prepare("UPDATE orders SET price_cents = 800, charge_currency = 'GBP', charge_cents = 450, cart_offer_code = 'BACK10', status_token = ? WHERE id = ?").run(`tok-${randomUUID()}`, id);
+  db.prepare("INSERT OR REPLACE INTO discount_codes (code, discount_pct, active) VALUES ('BACK10', 10, 1)").run();
+  const tok = db.prepare('SELECT status_token FROM orders WHERE id = ?').get(id).status_token;
+  const r = await fetch(`${base}/resume/${tok}?code=BACK10`, { redirect: 'manual' });
+  await r.text();
+  const o = db.prepare('SELECT price_cents, charge_cents, discount_code FROM orders WHERE id = ?').get(id);
+  assert.equal(o.discount_code, 'BACK10');
+  assert.equal(o.price_cents, 720);
+  assert.equal(o.charge_cents, 405, '10% off the 4.50 pound charge');
+});

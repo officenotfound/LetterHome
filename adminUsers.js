@@ -6,7 +6,7 @@ const { Secret, TOTP } = require('otpauth');
 
 const NAME = /^[a-z0-9][a-z0-9._-]{2,31}$/i;
 
-function register(app, { db, requireAdmin, logAudit, envAccounts }) {
+function register(app, { db, requireAdmin, logAudit, envAccounts, endSessions = () => 0 }) {
   const envNames = () => envAccounts().map(a => a.user.toLowerCase());
   const dbUser = name => db.prepare('SELECT username, password_hash, totp_secret, created_at, created_by FROM admin_users WHERE username = ?').get(String(name || ''));
 
@@ -61,6 +61,7 @@ function register(app, { db, requireAdmin, logAudit, envAccounts }) {
       if (!dbUser(username)) return res.status(404).json({ error: 'That account was not added here, so its password is set in the server settings.' });
       if (password.length < 12) return res.status(400).json({ error: 'Use a password of at least 12 characters.' });
       db.prepare('UPDATE admin_users SET password_hash = ? WHERE username = ?').run(await bcrypt.hash(password, 12), username);
+      endSessions(s => s.admin?.username === username, req.sessionID);
       logAudit(req, 'admin_user.password', 'admin_user', username, {});
       res.json({ ok: true });
     } catch (e) { res.status(500).json({ error: e.message }); }
@@ -73,6 +74,7 @@ function register(app, { db, requireAdmin, logAudit, envAccounts }) {
       if (!dbUser(username)) return res.status(404).json({ error: 'That account was not added here.' });
       const secret = newSecret();
       db.prepare('UPDATE admin_users SET totp_secret = ? WHERE username = ?').run(secret.base32, username);
+      endSessions(s => s.admin?.username === username, req.sessionID);
       logAudit(req, 'admin_user.reset_2fa', 'admin_user', username, {});
       res.json({ ok: true, secret: secret.base32, uri: uriFor(username, secret) });
     } catch (e) { res.status(500).json({ error: e.message }); }

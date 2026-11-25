@@ -47,20 +47,32 @@ public class MainActivity extends Activity {
             + "<a href='https://letterhome.ca/admin' style='display:inline-block;padding:12px 22px;background:#222;color:#fff;border-radius:8px;text-decoration:none'>Try again</a></body>";
 
     /** What the admin's Settings screen can read and change inside the app. */
+    /** The address of the page now showing. The bridge answers only on the admin pages, so a public page loaded in this view can't use it. */
+    private volatile String pageUrl = "";
+    private boolean adminPage() {
+        try {
+            Uri u = Uri.parse(pageUrl);
+            String p = u.getPath() == null ? "" : u.getPath();
+            return "https".equals(u.getScheme()) && "letterhome.ca".equals(u.getHost()) && (p.equals("/admin") || p.startsWith("/admin/"));
+        } catch (Throwable e) { return false; }
+    }
     public class Bridge {
         @JavascriptInterface public String get() {
+            if (!adminPage()) return "{}";
             SharedPreferences sp = getSharedPreferences("ui", MODE_PRIVATE);
             return "{\"quietOn\":" + sp.getBoolean("quiet_on", false) + ",\"start\":" + sp.getInt("quiet_start", 22) + ",\"end\":" + sp.getInt("quiet_end", 7)
                     + ",\"lock\":" + sp.getBoolean("lock_on", false) + ",\"canLock\":" + secure() + ",\"version\":\"" + BuildConfigVersion() + "\"}";
         }
         @JavascriptInterface public void setQuiet(boolean on, int start, int end) {
+            if (!adminPage()) return;
             getSharedPreferences("ui", MODE_PRIVATE).edit().putBoolean("quiet_on", on).putInt("quiet_start", Math.max(0, Math.min(23, start))).putInt("quiet_end", Math.max(0, Math.min(23, end))).apply();
         }
         /** The page tells the app its top and bottom colours so the system bars blend in (and get light or dark icons). */
         @JavascriptInterface public void setChrome(String top, String bottom) {
+            if (!adminPage()) return;
             try { final int t = Color.parseColor(top), b = Color.parseColor(bottom); runOnUiThread(() -> applyChrome(t, b)); } catch (Throwable ignored) { }
         }
-        @JavascriptInterface public void setLock(boolean on) { getSharedPreferences("ui", MODE_PRIVATE).edit().putBoolean("lock_on", on).apply(); }
+        @JavascriptInterface public void setLock(boolean on) { if (!adminPage()) return; getSharedPreferences("ui", MODE_PRIVATE).edit().putBoolean("lock_on", on).apply(); }
     }
     private String BuildConfigVersion() { try { return getPackageManager().getPackageInfo(getPackageName(), 0).versionName; } catch (Throwable e) { return ""; } }
     private boolean secure() { try { return ((KeyguardManager) getSystemService(KEYGUARD_SERVICE)).isDeviceSecure(); } catch (Throwable e) { return false; } }
@@ -165,7 +177,9 @@ public class MainActivity extends Activity {
                 try { startActivity(new Intent(Intent.ACTION_VIEW, u)); } catch (Exception ignored) {}
                 return true;
             }
-            @Override public void onPageFinished(WebView v, String url) { CookieManager.getInstance().flush(); if (refreshing) endRefresh(); }
+            @Override public void onPageStarted(WebView v, String url, android.graphics.Bitmap icon) { pageUrl = url == null ? "" : url; }
+            @Override public void doUpdateVisitedHistory(WebView v, String url, boolean isReload) { pageUrl = url == null ? "" : url; }
+            @Override public void onPageFinished(WebView v, String url) { pageUrl = url == null ? "" : url; CookieManager.getInstance().flush(); if (refreshing) endRefresh(); }
             @Override public void onReceivedError(WebView v, WebResourceRequest r, WebResourceError e) {
                 if (r.isForMainFrame()) v.loadDataWithBaseURL("https://letterhome.ca/admin", OFFLINE, "text/html", "UTF-8", null);
             }

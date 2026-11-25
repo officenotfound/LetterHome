@@ -108,7 +108,7 @@ function templateFields(template) {
 const money = c => '$' + (c / 100).toFixed(2);
 
 // ── Registrars ─────────────────────────────────────────────────────────────────────────────────────────────────────
-function registerPortal(app, { db, getSetting, sendMail, notifyOwner }) {
+function registerPortal(app, { db, getSetting, sendMail, notifyOwner, endSessions = () => 0 }) {
   const enabled = () => getSetting('business_portal_enabled', 'true') === 'true';
   const router = express.Router();
 
@@ -242,6 +242,7 @@ function registerPortal(app, { db, getSetting, sendMail, notifyOwner }) {
     if (err) return res.status(400).json({ error: err });
     if (next === cur) return res.status(400).json({ error: 'Choose a password you have not used before.' });
     db.prepare('UPDATE business_users SET password_hash = ?, must_change_password = 0 WHERE id = ?').run(await bcrypt.hash(next, 12), req.biz.user.id);
+    endSessions(s => s.business?.userId === req.biz.user.id, req.sessionID);
     res.json({ ok: true });
   });
 
@@ -364,7 +365,7 @@ function registerPortal(app, { db, getSetting, sendMail, notifyOwner }) {
   app.get('/portal/', sendPage);
 }
 
-function registerAdmin(app, { db, requireAdmin, logAudit, getSetting, setSetting }) {
+function registerAdmin(app, { db, requireAdmin, logAudit, getSetting, setSetting, endSessions = () => 0 }) {
   const asInt = (v, lo, hi, dflt) => { const n = Math.round(Number(v)); return Number.isFinite(n) ? Math.min(hi, Math.max(lo, n)) : dflt; };
   const emailOk = e => /^[^\s@'"<>`\\(),;:]+@[^\s@'"<>`\\(),;:]+\.[^\s@'"<>`\\(),;:]{2,}$/.test(e) && e.length <= 200;
 
@@ -475,6 +476,7 @@ function registerAdmin(app, { db, requireAdmin, logAudit, getSetting, setSetting
     if (!u) return res.status(404).json({ error: 'Not found' });
     const pw = tempPassword();
     db.prepare('UPDATE business_users SET password_hash = ?, must_change_password = 1 WHERE id = ?').run(await bcrypt.hash(pw, 12), u.id);
+    endSessions(s => s.business?.userId === u.id);
     logAudit(req, 'business.user_reset', 'business', u.business_id, { email: u.email });
     res.json({ ok: true, login: { email: u.email, tempPassword: pw } });
   });
