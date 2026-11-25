@@ -5350,18 +5350,9 @@ async function showGrowth(site, engine) {
   setMain('<div class="empty">Loading…</div>');
   const [g, searchApi] = await Promise.all([api(`/api/admin/growth?site=${growthSite}&engine=${growthEngine}`), api('/api/admin/search-api')]);
   if (!g) return setMain('<div class="empty">Could not load this section.</div>');
-  const upload = searchApiCard(searchApi) + (growthEngine === 'bing' ? '' : `
-    <div class="card"><div class="card-header"><div class="card-title">Import a Search Console export</div></div>
-      <div style="padding:16px 24px;font-size:13px;color:#6b6b6b;line-height:1.7">
-        In Search Console open <strong>Performance → Search results</strong>, choose a date range, then <strong>Export → Download Excel</strong> (or CSV, which comes as a .zip). Choose that file here for <strong>${esc(SITE_LABELS[growthSite])}</strong>.
-        Each import is kept, so the next one shows what moved.
-        <div style="margin-top:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-          <input type="file" id="gsc-file" accept=".zip,.xlsx,.csv" style="font-size:12px">
-          <button class="btn btn-primary btn-sm" onclick="importGrowth()">Import</button>
-          <span id="gsc-msg" style="font-size:12px"></span>
-        </div></div></div>`);
+  const keys = searchApiCard(searchApi);
   const head = `<div style="display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap;align-items:center">${['google', 'bing'].map(x => `<button class="filter-btn ${growthEngine === x ? 'active' : ''}" onclick="showGrowth(null,'${x}')">${x === 'google' ? 'Google' : 'Bing'}</button>`).join('')}<span style="width:12px"></span>${siteTabs(growthSite, 'showGrowth')}</div>`;
-  if (g.empty) return setMain(head + upload + `<div class="empty">No ${growthEngine === 'bing' ? 'Bing' : 'Google'} results for this site yet.</div>`);
+  if (g.empty) return setMain(head + keys + `<div class="empty">No ${growthEngine === 'bing' ? 'Bing' : 'Google'} results for this site yet.</div>`);
 
   const l = g.latest, p = g.previous;
   const maxI = Math.max(1, ...g.chart.map(d => d.impressions));
@@ -5388,32 +5379,19 @@ async function showGrowth(site, engine) {
       tbl(['Search', 'Impressions', 'Clicks', 'Position'], g.nearPageOne.map(qRow), 'None yet.')) +
     sect('Questions people search', 'Each question is a candidate for a short, sourced guide, or a better answer at the top of an existing page.',
       tbl(['Question', 'Impressions', 'Clicks', 'Position'], g.questions.map(qRow), 'None yet.')) +
-    (p ? sect('Moved since the last import', 'Pages whose impressions changed by 20 or more.',
+    (p ? sect('Moved since the last copy', 'Pages whose impressions changed by 20 or more.',
       tbl(['Page', 'Impressions', 'Change', 'Position'], g.movers.map(r => `<tr><td style="font-family:monospace;font-size:12px;word-break:break-all">${esc(r.key)}${r.isNew ? ' <span style="color:#15803d">new</span>' : ''}</td><td style="text-align:right">${nf(r.impressions)}</td><td style="text-align:right;color:${r.delta >= 0 ? '#15803d' : '#c1121f'}">${r.delta > 0 ? '+' : ''}${nf(r.delta)}</td><td style="text-align:right">${r.position.toFixed(1)}</td></tr>`), 'Nothing moved by 20 or more.')) +
-      sect('New searches since the last import', '', tbl(['Search', 'Impressions', 'Clicks', 'Position'], g.newQueries.map(qRow), 'No new searches with 5 or more impressions.')) : '') +
+      sect('New searches since the last copy', '', tbl(['Search', 'Impressions', 'Clicks', 'Position'], g.newQueries.map(qRow), 'No new searches with 5 or more impressions.')) : '') +
     sect('Top pages', '', tbl(['Page', 'Impressions', 'Clicks', 'Click rate', 'Position'], g.topPages.map(pageRow))) +
     sect('Top searches', '', tbl(['Search', 'Impressions', 'Clicks', 'Position'], g.topQueries.map(qRow))) +
     sect('Countries', g.deepCountries.length ? 'Countries with 50 or more impressions where you rank below position 25: ' + g.deepCountries.map(c => esc(c.key)).join(', ') + '.' : '',
       tbl(['Country', 'Impressions', 'Clicks', 'Position'], g.countries.map(qRow))) +
-    `<div class="card"><div class="card-header"><div class="card-title">Imports kept</div></div>${tbl(['Imported', 'Dates', 'Clicks', 'Impressions', ''], g.snapshots.map(s => `<tr><td>${fmtDateTime(s.imported_at)}</td><td>${esc(s.date_from || '')} to ${esc(s.date_to || '')}</td><td style="text-align:right">${nf(s.clicks)}</td><td style="text-align:right">${nf(s.impressions)}</td><td style="text-align:right"><button class="link" onclick="deleteGrowth(${s.id})">Delete</button></td></tr>`))}</div>`;
-  setMain(head + upload + html.slice(head.length));
+    `<div class="card"><div class="card-header"><div class="card-title">Copies kept</div></div>${tbl(['Saved', 'Dates', 'Clicks', 'Impressions', ''], g.snapshots.map(s => `<tr><td>${fmtDateTime(s.imported_at)}</td><td>${esc(s.date_from || '')} to ${esc(s.date_to || '')}</td><td style="text-align:right">${nf(s.clicks)}</td><td style="text-align:right">${nf(s.impressions)}</td><td style="text-align:right"><button class="link" onclick="deleteGrowth(${s.id})">Delete</button></td></tr>`))}</div>`;
+  setMain(head + html.slice(head.length) + keys);   // set up once, so it sits at the bottom
 }
 
-async function importGrowth() {
-  const f = document.getElementById('gsc-file').files[0];
-  const msg = document.getElementById('gsc-msg');
-  if (!f) { msg.style.color = '#c1121f'; msg.textContent = 'Choose a file first.'; return; }
-  if (f.size > 6 * 1024 * 1024) { msg.style.color = '#c1121f'; msg.textContent = 'That file is over 6 MB.'; return; }
-  msg.style.color = '#6b6b6b'; msg.textContent = 'Importing…';
-  try {
-    const r = await fetch('/api/admin/growth/import', { method: 'POST', body: f, headers: { 'Content-Type': 'application/octet-stream', 'X-Site': growthSite, 'X-Filename': f.name, 'X-CSRF-Token': _csrfToken || '' } });
-    const j = await r.json().catch(() => ({}));
-    if (!r.ok || !j.ok) { msg.style.color = '#c1121f'; msg.textContent = j.error || ('Import failed (' + r.status + ')'); return; }
-    showGrowth(growthSite);
-  } catch (e) { msg.style.color = '#c1121f'; msg.textContent = 'Import failed.'; }
-}
 async function deleteGrowth(id) {
-  if (!confirm('Delete this import?')) return;
+  if (!confirm('Delete this copy?')) return;
   await api('/api/admin/growth/' + id, { method: 'DELETE' });
   showGrowth(growthSite);
 }
