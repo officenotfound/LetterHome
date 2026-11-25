@@ -31,7 +31,6 @@ const template = (c) => `<!DOCTYPE html>
 <link rel="dns-prefetch" href="https://www.googletagmanager.com">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="/ga.js" defer><\/script>
-<script src="/cookie-consent.js" defer><\/script>
 <title>Send a Letter from ${c.name} to Canada — Cost, Delivery & How To (2026)</title>
 <meta name="description" content="How to send a letter or document from ${c.name} to Canada. Postal options, costs, delivery times, and the easiest way to mail from ${c.name}.">
 <link rel="canonical" href="https://letterhome.ca/from-${c.slug}">

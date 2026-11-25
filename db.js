@@ -165,7 +165,7 @@ try { db.exec(`ALTER TABLE orders ADD COLUMN mail_service_cents INTEGER`);      
 try { db.exec(`ALTER TABLE orders ADD COLUMN printer_email_sent_at DATETIME`);   } catch {}
 try { db.exec(`ALTER TABLE orders ADD COLUMN large_envelope INTEGER DEFAULT 0`);   } catch {}
 try { db.exec(`ALTER TABLE orders ADD COLUMN paid_at DATETIME`); } catch {}
-try { db.exec(`ALTER TABLE orders ADD COLUMN ga_client_id TEXT`); } catch {}   // GA4 ids from the visitor's own cookies, only when they accepted analytics
+try { db.exec(`ALTER TABLE orders ADD COLUMN ga_client_id TEXT`); } catch {}   // GA4 ids from the visitor's own cookies, only when Google Analytics ran for them
 try { db.exec(`ALTER TABLE orders ADD COLUMN ga_session_id TEXT`); } catch {}
 try { db.exec(`ALTER TABLE orders ADD COLUMN ga_site TEXT`); } catch {}   // which site's GA4 stream the visit belongs to
 try { db.exec(`ALTER TABLE orders ADD COLUMN mailed_at DATETIME`); } catch {}

@@ -130,8 +130,7 @@ def build(key):
 <link rel="preload" as="font" type="font/woff2" href="/fonts/vEFI2_tTDB4M7-auWDN0ahZJW1gb8tc.woff2" crossorigin>
 <link rel="dns-prefetch" href="https://www.googletagmanager.com">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<script src="/ga.js?v=2" defer></script>
-<script src="/cookie-consent.js?v=12" defer></script>
+<script src="/ga.js?v=3" defer></script>
 <title>{esc(c['title'])}</title>
 <meta name="description" content="{esc(c['desc'])}">
 <link rel="canonical" href="{url}">
@@ -342,7 +341,7 @@ def build(key):
 <footer id="site-footer"><nav aria-label="Site links" style="padding:24px;font-size:14px"><a href="/about">About</a> · <a href="/careers">Careers</a> · <a href="/contact">Contact</a> · <a href="/guides">Mailing guides</a> · <a href="/business">Business mail</a> · <a href="/monthly-letters">Monthly letters</a> · <a href="/terms">Terms</a> · <a href="/privacy">Privacy</a> · <a href="/refunds">Refund policy</a> · <a href="https://letterhome.ca/">Canada</a> · <a href="/us">United States</a> · <a href="/uk">United Kingdom</a> · <a href="/au">Australia</a></nav></footer>
 <script src="/footer.js?v=22" defer></script>
 <script src="/theme.js?v=4" defer></script>
-<script src="/lang.js?v=76" defer></script>
+<script src="/lang.js?v=77" defer></script>
 <script>
 async function submitBizForm() {{
   const v = id => document.getElementById(id).value.trim();

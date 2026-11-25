@@ -145,7 +145,6 @@ ${factList(j).map(i => `    <li>${i}</li>`).join('\n')}
 <link rel="dns-prefetch" href="https://www.googletagmanager.com">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="/ga.js" defer></script>
-<script src="/cookie-consent.js?v=2" defer></script>
 <title>${esc(title)}</title>
 <meta name="description" content="${esc(desc)}">
 <link rel="canonical" href="${url}">

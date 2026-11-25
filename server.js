@@ -1361,12 +1361,12 @@ app.use(express.static('public', {
   },
 }));
 
-// Ahrefs Web Analytics, letterhome.ca only. The key is public (it appears in the tag). It loads from /ga.js so that,
-// like Google Analytics, nothing runs until the visitor accepts analytics.
+// Ahrefs Web Analytics, letterhome.ca only. The key is public (it appears in the tag). It loads from /ga.js
+// with Google Analytics. There is no consent popup; a Decline saved by the old popup is still honoured.
 const AHREFS_KEY = 'd8wW5j/BZDcMfly9oVT76g';
 const ahrefsLoader = `
 (function(){
-  try{if(localStorage.getItem('lh-analytics-consent')!=='yes')return;}catch(e){return;}
+  try{if(localStorage.getItem('lh-analytics-consent')==='no')return;}catch(e){}
   if(window.__lhAhrefs)return;window.__lhAhrefs=1;
   var s=document.createElement('script');s.async=true;s.src='https://analytics.ahrefs.com/analytics.js';
   s.setAttribute('data-key','${AHREFS_KEY}');document.head.appendChild(s);
@@ -1386,7 +1386,7 @@ app.get('/ga.js', (req, res) => {
   if (!/^G-[A-Z0-9]+$/.test(id)) return res.send('/* analytics disabled: invalid GA4_MEASUREMENT_ID */' + ahrefs);
   res.send(`
 (function(){
-  try{if(localStorage.getItem('lh-analytics-consent')!=='yes')return;}catch(e){return;}
+  try{if(localStorage.getItem('lh-analytics-consent')==='no')return;}catch(e){}
   window.dataLayer=window.dataLayer||[];
   function gtag(){dataLayer.push(arguments);}
   gtag('js',new Date());
@@ -2063,7 +2063,7 @@ app.post('/api/create-order', orderLimiter, uploadAttachments, async (req, res) 
     return res.status(502).json({ error: 'Payment service is temporarily unavailable. Please try again in a moment.' });
   }
 
-  // Analytics ids from the visitor's own cookies (present only if they accepted analytics) so the sale can be credited later.
+  // Analytics ids from the visitor's own cookies (present only if Google Analytics ran for them) so the sale can be credited later.
   try {
     const gaSite = ga4.siteOfHost(req.hostname);
     const ids = ga4.gaIdsFromCookie(req.headers.cookie, gaSite);
@@ -4879,7 +4879,7 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:48px 36px 32px
 </div>
 <footer id="site-footer"></footer>
 <script src="/theme.js?v=4"></script>
-<script src="/lang.js?v=76" defer></script>
+<script src="/lang.js?v=77" defer></script>
 <script src="/footer.js?v=22" defer></script>
 </body>
 </html>`;

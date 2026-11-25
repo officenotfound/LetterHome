@@ -58,8 +58,7 @@ def head(title, desc, path, ld):
 <meta charset="UTF-8">
 <link rel="preload" as="font" type="font/woff2" href="/fonts/vEFI2_tTDB4M7-auWDN0ahZJW1gb8tc.woff2" crossorigin>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<script src="/ga.js?v=2" defer></script>
-<script src="/cookie-consent.js?v=12" defer></script>
+<script src="/ga.js?v=3" defer></script>
 <title>{esc(title)}</title>
 <meta name="description" content="{esc(desc)}">
 <link rel="canonical" href="{BASE}{path}">

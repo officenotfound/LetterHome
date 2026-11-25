@@ -1,5 +1,5 @@
 // Server-side Google Analytics events (GA4 Measurement Protocol).
-// Only ever sent for visitors who accepted the cookie banner: the GA client id comes from their own _ga cookie.
+// Only sent when the visitor's browser has a _ga cookie: the GA client id comes from it.
 // Without GA4_API_SECRET nothing is sent. No names, emails or addresses are included.
 // One GA4 data stream per site. The IDs are public (they appear in every page); each stream has its own API secret.
 const STREAMS = {
