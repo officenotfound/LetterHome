@@ -2,6 +2,7 @@
 .rp{--rp-c1:#2456a6;--rp-c2:#c2571f;--rp-c3:#11866b;--rp-c4:#a97a00;--rp-c5:#8d4a86;--rp-good:#1c7a4d;--rp-warn:#8a5a00;--rp-bad:#b3261e;--rp-faint:#edf0f5;max-width:1320px;margin:0 auto;min-width:0}
 html[data-theme=dark] .rp{--rp-c1:#4f8ad9;--rp-c2:#d4702f;--rp-c3:#23a18a;--rp-c4:#bd8c14;--rp-c5:#b566ad;--rp-good:#4cc38a;--rp-warn:#e0ad45;--rp-bad:#ff8078;--rp-faint:#222a35}
 .rp *{box-sizing:border-box}
+.rp-busy .rp-summary,.rp-busy .rp-kpis,.rp-busy .rp-grid{opacity:.45;transition:opacity .15s}
 .rp-top{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px}
 .rp-live{margin-right:auto;display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--a-muted)}
 .rp-pulse{display:inline-block;width:8px;height:8px;border-radius:99px;background:var(--rp-good);flex:none}

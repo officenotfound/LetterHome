@@ -3,7 +3,9 @@
 //   build()     everything worked out from our own database and the figures already fetched; no outside calls
 //   live()      what is happening right now, from our own database
 //   external()  Stripe, Google Analytics, Clarity and Bing, each cached and each allowed to fail on its own
-//   register()  the routes, the CSV export and the server heartbeat
+//   register()  the routes, the CSV export and the server heartbeat (build() runs in reportsWorker.js)
+const path = require('node:path');
+const { Worker } = require('node:worker_threads');
 const { estimateCost } = require('./adminExtras');
 const { SOURCE_LABELS } = require('./trafficSources');
 const { parseServiceKey, googleToken, call, pickProperties } = require('./searchApis');
@@ -21,9 +23,18 @@ const PROBLEM_TEXT = {
 const stamp = ms => new Date(ms).toISOString().slice(0, 19).replace('T', ' ');
 const dbTime = s => Date.parse(String(s).replace(' ', 'T') + 'Z');
 const zone = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Toronto', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', hourCycle: 'h23', weekday: 'short' });
+// Time zone conversion is slow, and Toronto only changes on the hour, so each hour is worked out once.
+const hours = new Map();
 function local(ms) {
-  const p = Object.fromEntries(zone.formatToParts(new Date(ms)).map(x => [x.type, x.value]));
-  return { day: `${p.year}-${p.month}-${p.day}`, hour: Number(p.hour), weekday: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].indexOf(p.weekday) };
+  const key = Math.floor(ms / 3600000);
+  let hit = hours.get(key);
+  if (!hit) {
+    const p = Object.fromEntries(zone.formatToParts(new Date(ms)).map(x => [x.type, x.value]));
+    hit = { day: `${p.year}-${p.month}-${p.day}`, hour: Number(p.hour), weekday: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].indexOf(p.weekday) };
+    if (hours.size > 20000) hours.clear();
+    hours.set(key, hit);
+  }
+  return hit;
 }
 const pageName = path => (!path || path === '/' ? 'Home page' : path === '/send' ? 'Order page' : String(path).slice(0, 120));
 const landingGroup = path => (path === '/' ? 'Home page' : path === '/send' ? 'Order page' : /santa/.test(path || '') ? 'Santa letter' : 'Guides and other pages');
@@ -40,7 +51,19 @@ function filters(query) {
   };
 }
 
-function build({ db, getSetting, contentHeld, today }, query = {}, now = Date.now()) {
+// Orders waiting on the owner. The content check lives in the server, so this part stays on the main thread.
+function orderQueue(db, contentHeld, t) {
+  try {
+    const paid = db.prepare("SELECT * FROM orders WHERE status = 'paid' AND deleted_at IS NULL").all();
+    const held = o => !!(contentHeld && contentHeld(o));
+    return {
+      waiting: paid.filter(o => (!o.postgrid_letter_id || o.postgrid_status === 'cancelled') && !(o.scheduled_date && o.scheduled_date > t) && !held(o)).length,
+      held: paid.filter(o => !o.postgrid_letter_id && held(o)).length,
+    };
+  } catch (e) { console.error('[reports]', e.message); return { waiting: 0, held: 0 }; }
+}
+
+function build({ db, getSetting, contentHeld, today, queue }, query = {}, now = Date.now()) {
   const f = filters(query);
   const { days } = f;
   const all = (sql, ...a) => { try { return db.prepare(sql).all(...a); } catch (e) { console.error('[reports]', e.message); return []; } };
@@ -63,7 +86,7 @@ function build({ db, getSetting, contentHeld, today }, query = {}, now = Date.no
 
   // ── Page views ─────────────────────────────────────────────────────────────────────────────
   const views = all(`SELECT ip, path, COALESCE(source, 'direct') AS source, referrer, device_type, country_code, country_name, created_at
-    FROM page_views WHERE ${PERSON} AND created_at >= ?${f.pv} ORDER BY id`, stamp(now - (days * 2 + 1) * 86400000))
+    FROM page_views WHERE ${PERSON} AND created_at >= ?${f.pv} ORDER BY created_at, id`, stamp(now - (days * 2 + 1) * 86400000))
     .map(v => ({ ...v, ...local(dbTime(v.created_at)) }));
   const nowViews = views.filter(v => current.has(v.day));
   const beforeViews = views.filter(v => !current.has(v.day) && v.day >= since);
@@ -234,13 +257,11 @@ function build({ db, getSetting, contentHeld, today }, query = {}, now = Date.no
 
   // ── What to do next, most important first ────────────────────────────────────────────────
   const t = today ? today() : local(now).day;
-  const waiting = all(`SELECT * FROM orders WHERE status = 'paid' AND deleted_at IS NULL AND (postgrid_letter_id IS NULL OR postgrid_status = 'cancelled')`)
-    .filter(o => !(o.scheduled_date && o.scheduled_date > t) && !(contentHeld && contentHeld(o)));
-  const held = contentHeld ? all(`SELECT * FROM orders WHERE status = 'paid' AND deleted_at IS NULL AND postgrid_letter_id IS NULL`).filter(o => contentHeld(o)).length : 0;
+  const { waiting, held } = queue || orderQueue(db, contentHeld, t);
   const actions = [];
   const add = (level, text, button, href) => actions.push({ level, text, button, href });
   const s = n => (n === 1 ? '' : 's');
-  if (waiting.length) add('High', `${waiting.length} order${s(waiting.length)} waiting for your approval`, 'Review', '/admin/approvals');
+  if (waiting) add('High', `${waiting} order${s(waiting)} waiting for your approval`, 'Review', '/admin/approvals');
   if (held) add('High', `${held} order${s(held)} held by the content check`, 'Review', '/admin/approvals');
   let fetchLast = null;
   try { fetchLast = JSON.parse(getSetting('search_fetch_last', '') || 'null'); } catch {}
@@ -289,7 +310,7 @@ function build({ db, getSetting, contentHeld, today }, query = {}, now = Date.no
 function live({ db }, query = {}, now = Date.now()) {
   const f = filters(query);
   const all = (sql, ...a) => { try { return db.prepare(sql).all(...a); } catch (e) { console.error('[reports]', e.message); return []; } };
-  const recent = all(`SELECT ip, path, source, device_type, country_name, created_at FROM page_views WHERE ${PERSON} AND created_at >= ?${f.pv} ORDER BY id DESC LIMIT 600`, stamp(now - 30 * 60000));
+  const recent = all(`SELECT ip, path, source, device_type, country_name, created_at FROM page_views WHERE ${PERSON} AND created_at >= ?${f.pv} ORDER BY created_at DESC, id DESC LIMIT 600`, stamp(now - 30 * 60000));
   const latest = new Map();
   for (const v of recent) if (!latest.has(v.ip)) latest.set(v.ip, v);
   const orders = all(`SELECT id, status, price_cents, recipient_city, destination_country, created_at, paid_at, mailed_at FROM orders
@@ -498,19 +519,71 @@ function schema(db) {
   for (const col of ['a11y', 'practices', 'seo']) { try { db.exec(`ALTER TABLE speed_results ADD COLUMN ${col} INTEGER`); } catch {} }
 }
 
+// ── Background worker and short-lived cache ───────────────────────────────────────────────────
+function background(dbPath) {
+  let worker = null, nextId = 0;
+  const waiting = new Map();
+  const drop = (w, message) => {
+    if (worker !== w) return;
+    worker = null;
+    for (const job of waiting.values()) job.reject(new Error(message));
+    waiting.clear();
+  };
+  function start() {
+    const w = new Worker(path.join(__dirname, 'reportsWorker.js'), { workerData: { dbPath } });
+    w.on('message', m => {
+      const job = waiting.get(m.id);
+      if (!job) return;
+      waiting.delete(m.id);
+      if (!waiting.size) w.unref();
+      if (m.error) job.reject(new Error(m.error)); else job.resolve(m.data);
+    });
+    w.on('error', e => drop(w, e.message));
+    w.on('exit', () => drop(w, 'The report worker stopped.'));
+    return w;
+  }
+  return (query, queue, today) => new Promise((resolve, reject) => {
+    if (!worker) worker = start();
+    const w = worker, id = ++nextId;
+    const timer = setTimeout(() => { drop(w, 'The report took too long.'); w.terminate(); }, 60000);
+    timer.unref();
+    const done = fn => value => { clearTimeout(timer); fn(value); };
+    waiting.set(id, { resolve: done(resolve), reject: done(reject) });
+    w.ref();
+    w.postMessage({ id, query, queue, today, now: Date.now() });
+  });
+}
+
 function register(app, deps) {
-  const { db, requireAdmin } = deps;
+  const { db, requireAdmin, contentHeld, today } = deps;
   schema(db);
+  const run = background(path.resolve(deps.dbPath || process.env.DB_PATH || 'orders.db'));
+  const recent = new Map();
+  // The same screen is reused for a minute, and sooner than that if an order arrives or changes.
+  function report(query) {
+    const f = filters(query), t = today ? today() : local(Date.now()).day;
+    const queue = orderQueue(db, contentHeld, t);
+    let newest = 0;
+    try { newest = db.prepare('SELECT MAX(id) n FROM orders').get().n || 0; } catch {}
+    const key = [f.days, f.site, newest, queue.waiting, queue.held, deps.getSetting('monthly_order_target', '')].join('|');
+    const hit = recent.get(key);
+    if (hit && Date.now() - hit.at < 60000) return hit.value;
+    for (const [k, v] of recent) if (Date.now() - v.at >= 60000) recent.delete(k);
+    const value = run({ days: f.days, site: f.site }, queue, t);
+    recent.set(key, { at: Date.now(), value });
+    value.catch(() => recent.delete(key));
+    return value;
+  }
   const fail = (res, e) => { console.error('[reports]', e.message); res.status(500).json({ error: 'Could not load this section.' }); };
 
-  app.get('/api/admin/reports', requireAdmin, (req, res) => { try { res.json(build(deps, req.query)); } catch (e) { fail(res, e); } });
+  app.get('/api/admin/reports', requireAdmin, async (req, res) => { try { res.json(await report(req.query)); } catch (e) { fail(res, e); } });
   app.get('/api/admin/reports/live', requireAdmin, (req, res) => { try { res.json(live(deps, req.query)); } catch (e) { fail(res, e); } });
   app.get('/api/admin/reports/external', requireAdmin, async (req, res) => { try { res.json(await external(deps, req.query)); } catch (e) { fail(res, e); } });
 
   // A real file from the server, so it downloads in the browser and in both apps.
-  app.get('/api/admin/reports/export', requireAdmin, (req, res) => {
+  app.get('/api/admin/reports/export', requireAdmin, async (req, res) => {
     try {
-      const data = build(deps, req.query);
+      const data = await report(req.query);
       const wanted = tables(data).filter(t => (req.query.table ? t.id === req.query.table && t.screen === req.query.screen : t.screen === req.query.screen));
       if (!wanted.length) return res.status(404).json({ error: 'Nothing to export.' });
       const body = wanted.map(t => (wanted.length > 1 ? `${t.title}\r\n` : '') + toCsv(t.columns, t.rows)).join('\r\n\r\n');

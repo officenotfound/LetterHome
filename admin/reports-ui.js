@@ -433,7 +433,7 @@
       const t = ev.target.closest('[data-go],[data-days],[data-table],[data-run]');
       if (!t) return;
       if (t.dataset.go) return go(t.dataset.go);
-      if (t.dataset.days) { state.days = Number(t.dataset.days); return load(); }
+      if (t.dataset.days) { if (Number(t.dataset.days) !== state.days) { state.days = Number(t.dataset.days); load(); } return; }
       if (t.dataset.table) {
         const body = t.closest('.rp-card').querySelector('.rp-body'), d = state.tables[t.dataset.table], on = t.getAttribute('aria-pressed') !== 'true';
         t.setAttribute('aria-pressed', on); t.textContent = on ? 'Chart' : 'Table';
@@ -484,20 +484,45 @@
 
   async function refreshData() {
     const run = state.run;
-    const d = await api(`/api/admin/reports?${query()}`, { background: true });
-    if (d && run === state.run && here()) { state.data = d; redraw(); }
+    const key = query();
+    const d = await api(`/api/admin/reports?${key}`, { background: true });
+    if (d && !d.error && run === state.run && here()) { seen.set(key, d); state.data = d; redraw(); }
   }
 
-  async function load() {
-    const run = ++state.run;
-    clearInterval(state.timer);
-    const d = await api(`/api/admin/reports?${query()}`);
-    if (!d || run !== state.run) return;
+  // Figures already seen this visit are shown at once; newer ones replace them when they arrive.
+  const seen = new Map();
+
+  // Show straight away that the click was heard.
+  function busy(message) {
+    const root = document.getElementById('rp');
+    if (!root) return;
+    root.classList.add('rp-busy');
+    for (const b of root.querySelectorAll('[data-days]')) b.setAttribute('aria-pressed', Number(b.dataset.days) === state.days);
+    const el = document.getElementById('rp-ago');
+    if (el) el.textContent = message;
+  }
+
+  function show(d, run) {
     state.data = d; state.live = null; state.ext = null;
     draw();
     refreshLive();
     api(`/api/admin/reports/external?${query()}`, { background: true }).then(x => { if (x && run === state.run && here()) { state.ext = x; redraw(); } });
     if (state.screen === 'health') api('/api/admin/health-detail', { background: true }).then(x => { if (x && run === state.run && here()) { state.health = x; redraw(); } });
+  }
+
+  async function load() {
+    const run = ++state.run, key = query();
+    clearInterval(state.timer);
+    const old = seen.get(key);
+    if (old) show(old, run); else busy('Loading…');
+    const d = await api(`/api/admin/reports?${key}`, { background: !!old });
+    if (run !== state.run) return;
+    if (!d || d.error) {
+      if (here()) { document.getElementById('rp').classList.remove('rp-busy'); const el = document.getElementById('rp-ago'); if (el) el.textContent = 'Could not load. Choose the period again to retry.'; }
+      return;
+    }
+    seen.set(key, d);
+    if (!old) show(d, run); else if (here()) { state.data = d; redraw(); }
     let tick = 0;
     state.timer = setInterval(() => {
       if (run !== state.run || !here()) return clearInterval(state.timer);
