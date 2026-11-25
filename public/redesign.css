@@ -676,3 +676,5 @@ html[data-theme="dark"]:not([data-country]) body main.ab h1.ab-logo .logo-accent
 /* Careers: the whole role card is one link, so only the title underlines, and only on hover. */
 :root body:not(#x):not(#y) a.job-card,:root body:not(#x):not(#y) a.job-card *{text-decoration:none!important}
 :root body:not(#x):not(#y) a.job-card:hover strong{text-decoration:underline!important;text-underline-offset:3px}
+/* Country sites: the small label above a page title is white on the coloured header band. */
+:root body[class*="c-"]:not(#x) .hero .hero-eyebrow{color:#fff!important;opacity:.85}

@@ -1087,9 +1087,7 @@ window.LH_FR = {
       // CONTACT
       'contact.eyebrow': 'Contact',
       'contact.h1': 'Nous joindre',
-      'contact.intro': 'Commandes et courrier d\'entreprise passent par le formulaire ci-dessous. Réponse sous un jour ouvrable.',
-      'contact.meta1.h3': 'Soutien',
-      'contact.meta1.p': 'Commandes, statut de commande et questions générales. Utilisez le formulaire de cette page.',
+      'contact.intro': 'Une question sur une commande ou le courrier d\'entreprise ? Écrivez-nous. Réponse sous un jour ouvrable.',
       'contact.meta2.h3': 'Soutien aux commandes',
       'contact.meta2.p': 'Gardez votre numéro de commande. Nous pouvons annuler avec remboursement complet avant l\'impression et corriger les erreurs d\'adresse.',
       'contact.meta3.h3': 'Envois en volume et courrier d\'affaires',

@@ -384,9 +384,7 @@
       // CONTACT
       'contact.eyebrow': 'Contact',
       'contact.h1': 'Get in touch',
-      'contact.intro': 'Orders and business mail both go through the form below. We reply within one business day.',
-      'contact.meta1.h3': 'Support',
-      'contact.meta1.p': 'Orders, order status, and general questions. Use the form on this page.',
+      'contact.intro': 'Questions about an order or business mail? Send us a message. We reply within one business day.',
       'contact.meta2.h3': 'Order support',
       'contact.meta2.p': 'Have your order number ready. We can cancel for a full refund before it goes to print, and fix address mistakes.',
       'contact.meta3.h3': 'Bulk & business mail',

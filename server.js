@@ -4832,7 +4832,7 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:48px 36px 32px
 </div>
 <footer id="site-footer"></footer>
 <script src="/theme.js?v=4"></script>
-<script src="/lang.js?v=72" defer></script>
+<script src="/lang.js?v=73" defer></script>
 <script src="/footer.js?v=22" defer></script>
 </body>
 </html>`;
