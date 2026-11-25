@@ -15,6 +15,8 @@
   const cash = c => '$' + ((c || 0) / 100).toLocaleString('en-CA', { minimumFractionDigits: (c || 0) % 100 ? 2 : 0, maximumFractionDigits: 2 });
   const sum = a => a.reduce((x, y) => x + y, 0);
   const tip = t => `data-tip="${e(t)}"`;
+  const span = d => (d.period === 'all' ? `since ${fullDay(d.since)}` : `over the last ${d.days} days`);
+  const fullDay = d => new Date(d + 'T12:00:00Z').toLocaleDateString('en-CA', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
   const dayName = d => new Date(d + 'T12:00:00Z').toLocaleDateString('en-CA', { month: 'short', day: 'numeric', timeZone: 'UTC' });
   const ago = iso => {
     if (!iso) return 'Not yet';
@@ -85,13 +87,13 @@
     const label = v => (money ? '$' + num(v / 100) : num(v));
     let g = '';
     for (let k = 0; k <= 3; k++) { const v = max * k / 3; g += `<line x1="${l}" x2="${W}" y1="${y(v)}" y2="${y(v)}" stroke="var(--a-line)"/><text x="${l - 6}" y="${y(v) + 4}" text-anchor="end">${label(v)}</text>`; }
-    for (const i of [...new Set([0, Math.floor((dates.length - 1) / 2), dates.length - 1])]) g += `<text x="${x(i)}" y="${H - 3}" text-anchor="${i === 0 ? 'start' : i === dates.length - 1 ? 'end' : 'middle'}">${dayName(dates[i])}</text>`;
+    for (const i of [...new Set([0, Math.floor((dates.length - 1) / 2), dates.length - 1])]) g += `<text x="${x(i)}" y="${H - 3}" text-anchor="${i === 0 ? 'start' : i === dates.length - 1 ? 'end' : 'middle'}">${(dates.length > 300 ? fullDay : dayName)(dates[i])}</text>`;
     const paths = series.map(s => {
       const p = s.d.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`).join('L');
       return (s.fill ? `<path d="M${p}L${x(dates.length - 1)},${H - b}L${l},${H - b}Z" fill="${s.c}" opacity=".1"/>` : '') + `<path d="M${p}" fill="none" stroke="${s.c}" stroke-width="2" ${s.dash ? 'stroke-dasharray="4 5" opacity=".55"' : ''}/>`;
     }).join('');
     const step = (W - l) / dates.length;
-    const hot = dates.map((d, i) => `<rect x="${x(i) - step / 2}" y="0" width="${step}" height="${H - b}" fill="transparent" ${tip(`${dayName(d)}\n${series.map(s => `${s.name}: ${money ? cash(s.d[i]) : num(s.d[i])}`).join('\n')}`)}/>`).join('');
+    const hot = dates.map((d, i) => `<rect x="${x(i) - step / 2}" y="0" width="${step}" height="${H - b}" fill="transparent" ${tip(`${(dates.length > 300 ? fullDay : dayName)(d)}\n${series.map(s => `${s.name}: ${money ? cash(s.d[i]) : num(s.d[i])}`).join('\n')}`)}/>`).join('');
     return `<div class="rp-legend">${series.map(s => `<span><i style="background:${s.c};${s.dash ? 'opacity:.55' : ''}"></i>${e(s.name)}</span>`).join('')}</div><svg viewBox="0 0 ${W} ${H}">${g}${paths}${hot}</svg>`;
   }
 
@@ -199,12 +201,13 @@
       const top = o.ordersBySource[0];
       const money = state.ext?.stripe;
       const target = o.target;
+      const all = d.period === 'all', oneSite = d.site !== 'all';
       return {
         summary: k.orders.now
-          ? `Revenue of <b>${cash(k.revenue.now)}</b> from <b>${num(k.orders.now)} order${k.orders.now === 1 ? '' : 's'}</b> over the last ${d.days} days${k.revenue.before ? `, ${k.revenue.now >= k.revenue.before ? 'up' : 'down'} on the previous period` : ''}.${top ? ` Most orders came from <b>${e(top[0])}</b>.` : ''}`
-          : `No paid orders in the last ${d.days} days. <b>${num(k.visitors.now)}</b> people visited.`,
+          ? `Revenue of <b>${cash(k.revenue.now)}</b> from <b>${num(k.orders.now)} order${k.orders.now === 1 ? '' : 's'}</b> ${span(d)}${k.revenue.before ? `, ${k.revenue.now >= k.revenue.before ? 'up' : 'down'} on the previous period` : ''}.${top ? ` Most orders came from <b>${e(top[0])}</b>.` : ''}`
+          : `No paid orders ${span(d)}. <b>${num(k.visitors.now)}</b> people visited.`,
         kpis: [
-          { label: 'Revenue', value: cash(k.revenue.now), pair: k.revenue, note: 'vs previous period', series: s.revenue },
+          { label: 'Revenue', value: cash(k.revenue.now), pair: k.revenue, note: all ? `since ${fullDay(d.since)}` : 'vs previous period', series: s.revenue },
           { label: 'Orders', value: num(k.orders.now), pair: k.orders, note: 'paid', series: s.orders },
           { label: 'Visitors', value: num(k.visitors.now), pair: k.visitors, note: 'unique', series: s.visitors },
           { label: 'Profit (estimate)', value: cash(k.profit.now), pair: k.profit, note: 'after print and card fees', series: s.profit },
@@ -216,15 +219,15 @@
           + card(4, 'Recent orders', 'Newest first.', liveBox('orders', LIVE.orders))
           + card(4, 'Active visitors', 'Last 30 minutes, by page.', liveBox('active', LIVE.active))
           + section('Performance')
-          + card(8, 'Daily revenue', 'This period (solid) against the one before (dotted). Canadian dollars.',
-            lines(s.dates, [{ name: 'This period', d: s.revenue, c: 'var(--rp-c1)', fill: 1 }, { name: 'Previous', d: s.revenuePrev, c: 'var(--rp-c1)', dash: 1 }], true),
-            { id: 'daily', cols: ['Day', 'Revenue', 'Previous'], rows: s.dates.map((day, i) => [day, s.revenue[i] / 100, s.revenuePrev[i] / 100]) })
+          + card(8, 'Daily revenue', all ? 'Every day on record. Canadian dollars.' : 'This period (solid) against the one before (dotted). Canadian dollars.',
+            lines(s.dates, [{ name: all ? 'Revenue' : 'This period', d: s.revenue, c: 'var(--rp-c1)', fill: 1 }, ...(all ? [] : [{ name: 'Previous', d: s.revenuePrev, c: 'var(--rp-c1)', dash: 1 }])], true),
+            { id: 'daily', cols: ['Day', 'Revenue', ...(all ? [] : ['Previous'])], rows: s.dates.map((day, i) => [day, s.revenue[i] / 100, ...(all ? [] : [s.revenuePrev[i] / 100])]) })
           + card(4, 'Monthly order target', 'This calendar month.',
             (target.goal ? `<div class="rp-big">${num(target.month)} <small>of ${num(target.goal)} orders</small></div><div class="rp-bar"><i style="--w:${Math.min(100, target.month / target.goal * 100)}%;--c:var(--rp-c1)"></i></div><div class="rp-key"><span>Reached</span><b>${Math.round(target.month / target.goal * 100)}%</b></div><div class="rp-key"><span>Remaining</span><b>${num(Math.max(0, target.goal - target.month))}</b></div>`
               : `<div class="rp-big">${num(target.month)} <small>orders so far</small></div>`)
             + `<form class="rp-target" data-target><label>Target<input type="number" min="0" max="1000000" inputmode="numeric" value="${target.goal || ''}" aria-label="Monthly order target"></label><button class="rp-btn" type="submit">Save</button></form>`)
           + card(4, 'Orders by source', 'Where paying customers came from.', bars(o.ordersBySource), { id: 'sources', cols: ['Source', 'Orders'], rows: o.ordersBySource })
-          + card(4, 'Conversion funnel', d.site === 'all' ? 'People remaining at each step.' : 'The checkout steps are counted for all sites together.', bars(o.funnel, 'var(--rp-c3)'), { id: 'funnel', cols: ['Step', 'People'], rows: o.funnel })
+          + card(4, 'Conversion funnel', 'People remaining at each step.', bars(o.funnel, 'var(--rp-c3)'), { id: 'funnel', cols: ['Step', 'People'], rows: o.funnel })
           + card(4, 'Payouts', 'From Stripe, all sites.', outside('stripe', m => rows([
             { name: m.nextPayout ? `${cash(m.nextPayout.amount)} arriving ${dayName(new Date(m.nextPayout.arrival * 1000).toISOString().slice(0, 10))}` : 'No payout on the way', sub: 'Next payout' },
             { name: `${cash(m.available)} available`, sub: 'In your Stripe balance' },
@@ -257,11 +260,11 @@
           + card(4, 'Traffic channels', 'How visitors reached the sites.', bars(a.channels), { id: 'channels', cols: ['Channel', 'Visitors'], rows: a.channels })
           + card(4, 'Cities', 'From Google Analytics, all sites.', outside('analytics', g => bars(g.cities)))
           + card(4, 'Device language', 'From Google Analytics, all sites.', outside('analytics', g => bars(g.languages)))
-          + card(4, 'New and returning', 'Whether they had visited before this period.', split([['New', a.visitorsNew], ['Returning', a.visitorsReturning]]))
+          + card(4, 'New and returning', d.period === 'all' ? 'Returning means they came on more than one day.' : 'Whether they had visited before this period.', split([['New', a.visitorsNew], ['Returning', a.visitorsReturning]]))
           + section('What they do')
           + card(8, 'Top pages', 'Views, and orders from people who arrived on that page.', table(['Page', 'Views', 'Orders'], a.topPages), { id: 'pages', cols: ['Page', 'Views', 'Orders'], rows: a.topPages })
           + card(4, 'Devices', 'Visitors by device.', bars(a.devices), { id: 'devices', cols: ['Device', 'Visitors'], rows: a.devices })
-          + card(12, 'Engagement', 'Time and attention from Google Analytics. Frustration signs from Clarity cover the last 3 days.',
+          + card(12, 'Engagement', 'Time and attention from Google Analytics. Clarity figures (scrolling and frustration signs) always cover the last 3 days. All sites.',
             tiles([
               ...(state.ext?.analytics?.configured && !state.ext.analytics.error ? [[`${Math.floor(state.ext.analytics.seconds / 60)}m ${state.ext.analytics.seconds % 60}s`, 'Time per visit', 'Average'], [state.ext.analytics.engagedPct + '%', 'Engaged visits', 'Stayed or did something']] : [[null, 'Time per visit', 'Google Analytics'], [null, 'Engaged visits', 'Google Analytics']]),
               ...(() => {
@@ -281,7 +284,7 @@
       const pair = (x, key, before) => (x[before] == null ? null : { now: x[key], before: x[before] });
       return {
         summary: shown
-          ? `Your pages were shown <b>${num(shown)} times</b> in search and clicked <b>${num(clicks)} times</b> in the latest 28 days. <b>${num(near)} page${near === 1 ? ' is' : 's are'}</b> close to the top and the easiest to improve.`
+          ? `Your pages were shown <b>${num(shown)} times</b> in search and clicked <b>${num(clicks)} times</b> ${q.standIn ? 'in the latest 28 days' : d.period === 'all' ? 'over all the history Google and Bing keep' : `in the latest ${d.days} days they have published`}. <b>${num(near)} page${near === 1 ? ' is' : 's are'}</b> close to the top and the easiest to improve.${q.standIn ? ` <br><b>Figures for this period have not been fetched yet.</b> ${button('Fetch now', 'data-run="search"')}` : ''}`
           : 'No search figures yet. Connect Google and Bing under Health, Connections.',
         kpis: [
           { label: 'Google clicks', value: num(g.clicks), pair: pair(g, 'clicks', 'beforeClicks'), note: g.to ? `to ${dayName(g.to)}` : '', series: q.google },
@@ -290,20 +293,20 @@
           { label: 'Google position', value: g.position ? String(g.position) : '–', note: 'average, 1 is top' },
         ],
         body: section('Results')
-          + card(8, 'Search clicks', 'The latest 28 days the search engines have published, whatever period is chosen above.', lines(q.dates, [{ name: 'Google', d: q.google, c: 'var(--rp-c1)', fill: 1 }, { name: 'Bing', d: q.bing, c: 'var(--rp-c2)' }]), { id: 'clicks', cols: ['Day', 'Google', 'Bing'], rows: q.dates.map((day, i) => [day, q.google[i], q.bing[i]]) })
-          + card(4, 'Index coverage', 'Pages Google has indexed.', q.index.checked ? `<div class="rp-big">${Math.round(q.index.indexed / q.index.checked * 100)}%</div><div class="rp-bar"><i style="--w:${q.index.indexed / q.index.checked * 100}%;--c:var(--rp-c3)"></i></div><div class="rp-key"><span>Indexed</span><b>${num(q.index.indexed)}</b></div><div class="rp-key"><span>Checked</span><b>${num(q.index.checked)}</b></div>` : none('Not checked yet. Run it from Health, Connections.'))
+          + card(8, 'Search clicks', 'By day. Google runs 2 to 3 days behind and Bing about 2.', lines(q.dates, [{ name: 'Google', d: q.google, c: 'var(--rp-c1)', fill: 1 }, { name: 'Bing', d: q.bing, c: 'var(--rp-c2)' }]), { id: 'clicks', cols: ['Day', 'Google', 'Bing'], rows: q.dates.map((day, i) => [day, q.google[i], q.bing[i]]) })
+          + card(4, 'Index coverage', 'Pages Google has indexed, as of the last check.', q.index.checked ? `<div class="rp-big">${Math.round(q.index.indexed / q.index.checked * 100)}%</div><div class="rp-bar"><i style="--w:${q.index.indexed / q.index.checked * 100}%;--c:var(--rp-c3)"></i></div><div class="rp-key"><span>Indexed</span><b>${num(q.index.indexed)}</b></div><div class="rp-key"><span>Checked</span><b>${num(q.index.checked)}</b></div>` : none('Not checked yet. Run it from Health, Connections.'))
           + section('What to improve')
           + card(12, 'Ranking opportunities', 'Each circle is a page; height shows times shown. Pages ranked 8th to 20th are the easiest to move up.', scatter(q.pages), { id: 'pages', cols: ['Page', 'Position', 'Shown', 'Clicks'], rows: q.pages.map(p => [p.key, p.position, p.impressions, p.clicks]) })
           + card(7, 'Search queries', 'Searches that showed your pages.', table(['Query', 'Shown', 'Clicks', 'Position'], q.queries.slice(0, 12).map(x => [x.key, x.impressions, x.clicks, x.position])), { id: 'queries', cols: ['Query', 'Shown', 'Clicks', 'Position'], rows: q.queries.map(x => [x.key, x.impressions, x.clicks, x.position]) })
-          + card(5, 'Not yet indexed', 'Google only accepts a request for one page inside Search Console.', q.missing.length
+          + card(5, 'Not yet indexed', 'As of the last check. Google only accepts a request for one page inside Search Console.', q.missing.length
             ? rows(q.missing.slice(0, 8).map(m => ({ name: m.url.replace(/^https?:\/\//, ''), sub: m.coverage, warn: true, button: link('Open', `https://search.google.com/search-console/inspect?resource_id=${encodeURIComponent('sc-domain:' + m.url.split('/')[2])}&id=${encodeURIComponent(m.url)}`) }))) + `<div class="rp-gap">${button('Send changed pages to Bing', 'data-run="indexnow"')}</div>`
             : none(q.index.checked ? 'Every checked page is indexed.' : 'Not checked yet.'), { id: 'missing', cols: ['Page', 'Google says'], rows: q.missing.map(m => [m.url, m.coverage]) })
           + section('Searchers')
           + card(6, 'Search clicks by country', 'From Google.', bars(q.countries.map(c => [c.key, c.clicks])), { id: 'countries', cols: ['Country', 'Clicks', 'Shown'], rows: q.countries.map(c => [c.key, c.clicks, c.impressions]) })
           + card(6, 'Search devices', 'From Google.', split(q.devices.map(x => [x.key, x.clicks])))
           + section('Site checks')
-          + card(6, 'Bing crawl', "Bing's robot over the last 28 days.", outside('bing', x => tiles([[num(x.crawled), 'Pages read'], [num(x.errors), 'Errors'], [num(x.inIndex), 'Pages in Bing'], [num(x.links), 'Links to you'], [x.quota == null ? null : num(x.quota), 'Send-ins left today']])))
-          + card(6, 'Content audit', q.audit ? `Checked ${ago(q.audit.ran_at).toLowerCase()}.` : 'Runs every night.', q.audit ? tiles([[num(q.audit.pages), 'Pages checked'], [num(q.audit.counts.high), 'Serious issues'], [num(q.audit.counts.med), 'Worth fixing'], [num(q.audit.counts.low), 'Minor']]) + `<div class="rp-gap">${button('Open the list', 'data-go="/admin/seo-audit"')}</div>` : none('Not run yet.')),
+          + card(6, 'Bing crawl', d.period === 'all' ? "Bing's robot, all the history Bing keeps." : `Bing's robot over the last ${d.days} days.`, outside('bing', x => tiles([[num(x.crawled), 'Pages read'], [num(x.errors), 'Errors'], [num(x.inIndex), 'Pages in Bing'], [num(x.links), 'Links to you'], [x.quota == null ? null : num(x.quota), 'Send-ins left today']])))
+          + card(6, 'Content audit', q.audit ? `All sites, checked ${ago(q.audit.ran_at).toLowerCase()}.` : 'Runs every night.', q.audit ? tiles([[num(q.audit.pages), 'Pages checked'], [num(q.audit.counts.high), 'Serious issues'], [num(q.audit.counts.med), 'Worth fixing'], [num(q.audit.counts.low), 'Minor']]) + `<div class="rp-gap">${button('Open the list', 'data-go="/admin/seo-audit"')}</div>` : none('Not run yet.')),
       };
     },
 
@@ -322,8 +325,8 @@
         ],
         body: section('Path to purchase')
           + card(12, 'Customer journey', 'Source, first page, then outcome. Band width shows visitor numbers.', journeyChart(s.journey), { id: 'journey', cols: ['From', 'To', 'Visitors'], rows: s.journey })
-          + card(4, 'Form drop-off causes', 'Most frequent first.', bars(s.problems.map(p => [p[0], p[1], p[2] ? `${p[2]} on phones` : '']), 'var(--rp-c2)'), { id: 'problems', cols: ['Problem', 'Times', 'On phones'], rows: s.problems })
-          + card(4, 'Friction', 'From Clarity, last 3 days.', outside('clarity', c => rows([
+          + card(4, 'Form drop-off causes', d.site === 'all' ? 'Most frequent first.' : 'Most frequent first. Counted for all sites together.', bars(s.problems.map(p => [p[0], p[1], p[2] ? `${p[2]} on phones` : '']), 'var(--rp-c2)'), { id: 'problems', cols: ['Problem', 'Times', 'On phones'], rows: s.problems })
+          + card(4, 'Friction', 'From Clarity, all sites. Always the last 3 days.', outside('clarity', c => rows([
             { name: `${c.dead == null ? 0 : num(c.dead)} taps that did nothing`, sub: 'Dead clicks' },
             { name: `${c.rage == null ? 0 : num(c.rage)} bursts of frustrated tapping`, sub: 'Rage clicks' },
             { name: 'Watch what happened', sub: 'Replays open in Clarity', button: link('Open', 'https://clarity.microsoft.com/projects') },
@@ -335,10 +338,10 @@
             return `<div class="rp-bar" ${tip(`${place(p.code)}\n${p.orders} orders\nRevenue ${cash(p.revenue)}\nProfit ${cash(p.profit)}`)}><div><span>${e(place(p.code))} <small>${num(p.orders)} orders</small></span><b>${cash(p.profit)} <small>of ${cash(p.revenue)}</small></b></div><svg viewBox="0 0 100 4" preserveAspectRatio="none" class="rp-stack"><rect width="${p.revenue / max * 100}" height="4" fill="var(--rp-faint)"/><rect width="${Math.max(0, p.profit) / max * 100}" height="4" fill="var(--rp-good)"/></svg></div>`;
           }).join('') : none('No orders in this period.'), { id: 'profit', cols: ['Destination', 'Revenue', 'Profit'], rows: s.profit.map(p => [place(p.code), p.revenue / 100, p.profit / 100]) })
           + card(4, 'Payment methods', 'From Stripe, all sites.', outside('stripe', m => split(m.methods)))
-          + card(12, 'Payment issues and fees', `From Stripe, all sites, last ${d.days} days.`, outside('stripe', m => tiles([[num(m.declined), 'Declined payments'], [num(m.refunds), 'Refunds', cash(m.refundedCents)], [num(m.disputes), 'Open disputes'], [cash(m.fees), 'Stripe fees']])))
+          + card(12, 'Payment issues and fees', `From Stripe, all sites, ${d.period === 'all' ? 'all time' : `last ${d.days} days`}.`, outside('stripe', m => tiles([[num(m.declined), 'Declined payments'], [num(m.refunds), 'Refunds', cash(m.refundedCents)], [num(m.disputes), 'Open disputes'], [cash(m.fees), 'Stripe fees']])))
           + section('After the order')
           + card(4, 'Fulfilment time', 'Days from payment to mailing.', bars(s.fulfilment, 'var(--rp-c3)'), { id: 'fulfilment', cols: ['Time', 'Orders'], rows: s.fulfilment })
-          + card(8, 'Emails, codes and messages', 'Order-related activity.', tiles([[num(s.extras.emailsSent), 'Emails sent'], [s.extras.emailsTracked ? Math.round(s.extras.emailsOpened / s.extras.emailsTracked * 100) + '%' : null, 'Tracked emails opened'], [num(s.extras.codes), 'Used a discount code'], [num(s.extras.offers), 'Bought after a cart offer'], [num(s.extras.messages), 'Messages to answer']])),
+          + card(8, 'Emails, codes and messages', d.site === 'all' ? 'Order-related activity.' : 'Order-related activity. Email and message counts cover all sites.', tiles([[num(s.extras.emailsSent), 'Emails sent'], [s.extras.emailsTracked ? Math.round(s.extras.emailsOpened / s.extras.emailsTracked * 100) + '%' : null, 'Tracked emails opened'], [num(s.extras.codes), 'Used a discount code'], [num(s.extras.offers), 'Bought after a cart offer'], [num(s.extras.messages), 'Messages to answer']])),
       };
     },
 
@@ -356,7 +359,7 @@
         summary: slow ? `<b>${slow} page${slow === 1 ? ' is' : 's are'}</b> slow on phones.` : pages.length ? 'Your main pages are loading well on phones.' : 'Page speed has not been checked yet.',
         kpis: null,
         body: section('Availability')
-          + card(12, 'Server running time', 'Share of each day the Letterhome server was running. Grey means no record yet. Network outages are caught by your uptime monitor, not here.',
+          + card(12, 'Server running time', 'The last 90 days. Share of each day the Letterhome server was running. Grey means no record yet. Network outages are caught by your uptime monitor, not here.',
             `<div class="rp-days">${h.uptime.map(u => `<i class="${u.share == null ? 'x' : u.share < .995 ? 'o' : ''}" ${tip(`${dayName(u.day)}: ${u.share == null ? 'no record' : Math.round(u.share * 100) + '% of the day'}`)}></i>`).join('')}</div>`,
             { id: 'uptime', cols: ['Day', 'Percent'], rows: h.uptime.map(u => [u.day, u.share == null ? '' : Math.round(u.share * 100)]) })
           + section('Speed and quality')
@@ -402,11 +405,13 @@
     const d = state.data;
     state.tables = [];
     const v = SCREENS[state.screen](d);
-    const seg = [7, 28, 90].map(n => `<button data-days="${n}" aria-pressed="${n === state.days}">${n} days</button>`).join('');
+    const seg = [7, 28, 90, 'all'].map(n => `<button data-days="${n}" aria-pressed="${n === state.days}">${n === 'all' ? 'All time' : `${n} days`}</button>`).join('');
+    // Health shows how things are now, so a period or site choice would change nothing there.
+    const filtered = state.screen !== 'health';
     setMain(`<div id="rp" class="rp">
       <div class="rp-top"><span class="rp-live"><span class="rp-pulse"></span><span id="rp-ago">Live</span></span>
-        <div class="rp-seg" role="group" aria-label="Period">${seg}</div>
-        <select data-site aria-label="Site">${Object.entries(SITE_NAMES).map(([k, n]) => `<option value="${k}"${k === state.site ? ' selected' : ''}>${n}</option>`).join('')}</select>
+        ${filtered ? `<div class="rp-seg" role="group" aria-label="Period">${seg}</div>
+        <select data-site aria-label="Site">${Object.entries(SITE_NAMES).map(([k, n]) => `<option value="${k}"${k === state.site ? ' selected' : ''}>${n}</option>`).join('')}</select>` : ''}
         <a class="rp-btn" download href="/api/admin/reports/export?screen=${state.screen}&days=${state.days}&site=${state.site}">Export</a></div>
       <div class="rp-summary">${v.summary}</div>
       ${v.kpis ? strip(v.kpis) : ''}
@@ -433,7 +438,7 @@
       const t = ev.target.closest('[data-go],[data-days],[data-table],[data-run]');
       if (!t) return;
       if (t.dataset.go) return go(t.dataset.go);
-      if (t.dataset.days) { if (Number(t.dataset.days) !== state.days) { state.days = Number(t.dataset.days); load(); } return; }
+      if (t.dataset.days) { const v = t.dataset.days === 'all' ? 'all' : Number(t.dataset.days); if (v !== state.days) { state.days = v; load(); } return; }
       if (t.dataset.table) {
         const body = t.closest('.rp-card').querySelector('.rp-body'), d = state.tables[t.dataset.table], on = t.getAttribute('aria-pressed') !== 'true';
         t.setAttribute('aria-pressed', on); t.textContent = on ? 'Chart' : 'Table';
@@ -447,9 +452,9 @@
           : await post('/api/admin/google/run', { kind });
       t.textContent = !r || r.error ? 'Failed' : kind === 'search' ? 'Done' : kind === 'indexnow' ? `${r.submitted || 0} sent` : 'Started';
       if (r && r.error) t.title = r.error;
-      if (kind === 'search' && r && !r.error) load();
+      if (kind === 'search' && r && !r.error) { seen.clear(); load(); }
     });
-    root.querySelector('[data-site]').addEventListener('change', ev => { state.site = ev.target.value; load(); });
+    root.querySelector('[data-site]')?.addEventListener('change', ev => { state.site = ev.target.value; load(); });
     root.querySelector('[data-target]')?.addEventListener('submit', async ev => {
       ev.preventDefault();
       const value = String(Math.max(0, Math.min(1000000, parseInt(ev.target.querySelector('input').value, 10) || 0)));
@@ -497,7 +502,7 @@
     const root = document.getElementById('rp');
     if (!root) return;
     root.classList.add('rp-busy');
-    for (const b of root.querySelectorAll('[data-days]')) b.setAttribute('aria-pressed', Number(b.dataset.days) === state.days);
+    for (const b of root.querySelectorAll('[data-days]')) b.setAttribute('aria-pressed', b.dataset.days === String(state.days));
     const el = document.getElementById('rp-ago');
     if (el) el.textContent = message;
   }

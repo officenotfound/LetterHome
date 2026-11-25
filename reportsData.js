@@ -8,7 +8,7 @@ const path = require('node:path');
 const { Worker } = require('node:worker_threads');
 const { estimateCost } = require('./adminExtras');
 const { SOURCE_LABELS } = require('./trafficSources');
-const { parseServiceKey, googleToken, call, pickProperties } = require('./searchApis');
+const { parseServiceKey, googleToken, call, pickProperties, windowsSchema } = require('./searchApis');
 const tracking = require('./tracking');
 
 const SITES = ['ca', 'us', 'uk'];
@@ -42,7 +42,7 @@ const titleCase = c => (c ? c[0].toUpperCase() + c.slice(1) : 'Unknown');
 const count = (list, key) => { const m = new Map(); for (const x of list) { const k = key(x); if (k != null) m.set(k, (m.get(k) || 0) + 1); } return [...m].sort((a, b) => b[1] - a[1]); };
 
 function filters(query) {
-  const days = [7, 28, 90].includes(Number(query.days)) ? Number(query.days) : 28;
+  const days = query.days === 'all' ? 'all' : [7, 28, 90].includes(Number(query.days)) ? Number(query.days) : 28;
   const site = SITES.includes(query.site) ? query.site : 'all';
   return {
     days, site,
@@ -65,9 +65,16 @@ function orderQueue(db, contentHeld, t) {
 
 function build({ db, getSetting, contentHeld, today, queue }, query = {}, now = Date.now()) {
   const f = filters(query);
-  const { days } = f;
   const all = (sql, ...a) => { try { return db.prepare(sql).all(...a); } catch (e) { console.error('[reports]', e.message); return []; } };
   const one = (sql, ...a) => all(sql, ...a)[0] || {};
+
+  // All time starts at the first visit or paid order on record.
+  const allTime = f.days === 'all';
+  let days = f.days;
+  if (allTime) {
+    const first = [one('SELECT MIN(created_at) t FROM page_views').t, one(`SELECT MIN(created_at) t FROM orders WHERE ${SALE}`).t].filter(Boolean).sort()[0];
+    days = first ? Math.min(3660, Math.max(1, Math.ceil((now - dbTime(first)) / 86400000) + 1)) : 1;
+  }
 
   const dates = Array.from({ length: days * 2 }, (_, i) => local(now - (days * 2 - 1 - i) * 86400000).day);
   const current = new Set(dates.slice(days));
@@ -134,7 +141,10 @@ function build({ db, getSetting, contentHeld, today, queue }, query = {}, now = 
 
   // ── Funnel (checkout steps are counted for all sites together) ───────────────────────────
   const steps = Object.fromEntries(all('SELECT step, COUNT(*) n FROM funnel_events WHERE day >= ? GROUP BY step', from).map(r => [r.step, r.n]));
-  const funnel = [['Visited', people.length], ['Opened the order page', steps.send_view || kpis.sendViews.now], ['Clicked Pay', steps.pay_click || 0], ['Paid', sales.length]];
+  // With one site chosen, only the steps that can be told apart by site are shown.
+  const funnel = f.site === 'all'
+    ? [['Visited', people.length], ['Opened the order page', steps.send_view || kpis.sendViews.now], ['Clicked Pay', steps.pay_click || 0], ['Paid', sales.length]]
+    : [['Visited', people.length], ['Opened the order page', kpis.sendViews.now], ['Paid', sales.length]];
 
   // ── Sources and journey ──────────────────────────────────────────────────────────────────
   const label = s => SOURCE_LABELS[s] || 'Unknown';
@@ -169,7 +179,10 @@ function build({ db, getSetting, contentHeld, today, queue }, query = {}, now = 
     if (seenHour.has(k) || v.weekday < 0) continue;
     seenHour.add(k); heat[v.weekday][v.hour]++;
   }
-  const returning = people.filter(p => seenBefore.has(p.ip)).length;
+  // Within a period, returning means seen before it. Over all time it means seen on more than one day.
+  const daysSeen = new Map();
+  if (allTime) for (const v of nowViews) { if (!daysSeen.has(v.ip)) daysSeen.set(v.ip, new Set()); daysSeen.get(v.ip).add(v.day); }
+  const returning = people.filter(p => (allTime ? daysSeen.get(p.ip)?.size > 1 : seenBefore.has(p.ip))).length;
   const referrers = count(people.filter(p => p.source === 'site' || p.source === 'social'), p => {
     const h = String(p.referrer || '').toLowerCase().replace(/^www\./, '');
     return h && !OUR_HOSTS.test(h) ? h.slice(0, 80) : null;
@@ -186,29 +199,45 @@ function build({ db, getSetting, contentHeld, today, queue }, query = {}, now = 
   const flat = map => [...map.values()].map(x => ({ key: x.key, clicks: Math.round(x.clicks), impressions: Math.round(x.impressions), position: x.impressions ? Math.round(x.weighted / x.impressions * 10) / 10 : 0 }));
   const queryMap = new Map(), pageMap = new Map(), countryMap = new Map(), deviceMap = new Map();
   const dayMaps = { google: new Map(), bing: new Map() };
+  // Each period is fetched separately. Until that has happened the latest 28 days stand in, and the screen says so.
+  let standIn = false;
+  const addRow = (kind, r, engine, total) => {
+    if (kind === 'date') { merge(dayMaps[engine], r.key, r); if (total) total.weighted += (r.position || 0) * (r.impressions || 0); }
+    else if (kind === 'query') merge(queryMap, r.key, r);
+    else if (kind === 'page') merge(pageMap, f.site === 'all' ? r.key.replace(/^https?:\/\/(www\.)?/, '') : r.key.replace(/^https?:\/\/[^/]+/, '') || '/', r);
+    else if (kind === 'country') merge(countryMap, r.key, r);
+    else if (kind === 'device') merge(deviceMap, r.key, r);
+  };
   for (const engine of ['google', 'bing']) {
     const total = { clicks: 0, impressions: 0, weighted: 0, beforeClicks: null, beforeImpressions: null, to: null };
     for (const site of sites) {
+      let period = null;
+      try { period = JSON.parse(one('SELECT data FROM search_windows WHERE site = ? AND engine = ? AND days = ?', site, engine, allTime ? 0 : f.days).data || 'null'); } catch {}
+      if (period) {
+        if (period.to && (!total.to || period.to > total.to)) total.to = period.to;
+        total.clicks += period.clicks; total.impressions += period.impressions;
+        total.weighted += period.position * period.impressions;
+        if (period.beforeClicks != null) { total.beforeClicks = (total.beforeClicks || 0) + period.beforeClicks; total.beforeImpressions = (total.beforeImpressions || 0) + period.beforeImpressions; }
+        for (const r of period.chart) addRow('date', r, engine);
+        for (const kind of ['query', 'page', 'country', 'device']) for (const r of period[{ query: 'queries', page: 'pages', country: 'countries', device: 'devices' }[kind]] || []) addRow(kind, r, engine);
+        continue;
+      }
       const snaps = all('SELECT id, date_to, clicks, impressions FROM gsc_snapshots WHERE site = ? AND engine = ? ORDER BY id DESC LIMIT 12', site, engine);
       if (!snaps.length) continue;
+      if (f.days !== 28) standIn = true;
       const latest = snaps[0];
       if (latest.date_to && (!total.to || latest.date_to > total.to)) total.to = latest.date_to;
       total.clicks += latest.clicks; total.impressions += latest.impressions;
       const cut = latest.date_to ? new Date(Date.parse(latest.date_to) - 6 * 86400000).toISOString().slice(0, 10) : '';
-      const prev = snaps.slice(1).find(s => s.date_to && s.date_to <= cut);
+      const prev = f.days === 28 && snaps.slice(1).find(s => s.date_to && s.date_to <= cut);
       if (prev) { total.beforeClicks = (total.beforeClicks || 0) + prev.clicks; total.beforeImpressions = (total.beforeImpressions || 0) + prev.impressions; }
-      for (const r of all('SELECT kind, key, clicks, impressions, position FROM gsc_rows WHERE snapshot_id = ?', latest.id)) {
-        if (r.kind === 'date') { merge(dayMaps[engine], r.key, r); total.weighted += (r.position || 0) * (r.impressions || 0); }
-        else if (r.kind === 'query') merge(queryMap, r.key, r);
-        else if (r.kind === 'page') merge(pageMap, f.site === 'all' ? r.key.replace(/^https?:\/\/(www\.)?/, '') : r.key.replace(/^https?:\/\/[^/]+/, '') || '/', r);
-        else if (r.kind === 'country') merge(countryMap, r.key, r);
-        else if (r.kind === 'device') merge(deviceMap, r.key, r);
-      }
+      for (const r of all('SELECT kind, key, clicks, impressions, position FROM gsc_rows WHERE snapshot_id = ?', latest.id)) addRow(r.kind, r, engine, total);
     }
     const position = total.impressions ? Math.round(total.weighted / total.impressions * 10) / 10 : 0;
     search.engines[engine] = { clicks: Math.round(total.clicks), impressions: Math.round(total.impressions), position, to: total.to,
       beforeClicks: total.beforeClicks, beforeImpressions: total.beforeImpressions };
   }
+  search.standIn = standIn;
   search.dates = [...new Set([...dayMaps.google.keys(), ...dayMaps.bing.keys()])].sort();
   search.google = search.dates.map(d => Math.round(dayMaps.google.get(d)?.clicks || 0));
   search.bing = search.dates.map(d => Math.round(dayMaps.bing.get(d)?.clicks || 0));
@@ -282,15 +311,17 @@ function build({ db, getSetting, contentHeld, today, queue }, query = {}, now = 
   const speed = all('SELECT url, score, a11y, practices, seo, lcp_ms, cls, error, checked_at FROM speed_results WHERE checked_at = (SELECT MAX(checked_at) FROM speed_results) ORDER BY url');
   const setting = key => { try { return JSON.parse(getSetting(key, '') || 'null'); } catch { return null; } };
 
+  const upDays = Array.from({ length: 90 }, (_, i) => local(now - (89 - i) * 86400000).day);
+
   return {
-    days, site: f.site, generated_at: new Date(now).toISOString(),
+    days, period: f.days, since: from, site: f.site, generated_at: new Date(now).toISOString(),
     kpis, series,
     overview: { actions, ordersBySource, funnel, target: { goal: parseInt(getSetting('monthly_order_target', ''), 10) || 0, month: monthOrders } },
     audience: { countries, channels, topPages, devices, heat, visitorsNew: people.length - returning, visitorsReturning: returning, referrers },
     search,
     sales: { journey, problems, heard, profit, fulfilment: buckets, extras },
     health: {
-      uptime: dates.slice(days).map(d => { const r = heartbeat.get(d); return { day: d, share: r ? Math.min(1, r.beats / Math.max(1, r.expected)) : null }; }),
+      uptime: upDays.map(d => { const r = heartbeat.get(d); return { day: d, share: r ? Math.min(1, r.beats / Math.max(1, r.expected)) : null }; }),
       speed,
       jobs: {
         searchFetch: fetchLast?.at ? new Date(fetchLast.at).toISOString() : null,
@@ -353,13 +384,13 @@ async function cached(key, ms, make, now = Date.now()) {
 const timed = (promise, ms = 9000) => Promise.race([promise, new Promise((_, no) => setTimeout(() => no(new Error('Did not answer in time.')), ms).unref())]);
 
 async function stripeFigures(stripe, days, now) {
-  const created = { gte: Math.floor(now / 1000) - days * 86400 };
-  const list = (resource, params) => timed(resource.list({ limit: 100, ...params }).autoPagingToArray({ limit: 600 }), 15000);
+  const created = days === 'all' ? undefined : { gte: Math.floor(now / 1000) - days * 86400 };
+  const list = (resource, params) => timed(resource.list({ limit: 100, ...params }).autoPagingToArray({ limit: days === 'all' ? 3000 : 600 }), 20000);
   const [balance, payouts, charges, movements, disputes] = await Promise.all([
     timed(stripe.balance.retrieve()),
     timed(stripe.payouts.list({ limit: 5 })),
-    list(stripe.charges, { created }),
-    list(stripe.balanceTransactions, { created }),
+    list(stripe.charges, created ? { created } : {}),
+    list(stripe.balanceTransactions, created ? { created } : {}),
     timed(stripe.disputes.list({ limit: 20 })),
   ]);
   const add = rows => rows.reduce((a, r) => a + r.amount, 0);
@@ -393,7 +424,7 @@ async function analyticsFigures(getSetting, days, fetchImpl) {
   const token = await googleToken(fetchImpl, parseServiceKey(raw), 'analytics.readonly');
   const cities = new Map(), languages = new Map();
   let sessions = 0, seconds = 0, engaged = 0, errors = 0;
-  const dateRanges = [{ startDate: `${days}daysAgo`, endDate: 'today' }];
+  const dateRanges = [{ startDate: days === 'all' ? '2020-01-01' : `${days}daysAgo`, endDate: 'today' }];
   for (const id of ids) {
     const report = body => call(fetchImpl, 'Google Analytics', `https://analyticsdata.googleapis.com/v1beta/properties/${id}:runReport`,
       { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ dateRanges, ...body }) });
@@ -426,14 +457,14 @@ async function clarityFigures(getSetting, setSetting, fetchImpl) {
   };
 }
 
-async function bingFigures(getSetting, site, fetchImpl, now) {
+async function bingFigures(getSetting, site, days, fetchImpl, now) {
   const key = getSetting('bing_api_key', '');
   if (!key) return { configured: false };
   const base = 'https://ssl.bing.com/webmaster/api.svc/json';
   const ask = async (method, extra = '') => (await call(fetchImpl, 'Bing', `${base}/${method}?apikey=${encodeURIComponent(key)}${extra}`)).d;
   const props = pickProperties(((await ask('GetUserSites')) || []).filter(s => s.IsVerified !== false).map(s => s.Url));
   const wanted = Object.entries(props).filter(([s]) => site === 'all' || s === site);
-  const since = now - 28 * 86400000;
+  const since = days === 'all' ? 0 : now - days * 86400000;
   let crawled = 0, errors = 0, inIndex = 0, links = 0, quota = null;
   for (const [, url] of wanted) {
     const q = `&siteUrl=${encodeURIComponent(url)}`;
@@ -454,7 +485,7 @@ async function external({ getSetting, setSetting, stripe }, query = {}, fetchImp
     cached(`stripe ${f.days}`, 60000, () => stripeFigures(stripe, f.days, now), now),
     cached(`analytics ${f.days} ${getSetting('ga4_property_ids', '')}`, HOUR, () => analyticsFigures(getSetting, f.days, fetchImpl), now),
     cached('clarity', 15 * 60000, () => clarityFigures(getSetting, setSetting, fetchImpl), now),
-    cached(`bing ${f.site}`, 6 * HOUR, () => bingFigures(getSetting, f.site, fetchImpl, now), now),
+    cached(`bing ${f.site} ${f.days}`, 6 * HOUR, () => bingFigures(getSetting, f.site, f.days, fetchImpl, now), now),
   ]);
   return { stripe: money, analytics, clarity, bing };
 }
@@ -515,6 +546,7 @@ function beat(db, now = Date.now()) {
 }
 
 function schema(db) {
+  windowsSchema(db);
   db.exec('CREATE TABLE IF NOT EXISTS app_heartbeat (day TEXT PRIMARY KEY, beats INTEGER NOT NULL, expected INTEGER NOT NULL, last_at INTEGER NOT NULL)');
   for (const col of ['a11y', 'practices', 'seo']) { try { db.exec(`ALTER TABLE speed_results ADD COLUMN ${col} INTEGER`); } catch {} }
 }
@@ -565,7 +597,7 @@ function register(app, deps) {
     const queue = orderQueue(db, contentHeld, t);
     let newest = 0;
     try { newest = db.prepare('SELECT MAX(id) n FROM orders').get().n || 0; } catch {}
-    const key = [f.days, f.site, newest, queue.waiting, queue.held, deps.getSetting('monthly_order_target', '')].join('|');
+    const key = [f.days, f.site, newest, queue.waiting, queue.held, deps.getSetting('monthly_order_target', ''), deps.getSetting('search_fetch_last', '')].join('|');
     const hit = recent.get(key);
     if (hit && Date.now() - hit.at < 60000) return hit.value;
     for (const [k, v] of recent) if (Date.now() - v.at >= 60000) recent.delete(k);
@@ -587,7 +619,7 @@ function register(app, deps) {
       const wanted = tables(data).filter(t => (req.query.table ? t.id === req.query.table && t.screen === req.query.screen : t.screen === req.query.screen));
       if (!wanted.length) return res.status(404).json({ error: 'Nothing to export.' });
       const body = wanted.map(t => (wanted.length > 1 ? `${t.title}\r\n` : '') + toCsv(t.columns, t.rows)).join('\r\n\r\n');
-      const name = `letterhome-${wanted[0].screen}${req.query.table ? '-' + wanted[0].id : ''}-${data.days}d-${data.series.dates[data.series.dates.length - 1]}.csv`;
+      const name = `letterhome-${wanted[0].screen}${req.query.table ? '-' + wanted[0].id : ''}-${data.period === 'all' ? 'all-time' : data.period + 'd'}-${data.series.dates[data.series.dates.length - 1]}.csv`;
       res.setHeader('Content-Type', 'text/csv; charset=utf-8');
       res.setHeader('Content-Disposition', `attachment; filename="${name}"`);
       res.send('﻿' + body);

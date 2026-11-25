@@ -5,6 +5,8 @@
 const { createSign } = require('node:crypto');
 
 const KEEP = 12;
+const WINDOWS = [7, 28, 90, 0];   // the periods the Reports screen offers; 0 is all time
+const GOOGLE_HISTORY = 480;       // about the 16 months Google keeps
 const GOOGLE = 'https://www.googleapis.com/webmasters/v3';
 const BING = 'https://ssl.bing.com/webmaster/api.svc/json';
 const COUNTRIES = { can: 'Canada', usa: 'United States', gbr: 'United Kingdom', aus: 'Australia', nzl: 'New Zealand', ind: 'India', phl: 'Philippines',
@@ -61,6 +63,63 @@ async function googleToken(fetchImpl, key, scope = 'webmasters.readonly') {
   return j.access_token;
 }
 
+function windowsSchema(db) {
+  db.exec(`CREATE TABLE IF NOT EXISTS search_windows (
+    site TEXT NOT NULL, engine TEXT NOT NULL, days INTEGER NOT NULL, data TEXT NOT NULL, fetched_at TEXT NOT NULL,
+    PRIMARY KEY (site, engine, days))`);
+}
+
+const back = (date, n) => day(Date.parse(date + 'T00:00:00Z') - n * 86400000);
+
+// One period's figures: totals from the daily rows, with the period just before it to compare against.
+function windowOf(daily, days, end, lists) {
+  const start = days ? back(end, days - 1) : '';
+  const chart = daily.filter(r => r.key >= start && r.key <= end).sort((a, b) => a.key.localeCompare(b.key));
+  const before = days ? daily.filter(r => r.key >= back(end, days * 2 - 1) && r.key < start) : [];
+  const sum = (list, key) => Math.round(list.reduce((a, r) => a + (r[key] || 0), 0));
+  const rows = chart.some(r => r.position > 0) ? chart : lists.pages;
+  const placed = rows.filter(r => r.position > 0 && r.impressions > 0), seen = placed.reduce((a, r) => a + r.impressions, 0);
+  return {
+    to: chart.length ? chart[chart.length - 1].key : null,
+    clicks: sum(chart, 'clicks'), impressions: sum(chart, 'impressions'),
+    position: seen ? Math.round(placed.reduce((a, r) => a + r.position * r.impressions, 0) / seen * 10) / 10 : 0,
+    beforeClicks: before.length ? sum(before, 'clicks') : null, beforeImpressions: before.length ? sum(before, 'impressions') : null,
+    chart: chart.map(r => ({ key: r.key, clicks: r.clicks, impressions: r.impressions, position: r.position })),
+    ...lists,
+  };
+}
+
+function storeWindows(db, site, engine, windows, now) {
+  windowsSchema(db);
+  const put = db.prepare(`INSERT INTO search_windows (site, engine, days, data, fetched_at) VALUES (?,?,?,?,?)
+    ON CONFLICT(site, engine, days) DO UPDATE SET data = excluded.data, fetched_at = excluded.fetched_at`);
+  for (const [days, data] of Object.entries(windows)) put.run(site, engine, Number(days), JSON.stringify(data), new Date(now).toISOString());
+}
+
+const googleRow = r => ({ key: String(r.keys[0]).slice(0, 500), clicks: r.clicks || 0, impressions: r.impressions || 0, ctr: r.ctr || 0, position: r.position || 0 });
+const countryName = r => ({ ...r, key: COUNTRIES[r.key] || r.key.toUpperCase() });
+const deviceName = r => ({ ...r, key: r.key[0] + r.key.slice(1).toLowerCase() });
+
+async function googleWindows(fetchImpl, token, property, now) {
+  const end = day(now - 2 * 86400000);
+  const ask = async (days, dimension, rowLimit) => {
+    const j = await call(fetchImpl, 'Google', `${GOOGLE}/sites/${encodeURIComponent(property)}/searchAnalytics/query`, {
+      method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ startDate: back(end, (days || GOOGLE_HISTORY) - 1), endDate: end, dimensions: [dimension], rowLimit }),
+    });
+    return (j.rows || []).map(googleRow);
+  };
+  const daily = await ask(0, 'date', 500);
+  const out = {};
+  for (const days of WINDOWS) {
+    out[days] = windowOf(daily, days, end, {
+      queries: await ask(days, 'query', 250), pages: await ask(days, 'page', 250),
+      countries: (await ask(days, 'country', 50)).map(countryName), devices: (await ask(days, 'device', 10)).map(deviceName),
+    });
+  }
+  return out;
+}
+
 async function googleData(fetchImpl, token, property, now) {
   const range = { startDate: day(now - 30 * 86400000), endDate: day(now - 2 * 86400000) };   // 28 days; Google runs 2 days behind
   const ask = async (dimension, rowLimit) => {
@@ -98,12 +157,22 @@ function bingRows(list, keyOf, since) {
 async function bingData(fetchImpl, apiKey, siteUrl, now) {
   const since = day(now - 28 * 86400000);
   const ask = async method => (await call(fetchImpl, 'Bing', `${BING}/${method}?siteUrl=${encodeURIComponent(siteUrl)}&apikey=${encodeURIComponent(apiKey)}`)).d || [];
-  return {
-    queries: bingRows(await ask('GetQueryStats'), r => r.Query, since),
-    pages: bingRows(await ask('GetPageStats'), r => r.Query, since),
-    chart: bingRows(await ask('GetRankAndTrafficStats'), r => bingDay(r.Date), since).sort((a, b) => a.key.localeCompare(b.key)),
+  const queries = await ask('GetQueryStats'), pages = await ask('GetPageStats'), traffic = await ask('GetRankAndTrafficStats');
+  const cut = (from) => ({
+    queries: bingRows(queries, r => r.Query, from),
+    pages: bingRows(pages, r => r.Query, from),
+    chart: bingRows(traffic, r => bingDay(r.Date), from).sort((a, b) => a.key.localeCompare(b.key)),
     countries: [], devices: [],
-  };
+  });
+  // Bing publishes a few days late, so each period ends on the newest day it has.
+  const daily = bingRows(traffic, r => bingDay(r.Date), '');
+  const end = daily.map(r => r.key).sort().pop() || day(now);
+  const windows = {};
+  for (const days of WINDOWS) {
+    const part = cut(days ? back(end, days - 1) : '');
+    windows[days] = windowOf(daily, days, end, { queries: part.queries.slice(0, 250), pages: part.pages.slice(0, 250), countries: [], devices: [] });
+  }
+  return { ...cut(since), windows };
 }
 
 // One kept copy per week: a newer fetch in the same week replaces it, so the history reaches back months.
@@ -134,11 +203,12 @@ async function fetchAll({ db, getSetting, setSetting, fetchImpl = fetch, now = D
     try { await run(); }
     catch (e) { results.push({ engine: name, ok: false, message: e.message || `${label} failed.` }); }
   };
-  const one = async (name, site, getData) => {
+  const one = async (name, site, getData, getWindows) => {
     try {
       const data = await getData();
       if (!data.pages.length && !data.queries.length && !data.chart.length) return results.push({ engine: name, site, ok: true, message: 'No data yet.' });
       store(db, site, name, data, now);
+      storeWindows(db, site, name, data.windows || await getWindows(), now);
       results.push({ engine: name, site, ok: true, message: `${data.queries.length} searches, ${data.pages.length} pages` });
     } catch (e) { results.push({ engine: name, site, ok: false, message: e.message }); }
   };
@@ -148,7 +218,7 @@ async function fetchAll({ db, getSetting, setSetting, fetchImpl = fetch, now = D
     const list = await call(fetchImpl, 'Google', `${GOOGLE}/sites`, { headers: { Authorization: `Bearer ${token}` } });
     const props = pickProperties((list.siteEntry || []).filter(s => s.permissionLevel !== 'siteUnverifiedUser').map(s => s.siteUrl));
     if (!Object.keys(props).length) throw new Error('The key works, but it has not been added as a user on any Letterhome site in Search Console.');
-    for (const [site, property] of Object.entries(props)) await one('google', site, () => googleData(fetchImpl, token, property, now));
+    for (const [site, property] of Object.entries(props)) await one('google', site, () => googleData(fetchImpl, token, property, now), () => googleWindows(fetchImpl, token, property, now));
   });
   const bingKey = getSetting('bing_api_key', '');
   if (bingKey) await engine('bing', 'Bing', async () => {
@@ -169,6 +239,12 @@ function status(getSetting) {
 }
 
 function register(app, { db, requireAdmin, logAudit, getSetting, setSetting }) {
+  windowsSchema(db);
+  // Right after an update there may be no per-period figures yet: fetch once rather than wait for tomorrow.
+  if (process.env.NODE_ENV !== 'test' && (getSetting('gsc_service_key', '') || getSetting('bing_api_key', ''))
+    && !db.prepare('SELECT 1 FROM search_windows WHERE days = 0 LIMIT 1').get()) {
+    setTimeout(() => fetchAll({ db, getSetting, setSetting }).catch(e => console.error('[search-api]', e.message)), 30000).unref();
+  }
   app.get('/api/admin/search-api', requireAdmin, (req, res) => res.json(status(getSetting)));
 
   app.post('/api/admin/search-api/keys', requireAdmin, (req, res) => {
@@ -193,4 +269,4 @@ function register(app, { db, requireAdmin, logAudit, getSetting, setSetting }) {
   });
 }
 
-module.exports = { register, fetchAll, status, siteOfProperty, pickProperties, parseServiceKey, bingRows, googleToken, call };
+module.exports = { register, fetchAll, status, windowsSchema, windowOf, siteOfProperty, pickProperties, parseServiceKey, bingRows, googleToken, call };

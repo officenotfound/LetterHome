@@ -86,3 +86,42 @@ test('the heartbeat marks the day, and missed marks lower it', () => {
   assert.equal(row.beats, 3);
   assert.equal(row.expected, 7);
 });
+
+test('all time reaches back to the first record and shows what the shorter periods leave out', () => {
+  const short = reports.build(deps, { days: '7' }, NOW), all = reports.build(deps, { days: 'all' }, NOW);
+  assert.equal(all.period, 'all');
+  assert.equal(short.kpis.orders.now, 2);
+  assert.equal(all.kpis.orders.now, 3);          // includes the order from 40 days ago
+  assert.equal(all.kpis.orders.before, 0);
+  assert.ok(all.days >= 41);
+  assert.equal(all.health.uptime.length, 90);    // the same whatever period is chosen
+  assert.equal(short.health.uptime.length, 90);
+  assert.ok(reports.tables(all).length);
+});
+
+test('search figures follow the period chosen, and say so when a period has not been fetched yet', async () => {
+  const search = require('../searchApis');
+  search.windowsSchema(db);
+  const day = n => new Date(NOW - n * 86400000).toISOString().slice(0, 10);
+  const answer = body => {
+    const rows = [];
+    if (body.dimensions[0] === 'date') for (let n = 2; n < 200; n++) rows.push({ keys: [day(n)], clicks: 1, impressions: 10, position: 5 });
+    else rows.push({ keys: [body.dimensions[0] === 'page' ? 'https://letterhome.ca/from-' + body.startDate : 'can'], clicks: 3, impressions: 30, position: 4 });
+    return { rows: rows.filter(r => body.dimensions[0] !== 'date' || (r.keys[0] >= body.startDate && r.keys[0] <= body.endDate)) };
+  };
+  const key = require('node:crypto').generateKeyPairSync('rsa', { modulusLength: 2048, privateKeyEncoding: { type: 'pkcs8', format: 'pem' }, publicKeyEncoding: { type: 'spki', format: 'pem' } }).privateKey;
+  const settings = { gsc_service_key: JSON.stringify({ type: 'service_account', client_email: 'a@b.iam.gserviceaccount.com', private_key: key }) };
+  const fetchImpl = async (url, opts = {}) => ({ ok: true, status: 200, json: async () => (url.includes('oauth2') ? { access_token: 't' }
+    : url.endsWith('/sites') ? { siteEntry: [{ siteUrl: 'sc-domain:letterhome.ca', permissionLevel: 'siteOwner' }] } : answer(JSON.parse(opts.body))) });
+
+  db.exec("DELETE FROM search_windows");
+  assert.equal(reports.build(deps, { days: '28' }, NOW).search.standIn, false);
+  const results = await search.fetchAll({ db, getSetting: (k, d = '') => settings[k] ?? d, setSetting() {}, fetchImpl, now: NOW });
+  assert.ok(results.every(r => r.ok), JSON.stringify(results));
+  const seen = ['7', '28', '90', 'all'].map(days => reports.build(deps, { days, site: 'ca' }, NOW).search);
+  assert.deepEqual(seen.map(s => s.engines.google.clicks), [7, 28, 90, 198]);
+  assert.equal(seen[0].engines.google.beforeClicks, 7);
+  assert.equal(seen[3].engines.google.beforeClicks, null);
+  assert.equal(new Set(seen.map(s => s.pages[0].key)).size, 4);
+  assert.ok(seen.every(s => !s.standIn));
+});
