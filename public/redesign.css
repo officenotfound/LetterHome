@@ -687,3 +687,41 @@ html body footer .lh-f-bar .lh-f-in2 .lh-f-legal a{white-space:nowrap}
 /* Footer country links: a small flag beside each name. */
 html body footer .lh-f-row .lh-flag{display:inline-block;vertical-align:-1px;margin-right:6px;box-shadow:0 0 0 1px rgba(250,246,236,.4)}
 @media(max-width:420px){html body footer .lh-f-row:first-child{flex-wrap:wrap!important;row-gap:6px}}
+/* Guides directory: header band with search, topic links, then one ruled list per topic. */
+html body .gx-hero .gx-find{width:100%;max-width:560px;margin:24px auto 0}
+html body .gx-hero .gx-find input{width:100%;box-sizing:border-box;padding:14px 16px;font:400 16px 'Noto Sans',sans-serif;border:1px solid var(--ds-line);border-radius:8px;background:#fff;color:#1c1c1c}
+html body .gx-hero .gx-find input:focus{outline:2px solid var(--ds-navy);outline-offset:2px}
+html body .hero.gx-hero{padding-left:max(24px,calc((100% - 1052px)/2))!important;padding-right:max(24px,calc((100% - 1052px)/2))!important;text-align:left!important}
+html body .hero.gx-hero>*{margin-left:0!important;margin-right:auto!important;text-align:left!important}
+html body .hero.gx-hero h1{max-width:20em!important;margin-bottom:16px!important}
+html body .hero.gx-hero .gx-find{margin:24px 0 0!important}
+html body .gx{max-width:1100px;margin:0 auto;padding:24px 24px 40px}
+html body .gx .gx-topics{display:flex;flex-wrap:wrap;justify-content:flex-start;gap:4px 24px;position:static;background:none;border:0;box-shadow:none;backdrop-filter:none;padding:0 0 20px;margin:0}
+html body .gx .gx-topics[hidden]{display:none}
+html body .gx .gx-topics a{font:500 14px/1.4 'Roboto',sans-serif;color:var(--ds-ink);text-decoration:none!important;padding:6px 0;min-height:32px}
+html body .gx .gx-topics a:hover{text-decoration:underline!important;text-underline-offset:4px}
+html body .gx .gx-sec{display:grid;grid-template-columns:240px minmax(0,1fr);gap:16px 40px;padding:32px 0;margin:0;border-top:1px solid var(--ds-line);scroll-margin-top:90px}
+html body .gx .gx-sec[hidden]{display:none}
+html body .gx .gx-sec h2{font:700 22px/1.3 'Archivo',sans-serif!important;text-align:left!important;letter-spacing:-.01em!important;margin:0!important;padding:10px 0 0!important;color:var(--ds-ink)!important}
+html body .gx .gx-list{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:32px}
+html body .gx .gx-list li{margin:0;padding:0;border-bottom:1px solid var(--ds-line);display:flex}
+html body .gx .gx-list li[hidden]{display:none}
+html body .gx .gx-list a{display:flex;flex:1;align-items:center;justify-content:space-between;gap:12px;min-height:48px;padding:12px 2px;font:400 15px/1.45 'Noto Sans',sans-serif;color:var(--ds-ink);text-decoration:none!important}
+html body .gx .gx-list a::after{content:"\203A";flex:none;font-size:18px;color:var(--ds-ink2)}
+html body .gx .gx-list a:hover{color:var(--ds-navy);text-decoration:underline!important;text-underline-offset:3px}
+html body .gx .gx-countries .gx-list{grid-template-columns:repeat(4,minmax(0,1fr));column-gap:24px}
+html body .gx .gx-sub{display:flex;flex-wrap:wrap;gap:4px 20px;margin:16px 0 0;font:400 14px/1.6 'Noto Sans',sans-serif;color:var(--ds-ink2);text-align:left}
+html body .gx .gx-sub a{color:var(--ds-ink);text-decoration:underline;text-underline-offset:3px}
+html body .gx .g-none{text-align:center;padding:24px 0}
+@media(max-width:860px){
+  html body .gx .gx-sec{grid-template-columns:minmax(0,1fr);gap:8px;padding:24px 0}
+  html body .gx .gx-sec h2{padding:0!important}
+  html body .gx .gx-countries .gx-list{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:600px){
+  html body .gx{padding:16px 16px 32px}
+  html body .gx .gx-list{grid-template-columns:minmax(0,1fr)}
+  html body .gx .gx-countries .gx-list{grid-template-columns:repeat(2,minmax(0,1fr))}
+  html body .gx .gx-topics{gap:2px 18px}
+  html body .hero.gx-hero{padding-left:16px!important;padding-right:16px!important}
+}
