@@ -17,6 +17,7 @@
       'footer.privacy': 'Privacy',
       'footer.terms': 'Terms',
       'footer.accessibility': 'Accessibility',
+      'footer.business': 'Business',
       'footer.home': 'Home',
       'index.seepricing': 'See pricing',
       'proof.address': 'Every address verified before printing',

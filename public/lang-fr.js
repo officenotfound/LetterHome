@@ -633,6 +633,7 @@ window.LH_FR = {
       'footer.privacy': 'Confidentialité',
       'footer.terms': 'Conditions',
       'footer.accessibility': 'Accessibilité',
+      'footer.business': 'Entreprises',
       'footer.home': 'Accueil',
       'index.seepricing': 'Voir les tarifs',
       'proof.address': 'Chaque adresse vérifiée avant l’impression',

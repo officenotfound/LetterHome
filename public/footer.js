@@ -19,9 +19,22 @@
     '</div>';
   var stamp = window.LHStamp ? window.LHStamp('f', 34) : '';
   // Only the links a visitor expects in a footer. Anything already in the header or on the home page stays out.
+  // Small drawn flags: emoji flags show as two letters on Windows.
+  var flag = function (inner) { return '<svg class="lh-flag" viewBox="0 0 24 12" width="22" height="11" aria-hidden="true" focusable="false">' + inner + '</svg>'; };
+  var jack = '<path fill="#012169" d="M0 0h24v12H0z"/><path stroke="#fff" stroke-width="2.4" d="M0 0l24 12M24 0L0 12"/><path stroke="#c8102e" stroke-width="1" d="M0 0l24 12M24 0L0 12"/><path stroke="#fff" stroke-width="4" d="M12 0v12M0 6h24"/><path stroke="#c8102e" stroke-width="2.4" d="M12 0v12M0 6h24"/>';
+  var FLAGS = {
+    ca: flag('<path fill="#fff" d="M0 0h24v12H0z"/><path fill="#d52b1e" d="M0 0h6v12H0zM18 0h6v12h-6zM12 1.5l1 1.9 1.1-.55-.5 2.65 1.2-1.25.25.75 1.35-.25-.45 1.5.6.35-2.2 1.85.25.85-2.25-.35.05 1.6h-.8l.05-1.6-2.25.35.25-.85-2.2-1.85.6-.35-.45-1.5 1.35.25.25-.75 1.2 1.25-.5-2.65 1.1.55z"/>'),
+    us: flag('<path fill="#fff" d="M0 0h24v12H0z"/><path stroke="#b22234" stroke-width=".92" d="M0 .46h24M0 2.31h24M0 4.15h24M0 6h24M0 7.85h24M0 9.69h24M0 11.54h24"/><path fill="#3c3b6e" d="M0 0h10.5v6.46H0z"/><path stroke="#fff" stroke-width=".9" stroke-linecap="round" stroke-dasharray="0 2.2" d="M1.2 1.3h9M2.3 2.6h7M1.2 3.9h9M2.3 5.2h7"/>'),
+    uk: flag(jack),
+    au: flag('<path fill="#012169" d="M0 0h24v12H0z"/><svg x="0" y="0" width="12" height="6" viewBox="0 0 24 12">' + jack + '</svg><g fill="#fff"><circle cx="6" cy="9" r="1.5"/><circle cx="18" cy="2.2" r=".8"/><circle cx="15" cy="5.4" r=".8"/><circle cx="21" cy="4.6" r=".8"/><circle cx="18" cy="9.6" r=".8"/><circle cx="19.4" cy="6.6" r=".5"/></g>')
+  };
   var row = function (label, links) {
     return '<div class="lh-f-row" role="navigation" aria-label="' + label + '">' +
-      links.map(function (l) { return '<a href="' + l[0] + '"' + (l[2] ? ' data-i18n="' + l[2] + '"' : '') + '>' + l[1] + '</a>'; }).join('') + '</div>';
+      links.map(function (l) {
+        var key = l[2] ? ' data-i18n="' + l[2] + '"' : '';
+        // With a flag, only the name is translated, so switching language keeps the flag.
+        return l[3] ? '<a href="' + l[0] + '">' + FLAGS[l[3]] + '<span' + key + '>' + l[1] + '</span></a>' : '<a href="' + l[0] + '"' + key + '>' + l[1] + '</a>';
+      }).join('') + '</div>';
   };
   // On a country domain (letterhome.us, letterhome.co.uk) the home page is that country's page, so the Canada link has
   // to be absolute. Other country links are plain paths: the server sends them to the right domain.
@@ -39,10 +52,12 @@
       '<div class="lh-f-brand"><div class="lh-f-logo"><span class="lh-f-stamp" aria-hidden="true">' + stamp + '</span><span class="lh-f-word">Letter<em>home</em></span></div>' +
       social + '</div>' +
       '<div class="lh-f-nav">' +
-      row('Countries', [[caHome, 'Canada', 'footer.ca'], [usHome, 'United States', 'footer.us'], [ukHome, 'United Kingdom', 'footer.uk'], [auHome, 'Australia', 'footer.au']]) +
-      row('Information', [['/about', 'About', 'footer.about'], ['/careers', 'Careers', 'footer.careers'], ['/contact', 'Contact', 'nav.contact'], ['/guides', 'Mailing guides', 'footer.guides'], ['/tools', 'Free tools'], ['/terms', 'Terms', 'footer.terms'], ['/refunds', 'Refund policy', 'footer.refunds'], ['/accessibility', 'Accessibility', 'footer.accessibility']]) +
+      row('Countries', [[caHome, 'Canada', 'footer.ca', 'ca'], [usHome, 'United States', 'footer.us', 'us'], [ukHome, 'United Kingdom', 'footer.uk', 'uk'], [auHome, 'Australia', 'footer.au', 'au']]) +
+      row('Information', [['/about', 'About', 'footer.about'], ['/careers', 'Careers', 'footer.careers'], ['/business', 'Business', 'footer.business'], ['/contact', 'Contact', 'nav.contact'], ['/guides', 'Mailing guides', 'footer.guides'], ['/tools', 'Free tools']]) +
       '</div>' +
-    '</div><div class="lh-f-bar"><div class="lh-f-in2"><span class="lh-f-id">© 2026 Letterhome</span>' + usDomain + '<a href="/privacy" data-i18n="footer.privacy">Privacy</a></div></div></footer>';
+    '</div><div class="lh-f-bar"><div class="lh-f-in2"><span class="lh-f-id">© 2026 Letterhome</span>' + usDomain +
+      row('Legal', [['/privacy', 'Privacy', 'footer.privacy'], ['/terms', 'Terms', 'footer.terms'], ['/refunds', 'Refund policy', 'footer.refunds'], ['/accessibility', 'Accessibility', 'footer.accessibility']]).replace('lh-f-row', 'lh-f-legal') +
+    '</div></div></footer>';
   // The "home" in the footer wordmark takes the exact colour of the header's, on every page, theme and country look.
   function syncAccent() {
     var src = document.querySelector('nav .logo-accent, header .logo-accent, .logo-accent'), em = document.querySelector('.lh-f-word em');

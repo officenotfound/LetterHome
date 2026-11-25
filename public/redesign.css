@@ -678,3 +678,12 @@ html[data-theme="dark"]:not([data-country]) body main.ab h1.ab-logo .logo-accent
 :root body:not(#x):not(#y) a.job-card:hover strong{text-decoration:underline!important;text-underline-offset:3px}
 /* Country sites: the small label above a page title is white on the coloured header band. */
 :root body[class*="c-"]:not(#x) .hero .hero-eyebrow{color:#fff!important;opacity:.85}
+/* Footer bottom bar: copyright on the left, the legal links together on the right. */
+html body footer .lh-f-bar .lh-f-in2 .lh-f-legal{display:flex!important;flex-wrap:wrap;align-items:baseline;justify-content:flex-end;gap:4px 20px!important;height:auto!important;white-space:normal!important;justify-self:end;grid-column:3}
+html body footer .lh-f-bar .lh-f-in2 .lh-f-legal a{white-space:nowrap}
+@media(max-width:760px){html body footer .lh-f-bar .lh-f-in2{grid-template-columns:1fr!important;justify-items:center}
+  html body footer .lh-f-bar .lh-f-in2>*{grid-column:1!important;justify-self:center!important;text-align:center!important}
+  html body footer .lh-f-bar .lh-f-in2 .lh-f-legal{justify-content:center;order:-1;gap:4px 16px!important;width:100%}}
+/* Footer country links: a small flag beside each name. */
+html body footer .lh-f-row .lh-flag{display:inline-block;vertical-align:-1px;margin-right:6px;box-shadow:0 0 0 1px rgba(250,246,236,.4)}
+@media(max-width:420px){html body footer .lh-f-row:first-child{flex-wrap:wrap!important;row-gap:6px}}
