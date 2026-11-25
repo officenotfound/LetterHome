@@ -1630,7 +1630,7 @@ async function showGoogle() {
 
   const ix = d.index;
   const indexCard = card('Pages Google has indexed',
-    tbl(['Site', 'Checked', 'Indexed'], ix.sites.map(s => `<tr><td>${esc(SITE_LABELS[s.site] || s.site)}</td><td style="text-align:right">${nf(s.checked)}</td><td style="text-align:right">${nf(s.indexed)}</td></tr>`), d.has_google_key ? 'Not checked yet.' : 'Add the Google key file on the Search screen first.') +
+    tbl(['Site', 'Checked', 'Indexed'], ix.sites.map(s => `<tr><td>${esc(SITE_LABELS[s.site] || s.site)}</td><td style="text-align:right">${nf(s.checked)}</td><td style="text-align:right">${nf(s.passed)}</td></tr>`), d.has_google_key ? 'Not checked yet.' : 'Add the Google key file on the Search screen first.') +
     pad(`${ix.last ? `<div style="color:#6b6b6b;margin-bottom:8px">Last check ${when(ix.last.at)}<br>${ix.last.messages.map(esc).join('<br>')}</div>` : ''}${btn('index', 'Check now')}`)) +
     (ix.missing.length ? card('Not indexed', tbl(['Page', 'What Google says', 'Last visit'], ix.missing.map(m => `<tr><td>${path(m.url)}</td><td>${esc(m.coverage || 'No detail')}</td><td>${esc(m.last_crawl || 'never')}</td></tr>`))) : '');
 

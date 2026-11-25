@@ -2342,3 +2342,11 @@ test('tracking: Clarity loads only with a project ID and never for private pages
   for (const p of ['/send', '/uk/send', '/track', '/order-success', '/account', '/santa-letter', '/contact']) assert.ok(priv.test(p), p);
   for (const p of ['/', '/send-a-letter-to-the-uk', '/guides', '/uk']) assert.ok(!priv.test(p), p);
 });
+
+test('every admin report screen loads on the real server', async () => {
+  const { cookie } = await loginAdmin();
+  for (const p of ['google', 'pulse', 'search-api', 'traffic', 'funnel', 'clarity', 'growth', 'growth?engine=bing']) {
+    const r = await fetch(`${base}/api/admin/${p}`, { headers: { Cookie: cookie } });
+    assert.equal(r.status, 200, p);
+  }
+});

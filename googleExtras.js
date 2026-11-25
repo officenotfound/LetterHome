@@ -189,7 +189,7 @@ function register(app, { db, requireAdmin, logAudit, getSetting, setSetting, pag
         has_google_key: !!getSetting('gsc_service_key', ''), has_speed_key: !!getSetting('pagespeed_api_key', ''),
         ga_ids: getSetting('ga4_property_ids', ''), running,
         index: {
-          sites: db.prepare(`SELECT site, COUNT(*) checked, SUM(verdict = 'PASS') indexed FROM index_status GROUP BY site ORDER BY site`).all(),
+          sites: db.prepare(`SELECT site, COUNT(*) checked, SUM(verdict = 'PASS') passed FROM index_status GROUP BY site ORDER BY site`).all(),
           missing: db.prepare(`SELECT url, coverage, last_crawl FROM index_status WHERE verdict != 'PASS' ORDER BY site, url LIMIT 60`).all(),
           last: indexLast,
         },
