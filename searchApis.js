@@ -31,10 +31,10 @@ function pickProperties(urls) {
 function parseServiceKey(text) {
   let k;
   try { k = JSON.parse(String(text)); } catch { throw new Error('That is not the key file Google gave you (it should be a .json file).'); }
-  if (k?.type !== 'service_account' || !/@[\w.-]+\.gserviceaccount\.com$/.test(k.client_email || '') || !/PRIVATE KEY/.test(k.private_key || '')) {
+  if ((k?.type && k.type !== 'service_account') || !/@[\w.-]+\.gserviceaccount\.com$/.test(k.client_email || '') || !/PRIVATE KEY/.test(k.private_key || '')) {
     throw new Error('That file is not a service account key.');
   }
-  return { client_email: k.client_email, private_key: k.private_key };
+  return { type: 'service_account', client_email: k.client_email, private_key: k.private_key };
 }
 
 async function call(fetchImpl, who, url, opts = {}) {

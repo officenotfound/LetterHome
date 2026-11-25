@@ -58,3 +58,18 @@ test('Google and Bing results are stored apart, one copy a week, and a failure i
   assert.equal(api.status(getSetting).google_email, 'search-reader@lh.iam.gserviceaccount.com');
   assert.ok(!JSON.stringify(api.status(getSetting)).includes('PRIVATE KEY'));
 });
+
+test('a key saved from the admin can be read back by the fetch, including one saved without its type', async () => {
+  const store = {};
+  const app = express();
+  app.use(express.json());
+  api.register(app, { db, requireAdmin: (q, r, n) => n(), logAudit: () => {}, getSetting: (k, d = '') => store[k] ?? d, setSetting: (k, v) => { store[k] = v; } });
+  const server = app.listen(0, '127.0.0.1');
+  await new Promise(r => server.once('listening', r));
+  const r = await (await fetch(`http://127.0.0.1:${server.address().port}/api/admin/search-api/keys`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ google: keyFile }) })).json();
+  server.close();
+  assert.equal(r.google, true);
+  assert.equal(api.parseServiceKey(store.gsc_service_key).client_email, 'search-reader@lh.iam.gserviceaccount.com');
+  const { type, ...withoutType } = JSON.parse(store.gsc_service_key);
+  assert.equal(api.parseServiceKey(JSON.stringify(withoutType)).private_key, privateKey);
+});
