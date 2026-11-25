@@ -219,13 +219,13 @@ app.use('/admin', (req, res, next) => {
   if (csp) res.setHeader('Content-Security-Policy', String(csp).replace("frame-src 'none'", "frame-src 'self'"));
   next();
 });
-// Home page, sitemap and robots.txt per domain. Registered after helmet so they carry the same security headers as every other page.
-sites.register(app);
-
 app.use((_req, res, next) => {
   res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()');
   next();
 });
+// Home page, sitemap and robots.txt per domain. Registered after helmet so they carry the same security headers as every other page.
+sites.register(app);
+
 
 app.use((req, res, next) => {
   const p = req.path;
@@ -1430,6 +1430,12 @@ function getBasePriceCents(country) {
   return destinations.priceFor(country);
 }
 
+// The Google score shown beside the reviews. Typed in by the owner under Settings; anything outside 1 to 5 shows 5.0.
+function googleRating() {
+  const n = Number(getSetting('google_rating', '5.0'));
+  return (n >= 1 && n <= 5 ? n : 5).toFixed(1);
+}
+
 app.get('/api/site-config', (req, res) => {
   const pub = destinations.publicConfig();
   const priceDomestic = parseInt(getSetting('price_domestic_cents',      '600')) || 600;
@@ -1440,6 +1446,7 @@ app.get('/api/site-config', (req, res) => {
     orders_open:               getSetting('service_paused', 'false') !== 'true',
     blank_return_allowed:      getSetting('allow_blank_return', '0') === '1',
     announcement:              getSetting('announcement', ''),
+    google_rating:             googleRating(),
     price_domestic_cents:      priceDomestic,
     price_usa_cents:           priceUsa,
     price_international_cents: priceIntl,
@@ -3913,6 +3920,7 @@ const ALLOWED_SETTING_KEYS = new Set([
   'price_uk_cents', 'price_au_cents', 'us_domain_live', 'uk_domain_live',
   'cart_offer_enabled', 'cart_offer_pct', 'cart_offer_valid_days',
   'svc_ca_registered_cents', 'svc_ca_express_cents', 'svc_us_certified_cents', 'svc_us_express_cents',
+  'google_rating',
 ]);
 
 app.post('/api/admin/settings', requireAdmin, (req, res) => {
@@ -4824,7 +4832,7 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:48px 36px 32px
 </div>
 <footer id="site-footer"></footer>
 <script src="/theme.js?v=4"></script>
-<script src="/lang.js?v=60" defer></script>
+<script src="/lang.js?v=71" defer></script>
 <script src="/footer.js?v=22" defer></script>
 </body>
 </html>`;

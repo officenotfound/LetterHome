@@ -7,7 +7,8 @@
 const fs = require('fs');
 const path = require('path');
 
-const langContent = fs.readFileSync('public/lang.js', 'utf8');
+// French lives in its own file; join the two with the marker the section split below looks for.
+const langContent = fs.readFileSync('public/lang.js', 'utf8') + '\n    fr: {\n' + fs.readFileSync('public/lang-fr.js', 'utf8');
 
 const enStart = langContent.indexOf('\n    en: {');
 const frStart = langContent.indexOf('\n    fr: {');

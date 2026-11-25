@@ -82,7 +82,6 @@
     banner.appendChild(text);
     banner.appendChild(btns);
     document.body.appendChild(banner);
-    accept.focus();
   }
 
   if (document.readyState === 'loading') {

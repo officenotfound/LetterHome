@@ -656,3 +656,6 @@ html[data-theme="dark"]:not([data-country]) body main.ab h1.ab-logo .logo-accent
 :root body :is(.form-group,.field) textarea{min-height:140px!important;line-height:1.55}
 :root body #letter-body{min-height:300px!important;line-height:1.6}
 @media(max-width:700px){:root body #letter-body{min-height:260px!important}}
+
+/* Phone tap targets: at least 24px tall for footer links and the header tracking link. */
+@media(max-width:900px){html body footer.lh-footer .lh-f-row a,html body footer.lh-footer .lh-f-in2 a{min-height:24px!important;padding-block:2px!important;box-sizing:border-box}nav .nav-track{padding-block:10px!important}}

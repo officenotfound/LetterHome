@@ -9,6 +9,7 @@ const fs = require('fs');
 const FILES = [
   'server.js',
   'public/lang.js',
+  'public/lang-fr.js',
   'public/theme.js',
   'tests/server.test.js',
 ];

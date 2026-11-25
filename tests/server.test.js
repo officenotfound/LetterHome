@@ -2236,3 +2236,14 @@ test('a resumed local-currency order gets the cart offer discount on the amount 
   assert.equal(o.price_cents, 720);
   assert.equal(o.charge_cents, 405, '10% off the 4.50 pound charge');
 });
+
+test('site-config reports the owner-set Google rating and falls back to 5.0 for nonsense', async () => {
+  const rating = async () => (await (await fetch(`${base}/api/site-config`)).json()).google_rating;
+  const set = v => db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('google_rating', ?)").run(v);
+  assert.equal(await rating(), '5.0');
+  set('4.8');
+  assert.equal(await rating(), '4.8');
+  set('<b>9</b>');
+  assert.equal(await rating(), '5.0');
+  db.prepare("DELETE FROM settings WHERE key = 'google_rating'").run();
+});

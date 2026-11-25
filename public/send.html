@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="/order-country.js?v=3"></script>
 <script src="/ga.js?v=2" defer></script>
-<script src="/cookie-consent.js?v=13" defer></script>
+<script src="/cookie-consent.js?v=14" defer></script>
 <title>Send a Letter from Canada | Letterhome</title>
 <meta name="description" content="Send a real letter or document from Canada. We print, seal and mail it via Canada Post. $6 CAD to Canada or the United States, $15 elsewhere. No account needed.">
 <link rel="canonical" href="https://letterhome.ca/send">
@@ -482,7 +482,7 @@ textarea.field-error { border-color: var(--red) !important; }
 <script>(function(){try{var m=window.matchMedia('(prefers-color-scheme: dark)'),s=function(){document.documentElement.setAttribute('data-theme','light');};s();if(m.addEventListener)m.addEventListener('change',s);}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
 
 <link rel="stylesheet" href="/theme.css?v=30">
-<link rel="stylesheet" href="/redesign.css?v=98"><link rel="stylesheet" href="/inner.css?v=7"><link rel="stylesheet" href="/country-order.css?v=4">
+<link rel="stylesheet" href="/redesign.css?v=99"><link rel="stylesheet" href="/inner.css?v=7"><link rel="stylesheet" href="/country-order.css?v=4">
 </head>
 <body>
 <a data-i18n-html="x.cc367b544f" href="#main-content" class="skip-link" style="position:absolute;left:-9999px;top:4px;z-index:9999;background:#a8472d;color:#faf6ec;padding:8px 16px;font-size:14px;font-family:'Noto Sans',system-ui,sans-serif;text-decoration:none;border-radius:2px" onfocus="this.style.left='4px'" onblur="this.style.left='-9999px'">Skip to main content</a>
@@ -1603,8 +1603,9 @@ function applyDraft(d) {
   updatePricing();
 }
 document.addEventListener('DOMContentLoaded', () => {
-  // /send?to=US (from the homepage price list) preselects the destination.
-  const to = (new URLSearchParams(location.search).get('to') || '').toUpperCase();
+  // /send?to=US (from the homepage price list) preselects the destination. Without it, the US, UK and
+  // Australian versions start on their own country instead of Canada.
+  const to = (new URLSearchParams(location.search).get('to') || { us: 'US', uk: 'GB', au: 'AU' }[window.LH_COUNTRY] || '').toUpperCase();
   const sel = document.getElementById('r-country');
   if (to && sel && Array.from(sel.options).some(o => o.value === to)) { sel.value = to; sel.dispatchEvent(new Event('change')); }
   track('send_view');
@@ -1980,7 +1981,8 @@ function fillSavedRecipient(sel) {
 }
 </script>
 <script src="/lang-es.js?v=6" defer></script>
-<script src="/lang.js?v=70" defer></script>
+<script src="/lang-fr.js?v=71" defer></script>
+<script src="/lang.js?v=71" defer></script>
 <script type="module">
   import * as pdfjsLib from '/vendor/pdfjs/pdf.min.mjs';
   pdfjsLib.GlobalWorkerOptions.workerSrc = '/vendor/pdfjs/pdf.worker.min.mjs';
