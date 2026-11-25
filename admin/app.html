@@ -686,7 +686,28 @@ html[data-theme] body .need-strip>*,html[data-theme] body .dash-grid-5>*,html[da
 html[data-theme] body .card-header+div>div[style*="15803d"]{text-align:center}
 html[data-theme] body .today-actions{display:flex;flex-wrap:wrap;gap:8px}
 html[data-theme] body .today-actions .btn{flex:1 1 220px;justify-content:center;text-align:center;white-space:normal}
-html[data-theme] body .subtabs{justify-content:center}
+html[data-theme] body .subtabs{justify-content:flex-start;scrollbar-width:none}
+.subtabs::-webkit-scrollbar{display:none}
+.subtab{flex-shrink:0}
+.subtabs>:first-child{margin-left:auto}
+.subtabs>:last-child{margin-right:auto}
+.dash-grid-3{display:grid;gap:20px;margin-bottom:20px;grid-template-columns:repeat(3,minmax(0,1fr))}
+.dash-grid-2>*,.dash-grid-3>*,.m-stack>*{min-width:0}
+.cf-legend{display:inline-block;white-space:nowrap}
+.cf-stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));border-bottom:1px solid var(--a-line)}
+.cf-stats>div{padding:14px 20px;border-right:1px solid var(--a-line)}
+.cf-stats>div:last-child{border-right:0}
+.cf-key{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px}
+@media(max-width:860px){
+  .dash-grid-3,.m-stack{grid-template-columns:minmax(0,1fr)!important}
+  .cf-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .cf-stats>div{padding:12px 14px;border-bottom:1px solid var(--a-line)}
+  .cf-stats>div:nth-child(even){border-right:0}
+  .cf-stats>div:last-child{grid-column:1/-1;border-bottom:0}
+  html[data-theme] body .card table.fit{display:table;width:100%}
+  html[data-theme] body table.fit th,html[data-theme] body table.fit td{white-space:normal}
+  html[data-theme] body table.fit td:first-child{overflow-wrap:anywhere}
+}
 @media(min-width:601px) and (max-width:860px){html[data-theme] body .need-strip{grid-template-columns:repeat(5,minmax(0,1fr))}html[data-theme] body .need-chip{padding:14px 6px;font-size:12px}}
 html[data-theme] body .need-chip{flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center;padding:16px 12px}
 html[data-theme] body .need-chip>*:first-child{font-size:26px;line-height:1.1}
@@ -896,6 +917,8 @@ function setActiveNav(p) {
     strip.innerHTML = NAV_GROUPS[g].tabs.map(([path, label]) =>
       `<button class="subtab${path === tab ? ' active' : ''}" role="tab" aria-selected="${path === tab}" onclick="go('${path}')">${label}${path === '/admin/contacts' ? '<span class="contacts-tab-badge" style="display:none"></span>' : ''}${path === '/admin/mail' ? '<span class="mail-tab-badge contacts-tab-badge" style="display:none"></span>' : ''}${path === '/admin/applicants' ? '<span class="app-tab-badge contacts-tab-badge" style="display:none"></span>' : ''}</button>`).join('');
     const n = window._unreadContacts || 0;
+    const on = strip.querySelector('.subtab.active');
+    if (on) strip.scrollLeft += on.getBoundingClientRect().left - strip.getBoundingClientRect().left - (strip.clientWidth - on.offsetWidth) / 2;
     strip.querySelectorAll('.contacts-tab-badge').forEach(b => { const v = b.classList.contains('mail-tab-badge') ? (window._unreadMail || 0) : b.classList.contains('app-tab-badge') ? (window._unreadApplicants || 0) : n; b.textContent = v; b.style.display = v > 0 ? 'inline-block' : 'none'; });
   }
 }
@@ -908,7 +931,7 @@ new MutationObserver(() => stackTables(document.getElementById('main'))).observe
 function stackTables(root) {
   root.querySelectorAll('table').forEach(t => {
     const heads = [...t.querySelectorAll('thead th')].map(th => th.textContent.trim());
-    if (heads.length < 4) return;
+    if (heads.length < 4) { t.classList.add('fit'); return; }
     t.classList.add('stack');
     t.querySelectorAll('tbody tr').forEach(tr => [...tr.children].forEach((td, i) => { if (td.tagName === 'TD' && !td.hasAttribute('colspan') && !td.hasAttribute('data-label')) td.setAttribute('data-label', heads[i] || ''); }));
   });
@@ -1528,7 +1551,7 @@ async function showPrintQueue() {
       o.sender_country].filter(Boolean).join('\n');
     return `<div style="border:1px solid #ececec;border-radius:0;padding:20px;break-inside:avoid;margin-bottom:16px">
       <div style="font-size:11px;color:#9a9a9a;margin-bottom:10px;font-family:monospace">ORDER #${o.id} · ${fmtDate(o.created_at)} · ${statusBadge(o.status)}${schById[o.id] ? ` · <span style="color:${schById[o.id].approved ? '#15803d' : '#92400e'}">SENDS ${esc(schById[o.id].date)}${schById[o.id].approved ? ' (approved)' : ' (not approved yet)'}</span>` : ''}</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+      <div class="m-stack" style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
         <div>
           <div style="font-size:10px;font-weight:600;color:#6b6b6b;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">From</div>
           <div style="font-size:13px;line-height:1.7;white-space:pre-line;color:#2a2a2a">${fromAddr ? esc(fromAddr) : '<em style="color:#9a9a9a">No return address</em>'}</div>
@@ -3741,28 +3764,28 @@ function renderVisitors(cf, s, recent) {
     cfHtml = `
     <div class="card" style="margin-bottom:24px">
       <div class="card-header">
-        <div class="card-title">Cloudflare — Last ${cf.days} Days${(cf.failed || []).length ? ` <span style="font-size:11px;color:#b45309;font-weight:400;margin-left:8px">Not included: ${cf.failed.map(f => esc(({ ca: 'letterhome.ca', us: 'letterhome.us', uk: 'letterhome.co.uk' })[f.site] || f.site)).join(', ')} (token has no access)</span>` : ''} <span style="font-size:11px;color:#9a9a9a;font-weight:400;margin-left:8px">█ requests &nbsp; █ page views</span></div>
+        <div class="card-title">Cloudflare — Last ${cf.days} Days${(cf.failed || []).length ? ` <span style="font-size:11px;color:#b45309;font-weight:400;margin-left:8px">Not included: ${cf.failed.map(f => esc(({ ca: 'letterhome.ca', us: 'letterhome.us', uk: 'letterhome.co.uk' })[f.site] || f.site)).join(', ')} (token has no access)</span>` : ''} <span class="cf-legend" style="font-size:11px;color:#9a9a9a;font-weight:400;margin-left:8px"><i class="cf-key" style="background:#bfdbfe"></i>requests <i class="cf-key" style="background:#2563eb;margin-left:10px"></i>page views</span></div>
         <div style="display:flex;gap:6px">${periodBtns}</div>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:0;border-bottom:1px solid #fafafa">
-        <div style="padding:14px 20px;border-right:1px solid #fafafa">
+      <div class="cf-stats">
+        <div>
           <div style="font-size:11px;color:#6b6b6b;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">Requests</div>
-          <div style="font-size:22px;font-weight:700;color:#111111">${t.requests.toLocaleString()}</div>
+          <div style="font-size:22px;font-weight:700;color:var(--a-text)">${t.requests.toLocaleString()}</div>
         </div>
-        <div style="padding:14px 20px;border-right:1px solid #fafafa">
+        <div>
           <div style="font-size:11px;color:#6b6b6b;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">Page Views</div>
-          <div style="font-size:22px;font-weight:700;color:#111111">${t.pageViews.toLocaleString()}</div>
+          <div style="font-size:22px;font-weight:700;color:var(--a-text)">${t.pageViews.toLocaleString()}</div>
         </div>
-        <div style="padding:14px 20px;border-right:1px solid #fafafa">
+        <div>
           <div style="font-size:11px;color:#6b6b6b;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">Unique Visitors</div>
-          <div style="font-size:22px;font-weight:700;color:#111111">${t.uniques.toLocaleString()}</div>
+          <div style="font-size:22px;font-weight:700;color:var(--a-text)">${t.uniques.toLocaleString()}</div>
         </div>
-        <div style="padding:14px 20px;border-right:1px solid #fafafa">
+        <div>
           <div style="font-size:11px;color:#6b6b6b;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">Bandwidth</div>
-          <div style="font-size:22px;font-weight:700;color:#111111">${fmtBytes(t.bytes)}</div>
+          <div style="font-size:22px;font-weight:700;color:var(--a-text)">${fmtBytes(t.bytes)}</div>
           <div style="font-size:11px;color:#9a9a9a;margin-top:2px">${cachedPct}% cached</div>
         </div>
-        <div style="padding:14px 20px">
+        <div>
           <div style="font-size:11px;color:#6b6b6b;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">Threats Blocked</div>
           <div style="font-size:22px;font-weight:700;color:${t.threats > 0 ? '#e63946' : '#16a34a'}">${t.threats.toLocaleString()}</div>
         </div>
@@ -3811,7 +3834,7 @@ function renderVisitors(cf, s, recent) {
 
     dbHtml = `
     <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:#9a9a9a;margin-bottom:12px">App-level detail (30 days · ${s.total} total logged)</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
+    <div class="dash-grid-2" style="margin-bottom:20px">
       <div class="card">
         <div class="card-header"><div class="card-title">Top Pages</div></div>
         <table><thead><tr><th>Path</th><th style="text-align:right">Views</th></tr></thead>
@@ -3823,7 +3846,7 @@ function renderVisitors(cf, s, recent) {
           <tbody>${topCountriesRows}</tbody></table>
       </div>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;margin-bottom:20px">
+    <div class="dash-grid-3">
       <div class="card">
         <div class="card-header"><div class="card-title">Devices</div></div>
         <table><thead><tr><th>Type</th><th style="text-align:right">Views</th></tr></thead>
@@ -4080,7 +4103,7 @@ async function renderPostgridSettings(settings) {
     <div style="font-size:12px;font-weight:600;color:#111;margin:14px 0 4px;letter-spacing:.04em;text-transform:uppercase">Delivery networks enabled on your PostGrid account</div>
     <div style="font-size:12px;color:#6b6b6b;margin-bottom:6px">Tick a country only after PostGrid has enabled that network. UK and Australia sell at their local price only when ticked; otherwise they are sold as international mail.</div>
     ${PG_DESTS.map(([cc, name]) => chk('pg-dest-' + cc, live.includes(cc), name)).join('')}
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0">
+    <div class="m-stack" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0">
       <div class="field"><label>UK price (CAD cents)</label><input id="pg-price-uk" type="number" min="50" step="50" value="${cents('price_uk_cents', 900)}"></div>
       <div class="field"><label>Australia price (CAD cents)</label><input id="pg-price-au" type="number" min="50" step="50" value="${cents('price_au_cents', 900)}"></div>
     </div>
@@ -4583,7 +4606,7 @@ async function showBusinesses() {
       <table><thead><tr><th>Business</th><th>Contact</th><th>Per piece</th><th>Logins</th><th>Batches</th><th>Pending</th><th>Pieces approved</th></tr></thead>
       <tbody>${rows || '<tr><td colspan="7" class="empty">No businesses yet. Add the first one below.</td></tr>'}</tbody></table></div>
     <div class="card"><div class="card-header"><span class="card-title">Add a business</span></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:20px">
+      <div class="m-stack" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:20px">
         ${bizInput('nb-name', 'Business name')}${bizInput('nb-industry', 'Industry', '', 'placeholder="Property management"')}
         ${bizInput('nb-contact', 'Contact name')}${bizInput('nb-cemail', 'Contact email')}
         ${bizInput('nb-phone', 'Phone')}${bizInput('nb-owner', 'Owner sign-in email', '', 'placeholder="the email they will log in with"')}
@@ -4649,7 +4672,7 @@ async function showBusiness(id) {
       <table><thead><tr><th>User</th><th>Last sign-in</th><th>Status</th><th></th></tr></thead><tbody>${users}</tbody></table>
       <div style="padding:14px 20px;display:flex;gap:10px;align-items:end;flex-wrap:wrap">${bizInput('bu-email', 'Add another login (email)')}${bizInput('bu-name', 'Name')}<button class="btn btn-outline btn-sm" onclick="bizAddUser(${b.id})">Add login</button><span id="bu-msg" style="font-size:12px;color:#a4161f"></span></div></div>
     <div class="card"><div class="card-header"><span class="card-title">Business details and pricing</span></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:20px">
+      <div class="m-stack" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:20px">
         ${bizInput('eb-name', 'Business name', b.name)}${bizInput('eb-industry', 'Industry', b.industry)}
         ${bizInput('eb-contact', 'Contact name', b.contact_name)}${bizInput('eb-cemail', 'Contact email', b.contact_email)}
         ${bizInput('eb-phone', 'Phone', b.phone)}${bizInput('eb-terms', 'Billing terms', b.billing_terms)}
@@ -4718,7 +4741,7 @@ async function showCodes() {
   setMain(`
     <div class="card" style="margin-bottom:24px">
       <div class="card-header"><span class="card-title">Create Discount Code</span></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:20px">
+      <div class="m-stack" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:20px">
         <div>
           <label style="font-family:'DM Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.12em;color:#9a9a9a;display:block;margin-bottom:4px">Code</label>
           <input id="dc-code" type="text" placeholder="RCIC10" style="width:100%;padding:8px 10px;border:1px solid #e0e0e0;border-radius:2px;font-family:'DM Mono',monospace;font-size:13px;text-transform:uppercase">
@@ -4969,7 +4992,7 @@ async function showStripe() {
       </div>
       <div style="padding:16px 20px"><div style="display:flex;align-items:flex-end;gap:3px;height:140px">${revBars}</div></div>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+    <div class="m-stack" style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
       <div class="card">
         <div class="card-header"><div class="card-title">Recent Payouts</div></div>
         <table><thead><tr><th>Date</th><th>Amount</th><th>Status</th><th>Arrival</th><th>ID</th></tr></thead>
@@ -5551,7 +5574,7 @@ function apprCard(o, i) {
   const focus = i === _appr.focus;
   const open = _appr.open.has(o.id);
   return `<div id="appr-${o.id}" class="card" style="margin-bottom:16px;${focus ? 'outline:2px solid #111111;' : ''}">
-    <div style="display:grid;grid-template-columns:${open ? 'minmax(260px,1fr) minmax(300px,1.4fr)' : '1fr'};gap:0">
+    <div class="m-stack" style="display:grid;grid-template-columns:${open ? 'minmax(260px,1fr) minmax(300px,1.4fr)' : '1fr'};gap:0">
       <div style="padding:16px 20px;min-width:0">
         <div style="display:flex;justify-content:space-between;gap:10px;font-size:11px;color:#6b6b6b;font-family:monospace;margin-bottom:10px">
           <label style="display:flex;gap:8px;align-items:center;cursor:${o.clean ? 'pointer' : 'not-allowed'}"><input type="checkbox" ${_appr.ticked.has(o.id) ? 'checked' : ''} ${o.clean && !o.approved_for ? '' : 'disabled'} onchange="apprTick(${o.id}, this.checked)"> ORDER #${o.id} · ${fmtDate(o.paid_at || o.created_at)} · ${esc(o.site)}</label>
