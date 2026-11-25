@@ -1935,6 +1935,8 @@ test('analytics: no consent popup, /ga.js runs for everyone except a saved Decli
   const res = await fetch(`${base}/ga.js`);
   const js = await res.text();
   assert.match(js, /G-DF3XQ6ML41/);
+  assert.match(js, /clarity\.ms\/tag\//);
+  assert.match(js, /'zjdix559qz'/);
   assert.match(js, /analytics\.ahrefs\.com\/analytics\.js/);
   assert.match(js, /lh-analytics-consent'\)==='no'\)return/);
   assert.doesNotMatch(js, /!=='yes'/);

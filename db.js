@@ -378,6 +378,10 @@ try {
   )`);
 } catch (e) { console.error('[init] settings table:', e.message); }
 
+// The owner's Microsoft Clarity project (public: it appears in the tag). Added once, so clearing it in the admin turns Clarity off.
+try { db.prepare(`INSERT OR IGNORE INTO settings (key, value) VALUES ('clarity_project_id', 'zjdix559qz')`).run(); }
+catch (e) { console.error('[init] clarity id:', e.message); }
+
 try {
   db.exec(`CREATE TABLE IF NOT EXISTS page_views (
     id           INTEGER PRIMARY KEY AUTOINCREMENT,
