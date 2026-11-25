@@ -1894,6 +1894,10 @@ test('Google Analytics: /ga.js carries the site measurement ID, loads only after
   assert.match(js, /G-DF3XQ6ML41/);
   assert.match(js, /lh-analytics-consent/);
   assert.equal(res.headers.get('cache-control'), 'public, max-age=3600');
+  // Ahrefs loads from the same file, behind the same consent check, and the CSP allows it
+  assert.match(js, /lh-analytics-consent'\)!=='yes'\)return;\}catch\(e\)\{return;\}\s+if\(window\.__lhAhrefs\)/);
+  assert.match(js, /analytics\.ahrefs\.com\/analytics\.js/);
+  assert.match(res.headers.get('content-security-policy'), /script-src [^;]*analytics\.ahrefs\.com/);
 });
 
 test('careers: /careers lists the open role, the role page has JobPosting data and an application form that reaches the inbox', async () => {

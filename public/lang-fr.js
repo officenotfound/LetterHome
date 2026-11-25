@@ -1307,7 +1307,7 @@ window.LH_FR = {
       'legal.eyebrow': 'Juridique',
       // PRIVACY
       'privacy.h1': 'Politique de confidentialité',
-      'privacy.updated': 'Dernière mise à jour : juin 2026',
+      'privacy.updated': 'Dernière mise à jour : novembre 2026',
       'privacy.intro': 'Letterhome est un petit service de courrier exploité depuis le Canada. Cette politique explique ce que nous collectons lorsque vous passez une commande, comment nous l\'utilisons et quand nous le supprimons.',
       'privacy.s1.h2': 'Ce que nous collectons',
       'privacy.s1.p': 'Lorsque vous passez une commande, nous collectons :',
@@ -1325,6 +1325,7 @@ window.LH_FR = {
       'privacy.s3.h2': 'Conservation des données',
       'privacy.s3.p': 'Nous conservons votre lettre et vos pièces jointes seulement le temps nécessaire pour l\'imprimer et la poster, gérer les remboursements, et répondre à vos questions sur la commande. Nous conservons un dossier de commande de base, date, montant et adresse courriel, pour la période requise par la réglementation fiscale et comptable canadienne.',
       'privacy.s4.h2': 'Services tiers',
+      'privacy.s4.analytics': 'Si vous cliquez sur « Accepter » dans la bannière d’analyse, nos pages chargent aussi Google Analytics et, sur letterhome.ca, Ahrefs Web Analytics, pour compter les visites et voir comment les gens trouvent le site. Si vous cliquez sur « Refuser », nos pages ne chargent ni l’un ni l’autre.',
       'privacy.s4.p': 'Nous utilisons <strong>Stripe</strong> pour traiter les paiements. Stripe est un fournisseur de paiement certifié PCI DSS niveau 1, et nous ne voyons ni ne conservons jamais votre numéro de carte (<a href="https://stripe.com/privacy" target="_blank" rel="noopener">stripe.com/privacy</a>). Une fois votre commande approuvée, votre lettre, vos pièces jointes et les adresses sont transmises par une connexion HTTPS chiffrée au fournisseur de services d’impression et d’envoi qui la produit. Cette installation dispose d’un rapport SOC 2 Type II et d’une certification PCI DSS 3.2.1, prend en charge un traitement conforme à HIPAA, à la LPRPDE et au RGPD, et fonctionne sur Amazon Web Services. Letterhome ne détient pas elle-même de certification HIPAA (cette loi n’en prévoit pas) et ne signe pas d’ententes d’associé commercial HIPAA. Si votre lettre contient des renseignements de santé que la loi vous oblige à protéger, communiquez avec nous avant de l’envoyer. Votre lettre est livrée par le service postal du pays de destination, comme Postes Canada. Au-delà de ces partenaires, aucun tiers n’a accès à vos informations de commande.',
       'privacy.s5b.h2': 'Contenu que nous n’enverrons pas',
       'privacy.s5b.p': 'Nous n’imprimerons ni n’enverrons aucune lettre contenant du contenu dangereux, illégal, abusif, menaçant ou harcelant, ni tout autre contenu contraire à la loi. Si une commande contient ce type de contenu, nous l’annulerons et rembourserons votre paiement.',

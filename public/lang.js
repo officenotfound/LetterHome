@@ -513,7 +513,7 @@
       'legal.eyebrow': 'Legal',
       // PRIVACY
       'privacy.h1': 'Privacy Policy',
-      'privacy.updated': 'Last updated: June 2026',
+      'privacy.updated': 'Last updated: November 2026',
       'privacy.intro': 'This policy explains what we collect when you place an order, how we use it, and when we delete it.',
       'privacy.s1.h2': 'What we collect',
       'privacy.s1.p': 'When you place an order, we collect:',
@@ -531,6 +531,7 @@
       'privacy.s3.h2': 'Data retention',
       'privacy.s3.p': 'We keep your letter and attachments only as long as needed to print and mail it, handle refunds, and answer questions about your order. We keep a basic order record (date, amount and your email address) for the period required by Canadian tax and accounting regulations.',
       'privacy.s4.h2': 'Third-party services',
+      'privacy.s4.analytics': 'If you click Accept on the analytics banner, our pages also load Google Analytics, and on letterhome.ca Ahrefs Web Analytics, to count visits and show how people find the site. If you click Decline, our pages load neither.',
       'privacy.s4.p': 'We use <strong>Stripe</strong> to process payments. Stripe is a PCI DSS Level 1 certified payment provider, and we never see or store your card number (<a href="https://stripe.com/privacy" target="_blank" rel="noopener">stripe.com/privacy</a>). Once we approve your order, your letter, attachments and addresses are sent over an encrypted HTTPS connection to the printing and mailing service provider that produces it. That facility has a SOC 2 Type II report and PCI DSS 3.2.1 certification, supports HIPAA, PIPEDA and GDPR compliant handling, and runs on Amazon Web Services. Letterhome itself does not hold a HIPAA certification (HIPAA has none) or sign HIPAA business associate agreements. If your letter contains health information that the law requires you to protect, contact us before you send it. Your letter is delivered by the postal service of the destination country, such as Canada Post. Beyond these, no third parties have access to your order information.',
       'privacy.s5b.h2': 'Content we will not send',
       'privacy.s5b.p': 'We will not print or send any letter that contains dangerous, illegal, abusive, threatening or harassing content, or anything else that is against the law. If an order contains this kind of content, we will cancel it and refund your payment.',

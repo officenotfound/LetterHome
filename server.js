@@ -179,7 +179,8 @@ app.use(helmet({
                     'https://maps.googleapis.com',
                     'https://www.googletagmanager.com',
                     'https://www.google-analytics.com',
-                    'https://static.cloudflareinsights.com'],
+                    'https://static.cloudflareinsights.com',
+                    'https://analytics.ahrefs.com'],
       styleSrc:    ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
       fontSrc:     ["'self'", 'https://fonts.gstatic.com'],
       imgSrc:      ["'self'", 'data:',
@@ -194,7 +195,8 @@ app.use(helmet({
                     'https://*.google-analytics.com',      // GA4 sends hits to regional hosts (region1.google-analytics.com)
                     'https://*.analytics.google.com',
                     'https://www.googletagmanager.com',
-                    'https://cloudflareinsights.com'],
+                    'https://cloudflareinsights.com',
+                    'https://analytics.ahrefs.com'],
       frameSrc:    ["'none'"],
       objectSrc:   ["'none'"],
       baseUri:     ["'self'"],
@@ -1327,16 +1329,29 @@ app.use(express.static('public', {
   },
 }));
 
+// Ahrefs Web Analytics, letterhome.ca only. The key is public (it appears in the tag). It loads from /ga.js so that,
+// like Google Analytics, nothing runs until the visitor accepts analytics.
+const AHREFS_KEY = 'd8wW5j/BZDcMfly9oVT76g';
+const ahrefsLoader = `
+(function(){
+  try{if(localStorage.getItem('lh-analytics-consent')!=='yes')return;}catch(e){return;}
+  if(window.__lhAhrefs)return;window.__lhAhrefs=1;
+  var s=document.createElement('script');s.async=true;s.src='https://analytics.ahrefs.com/analytics.js';
+  s.setAttribute('data-key','${AHREFS_KEY}');document.head.appendChild(s);
+})();`;
+
 app.get('/ga.js', (req, res) => {
   // The measurement ID is public (it appears in every page that loads the tag). Each site has its own GA4 stream.
-  const id = ga4.measurementIdFor(ga4.siteOfHost(req.hostname));
+  const site = ga4.siteOfHost(req.hostname);
+  const id = ga4.measurementIdFor(site);
+  const ahrefs = site === 'ca' ? ahrefsLoader : '';
   res.setHeader('Content-Type', 'application/javascript');
   // Short cache: this file changes when the measurement ID is set or changed on the server.
   res.setHeader('Cache-Control', 'public, max-age=3600');
   // No measurement ID configured, serve an inert script rather than a stray default property.
-  if (!id) return res.send('/* analytics disabled: GA4_MEASUREMENT_ID not set */');
+  if (!id) return res.send('/* analytics disabled: GA4_MEASUREMENT_ID not set */' + ahrefs);
   // GA4 IDs are strictly G-XXXXXXXXXX, reject anything else before injecting into JS.
-  if (!/^G-[A-Z0-9]+$/.test(id)) return res.send('/* analytics disabled: invalid GA4_MEASUREMENT_ID */');
+  if (!/^G-[A-Z0-9]+$/.test(id)) return res.send('/* analytics disabled: invalid GA4_MEASUREMENT_ID */' + ahrefs);
   res.send(`
 (function(){
   try{if(localStorage.getItem('lh-analytics-consent')!=='yes')return;}catch(e){return;}
@@ -1349,7 +1364,7 @@ app.get('/ga.js', (req, res) => {
   s.src='https://www.googletagmanager.com/gtag/js?id=${id}';
   document.head.appendChild(s);})();
 })();
-`.trim());
+`.trim() + ahrefs);
 });
 
 // Base send price by destination: Canada, United States, rest of world.
@@ -4832,7 +4847,7 @@ footer{background:var(--ink);color:rgba(255,255,255,0.65);padding:48px 36px 32px
 </div>
 <footer id="site-footer"></footer>
 <script src="/theme.js?v=4"></script>
-<script src="/lang.js?v=74" defer></script>
+<script src="/lang.js?v=75" defer></script>
 <script src="/footer.js?v=22" defer></script>
 </body>
 </html>`;
