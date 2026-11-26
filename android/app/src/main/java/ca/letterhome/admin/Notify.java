@@ -53,6 +53,30 @@ final class Notify {
     /** Email and customer messages; reply = {box, messageId, folderId, toAddress, subject} lets you answer from the notification. */
     static void showMail(Context c, int id, String title, String text, String path, String[] reply) { post(c, id, false, title, text, path, reply); }
 
+    /** What an alert is about, so it can be taken down once that thing has been looked at in the app. */
+    private static String keyFor(String path) {
+        try {
+            Uri u = Uri.parse(path);
+            String p = u.getPath() == null ? "" : u.getPath();
+            if (p.startsWith("/admin/orders/")) return "order:" + u.getLastPathSegment();
+            if (p.equals("/admin/contacts") && u.getQueryParameter("id") != null) return "message:" + u.getQueryParameter("id");
+            if (p.equals("/admin/mail") && u.getQueryParameter("id") != null) return "mail:" + u.getQueryParameter("box") + ":" + u.getQueryParameter("id");
+        } catch (Throwable ignored) { }
+        return "";
+    }
+
+    /** Removes the alerts for one thing, or every alert for "all". The "listening" notice (77) stays. */
+    static void clear(Context c, String key) {
+        try {
+            if (key == null || key.isEmpty()) return;
+            NotificationManager nm = (NotificationManager) c.getSystemService(Context.NOTIFICATION_SERVICE);
+            for (android.service.notification.StatusBarNotification s : nm.getActiveNotifications()) {
+                if (s.getId() == 77) continue;
+                if (key.equals("all") || key.equals(s.getNotification().extras.getString("lhkey"))) nm.cancel(s.getId());
+            }
+        } catch (Throwable ignored) { }
+    }
+
     private static void post(Context c, int id, boolean order, String title, String text, String path, String[] reply) {
         try {
             channels(c);
@@ -64,6 +88,9 @@ final class Notify {
             Notification.Builder b = Build.VERSION.SDK_INT >= 26 ? new Notification.Builder(c, channel) : new Notification.Builder(c);
             b.setSmallIcon(R.drawable.ic_stat).setContentTitle(title).setContentText(text)
                     .setStyle(new Notification.BigTextStyle().bigText(text)).setContentIntent(pi).setAutoCancel(true);
+            android.os.Bundle about = new android.os.Bundle();
+            about.putString("lhkey", keyFor(path));
+            b.addExtras(about);
             b.setColor(0xFFC4202B).setCategory(order ? Notification.CATEGORY_EVENT : Notification.CATEGORY_MESSAGE).setShowWhen(true);
             if (Build.VERSION.SDK_INT < 26) b.setPriority(order ? Notification.PRIORITY_HIGH : Notification.PRIORITY_DEFAULT);
             // the number on the app icon: how many alerts are waiting

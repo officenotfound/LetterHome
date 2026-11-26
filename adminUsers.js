@@ -67,6 +67,14 @@ function register(app, { db, requireAdmin, logAudit, envAccounts, endSessions = 
     } catch (e) { res.status(500).json({ error: e.message }); }
   });
 
+  // For a lost phone or laptop: ends every other place this account is signed in.
+  app.post('/api/admin/admin-users/sign-out-others', requireAdmin, (req, res) => {
+    const me = req.session.admin.username;
+    const ended = endSessions(s => s.admin?.username === me, req.sessionID);
+    logAudit(req, 'admin_user.sign_out_others', 'admin_user', me, { ended });
+    res.json({ ok: true, ended });
+  });
+
   app.post('/api/admin/admin-users/reset-2fa', requireAdmin, async (req, res) => {
     try {
       if (!(await confirm(req, res))) return;

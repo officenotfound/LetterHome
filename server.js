@@ -1644,6 +1644,8 @@ function loginFailed(email) {
 }
 
 const ADMIN_SESSION_MAX_AGE_MS = 12 * 60 * 60 * 1000;
+// "Keep me signed in on this device": no 12 hour limit, signed out only after this long without being opened.
+const ADMIN_REMEMBER_MS = 180 * 24 * 60 * 60 * 1000;
 // The two owner accounts come from the server settings; more can be added on the Admin users screen.
 function envAdminAccounts() {
   return [
@@ -1668,6 +1670,16 @@ function endSessions(match, keepSid) {
   return ended;
 }
 
+// Changes when the account's password does, so a remembered device is signed out by a new password.
+function adminAccountKey(username) {
+  const a = [...envAdminAccounts(), ...(adminUsersApi ? adminUsersApi.accountsForLogin() : [])].find(x => x.user === username);
+  return a ? createHash('sha256').update(a.hash).digest('hex').slice(0, 16) : '';
+}
+function adminSessionOver(admin) {
+  if (admin.remember) return admin.key !== adminAccountKey(admin.username);
+  return Date.now() - (admin.loginAt || 0) > ADMIN_SESSION_MAX_AGE_MS;
+}
+
 function requireAdmin(req, res, next) {
   // An account that was removed (here or from the server settings) loses its open sessions at once, not after 30 days.
   if (req.session?.admin && adminUsersApi && !adminUsersApi.stillValid(req.session.admin.username)) {
@@ -1678,8 +1690,7 @@ function requireAdmin(req, res, next) {
     });
   }
   if (req.session?.admin) {
-    const loginAt = req.session.admin.loginAt || 0;
-    if (Date.now() - loginAt > ADMIN_SESSION_MAX_AGE_MS) {
+    if (adminSessionOver(req.session.admin)) {
       delete req.session.admin;
       return req.session.save(() => {
         if (req.path.startsWith('/api/')) return res.status(401).json({ error: 'Session expired. Please sign in again.' });
@@ -2306,6 +2317,11 @@ app.post('/admin/login', loginLimiter, async (req, res) => {
     if (err) return res.status(500).send('Session error');
     req.session.admin = { username: account.user, loginAt: Date.now(), has2FA: !!account.totpSecret };
     req.session.csrfToken = randomBytes(32).toString('hex');
+    if (req.body.remember === '1') {
+      req.session.admin.remember = true;
+      req.session.admin.key = adminAccountKey(account.user);
+      req.session.cookie.maxAge = ADMIN_REMEMBER_MS;
+    }
     req.session.save(err2 => {
       if (err2) return res.status(500).send('Session error');
       res.redirect('/admin');
@@ -2318,7 +2334,7 @@ app.post('/admin/logout', (req, res) => {
 });
 
 // The Reports screens' own script and styles (before the catch-all below, which answers with the admin page).
-app.get(['/admin/reports-ui.js', '/admin/reports-ui.css'], requireAdmin, (req, res) =>
+app.get(['/admin/reports-ui.js', '/admin/reports-ui.css', '/admin/doc-viewer.js'], requireAdmin, (req, res) =>
   res.sendFile(path.join(__dirname, 'admin', path.basename(req.path))));
 app.get('/admin', requireAdmin, (req, res) =>
   res.sendFile(path.join(__dirname, 'admin', 'app.html')));
@@ -3041,6 +3057,7 @@ app.get('/api/admin/orders/:id/postgrid/preview', requireAdmin, async (req, res)
     // Default: the finished look, with addresses where PostGrid stamps them. ?raw=1: the exact file uploaded to PostGrid.
     const b = req.query.raw ? await postgrid.buildLetterPdf(order) : await postgrid.buildPreviewPdf(order);
     res.setHeader('Content-Type', 'application/pdf');
+    if (req.query.download) res.setHeader('Content-Disposition', `attachment; filename="letter-order-${order.id}.pdf"`);
     // Lets the browser's PDF viewer draw inside the approval queue frame (the site-wide policy blocks plug-in content).
     res.setHeader('Content-Security-Policy', "default-src 'none'; object-src 'self'; style-src 'unsafe-inline'");
     if (b.sheets !== undefined) res.setHeader('X-Letter-Sheets', String(b.sheets));
@@ -3097,6 +3114,7 @@ app.get('/api/admin/orders/:id/files/:filename', requireAdmin, (req, res) => {
   const file = path.resolve(dir, path.basename(req.params.filename));
   if (!file.startsWith(path.resolve(dir) + path.sep)) return res.status(403).json({ error: 'Forbidden' });
   if (!fs.existsSync(file)) return res.status(404).json({ error: 'File not found' });
+  if (req.query.download) return res.download(file);
   res.sendFile(file);
 });
 
@@ -3396,12 +3414,12 @@ app.get('/api/admin/events', requireAdmin, (req, res) => {
     } catch (e) { console.error('[events] tick failed:', e.message); }
   };
   // The stream ends when the session is logged out, expires, or the account is removed.
-  const sid = req.sessionID, adminName = req.session.admin.username, startedAt = req.session.admin.loginAt || 0;
+  const sid = req.sessionID, adminName = req.session.admin.username, signedIn = req.session.admin;
   let ticks = 0;
   const stopStream = () => { clearInterval(timer); mailbox.events.off('mail', onMail); try { res.end(); } catch {} };
   const timer = setInterval(() => {
     if (++ticks % 6 === 0) {
-      const dead = (adminUsersApi && !adminUsersApi.stillValid(adminName)) || Date.now() - startedAt > ADMIN_SESSION_MAX_AGE_MS;
+      const dead = (adminUsersApi && !adminUsersApi.stillValid(adminName)) || adminSessionOver(signedIn);
       if (dead) return stopStream();
       return req.sessionStore.get(sid, (err, sess) => { if (!err && !sess?.admin) return stopStream(); tick(); });
     }

@@ -534,11 +534,33 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
     // page to app messages (window dragging from the page's top bar)
     func userContentController(_ c: WKUserContentController, didReceive m: WKScriptMessage) {
         guard let s = m.body as? String else { return }
-        if s == "drag", let e = NSApp.currentEvent { window.performDrag(with: e) }
+        if s.hasPrefix("seen:") { clearAlerts(String(s.dropFirst(5))) }
+        else if s == "drag", let e = NSApp.currentEvent { window.performDrag(with: e) }
         else if s == "zoom" { window.zoom(nil) }
     }
 
     // MARK: alerts and Dock badge
+    // What an alert is about, worked out from the page it opens.
+    func alertKey(_ path: String) -> String {
+        guard let u = URLComponents(string: path) else { return "" }
+        func q(_ n: String) -> String? { u.queryItems?.first { $0.name == n }?.value }
+        if u.path.hasPrefix("/admin/orders/") { return "order:" + (u.path as NSString).lastPathComponent }
+        if u.path == "/admin/contacts", let id = q("id") { return "message:" + id }
+        if u.path == "/admin/mail", let id = q("id") { return "mail:" + (q("box") ?? "") + ":" + id }
+        return ""
+    }
+    // Something was read in the app: remove its alert from Notification Centre and refresh the badge now.
+    func clearAlerts(_ key: String) {
+        let un = UNUserNotificationCenter.current()
+        if key == "all" { un.removeAllDeliveredNotifications() }
+        else {
+            un.getDeliveredNotifications { list in
+                let ids = list.filter { n in self.alertKey(n.request.content.userInfo["path"] as? String ?? "") == key }.map { $0.request.identifier }
+                un.removeDeliveredNotifications(withIdentifiers: ids)
+            }
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { self.poll() }
+    }
     func poll() {
         withCookies { cookie in
             guard let cookie = cookie else { return }

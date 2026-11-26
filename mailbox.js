@@ -89,7 +89,7 @@ function makeMailbox(cfg, fetchFn) {
     return folders;
   }
   const folderBy = async name => { const fs = await folderList(); return fs.find(f => String(f.name).toLowerCase() === name) || fs.find(f => String(f.type).toLowerCase() === name) || null; };
-  return { key: cfg.key, label: cfg.label, call, account, folderList, folderBy, state: { unread: 0, error: null } };
+  return { key: cfg.key, label: cfg.label, call, account, folderList, folderBy, state: { unread: 0, error: null, unreadIds: new Set(), handled: new Map() } };
 }
 
 function register(app, deps) {
@@ -230,6 +230,17 @@ function register(app, deps) {
       const trash = await b.folderBy('trash');
       for (const i of items) await b.call('DELETE', `/accounts/${a.accountId}/folders/${i.folderId}/messages/${i.id}`, { query: trash && trash.id === i.folderId ? { expunge: 'true' } : {} });
     } else throw new MailError('Unknown action.', 400);
+    // Bring the unread count and the bell up to date now instead of at the next mailbox check.
+    for (const { id } of items) {
+      if (body.action === 'unread') {
+        b.state.handled.delete(id);
+        if (!b.state.unreadIds.has(id)) { b.state.unreadIds.add(id); b.state.unread++; }
+      } else {
+        b.state.handled.set(id, Date.now());
+        if (b.state.unreadIds.delete(id)) b.state.unread = Math.max(0, b.state.unread - 1);
+        for (let i = recent.length - 1; i >= 0; i--) if (recent[i].box === b.key && recent[i].id === id) recent.splice(i, 1);
+      }
+    }
     logAudit(req, 'mail.' + body.action, 'mailbox', b.key, { count: items.length });
     res.json({ ok: true });
   }));
@@ -247,7 +258,11 @@ function register(app, deps) {
     const a = await b.account(); const inbox = await b.folderBy('inbox'); if (!inbox) return;
     const j = await b.call('GET', `/accounts/${a.accountId}/messages/view`, { query: { folderId: inbox.id, status: 'unread', limit: 50, sortBy: 'date' } });
     const msgs = ((j && j.data) || []).map(m => normMsg(m, { has: () => true })).filter(m => m.at);
-    b.state.unread = msgs.length; b.state.error = null;
+    // The mailbox can still list a message as unread for a moment after it was read here.
+    for (const [id, at] of b.state.handled) if (Date.now() - at > 60000) b.state.handled.delete(id);
+    const unread = msgs.filter(m => !b.state.handled.has(m.id));
+    b.state.unreadIds = new Set(unread.map(m => m.id));
+    b.state.unread = unread.length; b.state.error = null;
     const cursor = cursorGet(b.key);
     b.state.checkedAt = Date.now(); b.state.cursor = cursor || 0; b.state.listed = (j && j.data || []).length; b.state.parsed = msgs.length;
     const newest = msgs.reduce((n, m) => Math.max(n, m.at), 0);

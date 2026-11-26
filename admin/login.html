@@ -34,6 +34,8 @@ input:focus{border-color:#c4202b;box-shadow:0 0 0 3px #fdecee}
 button{background:#c4202b;border-radius:8px;font:600 14px 'Noto Sans',sans-serif;letter-spacing:0;text-transform:none;padding:13px}
 button:hover{background:#a8171f}
 .helper{font-family:'Noto Sans',sans-serif}
+label.keep{display:flex;align-items:center;gap:9px;margin:-4px 0 14px;font-weight:500;cursor:pointer}
+label.keep input{width:17px;height:17px;margin:0;padding:0;flex:none;accent-color:#c4202b}
 </style>
 </head>
 <body>
@@ -51,10 +53,13 @@ button:hover{background:#a8171f}
     <input id="password" name="password" type="password" autocomplete="current-password" required>
     <label for="code">2FA Code <span class="helper">(if enabled)</span></label>
     <input id="code" name="code" type="text" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" placeholder="123456">
+    <label class="keep"><input id="remember" name="remember" type="checkbox" value="1"> Keep me signed in on this device</label>
     <button type="submit">Sign in →</button>
   </form>
 </div>
 <script>
+  // Ticked to start with inside the Mac and Android apps, which have their own lock.
+  if (window.LHApp || document.documentElement.classList.contains('mac-app')) document.getElementById('remember').checked = true;
   if (window.location.search.includes('error=1'))
     document.getElementById('err').style.display = 'block';
 </script>

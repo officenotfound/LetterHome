@@ -1511,6 +1511,26 @@ test('fixed local prices: a UK order is charged in pounds, reports stay in CAD, 
   db.prepare("DELETE FROM settings WHERE key = 'postgrid_countries'").run();
 });
 
+test('admin sign-in: "keep me signed in" has no 12 hour limit, and a password change ends it', async () => {
+  const res = await fetch(`${base}/admin/login`, {
+    method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ username: 'testadmin', password: ADMIN_PW, remember: '1' }).toString(), redirect: 'manual',
+  });
+  const set = res.headers.getSetCookie().find(c => c.startsWith('connect.sid='));
+  const days = (Date.parse(/Expires=([^;]+)/i.exec(set)[1]) - Date.now()) / 86400000;
+  assert.ok(days > 179 && days <= 180, `cookie lasts ${days} days`);
+  const cookie = set.split(';')[0];
+  const file = path.join('sessions', decodeURIComponent(cookie.split('=')[1]).slice(2).split('.')[0] + '.json');
+  const edit = change => { const s = JSON.parse(fs.readFileSync(file, 'utf8')); change(s); fs.writeFileSync(file, JSON.stringify(s)); };
+  // the body is read so the session has finished saving before the file is edited again
+  const me = async () => { const r = await fetch(`${base}/api/admin/me`, { headers: { Cookie: cookie } }); await r.text(); return r; };
+  edit(s => { s.admin.loginAt = Date.now() - 3 * 86400000; });
+  assert.equal((await me()).status, 200);
+  edit(s => { s.admin.key = 'another password'; });
+  assert.equal((await me()).status, 401);
+  fs.rmSync(file, { force: true });
+});
+
 test('admin login: a malformed body (password[]=x) is answered, not left hanging', async () => {
   const form = 'username=testadmin&password[]=x&code[]=1';
   const res = await fetch(`${base}/admin/login`, {

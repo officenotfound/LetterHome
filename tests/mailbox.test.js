@@ -184,6 +184,19 @@ test('the new-mail watcher starts from now, then raises an event for each new un
   assert.equal(mod.recent().length, 1);
 });
 
+test('reading a message lowers the unread count and clears it from the bell straight away, even if the mailbox still lists it', async () => {
+  const count = () => mod.unread()[0].unread;
+  const before = count();
+  assert.ok(before >= 1 && mod.recent().some(e => e.id === '2'));
+  assert.equal((await post('/api/admin/mail/support/action', { action: 'read', items: [{ id: '2', folderId: '10' }] })).status, 200);
+  assert.equal(count(), before - 1);
+  assert.ok(!mod.recent().some(e => e.id === '2'));
+  await mod.pollAll();                                       // the pretend mailbox still says it is unread
+  assert.equal(count(), before - 1);
+  await post('/api/admin/mail/support/action', { action: 'unread', items: [{ id: '2', folderId: '10' }] });
+  assert.equal(count(), before);
+});
+
 test('an expired access token is renewed once and the call retried; a key Zoho refuses gives a clear message', async () => {
   const app2 = express(); app2.use(express.json());
   let first = true;

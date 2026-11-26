@@ -72,6 +72,8 @@ public class MainActivity extends Activity {
             if (!adminPage()) return;
             try { final int t = Color.parseColor(top), b = Color.parseColor(bottom); runOnUiThread(() -> applyChrome(t, b)); } catch (Throwable ignored) { }
         }
+        /** The page says something has been read, so its alert and the icon dot can go. */
+        @JavascriptInterface public void seen(String key) { if (!adminPage()) return; Notify.clear(MainActivity.this, key); }
         @JavascriptInterface public void setLock(boolean on) { if (!adminPage()) return; getSharedPreferences("ui", MODE_PRIVATE).edit().putBoolean("lock_on", on).apply(); }
     }
     private String BuildConfigVersion() { try { return getPackageManager().getPackageInfo(getPackageName(), 0).versionName; } catch (Throwable e) { return ""; } }

@@ -11,6 +11,7 @@
 <script src="/sla-clock.js"></script>
 <link rel="stylesheet" href="/admin/reports-ui.css">
 <script src="/admin/reports-ui.js"></script>
+<script src="/admin/doc-viewer.js"></script>
 <script>(function(){try{var st=localStorage.getItem('lh-admin-theme');var mq=window.matchMedia&&matchMedia('(prefers-color-scheme: dark)');var t=st||(mq&&mq.matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);if(!st&&mq&&mq.addEventListener)mq.addEventListener('change',function(){if(!localStorage.getItem('lh-admin-theme'))document.documentElement.setAttribute('data-theme',mq.matches?'dark':'light');});}catch(e){}})();</script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -857,7 +858,7 @@ function renderRoute(p) {
   if (p === '/admin' || p === '/admin/')           return showDashboard();
   if (p === '/admin/orders')                        return showOrders();
   if (p === '/admin/reports' || p.startsWith('/admin/reports/')) return showReports(p);
-  if (p.match(/^\/admin\/orders\/\d+$/))            return showOrder(p.split('/').pop());
+  if (p.match(/^\/admin\/orders\/\d+$/))          { const id = p.split('/').pop(); notifSeen('o' + id, 'order:' + id); return showOrder(id); }
   if (p === '/admin/customers')                     return showCustomers();
   if (p.match(/^\/admin\/customers\/.+$/))          return showCustomer(decodeURIComponent(p.replace('/admin/customers/', '')));
   if (p === '/admin/accounts')                      return showAccounts();
@@ -982,7 +983,9 @@ async function api(url, opts = {}) {
 }
 
 async function post(url, body) {
-  return api(url, { method: 'POST', body: JSON.stringify(body) });
+  const r = await api(url, { method: 'POST', body: JSON.stringify(body) });
+  if (r && r.ok !== false && !r.error) afterPost(url);
+  return r;
 }
 
 async function del(url) {
@@ -1725,7 +1728,16 @@ async function showAdminUsers(secretInfo) {
       <div class="field" style="margin-bottom:12px"><label>Your password, to confirm</label><input id="au-me" type="password" autocomplete="current-password"></div>
       <button class="btn btn-primary btn-sm" onclick="adminUserAdd()">Add admin</button>
       <div id="au-msg" style="font-size:12px;color:#b42318;margin-top:8px"></div>
-      <div style="font-size:12px;color:#6b6b6b;margin-top:10px;line-height:1.6">A new admin can do everything you can, including approving orders and refunds. Removing an account signs it out straight away. The two owner accounts are set in the server settings and are not changed here.</div></div>`);
+      <div style="font-size:12px;color:#6b6b6b;margin-top:10px;line-height:1.6">A new admin can do everything you can, including approving orders and refunds. Removing an account signs it out straight away. The two owner accounts are set in the server settings and are not changed here.</div></div>
+    <div class="card" style="padding:18px 20px;max-width:560px;margin-top:20px"><div class="card-title" style="margin-bottom:8px">Lost a phone or laptop?</div>
+      <div style="font-size:12px;color:#6b6b6b;margin-bottom:12px;line-height:1.6">Signs your account out everywhere except here, including devices set to stay signed in.</div>
+      <button class="btn btn-outline btn-sm" onclick="signOutOthers()">Sign out my other devices</button>
+      <div id="so-msg" style="font-size:12px;margin-top:8px"></div></div>`);
+}
+async function signOutOthers() {
+  if (!confirm('Sign out every other device on your account?')) return;
+  const r = await post('/api/admin/admin-users/sign-out-others', {});
+  document.getElementById('so-msg').textContent = r?.ok ? (r.ended ? `Done. ${r.ended} other sign-in${r.ended === 1 ? '' : 's'} ended.` : 'No other devices were signed in.') : (r?.error || 'That did not work.');
 }
 async function adminUserAdd() {
   const v = id => document.getElementById(id).value;
@@ -1983,7 +1995,7 @@ async function showOrder(id) {
   const fileItems = userFiles.map(f => `
       <div class="file-item">
         <span class="file-name">📄 ${esc(f)}</span>
-        <a class="btn btn-outline btn-sm" href="/api/admin/orders/${o.id}/files/${encodeURIComponent(f)}" target="_blank">Download</a>
+        <a class="btn btn-outline btn-sm" href="/api/admin/orders/${o.id}/files/${encodeURIComponent(f)}" target="_blank">View</a>
       </div>`).join('');
 
   const allStatuses = ['awaiting_payment','paid','submitted_to_printer','printing','mailed','delivered','refunded'];
@@ -2187,6 +2199,7 @@ function openNotif(i) {
   const keys = readKeys(); keys.add(it.key); writeKeys(keys);
   _notifItems = _notifItems.filter(x => x.key !== it.key);
   renderNotifs(_notifUnreadContacts);
+  nativeSeen(it.app);
   go(it.path);
 }
 
@@ -2203,12 +2216,37 @@ function markNotifsRead() {
   try { localStorage.removeItem(NOTIF_READ_KEY); } catch {}   // everything before now is read, so the single-item list can start over
   _notifItems = []; renderNotifs(_notifUnreadContacts);
   document.getElementById('notif-panel').style.display = 'none';
+  nativeSeen('all');
 }
 
+// Tells the Mac or Android app to take down its own alert and refresh its badge.
+function nativeSeen(key) {
+  try {
+    if (window.LHApp && typeof window.LHApp.seen === 'function') window.LHApp.seen(key);
+    window.webkit?.messageHandlers?.mac?.postMessage('seen:' + key);
+  } catch {}
+}
+// One thing has been looked at: take it out of the bell and the phone or Mac alerts.
+function notifSeen(itemKey, appKey) {
+  const keys = readKeys(); keys.add(itemKey); writeKeys(keys);
+  const left = _notifItems.filter(x => x.key !== itemKey);
+  if (left.length !== _notifItems.length) { _notifItems = left; renderNotifs(_notifUnreadContacts); }
+  nativeSeen(appKey);
+}
+// Called after anything that marks mail or messages read, so the counts change at once.
+function afterPost(url) {
+  let m;
+  if ((m = url.match(/^\/api\/admin\/contacts\/(\d+)\/(read|reply)$/))) { notifSeen('c' + m[1], 'message:' + m[1]); notifSeen('a' + m[1], 'message:' + m[1]); }
+  else if (url !== '/api/admin/contacts/read-all' && !/^\/api\/admin\/mail\/[^/]+\/action$/.test(url)) return;
+  pollNotifications();
+}
+
+let _notifPoll = 0;
 async function pollNotifications() {
+  const turn = ++_notifPoll;
   const seen = readSeen();
   const d = await api('/api/admin/notifications' + (seen ? `?since=${encodeURIComponent(seen)}` : ''), { background: true });
-  if (!d) return;
+  if (!d || turn !== _notifPoll) return;     // a newer check is on its way; an older answer would bring read items back
   _notifSince = d.now;
   if (d.mailUnread) updateMailBadge(d.mailUnread);
   if (typeof d.unreadApplicants === 'number') window._unreadApplicants = d.unreadApplicants;
@@ -2216,13 +2254,13 @@ async function pollNotifications() {
   refreshBadges();
   if (!seen) { writeSeen(d.now); } // first ever visit: start counting from now, not the whole history
   const items = [];
-  (seen ? d.orders : []).forEach(o => items.push({ key: 'o' + o.id, path: `/admin/orders/${o.id}`,
+  (seen ? d.orders : []).forEach(o => items.push({ key: 'o' + o.id, app: 'order:' + o.id, path: `/admin/orders/${o.id}`,
     html: `<strong>New order #${o.id}</strong> · $${(o.price_cents / 100).toFixed(2)} CAD<br>${esc(o.recipient_name || '')} (${esc(o.destination_country || '')})`, when: fmtDateTime(o.paid_at) }));
-  (seen ? (d.mail || []) : []).forEach(m => items.push({ key: 'm' + m.box + m.id, path: '/admin/mail?box=' + encodeURIComponent(m.box) + '&id=' + encodeURIComponent(m.id) + '&folder=' + encodeURIComponent(m.folderId || ''),
+  (seen ? (d.mail || []) : []).forEach(m => items.push({ key: 'm' + m.box + m.id, app: 'mail:' + m.box + ':' + m.id, path: '/admin/mail?box=' + encodeURIComponent(m.box) + '&id=' + encodeURIComponent(m.id) + '&folder=' + encodeURIComponent(m.folderId || ''),
     html: `<strong>New email (${esc(m.label || m.box)})</strong><br>${esc(String(m.from || '').replace(/<[^>]*>/g, '').trim())}: ${esc(m.subject || '')}`, when: fmtDateTime(new Date(m.at).toISOString().slice(0, 19).replace('T', ' ')) }));
-  (seen ? (d.applicants || []) : []).forEach(c => items.push({ key: 'a' + c.id, path: '/admin/applicants',
+  (seen ? (d.applicants || []) : []).forEach(c => items.push({ key: 'a' + c.id, app: 'message:' + c.id, path: '/admin/applicants',
     html: `<strong>New job application: ${esc(c.name)}</strong><br>${esc(String(c.preview || '').replace(/^CAREERS APPLICATION:\s*/, ''))}`, when: fmtDateTime(c.created_at) }));
-  (seen ? d.contacts : []).forEach(c => items.push({ key: 'c' + c.id, path: '/admin/contacts?id=' + c.id,
+  (seen ? d.contacts : []).forEach(c => items.push({ key: 'c' + c.id, app: 'message:' + c.id, path: '/admin/contacts?id=' + c.id,
     html: `<strong>Message from ${esc(c.name)}</strong><br>${esc(c.preview)}`, when: fmtDateTime(c.created_at) }));
   const readNow = readKeys();
   const unreadItems = items.filter(i => !readNow.has(i.key));
@@ -2402,7 +2440,8 @@ async function mailOpen(i) {
   if (!r || r.error) { rd.innerHTML = `<div class="ml-empty" style="color:#b42318">${esc((r && r.error) || 'Could not open this email.')}</div>`; return; }
   const wasUnread = m.unread || r.unread; m.unread = false; MAIL.cur = { ...r, folderId: m.folderId };
   if (wasUnread) post(`/api/admin/mail/${MAIL.box}/action`, { action: 'read', items: [{ id: m.id, folderId: m.folderId }] });
-  if (wasUnread) { const b = MAIL.boxes.find(x => x.key === MAIL.box); if (b && b.unread) { b.unread--; mailTop(); } }
+  if (wasUnread) { const b = MAIL.boxes.find(x => x.key === MAIL.box); if (b && b.unread) { b.unread--; mailTop(); updateMailBadge(MAIL.boxes); } }
+  notifSeen('m' + MAIL.box + m.id, 'mail:' + MAIL.box + ':' + m.id);
   mailRenderList(); mailRenderReader();
   const em = mailAddr(r.from).toLowerCase();
   const o = await api('/api/admin/mail/orders?email=' + encodeURIComponent(em), { background: true });
@@ -2663,7 +2702,7 @@ function letterEditCard(o) {
   let atts = []; try { atts = JSON.parse(o.attachment_info || '[]'); } catch {}
   const files = atts.map(a => { const n = String(a.path || '').split('/').pop(); return { n, label: a.originalName || n }; });
   const rows = files.map(f => `<div class="file-item"><span class="file-name">📄 ${esc(f.label)}</span>
-      <span style="display:flex;gap:8px"><a class="btn btn-outline btn-sm" href="/api/admin/orders/${o.id}/files/${encodeURIComponent(f.n)}" target="_blank">Download</a>
+      <span style="display:flex;gap:8px"><a class="btn btn-outline btn-sm" href="/api/admin/orders/${o.id}/files/${encodeURIComponent(f.n)}" target="_blank">View</a>
       ${locked ? '' : `<button class="btn btn-outline btn-sm" style="color:#b42318" onclick="removeAttachment(${o.id}, ${esc(JSON.stringify(f.n))}, ${esc(JSON.stringify(f.label))})">Remove</button>`}</span></div>`).join('');
   return `<details class="card" style="margin-bottom:24px">
     <summary class="card-header" style="cursor:pointer"><span class="card-title">Edit letter text and attachments</span><span style="font-size:12px;color:#6b6b6b;font-weight:400">${locked ? esc(lockReason) : 'Change what gets printed before it goes out'}</span></summary>
@@ -2876,7 +2915,7 @@ function downloadAllFiles(orderId, files) {
   files.forEach((f, i) => {
     setTimeout(() => {
       const a = document.createElement('a');
-      a.href = `/api/admin/orders/${orderId}/files/${encodeURIComponent(f)}`;
+      a.href = `/api/admin/orders/${orderId}/files/${encodeURIComponent(f)}?download=1`;
       a.download = f;
       document.body.appendChild(a);
       a.click();
@@ -5749,7 +5788,7 @@ function apprCard(o, i) {
         </div>
         <div id="appr-res-${o.id}" style="font-size:12px;margin-top:8px"></div>
       </div>
-      ${open ? `<div style="border-left:1px solid #ececec;min-width:0"><div style="padding:8px 14px;font-size:11px;border-bottom:1px solid #ececec"><a class="link" href="/api/admin/orders/${o.id}/postgrid/preview" target="_blank" rel="noopener">Open full size</a> <span style="color:#6b6b6b">· if the letter does not appear here, your browser is not showing PDFs in frames</span></div><iframe src="/api/admin/orders/${o.id}/postgrid/preview" title="Letter preview for order ${o.id}" style="width:100%;height:540px;border:0;background:#f5f5f5"></iframe></div>` : ''}
+      ${open ? `<div style="border-left:1px solid #ececec;min-width:0"><div style="padding:8px 14px;font-size:11px;border-bottom:1px solid #ececec"><a class="link" href="/api/admin/orders/${o.id}/postgrid/preview" target="_blank" rel="noopener">Open full size</a> </div><div class="doc-inline" data-doc="/api/admin/orders/${o.id}/postgrid/preview" aria-label="Letter preview for order ${o.id}"></div></div>` : ''}
     </div></div>`;
 }
 function renderApprovals() {
@@ -5768,6 +5807,7 @@ function renderApprovals() {
     </div>
     ${a.configured ? '' : '<div class="card" style="padding:14px 20px;color:#b45309;font-size:13px">PostGrid is not set up on this server, so orders can be checked here but not sent.</div>'}
     ${a.orders.map(apprCard).join('')}`);
+  DocView.fill(document.getElementById('main'));
 }
 function apprTick(id, on) { on ? _appr.ticked.add(id) : _appr.ticked.delete(id); if (_appr.ticked.size > (_appr.max || 10)) { _appr.ticked.delete(id); } renderApprovals(); }
 function apprTickAll() { _appr.ticked = new Set(_appr.orders.filter(o => o.clean && !o.approved_for).slice(0, _appr.max || 10).map(o => o.id)); renderApprovals(); }
