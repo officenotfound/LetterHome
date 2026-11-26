@@ -454,6 +454,10 @@ dict(c='us', slug='registered-mail-vs-certified-mail',
  sub='Certified Mail proves you sent a letter. Registered Mail is a much more expensive service for items of value.',
  answer='Certified Mail costs $5.55 on top of postage and gives you a mailing receipt and a record of delivery. Registered Mail starts at $20.90, is handed to a postal employee for a receipt, and can be insured up to $50,000.',
  body='''
+<h2>What is Registered Mail?</h2>
+<p><strong>Registered Mail is the most secure service USPS offers.</strong> A system of receipts follows the item from the point where USPS accepts it to delivery.</p>
+<p>You hand it to a postal employee, who gives you a mailing receipt. Declare a value and it is insured for that value, up to $50,000. A signature record needs a return receipt, bought when you mail it. The fee depends on the declared value and costs several times as much as Certified Mail, so it is worth it only when the item itself is valuable.</p>
+
 <h2>The short version</h2>
 <p>For most letters, <strong>Certified Mail</strong> is the right choice when you need proof. It costs $5.55 on top of postage, and you can add a return receipt. <strong>Registered Mail</strong> is a different service, priced from $20.90, meant for items where the contents matter, such as valuable documents.</p>
 
@@ -470,9 +474,6 @@ dict(c='us', slug='registered-mail-vs-certified-mail',
 <h2>How Certified Mail works</h2>
 <p>Certified Mail is an extra service added to First-Class Mail or Priority Mail. It moves through the mail as ordinary mail does, so it is no faster, but you get a record of delivery or a delivery attempt. Our guide to <a href="/us/what-is-certified-mail">Certified Mail</a> covers the receipt, the signature options and what it does not prove.</p>
 
-<h2>How Registered Mail works</h2>
-<p>Registered Mail must be handed to a postal employee, who issues a receipt. It can be insured at a Post Office, and the fee depends on the value you declare. It costs several times as much as Certified Mail, so it is worth it only when the item itself is valuable.</p>
-
 <h2>Which one to pick</h2>
 <ul>
 <li><strong>A formal notice, dispute or demand letter:</strong> Certified Mail, with a return receipt if you want a signature. The question is whether you can show you sent it, and that costs about $9 with the receipt.</li>
@@ -486,7 +487,8 @@ dict(c='us', slug='registered-mail-vs-certified-mail',
  faq=[('What is the difference between Registered Mail and Certified Mail?', 'Certified Mail ($5.55 plus postage) gives a mailing receipt and a record of delivery. Registered Mail (from $20.90) is handed to a postal employee for a receipt and can be insured up to $50,000.'),
       ('How much is Registered Mail?', 'It starts at $20.90 with no declared value, and $21.50 for a declared value of $0.01 to $100, plus postage. The fee rises with the declared value.'),
       ('Is Registered Mail better than Certified Mail?', 'It offers insurance and costs several times as much. For a notice or a formal letter where you need proof of delivery, Certified Mail is usually enough.'),
-      ('Can I buy Registered Mail online?', 'Registered Mail must be presented to a postal employee, so it is bought at a Post Office counter.')],
+      ('Can I buy Registered Mail online?', 'Registered Mail must be presented to a postal employee, so it is bought at a Post Office counter.'),
+      ('What is Registered Mail?', 'It is the most secure service USPS offers. A system of receipts follows the item from acceptance to delivery, and it can be insured for a declared value of up to $50,000.')],
  sources=[US_SRC_N123, ('USPS: insurance and extra services', 'https://www.usps.com/ship/insurance-extra-services.htm'), ('USPS Domestic Mail Manual 503: extra services', 'https://pe.usps.com/text/dmm300/503.htm')],
  related=[('/us/what-is-certified-mail', 'What is Certified Mail?', 'Cost, receipts and what it proves'), US_REL_RATES, US_REL_STAMP, ('/us/mail-a-letter-without-a-printer', 'Mail a letter without a printer', 'Three ways to get a letter sent')]),
 
