@@ -98,7 +98,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
     var status: NSStatusItem!
     var session: URLSession!
     var streamTask: URLSessionDataTask?
-    var streamBuf = ""
+    var streamBuf = Data()     // bytes, because a network chunk can end in the middle of an accented letter
+    var awake: NSObjectProtocol?
     var streamCode = 0
     var backoff = 3.0
     var streamStopped = false
@@ -146,6 +147,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         un.setNotificationCategories([UNNotificationCategory(identifier: "mailreply", actions: [UNTextInputNotificationAction(identifier: "reply", title: "Reply", options: [], textInputButtonTitle: "Send", textInputPlaceholder: "Reply")], intentIdentifiers: [], options: [])])
         un.requestAuthorization(options: [.alert, .sound, .badge]) { ok, err in lhLog("notification permission granted=\(ok) error=\(String(describing: err))"); self.refreshNotifState() }
 
+        // Without this, macOS puts a menu bar app to sleep in the background and alerts arrive late or in bunches.
+        awake = ProcessInfo.processInfo.beginActivity(options: .userInitiatedAllowingIdleSystemSleep, reason: "Listening for new orders and messages")
         showWindow(nil)
         startStream()
         pollTimer = Timer.scheduledTimer(withTimeInterval: 180, repeats: true) { [weak self] _ in self?.poll() }
@@ -337,7 +340,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
                 var req = URLRequest(url: comps.url!)
                 req.setValue(cookie, forHTTPHeaderField: "Cookie")
                 req.setValue("text/event-stream", forHTTPHeaderField: "Accept")
-                self.streamBuf = ""; self.streamCode = 0
+                self.streamBuf = Data(); self.streamCode = 0
                 self.streamTask = self.session.dataTask(with: req)
                 self.streamTask?.resume()
             }
@@ -362,17 +365,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         if streamCode == 200 { backoff = 3; streamState = "Connected"; defaults.set(false, forKey: "signedOutShown") }
     }
     func urlSession(_ s: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
-        guard let t = String(data: data, encoding: .utf8) else { return }
-        streamBuf += t
-        while let r = streamBuf.range(of: "\n\n") {
-            let blk = String(streamBuf[..<r.lowerBound]); streamBuf.removeSubrange(..<r.upperBound)
+        streamBuf.append(data)
+        while let r = streamBuf.range(of: Data("\n\n".utf8)) {
+            let blk = String(decoding: streamBuf.subdata(in: streamBuf.startIndex..<r.lowerBound), as: UTF8.self)
+            streamBuf = Data(streamBuf[r.upperBound...])
             guard let line = blk.split(separator: "\n").first(where: { $0.hasPrefix("data: ") }),
                   let d = String(line.dropFirst(6)).data(using: .utf8),
                   let j = try? JSONSerialization.jsonObject(with: d) as? [String: Any] else { continue }
             if let at = j["at"] as? String { defaults.set(at, forKey: "evSince") }
             DispatchQueue.main.async { self.liveEvent(j) }
         }
-        if streamBuf.count > 100_000 { streamBuf = "" }
+        if streamBuf.count > 100_000 { streamBuf = Data() }
     }
     func urlSession(_ s: URLSession, task: URLSessionTask, didCompleteWithError e: Error?) {
         guard task === streamTask else { return }
@@ -478,7 +481,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
     }
     func downloadDidFinish(_ d: WKDownload) { NSApp.dockTile.badgeLabel = NSApp.dockTile.badgeLabel }
     func webView(_ w: WKWebView, didFinish n: WKNavigation!) {
-        if let u = w.url, isMine(u), u.path.hasPrefix("/admin"), !u.path.hasPrefix("/admin/login") { defaults.set(u.path, forKey: "lastPath") }
+        if let u = w.url, isMine(u), u.path.hasPrefix("/admin"), !u.path.hasPrefix("/admin/login") {
+            defaults.set(u.path, forKey: "lastPath")
+            // Just signed in: connect now, not after the retry wait.
+            if streamState != "Connected" { stopStream(); backoff = 3; startStream() }
+        }
         if ENV["LH_SNAPSHOT"] != nil { FileHandle.standardError.write(("loaded " + (w.url?.absoluteString ?? "nil") + "\n").data(using: .utf8)!) }
         testHook(w)
     }
@@ -598,7 +605,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         }
         defaults.set(false, forKey: "signedOutShown")
         let key = type + ":" + String(describing: j["id"] ?? "")
-        if type != "mail" { if seenAlerts.contains(key) { return }; seenAlerts.insert(key) }
+        let once = type == "mail" ? key + ":" + (j["box"] as? String ?? "") : key     // a reconnect can send an alert again
+        if seenAlerts.contains(once) { return }; seenAlerts.insert(once)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in self?.poll() }     // update the unread number
         func money(_ c: Any?) -> String { String(format: "$%.2f", Double((c as? Int) ?? 0) / 100) }
         switch type {
         case "order":
@@ -657,7 +666,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: UUID().uuidString, content: c, trigger: nil)) { e in lhLog("notification posted title=\(title) error=\(String(describing: e))") }
     }
     func userNotificationCenter(_ c: UNUserNotificationCenter, willPresent n: UNNotification, withCompletionHandler h: @escaping (UNNotificationPresentationOptions) -> Void) {
-        h(NSApp.isActive && !locked ? [] : [.banner, .list, .sound])
+        h([.banner, .list, .sound])      // also while the app is in front, like the phone
     }
     func userNotificationCenter(_ c: UNUserNotificationCenter, didReceive r: UNNotificationResponse, withCompletionHandler h: @escaping () -> Void) {
         let ui = r.notification.request.content.userInfo

@@ -269,7 +269,7 @@ function register(app, deps) {
     if (!cursor) { cursorSet(b.key, newest || Date.now()); return; }          // first run: start from now, no flood
     const fresh = msgs.filter(m => m.at > cursor).sort((x, y) => x.at - y.at);
     for (const m of fresh) {
-      const ev = { box: b.key, label: b.label, id: m.id, folderId: m.folderId, from: m.from, subject: m.subject, at: m.at };
+      const ev = { box: b.key, label: b.label, id: m.id, folderId: m.folderId, from: m.from, subject: m.subject, at: m.at, seen: Date.now() };
       recent.push(ev); events.emit('mail', ev);
     }
     if (fresh.length) cursorSet(b.key, fresh[fresh.length - 1].at);

@@ -3427,6 +3427,11 @@ app.get('/api/admin/events', requireAdmin, (req, res) => {
   }, 5000);
   const onMail = ev => { try { send({ type: 'mail', box: ev.box, label: ev.label, id: ev.id, folderId: ev.folderId || '', from: ev.from, subject: ev.subject }); } catch {} };
   mailbox.events.on('mail', onMail);
+  // Email that was spotted while this app was disconnected or asleep.
+  if (req.query.since) {
+    const from = Date.parse(cursor.replace(' ', 'T') + 'Z');
+    for (const ev of mailbox.recent()) if (ev.seen > from) onMail(ev);
+  }
   req.on('close', () => { clearInterval(timer); mailbox.events.off('mail', onMail); });
 });
 

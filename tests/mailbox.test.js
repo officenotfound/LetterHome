@@ -179,6 +179,7 @@ test('the new-mail watcher starts from now, then raises an event for each new un
   await mod.pollAll();
   assert.equal(seen.length, 1);
   assert.equal(seen[0].subject, 'New & shiny'); assert.equal(seen[0].box, 'support');
+  assert.ok(Date.now() - seen[0].seen < 5000, 'when it was spotted is kept, so a reconnecting app can be sent it');
   await mod.pollAll();
   assert.equal(seen.length, 1, 'the same message does not alert twice');
   assert.equal(mod.recent().length, 1);
