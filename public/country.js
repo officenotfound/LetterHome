@@ -23,6 +23,8 @@
     a.textContent = es ? 'Español' : 'English';
     a.setAttribute('hreflang', es ? 'es-US' : 'en-US');
     a.setAttribute('lang', es ? 'es' : 'en');
+    var pick = es ? 'es' : 'en';   // copied now: `es` is reused further down for the Spanish labels
+    a.addEventListener('click', function () { try { localStorage.setItem('lh-lang', pick); } catch (e) {} });
     // Same order as the Canadian header: Track an order, language, Send a letter.
     var track = right.querySelector('.nav-track');
     right.insertBefore(a, track ? track.nextSibling : right.firstChild);

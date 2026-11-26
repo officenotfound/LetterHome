@@ -79,11 +79,25 @@
   var isSpanish = htmlLang.indexOf('es') === 0;
   var country = document.documentElement.getAttribute('data-country') || '';
   var onUsDomain = location.hostname.replace(/^www\./, '') === 'letterhome.us';
+  // First visit: a browser set to French on a Canadian page, or to Spanish on a US page, goes to that page's own
+  // French or Spanish version. Only until the visitor picks a language; after that their choice always wins.
+  try {
+    var picked = localStorage.getItem('lh-lang') || sessionStorage.getItem('lh-lang');
+    if (!picked && !/[?&]lang=/.test(location.search)) {
+      var first = ((navigator.languages && navigator.languages[0]) || navigator.language || '').toLowerCase();
+      var want = first.indexOf('fr') === 0 && !country && !isFrench ? 'fr'
+        : first.indexOf('es') === 0 && country === 'us' && !isSpanish ? 'es' : '';
+      var twin = want && document.querySelector('link[rel="alternate"][hreflang^="' + want + '"]');
+      if (twin) {
+        var to = new URL(twin.href, location.href);
+        if (to.pathname !== location.pathname) { location.replace(to.pathname + location.search + location.hash); return; }
+      }
+    }
+  } catch (e) {}
   // Remember the visitor's language on the French and US Spanish pages, so the ordering pages that follow open in it.
   try {
     if (isSpanish) localStorage.setItem('lh-lang', 'es');
     else if (isFrench) localStorage.setItem('lh-lang', 'fr');   // a visitor on a French page orders in French
-    else if (country === 'us' && document.documentElement.hasAttribute('data-en-only')) localStorage.setItem('lh-lang', 'en');
   } catch (e) {}
   // Hide toggle only on the /guides index page (not on individual blog/guide pages).
   var isGuidesIndex = window.location.pathname === '/guides' || window.location.pathname === '/guides/';
