@@ -20,7 +20,7 @@ def page(title, desc, url, content, noindex=False):
                      (r'<meta name="twitter:title"[^>]*>', f'<meta name="twitter:title" content="{html.escape(title)}">'),
                      (r'<meta name="twitter:description"[^>]*>', f'<meta name="twitter:description" content="{html.escape(desc)}">')]:
         h = re.sub(pat, val, h, count=1)
-    h = h.replace('<html ', '<html data-rail-title="We send it for you" data-rail-text="We check your fax, send it to any Canadian or US fax number, and email you when it has been delivered. $5 for up to 10 pages." data-rail-href="/fax" data-rail-label="Send a fax" data-rail-meta="Pay securely with Stripe." ', 1)
+    h = h.replace('<html ', '<html data-rail-title="We send it for you" data-rail-text="We check your fax, send it to any Canadian or US fax number, and email you when it has been delivered." data-rail-href="/fax" data-rail-label="Send a fax" data-rail-meta="Pay securely with Stripe." ', 1)
     if noindex:
         h = h.replace('<meta charset="UTF-8">', '<meta charset="UTF-8">\n<meta name="robots" content="noindex">', 1)
     return h + STYLE + '</head>' + body_open + content + '\n' + tail
@@ -48,7 +48,7 @@ FAX = '''<div class="hero" id="main-content">
   <h1>Send a fax to Canada or the US</h1>
   <p class="hero-sub">Upload a PDF or a photo of your document, enter the fax number, and we send it for you. No fax machine needed.</p>
   <div class="answer-box">
-    <p>A fax to any Canadian or US fax number costs $5 for up to 10 pages, plus $1 for each extra page. We check every fax before it is sent, usually within a few hours, and email you when it has been delivered.</p>
+    <p>A fax to any Canadian or US fax number costs <span data-fx="base">$3.00</span> for up to <span data-fx="incl">10</span> pages, plus <span data-fx="page">$0.50</span> for each extra page. We check every fax before it is sent, usually within a few hours, and email you when it has been delivered.</p>
   </div>
 </div>
 
@@ -78,7 +78,7 @@ FAX = '''<div class="hero" id="main-content">
   </ol>
 
   <h2>Price</h2>
-  <p>$5 CAD for up to 10 pages, including the cover page if you add one, and $1 for each extra page. Faxes can be up to 50 pages. The exact price is shown before you pay.</p>
+  <p><span data-fx="base">$3.00</span> CAD for up to <span data-fx="incl">10</span> pages, including the cover page if you add one, and <span data-fx="page">$0.50</span> for each extra page. Faxes can be up to 50 pages. The exact price is shown before you pay.</p>
 
   <h2>What we can send</h2>
   <ul>
@@ -99,7 +99,10 @@ FAX = '''<div class="hero" id="main-content">
 <script>
 (function(){
   var form=document.getElementById('fx-form'),err=document.getElementById('fx-err'),qb=document.getElementById('fx-quote-btn'),pay=document.getElementById('fx-pay'),ref=null;
-  fetch('/api/fax/config').then(function(r){return r.json()}).then(function(c){ if(!c.open){form.style.display='none';document.getElementById('fx-closed').style.display='block';} }).catch(function(){});
+  fetch('/api/fax/config').then(function(r){return r.json()}).then(function(c){
+    var set=function(k,v){document.querySelectorAll('[data-fx="'+k+'"]').forEach(function(e){e.textContent=v})};
+    set('base',money(c.price_cents)); set('page',money(c.page_cents)); set('incl',String(c.included_pages));
+    if(!c.open){form.style.display='none';document.getElementById('fx-closed').style.display='block';} }).catch(function(){});
   function money(c){return '$'+(c/100).toFixed(2)}
   form.addEventListener('submit',function(e){
     e.preventDefault(); err.textContent=''; document.getElementById('fx-quote').style.display='none';
@@ -157,7 +160,7 @@ STATUS = '''<div class="hero" id="main-content">
 
 if __name__ == '__main__':
     open('public/fax.html', 'w', encoding='utf-8').write(page('Send a Fax to Canada or the US Online | Letterhome',
-        'Send a fax online to any Canadian or US fax number from anywhere. Upload a PDF or photo, $5 for up to 10 pages, with an email confirmation when it is delivered.',
+        'Send a fax online to any Canadian or US fax number from anywhere. Upload a PDF or photo, $3 for up to 10 pages, with an email confirmation when it is delivered.',
         'https://letterhome.ca/fax', FAX))
     open('public/fax-status.html', 'w', encoding='utf-8').write(page('Your Fax | Letterhome', 'The status of your Letterhome fax.',
         'https://letterhome.ca/fax', STATUS, noindex=True))

@@ -126,8 +126,8 @@ async function addCover(doc, { to, from, note, docPages }) {
 }
 
 function priceFor(getSetting, pages) {
-  const base = parseInt(getSetting('fax_price_cents', '500'), 10) || 500;
-  const per = parseInt(getSetting('fax_page_cents', '100'), 10) || 100;
+  const base = parseInt(getSetting('fax_price_cents', '300'), 10) || 300;
+  const per = parseInt(getSetting('fax_page_cents', '50'), 10) || 50;
   const incl = parseInt(getSetting('fax_included_pages', '10'), 10) || 10;
   return base + Math.max(0, pages - incl) * per;
 }
@@ -166,7 +166,7 @@ function register(app, deps) {
 
   // ---------- public: page config, quote, checkout, status ----------
   app.get('/api/fax/config', (req, res) => {
-    res.json({ open: open(req), price_cents: priceFor(getSetting, 1), page_cents: parseInt(getSetting('fax_page_cents', '100'), 10) || 100,
+    res.json({ open: open(req), price_cents: priceFor(getSetting, 1), page_cents: parseInt(getSetting('fax_page_cents', '50'), 10) || 50,
       included_pages: parseInt(getSetting('fax_included_pages', '10'), 10) || 10, max_pages: MAX_PAGES, max_mb: MAX_BYTES / 1048576 });
   });
 

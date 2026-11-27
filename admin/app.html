@@ -4379,8 +4379,8 @@ async function showSettings() {
           <div class="set-row stack">
             <div class="set-txt"><h3>Fax prices</h3><p>In Canadian cents: the price for up to 10 pages, and each page after that.</p></div>
             <div class="price-grid">
-              ${priceField('setting-fax-price', 'Up to 10 pages', parseInt(settings['fax_price_cents']) || 500, 50)}
-              ${priceField('setting-fax-page', 'Each extra page', parseInt(settings['fax_page_cents']) || 100, 50)}
+              ${priceField('setting-fax-price', 'Up to 10 pages', parseInt(settings['fax_price_cents']) || 300, 50)}
+              ${priceField('setting-fax-page', 'Each extra page', parseInt(settings['fax_page_cents']) || 50, 50)}
             </div>
           </div>
           ${keyBox(!!(settings['telnyx_api_key_set'] === 'true' && settings['telnyx_fax_app_id'] && settings['telnyx_fax_from'] && settings['telnyx_public_key']), false, 'Change the Telnyx fax connection', `
@@ -4554,8 +4554,8 @@ async function saveAllSettings() {
   const telnyxKey = (document.getElementById('setting-telnyx-key')?.value || '').trim();
   const faxFields = document.getElementById('setting-fax-enabled') ? {
     fax_enabled: document.getElementById('setting-fax-enabled').value,
-    fax_price_cents: String(parseInt(document.getElementById('setting-fax-price')?.value) || 500),
-    fax_page_cents: String(parseInt(document.getElementById('setting-fax-page')?.value) || 100),
+    fax_price_cents: String(parseInt(document.getElementById('setting-fax-price')?.value) || 300),
+    fax_page_cents: String(parseInt(document.getElementById('setting-fax-page')?.value) || 50),
     ...(document.getElementById('setting-telnyx-pub') ? {
       telnyx_public_key: document.getElementById('setting-telnyx-pub').value.trim(),
       telnyx_fax_app_id: document.getElementById('setting-telnyx-app').value.trim(),

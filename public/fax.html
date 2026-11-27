@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html data-rail-title="We send it for you" data-rail-text="We check your fax, send it to any Canadian or US fax number, and email you when it has been delivered. $5 for up to 10 pages." data-rail-href="/fax" data-rail-label="Send a fax" data-rail-meta="Pay securely with Stripe." data-en-only lang="en-CA" data-theme="light">
+<html data-rail-title="We send it for you" data-rail-text="We check your fax, send it to any Canadian or US fax number, and email you when it has been delivered." data-rail-href="/fax" data-rail-label="Send a fax" data-rail-meta="Pay securely with Stripe." data-en-only lang="en-CA" data-theme="light">
 <head>
 <meta charset="UTF-8">
 <link rel="preload" as="font" type="font/woff2" href="/fonts/vEFI2_tTDB4M7-auWDN0ahZJW1gb8tc.woff2" crossorigin>
@@ -7,14 +7,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="/ga.js?v=3" defer></script>
 <title>Send a Fax to Canada or the US Online | Letterhome</title>
-<meta name="description" content="Send a fax online to any Canadian or US fax number from anywhere. Upload a PDF or photo, $5 for up to 10 pages, with an email confirmation when it is delivered.">
+<meta name="description" content="Send a fax online to any Canadian or US fax number from anywhere. Upload a PDF or photo, $3 for up to 10 pages, with an email confirmation when it is delivered.">
 <link rel="canonical" href="https://letterhome.ca/fax">
 <link rel="icon" type="image/png" href="/favicon.png">
 <link rel="manifest" href="/manifest.json">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <meta name="theme-color" content="#faf8f2" media="(prefers-color-scheme: light)">
 <meta property="og:title" content="Send a Fax to Canada or the US Online | Letterhome">
-<meta property="og:description" content="Send a fax online to any Canadian or US fax number from anywhere. Upload a PDF or photo, $5 for up to 10 pages, with an email confirmation when it is delivered.">
+<meta property="og:description" content="Send a fax online to any Canadian or US fax number from anywhere. Upload a PDF or photo, $3 for up to 10 pages, with an email confirmation when it is delivered.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://letterhome.ca/fax">
 <meta property="og:image" content="https://letterhome.ca/og-image.jpg?v=4">
@@ -22,7 +22,7 @@
 <meta property="og:locale" content="en_CA">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Send a Fax to Canada or the US Online | Letterhome">
-<meta name="twitter:description" content="Send a fax online to any Canadian or US fax number from anywhere. Upload a PDF or photo, $5 for up to 10 pages, with an email confirmation when it is delivered.">
+<meta name="twitter:description" content="Send a fax online to any Canadian or US fax number from anywhere. Upload a PDF or photo, $3 for up to 10 pages, with an email confirmation when it is delivered.">
 <meta name="twitter:image" content="https://letterhome.ca/og-image.jpg?v=4">
 <link rel="stylesheet" href="/fonts.css?v=2">
 <style>
@@ -109,7 +109,7 @@ footer{background:var(--ink);color:rgba(255,255,255,0.5);padding:40px 36px;margi
   <h1>Send a fax to Canada or the US</h1>
   <p class="hero-sub">Upload a PDF or a photo of your document, enter the fax number, and we send it for you. No fax machine needed.</p>
   <div class="answer-box">
-    <p>A fax to any Canadian or US fax number costs $5 for up to 10 pages, plus $1 for each extra page. We check every fax before it is sent, usually within a few hours, and email you when it has been delivered.</p>
+    <p>A fax to any Canadian or US fax number costs <span data-fx="base">$3.00</span> for up to <span data-fx="incl">10</span> pages, plus <span data-fx="page">$0.50</span> for each extra page. We check every fax before it is sent, usually within a few hours, and email you when it has been delivered.</p>
   </div>
 </div>
 
@@ -139,7 +139,7 @@ footer{background:var(--ink);color:rgba(255,255,255,0.5);padding:40px 36px;margi
   </ol>
 
   <h2>Price</h2>
-  <p>$5 CAD for up to 10 pages, including the cover page if you add one, and $1 for each extra page. Faxes can be up to 50 pages. The exact price is shown before you pay.</p>
+  <p><span data-fx="base">$3.00</span> CAD for up to <span data-fx="incl">10</span> pages, including the cover page if you add one, and <span data-fx="page">$0.50</span> for each extra page. Faxes can be up to 50 pages. The exact price is shown before you pay.</p>
 
   <h2>What we can send</h2>
   <ul>
@@ -160,7 +160,10 @@ footer{background:var(--ink);color:rgba(255,255,255,0.5);padding:40px 36px;margi
 <script>
 (function(){
   var form=document.getElementById('fx-form'),err=document.getElementById('fx-err'),qb=document.getElementById('fx-quote-btn'),pay=document.getElementById('fx-pay'),ref=null;
-  fetch('/api/fax/config').then(function(r){return r.json()}).then(function(c){ if(!c.open){form.style.display='none';document.getElementById('fx-closed').style.display='block';} }).catch(function(){});
+  fetch('/api/fax/config').then(function(r){return r.json()}).then(function(c){
+    var set=function(k,v){document.querySelectorAll('[data-fx="'+k+'"]').forEach(function(e){e.textContent=v})};
+    set('base',money(c.price_cents)); set('page',money(c.page_cents)); set('incl',String(c.included_pages));
+    if(!c.open){form.style.display='none';document.getElementById('fx-closed').style.display='block';} }).catch(function(){});
   function money(c){return '$'+(c/100).toFixed(2)}
   form.addEventListener('submit',function(e){
     e.preventDefault(); err.textContent=''; document.getElementById('fx-quote').style.display='none';

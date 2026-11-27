@@ -77,17 +77,20 @@ test('fax numbers: +1 numbers in any common format, never toll-free or short', (
   assert.equal(fax.normalizeNumber('555-0123'), null);
 });
 
-test('price: $5 up to 10 pages, then $1 a page, from the settings', () => {
-  assert.equal(fax.priceFor(getSetting, 1), 500);
-  assert.equal(fax.priceFor(getSetting, 10), 500);
-  assert.equal(fax.priceFor(getSetting, 13), 800);
+test('price: $3 up to 10 pages, then 50 cents a page, from the settings', () => {
+  assert.equal(fax.priceFor(getSetting, 1), 300);
+  assert.equal(fax.priceFor(getSetting, 10), 300);
+  assert.equal(fax.priceFor(getSetting, 13), 450);
+  settings.fax_price_cents = '400'; settings.fax_page_cents = '100';
+  assert.equal(fax.priceFor(getSetting, 12), 600);
+  delete settings.fax_price_cents; delete settings.fax_page_cents;
 });
 
 test('quote: counts pages, adds a cover page for a note, refuses bad input', async () => {
   let r = await quote(good, await pdf(12));
   assert.equal(r.status, 200);
   assert.equal(r.body.pages, 12);
-  assert.equal(r.body.price_cents, 700);
+  assert.equal(r.body.price_cents, 400);
   r = await quote({ ...good, cover_note: 'Please see attached.' }, await pdf(2));
   assert.equal(r.body.pages, 3);
   assert.equal(r.body.cover, true);
