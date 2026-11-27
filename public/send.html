@@ -1516,9 +1516,14 @@ function validateStep(step) {
       markError('r-email');
     }
     // Military mail (APO, FPO or DPO addresses) is not something we can send yet, so say so before payment.
+    // The same goes for British Forces (BFPO) and deployed Canadian Forces (Stn Forces, Belleville) addresses.
     const rState = (document.getElementById('r-province-text').value || '').trim();
     const rCity = (document.getElementById('r-city').value || '').trim();
-    if (!missing.length && destCC === 'US' && (/^(AA|AE|AP)$/i.test(rState) || /^(APO|FPO|DPO)$/i.test(rCity))) {
+    const rAll = [document.getElementById('r-street').value, rCity, document.getElementById('r-postal').value].join(' ');
+    const military = (destCC === 'US' && (/^(AA|AE|AP)$/i.test(rState) || /^(APO|FPO|DPO)$/i.test(rCity)))
+      || (destCC === 'GB' && (/\bBFPO\b/i.test(rAll) || /^BF1/i.test(document.getElementById('r-postal').value.trim())))
+      || (destCC === 'CA' && /\b(stn|station|succ|succursale)\.?\s+forces\b/i.test(rAll));
+    if (!missing.length && military) {
       reportProblem('r-military');
       markError('r-city');
       showValidationBanner(LH_T('send.val.military'));

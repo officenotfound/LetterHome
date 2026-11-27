@@ -339,7 +339,7 @@
       'send.val.email.valid': 'A valid email address',
       'send.val.letter': 'Letter message',
       'send.val.terms': 'Agreement to Terms & Privacy',
-      'send.val.military': 'We can\'t send to military addresses (APO, FPO or DPO) yet. Please mail this letter from a Post Office.',
+      'send.val.military': 'We can\'t send to military mail addresses (APO, FPO, DPO, BFPO or Canadian Forces) yet. Please mail this letter from a post office.',
       'send.file.badtype': 'only PDF, Word or TXT files allowed',
       'send.file.toobig': 'file is over 10 MB',
       'send.file.limit': 'limit is 5 files',
