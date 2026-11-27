@@ -4,7 +4,7 @@ search for (sending a fax online, faxing from abroad or from a phone, fax cover 
 Run from the project root:  python3 scripts/build-fax-guides-2026-11.py
 
 Every fact about the service matches fax.js and the fax pages: PDF, JPG or PNG up to 20 MB, up to 50 pages, Canadian and
-US numbers only (no toll-free), a person checks every fax before it is sent, a busy line or no answer is tried twice more,
+US numbers only (no toll-free), faxes usually go out within a few hours, a busy line or no answer is tried twice more,
 an email when the receiving machine has every page, files deleted 24 hours after the fax is finished. Prices are the
 defaults in Settings ($3.00 CAD for up to 10 pages and $0.50 a page; $2.50 USD and $0.25 a page): if the prices change
 in the admin, change them here and rebuild. Nothing here names the fax provider."""
@@ -16,7 +16,7 @@ lg.PUBLISHED = '2026-11-27'
 spec2 = importlib.util.spec_from_file_location('bg', 'scripts/build-guides-2026-11.py')
 bg = importlib.util.module_from_spec(spec2); spec2.loader.exec_module(bg)
 
-RAIL = ('data-rail-title="We send it for you" data-rail-text="We check your fax, send it to any Canadian or US fax number, '
+RAIL = ('data-rail-title="We send it for you" data-rail-text="We send it to any Canadian or US fax number, '
         'and email you when it has been delivered." data-rail-label="Send a fax" data-rail-meta="Pay securely with Stripe." ')
 
 # ───────────────────────── Canada (house guide template) ─────────────────────────
@@ -36,7 +36,7 @@ ca("send-a-fax-online-canada",
   breadcrumb="Send a Fax Online in Canada",
   h1_main="How to send a fax online", h1_em="in Canada.",
   hero_sub="No fax machine and no phone line. Upload the document and the number, and it is sent for you.",
-  answer_box="To send a fax online in Canada, upload your document as a PDF, JPG or PNG, enter the fax number with its area code, and pay. With Letterhome it costs $3 for up to 10 pages. A person checks every fax before it is sent, and you get an email with the delivery time once the receiving machine has every page.",
+  answer_box="To send a fax online in Canada, upload your document as a PDF, JPG or PNG, enter the fax number with its area code, and pay. With Letterhome it costs $3 for up to 10 pages. It usually goes out within a few hours, and you get an email with the delivery time once the receiving machine has every page.",
   steps=[
    ("Get the document ready", "Save it as a PDF, or take a clear photo of each page. A phone's scan feature works well."),
    ("Enter the number and pay", "Type the fax number with its area code, add a cover page if you want one, and see every page before you pay."),
@@ -55,7 +55,7 @@ ca("send-a-fax-online-canada",
    ("Can I send a fax without a fax machine?", "Yes. Upload the document online and it is sent to the fax number for you. You do not need a machine or a phone line."),
    ("How do I know my fax went through?", "We email you once the receiving fax machine has every page, with the date and time. Keep that email as your record."),
    ("Can I send a fax to the US from Canada?", "Yes. Canadian and US fax numbers both work, at the same price."),
-   ("How long does it take?", "A person checks every fax before it is sent, usually within a few hours. Sending itself takes a few minutes."),
+   ("How long does it take?", "Your fax usually goes out within a few hours. Sending itself takes a few minutes."),
   ],
   related=[REL_FAX_ABROAD, REL_FAX_COVER, ("/proof-of-mailing", "Proof You Sent a Letter", "When a letter is better than a fax"), REL_FAX],
   sources_text="",
@@ -124,7 +124,7 @@ US_REL_COVER = ('/us/fax-cover-sheet', 'Fax cover sheet template', 'What to put 
 US_REL_FAX = ('/us/fax', 'Send a fax', 'Upload, pay, and we send it')
 
 US_SERVICE = '''<h2>Sending it with Letterhome</h2>
-<p>Upload a PDF, JPG or PNG, enter the fax number and pay: $2.50 for up to 10 pages and $0.25 for each page after that, up to 50 pages. A person checks every fax before it is sent, usually within a few hours. If the line is busy or does not answer, we try twice more, and we email you when the receiving machine has every page. Faxes go to US and Canadian numbers; toll-free numbers are not accepted. Your file is deleted 24 hours after the fax is finished.</p>'''
+<p>Upload a PDF, JPG or PNG, enter the fax number and pay: $2.50 for up to 10 pages and $0.25 for each page after that, up to 50 pages. Your fax usually goes out within a few hours. If the line is busy or does not answer, we try twice more, and we email you when the receiving machine has every page. Faxes go to US and Canadian numbers; toll-free numbers are not accepted. Your file is deleted 24 hours after the fax is finished.</p>'''
 
 US = [
 dict(c='us', slug='send-a-fax-online',
@@ -132,7 +132,7 @@ dict(c='us', slug='send-a-fax-online',
  desc='Send a fax online to any US or Canadian fax number without a fax machine or phone line: upload a PDF or photo, pay $2.50 for up to 10 pages, and get an email when it is delivered.',
  eyebrow='Fax', h1='How to send a fax<br><em>online</em>',
  sub='No fax machine and no phone line. Upload the document and the number, and it is sent for you.',
- answer='To send a fax online, upload your document as a PDF, JPG or PNG, enter the fax number with its area code, and pay. With Letterhome it costs $2.50 for up to 10 pages. A person checks every fax before it is sent, and you get an email with the delivery time once the receiving machine has every page.',
+ answer='To send a fax online, upload your document as a PDF, JPG or PNG, enter the fax number with its area code, and pay. With Letterhome it costs $2.50 for up to 10 pages. It usually goes out within a few hours, and you get an email with the delivery time once the receiving machine has every page.',
  body='''
 <h2>The steps</h2>
 <ol>
@@ -156,7 +156,7 @@ dict(c='us', slug='send-a-fax-online',
       ('How much does it cost to send a fax online?', 'With Letterhome, $2.50 for up to 10 pages and $0.25 for each extra page. The price is shown before you pay.'),
       ('How do I know my fax went through?', 'We email you once the receiving machine has every page, with the date and time.'),
       ('Can I send a fax to Canada?', 'Yes. US and Canadian fax numbers both work, at the same price.'),
-      ('How long does it take to send a fax online?', 'A person checks every fax before it is sent, usually within a few hours. Sending takes a few minutes.')],
+      ('How long does it take to send a fax online?', 'Your fax usually goes out within a few hours. Sending takes a few minutes.')],
  sources=[],
  related=[US_REL_PHONE, US_REL_COVER, US_REL_FAX, ('/us/how-to-address-an-envelope', 'How to address an envelope', 'When it has to go by mail')]),
 

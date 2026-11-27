@@ -121,7 +121,7 @@ test('French and Spanish: errors, Stripe wording, cancel page, status words and 
   assert.match(mails.at(-1).subject, /Su fax de Letterhome está confirmado/);
   const st = await (await fetch(`${base}/api/fax/status/${f.status_token}`)).json();
   assert.equal(st.lang, 'es');
-  assert.equal(st.status_label, 'Esperando nuestra revisión');
+  assert.equal(st.status_label, 'En espera de envío');
 });
 
 test('quote: counts pages, adds a cover page for a note, refuses bad input', async () => {

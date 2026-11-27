@@ -61,7 +61,7 @@ ES_ATTRS = lambda en: f'data-en-only lang="es-US" data-country="us" data-alt="{e
 FR_SERVICE = '''<h2>Le prix</h2>
 <p>3 $ pour un maximum de 10 pages, page couverture comprise, et 0,50 $ par page supplémentaire, jusqu’à 50 pages. Le prix exact est affiché avant de payer. Les fax peuvent aller vers des numéros canadiens et américains; les numéros sans frais ne sont pas acceptés.</p>'''
 ES_SERVICE = '''<h2>Enviarlo con Letterhome</h2>
-<p>Suba un PDF, JPG o PNG, escriba el número de fax y pague: $2.50 por hasta 10 páginas y $0.25 por cada página adicional, hasta 50 páginas. Una persona revisa cada fax antes de enviarlo, normalmente en unas horas. Si la línea está ocupada o no contesta, lo intentamos dos veces más, y le escribimos cuando la máquina recibe todas las páginas. Los faxes van a números de EE. UU. y Canadá; no se aceptan números gratuitos (800). Su archivo se borra 24 horas después de terminar el envío.</p>'''
+<p>Suba un PDF, JPG o PNG, escriba el número de fax y pague: $2.50 por hasta 10 páginas y $0.25 por cada página adicional, hasta 50 páginas. Su fax suele salir en unas horas. Si la línea está ocupada o no contesta, lo intentamos dos veces más, y le escribimos cuando la máquina recibe todas las páginas. Los faxes van a números de EE. UU. y Canadá; no se aceptan números gratuitos (800). Su archivo se borra 24 horas después de terminar el envío.</p>'''
 
 PAGES = [
 dict(out='public/comment-envoyer-un-fax-sans-telecopieur.html', lang='fr-CA', L=LFR, shell=fp.CA_SHELL, attrs=FR_ATTRS, cta_href='/envoyer-un-fax-en-ligne',
@@ -71,7 +71,7 @@ dict(out='public/comment-envoyer-un-fax-sans-telecopieur.html', lang='fr-CA', L=
   desc='Envoyez un fax en ligne vers n’importe quel numéro canadien ou américain sans télécopieur : téléversez un PDF ou une photo, 3 $ pour 10 pages, confirmation par courriel.',
   h1='Comment envoyer un fax<br><em>sans télécopieur</em>',
   sub='Pas de télécopieur ni de ligne téléphonique. Téléversez le document et le numéro, et il est envoyé pour vous.',
-  answer='Pour envoyer un fax sans télécopieur, téléversez votre document en PDF, JPG ou PNG sur un service de fax en ligne, entrez le numéro de fax avec l’indicatif régional et payez. Avec Letterhome, c’est 3 $ pour un maximum de 10 pages. Une personne vérifie chaque fax avant l’envoi, et vous recevez un courriel avec l’heure de livraison quand le télécopieur a reçu toutes les pages.',
+  answer='Pour envoyer un fax sans télécopieur, téléversez votre document en PDF, JPG ou PNG sur un service de fax en ligne, entrez le numéro de fax avec l’indicatif régional et payez. Avec Letterhome, c’est 3 $ pour un maximum de 10 pages. Il part habituellement en quelques heures, et vous recevez un courriel avec l’heure de livraison quand le télécopieur a reçu toutes les pages.',
   body='''
 <h2>Les étapes</h2>
 <ol>
@@ -94,7 +94,7 @@ dict(out='public/comment-envoyer-un-fax-sans-telecopieur.html', lang='fr-CA', L=
        ('Peut-on envoyer un fax sans télécopieur?', 'Oui. Téléversez le document en ligne et il est envoyé au numéro de fax pour vous, sans appareil ni ligne téléphonique.'),
        ('Comment savoir si mon fax est passé?', 'Nous vous écrivons dès que le télécopieur a reçu toutes les pages, avec la date et l’heure. Conservez ce courriel comme preuve.'),
        ('Puis-je envoyer un fax aux États-Unis?', 'Oui. Les numéros canadiens et américains fonctionnent, au même prix.'),
-       ('Combien de temps faut-il?', 'Une personne vérifie chaque fax avant l’envoi, habituellement en quelques heures. L’envoi lui-même prend quelques minutes.')],
+       ('Combien de temps faut-il?', 'Votre fax part habituellement en quelques heures. L’envoi lui-même prend quelques minutes.')],
   related=[('/page-couverture-fax', 'Page couverture de fax', 'Quoi inclure, avec un modèle'), ('/envoyer-un-fax-en-ligne', 'Envoyer un fax en ligne', 'Téléversez, payez, et nous l’envoyons'),
            ('/quest-ce-que-la-poste-lettres', 'Qu’est-ce que le Poste-lettres?', 'Quand il faut l’envoyer sur papier')]),
 
@@ -147,7 +147,7 @@ dict(out='public/como-enviar-un-fax-en-linea-es.html', lang='es-US', L=LES, shel
   desc='Envíe un fax en línea a cualquier número de EE. UU. o Canadá sin máquina de fax: suba un PDF o una foto, $2.50 por hasta 10 páginas y confirmación por correo.',
   h1='Cómo enviar un fax<br><em>en línea</em>',
   sub='Sin máquina de fax ni línea telefónica. Suba el documento y el número, y nosotros lo enviamos.',
-  answer='Para enviar un fax en línea, suba su documento en PDF, JPG o PNG, escriba el número de fax con su código de área y pague. Con Letterhome cuesta $2.50 por hasta 10 páginas. Una persona revisa cada fax antes de enviarlo, y le escribimos con la hora de entrega cuando la máquina recibe todas las páginas.',
+  answer='Para enviar un fax en línea, suba su documento en PDF, JPG o PNG, escriba el número de fax con su código de área y pague. Con Letterhome cuesta $2.50 por hasta 10 páginas. Suele salir en unas horas, y le escribimos con la hora de entrega cuando la máquina recibe todas las páginas.',
   body='''
 <h2>Los pasos</h2>
 <ol>

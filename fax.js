@@ -303,9 +303,9 @@ function register(app, deps) {
         line_items: [{ quantity: 1, price_data: { currency: String(f.currency || 'CAD').toLowerCase(), unit_amount: f.price_cents,
           product_data: {
             name: { fr: `Fax au ${pretty(f.to_number)}`, es: `Fax al ${pretty(f.to_number)}` }[f.lang] || `Fax to ${pretty(f.to_number)}`,
-            description: ({ fr: `${f.pages} page${f.pages === 1 ? '' : 's'}, envoyé après une vérification par notre équipe`,
-              es: `${f.pages} página${f.pages === 1 ? '' : 's'}, enviado después de una revisión de nuestro equipo` }[f.lang])
-              || `${f.pages} page${f.pages === 1 ? '' : 's'}, sent after a quick check by our team` } } }],
+            description: ({ fr: `${f.pages} page${f.pages === 1 ? '' : 's'}, envoyé habituellement en quelques heures`,
+              es: `${f.pages} página${f.pages === 1 ? '' : 's'}, enviado normalmente en unas horas` }[f.lang])
+              || `${f.pages} page${f.pages === 1 ? '' : 's'}, usually sent within a few hours` } } }],
         locale: f.lang === 'fr' ? 'fr-CA' : f.lang === 'es' ? 'es-419' : 'auto',
         metadata: { kind: 'fax', fax_ref: f.public_ref },
         payment_intent_data: { metadata: { kind: 'fax', fax_ref: f.public_ref } },
@@ -322,13 +322,13 @@ function register(app, deps) {
   });
 
   const STATUS_TEXT = {
-    en: { quote: 'Not paid yet', awaiting_payment: 'Waiting for payment', paid: 'Paid. We check every fax before it is sent, usually within a few hours.',
+    en: { quote: 'Not paid yet', awaiting_payment: 'Waiting for payment', paid: 'Paid. Your fax usually goes out within a few hours.',
       sending: 'Sending now', retrying: 'The line was busy or did not answer. We will try again shortly.',
       delivered: 'Delivered', failed: 'We could not get it through. We will email you about what happens next.', refunded: 'Refunded', cancelled: 'Cancelled' },
-    fr: { quote: 'Pas encore payé', awaiting_payment: 'En attente du paiement', paid: 'Payé. Nous vérifions chaque fax avant l’envoi, habituellement en quelques heures.',
+    fr: { quote: 'Pas encore payé', awaiting_payment: 'En attente du paiement', paid: 'Payé. Votre fax part habituellement en quelques heures.',
       sending: 'Envoi en cours', retrying: 'La ligne était occupée ou n’a pas répondu. Nous allons réessayer sous peu.',
       delivered: 'Livré', failed: 'Le fax n’a pas pu passer. Nous vous écrirons pour la suite.', refunded: 'Remboursé', cancelled: 'Annulé' },
-    es: { quote: 'Todavía sin pagar', awaiting_payment: 'Esperando el pago', paid: 'Pagado. Revisamos cada fax antes de enviarlo, normalmente en unas horas.',
+    es: { quote: 'Todavía sin pagar', awaiting_payment: 'Esperando el pago', paid: 'Pagado. Su fax suele salir en unas horas.',
       sending: 'Enviándose', retrying: 'La línea estaba ocupada o no contestó. Lo intentaremos de nuevo en breve.',
       delivered: 'Entregado', failed: 'No pudimos enviarlo. Le escribiremos sobre los siguientes pasos.', refunded: 'Reembolsado', cancelled: 'Cancelado' },
   };
@@ -337,7 +337,7 @@ function register(app, deps) {
       retrying: 'Will try again', delivered: 'Delivered', failed: 'Not delivered', refunded: 'Refunded', cancelled: 'Cancelled' },
     fr: { quote: 'Non payé', awaiting_payment: 'Confirmation du paiement', paid: 'En attente de vérification', sending: 'Envoi en cours',
       retrying: 'Nouvel essai sous peu', delivered: 'Livré', failed: 'Non livré', refunded: 'Remboursé', cancelled: 'Annulé' },
-    es: { quote: 'Sin pagar', awaiting_payment: 'Confirmando el pago', paid: 'Esperando nuestra revisión', sending: 'Enviándose',
+    es: { quote: 'Sin pagar', awaiting_payment: 'Confirmando el pago', paid: 'En espera de envío', sending: 'Enviándose',
       retrying: 'Se intentará de nuevo', delivered: 'Entregado', failed: 'No entregado', refunded: 'Reembolsado', cancelled: 'Cancelado' },
   };
   app.get('/api/fax/status/:token', (req, res) => {
@@ -376,17 +376,17 @@ function register(app, deps) {
       .toLocaleString({ fr: 'fr-CA', es: 'es-US' }[lg] || 'en-CA', { dateStyle: 'long', timeStyle: 'short', timeZone: 'UTC' }) + ' UTC';
     const W = {
       en: { paid: { subject: `Your Letterhome fax is confirmed: ${f.public_ref}`, h1: 'Your fax is in.',
-          p: `We've received your payment. We check every fax before it is sent, usually within a few hours, and we'll email you again once it has gone through.` },
+          p: `We've received your payment. Your fax usually goes out within a few hours, and we'll email you again once it has gone through.` },
         done: { subject: `Your fax to ${num} was delivered: ${f.public_ref}`, h1: 'Your fax was delivered.',
           p: `The fax machine at ${num} received all ${n} page${s} on ${when}. Keep this email as your record that it was sent.` },
         rows: ['Fax number', 'Pages', 'Order'], linkText: 'Check your fax' },
       fr: { paid: { subject: `Votre fax Letterhome est confirmé : ${f.public_ref}`, h1: 'Nous avons reçu votre fax.',
-          p: `Nous avons reçu votre paiement. Nous vérifions chaque fax avant l’envoi, habituellement en quelques heures, et nous vous écrirons de nouveau une fois qu’il sera passé.` },
+          p: `Nous avons reçu votre paiement. Votre fax part habituellement en quelques heures, et nous vous écrirons de nouveau une fois qu’il sera passé.` },
         done: { subject: `Votre fax au ${num} a été livré : ${f.public_ref}`, h1: 'Votre fax a été livré.',
           p: `Le télécopieur du ${num} a reçu les ${n} page${s} le ${when}. Conservez ce courriel comme preuve de l’envoi.` },
         rows: ['Numéro de fax', 'Pages', 'Commande'], linkText: 'Suivre votre fax' },
       es: { paid: { subject: `Su fax de Letterhome está confirmado: ${f.public_ref}`, h1: 'Recibimos su fax.',
-          p: `Recibimos su pago. Revisamos cada fax antes de enviarlo, normalmente en unas horas, y le escribiremos otra vez cuando se haya entregado.` },
+          p: `Recibimos su pago. Su fax suele salir en unas horas, y le escribiremos otra vez cuando se haya entregado.` },
         done: { subject: `Su fax al ${num} se entregó: ${f.public_ref}`, h1: 'Su fax se entregó.',
           p: `La máquina de fax del ${num} recibió ${n === 1 ? 'la página' : `las ${n} páginas`} el ${when}. Guarde este correo como comprobante del envío.` },
         rows: ['Número de fax', 'Páginas', 'Pedido'], linkText: 'Consulte su fax' },
