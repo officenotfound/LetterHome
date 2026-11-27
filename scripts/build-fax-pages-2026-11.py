@@ -1,15 +1,19 @@
 #!/usr/bin/env python3
-"""Builds public/fax.html (the fax order page) and public/fax-status.html from the live guide shell, so they carry the
-current header, footer, theme and asset versions. Run from the project root: python3 scripts/build-fax-pages-2026-11.py"""
+"""Builds public/fax.html (the fax order page on letterhome.ca), public/us-fax.html (the same page for letterhome.us, in US
+dollars, served at /us/fax and letterhome.us/fax) and public/fax-status.html from live page shells, so they carry the current
+header, footer, theme and asset versions. Run from the project root: python3 scripts/build-fax-pages-2026-11.py"""
 import re, html
 
-LIVE = open('public/registered-mail-vs-xpresspost.html', encoding='utf-8').read()
-head, rest = LIVE.split('</head>', 1)
-head = re.sub(r'<script type="application/ld\+json">.*?</script>\s*', '', head, flags=re.S)
-body_open = rest[:rest.index('<div class="hero" id="main-content">')]
-tail = rest[rest.index('<footer id="site-footer">'):]
+def shell(file):
+    live = open(file, encoding='utf-8').read()
+    head, rest = live.split('</head>', 1)
+    head = re.sub(r'<script type="application/ld\+json">.*?</script>\s*', '', head, flags=re.S)
+    return head, rest[:rest.index('<div class="hero" id="main-content">')], rest[rest.index('<footer id="site-footer">'):]
+CA_SHELL = shell('public/registered-mail-vs-xpresspost.html')
+US_SHELL = shell('public/us-what-is-certified-mail.html')
 
-def page(title, desc, url, content, noindex=False):
+def page(title, desc, url, content, noindex=False, sh=CA_SHELL):
+    head, body_open, tail = sh
     h = head
     h = re.sub(r'<title>.*?</title>', f'<title>{html.escape(title)}</title>', h, flags=re.S)
     for pat, val in [(r'<meta name="description"[^>]*>', f'<meta name="description" content="{html.escape(desc)}">'),
@@ -20,7 +24,7 @@ def page(title, desc, url, content, noindex=False):
                      (r'<meta name="twitter:title"[^>]*>', f'<meta name="twitter:title" content="{html.escape(title)}">'),
                      (r'<meta name="twitter:description"[^>]*>', f'<meta name="twitter:description" content="{html.escape(desc)}">')]:
         h = re.sub(pat, val, h, count=1)
-    h = h.replace('<html ', '<html data-rail-title="We send it for you" data-rail-text="We check your fax, send it to any Canadian or US fax number, and email you when it has been delivered." data-rail-href="/fax" data-rail-label="Send a fax" data-rail-meta="Pay securely with Stripe." ', 1)
+    h = h.replace('<html ', '<html data-rail-title="We send it for you" data-rail-text="We check your fax, send it to any Canadian or US fax number, and email you when it has been delivered." data-rail-href="#fx-form" data-rail-label="Send a fax" data-rail-meta="Pay securely with Stripe." ', 1)
     if noindex:
         h = h.replace('<meta charset="UTF-8">', '<meta charset="UTF-8">\n<meta name="robots" content="noindex">', 1)
     return h + STYLE + '</head>' + body_open + content + '\n' + tail
@@ -158,10 +162,28 @@ STATUS = '''<div class="hero" id="main-content">
 })();
 </script>'''
 
+# The US page: same form and wording, US dollars, and the quote is made in US dollars (site=us).
+FAX_US = (FAX
+    .replace('<h1>Send a fax to Canada or the US</h1>', '<h1>Send a fax to the US or Canada</h1>')
+    .replace('$3.00</span> for up to', '$2.50</span> for up to').replace('$3.00</span> CAD for up to', '$2.50</span> USD for up to')
+    .replace('$0.50</span> for each extra page', '$0.25</span> for each extra page')
+    .replace('A fax to any Canadian or US fax number', 'A fax to any US or Canadian fax number')
+    .replace('A Canadian or US fax number with its area code, such as 613-555-0123.', 'A US or Canadian fax number with its area code, such as 212-555-0123.')
+    .replace('<form class="fx-card" id="fx-form" novalidate>', '<form class="fx-card" id="fx-form" novalidate>\n    <input type="hidden" name="site" value="us">')
+    .replace("fetch('/api/fax/config')", "fetch('/api/fax/config?site=us')")
+    .replace("' CAD.'", "' USD.'")
+    .replace('we can <a href="/send">print and mail your document</a> anywhere in Canada.', 'we can <a href="/send?to=US">print and mail your document</a> anywhere in the US.')
+    .replace('<li>Faxes to Canadian and US fax numbers.', '<li>Faxes to US and Canadian fax numbers.'))
+for a in ['$2.50</span> for up to', '$2.50</span> USD for up to', '$0.25</span> for each extra page', "fetch('/api/fax/config?site=us')", 'name="site" value="us"', "' USD.'"]:
+    assert a in FAX_US, a
+
 if __name__ == '__main__':
     open('public/fax.html', 'w', encoding='utf-8').write(page('Send a Fax to Canada or the US Online | Letterhome',
         'Send a fax online to any Canadian or US fax number from anywhere. Upload a PDF or photo, $3 for up to 10 pages, with an email confirmation when it is delivered.',
         'https://letterhome.ca/fax', FAX))
     open('public/fax-status.html', 'w', encoding='utf-8').write(page('Your Fax | Letterhome', 'The status of your Letterhome fax.',
         'https://letterhome.ca/fax', STATUS, noindex=True))
-    print('wrote public/fax.html, public/fax-status.html')
+    open('public/us-fax.html', 'w', encoding='utf-8').write(page('Send a Fax Online to the US or Canada | Letterhome',
+        'Send a fax online to any US or Canadian fax number from anywhere. Upload a PDF or photo, $2.50 for up to 10 pages, with an email confirmation when it is delivered.',
+        'https://letterhome.ca/us/fax', FAX_US, sh=US_SHELL))
+    print('wrote public/fax.html, public/us-fax.html, public/fax-status.html')

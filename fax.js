@@ -41,13 +41,14 @@ function schema(db) {
     file_name TEXT, original_name TEXT, status_token TEXT,
     stripe_session_id TEXT, payment_intent TEXT,
     telnyx_fax_id TEXT, telnyx_mode TEXT, attempts INTEGER NOT NULL DEFAULT 0, next_retry_at TEXT, failure_reason TEXT,
-    quote_ip TEXT,
+    quote_ip TEXT, site TEXT NOT NULL DEFAULT 'ca',
     created_at TEXT DEFAULT CURRENT_TIMESTAMP, paid_at TEXT, approved_at TEXT, sent_at TEXT, delivered_at TEXT,
     failed_at TEXT, refunded_at TEXT, finished_at TEXT, files_deleted_at TEXT, paid_email_at TEXT, done_email_at TEXT
   )`);
   db.exec(`CREATE TABLE IF NOT EXISTS fax_webhook_events (event_id TEXT PRIMARY KEY, received_at TEXT DEFAULT CURRENT_TIMESTAMP)`);
   db.exec(`CREATE TABLE IF NOT EXISTS fax_notes (id INTEGER PRIMARY KEY AUTOINCREMENT, fax_id INTEGER NOT NULL, note TEXT NOT NULL,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP)`);
+  try { db.exec("ALTER TABLE fax_orders ADD COLUMN site TEXT NOT NULL DEFAULT 'ca'"); } catch {}
   db.exec('CREATE INDEX IF NOT EXISTS fax_orders_status ON fax_orders (status)');
   db.exec('CREATE INDEX IF NOT EXISTS fax_orders_session ON fax_orders (stripe_session_id)');
   db.exec('CREATE INDEX IF NOT EXISTS fax_orders_telnyx ON fax_orders (telnyx_fax_id)');
@@ -125,12 +126,18 @@ async function addCover(doc, { to, from, note, docPages }) {
   for (const line of wrap(safe(note).slice(0, 2000), font, 12, 504).slice(0, 40)) { page.drawText(line, { x: 54, y, size: 12, font }); y -= 17; }
 }
 
-function priceFor(getSetting, pages) {
-  const base = parseInt(getSetting('fax_price_cents', '300'), 10) || 300;
-  const per = parseInt(getSetting('fax_page_cents', '50'), 10) || 50;
-  const incl = parseInt(getSetting('fax_included_pages', '10'), 10) || 10;
+// Prices per site: letterhome.ca in Canadian dollars, letterhome.us in US dollars. Each is set in the admin Settings.
+const PRICE_KEYS = { CAD: ['fax_price_cents', 300, 'fax_page_cents', 50], USD: ['fax_price_usd_cents', 250, 'fax_page_usd_cents', 25] };
+function priceParts(getSetting, cur = 'CAD') {
+  const [bk, bd, pk, pd] = PRICE_KEYS[cur] || PRICE_KEYS.CAD;
+  return { base: parseInt(getSetting(bk, String(bd)), 10) || bd, per: parseInt(getSetting(pk, String(pd)), 10) || pd,
+    incl: parseInt(getSetting('fax_included_pages', '10'), 10) || 10 };
+}
+function priceFor(getSetting, pages, cur = 'CAD') {
+  const { base, per, incl } = priceParts(getSetting, cur);
   return base + Math.max(0, pages - incl) * per;
 }
+const currencyOf = site => site === 'us' ? 'USD' : 'CAD';
 
 // Ed25519 check of a Telnyx webhook, as the official Node SDK does it.
 function verifyTelnyx(rawBody, headers, publicKeyB64, now = Date.now()) {
@@ -166,8 +173,9 @@ function register(app, deps) {
 
   // ---------- public: page config, quote, checkout, status ----------
   app.get('/api/fax/config', (req, res) => {
-    res.json({ open: open(req), price_cents: priceFor(getSetting, 1), page_cents: parseInt(getSetting('fax_page_cents', '50'), 10) || 50,
-      included_pages: parseInt(getSetting('fax_included_pages', '10'), 10) || 10, max_pages: MAX_PAGES, max_mb: MAX_BYTES / 1048576 });
+    const cur = currencyOf(req.query.site);
+    const p = priceParts(getSetting, cur);
+    res.json({ open: open(req), currency: cur, price_cents: p.base, page_cents: p.per, included_pages: p.incl, max_pages: MAX_PAGES, max_mb: MAX_BYTES / 1048576 });
   });
 
   const quoteLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 20, standardHeaders: true, legacyHeaders: false,
@@ -201,11 +209,12 @@ function register(app, deps) {
         const fileName = crypto.randomBytes(18).toString('hex') + '.pdf';
         fs.writeFileSync(path.join(dir, fileName), bytes, { mode: 0o600 });
         const ref = 'FX-' + crypto.randomBytes(4).toString('hex').toUpperCase();
-        const price = priceFor(getSetting, pages);
-        db.prepare(`INSERT INTO fax_orders (public_ref, status, email, sender_name, to_number, cover_note, pages, price_cents, file_name, original_name, status_token, quote_ip)
-          VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`).run(ref, 'quote', email, sender, to, coverNote || null, pages, price, fileName,
+        const site = b.site === 'us' ? 'us' : 'ca', currency = currencyOf(site);
+        const price = priceFor(getSetting, pages, currency);
+        db.prepare(`INSERT INTO fax_orders (public_ref, status, email, sender_name, to_number, cover_note, pages, price_cents, currency, site, file_name, original_name, status_token, quote_ip)
+          VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).run(ref, 'quote', email, sender, to, coverNote || null, pages, price, currency, site, fileName,
           String(req.file.originalname || '').slice(0, 200), crypto.randomBytes(24).toString('hex'), String(req.ip || '').slice(0, 64));
-        res.json({ ref, to: pretty(to), pages, price_cents: price, cover: !!coverNote });
+        res.json({ ref, to: pretty(to), pages, price_cents: price, currency, cover: !!coverNote });
       } catch (e) {
         res.status(400).json({ error: e.message && e.message.length < 160 ? e.message : 'The file could not be prepared for faxing.' });
       }
@@ -221,12 +230,13 @@ function register(app, deps) {
     try {
       const session = await stripe.checkout.sessions.create({
         mode: 'payment', customer_email: f.email,
-        line_items: [{ quantity: 1, price_data: { currency: 'cad', unit_amount: f.price_cents,
+        line_items: [{ quantity: 1, price_data: { currency: String(f.currency || 'CAD').toLowerCase(), unit_amount: f.price_cents,
           product_data: { name: `Fax to ${pretty(f.to_number)}`, description: `${f.pages} page${f.pages === 1 ? '' : 's'}, sent after a quick check by our team` } } }],
         metadata: { kind: 'fax', fax_ref: f.public_ref },
         payment_intent_data: { metadata: { kind: 'fax', fax_ref: f.public_ref } },
         success_url: `${base()}/fax/status/${f.status_token}?paid=1`,
-        cancel_url: `${base()}/fax?cancelled=1`,
+        // On letterhome.us the US fax page is /fax; on letterhome.ca it lives at /us/fax.
+        cancel_url: `${base()}${f.site === 'us' && !/letterhome\.us/.test(base()) ? '/us/fax' : '/fax'}?cancelled=1`,
       });
       db.prepare("UPDATE fax_orders SET status = 'awaiting_payment', stripe_session_id = ? WHERE id = ?").run(session.id, f.id);
       res.json({ url: session.url });
@@ -467,4 +477,4 @@ function register(app, deps) {
   return { registerWebhook, registerAdmin, onCheckoutCompleted, sweep, send, settle };
 }
 
-module.exports = { register, schema, normalizeNumber, verifyTelnyx, priceFor, pretty, kindOf };
+module.exports = { register, schema, normalizeNumber, verifyTelnyx, priceFor, priceParts, pretty, kindOf };

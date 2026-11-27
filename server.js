@@ -1245,7 +1245,7 @@ const LOCAL_GUIDES = [
   'us/how-long-does-mail-take', 'us/how-much-is-a-stamp', 'us/return-address-on-a-letter',
   'us/postage-rates-2026', 'us/what-is-certified-mail', 'us/christmas-mailing-deadlines-2026', 'us/christmas-card-postage-2026',
   'us/debt-validation-letter', 'us/request-medical-records-by-mail', 'us/donor-thank-you-letters',
-  'us/how-to-address-an-envelope', 'us/mail-a-letter-without-a-printer', 'us/how-many-stamps-does-a-letter-need', 'us/postage-calculator', 'us/address-formatter', 'us/business-letter-format', 'us/registered-mail-vs-certified-mail', 'us/how-to-send-fan-mail', 'us/how-to-write-to-an-inmate', 'us/how-to-write-to-the-president', 'us/how-to-write-to-congress', 'us/complaint-letter-to-a-ceo', 'us/how-to-address-mail-to-apo-fpo', 'us/thank-you-letter-to-a-teacher', 'us/thank-you-letter-to-a-nurse',
+  'us/how-to-address-an-envelope', 'us/mail-a-letter-without-a-printer', 'us/how-many-stamps-does-a-letter-need', 'us/postage-calculator', 'us/address-formatter', 'us/business-letter-format', 'us/registered-mail-vs-certified-mail', 'us/how-to-send-fan-mail', 'us/how-to-write-to-an-inmate', 'us/how-to-write-to-the-president', 'us/how-to-write-to-congress', 'us/complaint-letter-to-a-ceo', 'us/how-to-address-mail-to-apo-fpo', 'us/thank-you-letter-to-a-teacher', 'us/thank-you-letter-to-a-nurse', 'us/fax',
   'uk/how-long-does-post-take', 'uk/how-much-is-a-stamp', 'uk/return-address-on-a-letter',
   'uk/how-to-address-a-letter', 'uk/post-a-letter-without-a-printer', 'uk/how-many-sheets-for-a-stamp', 'uk/postage-calculator', 'uk/address-formatter', 'uk/how-to-write-a-formal-letter', 'uk/how-to-write-to-the-king', 'uk/how-to-send-fan-mail', 'uk/how-to-write-to-a-prisoner', 'uk/how-to-write-to-your-mp', 'uk/how-to-write-to-the-prime-minister', 'uk/complaint-letter-to-a-ceo', 'uk/how-to-address-bfpo-mail', 'uk/thank-you-letter-to-a-teacher', 'uk/thank-you-letter-to-a-nurse',
 ];
@@ -4046,7 +4046,7 @@ const ALLOWED_SETTING_KEYS = new Set([
   'cart_offer_enabled', 'cart_offer_pct', 'cart_offer_valid_days',
   'svc_ca_registered_cents', 'svc_ca_express_cents', 'svc_us_certified_cents', 'svc_us_express_cents',
   'google_rating', 'clarity_project_id', 'clarity_api_token', 'monthly_order_target',
-  'fax_enabled', 'fax_price_cents', 'fax_page_cents', 'fax_included_pages', 'telnyx_api_key', 'telnyx_public_key', 'telnyx_fax_app_id', 'telnyx_fax_from',
+  'fax_enabled', 'fax_price_cents', 'fax_page_cents', 'fax_price_usd_cents', 'fax_page_usd_cents', 'fax_included_pages', 'telnyx_api_key', 'telnyx_public_key', 'telnyx_fax_app_id', 'telnyx_fax_from',
 ]);
 const HIDDEN_SETTINGS = new Set(['clarity_api_token', 'telnyx_api_key']);
 

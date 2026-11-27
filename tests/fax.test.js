@@ -86,6 +86,23 @@ test('price: $3 up to 10 pages, then 50 cents a page, from the settings', () => 
   delete settings.fax_price_cents; delete settings.fax_page_cents;
 });
 
+test('US site: $2.50 USD up to 10 pages and 25 cents a page, charged in US dollars', async () => {
+  assert.equal(fax.priceFor(getSetting, 10, 'USD'), 250);
+  assert.equal(fax.priceFor(getSetting, 12, 'USD'), 300);
+  const cfg = await (await fetch(base + '/api/fax/config?site=us')).json();
+  assert.equal(cfg.currency, 'USD');
+  assert.equal(cfg.price_cents, 250);
+  assert.equal(cfg.page_cents, 25);
+  const q = await quote({ ...good, site: 'us' }, await pdf(11));
+  assert.equal(q.body.currency, 'USD');
+  assert.equal(q.body.price_cents, 275);
+  await post('/api/fax/checkout', { ref: q.body.ref });
+  assert.equal(sessions.at(-1).line_items[0].price_data.currency, 'usd');
+  assert.match(sessions.at(-1).cancel_url, /\/us\/fax\?cancelled=1$/);
+  const ca = await quote(good, await pdf(1));
+  assert.equal(ca.body.currency, 'CAD');
+});
+
 test('quote: counts pages, adds a cover page for a note, refuses bad input', async () => {
   let r = await quote(good, await pdf(12));
   assert.equal(r.status, 200);
