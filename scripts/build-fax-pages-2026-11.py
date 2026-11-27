@@ -41,9 +41,10 @@ def page(title, desc, url, content, sh, html_attrs, noindex=False, alternates=''
                      (r'<meta name="twitter:description"[^>]*>', f'<meta name="twitter:description" content="{html.escape(desc)}">')]:
         h = re.sub(pat, val, h, count=1)
     if share_image:
+        share_price = '$2.50' if share_image.endswith('-us.jpg') else '$3'
         h = re.sub(r'<meta property="og:image(:width|:height|:alt)?"[^>]*>\n?', '', h)
         h = re.sub(r'<meta name="twitter:image"[^>]*>', f'<meta name="twitter:image" content="{share_image}">', h, count=1)
-        h = h.replace('<meta property="og:site_name"', f'<meta property="og:image" content="{share_image}">\n<meta property="og:image:width" content="1424">\n<meta property="og:image:height" content="748">\n<meta property="og:image:alt" content="Send a fax to the US or Canada from $3">\n<meta property="og:site_name"', 1)
+        h = h.replace('<meta property="og:site_name"', f'<meta property="og:image" content="{share_image}">\n<meta property="og:image:width" content="1424">\n<meta property="og:image:height" content="748">\n<meta property="og:image:alt" content="Send a fax to the US or Canada from {share_price}">\n<meta property="og:site_name"', 1)
     h = re.sub(r'<html[^>]*>', f'<html {html_attrs}>', h, count=1)
     if alternates:
         h = h.replace(f'<link rel="canonical" href="{url}">', f'<link rel="canonical" href="{url}">\n' + alternates.rstrip('\n'), 1)
@@ -286,7 +287,7 @@ if __name__ == '__main__':
     for out, t, sh, url, attrs in pages:
         body = fax_order_template.order_page(t, UI[t['lang']])
         open(out, 'w', encoding='utf-8').write(page(t['title'], t['desc'], url, body, sh, attrs, alternates=ALT_LINKS, extra_head=send_css,
-                                              share_image=f'{BASE}/og-fax.jpg' if out == 'public/fax.html' else ''))
+                                              share_image={'public/fax.html': f'{BASE}/og-fax.jpg', 'public/us-fax.html': f'{BASE}/og-fax-us.jpg'}.get(out, '')))
         print('wrote', out)
     open('public/fax-status.html', 'w', encoding='utf-8').write(page('Your Fax | Letterhome', 'The status of your Letterhome fax.', f'{BASE}/fax', STATUS, CA_SHELL,
         f'data-en-only lang="en-CA" data-theme="light" {rail(EN)}', noindex=True))
