@@ -306,7 +306,7 @@ function register(app, deps) {
             description: ({ fr: `${f.pages} page${f.pages === 1 ? '' : 's'}, envoyé après une vérification par notre équipe`,
               es: `${f.pages} página${f.pages === 1 ? '' : 's'}, enviado después de una revisión de nuestro equipo` }[f.lang])
               || `${f.pages} page${f.pages === 1 ? '' : 's'}, sent after a quick check by our team` } } }],
-        locale: f.lang === 'fr' ? 'fr-CA' : f.lang === 'es' ? 'es' : 'auto',
+        locale: f.lang === 'fr' ? 'fr-CA' : f.lang === 'es' ? 'es-419' : 'auto',
         metadata: { kind: 'fax', fax_ref: f.public_ref },
         payment_intent_data: { metadata: { kind: 'fax', fax_ref: f.public_ref } },
         success_url: `${base()}/fax/status/${f.status_token}?paid=1`,
