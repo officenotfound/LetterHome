@@ -725,3 +725,6 @@ html body .gx .g-none{text-align:center;padding:24px 0}
   html body .gx .gx-topics{gap:2px 18px}
   html body .hero.gx-hero{padding-left:16px!important;padding-right:16px!important}
 }
+
+/* Guides: a paragraph after a list, an address block or a table gets the same gap as after a paragraph. Zero specificity, so any page that sets its own margin keeps it. */
+:where(.main) > :where(ul, ol, pre, .cost-wrap):not(:last-child){margin-bottom:16px}
