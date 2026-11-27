@@ -31,6 +31,39 @@ const KEEP_HOURS = 24;
 const RETRYABLE = /busy|no_answer|unreachable|timeout|interrupted|call_dropped|ring|disconnect|negotiation/i;
 const SPKI_ED25519 = Buffer.from('302a300506032b6570032100', 'hex');
 
+// The customer's language: English, Canadian French (letterhome.ca) or US Spanish (letterhome.us).
+const langOf = v => (v === 'fr' || v === 'es') ? v : 'en';
+const MSG = {
+  en: { closed: 'Fax is not available yet.', big: 'The file is larger than 20 MB.', unread: 'The upload could not be read.',
+    number: 'Enter a Canadian or US fax number with its area code, such as 613-555-0123.', email: 'Enter a valid email address for your receipt.',
+    name: 'Enter your name.', file: 'Choose a PDF, JPG or PNG file.', type: 'Only PDF, JPG and PNG files can be faxed.', empty: 'This file has no pages.',
+    pages: (m, n) => `Faxes can be up to ${m} pages. This one has ${n}.`, huge: 'This document is too large to fax. Try a smaller scan.',
+    prep: 'The file could not be prepared for faxing.', expired: 'That quote has expired. Please upload the document again.',
+    hourly: 'You can send up to 5 faxes an hour. Please try again later.', pay: 'Payment could not be started. Please try again.',
+    pdfpw: 'This PDF is password-protected. Save a copy without a password and try again.', pdfbad: 'This PDF could not be read.' },
+  fr: { closed: 'Le fax n’est pas encore offert.', big: 'Le fichier dépasse 20 Mo.', unread: 'Le fichier téléversé n’a pas pu être lu.',
+    number: 'Entrez un numéro de fax canadien ou américain avec l’indicatif régional, comme 514-555-0123.', email: 'Entrez une adresse courriel valide pour votre reçu.',
+    name: 'Entrez votre nom.', file: 'Choisissez un fichier PDF, JPG ou PNG.', type: 'Seuls les fichiers PDF, JPG et PNG peuvent être envoyés par fax.', empty: 'Ce fichier n’a aucune page.',
+    pages: (m, n) => `Un fax peut compter jusqu’à ${m} pages. Celui-ci en a ${n}.`, huge: 'Ce document est trop lourd pour un fax. Essayez une numérisation plus légère.',
+    prep: 'Le fichier n’a pas pu être préparé pour le fax.', expired: 'Ce prix a expiré. Téléversez le document de nouveau.',
+    hourly: 'Vous pouvez envoyer jusqu’à 5 fax par heure. Réessayez plus tard.', pay: 'Le paiement n’a pas pu commencer. Réessayez.',
+    pdfpw: 'Ce PDF est protégé par un mot de passe. Enregistrez une copie sans mot de passe et réessayez.', pdfbad: 'Ce PDF n’a pas pu être lu.' },
+  es: { closed: 'El fax todavía no está disponible.', big: 'El archivo pesa más de 20 MB.', unread: 'No se pudo leer el archivo.',
+    number: 'Ingrese un número de fax de EE. UU. o Canadá con su código de área, como 212-555-0123.', email: 'Ingrese un correo electrónico válido para su recibo.',
+    name: 'Ingrese su nombre.', file: 'Elija un archivo PDF, JPG o PNG.', type: 'Solo se pueden enviar por fax archivos PDF, JPG y PNG.', empty: 'Este archivo no tiene páginas.',
+    pages: (m, n) => `Un fax puede tener hasta ${m} páginas. Este tiene ${n}.`, huge: 'Este documento es demasiado grande para un fax. Pruebe con un escaneo más ligero.',
+    prep: 'No se pudo preparar el archivo para el fax.', expired: 'Esta cotización venció. Suba el documento otra vez.',
+    hourly: 'Puede enviar hasta 5 faxes por hora. Inténtelo más tarde.', pay: 'No se pudo iniciar el pago. Inténtelo de nuevo.',
+    pdfpw: 'Este PDF tiene contraseña. Guarde una copia sin contraseña e inténtelo de nuevo.', pdfbad: 'No se pudo leer este PDF.' },
+};
+const COVER = {
+  en: { to: 'To:', from: 'From:', date: 'Date:', pages: 'Pages:', count: n => `${n} including this page` },
+  fr: { to: 'À :', from: 'De :', date: 'Date :', pages: 'Pages :', count: n => `${n}, incluant cette page` },
+  es: { to: 'Para:', from: 'De:', date: 'Fecha:', pages: 'Páginas:', count: n => `${n}, incluida esta página` },
+};
+// The fax order page for each site and language, as a path on letterhome.ca.
+const PAGE_PATH = { 'ca-en': '/fax', 'ca-fr': '/envoyer-un-fax-en-ligne', 'us-en': '/us/fax', 'us-es': '/us/es/fax' };
+
 function schema(db) {
   db.exec(`CREATE TABLE IF NOT EXISTS fax_orders (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -41,7 +74,7 @@ function schema(db) {
     file_name TEXT, original_name TEXT, status_token TEXT,
     stripe_session_id TEXT, payment_intent TEXT,
     telnyx_fax_id TEXT, telnyx_mode TEXT, attempts INTEGER NOT NULL DEFAULT 0, next_retry_at TEXT, failure_reason TEXT,
-    quote_ip TEXT, site TEXT NOT NULL DEFAULT 'ca',
+    quote_ip TEXT, site TEXT NOT NULL DEFAULT 'ca', lang TEXT NOT NULL DEFAULT 'en',
     created_at TEXT DEFAULT CURRENT_TIMESTAMP, paid_at TEXT, approved_at TEXT, sent_at TEXT, delivered_at TEXT,
     failed_at TEXT, refunded_at TEXT, finished_at TEXT, files_deleted_at TEXT, paid_email_at TEXT, done_email_at TEXT
   )`);
@@ -49,6 +82,7 @@ function schema(db) {
   db.exec(`CREATE TABLE IF NOT EXISTS fax_notes (id INTEGER PRIMARY KEY AUTOINCREMENT, fax_id INTEGER NOT NULL, note TEXT NOT NULL,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP)`);
   try { db.exec("ALTER TABLE fax_orders ADD COLUMN site TEXT NOT NULL DEFAULT 'ca'"); } catch {}
+  try { db.exec("ALTER TABLE fax_orders ADD COLUMN lang TEXT NOT NULL DEFAULT 'en'"); } catch {}
   db.exec('CREATE INDEX IF NOT EXISTS fax_orders_status ON fax_orders (status)');
   db.exec('CREATE INDEX IF NOT EXISTS fax_orders_session ON fax_orders (stripe_session_id)');
   db.exec('CREATE INDEX IF NOT EXISTS fax_orders_telnyx ON fax_orders (telnyx_fax_id)');
@@ -77,8 +111,8 @@ async function toPdf(buf, kind) {
   if (kind === 'pdf') {
     let doc;
     try { doc = await PDFDocument.load(buf, { updateMetadata: false }); }
-    catch (e) { throw new Error(/encrypt/i.test(e.message) ? 'This PDF is password-protected. Save a copy without a password and try again.' : 'This PDF could not be read.'); }
-    if (doc.isEncrypted) throw new Error('This PDF is password-protected. Save a copy without a password and try again.');
+    catch (e) { throw Object.assign(new Error('pdf'), { code: /encrypt/i.test(e.message) ? 'pdfpw' : 'pdfbad' }); }
+    if (doc.isEncrypted) throw Object.assign(new Error('pdf'), { code: 'pdfpw' });
     return doc;
   }
   const doc = await PDFDocument.create();
@@ -106,7 +140,8 @@ const wrap = (text, font, size, width) => {
 };
 
 // A plain cover sheet in front of the document, when the customer wrote a note.
-async function addCover(doc, { to, from, note, docPages }) {
+async function addCover(doc, { to, from, note, docPages, lang = 'en' }) {
+  const C = COVER[langOf(lang)];
   const font = await doc.embedFont(StandardFonts.Helvetica);
   const bold = await doc.embedFont(StandardFonts.HelveticaBold);
   const page = doc.insertPage(0, [612, 792]);
@@ -117,10 +152,10 @@ async function addCover(doc, { to, from, note, docPages }) {
   const row = (label, value) => {
     page.drawText(label, { x: 54, y, size: 11, font: bold }); page.drawText(safe(value), { x: 150, y, size: 11, font }); y -= 20;
   };
-  row('To:', pretty(to));
-  row('From:', from);
-  row('Date:', new Date().toISOString().slice(0, 10));
-  row('Pages:', `${docPages + 1} including this page`);
+  row(C.to, pretty(to));
+  row(C.from, from);
+  row(C.date, new Date().toISOString().slice(0, 10));
+  row(C.pages, C.count(docPages + 1));
   y -= 14;
   page.drawLine({ start: { x: 54, y }, end: { x: 558, y }, thickness: 0.8, color: rgb(0.5, 0.5, 0.5) }); y -= 28;
   for (const line of wrap(safe(note).slice(0, 2000), font, 12, 504).slice(0, 40)) { page.drawText(line, { x: 54, y, size: 12, font }); y -= 17; }
@@ -183,82 +218,103 @@ function register(app, deps) {
   const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: MAX_BYTES, files: 1, fields: 10, fieldSize: 4000 } }).single('document');
 
   app.post('/api/fax/quote', quoteLimiter, (req, res) => {
-    if (!open(req)) return res.status(403).json({ error: 'Fax is not available yet.' });
+    const M = MSG[langOf(req.query.lang)];
+    if (!open(req)) return res.status(403).json({ error: M.closed });
     upload(req, res, async err => {
-      if (err) return res.status(400).json({ error: err.code === 'LIMIT_FILE_SIZE' ? 'The file is larger than 20 MB.' : 'The upload could not be read.' });
+      if (err) return res.status(400).json({ error: err.code === 'LIMIT_FILE_SIZE' ? M.big : M.unread });
       try {
         const b = req.body || {};
+        const lang = langOf(b.lang || req.query.lang);
         const to = normalizeNumber(b.to);
-        if (!to) return res.status(400).json({ error: 'Enter a Canadian or US fax number with its area code, such as 613-555-0123.' });
+        if (!to) return res.status(400).json({ error: M.number });
         const email = String(b.email || '').trim().slice(0, 200);
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: 'Enter a valid email address for your receipt.' });
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: M.email });
         const sender = String(b.sender_name || '').trim().slice(0, 100);
-        if (!sender) return res.status(400).json({ error: 'Enter your name.' });
+        if (!sender) return res.status(400).json({ error: M.name });
         const coverNote = String(b.cover_note || '').trim().slice(0, 2000);
-        if (!req.file) return res.status(400).json({ error: 'Choose a PDF, JPG or PNG file.' });
+        if (!req.file) return res.status(400).json({ error: M.file });
         const kind = kindOf(req.file.buffer);
-        if (!kind) return res.status(400).json({ error: 'Only PDF, JPG and PNG files can be faxed.' });
+        if (!kind) return res.status(400).json({ error: M.type });
         const doc = await toPdf(req.file.buffer, kind);
         const docPages = doc.getPageCount();
-        if (!docPages) return res.status(400).json({ error: 'This file has no pages.' });
-        if (coverNote) await addCover(doc, { to, from: sender, note: coverNote, docPages });
+        if (!docPages) return res.status(400).json({ error: M.empty });
+        if (coverNote) await addCover(doc, { to, from: sender, note: coverNote, docPages, lang });
         const pages = doc.getPageCount();
-        if (pages > MAX_PAGES) return res.status(400).json({ error: `Faxes can be up to ${MAX_PAGES} pages. This one has ${pages}.` });
+        if (pages > MAX_PAGES) return res.status(400).json({ error: M.pages(MAX_PAGES, pages) });
         const bytes = Buffer.from(await doc.save());
-        if (bytes.length > MAX_BYTES * 2) return res.status(400).json({ error: 'This document is too large to fax. Try a smaller scan.' });
+        if (bytes.length > MAX_BYTES * 2) return res.status(400).json({ error: M.huge });
         const fileName = crypto.randomBytes(18).toString('hex') + '.pdf';
         fs.writeFileSync(path.join(dir, fileName), bytes, { mode: 0o600 });
         const ref = 'FX-' + crypto.randomBytes(4).toString('hex').toUpperCase();
         const site = b.site === 'us' ? 'us' : 'ca', currency = currencyOf(site);
         const price = priceFor(getSetting, pages, currency);
-        db.prepare(`INSERT INTO fax_orders (public_ref, status, email, sender_name, to_number, cover_note, pages, price_cents, currency, site, file_name, original_name, status_token, quote_ip)
-          VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).run(ref, 'quote', email, sender, to, coverNote || null, pages, price, currency, site, fileName,
+        db.prepare(`INSERT INTO fax_orders (public_ref, status, email, sender_name, to_number, cover_note, pages, price_cents, currency, site, lang, file_name, original_name, status_token, quote_ip)
+          VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).run(ref, 'quote', email, sender, to, coverNote || null, pages, price, currency, site, lang, fileName,
           String(req.file.originalname || '').slice(0, 200), crypto.randomBytes(24).toString('hex'), String(req.ip || '').slice(0, 64));
         res.json({ ref, to: pretty(to), pages, price_cents: price, currency, cover: !!coverNote });
       } catch (e) {
-        res.status(400).json({ error: e.message && e.message.length < 160 ? e.message : 'The file could not be prepared for faxing.' });
+        res.status(400).json({ error: (e.code && M[e.code]) || M.prep });
       }
     });
   });
 
   app.post('/api/fax/checkout', express.json({ limit: '4kb' }), async (req, res) => {
-    if (!open(req)) return res.status(403).json({ error: 'Fax is not available yet.' });
+    let M = MSG[langOf(req.body?.lang)];
+    if (!open(req)) return res.status(403).json({ error: M.closed });
     const f = db.prepare("SELECT * FROM fax_orders WHERE public_ref = ? AND status IN ('quote','awaiting_payment')").get(String(req.body?.ref || ''));
-    if (!f || f.files_deleted_at) return res.status(404).json({ error: 'That quote has expired. Please upload the document again.' });
+    if (!f || f.files_deleted_at) return res.status(404).json({ error: M.expired });
+    M = MSG[langOf(f.lang)];
     const recent = db.prepare("SELECT COUNT(*) n FROM fax_orders WHERE lower(email) = lower(?) AND paid_at > datetime('now','-1 hour')").get(f.email).n;
-    if (recent >= 5) return res.status(429).json({ error: 'You can send up to 5 faxes an hour. Please try again later.' });
+    if (recent >= 5) return res.status(429).json({ error: M.hourly });
     try {
       const session = await stripe.checkout.sessions.create({
         mode: 'payment', customer_email: f.email,
         line_items: [{ quantity: 1, price_data: { currency: String(f.currency || 'CAD').toLowerCase(), unit_amount: f.price_cents,
-          product_data: { name: `Fax to ${pretty(f.to_number)}`, description: `${f.pages} page${f.pages === 1 ? '' : 's'}, sent after a quick check by our team` } } }],
+          product_data: {
+            name: { fr: `Fax au ${pretty(f.to_number)}`, es: `Fax al ${pretty(f.to_number)}` }[f.lang] || `Fax to ${pretty(f.to_number)}`,
+            description: ({ fr: `${f.pages} page${f.pages === 1 ? '' : 's'}, envoyé après une vérification par notre équipe`,
+              es: `${f.pages} página${f.pages === 1 ? '' : 's'}, enviado después de una revisión de nuestro equipo` }[f.lang])
+              || `${f.pages} page${f.pages === 1 ? '' : 's'}, sent after a quick check by our team` } } }],
+        locale: f.lang === 'fr' ? 'fr-CA' : f.lang === 'es' ? 'es' : 'auto',
         metadata: { kind: 'fax', fax_ref: f.public_ref },
         payment_intent_data: { metadata: { kind: 'fax', fax_ref: f.public_ref } },
         success_url: `${base()}/fax/status/${f.status_token}?paid=1`,
-        // On letterhome.us the US fax page is /fax; on letterhome.ca it lives at /us/fax.
-        cancel_url: `${base()}${f.site === 'us' && !/letterhome\.us/.test(base()) ? '/us/fax' : '/fax'}?cancelled=1`,
+        // The order page the customer came from; on letterhome.us the US pages drop their /us prefix.
+        cancel_url: `${base()}${(p => /letterhome\.us/.test(base()) ? p.replace(/^\/us(?=\/)/, '') : p)(PAGE_PATH[`${f.site}-${f.lang}`] || (f.site === 'us' ? '/us/fax' : '/fax'))}?cancelled=1`,
       });
       db.prepare("UPDATE fax_orders SET status = 'awaiting_payment', stripe_session_id = ? WHERE id = ?").run(session.id, f.id);
       res.json({ url: session.url });
     } catch (e) {
       console.error('[fax] checkout failed:', e.message);
-      res.status(502).json({ error: 'Payment could not be started. Please try again.' });
+      res.status(502).json({ error: M.pay });
     }
   });
 
   const STATUS_TEXT = {
-    quote: 'Not paid yet', awaiting_payment: 'Waiting for payment', paid: 'Paid. We check every fax before it is sent, usually within a few hours.',
-    sending: 'Sending now', retrying: 'The line was busy or did not answer. We will try again shortly.',
-    delivered: 'Delivered', failed: 'We could not get it through. We will email you about what happens next.',
-    refunded: 'Refunded', cancelled: 'Cancelled',
+    en: { quote: 'Not paid yet', awaiting_payment: 'Waiting for payment', paid: 'Paid. We check every fax before it is sent, usually within a few hours.',
+      sending: 'Sending now', retrying: 'The line was busy or did not answer. We will try again shortly.',
+      delivered: 'Delivered', failed: 'We could not get it through. We will email you about what happens next.', refunded: 'Refunded', cancelled: 'Cancelled' },
+    fr: { quote: 'Pas encore payé', awaiting_payment: 'En attente du paiement', paid: 'Payé. Nous vérifions chaque fax avant l’envoi, habituellement en quelques heures.',
+      sending: 'Envoi en cours', retrying: 'La ligne était occupée ou n’a pas répondu. Nous allons réessayer sous peu.',
+      delivered: 'Livré', failed: 'Le fax n’a pas pu passer. Nous vous écrirons pour la suite.', refunded: 'Remboursé', cancelled: 'Annulé' },
+    es: { quote: 'Todavía sin pagar', awaiting_payment: 'Esperando el pago', paid: 'Pagado. Revisamos cada fax antes de enviarlo, normalmente en unas horas.',
+      sending: 'Enviándose', retrying: 'La línea estaba ocupada o no contestó. Lo intentaremos de nuevo en breve.',
+      delivered: 'Entregado', failed: 'No pudimos enviarlo. Le escribiremos sobre los siguientes pasos.', refunded: 'Reembolsado', cancelled: 'Cancelado' },
   };
-  const STATUS_LABEL = { quote: 'Not paid', awaiting_payment: 'Confirming payment', paid: 'Waiting for our check', sending: 'Sending',
-    retrying: 'Will try again', delivered: 'Delivered', failed: 'Not delivered', refunded: 'Refunded', cancelled: 'Cancelled' };
+  const STATUS_LABEL = {
+    en: { quote: 'Not paid', awaiting_payment: 'Confirming payment', paid: 'Waiting for our check', sending: 'Sending',
+      retrying: 'Will try again', delivered: 'Delivered', failed: 'Not delivered', refunded: 'Refunded', cancelled: 'Cancelled' },
+    fr: { quote: 'Non payé', awaiting_payment: 'Confirmation du paiement', paid: 'En attente de vérification', sending: 'Envoi en cours',
+      retrying: 'Nouvel essai sous peu', delivered: 'Livré', failed: 'Non livré', refunded: 'Remboursé', cancelled: 'Annulé' },
+    es: { quote: 'Sin pagar', awaiting_payment: 'Confirmando el pago', paid: 'Esperando nuestra revisión', sending: 'Enviándose',
+      retrying: 'Se intentará de nuevo', delivered: 'Entregado', failed: 'No entregado', refunded: 'Reembolsado', cancelled: 'Cancelado' },
+  };
   app.get('/api/fax/status/:token', (req, res) => {
     const f = db.prepare('SELECT * FROM fax_orders WHERE status_token = ?').get(String(req.params.token || ''));
     if (!f || f.status === 'quote') return res.status(404).json({ error: 'Not found.' });
-    res.json({ ref: f.public_ref, to: pretty(f.to_number), pages: f.pages, price: money(f.price_cents, f.currency), status: f.status,
-      status_text: STATUS_TEXT[f.status] || f.status, status_label: STATUS_LABEL[f.status] || f.status, paid_at: f.paid_at, delivered_at: f.delivered_at });
+    const lg = langOf(f.lang);
+    res.json({ ref: f.public_ref, lang: lg, to: pretty(f.to_number), pages: f.pages, price: money(f.price_cents, f.currency), status: f.status,
+      status_text: STATUS_TEXT[lg][f.status] || f.status, status_label: STATUS_LABEL[lg][f.status] || f.status, paid_at: f.paid_at, delivered_at: f.delivered_at });
   });
 
   // ---------- Stripe: called from the main /webhook handler ----------
@@ -283,19 +339,31 @@ function register(app, deps) {
     const col = which === 'paid' ? 'paid_email_at' : 'done_email_at';
     if (db.prepare(`UPDATE fax_orders SET ${col} = CURRENT_TIMESTAMP WHERE id = ? AND ${col} IS NULL`).run(id).changes !== 1) return;
     const link = `${base()}/fax/status/${f.status_token}`;
-    const T = which === 'paid' ? {
-      subject: `Your Letterhome fax is confirmed: ${f.public_ref}`,
-      h1: 'Your fax is in.',
-      p: `We've received your payment. We check every fax before it is sent, usually within a few hours, and we'll email you again once it has gone through.`,
-    } : {
-      subject: `Your fax to ${pretty(f.to_number)} was delivered: ${f.public_ref}`,
-      h1: 'Your fax was delivered.',
-      p: `The fax machine at ${pretty(f.to_number)} received all ${f.pages} page${f.pages === 1 ? '' : 's'} on ${new Date(String(f.delivered_at || '').replace(' ', 'T') + 'Z').toUTCString().replace(' GMT', ' UTC')}. Keep this email as your record that it was sent.`,
-    };
-    const rows = [['Fax number', pretty(f.to_number)], ['Pages', String(f.pages)], ['Order', f.public_ref]];
+    const lg = langOf(f.lang), num = pretty(f.to_number), n = f.pages, s = n === 1 ? '' : 's';
+    const when = new Date(String(f.delivered_at || '').replace(' ', 'T') + 'Z')
+      .toLocaleString({ fr: 'fr-CA', es: 'es-US' }[lg] || 'en-CA', { dateStyle: 'long', timeStyle: 'short', timeZone: 'UTC' }) + ' UTC';
+    const W = {
+      en: { paid: { subject: `Your Letterhome fax is confirmed: ${f.public_ref}`, h1: 'Your fax is in.',
+          p: `We've received your payment. We check every fax before it is sent, usually within a few hours, and we'll email you again once it has gone through.` },
+        done: { subject: `Your fax to ${num} was delivered: ${f.public_ref}`, h1: 'Your fax was delivered.',
+          p: `The fax machine at ${num} received all ${n} page${s} on ${when}. Keep this email as your record that it was sent.` },
+        rows: ['Fax number', 'Pages', 'Order'], linkText: 'Check your fax' },
+      fr: { paid: { subject: `Votre fax Letterhome est confirmé : ${f.public_ref}`, h1: 'Nous avons reçu votre fax.',
+          p: `Nous avons reçu votre paiement. Nous vérifions chaque fax avant l’envoi, habituellement en quelques heures, et nous vous écrirons de nouveau une fois qu’il sera passé.` },
+        done: { subject: `Votre fax au ${num} a été livré : ${f.public_ref}`, h1: 'Votre fax a été livré.',
+          p: `Le télécopieur du ${num} a reçu les ${n} page${s} le ${when}. Conservez ce courriel comme preuve de l’envoi.` },
+        rows: ['Numéro de fax', 'Pages', 'Commande'], linkText: 'Suivre votre fax' },
+      es: { paid: { subject: `Su fax de Letterhome está confirmado: ${f.public_ref}`, h1: 'Recibimos su fax.',
+          p: `Recibimos su pago. Revisamos cada fax antes de enviarlo, normalmente en unas horas, y le escribiremos otra vez cuando se haya entregado.` },
+        done: { subject: `Su fax al ${num} se entregó: ${f.public_ref}`, h1: 'Su fax se entregó.',
+          p: `La máquina de fax del ${num} recibió ${n === 1 ? 'la página' : `las ${n} páginas`} el ${when}. Guarde este correo como comprobante del envío.` },
+        rows: ['Número de fax', 'Páginas', 'Pedido'], linkText: 'Consulte su fax' },
+    }[lg];
+    const T = which === 'paid' ? W.paid : W.done;
+    const rows = [[W.rows[0], num], [W.rows[1], String(n)], [W.rows[2], f.public_ref]];
     sendMail({ from: process.env.EMAIL_FROM, to: f.email, replyTo: process.env.OPERATOR_EMAIL, subject: T.subject,
-      html: emailShell({ h1: T.h1, p: T.p, rows, link, linkText: 'Check your fax' }),
-      text: [T.h1, '', T.p, '', ...rows.map(r => `${r[0]}: ${r[1]}`), '', `Check your fax: ${link}`].join('\n') },
+      html: emailShell({ h1: T.h1, p: T.p, rows, link, linkText: W.linkText, lang: lg }),
+      text: [T.h1, '', T.p, '', ...rows.map(r => `${r[0]}: ${r[1]}`), '', `${W.linkText}: ${link}`].join('\n') },
       which === 'paid' ? 'fax_confirmation' : 'fax_delivered', null).catch(e => {
       console.error('[fax] email failed:', e.message);
       db.prepare(`UPDATE fax_orders SET ${col} = NULL WHERE id = ?`).run(id);
@@ -477,4 +545,4 @@ function register(app, deps) {
   return { registerWebhook, registerAdmin, onCheckoutCompleted, sweep, send, settle };
 }
 
-module.exports = { register, schema, normalizeNumber, verifyTelnyx, priceFor, priceParts, pretty, kindOf };
+module.exports = { register, schema, normalizeNumber, verifyTelnyx, priceFor, priceParts, pretty, kindOf, MSG, PAGE_PATH };

@@ -1042,6 +1042,8 @@ window.LH_FR = {
       'send.val.email.valid': 'Une adresse courriel valide',
       'send.val.letter': 'Message de la lettre',
       'send.val.terms': 'Acceptation des conditions',
+      'index.faxlink': '<a href="/envoyer-un-fax-en-ligne">Besoin de l’envoyer par fax? À partir de 3 $</a>',
+      'footer.fax': 'Envoyer une télécopie',
       'send.val.military': 'Nous ne pouvons pas encore poster vers les adresses militaires (Forces canadiennes, APO, FPO, DPO ou BFPO). Postez cette lettre à un bureau de poste.',
       'send.file.badtype': 'seuls les fichiers PDF, Word ou TXT sont acceptés',
       'send.file.toobig': 'fichier de plus de 10 Mo',

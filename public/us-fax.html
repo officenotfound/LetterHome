@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html data-rail-title="We send it for you" data-rail-text="We check your fax, send it to any Canadian or US fax number, and email you when it has been delivered." data-rail-href="#fx-form" data-rail-label="Send a fax" data-rail-meta="Pay securely with Stripe." data-en-only lang="en-US" data-country="us" data-theme="light">
+<html data-en-only lang="en-US" data-country="us" data-alt="/us/es/fax" data-alt-label="ES" data-theme="light" data-rail-title="We send it for you" data-rail-text="We check your fax, send it to any Canadian or US fax number, and email you when it has been delivered." data-rail-href="#fx-form" data-rail-label="Send a fax" data-rail-meta="Pay securely with Stripe.">
 <head>
 <meta charset="UTF-8">
 <link rel="preload" as="font" type="font/woff2" href="/fonts/vEFI2_tTDB4M7-auWDN0ahZJW1gb8tc.woff2" crossorigin>
@@ -9,6 +9,11 @@
 <title>Send a Fax Online to the US or Canada | Letterhome</title>
 <meta name="description" content="Send a fax online to any US or Canadian fax number from anywhere. Upload a PDF or photo, $2.50 for up to 10 pages, with an email confirmation when it is delivered.">
 <link rel="canonical" href="https://letterhome.ca/us/fax">
+<link rel="alternate" hreflang="en-CA" href="https://letterhome.ca/fax">
+<link rel="alternate" hreflang="fr-CA" href="https://letterhome.ca/envoyer-un-fax-en-ligne">
+<link rel="alternate" hreflang="en-US" href="https://letterhome.ca/us/fax">
+<link rel="alternate" hreflang="es-US" href="https://letterhome.ca/us/es/fax">
+<link rel="alternate" hreflang="x-default" href="https://letterhome.ca/fax">
 <link rel="icon" type="image/png" href="/favicon.png">
 <link rel="manifest" href="/manifest.json">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
@@ -237,6 +242,7 @@ body.c-us .cta-block h2{font-family:inherit;font-weight:800;color:#fff}
   <div class="fx-closed" id="fx-closed"><div class="fx-card"><h2 style="margin-top:0">Fax is coming soon</h2><p>We are getting fax ready. In the meantime, we can <a href="/send?to=US">print and mail your document</a> anywhere in the US.</p></div></div>
   <form class="fx-card" id="fx-form" novalidate>
     <input type="hidden" name="site" value="us">
+    <input type="hidden" name="lang" value="en">
     <div class="fx-field"><label for="fx-to">Fax number</label><span class="hint">A US or Canadian fax number with its area code, such as 212-555-0123.</span><input id="fx-to" name="to" type="tel" autocomplete="off" inputmode="tel" required></div>
     <div class="fx-field"><label for="fx-doc">Document</label><span class="hint">PDF, JPG or PNG, up to 20 MB.</span><input id="fx-doc" name="document" type="file" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" required></div>
     <div class="fx-field"><label for="fx-name">Your name</label><input id="fx-name" name="sender_name" type="text" autocomplete="name" maxlength="100" required></div>
@@ -252,69 +258,57 @@ body.c-us .cta-block h2{font-family:inherit;font-weight:800;color:#fff}
   </form>
 
   <h2>How it works</h2>
-  <ol class="steps">
-    <li><div><strong>Upload and pay</strong><p>Add your document and the fax number, see the exact price, and pay by card.</p></div></li>
-    <li><div><strong>We check it</strong><p>A person looks at every fax before it is sent, usually within a few hours, to make sure it will go through.</p></div></li>
-    <li><div><strong>We send it</strong><p>If the line is busy or does not answer, we try twice more. If it still does not go through, we email you about what happens next.</p></div></li>
-    <li><div><strong>You get a confirmation</strong><p>We email you when the fax machine has received every page, with the time it was delivered.</p></div></li>
-  </ol>
+  <ol class="steps"><li><div><strong>Upload and pay</strong><p>Add your document and the fax number, see the exact price, and pay by card.</p></div></li><li><div><strong>We check it</strong><p>A person looks at every fax before it is sent, usually within a few hours, to make sure it will go through.</p></div></li><li><div><strong>We send it</strong><p>If the line is busy or does not answer, we try twice more. If it still does not go through, we email you about what happens next.</p></div></li><li><div><strong>You get a confirmation</strong><p>We email you when the fax machine has received every page, with the time it was delivered.</p></div></li></ol>
 
   <h2>Price</h2>
   <p><span data-fx="base">$2.50</span> USD for up to <span data-fx="incl">10</span> pages, including the cover page if you add one, and <span data-fx="page">$0.25</span> for each extra page. Faxes can be up to 50 pages. The exact price is shown before you pay.</p>
 
   <h2>What we can send</h2>
-  <ul>
-    <li>Faxes to US and Canadian fax numbers. Toll-free numbers are not accepted.</li>
-    <li>PDF, JPG and PNG files. A password-protected PDF has to be saved without its password first.</li>
-  </ul>
+  <ul><li>Faxes to US and Canadian fax numbers. Toll-free numbers are not accepted.</li><li>PDF, JPG and PNG files. A password-protected PDF has to be saved without its password first.</li></ul>
 
   <h2>Your document</h2>
   <p>Your file is stored privately, is never shown to anyone outside Letterhome except the fax service that sends it, and is deleted 24 hours after the fax is finished.</p>
 
-  <div class="faq"><h2>Common questions</h2>
-    <div class="faq-item"><p class="faq-q">How long does it take?</p><p class="faq-a">We check every fax before it is sent, usually within a few hours. Sending itself takes a few minutes, depending on the number of pages.</p></div>
-    <div class="faq-item"><p class="faq-q">How do I know it arrived?</p><p class="faq-a">We email you once the receiving fax machine has accepted every page, with the date and time. Keep that email as your record.</p></div>
-    <div class="faq-item"><p class="faq-q">What if the fax does not go through?</p><p class="faq-a">If the line is busy or does not answer, we try twice more. If it still fails, we email you about what happens next.</p></div>
-    <div class="faq-item"><p class="faq-q">Can I fax a government office?</p><p class="faq-a">Yes, to any Canadian or US fax number. Check the office's current fax number on its own website before you send.</p></div>
-  </div>
+  <div class="faq"><h2>Common questions</h2><div class="faq-item"><p class="faq-q">How long does it take?</p><p class="faq-a">We check every fax before it is sent, usually within a few hours. Sending itself takes a few minutes, depending on the number of pages.</p></div><div class="faq-item"><p class="faq-q">How do I know it arrived?</p><p class="faq-a">We email you once the receiving fax machine has accepted every page, with the date and time. Keep that email as your record.</p></div><div class="faq-item"><p class="faq-q">What if the fax does not go through?</p><p class="faq-a">If the line is busy or does not answer, we try twice more. If it still fails, we email you about what happens next.</p></div><div class="faq-item"><p class="faq-q">Can I fax a government office?</p><p class="faq-a">Yes, to any Canadian or US fax number. Check the office&#x27;s current fax number on its own website before you send.</p></div></div>
 </div>
 <script>
 (function(){
+  var T={"sep": ": ", "choose": "Choose a PDF, JPG or PNG file.", "big": "The file is larger than 20 MB.", "preparing": "Preparing…", "again": "Something went wrong. Please try again.", "upfail": "The upload did not go through. Please try again.", "faxto": "Fax to ", "page": " page", "pages": " pages", "cover": " including the cover page", "total": ". Total ", "pay": "Pay {amt} and send", "payfail": "Payment could not be started.", "payfail2": "Payment could not be started. Please try again."}, site='us', lang='en';
   var form=document.getElementById('fx-form'),err=document.getElementById('fx-err'),qb=document.getElementById('fx-quote-btn'),pay=document.getElementById('fx-pay'),ref=null;
-  fetch('/api/fax/config?site=us').then(function(r){return r.json()}).then(function(c){
+  function money(c){return '$'+(c/100).toFixed(2)}
+  fetch('/api/fax/config?site='+site).then(function(r){return r.json()}).then(function(c){
     var set=function(k,v){document.querySelectorAll('[data-fx="'+k+'"]').forEach(function(e){e.textContent=v})};
     set('base',money(c.price_cents)); set('page',money(c.page_cents)); set('incl',String(c.included_pages));
     if(!c.open){form.style.display='none';document.getElementById('fx-closed').style.display='block';} }).catch(function(){});
-  function money(c){return '$'+(c/100).toFixed(2)}
   form.addEventListener('submit',function(e){
     e.preventDefault(); err.textContent=''; document.getElementById('fx-quote').style.display='none';
     var f=document.getElementById('fx-doc').files[0];
-    if(!f){err.textContent='Choose a PDF, JPG or PNG file.';return}
-    if(f.size>20*1024*1024){err.textContent='The file is larger than 20 MB.';return}
-    var fd=new FormData(form); qb.disabled=true; qb.textContent='Preparing…';
-    fetch('/api/fax/quote',{method:'POST',body:fd}).then(function(r){return r.json().then(function(j){return {ok:r.ok,j:j}})}).then(function(x){
-      qb.disabled=false; qb.textContent='See the price';
-      if(!x.ok){err.textContent=x.j.error||'Something went wrong. Please try again.';return}
+    if(!f){err.textContent=T.choose;return}
+    if(f.size>20*1024*1024){err.textContent=T.big;return}
+    var fd=new FormData(form); qb.disabled=true; var label=qb.textContent; qb.textContent=T.preparing;
+    fetch('/api/fax/quote?lang='+lang,{method:'POST',body:fd}).then(function(r){return r.json().then(function(j){return {ok:r.ok,j:j}})}).then(function(x){
+      qb.disabled=false; qb.textContent=label;
+      if(!x.ok){err.textContent=x.j.error||T.again;return}
       ref=x.j.ref;
-      document.getElementById('fx-quote-text').textContent='Fax to '+x.j.to+': '+x.j.pages+' page'+(x.j.pages===1?'':'s')+(x.j.cover?' including the cover page':'')+'. Total '+money(x.j.price_cents)+' USD.';
-      pay.textContent='Pay '+money(x.j.price_cents)+' and send';
+      document.getElementById('fx-quote-text').textContent=T.faxto+x.j.to+T.sep+x.j.pages+(x.j.pages===1?T.page:T.pages)+(x.j.cover?T.cover:'')+T.total+money(x.j.price_cents)+' '+x.j.currency+'.';
+      pay.textContent=T.pay.replace('{amt}',money(x.j.price_cents));
       document.getElementById('fx-quote').style.display='block';
-    }).catch(function(){qb.disabled=false;qb.textContent='See the price';err.textContent='The upload did not go through. Please try again.'});
+    }).catch(function(){qb.disabled=false;qb.textContent=label;err.textContent=T.upfail});
   });
   ['fx-to','fx-doc','fx-name','fx-email','fx-note'].forEach(function(id){document.getElementById(id).addEventListener('change',function(){ref=null;document.getElementById('fx-quote').style.display='none'})});
   pay.addEventListener('click',function(){
     if(!ref)return; pay.disabled=true; err.textContent='';
-    fetch('/api/fax/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ref:ref})}).then(function(r){return r.json().then(function(j){return {ok:r.ok,j:j}})}).then(function(x){
+    fetch('/api/fax/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ref:ref,lang:lang})}).then(function(r){return r.json().then(function(j){return {ok:r.ok,j:j}})}).then(function(x){
       if(x.ok&&x.j.url){location.href=x.j.url;return}
-      pay.disabled=false; err.textContent=x.j.error||'Payment could not be started.';
-    }).catch(function(){pay.disabled=false;err.textContent='Payment could not be started. Please try again.'});
+      pay.disabled=false; err.textContent=x.j.error||T.payfail;
+    }).catch(function(){pay.disabled=false;err.textContent=T.payfail2});
   });
 })();
 </script>
 <footer id="site-footer"><nav aria-label="Site links" style="padding:24px;font-size:14px"><a href="/about">About</a> · <a href="/careers">Careers</a> · <a href="/contact">Contact</a> · <a href="/guides">Mailing guides</a> · <a href="/business">Business mail</a> · <a href="/monthly-letters">Monthly letters</a> · <a href="/terms">Terms</a> · <a href="/privacy">Privacy</a> · <a href="/refunds">Refund policy</a> · <a href="https://letterhome.ca/">Canada</a> · <a href="/us">United States</a> · <a href="/uk">United Kingdom</a> · <a href="/au">Australia</a></nav></footer>
-<script src="/footer.js?v=28" defer></script>
+<script src="/footer.js?v=29" defer></script>
 <script src="/theme.js?v=4" defer></script>
-<script src="/lang.js?v=80" defer></script>
+<script src="/lang.js?v=81" defer></script>
 
 <script src="/country.js?v=23" defer></script>
 </body>

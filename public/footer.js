@@ -46,6 +46,8 @@
   var ukHome = H === 'letterhome.co.uk' ? '/' : '/uk';
   // Until the .us domain is switched on, the US pages on letterhome.ca show the .us address in the footer.
   var onUs = H !== 'letterhome.us' && (location.pathname === '/us' || location.pathname.indexOf('/us/') === 0);
+  var onUk = H === 'letterhome.co.uk' || location.pathname === '/uk' || location.pathname.indexOf('/uk/') === 0;
+  var faxHref = onUk ? '' : (H === 'letterhome.us' ? '/fax' : (onUs ? '/us/fax' : '/fax'));
   var usDomain = onUs ? '<a href="https://letterhome.us" data-us-domain>letterhome.us</a>' : '';
   mount.outerHTML =
     '<footer class="lh-footer"><div class="lh-f-in">' +
@@ -53,7 +55,7 @@
       social + '</div>' +
       '<div class="lh-f-nav">' +
       row('Countries', [[caHome, 'Canada', 'footer.ca', 'ca'], [usHome, 'United States', 'footer.us', 'us'], [ukHome, 'United Kingdom', 'footer.uk', 'uk'], [auHome, 'Australia', 'footer.au', 'au']]) +
-      row('Information', [['/about', 'About', 'footer.about'], ['/careers', 'Careers', 'footer.careers'], ['/business', 'Business', 'footer.business'], ['/contact', 'Contact', 'nav.contact'], ['/guides', 'Mailing guides', 'footer.guides'], ['/tools', 'Free tools']]) +
+      row('Information', [['/about', 'About', 'footer.about'], ...(faxHref ? [[faxHref, 'Send a fax', 'footer.fax']] : []), ['/careers', 'Careers', 'footer.careers'], ['/business', 'Business', 'footer.business'], ['/contact', 'Contact', 'nav.contact'], ['/guides', 'Mailing guides', 'footer.guides'], ['/tools', 'Free tools']]) +
       '</div>' +
     '</div><div class="lh-f-bar"><div class="lh-f-in2"><span class="lh-f-id">© 2026 Letterhome</span>' + usDomain +
       row('Legal', [['/privacy', 'Privacy', 'footer.privacy'], ['/terms', 'Terms', 'footer.terms'], ['/refunds', 'Refund policy', 'footer.refunds'], ['/accessibility', 'Accessibility', 'footer.accessibility']]).replace('lh-f-row', 'lh-f-legal') +

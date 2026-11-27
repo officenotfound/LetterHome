@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html data-rail-title="We send it for you" data-rail-text="We check your fax, send it to any Canadian or US fax number, and email you when it has been delivered." data-rail-href="#fx-form" data-rail-label="Send a fax" data-rail-meta="Pay securely with Stripe." data-en-only lang="en-CA" data-theme="light">
+<html data-en-only lang="en-CA" data-theme="light" data-rail-title="We send it for you" data-rail-text="We check your fax, send it to any Canadian or US fax number, and email you when it has been delivered." data-rail-href="#fx-form" data-rail-label="Send a fax" data-rail-meta="Pay securely with Stripe.">
 <head>
 <meta charset="UTF-8">
 <meta name="robots" content="noindex">
@@ -107,24 +107,31 @@ footer{background:var(--ink);color:rgba(255,255,255,0.5);padding:40px 36px;margi
 
 <div class="hero" id="main-content">
   <p class="hero-eyebrow">Fax</p>
-  <h1>Your fax</h1>
+  <h1 id="fx-h1">Your fax</h1>
   <p class="hero-sub" id="fx-lead">Loading…</p>
 </div>
 <div class="main">
   <div class="fx-card"><dl class="fx-status" id="fx-status" style="margin:0"></dl></div>
-  <p>Questions about your fax? Use the <a href="/contact">contact form</a> and include your order number.</p>
+  <p id="fx-help">Questions about your fax? Use the <a href="/contact">contact form</a> and include your order number.</p>
 </div>
 <script>
 (function(){
+  var L={
+    en:{h1:'Your fax',order:'Order',number:'Fax number',pages:'Pages',price:'Price',status:'Status',confirming:'We are confirming your payment. This page updates by itself.',missing:'We could not find this fax. Check the link in your email.',help:'Questions about your fax? Use the <a href="/contact">contact form</a> and include your order number.'},
+    fr:{h1:'Votre fax',order:'Commande',number:'Numéro de fax',pages:'Pages',price:'Prix',status:'État',confirming:'Nous confirmons votre paiement. Cette page se met à jour toute seule.',missing:'Nous n’avons pas trouvé ce fax. Vérifiez le lien dans votre courriel.',help:'Des questions sur votre fax? Utilisez le <a href="/contact">formulaire de contact</a> en indiquant votre numéro de commande.'},
+    es:{h1:'Su fax',order:'Pedido',number:'Número de fax',pages:'Páginas',price:'Precio',status:'Estado',confirming:'Estamos confirmando su pago. Esta página se actualiza sola.',missing:'No encontramos este fax. Revise el enlace de su correo.',help:'¿Preguntas sobre su fax? Use el <a href="/contact">formulario de contacto</a> e incluya su número de pedido.'}
+  };
   var token=location.pathname.split('/').pop(), timer=null;
   function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
   function load(){
     fetch('/api/fax/status/'+encodeURIComponent(token),{cache:'no-store'}).then(function(r){return r.ok?r.json():null}).then(function(d){
       var lead=document.getElementById('fx-lead');
-      if(!d){lead.textContent='We could not find this fax. Check the link in your email.';return}
-      var waiting=d.status==='awaiting_payment';
-      lead.textContent=waiting?'We are confirming your payment. This page updates by itself.':d.status_text;
-      document.getElementById('fx-status').innerHTML='<dt>Order</dt><dd>'+esc(d.ref)+'</dd><dt>Fax number</dt><dd>'+esc(d.to)+'</dd><dt>Pages</dt><dd>'+esc(d.pages)+'</dd><dt>Price</dt><dd>'+esc(d.price)+'</dd><dt>Status</dt><dd>'+esc(d.status_label)+'</dd>';
+      if(!d){lead.textContent=L.en.missing;return}
+      var t=L[d.lang]||L.en;
+      document.documentElement.lang=d.lang==='fr'?'fr-CA':d.lang==='es'?'es-US':'en-CA';
+      document.getElementById('fx-h1').textContent=t.h1; document.getElementById('fx-help').innerHTML=t.help;
+      lead.textContent=d.status==='awaiting_payment'?t.confirming:d.status_text;
+      document.getElementById('fx-status').innerHTML='<dt>'+t.order+'</dt><dd>'+esc(d.ref)+'</dd><dt>'+t.number+'</dt><dd>'+esc(d.to)+'</dd><dt>'+t.pages+'</dt><dd>'+esc(d.pages)+'</dd><dt>'+t.price+'</dt><dd>'+esc(d.price)+'</dd><dt>'+t.status+'</dt><dd>'+esc(d.status_label)+'</dd>';
       clearTimeout(timer);
       if(['delivered','refunded','cancelled','failed'].indexOf(d.status)<0) timer=setTimeout(load,15000);
     }).catch(function(){timer=setTimeout(load,15000)});
@@ -133,8 +140,8 @@ footer{background:var(--ink);color:rgba(255,255,255,0.5);padding:40px 36px;margi
 })();
 </script>
 <footer id="site-footer"><nav aria-label="Site links" style="padding:24px;font-size:14px"><a href="/about">About</a> · <a href="/careers">Careers</a> · <a href="/contact">Contact</a> · <a href="/guides">Mailing guides</a> · <a href="/business">Business mail</a> · <a href="/monthly-letters">Monthly letters</a> · <a href="/terms">Terms</a> · <a href="/privacy">Privacy</a> · <a href="/refunds">Refund policy</a> · <a href="https://letterhome.ca/">Canada</a> · <a href="/us">United States</a> · <a href="/uk">United Kingdom</a> · <a href="/au">Australia</a></nav></footer>
-<script src="/footer.js?v=28" defer></script>
+<script src="/footer.js?v=29" defer></script>
 <script src="/theme.js?v=4" defer></script>
-<script src="/lang.js?v=80" defer></script>
+<script src="/lang.js?v=81" defer></script>
 </body>
 </html>

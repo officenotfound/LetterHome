@@ -103,6 +103,27 @@ test('US site: $2.50 USD up to 10 pages and 25 cents a page, charged in US dolla
   assert.equal(ca.body.currency, 'CAD');
 });
 
+test('French and Spanish: errors, Stripe wording, cancel page, status words and emails follow the language', async () => {
+  const fd = new FormData(); fd.append('to', '800-555-0100'); fd.append('email', 'a@example.com'); fd.append('sender_name', 'Ana'); fd.append('lang', 'fr');
+  fd.append('document', new Blob([await pdf(1)]), 'a.pdf');
+  const bad = await (await fetch(base + '/api/fax/quote?lang=fr', { method: 'POST', body: fd })).json();
+  assert.match(bad.error, /indicatif régional/);
+  const fr = await quote({ ...good, lang: 'fr', cover_note: 'Merci' }, await pdf(1));
+  assert.equal(fr.status, 200);
+  await post('/api/fax/checkout', { ref: fr.body.ref, lang: 'fr' });
+  assert.match(sessions.at(-1).line_items[0].price_data.product_data.name, /^Fax au /);
+  assert.match(sessions.at(-1).cancel_url, /\/envoyer-un-fax-en-ligne\?cancelled=1$/);
+  const es = await quote({ ...good, lang: 'es', site: 'us' }, await pdf(1));
+  await post('/api/fax/checkout', { ref: es.body.ref, lang: 'es' });
+  assert.match(sessions.at(-1).cancel_url, /\/us\/es\/fax\?cancelled=1$/);
+  const f = db.prepare('SELECT * FROM fax_orders WHERE public_ref = ?').get(es.body.ref);
+  api.onCheckoutCompleted({ id: f.stripe_session_id, payment_status: 'paid', payment_intent: 'pi_es', metadata: { kind: 'fax', fax_ref: f.public_ref } });
+  assert.match(mails.at(-1).subject, /Su fax de Letterhome está confirmado/);
+  const st = await (await fetch(`${base}/api/fax/status/${f.status_token}`)).json();
+  assert.equal(st.lang, 'es');
+  assert.equal(st.status_label, 'Esperando nuestra revisión');
+});
+
 test('quote: counts pages, adds a cover page for a note, refuses bad input', async () => {
   let r = await quote(good, await pdf(12));
   assert.equal(r.status, 200);
