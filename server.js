@@ -1150,7 +1150,7 @@ Object.entries(REGION_REDIRECTS).forEach(([from, to]) =>
  'mail-a-letter-online', 'send-a-letter-from-home', 'what-is-lettermail', 'postage-for-a-large-letter-in-canada',
  'ircc-processing-times', 'n4-notice', 'ircc-documents', 'for-professionals', 'bulk-mailing',
  'cra-mail', 'cra-notice-of-objection', 'ltb-forms',
- 'registered-mail-vs-xpresspost', 'proof-of-mailing', 'canada-post-stamp-price-2027', 'write-a-letter-to-santa', 'cancel-gym-membership-by-mail', 'write-to-a-child-at-summer-camp', 'mail-a-letter-to-a-university-student-in-canada', 'send-a-letter-from-canada-to-india', 'send-a-letter-from-canada-to-the-philippines', 'send-a-letter-from-canada-to-pakistan', 'send-a-letter-from-canada-to-nigeria', 'write-a-letter-to-your-future-self', 'open-when-letters', 'how-to-write-a-condolence-letter', 'write-a-letter-to-your-mp', 'real-estate-letters-by-mail', 'government-forms-that-require-mail',
+ 'registered-mail-vs-xpresspost', 'proof-of-mailing', 'canada-post-stamp-price-2027', 'write-a-letter-to-santa', 'cancel-gym-membership-by-mail', 'write-to-a-child-at-summer-camp', 'mail-a-letter-to-a-university-student-in-canada', 'send-a-letter-from-canada-to-india', 'send-a-letter-from-canada-to-the-philippines', 'send-a-letter-from-canada-to-pakistan', 'send-a-letter-from-canada-to-nigeria', 'write-a-letter-to-your-future-self', 'open-when-letters', 'how-to-write-a-condolence-letter', 'write-a-letter-to-your-mp', 'write-to-the-prime-minister', 'real-estate-letters-by-mail', 'government-forms-that-require-mail',
  'n9-notice', 'renew-pr-card-by-mail', 'canadian-citizenship-application-by-mail',
  'cpp-application-by-mail', 'oas-gis-application-by-mail', 'canada-child-benefit-by-mail',
  'demand-letter-unpaid-invoice', 'security-deposit-demand-letter', 'cease-and-desist-letter',
@@ -1237,9 +1237,9 @@ const LOCAL_GUIDES = [
   'us/how-long-does-mail-take', 'us/how-much-is-a-stamp', 'us/return-address-on-a-letter',
   'us/postage-rates-2026', 'us/what-is-certified-mail', 'us/christmas-mailing-deadlines-2026', 'us/christmas-card-postage-2026',
   'us/debt-validation-letter', 'us/request-medical-records-by-mail', 'us/donor-thank-you-letters',
-  'us/how-to-address-an-envelope', 'us/mail-a-letter-without-a-printer', 'us/how-many-stamps-does-a-letter-need', 'us/postage-calculator', 'us/address-formatter', 'us/business-letter-format', 'us/registered-mail-vs-certified-mail', 'us/how-to-send-fan-mail',
+  'us/how-to-address-an-envelope', 'us/mail-a-letter-without-a-printer', 'us/how-many-stamps-does-a-letter-need', 'us/postage-calculator', 'us/address-formatter', 'us/business-letter-format', 'us/registered-mail-vs-certified-mail', 'us/how-to-send-fan-mail', 'us/how-to-write-to-an-inmate', 'us/how-to-write-to-the-president', 'us/how-to-write-to-congress', 'us/complaint-letter-to-a-ceo', 'us/how-to-address-mail-to-apo-fpo', 'us/thank-you-letter-to-a-teacher', 'us/thank-you-letter-to-a-nurse',
   'uk/how-long-does-post-take', 'uk/how-much-is-a-stamp', 'uk/return-address-on-a-letter',
-  'uk/how-to-address-a-letter', 'uk/post-a-letter-without-a-printer', 'uk/how-many-sheets-for-a-stamp', 'uk/postage-calculator', 'uk/address-formatter', 'uk/how-to-write-a-formal-letter',
+  'uk/how-to-address-a-letter', 'uk/post-a-letter-without-a-printer', 'uk/how-many-sheets-for-a-stamp', 'uk/postage-calculator', 'uk/address-formatter', 'uk/how-to-write-a-formal-letter', 'uk/how-to-write-to-the-king',
 ];
 const COUNTRY_GUIDES = {
   'us/how-to-send-mail-to-canada-from-us': 'send-a-letter-from-the-us-to-canada',

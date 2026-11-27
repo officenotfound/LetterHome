@@ -134,6 +134,7 @@ window.LH_ES = {
  "send.val.email.valid": "Un correo electrónico válido",
  "send.val.letter": "Mensaje de la carta",
  "send.val.terms": "Aceptación de los Términos y la Privacidad",
+ "send.val.military": "Todavía no podemos enviar a direcciones militares (APO, FPO o DPO). Envíe esta carta desde una oficina de correos.",
  "send.val.prefix": "Por favor complete: ",
  "send.processing": "Procesando…",
  "send.redirecting": "Redirigiendo a Stripe…",

@@ -5,7 +5,7 @@ const { botName } = require('./trafficSources');
 // Codes the order page may report. Anything else is ignored, so no typed text can be stored.
 const CLIENT_PROBLEMS = new Set([
   's-name', 's-street', 's-city', 's-province', 's-postal', 's-country',
-  'r-name', 'r-street', 'r-city', 'r-postal', 'r-province', 'r-province-text', 'r-email', 'r-email-invalid',
+  'r-name', 'r-street', 'r-city', 'r-postal', 'r-province', 'r-province-text', 'r-email', 'r-email-invalid', 'r-military',
   'letter-body', 'letter-too-long', 'agree-terms', 'file-type', 'file-size', 'file-count', 'network',
 ]);
 

@@ -1515,6 +1515,15 @@ function validateStep(step) {
       missing.push(LH_T('send.val.email.valid'));
       markError('r-email');
     }
+    // Military mail (APO, FPO or DPO addresses) is not something we can send yet, so say so before payment.
+    const rState = (document.getElementById('r-province-text').value || '').trim();
+    const rCity = (document.getElementById('r-city').value || '').trim();
+    if (!missing.length && destCC === 'US' && (/^(AA|AE|AP)$/i.test(rState) || /^(APO|FPO|DPO)$/i.test(rCity))) {
+      reportProblem('r-military');
+      markError('r-city');
+      showValidationBanner(LH_T('send.val.military'));
+      return false;
+    }
   } else if (step === 2) {
     const body = document.getElementById('letter-body').value.trim();
     if (body.length < 5) {
@@ -1999,9 +2008,9 @@ function fillSavedRecipient(sel) {
   } catch(e) {}
 }
 </script>
-<script src="/lang-es.js?v=8" defer></script>
-<script src="/lang-fr.js?v=79" defer></script>
-<script src="/lang.js?v=79" defer></script>
+<script src="/lang-es.js?v=9" defer></script>
+<script src="/lang-fr.js?v=80" defer></script>
+<script src="/lang.js?v=80" defer></script>
 <script type="module">
   import * as pdfjsLib from '/vendor/pdfjs/pdf.min.mjs';
   pdfjsLib.GlobalWorkerOptions.workerSrc = '/vendor/pdfjs/pdf.worker.min.mjs';

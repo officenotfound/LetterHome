@@ -1042,6 +1042,7 @@ window.LH_FR = {
       'send.val.email.valid': 'Une adresse courriel valide',
       'send.val.letter': 'Message de la lettre',
       'send.val.terms': 'Acceptation des conditions',
+      'send.val.military': 'Nous ne pouvons pas encore poster vers les adresses militaires américaines (APO, FPO ou DPO). Postez cette lettre à un bureau de poste.',
       'send.file.badtype': 'seuls les fichiers PDF, Word ou TXT sont acceptés',
       'send.file.toobig': 'fichier de plus de 10 Mo',
       'send.file.limit': 'limite de 5 fichiers',
