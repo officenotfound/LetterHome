@@ -29,7 +29,7 @@ BASE = 'https://letterhome.ca'
 ALT = {'en-CA': '/fax', 'fr-CA': '/envoyer-un-fax-en-ligne', 'en-US': '/us/fax', 'es-US': '/us/es/fax'}
 ALT_LINKS = ''.join(f'<link rel="alternate" hreflang="{k}" href="{BASE}{v}">\n' for k, v in ALT.items()) + f'<link rel="alternate" hreflang="x-default" href="{BASE}/fax">\n'
 
-def page(title, desc, url, content, sh, html_attrs, noindex=False, alternates='', extra_head=''):
+def page(title, desc, url, content, sh, html_attrs, noindex=False, alternates='', extra_head='', share_image=''):
     head, body_open, tail = sh
     h = re.sub(r'<title>.*?</title>', f'<title>{html.escape(title)}</title>', head, flags=re.S)
     for pat, val in [(r'<meta name="description"[^>]*>', f'<meta name="description" content="{html.escape(desc)}">'),
@@ -40,6 +40,10 @@ def page(title, desc, url, content, sh, html_attrs, noindex=False, alternates=''
                      (r'<meta name="twitter:title"[^>]*>', f'<meta name="twitter:title" content="{html.escape(title)}">'),
                      (r'<meta name="twitter:description"[^>]*>', f'<meta name="twitter:description" content="{html.escape(desc)}">')]:
         h = re.sub(pat, val, h, count=1)
+    if share_image:
+        h = re.sub(r'<meta property="og:image(:width|:height|:alt)?"[^>]*>\n?', '', h)
+        h = re.sub(r'<meta name="twitter:image"[^>]*>', f'<meta name="twitter:image" content="{share_image}">', h, count=1)
+        h = h.replace('<meta property="og:site_name"', f'<meta property="og:image" content="{share_image}">\n<meta property="og:image:width" content="1424">\n<meta property="og:image:height" content="748">\n<meta property="og:image:alt" content="Send a fax to the US or Canada from $3">\n<meta property="og:site_name"', 1)
     h = re.sub(r'<html[^>]*>', f'<html {html_attrs}>', h, count=1)
     if alternates:
         h = h.replace(f'<link rel="canonical" href="{url}">', f'<link rel="canonical" href="{url}">\n' + alternates.rstrip('\n'), 1)
@@ -284,7 +288,8 @@ if __name__ == '__main__':
     send_css = fax_order_template.send_styles()
     for out, t, sh, url, attrs in pages:
         body = fax_order_template.order_page(t, UI[t['lang']])
-        open(out, 'w', encoding='utf-8').write(page(t['title'], t['desc'], url, body, sh, attrs, alternates=ALT_LINKS, extra_head=send_css))
+        open(out, 'w', encoding='utf-8').write(page(t['title'], t['desc'], url, body, sh, attrs, alternates=ALT_LINKS, extra_head=send_css,
+                                              share_image=f'{BASE}/og-fax.jpg' if out == 'public/fax.html' else ''))
         print('wrote', out)
     open('public/fax-status.html', 'w', encoding='utf-8').write(page('Your Fax | Letterhome', 'The status of your Letterhome fax.', f'{BASE}/fax', STATUS, CA_SHELL,
         f'data-en-only lang="en-CA" data-theme="light" {rail(EN)}', noindex=True))
