@@ -40,13 +40,18 @@
     us: { title: 'We print and mail it', text: 'We print it, put it in an envelope and mail it within two business days. Postage is included in the price.' }
   };
   var copy = COPY[country] || COPY.ca;
+  // A page about something other than mailing a letter (such as fax) can say so with data-rail-* on <html>.
+  var rd = document.documentElement.dataset;
+  if (rd.railTitle) copy = { title: esc(rd.railTitle), text: esc(rd.railText || '') };
+  if (rd.railHref) { href = rd.railHref; label = rd.railLabel || label; }
+  var meta = rd.railMeta ? esc(rd.railMeta) : 'Pay securely with Stripe. Cancel before printing for a full refund.';
   var aside = el('aside', 'lh-rail');
   aside.setAttribute('aria-label', 'On this page');
   var card = el('div', 'lh-rail-card',
     '<p class="lh-rail-title">' + copy.title + '</p>' +
     '<p class="lh-rail-text">' + copy.text + '</p>' +
     '<a class="btn btn-red btn-large lh-rail-btn" href="' + esc(href) + '">' + esc(label) + '</a>' +
-    '<p class="lh-rail-meta">Pay securely with Stripe. Cancel before printing for a full refund.</p>');
+    '<p class="lh-rail-meta">' + meta + '</p>');
   aside.appendChild(card);
 
   var upd = document.querySelector('.updated, .page-updated, .last-updated');

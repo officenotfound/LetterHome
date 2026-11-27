@@ -870,6 +870,7 @@ function renderRoute(p) {
   if (p === '/admin/mail')                          return showMail();
   if (p === '/admin/print-queue')                   return showPrintQueue();
   if (p === '/admin/approvals')                     return showApprovals();
+  if (p === '/admin/faxes')                         return showFaxes();
   if (p === '/admin/profit')                        return showProfit();
   if (p === '/admin/content')                       return showContent();
   if (p === '/admin/admin-users')                   return showAdminUsers();
@@ -897,7 +898,7 @@ function renderRoute(p) {
 
 // Related sections share one menu item and show as tabs. Every address still works as before.
 const NAV_GROUPS = {
-  orders:   { tabs: [['/admin/orders', 'Orders'], ['/admin/approvals', 'Approvals'], ['/admin/print-queue', 'Print queue']] },
+  orders:   { tabs: [['/admin/orders', 'Orders'], ['/admin/approvals', 'Approvals'], ['/admin/faxes', 'Faxes'], ['/admin/print-queue', 'Print queue']] },
   people:   { tabs: [['/admin/customers', 'Customers'], ['/admin/accounts', 'Accounts'], ['/admin/businesses', 'Businesses']] },
   inbox:    { tabs: [['/admin/mail', 'Mail'], ['/admin/contacts', 'Contact form'], ['/admin/applicants', 'Applicants'], ['/admin/templates', 'Saved replies']] },
   marketing: { tabs: [['/admin/broadcast', 'Broadcast'], ['/admin/outreach', 'Outreach'], ['/admin/followups', 'Follow-ups'], ['/admin/content', 'Content and links'], ['/admin/emails', 'Sent emails']] },
@@ -4370,6 +4371,36 @@ async function showSettings() {
             <input id="setting-clarity-token" type="password" autocomplete="new-password" style="max-width:180px">
           </div>`)}
           <div class="set-row">
+            <div class="set-txt"><h3>Fax</h3><p>Fax to Canadian and US numbers. "Only me" shows the fax page only while you are signed in to the admin, for testing with a real payment.</p></div>
+            <select id="setting-fax-enabled" style="max-width:180px">
+              ${[['false', 'Off'], ['admin', 'Only me'], ['true', 'Everyone']].map(([v, l]) => `<option value="${v}" ${(settings['fax_enabled'] || 'false') === v ? 'selected' : ''}>${l}</option>`).join('')}
+            </select>
+          </div>
+          <div class="set-row stack">
+            <div class="set-txt"><h3>Fax prices</h3><p>In Canadian cents: the price for up to 10 pages, and each page after that.</p></div>
+            <div class="price-grid">
+              ${priceField('setting-fax-price', 'Up to 10 pages', parseInt(settings['fax_price_cents']) || 500, 50)}
+              ${priceField('setting-fax-page', 'Each extra page', parseInt(settings['fax_page_cents']) || 100, 50)}
+            </div>
+          </div>
+          ${keyBox(!!(settings['telnyx_api_key_set'] === 'true' && settings['telnyx_fax_app_id'] && settings['telnyx_fax_from'] && settings['telnyx_public_key']), false, 'Change the Telnyx fax connection', `
+          <div class="set-row">
+            <div class="set-txt"><h3>Telnyx API key</h3><p>Telnyx portal: API Keys, Create API Key (V2). ${settings['telnyx_api_key_set'] === 'true' ? '<b>A key is saved.</b> Leave empty to keep it.' : 'Not saved yet.'}</p></div>
+            <input id="setting-telnyx-key" type="password" autocomplete="new-password" style="max-width:220px">
+          </div>
+          <div class="set-row">
+            <div class="set-txt"><h3>Telnyx public key</h3><p>Telnyx portal: API Keys, Public Key. Lets the site check that fax updates really come from Telnyx.</p></div>
+            <input id="setting-telnyx-pub" type="text" autocomplete="off" spellcheck="false" value="${esc(settings['telnyx_public_key'] || '')}" style="max-width:220px">
+          </div>
+          <div class="set-row">
+            <div class="set-txt"><h3>Fax app ID</h3><p>Telnyx portal: Programmable Fax, the Letterhome fax app's ID.</p></div>
+            <input id="setting-telnyx-app" type="text" autocomplete="off" spellcheck="false" value="${esc(settings['telnyx_fax_app_id'] || '')}" style="max-width:220px">
+          </div>
+          <div class="set-row">
+            <div class="set-txt"><h3>Fax number to send from</h3><p>The Telnyx number assigned to the fax app, such as +16135550123.</p></div>
+            <input id="setting-telnyx-from" type="text" autocomplete="off" spellcheck="false" value="${esc(settings['telnyx_fax_from'] || '')}" style="max-width:220px">
+          </div>`)}
+          <div class="set-row">
             <div class="set-txt"><h3>Daily order cap</h3><p>Stop taking orders after this many a day. 0 means no limit.</p></div>
             <input id="setting-daily-cap" type="number" min="0" value="${dailyCap}" class="narrow">
           </div>
@@ -4520,8 +4551,21 @@ async function saveAllSettings() {
   const blocked      = JSON.stringify(window._blockedCountries || []);
 
   const clarityToken = (document.getElementById('setting-clarity-token')?.value || '').trim();
+  const telnyxKey = (document.getElementById('setting-telnyx-key')?.value || '').trim();
+  const faxFields = document.getElementById('setting-fax-enabled') ? {
+    fax_enabled: document.getElementById('setting-fax-enabled').value,
+    fax_price_cents: String(parseInt(document.getElementById('setting-fax-price')?.value) || 500),
+    fax_page_cents: String(parseInt(document.getElementById('setting-fax-page')?.value) || 100),
+    ...(document.getElementById('setting-telnyx-pub') ? {
+      telnyx_public_key: document.getElementById('setting-telnyx-pub').value.trim(),
+      telnyx_fax_app_id: document.getElementById('setting-telnyx-app').value.trim(),
+      telnyx_fax_from: document.getElementById('setting-telnyx-from').value.trim(),
+    } : {}),
+  } : {};
   const r = await post('/api/admin/settings/batch', {
     ...(clarityToken ? { clarity_api_token: clarityToken } : {}),
+    ...(telnyxKey ? { telnyx_api_key: telnyxKey } : {}),
+    ...faxFields,
     announcement,
     price_domestic_cents:      String(priceDom),
     price_usa_cents:           String(priceUsa),
@@ -5732,6 +5776,60 @@ async function runSeoAudit() {
 
 // ── Approval queue: check each paid order, then approve it yourself ───────────────────────────────
 let _appr = { orders: [], focus: 0, ticked: new Set(), open: new Set(), configured: false, busy: false };
+// Faxes (fax.js): paid faxes wait here for approval; failed ones wait for your decision.
+const FAX_STATUS = { awaiting_payment: ['Not paid yet', '#6b6b6b'], paid: ['Waiting for approval', '#b45309'], sending: ['Sending', '#1d4ed8'],
+  retrying: ['Will retry', '#b45309'], delivered: ['Delivered', '#15803d'], failed: ['Failed: your decision', '#c1121f'], refunded: ['Refunded', '#6b6b6b'], cancelled: ['Cancelled', '#6b6b6b'] };
+async function showFaxes() {
+  setTitle('Faxes');
+  setMain('<div class="empty">Loading…</div>');
+  const d = await api('/api/admin/faxes');
+  if (!d) return setMain('<div class="empty">Could not load this section.</div>');
+  const modeText = { false: 'Off: the fax page shows "coming soon".', admin: 'Only you: the fax page works while you are signed in here.', true: 'Open to everyone.' }[d.mode] || d.mode;
+  const head = `<div class="card" style="padding:14px 18px;margin-bottom:16px;font-size:14px;line-height:1.6">
+    <div><b>Fax page:</b> ${esc(modeText)} Change it in Settings.</div>
+    <div><b>Telnyx:</b> ${d.telnyx_ready ? 'connected.' : (d.test_mode ? 'not set up. Test mode: sends are simulated.' : 'not set up yet. Add the keys in Settings before approving a fax.')}</div></div>`;
+  const when = t => t ? esc(new Date(String(t).replace(' ', 'T') + 'Z').toLocaleString()) : '';
+  const card = f => {
+    const [label, colour] = FAX_STATUS[f.status] || [f.status, '#6b6b6b'];
+    const btn = (txt, act, extra, cls) => `<button class="btn ${cls || 'btn-outline'} btn-sm" style="margin:0 6px 6px 0" data-fax="${f.id}" data-act="${act}" data-extra="${esc(JSON.stringify(extra || {}))}">${txt}</button>`;
+    const sim = d.test_mode && f.status === 'sending' && f.telnyx_mode === 'simulated';
+    const actions = [
+      f.status === 'paid' && btn('Approve and send', 'approve', null, 'btn-primary'),
+      f.status === 'failed' && btn('Retry now', 'retry'),
+      (f.status === 'paid' || f.status === 'failed') && btn('Refund in full', 'refund'),
+      sim && btn('Simulate delivered', 'simulate', { outcome: 'delivered' }),
+      sim && btn('Simulate busy line', 'simulate', { outcome: 'failed', reason: 'user_busy' }),
+      sim && btn('Simulate not a fax', 'simulate', { outcome: 'failed', reason: 'receiver_no_answer_fax_tone' }),
+      btn('Add a note', 'note'),
+    ].filter(Boolean).join('');
+    const file = f.files_deleted_at ? '<div style="font-size:12px;color:#6b6b6b">Document deleted after the fax finished.</div>'
+      : `<a href="/api/admin/faxes/${f.id}/file" style="font-size:13px">View the document</a>`;
+    return `<div class="card" style="padding:16px 20px;margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+        <div style="font-family:monospace;font-size:13px">${esc(f.public_ref)}</div>
+        <div style="font-size:13px;font-weight:600;color:${colour}">${label}</div></div>
+      <div style="font-size:15px;margin-bottom:4px"><b>${esc(f.to)}</b>, ${f.pages} page${f.pages === 1 ? '' : 's'}, $${(f.price_cents / 100).toFixed(2)} ${esc(f.currency)}</div>
+      <div style="font-size:13px;color:#6b6b6b;margin-bottom:8px">From ${esc(f.sender_name)} &lt;${esc(f.email)}&gt;${f.paid_at ? ' · paid ' + when(f.paid_at) : ''}${f.attempts ? ' · ' + f.attempts + ' attempt' + (f.attempts === 1 ? '' : 's') : ''}${f.failure_reason ? ' · last failure: ' + esc(f.failure_reason) : ''}</div>
+      ${f.cover_note ? `<div style="font-size:13px;margin-bottom:8px;white-space:pre-wrap"><b>Cover note:</b> ${esc(f.cover_note)}</div>` : ''}
+      <div style="margin-bottom:10px">${file}</div>
+      ${f.status === 'paid' && !f.files_deleted_at ? `<div class="doc-inline" data-doc="/api/admin/faxes/${f.id}/file" style="margin-bottom:10px"></div>` : ''}
+      <div>${actions}</div>
+      ${f.notes.length ? `<details style="margin-top:8px;font-size:13px"><summary>History (${f.notes.length})</summary>${f.notes.map(n => `<div style="margin-top:4px"><span style="color:#6b6b6b">${when(n.created_at)}</span> ${esc(n.note)}</div>`).join('')}</details>` : ''}
+    </div>`;
+  };
+  setMain(head + (d.faxes.length ? d.faxes.map(card).join('') : '<div class="empty">No faxes yet.</div>'));
+  document.querySelectorAll('#main [data-fax]').forEach(b => b.addEventListener('click', () => faxAction(Number(b.dataset.fax), b.dataset.act, JSON.parse(b.dataset.extra || '{}'))));
+  DocView.fill(document.getElementById('main'));
+}
+async function faxAction(id, action, extra) {
+  let body = extra || {};
+  if (action === 'refund' && !confirm('Refund this fax in full? This cannot be undone.')) return;
+  if (action === 'note') { const t = prompt('Note for this fax (for example, what you told the customer):'); if (!t) return; body = { note: t }; }
+  const r = await api('/api/admin/faxes/' + id + '/' + action, { method: 'POST', body: JSON.stringify(body) });
+  if (!r || r.ok === false) alert((r && r.error) || 'That did not work.');
+  showFaxes();
+}
+
 async function showApprovals() {
   setTitle('Approvals');
   setMain('<div class="empty">Loading…</div>');

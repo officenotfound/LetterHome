@@ -1066,6 +1066,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
   if (event.type === 'checkout.session.completed' ||
       event.type === 'checkout.session.async_payment_succeeded') {
     try {
+      if (fax.onCheckoutCompleted(event.data.object)) return res.json({ received: true });
       if (recordExtraPayment(event.data.object)) return res.json({ received: true });
       await fulfillOrder(event.data.object.id);
     } catch (err) {
@@ -1078,6 +1079,12 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
   }
   res.json({ received: true });
 });
+
+// Fax to Canada and the US through Telnyx (fax.js). The Telnyx status webhook needs the raw body, so it is mounted before
+// the JSON parser below; the admin routes are added after the admin CSRF check further down.
+const fax = require('./fax').register(app, { db, getSetting, stripe, sendMail, sendOwnerMail: (...a) => sendOwnerMail(...a), requireAdmin, logAudit,
+  siteBase, dataDir: __dirname, emailShell: o => faxEmailShell(o) });
+fax.registerWebhook(app);
 
 // Business portal (test): has its own larger body parser for CSV batches, so it is mounted before the global 64 kB one.
 const business = require('./business');
@@ -1150,7 +1157,7 @@ Object.entries(REGION_REDIRECTS).forEach(([from, to]) =>
  'mail-a-letter-online', 'send-a-letter-from-home', 'what-is-lettermail', 'postage-for-a-large-letter-in-canada',
  'ircc-processing-times', 'n4-notice', 'ircc-documents', 'for-professionals', 'bulk-mailing',
  'cra-mail', 'cra-notice-of-objection', 'ltb-forms',
- 'registered-mail-vs-xpresspost', 'proof-of-mailing', 'canada-post-stamp-price-2027', 'write-a-letter-to-santa', 'cancel-gym-membership-by-mail', 'write-to-a-child-at-summer-camp', 'mail-a-letter-to-a-university-student-in-canada', 'send-a-letter-from-canada-to-india', 'send-a-letter-from-canada-to-the-philippines', 'send-a-letter-from-canada-to-pakistan', 'send-a-letter-from-canada-to-nigeria', 'write-a-letter-to-your-future-self', 'open-when-letters', 'how-to-write-a-condolence-letter', 'write-a-letter-to-your-mp', 'write-to-the-prime-minister', 'send-fan-mail-from-canada', 'write-to-an-inmate-in-canada', 'complaint-letter-to-a-ceo-canada', 'mail-to-canadian-forces-members-overseas', 'thank-you-letter-to-a-teacher-canada', 'thank-you-letter-to-a-nurse-canada', 'real-estate-letters-by-mail', 'government-forms-that-require-mail',
+ 'registered-mail-vs-xpresspost', 'proof-of-mailing', 'canada-post-stamp-price-2027', 'write-a-letter-to-santa', 'cancel-gym-membership-by-mail', 'write-to-a-child-at-summer-camp', 'mail-a-letter-to-a-university-student-in-canada', 'send-a-letter-from-canada-to-india', 'send-a-letter-from-canada-to-the-philippines', 'send-a-letter-from-canada-to-pakistan', 'send-a-letter-from-canada-to-nigeria', 'write-a-letter-to-your-future-self', 'open-when-letters', 'how-to-write-a-condolence-letter', 'write-a-letter-to-your-mp', 'write-to-the-prime-minister', 'fax', 'send-fan-mail-from-canada', 'write-to-an-inmate-in-canada', 'complaint-letter-to-a-ceo-canada', 'mail-to-canadian-forces-members-overseas', 'thank-you-letter-to-a-teacher-canada', 'thank-you-letter-to-a-nurse-canada', 'real-estate-letters-by-mail', 'government-forms-that-require-mail',
  'n9-notice', 'renew-pr-card-by-mail', 'canadian-citizenship-application-by-mail',
  'cpp-application-by-mail', 'oas-gis-application-by-mail', 'canada-child-benefit-by-mail',
  'demand-letter-unpaid-invoice', 'security-deposit-demand-letter', 'cease-and-desist-letter',
@@ -1229,6 +1236,7 @@ Object.entries(REGION_REDIRECTS).forEach(([from, to]) =>
   )
 );
 app.get('/account', (req, res) => res.sendFile(path.join(__dirname, 'public', 'account.html')));
+app.get('/fax/status/:token', (req, res) => res.sendFile(path.join(__dirname, 'public', 'fax-status.html')));
 app.get('/account/:page', (req, res, next) => req.params.page === 'verify' ? next()   // email confirmation link, handled below
   : res.sendFile(path.join(__dirname, 'public', 'account.html')));
 
@@ -2365,6 +2373,7 @@ app.use('/api/admin', (req, res, next) => {
 
 // Business accounts and batch approvals (after the admin CSRF middleware above, so every change is protected).
 business.registerAdmin(app, { db, requireAdmin, logAudit, getSetting, setSetting, endSessions });
+fax.registerAdmin(app);
 
 // Search Console import, funnel and revenue, server health, restore drill and the content audit.
 const indexNow = require('./indexnow').create({
@@ -4019,6 +4028,8 @@ app.get('/api/admin/settings', requireAdmin, (req, res) => {
   delete obj.bing_api_key;
   delete obj.pagespeed_api_key;
   delete obj.ga_cache;
+  obj.telnyx_api_key_set = obj.telnyx_api_key ? 'true' : 'false';   // the Telnyx key is write-only too
+  delete obj.telnyx_api_key;
   res.json(obj);
 });
 
@@ -4035,7 +4046,9 @@ const ALLOWED_SETTING_KEYS = new Set([
   'cart_offer_enabled', 'cart_offer_pct', 'cart_offer_valid_days',
   'svc_ca_registered_cents', 'svc_ca_express_cents', 'svc_us_certified_cents', 'svc_us_express_cents',
   'google_rating', 'clarity_project_id', 'clarity_api_token', 'monthly_order_target',
+  'fax_enabled', 'fax_price_cents', 'fax_page_cents', 'fax_included_pages', 'telnyx_api_key', 'telnyx_public_key', 'telnyx_fax_app_id', 'telnyx_fax_from',
 ]);
+const HIDDEN_SETTINGS = new Set(['clarity_api_token', 'telnyx_api_key']);
 
 app.post('/api/admin/settings', requireAdmin, (req, res) => {
   const { key, value } = req.body;
@@ -4043,7 +4056,7 @@ app.post('/api/admin/settings', requireAdmin, (req, res) => {
   if (!ALLOWED_SETTING_KEYS.has(key.trim())) return res.status(400).json({ error: 'Unknown setting key.' });
   setSetting(key.trim(), value);
   if (key.trim() === 'clarity_api_token') setSetting('clarity_cache', '{}');
-  logAudit(req, 'settings.change', 'settings', key.trim(), { value: key.trim() === 'clarity_api_token' ? '(hidden)' : value });
+  logAudit(req, 'settings.change', 'settings', key.trim(), { value: HIDDEN_SETTINGS.has(key.trim()) ? '(hidden)' : value });
   res.json({ ok: true });
 });
 
@@ -4053,7 +4066,9 @@ app.post('/api/admin/settings/batch', requireAdmin, (req, res) => {
     if (key in updates) setSetting(key, updates[key]);
   }
   if ('clarity_api_token' in updates) setSetting('clarity_cache', '{}');   // a new token is tried at once
-  logAudit(req, 'settings.batch_update', 'settings', null, 'clarity_api_token' in updates ? { ...updates, clarity_api_token: '(hidden)' } : updates);
+  const shown = { ...updates };
+  for (const k of HIDDEN_SETTINGS) if (k in shown) shown[k] = '(hidden)';
+  logAudit(req, 'settings.batch_update', 'settings', null, shown);
   res.json({ ok: true });
 });
 
@@ -4801,6 +4816,28 @@ function buildAtPrinterEmailText(o, toAddr) {
     '',
     `Letterhome · ${MAILING_ADDRESS}`,
   ].join('\n');
+}
+
+// Fax emails use the same look as the letter emails (fax.js decides when they go out).
+function faxEmailShell({ h1, p, rows, link, linkText }) {
+  const esc = s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return `
+<!DOCTYPE html><html lang="en-CA" data-theme="light">
+<body style="font-family:Georgia,serif;background:#ede5d3;padding:40px 20px;color:#2a2a2a;margin:0">
+  <div style="max-width:520px;margin:0 auto;background:#faf6ec;border:1px solid rgba(42,42,42,0.12);padding:48px">
+    <div style="width:38px;height:38px;background:#a8472d;display:inline-flex;align-items:center;justify-content:center;color:#faf6ec;font-size:20px;font-family:Georgia,serif;margin-bottom:28px">L</div>
+    <h1 style="font-size:28px;font-weight:400;margin:0 0 10px;letter-spacing:-0.02em">${esc(h1)}</h1>
+    <p style="color:#6b6258;margin:0 0 32px;font-size:16px;line-height:1.6">${esc(p)}</p>
+    <div style="background:#2a2a2a;color:#faf6ec;padding:24px;margin-bottom:28px">
+      ${rows.map(([k, v]) => `<p style="font-size:11px;text-transform:uppercase;letter-spacing:0.15em;color:rgba(250,246,236,0.55);margin:0 0 4px">${esc(k)}</p><p style="font-size:17px;margin:0 0 14px">${esc(v)}</p>`).join('')}
+    </div>
+    <div style="border-top:1px solid rgba(42,42,42,0.1);padding-top:20px;font-size:13px;color:#6b6258">
+      <p style="margin:0 0 8px">${esc(linkText)}: <a href="${esc(link)}" style="color:#a8472d">${esc(link)}</a></p>
+      <p style="margin:0">Questions? Reply to this email.</p>
+      <p style="margin:12px 0 0;color:#968b7d;font-size:11px">Letterhome · ${MAILING_ADDRESS}</p>
+    </div>
+  </div>
+</body></html>`;
 }
 
 function buildMailedEmail(o, toAddr, deliveryText) {
@@ -5848,6 +5885,9 @@ cron.schedule('30 6 * * 1', () => { fxRefreshJob({ force: true }); });   // week
 if (!process.env.TEST_MODE && process.env.NODE_ENV !== 'test') setTimeout(() => { fxRefreshJob(); }, 20000);   // after a restart, refresh if older than a week
 
 const PORT = process.env.PORT || 3000;
+// Fax retries and file cleanup, once a minute.
+if (process.env.NODE_ENV !== 'test') setInterval(() => fax.sweep().catch(e => console.error('[fax] sweep:', e.message)), 60000).unref();
+
 if (!process.env.TEST_MODE) {
   app.listen(PORT, () => console.log(`Letterhome running on port ${PORT}`));
 }

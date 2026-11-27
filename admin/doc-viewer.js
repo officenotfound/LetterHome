@@ -2,7 +2,7 @@
 // and Word .docx. Nothing in a document is run: PDFs are drawn to canvas, text and Word files are put on the page as text.
 (() => {
   'use strict';
-  const LINKS = /^\/api\/admin\/(orders\/\d+\/(files\/[^/]+|postgrid\/preview)|mail\/[^/]+\/attachment|applicants\/\d+\/resume)$/;
+  const LINKS = /^\/api\/admin\/(orders\/\d+\/(files\/[^/]+|postgrid\/preview)|mail\/[^/]+\/attachment|applicants\/\d+\/resume|faxes\/\d+\/file)$/;
   const TEXT_EXT = ['txt', 'csv', 'tsv', 'md', 'json', 'log', 'eml', 'ics', 'vcf', 'xml', 'html', 'htm', 'rtf'];
   const MAX_TEXT = 2 * 1024 * 1024, MAX_DOCX = 8 * 1024 * 1024;
 
@@ -256,6 +256,7 @@
     if (u.pathname.endsWith('/attachment')) return u.searchParams.get('name') || 'Attachment';
     if (u.pathname.endsWith('/preview')) return u.searchParams.get('raw') ? 'File sent to print' : 'Letter preview';
     if (u.pathname.endsWith('/resume')) return '';
+    if (/\/faxes\/\d+\/file$/.test(u.pathname)) return 'Fax document';
     return decodeURIComponent(u.pathname.split('/').pop());
   }
 
