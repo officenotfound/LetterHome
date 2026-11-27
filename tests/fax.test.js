@@ -129,7 +129,7 @@ test('quote: counts pages, adds a cover page for a note, refuses bad input', asy
   assert.equal(r.status, 200);
   assert.equal(r.body.pages, 12);
   assert.equal(r.body.price_cents, 400);
-  r = await quote({ ...good, cover_note: 'Please see attached.' }, await pdf(2));
+  r = await quote({ ...good, cover: '1', cover_note: 'Please see attached.' }, await pdf(2));
   assert.equal(r.body.pages, 3);
   assert.equal(r.body.cover, true);
   assert.equal((await quote({ ...good, to: '800-555-0100' }, await pdf(1))).status, 400);
@@ -139,6 +139,32 @@ test('quote: counts pages, adds a cover page for a note, refuses bad input', asy
   const closed = process.env.TEST_MODE; delete process.env.TEST_MODE;
   assert.equal((await quote(good, await pdf(1))).status, 403);
   process.env.TEST_MODE = closed; settings.fax_enabled = 'true';
+});
+
+test('only the fax number and a document are needed; several files become one fax; the email comes from Stripe', async () => {
+  const fd = new FormData();
+  fd.append('to', '613-555-0123');
+  fd.append('document', new Blob([await pdf(2)]), 'a.pdf');
+  fd.append('document', new Blob([await pdf(3)]), 'b.pdf');
+  const r = await fetch(base + '/api/fax/quote', { method: 'POST', body: fd });
+  const q = await r.json();
+  assert.equal(r.status, 200);
+  assert.equal(q.pages, 5);
+  assert.equal(q.cover, false);
+  const prev = await fetch(base + q.preview);
+  assert.equal(prev.status, 200);
+  assert.equal(prev.headers.get('content-type'), 'application/pdf');
+  await post('/api/fax/checkout', { ref: q.ref });
+  assert.equal(sessions.at(-1).customer_email, undefined, 'Stripe asks for the email itself');
+  const f = db.prepare('SELECT * FROM fax_orders WHERE public_ref = ?').get(q.ref);
+  assert.equal(f.email, null);
+  api.onCheckoutCompleted({ id: f.stripe_session_id, payment_status: 'paid', payment_intent: 'pi_x', customer_details: { email: 'from-stripe@example.com' }, metadata: { kind: 'fax', fax_ref: f.public_ref } });
+  assert.equal(db.prepare('SELECT email FROM fax_orders WHERE id = ?').get(f.id).email, 'from-stripe@example.com');
+  assert.equal(mails.at(-1).to, 'from-stripe@example.com');
+  assert.equal((await fetch(base + q.preview)).status, 404, 'no preview once paid');
+  const six = new FormData(); six.append('to', '613-555-0123');
+  for (let i = 0; i < 6; i++) six.append('document', new Blob([await pdf(1)]), i + '.pdf');
+  assert.equal((await fetch(base + '/api/fax/quote', { method: 'POST', body: six })).status, 400);
 });
 
 test('payment: Stripe event marks it paid once, emails the customer and the owner, then it waits for approval', async () => {

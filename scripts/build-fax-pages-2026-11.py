@@ -10,7 +10,10 @@ theme and asset versions. Run from the project root: python3 scripts/build-fax-p
 
 The four order pages point at each other with hreflang, so the language detection in header.js sends a French or Spanish
 browser to its own page. Prices shown are the defaults in Settings; the page replaces them with the current Settings prices."""
-import re, html, json
+import re, html, json, os, sys
+sys.path.insert(0, os.path.join(os.getcwd(), "scripts"))
+from fax_ui_strings import UI
+import fax_order_template
 
 def shell(file):
     live = open(file, encoding='utf-8').read()
@@ -26,7 +29,7 @@ BASE = 'https://letterhome.ca'
 ALT = {'en-CA': '/fax', 'fr-CA': '/envoyer-un-fax-en-ligne', 'en-US': '/us/fax', 'es-US': '/us/es/fax'}
 ALT_LINKS = ''.join(f'<link rel="alternate" hreflang="{k}" href="{BASE}{v}">\n' for k, v in ALT.items()) + f'<link rel="alternate" hreflang="x-default" href="{BASE}/fax">\n'
 
-def page(title, desc, url, content, sh, html_attrs, noindex=False, alternates=''):
+def page(title, desc, url, content, sh, html_attrs, noindex=False, alternates='', extra_head=''):
     head, body_open, tail = sh
     h = re.sub(r'<title>.*?</title>', f'<title>{html.escape(title)}</title>', head, flags=re.S)
     for pat, val in [(r'<meta name="description"[^>]*>', f'<meta name="description" content="{html.escape(desc)}">'),
@@ -42,7 +45,7 @@ def page(title, desc, url, content, sh, html_attrs, noindex=False, alternates=''
         h = h.replace(f'<link rel="canonical" href="{url}">', f'<link rel="canonical" href="{url}">\n' + alternates.rstrip('\n'), 1)
     if noindex:
         h = h.replace('<meta charset="UTF-8">', '<meta charset="UTF-8">\n<meta name="robots" content="noindex">', 1)
-    return h + STYLE + '</head>' + body_open + content + '\n' + tail
+    return h + STYLE + extra_head + '</head>' + body_open + content + '\n' + tail
 
 STYLE = '''<style>
 .fx-card{background:var(--ds-surface,#fff);border:1px solid var(--ds-line,#e2ddd2);border-radius:12px;padding:24px;margin:0 0 32px}
@@ -280,8 +283,11 @@ if __name__ == '__main__':
         ('public/us-fax.html', US, US_SHELL, f'{BASE}/us/fax', f'data-en-only lang="en-US" data-country="us" data-alt="/us/es/fax" data-alt-label="ES" data-theme="light" {rail(US)}'),
         ('public/fax-es.html', ES, ES_SHELL, f'{BASE}/us/es/fax', f'data-en-only lang="es-US" data-country="us" data-alt="/us/fax" data-alt-label="EN" data-theme="light" {rail(ES)}'),
     ]
+    # The order pages use the letter page's own layout and styles (public/send.html), in three steps.
+    send_css = fax_order_template.send_styles()
     for out, t, sh, url, attrs in pages:
-        open(out, 'w', encoding='utf-8').write(page(t['title'], t['desc'], url, order_page(t), sh, attrs, alternates=ALT_LINKS))
+        body = fax_order_template.order_page(t, UI[t['lang']])
+        open(out, 'w', encoding='utf-8').write(page(t['title'], t['desc'], url, body, sh, attrs, alternates=ALT_LINKS, extra_head=send_css))
         print('wrote', out)
     open('public/fax-status.html', 'w', encoding='utf-8').write(page('Your Fax | Letterhome', 'The status of your Letterhome fax.', f'{BASE}/fax', STATUS, CA_SHELL,
         f'data-en-only lang="en-CA" data-theme="light" {rail(EN)}', noindex=True))

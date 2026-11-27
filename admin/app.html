@@ -5813,7 +5813,7 @@ async function showFaxes() {
         <div style="font-family:monospace;font-size:13px">${esc(f.public_ref)}</div>
         <div style="font-size:13px;font-weight:600;color:${colour}">${label}</div></div>
       <div style="font-size:15px;margin-bottom:4px"><b>${esc(f.to)}</b>, ${f.pages} page${f.pages === 1 ? '' : 's'}, $${(f.price_cents / 100).toFixed(2)} ${esc(f.currency)}</div>
-      <div style="font-size:13px;color:#6b6b6b;margin-bottom:8px">From ${esc(f.sender_name)} &lt;${esc(f.email)}&gt;${f.paid_at ? ' · paid ' + when(f.paid_at) : ''}${f.attempts ? ' · ' + f.attempts + ' attempt' + (f.attempts === 1 ? '' : 's') : ''}${f.failure_reason ? ' · last failure: ' + esc(f.failure_reason) : ''}</div>
+      <div style="font-size:13px;color:#6b6b6b;margin-bottom:8px">${f.sender_name ? 'From ' + esc(f.sender_name) + ' ' : ''}${f.email ? '&lt;' + esc(f.email) + '&gt;' : 'No email yet'}${f.cover_json ? ' · with cover page' : ' · no cover page'}${f.paid_at ? ' · paid ' + when(f.paid_at) : ''}${f.attempts ? ' · ' + f.attempts + ' attempt' + (f.attempts === 1 ? '' : 's') : ''}${f.failure_reason ? ' · last failure: ' + esc(f.failure_reason) : ''}</div>
       ${f.cover_note ? `<div style="font-size:13px;margin-bottom:8px;white-space:pre-wrap"><b>Cover note:</b> ${esc(f.cover_note)}</div>` : ''}
       <div style="margin-bottom:10px">${file}</div>
       ${f.status === 'paid' && !f.files_deleted_at ? `<div class="doc-inline" data-doc="/api/admin/faxes/${f.id}/file" style="margin-bottom:10px"></div>` : ''}

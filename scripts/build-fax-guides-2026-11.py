@@ -39,7 +39,7 @@ ca("send-a-fax-online-canada",
   answer_box="To send a fax online in Canada, upload your document as a PDF, JPG or PNG, enter the fax number with its area code, and pay. With Letterhome it costs $3 for up to 10 pages. A person checks every fax before it is sent, and you get an email with the delivery time once the receiving machine has every page.",
   steps=[
    ("Get the document ready", "Save it as a PDF, or take a clear photo of each page. A phone's scan feature works well."),
-   ("Enter the number and pay", "Type the fax number with its area code, add a cover note if you want one, and see the price before you pay."),
+   ("Enter the number and pay", "Type the fax number with its area code, add a cover page if you want one, and see every page before you pay."),
    ("Get the confirmation", "We email you when the receiving fax machine has every page, with the date and time."),
   ],
   warn=("Check the number first:", "use the fax number from the organization's own website or letter. Many offices list a phone number and a fax number side by side, and a fax sent to a phone line will not go through."),
@@ -105,7 +105,7 @@ ca("fax-cover-sheet",
   sections=[
    ("A template you can copy", ["FAX<br><br>To: Name, department<br>Fax: 613-555-0123<br>From: Your name<br>Phone or email: how to reach you<br>Date: 2026-11-27<br>Pages: 4 including this page<br><br>Note: Please find my completed form attached, for file 12345."]),
    ("Do you need one?", ["Not always, but it helps whenever a fax goes to an office where many people share one machine. Many forms and offices also ask for a reference number, such as a file or claim number, on the first page."]),
-   ("We can add it for you", ["When you send a fax with Letterhome, write a note and we add a plain cover page with who it is from, the date, the page count and your note. It counts as one of your pages."]),
+   ("We can add it for you", ["When you send a fax with Letterhome, choose Add a cover page and fill in only what you want on it, such as who it is for, your name, a reply fax number or a note. We add the date and the page count. It counts as one of your pages."]),
   ],
   faq=[
    ("What goes on a fax cover sheet?", "Who it is for and their fax number, who it is from and how to reach you, the date, the total pages including the cover, and a short note."),
@@ -138,7 +138,7 @@ dict(c='us', slug='send-a-fax-online',
 <ol>
 <li><strong>Get the document ready.</strong> Save it as a PDF, or take a clear photo of each page. Your phone's document scanner works well.</li>
 <li><strong>Enter the fax number.</strong> Ten digits with the area code. Use the number from the office's own website or letter.</li>
-<li><strong>Add a cover note if you want one.</strong> We turn it into a cover page with your name, the date and the page count.</li>
+<li><strong>Add a cover page if you want one.</strong> Fill in only what you want on it. We add the date and the page count. Or skip it and send just your pages.</li>
 <li><strong>Pay and wait for the confirmation.</strong> We email you when the fax has been delivered, with the date and time.</li>
 </ol>
 
@@ -175,7 +175,7 @@ dict(c='us', slug='how-to-fax-from-iphone',
 <p>Scan in good light on a flat, dark surface, and check that every page is straight and readable. A photo of each page also works.</p>
 
 <h2>Step 2: upload it and enter the number</h2>
-<p>Open the fax page in your phone's browser, choose the PDF from Files or Drive, type the fax number with its area code, and add a cover note if you want one. You see the exact price before you pay.</p>
+<p>Open the fax page in your phone's browser, choose the PDF from Files or Drive, type the fax number with its area code, and add a cover page if you want one. You see every page and the exact price before you pay.</p>
 
 <h2>Step 3: get the confirmation</h2>
 <p>We email you when the receiving machine has every page, with the date and time. Keep that email as your record.</p>
@@ -222,7 +222,7 @@ for claim number 12345.</pre>
 <p>Not always, but many offices expect one, and it helps any fax that goes to a shared machine.</p>
 
 <h2>We can add it for you</h2>
-<p>When you send a fax with Letterhome, write a note and we add a plain cover page with your name, the date, the page count and the note. It counts as one of your pages.</p>
+<p>When you send a fax with Letterhome, choose Add a cover page and fill in only what you want on it, such as who it is for, your name, a reply fax number or a note. We add the date and the page count. It counts as one of your pages.</p>
 ''' + US_SERVICE,
  faq=[('What goes on a fax cover sheet?', 'Who it is for and their fax number, who it is from and how to reach you, the date, the total pages including the cover, and a short note.'),
       ('Is a fax cover sheet required?', 'Not usually, but many offices expect one.'),

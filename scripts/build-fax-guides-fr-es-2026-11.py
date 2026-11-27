@@ -132,7 +132,7 @@ pour le dossier 12345.</pre>
 <p>Pas toujours, mais bien des bureaux s’y attendent, et elle aide tout fax qui arrive sur un appareil partagé.</p>
 
 <h2>Nous pouvons l’ajouter pour vous</h2>
-<p>Quand vous envoyez un fax avec Letterhome, écrivez une note et nous ajoutons une page couverture simple avec votre nom, la date, le nombre de pages et la note. Elle compte comme une de vos pages.</p>
+<p>Quand vous envoyez un fax avec Letterhome, choisissez Ajouter une page couverture et remplissez seulement ce que vous voulez y voir: le destinataire, votre nom, un numéro de fax pour la réponse ou une note. Nous ajoutons la date et le nombre de pages. Elle compte comme une de vos pages.</p>
 ''',
   faq=[('Que met-on sur une page couverture de fax?', 'Le destinataire et son numéro de fax, l’expéditeur et comment le joindre, la date, le nombre total de pages couverture comprise, et une courte note.'),
        ('La page couverture est-elle obligatoire?', 'Habituellement non, mais bien des bureaux s’y attendent.'),
@@ -205,7 +205,7 @@ número de reclamo 12345.</pre>
 <p>No siempre, pero muchas oficinas la esperan, y ayuda a cualquier fax que llega a una máquina compartida.</p>
 
 <h2>Podemos agregarla por usted</h2>
-<p>Cuando envía un fax con Letterhome, escriba una nota y agregamos una portada sencilla con su nombre, la fecha, el número de páginas y la nota. Cuenta como una de sus páginas.</p>
+<p>Cuando envía un fax con Letterhome, elija Agregar una portada y llene solo lo que quiera que aparezca: para quién es, su nombre, un número de fax para la respuesta o una nota. Nosotros agregamos la fecha y el número de páginas. Cuenta como una de sus páginas.</p>
 ''',
   faq=[('¿Qué lleva la portada de un fax?', 'Para quién es y su número de fax, quién lo envía y cómo contactarle, la fecha, el total de páginas incluida la portada, y una nota breve.'),
        ('¿La portada de fax es obligatoria?', 'Normalmente no, pero muchas oficinas la esperan.'),

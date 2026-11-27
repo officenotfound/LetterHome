@@ -223,85 +223,717 @@ body.c-us .cta-block h2{font-family:inherit;font-weight:800;color:#fff}
 .fx-status dt{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-muted,#6b6b6b);margin-top:14px}
 .fx-status dd{margin:2px 0 0;font-size:17px}
 </style>
+<style>
+:root {
+  --kraft: #f1ebde;
+  --kraft-deep: #e1d6bd;
+  --kraft-light: #f7f2e6;
+  --paper: #faf6ec;
+  --ink: #2a2a2a;
+  --ink-soft: #3a3835;
+  --ink-muted: #6b6258;
+  --ink-faint: #968b7d;
+  --red: #a8472d;
+  --red-deep: #7d3220;
+  --red-stamp: #b85540;
+  --taupe: #8a7f70;
+  --line: rgba(42,42,42,0.14);
+  --line-soft: rgba(42,42,42,0.08);
+  --shadow-soft: 0 1px 2px rgba(42,42,42,0.04), 0 6px 20px rgba(42,42,42,0.06);
+  --shadow-card: 0 2px 6px rgba(42,42,42,0.06), 0 14px 40px rgba(42,42,42,0.1);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Noto Sans', Georgia, serif;
+  background: var(--kraft);
+  color: var(--ink);
+  line-height: 1.55;
+  font-size: 16px;
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+.serif { font-family: 'Archivo', Georgia, serif; }
+.mono { font-family: 'Roboto', monospace; }
+
+/* NAV */
+nav {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(241,235,222,0.94);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--line);
+}
+.nav-inner {
+  max-width: 1280px; margin: 0 auto; padding: 20px 36px;
+  display: flex; align-items: center; justify-content: space-between; gap: 24px;
+}
+.logo {
+  display: flex; align-items: center; gap: 12px;
+  font-family: 'Archivo', serif; font-size: 26px;
+  color: var(--ink); text-decoration: none; letter-spacing: -0.01em;
+}
+.logo-mark {
+  width: 38px; height: 38px; background: var(--red);
+  display: grid; place-items: center; border-radius: 2px;
+  color: var(--paper); font-family: 'Archivo', serif;
+  font-size: 22px; line-height: 1; position: relative;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+.logo-mark::before {
+  content: ''; position: absolute; inset: -3px;
+  border: 1px dashed var(--ink); border-radius: 4px; opacity: 0.5;
+}
+.nav-links { display: flex; gap: 36px; align-items: center; }
+.nav-links a {
+  color: var(--ink-soft); text-decoration: none;
+  font-size: 14px; font-weight: 500; transition: color 0.2s; letter-spacing: 0.01em;
+}
+.nav-links a:hover { color: var(--red); }
+.btn {
+  display: inline-block; padding: 13px 26px; border-radius: 2px;
+  font-weight: 500; font-size: 14px; text-decoration: none;
+  transition: all 0.25s ease; border: none; cursor: pointer;
+  font-family: inherit; letter-spacing: 0.02em; text-transform: uppercase;
+}
+.btn-red { background: var(--red); color: var(--paper); border: 2px dashed white; }
+.btn-red:hover { background: var(--red-deep); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(168,71,45,0.3); }
+.btn-outline { background: transparent; color: var(--ink); border: 1.5px solid var(--ink); }
+.btn-outline:hover { background: var(--ink); color: var(--paper); }
+.btn-ink { background: var(--ink); color: var(--paper); }
+.btn-ink:hover { background: var(--ink-soft); transform: translateY(-1px); }
+.btn:disabled, .btn[disabled] { opacity: 0.4; cursor: not-allowed; transform: none !important; }
+
+/* PROGRESS BAR */
+.progress-wrap {
+  background: transparent; border-bottom: none;
+  padding: 32px 36px 0; position: relative; z-index: 2;
+}
+.progress-inner { max-width: 960px; margin: 0 auto; }
+.progress-steps { display: flex; align-items: center; gap: 0; }
+.progress-step {
+  display: flex; flex-direction: column; align-items: center; flex: 1;
+}
+.progress-step-row { display: flex; align-items: center; width: 100%; }
+.step-circle {
+  width: 44px; height: 44px; border-radius: 50%;
+  display: grid; place-items: center;
+  font-family: 'Archivo', serif; font-style: italic; font-size: 20px;
+  border: 1px dashed rgba(42,42,42,0.35); background: transparent;
+  color: var(--ink-muted); transition: all 0.3s; flex-shrink: 0;
+}
+.step-circle.active { background: var(--ink); color: var(--paper); border: 1.5px solid var(--ink); }
+.step-circle.done { background: var(--red); color: var(--paper); border: 1.5px solid var(--red); font-size: 16px; }
+.step-line { flex: 1; height: 1px; background: var(--line); margin: 0 8px; }
+.step-line.done { background: var(--red); }
+.step-label {
+  font-family: 'Roboto', monospace; font-size: 10px; text-transform: uppercase;
+  letter-spacing: 0.15em; color: var(--ink-muted); margin-top: 8px; text-align: center;
+}
+.step-label.active { color: var(--ink); font-weight: 500; }
+
+/* MAIN LAYOUT */
+.ac-drop {
+  position: absolute; top: 100%; left: 0; right: 0; z-index: 10000;
+  background: var(--paper); border: 1px solid var(--line); border-top: none;
+  list-style: none; margin: 0; padding: 0;
+  box-shadow: 0 4px 16px rgba(42,42,42,0.12);
+  max-height: 240px; overflow-y: auto;
+}
+.ac-item {
+  padding: 10px 14px; cursor: pointer; font-size: 13px;
+  color: var(--ink-soft); border-bottom: 1px solid rgba(42,42,42,0.06);
+  line-height: 1.4;
+}
+.ac-item:hover { background: var(--kraft-light); color: var(--ink); }
+.ac-item:last-child { border-bottom: none; }
+.send-wrap {
+  max-width: 960px; margin: 0 auto; padding: 20px 36px 60px;
+  position: relative; z-index: 2;
+}
+
+/* PANELS */
+.panel {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--red);
+  border-radius: 2px;
+  box-shadow: var(--shadow-soft);
+  padding: 36px 40px;
+  display: none;
+}
+.panel.active { display: block; }
+
+.panel-title {
+  font-family: 'Archivo', serif; font-size: 52px;
+  font-weight: 400; letter-spacing: -0.02em; margin-bottom: 8px; line-height: 1.05;
+}
+.panel-sub {
+  color: var(--ink-muted); font-size: 17px; line-height: 1.55; margin-bottom: 28px;
+  padding-bottom: 24px; border-bottom: 1px solid var(--line);
+}
+
+/* FORM */
+.form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.form-group { display: flex; flex-direction: column; gap: 4px; margin-bottom: 14px; }
+.form-group:last-child { margin-bottom: 0; }
+label {
+  font-family: 'Roboto', monospace; font-size: 14px; text-transform: uppercase;
+  letter-spacing: 0.08em; color: var(--ink-muted); font-weight: 500;
+}
+input, select, textarea {
+  width: 100%; padding: 12px 2px 10px 0; border: none;
+  border-bottom: 1.5px solid var(--ink); background: transparent;
+  color: var(--ink); font-family: 'Noto Sans', Georgia, serif;
+  font-size: 20px; border-radius: 0; transition: border-color 0.2s;
+  outline: none; appearance: none;
+}
+input:focus, select:focus, textarea:focus {
+  border-bottom-color: var(--red); box-shadow: none;
+}
+/* Textareas need a frame since they have multiple lines, keep underline but add a top rule */
+textarea {
+  border-top: 1px dashed var(--line); padding-top: 10px;
+}
+textarea { resize: vertical; min-height: 260px; line-height: 1.6; }
+.field-note { font-size: 15px; line-height: 1.5; color: var(--ink-muted); margin-top: 4px; }
+.field-note.hint { display: block; margin: 0 0 14px; }
+
+/* DESTINATION PICKER */
+.destination-picker {
+  background: transparent; border: none;
+  padding: 0; margin-bottom: 20px; border-radius: 0;
+}
+.destination-picker-header {
+  font-family: 'Roboto', monospace; font-size: 11px; text-transform: uppercase;
+  letter-spacing: 0.15em; color: var(--red); font-weight: 500; margin-bottom: 10px;
+}
+
+.xmas-note { max-width: 520px; margin: 12px 0 0; padding: 10px 14px; font-size: 14px; line-height: 1.5; color: var(--ink-soft); border-left: 3px solid #1f6b3a; background: rgba(31,107,58,0.08); }
+.xmas-note a { color: inherit; text-decoration: underline; }
+@media (max-width: 560px) {
+  #account-banner > div { padding: 12px 14px !important; margin-bottom: 18px !important; }
+  #account-banner .acct-text { display: none; }
+  #account-banner-collapsed { align-items: center !important; }
+}
+
+/* ADDRESS COLUMNS */
+.address-columns {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 40px;
+}
+.address-col h3 {
+  font-family: 'Roboto', monospace; font-size: 11px; text-transform: uppercase;
+  letter-spacing: 0.15em; color: var(--red); font-weight: 500;
+  margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px dashed var(--line);
+}
+.address-col:last-child h3::before { content: '→ '; }
+
+
+/* ATTACHMENT AREA */
+.attach-zone {
+  border: 1.5px dashed rgba(42,42,42,0.25); background: var(--kraft-light);
+  padding: 28px; text-align: center; cursor: pointer; transition: all 0.2s;
+  border-radius: 2px; margin-bottom: 20px;
+}
+.attach-zone:hover { border-color: var(--ink); background: var(--paper); }
+.attach-zone p { font-size: 14px; color: var(--ink-muted); margin-top: 8px; }
+.attach-zone .attach-icon { font-size: 28px; }
+.attach-list { list-style: none; }
+.attach-list li {
+  display: flex; align-items: center; gap: 12px; padding: 10px 14px;
+  background: var(--paper); border: 1px solid var(--line); margin-bottom: 8px;
+  font-size: 13px; border-radius: 2px;
+}
+.attach-list li .remove { margin-left: auto; color: var(--red); cursor: pointer; font-size: 16px; line-height: 1; background: none; border: none; min-width: 44px; min-height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 2px; }
+
+.sr-only { position:absolute; width:1px; height:1px; margin:-1px; padding:0; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0; }
+/* Running total + saved-draft banner */
+.total-bar { display:flex; justify-content:space-between; align-items:center; gap:6px 18px; flex-wrap:wrap; margin:0 0 14px; padding:10px 16px; border:1px dashed var(--line); background:var(--paper); border-radius:2px; font-size:15px; color:var(--ink-soft); }
+.total-bar strong { font-family:'Archivo',serif; font-size:22px; font-weight:400; color:var(--ink); margin-right:6px; }
+.total-bar .tb-sub { font-family:'Roboto',monospace; font-size:11px; letter-spacing:0.04em; color:var(--ink-muted); }
+.draft-banner { display:none; margin:0 0 22px; padding:14px 18px; border:1px solid var(--red); border-left-width:3px; background:var(--paper); border-radius:2px; font-size:15px; color:var(--ink-soft); }
+.draft-banner .db-row { display:flex; flex-wrap:wrap; align-items:center; gap:8px 12px; }
+.draft-banner button { font:inherit; font-size:13px; letter-spacing:0.04em; text-transform:uppercase; padding:9px 16px; border-radius:2px; cursor:pointer; min-height:40px; }
+.draft-banner .db-go { background:var(--red); color:#faf6ec; border:1.5px solid var(--red); }
+.draft-banner .db-no { background:transparent; color:var(--ink); border:1.5px solid rgba(42,42,42,0.35); }
+.draft-banner .tb-sub { display:block; margin-top:8px; font-family:'Roboto',monospace; font-size:11px; color:var(--ink-muted); }
+
+/* PREVIEW PANEL */
+.preview-envelope {
+  background: var(--paper); border: 1px solid rgba(42,42,42,0.12);
+  border-radius: 2px; box-shadow: var(--shadow-card);
+  padding: 36px 40px; margin-bottom: 32px; position: relative;
+  font-family: 'Archivo', serif;
+}
+.preview-envelope::before {
+  content: ''; position: absolute; inset: 0;
+  background: repeating-linear-gradient(45deg, var(--red) 0px, var(--red) 5px, transparent 5px, transparent 10px, var(--ink) 10px, var(--ink) 15px, transparent 15px, transparent 20px);
+  -webkit-mask: linear-gradient(#000,#000) content-box, linear-gradient(#000,#000);
+  mask: linear-gradient(#000,#000) content-box, linear-gradient(#000,#000);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  padding: 7px; pointer-events: none; opacity: 0.5; border-radius: 2px;
+}
+.preview-stamp {
+  position: absolute; top: 20px; right: 20px;
+  width: 68px; height: 80px; background: var(--red-stamp);
+  color: var(--paper); display: grid; place-items: center;
+  font-family: 'Archivo', serif; font-size: 11px; text-align: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.18); transform: rotate(4deg);
+}
+.preview-stamp strong { font-size: 20px; display: block; font-weight: 400; }
+.preview-from { font-size: 13px; color: var(--ink-muted); margin-bottom: 32px; line-height: 1.5; }
+.preview-from-label {
+  font-family: 'Roboto', monospace; font-size: 9px; text-transform: uppercase;
+  letter-spacing: 0.2em; color: var(--ink-faint); margin-bottom: 6px;
+}
+.preview-to { font-size: 19px; color: var(--ink-soft); line-height: 1.45; }
+.preview-to-label {
+  font-family: 'Roboto', monospace; font-size: 10px; text-transform: uppercase;
+  letter-spacing: 0.2em; color: var(--ink-muted); margin-bottom: 10px; display: flex; align-items: center; gap: 8px;
+}
+.preview-to-label::before { content: '→'; color: var(--red); }
+
+.preview-letter-box {
+  background: var(--kraft-light); border: 1px solid var(--line);
+  padding: 28px 32px; margin-bottom: 28px; border-radius: 2px;
+}
+.preview-letter-box p {
+  font-family: 'Archivo', serif; font-style: italic;
+  font-size: 17px; line-height: 1.7; color: var(--ink-soft); white-space: pre-wrap;
+}
+
+/* ORDER SUMMARY */
+.order-summary {
+  background: var(--ink); color: var(--paper);
+  padding: 28px 32px; border-radius: 2px; margin-bottom: 28px;
+}
+.order-summary-row {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.1);
+  font-size: 14px;
+}
+.order-summary-row:last-child { border-bottom: none; }
+.order-summary-row.total {
+  font-family: 'Archivo', serif; font-size: 26px;
+  color: var(--paper); padding-top: 16px; margin-top: 4px;
+}
+.order-summary-row .label { color: rgba(255,255,255,0.7); font-family: 'Roboto', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; }
+.order-summary-row .val { font-weight: 500; text-align: right; }
+.order-summary-row { gap: 16px; }
+.order-summary-row .label { flex-shrink: 0; }
+.order-summary-row.total .val { color: var(--paper); }
+
+/* PRIVACY NOTE */
+.privacy-note {
+  display: flex; gap: 12px; align-items: flex-start;
+  background: rgba(42,42,42,0.04); padding: 16px 20px;
+  border-left: 3px solid var(--red); margin-bottom: 28px;
+}
+.privacy-note p { font-size: 13px; color: var(--ink-muted); line-height: 1.6; }
+
+/* NAV BUTTONS */
+.panel-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--line); }
+.btn-large { padding: 20px 40px; font-size: 17px; }
+
+/* EYEBROW */
+.eyebrow {
+  display: inline-flex; align-items: center; gap: 12px;
+  font-family: 'Roboto', monospace; font-size: 12px; text-transform: uppercase;
+  letter-spacing: 0.18em; color: var(--red); font-weight: 500; margin-bottom: 10px;
+}
+.eyebrow::before { content: ''; width: 40px; height: 1px; background: var(--red); }
+
+/* CHECKBOX */
+.check-row { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
+.check-row input[type="checkbox"] {
+  appearance: none; -webkit-appearance: none;
+  width: 18px; height: 18px; min-width: 18px; flex-shrink: 0; margin-top: 1px;
+  border: 1.5px solid var(--ink); border-radius: 2px; background-color: transparent;
+  cursor: pointer; transition: background-color 0.15s, border-color 0.15s;
+}
+.check-row input[type="checkbox"]:hover:not(:checked) { border-color: var(--red); }
+.check-row input[type="checkbox"]:checked {
+  background-color: var(--red); border-color: var(--red);
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 6L9 17L4 12' fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-size: 12px 12px; background-position: center; background-repeat: no-repeat;
+}
+.check-row input[type="checkbox"]:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
+.check-row label { font-family: 'Noto Sans', Georgia, serif; font-size: 13px; color: var(--ink-muted); text-transform: none; letter-spacing: 0; font-weight: 400; cursor: pointer; line-height: 1.55; }
+
+
+/* Mail-service radios: same look as the site's custom checkboxes, but round */
+#mail-service-list input[type="radio"] {
+  appearance: none; -webkit-appearance: none; width: 18px; height: 18px; min-width: 18px; flex: 0 0 18px; padding: 0;
+  margin: 3px 0 0; border: 1.5px solid var(--ink); border-radius: 50%; background: transparent; box-shadow: none; cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+#mail-service-list input[type="radio"]:hover:not(:checked) { border-color: var(--red); }
+#mail-service-list input[type="radio"]:checked { border-color: var(--red); box-shadow: inset 0 0 0 4px var(--paper), inset 0 0 0 9px var(--red); }
+#mail-service-list input[type="radio"]:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
+/* Real print preview (step 3) */
+.real-preview { margin: 22px 0 24px; }
+.real-preview-head { display:flex; justify-content:space-between; align-items:baseline; gap:12px; flex-wrap:wrap; margin-bottom:10px; }
+.real-preview-label { font-family:'Roboto',monospace; font-size:12px; letter-spacing:0.08em; text-transform:uppercase; color:var(--ink); font-weight:600; }
+.real-preview-sub { font-family:'Roboto',monospace; font-size:11px; color:var(--ink-muted); }
+.real-preview-stage { background: rgba(42,42,42,0.04); border:1px dashed var(--line); padding:20px 14px; display:flex; flex-direction:column; align-items:center; gap:22px; }
+.real-sheet { width:100%; max-width:540px; }
+.real-sheet canvas { display:block; width:100%; height:auto; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,0.12), 0 8px 24px rgba(0,0,0,0.10); }
+.real-sheet-cap { font-family:'Roboto',monospace; font-size:11px; color:var(--ink-faint); margin-top:8px; text-align:center; letter-spacing:0.04em; }
+.real-sheet canvas { cursor: zoom-in; }
+.real-zoom { position:fixed; inset:0; z-index:9999; background:rgba(17,17,17,0.82); overflow:auto; -webkit-overflow-scrolling:touch; padding:60px 12px 24px; display:block; }
+.real-zoom canvas { display:block; margin:0 auto; width:max(640px, min(900px, 100%)); height:auto; background:#fff; box-shadow:0 8px 40px rgba(0,0,0,0.5); }
+.real-zoom-close { position:fixed; top:10px; right:12px; z-index:10000; font-family:'Roboto',monospace; font-size:12px; letter-spacing:0.08em; text-transform:uppercase; background:var(--paper); color:var(--ink); border:2px dashed var(--ink); padding:10px 16px; cursor:pointer; min-height:44px; }
+.real-preview-note { font-family:'Roboto',monospace; font-size:11px; color:var(--ink-faint); margin-top:8px; }
+.real-preview-loading { font-family:'Roboto',monospace; font-size:12px; color:var(--ink-muted); padding:30px 0; }
+
+/* Account banner, override inline styles: softer border, paper background for contrast on open layout */
+#account-banner > div {
+  border-left-width: 1px !important;
+  border-left-style: dashed !important;
+  border-left-color: var(--line) !important;
+  background: var(--paper) !important;
+}
+
+/* FOOTER */
+footer { background: var(--ink); color: rgba(255,255,255,0.65); padding: 48px 36px 32px; position: relative; z-index: 2; }
+.footer-inner { max-width: 1280px; margin: 0 auto; }
+.footer-bottom {
+  display: flex; justify-content: space-between; align-items: center;
+  font-family: 'Roboto', monospace; font-size: 11px; text-transform: uppercase;
+  letter-spacing: 0.12em; flex-wrap: wrap; gap: 16px;
+}
+.footer-bottom-links { display: flex; gap: 28px; }
+.footer-bottom a { color: rgba(255,255,255,0.5); text-decoration: none; transition: color 0.2s; }
+.footer-bottom a:hover { color: var(--red-stamp); }
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .nav-links { display: none; }
+  .send-wrap { padding: 20px 20px 60px; }
+  .panel { padding: 28px 24px; }
+  .panel-title { font-size: 36px; }
+  .address-columns { grid-template-columns: 1fr; gap: 28px; }
+  .form-grid-2 { grid-template-columns: 1fr; }
+  .progress-wrap { padding: 24px 20px 0; }
+  .address-col:last-child h3::before { content: ''; }
+  .step-label { display: none; }
+}
+
+@media (max-width: 480px) {
+  .send-wrap { padding: 16px 18px 48px; }
+  .panel { padding: 20px 18px; }
+  .panel-title { font-size: 30px; }
+  .progress-wrap { padding: 14px 18px 0; }
+}
+
+/* Envelope preview: honour the line breaks buildPreview() inserts, keep text clear of the stamp */
+#preview-from-text, #preview-to-text { white-space: pre-line; }
+.preview-from { padding-right: 84px; }
+
+/* What happens next */
+.next-steps { margin: 0 0 24px; padding: 20px 22px; border: 1px dashed var(--line); background: var(--paper); border-radius: 2px; }
+.next-steps h3 { font-family: 'Roboto', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.14em; color: var(--red); margin: 0 0 14px; font-weight: 500; }
+.next-steps ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+.next-steps li { display: grid; grid-template-columns: 26px 1fr; gap: 12px; align-items: start; }
+.next-steps .n { width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid var(--red); color: var(--red); display: grid; place-items: center; font-family: 'Roboto', monospace; font-size: 12px; }
+.next-steps strong { display: block; font-size: 15px; color: var(--ink); font-weight: 600; }
+.next-steps span.d { display: block; font-size: 13px; color: var(--ink-muted); line-height: 1.5; margin-top: 2px; }
+
+/* Mobile: recipient first (the thing people care about), compact account promo, thumb-friendly buttons */
+@media (max-width: 768px) {
+  .address-col:last-child { order: -1; }
+  #account-banner > div { padding: 12px 16px !important; margin-bottom: 20px !important; }
+  #account-banner-collapsed p { display: none; }
+  #account-banner-collapsed > div:first-child > div { margin-bottom: 0 !important; }
+  .panel-nav { flex-direction: column-reverse; align-items: stretch; gap: 12px; }
+  .panel-nav > span:empty { display: none; }
+  .panel-nav .btn, .panel-nav > div { width: 100%; text-align: center !important; }
+}
+@media (max-width: 480px) {
+  .preview-envelope { padding: 28px 20px; }
+  .preview-stamp { width: 56px; height: 66px; top: 14px; right: 14px; }
+  .preview-from { padding-right: 68px; }
+}
+
+/* Per-step validation (v0.2.8) */
+.field-error { border-bottom-color: var(--red) !important; }
+textarea.field-error { border-color: var(--red) !important; }
+.validation-banner {
+  position: fixed; top: 24px; left: 50%; transform: translateX(-50%);
+  background: var(--ink); color: var(--paper);
+  padding: 14px 24px; border-radius: 0; z-index: 1000;
+  font-family: 'Roboto', ui-monospace, monospace;
+  font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+  max-width: calc(100vw - 48px); text-align: center;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+}
+.validation-banner::before { content: '!  '; color: var(--red); font-weight: 600; }
+</style>
+<link rel="stylesheet" href="/theme.css?v=30"><link rel="stylesheet" href="/redesign.css?v=106"><link rel="stylesheet" href="/inner.css?v=7"><link rel="stylesheet" href="/country-order.css?v=4">
+<style>.fx-choice input[type="radio"]{appearance:none;-webkit-appearance:none;width:18px;height:18px;min-width:18px;flex:0 0 18px;padding:0;margin:3px 0 0;border:1.5px solid var(--ink);border-radius:50% !important;background:transparent;box-shadow:none;cursor:pointer;transition:border-color .15s,box-shadow .15s}.fx-choice input[type="radio"]:hover:not(:checked){border-color:var(--red)}.fx-choice input[type="radio"]:checked{border-color:var(--red);background:transparent;box-shadow:inset 0 0 0 4px var(--paper),inset 0 0 0 9px var(--red)}.fx-choice input[type="radio"]:focus-visible{outline:2px solid var(--red);outline-offset:2px}.fx-choice:has(input:checked){border-color:var(--ink)!important}</style>
 </head>
 <body class="c-us">
 <a href="#main-content" class="skip-link" style="position:absolute;left:-9999px;top:4px;z-index:9999;background:#a8472d;color:#faf6ec;padding:8px 16px;font-size:14px;font-family:'Noto Sans',system-ui,sans-serif;text-decoration:none;border-radius:2px" onfocus="this.style.left='4px'" onblur="this.style.left='-9999px'">Skip to main content</a>
 <div id="site-header"><nav aria-label="Main"><a href="/">Letterhome</a> · <a href="/send">Send a letter</a> · <a href="/track">Track an order</a> · <a href="/guides">Guides</a> · <a href="/business">Business mail</a></nav></div>
 <script src="/header.js?v=45"></script>
 
-<div class="hero" id="main-content">
-  <p class="hero-eyebrow">Fax</p>
-  <h1>Send a fax to the US or Canada</h1>
-  <p class="hero-sub">Upload a PDF or a photo of your document, enter the fax number, and we send it for you. No fax machine needed.</p>
-  <div class="answer-box">
-    <p>A fax to any US or Canadian fax number costs <span data-fx="base">$2.50</span> for up to <span data-fx="incl">10</span> pages, plus <span data-fx="page">$0.25</span> for each extra page. We check every fax before it is sent, usually within a few hours, and email you when it has been delivered.</p>
+<div class="progress-wrap" id="main-content" role="group" aria-label="Step 1 of 3">
+  <div class="progress-inner">
+    <div class="progress-steps">
+      <div class="progress-step">
+        <div class="progress-step-row">
+          <div class="step-circle active" id="circle-1">1</div>
+          <div class="step-line" id="line-1"></div>
+        </div>
+        <div class="step-label active" id="label-1">Fax and document</div>
+      </div>
+      <div class="progress-step">
+        <div class="progress-step-row">
+          <div class="step-circle" id="circle-2">2</div>
+          <div class="step-line" id="line-2"></div>
+        </div>
+        <div class="step-label" id="label-2">Cover page</div>
+      </div>
+      <div class="progress-step">
+        <div class="progress-step-row">
+          <div class="step-circle" id="circle-3">3</div>
+          <div class="step-line" id="line-3" style="opacity:0"></div>
+        </div>
+        <div class="step-label" id="label-3">Review and pay</div>
+      </div>
+    </div>
   </div>
 </div>
 
-<div class="main">
-  <div class="fx-closed" id="fx-closed"><div class="fx-card"><h2 style="margin-top:0">Fax is coming soon</h2><p>We are getting fax ready. In the meantime, we can <a href="/send?to=US">print and mail your document</a> anywhere in the US.</p></div></div>
-  <form class="fx-card" id="fx-form" novalidate>
-    <input type="hidden" name="site" value="us">
-    <input type="hidden" name="lang" value="en">
-    <div class="fx-field"><label for="fx-to">Fax number</label><span class="hint">A US or Canadian fax number with its area code, such as 212-555-0123.</span><input id="fx-to" name="to" type="tel" autocomplete="off" inputmode="tel" required></div>
-    <div class="fx-field"><label for="fx-doc">Document</label><span class="hint">PDF, JPG or PNG, up to 20 MB.</span><input id="fx-doc" name="document" type="file" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" required></div>
-    <div class="fx-field"><label for="fx-name">Your name</label><input id="fx-name" name="sender_name" type="text" autocomplete="name" maxlength="100" required></div>
-    <div class="fx-field"><label for="fx-email">Your email</label><span class="hint">For your receipt and the delivery confirmation. Never shared or sold.</span><input id="fx-email" name="email" type="email" autocomplete="email" maxlength="200" required></div>
-    <div class="fx-field"><label for="fx-note">Cover page note (optional)</label><span class="hint">If you write a note, we add a cover page with your name, the date and the note. It counts as a page.</span><textarea id="fx-note" name="cover_note" maxlength="2000"></textarea></div>
-    <button class="fx-btn" id="fx-quote-btn" type="submit">See the price</button>
-    <p class="fx-err" id="fx-err" role="alert"></p>
-    <div class="fx-quote" id="fx-quote" aria-live="polite">
-      <p id="fx-quote-text"></p>
-      <button class="fx-btn" id="fx-pay" type="button">Pay and send</button>
-      <p class="hint" style="font-size:13px;margin-top:10px">Payment by Stripe. We check every fax before it is sent.</p>
+<div class="send-wrap">
+  <h1 class="sr-only">Send a fax to the US or Canada</h1>
+
+  <div class="total-bar" role="status">
+    <span><strong><span data-fx="base">$2.50</span> USD</strong> to send this fax</span>
+    <span class="tb-sub">Up to <span data-fx="incl">10</span> pages. Each extra page <span data-fx="page">$0.25</span>.</span>
+  </div>
+
+  <div class="panel" id="fx-closed" style="display:none"><h2 class="panel-title serif">Fax is coming soon</h2><p class="panel-sub">We are getting fax ready. In the meantime, we can <a href="/send?to=US">print and mail your document</a> anywhere in the US.</p></div>
+
+  <form id="fx-form" novalidate>
+  <input type="hidden" name="site" value="us"><input type="hidden" name="lang" value="en">
+
+  <div class="panel active" id="panel-1">
+    <div class="eyebrow">Step 1 of 3</div>
+    <h2 class="panel-title serif">Where is it going?</h2>
+    <p class="panel-sub">The fax number and your documents. You only pay at the end.</p>
+    <div class="form-group"><label for="fx-to">Fax number</label><span class="field-note hint">A US or Canadian fax number with its area code, such as 212-555-0123.</span><input id="fx-to" name="fx_to" type="tel" autocomplete="off" inputmode="tel" style="max-width:320px"></div>
+    <div class="attach-zone" id="fx-zone" role="button" tabindex="0">
+      <div class="attach-icon">📎</div>
+      <p><strong>Attach documents</strong><span>, click to upload PDF, JPG or PNG files</span></p>
+      <p style="font-size:12px;margin-top:4px">PDF, JPG or PNG · up to 5 files · 20 MB in total</p>
+      <input type="file" id="fx-files" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" multiple style="display:none">
     </div>
+    <ul class="attach-list" id="fx-list"></ul>
+    <p class="field-note" id="fx-err-1" role="alert" style="color:var(--red)"></p>
+    <div class="panel-nav">
+      <span></span>
+      <button type="button" class="btn btn-red btn-large" id="fx-next-1">Continue</button>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-2">
+    <div class="eyebrow">Step 2 of 3</div>
+    <h2 class="panel-title serif">Add a cover page?</h2>
+    <p class="panel-sub">Optional. A cover page tells the person at the other end who the fax is for and how to reach you.</p>
+    <label class="fx-choice" style="display:flex;align-items:flex-start;gap:10px;padding:12px;border:1.5px solid rgba(42,42,42,0.15);border-radius:2px;margin-bottom:10px;cursor:pointer">
+        <input type="radio" name="fx-cover" value="0" style="margin-top:3px" checked>
+        <span><span style="display:block;font-weight:600">Just send my documents</span><span style="display:block;font-size:12px;color:var(--ink-muted)">Nothing is added. The fax is only your pages.</span></span>
+      </label>
+    <label class="fx-choice" style="display:flex;align-items:flex-start;gap:10px;padding:12px;border:1.5px solid rgba(42,42,42,0.15);border-radius:2px;margin-bottom:10px;cursor:pointer">
+        <input type="radio" name="fx-cover" value="1" style="margin-top:3px">
+        <span><span style="display:block;font-weight:600">Add a cover page</span><span style="display:block;font-size:12px;color:var(--ink-muted)">Counts as one page. Fill in only what you want on it.</span></span>
+      </label>
+    <div id="fx-cover-fields" style="display:none;margin-top:14px">
+      <div class="form-group"><label for="cover-to">For (name or attention)</label><input id="cover-to" name="cover_to" type="text" autocomplete="off" maxlength="100"></div>
+      <div class="form-group"><label for="cover-from">Your name</label><input id="cover-from" name="cover_from" type="text" autocomplete="name" maxlength="100"></div>
+      <div class="form-group"><label for="cover-fax">Your fax number for a reply</label><span class="field-note hint">The fax arrives from Letterhome’s number, so add yours if you want a reply by fax.</span><input id="cover-fax" name="cover_fax" type="tel" autocomplete="off" maxlength="30" inputmode="tel"></div>
+      <div class="form-group"><label for="cover-phone">Your phone</label><input id="cover-phone" name="cover_phone" type="tel" autocomplete="tel" maxlength="30"></div>
+      <div class="form-group"><label for="cover-email">Your email</label><input id="cover-email" name="cover_email" type="email" autocomplete="email" maxlength="200"></div>
+      <div class="form-group"><label for="cover-address">Your address</label><textarea id="cover-address" name="cover_address" maxlength="2000" rows="3" style="min-height:80px"></textarea></div>
+      <div class="form-group"><label for="cover-note">Note</label><textarea id="cover-note" name="cover_note" maxlength="2000" rows="4"></textarea></div>
+    </div>
+    <p class="field-note" id="fx-err-2" role="alert" style="color:var(--red)"></p>
+    <div class="panel-nav">
+      <button type="button" class="btn btn-outline" id="fx-back-2">Back</button>
+      <button type="button" class="btn btn-red btn-large" id="fx-next-2">Preview and review</button>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-3">
+    <div class="eyebrow">Step 3 of 3</div>
+    <h2 class="panel-title serif">Review your fax</h2>
+    <p class="panel-sub">Check every page, then pay.</p>
+    <div class="real-preview" id="fx-preview" style="display:block">
+      <div class="real-preview-head"><span class="real-preview-label">Your fax</span><span class="real-preview-sub" id="fx-preview-count"></span></div>
+      <div class="real-preview-stage" id="fx-stage"></div>
+      <p class="real-preview-note">Exactly what will be sent. Tap a page to zoom.</p>
+    </div>
+    <div class="order-summary">
+      <div class="order-summary-row"><span class="label">Fax number</span><span class="val" id="fx-sum-to"></span></div>
+      <div class="order-summary-row"><span class="label">Pages</span><span class="val" id="fx-sum-pages"></span></div>
+      <div class="order-summary-row"><span class="label">Cover page</span><span class="val" id="fx-sum-cover"></span></div>
+      <div class="order-summary-row total"><span class="label" style="color:rgba(255,255,255,0.7)">Total</span><span class="val" id="fx-sum-total"></span></div>
+    </div>
+    <div class="next-steps">
+      <h3>What happens after you pay</h3>
+      <ol>
+        <li><span class="n">1</span><span><strong>Confirmation email</strong><span class="d">Stripe asks for your email, and we send the confirmation there.</span></span></li>
+        <li><span class="n">2</span><span><strong>We check and send it</strong><span class="d">A person checks every fax, usually within a few hours. A busy line is tried twice more.</span></span></li>
+        <li><span class="n">3</span><span><strong>Delivered</strong><span class="d">We email you when the fax machine has every page, with the time.</span></span></li>
+      </ol>
+    </div>
+    <div class="privacy-note"><p>We don’t read or share your documents except to check that the fax will go through. Your file is deleted 24 hours after the fax is finished. Payments go through Stripe. We never see your card.</p></div>
+    <div class="check-row"><input type="checkbox" id="fx-agree"><label for="fx-agree">I agree to the <a href="/terms">Terms</a> and <a href="/privacy">Privacy Policy</a>. My fax has no threats, scams or illegal content.</label></div>
+    <p class="field-note" id="fx-err-3" role="alert" style="color:var(--red)"></p>
+    <div class="panel-nav">
+      <button type="button" class="btn btn-outline" id="fx-back-3">Edit</button>
+      <div style="text-align:right">
+        <button type="button" id="fx-pay" class="btn btn-red btn-large">Pay with Stripe</button>
+        <div class="pay-marks" aria-label="Accepted payment methods"><span>Visa</span><span>Mastercard</span><span>Amex</span><span>Apple Pay</span><span>Google Pay</span></div>
+      </div>
+    </div>
+  </div>
   </form>
 
-  <h2>How it works</h2>
-  <ol class="steps"><li><div><strong>Upload and pay</strong><p>Add your document and the fax number, see the exact price, and pay by card.</p></div></li><li><div><strong>We check it</strong><p>A person looks at every fax before it is sent, usually within a few hours, to make sure it will go through.</p></div></li><li><div><strong>We send it</strong><p>If the line is busy or does not answer, we try twice more. If it still does not go through, we email you about what happens next.</p></div></li><li><div><strong>You get a confirmation</strong><p>We email you when the fax machine has received every page, with the time it was delivered.</p></div></li></ol>
-
-  <h2>Price</h2>
-  <p><span data-fx="base">$2.50</span> USD for up to <span data-fx="incl">10</span> pages, including the cover page if you add one, and <span data-fx="page">$0.25</span> for each extra page. Faxes can be up to 50 pages. The exact price is shown before you pay.</p>
-
-  <h2>What we can send</h2>
-  <ul><li>Faxes to US and Canadian fax numbers. Toll-free numbers are not accepted.</li><li>PDF, JPG and PNG files. A password-protected PDF has to be saved without its password first.</li></ul>
-
-  <h2>Your document</h2>
-  <p>Your file is stored privately, is never shown to anyone outside Letterhome except the fax service that sends it, and is deleted 24 hours after the fax is finished.</p>
-
-  <div class="faq"><h2>Common questions</h2><div class="faq-item"><p class="faq-q">How long does it take?</p><p class="faq-a">We check every fax before it is sent, usually within a few hours. Sending itself takes a few minutes, depending on the number of pages.</p></div><div class="faq-item"><p class="faq-q">How do I know it arrived?</p><p class="faq-a">We email you once the receiving fax machine has accepted every page, with the date and time. Keep that email as your record.</p></div><div class="faq-item"><p class="faq-q">What if the fax does not go through?</p><p class="faq-a">If the line is busy or does not answer, we try twice more. If it still fails, we email you about what happens next.</p></div><div class="faq-item"><p class="faq-q">Can I fax a government office?</p><p class="faq-a">Yes, to any Canadian or US fax number. Check the office&#x27;s current fax number on its own website before you send.</p></div></div>
+  <section class="fx-info">
+    <h2>Send a fax to the US or Canada</h2>
+    <p>A fax to any US or Canadian fax number costs <span data-fx="base">$2.50</span> for up to <span data-fx="incl">10</span> pages, plus <span data-fx="page">$0.25</span> for each extra page. We check every fax before it is sent, usually within a few hours, and email you when it has been delivered.</p>
+    <h2>How it works</h2>
+    <ol class="steps"><li><div><strong>Upload and pay</strong><p>Add your document and the fax number, see the exact price, and pay by card.</p></div></li><li><div><strong>We check it</strong><p>A person looks at every fax before it is sent, usually within a few hours, to make sure it will go through.</p></div></li><li><div><strong>We send it</strong><p>If the line is busy or does not answer, we try twice more. If it still does not go through, we email you about what happens next.</p></div></li><li><div><strong>You get a confirmation</strong><p>We email you when the fax machine has received every page, with the time it was delivered.</p></div></li></ol>
+    <h2>What we can send</h2>
+    <ul><li>Faxes to US and Canadian fax numbers. Toll-free numbers are not accepted.</li><li>PDF, JPG and PNG files. A password-protected PDF has to be saved without its password first.</li></ul>
+    <h2>Your document</h2>
+    <p>Your file is stored privately, is never shown to anyone outside Letterhome except the fax service that sends it, and is deleted 24 hours after the fax is finished.</p>
+    <div class="faq"><h2>Common questions</h2><div class="faq-item"><p class="faq-q">How long does it take?</p><p class="faq-a">We check every fax before it is sent, usually within a few hours. Sending itself takes a few minutes, depending on the number of pages.</p></div><div class="faq-item"><p class="faq-q">How do I know it arrived?</p><p class="faq-a">We email you once the receiving fax machine has accepted every page, with the date and time. Keep that email as your record.</p></div><div class="faq-item"><p class="faq-q">What if the fax does not go through?</p><p class="faq-a">If the line is busy or does not answer, we try twice more. If it still fails, we email you about what happens next.</p></div><div class="faq-item"><p class="faq-q">Can I fax a government office?</p><p class="faq-a">Yes, to any Canadian or US fax number. Check the office&#x27;s current fax number on its own website before you send.</p></div></div>
+  </section>
 </div>
+<style>
+.fx-info{max-width:760px;margin:48px auto 0}
+.fx-info h2{margin:32px 0 12px}
+.fx-info p,.fx-info li{line-height:1.7}
+.fx-info ul{padding-left:20px}
+.real-sheet canvas{cursor:zoom-in}
+</style>
+<script type="module">
+import * as pdfjsLib from '/vendor/pdfjs/pdf.min.mjs';
+pdfjsLib.GlobalWorkerOptions.workerSrc = '/vendor/pdfjs/pdf.worker.min.mjs';
+window.__fxPdf = pdfjsLib;
+document.dispatchEvent(new Event('fx-pdf-ready'));
+</script>
 <script>
 (function(){
-  var T={"sep": ": ", "choose": "Choose a PDF, JPG or PNG file.", "big": "The file is larger than 20 MB.", "preparing": "Preparing…", "again": "Something went wrong. Please try again.", "upfail": "The upload did not go through. Please try again.", "faxto": "Fax to ", "page": " page", "pages": " pages", "cover": " including the cover page", "total": ". Total ", "pay": "Pay {amt} and send", "payfail": "Payment could not be started.", "payfail2": "Payment could not be started. Please try again."}, site='us', lang='en';
-  var form=document.getElementById('fx-form'),err=document.getElementById('fx-err'),qb=document.getElementById('fx-quote-btn'),pay=document.getElementById('fx-pay'),ref=null;
+  var T={"sep": ": ", "choose": "Choose a PDF, JPG or PNG file.", "big": "The file is larger than 20 MB.", "preparing": "Preparing…", "again": "Something went wrong. Please try again.", "upfail": "The upload did not go through. Please try again.", "faxto": "Fax to ", "page": " page", "pages": " pages", "cover": " including the cover page", "total": ". Total ", "pay": "Pay with Stripe", "payfail": "Payment could not be started.", "payfail2": "Payment could not be started. Please try again.", "need_agree": "Please agree to the Terms first.", "need_to": "Enter a Canadian or US fax number with its area code.", "need_doc": "Attach at least one document.", "too_many": "Attach up to 5 files.", "too_big": "Your files are larger than 20 MB together.", "bad_type": "Only PDF, JPG and PNG files can be faxed.", "remove": "Remove", "prev_wait": "Preparing your preview…", "prev_fail": "The preview could not be shown, but your fax is ready.", "yes": "Yes", "no": "No", "total_sub": "Up to {incl} pages. Each extra page {page}."}, site='us', lang='en', files=[], ref=null, quoteFor=null, step=1;
+  var $=function(id){return document.getElementById(id)};
   function money(c){return '$'+(c/100).toFixed(2)}
+  function show(n){
+    step=n;
+    [1,2,3].forEach(function(i){
+      $('panel-'+i).classList.toggle('active',i===n);
+      $('circle-'+i).classList.toggle('active',i===n); $('circle-'+i).classList.toggle('done',i<n);
+      $('label-'+i).classList.toggle('active',i===n);
+    });
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
   fetch('/api/fax/config?site='+site).then(function(r){return r.json()}).then(function(c){
-    var set=function(k,v){document.querySelectorAll('[data-fx="'+k+'"]').forEach(function(e){e.textContent=v})};
-    set('base',money(c.price_cents)); set('page',money(c.page_cents)); set('incl',String(c.included_pages));
-    if(!c.open){form.style.display='none';document.getElementById('fx-closed').style.display='block';} }).catch(function(){});
-  form.addEventListener('submit',function(e){
-    e.preventDefault(); err.textContent=''; document.getElementById('fx-quote').style.display='none';
-    var f=document.getElementById('fx-doc').files[0];
-    if(!f){err.textContent=T.choose;return}
-    if(f.size>20*1024*1024){err.textContent=T.big;return}
-    var fd=new FormData(form); qb.disabled=true; var label=qb.textContent; qb.textContent=T.preparing;
-    fetch('/api/fax/quote?lang='+lang,{method:'POST',body:fd}).then(function(r){return r.json().then(function(j){return {ok:r.ok,j:j}})}).then(function(x){
-      qb.disabled=false; qb.textContent=label;
-      if(!x.ok){err.textContent=x.j.error||T.again;return}
-      ref=x.j.ref;
-      document.getElementById('fx-quote-text').textContent=T.faxto+x.j.to+T.sep+x.j.pages+(x.j.pages===1?T.page:T.pages)+(x.j.cover?T.cover:'')+T.total+money(x.j.price_cents)+' '+x.j.currency+'.';
-      pay.textContent=T.pay.replace('{amt}',money(x.j.price_cents));
-      document.getElementById('fx-quote').style.display='block';
-    }).catch(function(){qb.disabled=false;qb.textContent=label;err.textContent=T.upfail});
+    document.querySelectorAll('[data-fx="base"]').forEach(function(e){e.textContent=money(c.price_cents)});
+    document.querySelectorAll('[data-fx="page"]').forEach(function(e){e.textContent=money(c.page_cents)});
+    document.querySelectorAll('[data-fx="incl"]').forEach(function(e){e.textContent=String(c.included_pages)});
+    if(!c.open){$('fx-form').style.display='none';$('fx-closed').style.display='block'}
+  }).catch(function(){});
+  function digits(v){var d=String(v||'').replace(/\D/g,''); if(d.length===11&&d[0]==='1')d=d.slice(1); return d}
+  function renderList(){
+    var ul=$('fx-list'); ul.innerHTML='';
+    files.forEach(function(f,i){
+      var li=document.createElement('li'); var name=document.createElement('span'); name.textContent=f.name+' · '+(f.size/1048576).toFixed(1)+' MB';
+      var b=document.createElement('button'); b.type='button'; b.className='remove'; b.setAttribute('aria-label',T.remove+' '+f.name); b.textContent='×';
+      b.addEventListener('click',function(){files.splice(i,1);renderList();quoteFor=null});
+      li.append(name,b); ul.appendChild(li);
+    });
+  }
+  function addFiles(list){
+    $('fx-err-1').textContent='';
+    Array.prototype.forEach.call(list,function(f){
+      if(!/\.(pdf|jpe?g|png)$/i.test(f.name)){$('fx-err-1').textContent=T.bad_type;return}
+      if(files.length>=5){$('fx-err-1').textContent=T.too_many;return}
+      files.push(f);
+    });
+    if(files.reduce(function(n,f){return n+f.size},0)>20*1024*1024){$('fx-err-1').textContent=T.too_big}
+    renderList(); quoteFor=null;
+  }
+  $('fx-zone').addEventListener('click',function(){$('fx-files').click()});
+  $('fx-zone').addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();$('fx-files').click()}});
+  $('fx-zone').addEventListener('dragover',function(e){e.preventDefault()});
+  $('fx-zone').addEventListener('drop',function(e){e.preventDefault();addFiles(e.dataTransfer.files)});
+  $('fx-files').addEventListener('change',function(){addFiles(this.files);this.value=''});
+  document.querySelectorAll('input[name="fx-cover"]').forEach(function(r){r.addEventListener('change',function(){
+    $('fx-cover-fields').style.display=document.querySelector('input[name="fx-cover"]:checked').value==='1'?'block':'none'; quoteFor=null;
+  })});
+  ['fx-to','cover-to','cover-from','cover-fax','cover-phone','cover-email','cover-address','cover-note'].forEach(function(id){$(id).addEventListener('input',function(){quoteFor=null})});
+  $('fx-next-1').addEventListener('click',function(){
+    var d=digits($('fx-to').value);
+    if(d.length!==10){$('fx-err-1').textContent=T.need_to;$('fx-to').focus();return}
+    if(!files.length){$('fx-err-1').textContent=T.need_doc;return}
+    if(files.length>5){$('fx-err-1').textContent=T.too_many;return}
+    if(files.reduce(function(n,f){return n+f.size},0)>20*1024*1024){$('fx-err-1').textContent=T.too_big;return}
+    $('fx-err-1').textContent=''; show(2);
   });
-  ['fx-to','fx-doc','fx-name','fx-email','fx-note'].forEach(function(id){document.getElementById(id).addEventListener('change',function(){ref=null;document.getElementById('fx-quote').style.display='none'})});
-  pay.addEventListener('click',function(){
-    if(!ref)return; pay.disabled=true; err.textContent='';
+  $('fx-back-2').addEventListener('click',function(){show(1)});
+  $('fx-back-3').addEventListener('click',function(){show(2)});
+  function drawPreview(url){
+    var stage=$('fx-stage'); stage.innerHTML='<div class="real-preview-loading">'+T.prev_wait+'</div>';
+    var go=function(){
+      fetch(url,{cache:'no-store'}).then(function(r){if(!r.ok)throw 0;return r.arrayBuffer()}).then(function(buf){return window.__fxPdf.getDocument({data:buf}).promise}).then(function(doc){
+        stage.innerHTML=''; var chain=Promise.resolve();
+        for(var i=1;i<=doc.numPages;i++)(function(i){chain=chain.then(function(){return doc.getPage(i).then(function(pg){
+          var vp=pg.getViewport({scale:1.4}), c=document.createElement('canvas'); c.width=vp.width; c.height=vp.height;
+          return pg.render({canvasContext:c.getContext('2d'),viewport:vp}).promise.then(function(){
+            var sheet=document.createElement('div'); sheet.className='real-sheet'; var cap=document.createElement('div'); cap.className='real-sheet-cap'; cap.textContent=i+' / '+doc.numPages;
+            c.addEventListener('click',function(){
+              var ov=document.createElement('div'); ov.className='real-zoom'; var big=document.createElement('canvas'); big.width=c.width; big.height=c.height; big.getContext('2d').drawImage(c,0,0);
+              var x=document.createElement('button'); x.type='button'; x.className='real-zoom-close'; x.textContent='×';
+              var done=function(){ov.remove();x.remove()}; ov.addEventListener('click',function(ev){if(ev.target===ov)done()}); x.addEventListener('click',done);
+              ov.appendChild(big); document.body.append(ov,x);
+            });
+            sheet.append(c,cap); stage.appendChild(sheet);
+          });
+        })})})(i);
+        return chain;
+      }).catch(function(){stage.innerHTML='<div class="real-preview-loading">'+T.prev_fail+'</div>'});
+    };
+    if(window.__fxPdf)go(); else document.addEventListener('fx-pdf-ready',go,{once:true});
+  }
+  function formKey(){return [digits($('fx-to').value),files.map(function(f){return f.name+f.size}).join('|'),new URLSearchParams(new FormData($('fx-form'))).toString(),(document.querySelector('input[name="fx-cover"]:checked')||{}).value].join('#')}
+  $('fx-next-2').addEventListener('click',function(){
+    var key=formKey(); if(key===quoteFor&&ref){show(3);return}
+    var fd=new FormData(); fd.append('to',$('fx-to').value); fd.append('site',site); fd.append('lang',lang);
+    var cover=(document.querySelector('input[name="fx-cover"]:checked')||{}).value==='1';
+    fd.append('cover',cover?'1':'0');
+    if(cover)['to','from','fax','phone','email','address','note'].forEach(function(k){fd.append('cover_'+k,$('cover-'+k).value)});
+    files.forEach(function(f){fd.append('document',f,f.name)});
+    var b=$('fx-next-2'), label=b.textContent; b.disabled=true; b.textContent=T.preparing; $('fx-err-2').textContent='';
+    fetch('/api/fax/quote?lang='+lang,{method:'POST',body:fd}).then(function(r){return r.json().then(function(j){return {ok:r.ok,j:j}})}).then(function(x){
+      b.disabled=false; b.textContent=label;
+      if(!x.ok){$('fx-err-2').textContent=x.j.error||T.again;return}
+      ref=x.j.ref; quoteFor=key;
+      $('fx-sum-to').textContent=x.j.to; $('fx-sum-pages').textContent=String(x.j.pages); $('fx-sum-cover').textContent=x.j.cover?T.yes:T.no;
+      $('fx-sum-total').textContent=money(x.j.price_cents)+' '+x.j.currency;
+      $('fx-preview-count').textContent=x.j.pages+(x.j.pages===1?T.page:T.pages);
+      $('fx-pay').textContent=T.pay+' · '+money(x.j.price_cents);
+      drawPreview(x.j.preview); show(3);
+    }).catch(function(){b.disabled=false;b.textContent=label;$('fx-err-2').textContent=T.upfail});
+  });
+  $('fx-pay').addEventListener('click',function(){
+    if(!$('fx-agree').checked){$('fx-err-3').textContent=T.need_agree;return}
+    if(!ref)return; var b=$('fx-pay'); b.disabled=true; $('fx-err-3').textContent='';
     fetch('/api/fax/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ref:ref,lang:lang})}).then(function(r){return r.json().then(function(j){return {ok:r.ok,j:j}})}).then(function(x){
       if(x.ok&&x.j.url){location.href=x.j.url;return}
-      pay.disabled=false; err.textContent=x.j.error||T.payfail;
-    }).catch(function(){pay.disabled=false;err.textContent=T.payfail2});
+      b.disabled=false; $('fx-err-3').textContent=x.j.error||T.payfail;
+    }).catch(function(){b.disabled=false;$('fx-err-3').textContent=T.payfail2});
   });
 })();
 </script>

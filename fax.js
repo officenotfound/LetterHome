@@ -24,6 +24,7 @@ const { PDFDocument, StandardFonts, rgb } = require('pdf-lib');
 const TELNYX = 'https://api.telnyx.com/v2';
 const MAX_BYTES = 20 * 1024 * 1024;
 const MAX_PAGES = 50;
+const MAX_FILES = 5;
 const MAX_TRIES = 3;                       // the first send plus two retries
 const RETRY_MINUTES = 10;
 const KEEP_HOURS = 24;
@@ -40,26 +41,26 @@ const MSG = {
     pages: (m, n) => `Faxes can be up to ${m} pages. This one has ${n}.`, huge: 'This document is too large to fax. Try a smaller scan.',
     prep: 'The file could not be prepared for faxing.', expired: 'That quote has expired. Please upload the document again.',
     hourly: 'You can send up to 5 faxes an hour. Please try again later.', pay: 'Payment could not be started. Please try again.',
-    pdfpw: 'This PDF is password-protected. Save a copy without a password and try again.', pdfbad: 'This PDF could not be read.' },
+    pdfpw: 'This PDF is password-protected. Save a copy without a password and try again.', pdfbad: 'This PDF could not be read.', files: 'Attach up to 5 files.' },
   fr: { closed: 'Le fax n’est pas encore offert.', big: 'Le fichier dépasse 20 Mo.', unread: 'Le fichier téléversé n’a pas pu être lu.',
     number: 'Entrez un numéro de fax canadien ou américain avec l’indicatif régional, comme 514-555-0123.', email: 'Entrez une adresse courriel valide pour votre reçu.',
     name: 'Entrez votre nom.', file: 'Choisissez un fichier PDF, JPG ou PNG.', type: 'Seuls les fichiers PDF, JPG et PNG peuvent être envoyés par fax.', empty: 'Ce fichier n’a aucune page.',
     pages: (m, n) => `Un fax peut compter jusqu’à ${m} pages. Celui-ci en a ${n}.`, huge: 'Ce document est trop lourd pour un fax. Essayez une numérisation plus légère.',
     prep: 'Le fichier n’a pas pu être préparé pour le fax.', expired: 'Ce prix a expiré. Téléversez le document de nouveau.',
     hourly: 'Vous pouvez envoyer jusqu’à 5 fax par heure. Réessayez plus tard.', pay: 'Le paiement n’a pas pu commencer. Réessayez.',
-    pdfpw: 'Ce PDF est protégé par un mot de passe. Enregistrez une copie sans mot de passe et réessayez.', pdfbad: 'Ce PDF n’a pas pu être lu.' },
+    pdfpw: 'Ce PDF est protégé par un mot de passe. Enregistrez une copie sans mot de passe et réessayez.', pdfbad: 'Ce PDF n’a pas pu être lu.', files: 'Joignez au plus 5 fichiers.' },
   es: { closed: 'El fax todavía no está disponible.', big: 'El archivo pesa más de 20 MB.', unread: 'No se pudo leer el archivo.',
     number: 'Ingrese un número de fax de EE. UU. o Canadá con su código de área, como 212-555-0123.', email: 'Ingrese un correo electrónico válido para su recibo.',
     name: 'Ingrese su nombre.', file: 'Elija un archivo PDF, JPG o PNG.', type: 'Solo se pueden enviar por fax archivos PDF, JPG y PNG.', empty: 'Este archivo no tiene páginas.',
     pages: (m, n) => `Un fax puede tener hasta ${m} páginas. Este tiene ${n}.`, huge: 'Este documento es demasiado grande para un fax. Pruebe con un escaneo más ligero.',
     prep: 'No se pudo preparar el archivo para el fax.', expired: 'Esta cotización venció. Suba el documento otra vez.',
     hourly: 'Puede enviar hasta 5 faxes por hora. Inténtelo más tarde.', pay: 'No se pudo iniciar el pago. Inténtelo de nuevo.',
-    pdfpw: 'Este PDF tiene contraseña. Guarde una copia sin contraseña e inténtelo de nuevo.', pdfbad: 'No se pudo leer este PDF.' },
+    pdfpw: 'Este PDF tiene contraseña. Guarde una copia sin contraseña e inténtelo de nuevo.', pdfbad: 'No se pudo leer este PDF.', files: 'Adjunte hasta 5 archivos.' },
 };
 const COVER = {
-  en: { to: 'To:', from: 'From:', date: 'Date:', pages: 'Pages:', count: n => `${n} including this page` },
-  fr: { to: 'À :', from: 'De :', date: 'Date :', pages: 'Pages :', count: n => `${n}, incluant cette page` },
-  es: { to: 'Para:', from: 'De:', date: 'Fecha:', pages: 'Páginas:', count: n => `${n}, incluida esta página` },
+  en: { to: 'To:', toFax: 'Fax:', from: 'From:', fax: 'Reply fax:', phone: 'Phone:', email: 'Email:', address: 'Address:', date: 'Date:', pages: 'Pages:', count: n => `${n} including this page` },
+  fr: { to: 'À :', toFax: 'Fax :', from: 'De :', fax: 'Fax de retour :', phone: 'Tél. :', email: 'Courriel :', address: 'Adresse :', date: 'Date :', pages: 'Pages :', count: n => `${n}, incluant cette page` },
+  es: { to: 'Para:', toFax: 'Fax:', from: 'De:', fax: 'Fax de respuesta:', phone: 'Teléfono:', email: 'Correo:', address: 'Dirección:', date: 'Fecha:', pages: 'Páginas:', count: n => `${n}, incluida esta página` },
 };
 // The fax order page for each site and language, as a path on letterhome.ca.
 const PAGE_PATH = { 'ca-en': '/fax', 'ca-fr': '/envoyer-un-fax-en-ligne', 'us-en': '/us/fax', 'us-es': '/us/es/fax' };
@@ -74,7 +75,7 @@ function schema(db) {
     file_name TEXT, original_name TEXT, status_token TEXT,
     stripe_session_id TEXT, payment_intent TEXT,
     telnyx_fax_id TEXT, telnyx_mode TEXT, attempts INTEGER NOT NULL DEFAULT 0, next_retry_at TEXT, failure_reason TEXT,
-    quote_ip TEXT, site TEXT NOT NULL DEFAULT 'ca', lang TEXT NOT NULL DEFAULT 'en',
+    quote_ip TEXT, site TEXT NOT NULL DEFAULT 'ca', lang TEXT NOT NULL DEFAULT 'en', cover_json TEXT,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP, paid_at TEXT, approved_at TEXT, sent_at TEXT, delivered_at TEXT,
     failed_at TEXT, refunded_at TEXT, finished_at TEXT, files_deleted_at TEXT, paid_email_at TEXT, done_email_at TEXT
   )`);
@@ -83,6 +84,7 @@ function schema(db) {
     created_at TEXT DEFAULT CURRENT_TIMESTAMP)`);
   try { db.exec("ALTER TABLE fax_orders ADD COLUMN site TEXT NOT NULL DEFAULT 'ca'"); } catch {}
   try { db.exec("ALTER TABLE fax_orders ADD COLUMN lang TEXT NOT NULL DEFAULT 'en'"); } catch {}
+  try { db.exec('ALTER TABLE fax_orders ADD COLUMN cover_json TEXT'); } catch {}
   db.exec('CREATE INDEX IF NOT EXISTS fax_orders_status ON fax_orders (status)');
   db.exec('CREATE INDEX IF NOT EXISTS fax_orders_session ON fax_orders (stripe_session_id)');
   db.exec('CREATE INDEX IF NOT EXISTS fax_orders_telnyx ON fax_orders (telnyx_fax_id)');
@@ -140,7 +142,7 @@ const wrap = (text, font, size, width) => {
 };
 
 // A plain cover sheet in front of the document, when the customer wrote a note.
-async function addCover(doc, { to, from, note, docPages, lang = 'en' }) {
+async function addCover(doc, { to, cover = {}, docPages, lang = 'en' }) {
   const C = COVER[langOf(lang)];
   const font = await doc.embedFont(StandardFonts.Helvetica);
   const bold = await doc.embedFont(StandardFonts.HelveticaBold);
@@ -150,15 +152,26 @@ async function addCover(doc, { to, from, note, docPages, lang = 'en' }) {
   let y = 720;
   page.drawText('FAX', { x: 54, y, size: 30, font: bold, color: rgb(0.1, 0.1, 0.1) }); y -= 44;
   const row = (label, value) => {
-    page.drawText(label, { x: 54, y, size: 11, font: bold }); page.drawText(safe(value), { x: 150, y, size: 11, font }); y -= 20;
+    const lines = wrap(safe(value), font, 11, 400).slice(0, 4);
+    if (!lines.join('').trim()) return;
+    page.drawText(label, { x: 54, y, size: 11, font: bold });
+    lines.forEach((l, i) => { page.drawText(l, { x: 160, y: y - i * 15, size: 11, font }); });
+    y -= 20 + (lines.length - 1) * 15;
   };
-  row(C.to, pretty(to));
-  row(C.from, from);
+  row(C.to, cover.to);
+  row(C.toFax, pretty(to));
+  row(C.from, cover.from);
+  row(C.fax, cover.fax ? (pretty(normalizeNumber(cover.fax)) || cover.fax) : '');
+  row(C.phone, cover.phone);
+  row(C.email, cover.email);
+  row(C.address, cover.address);
   row(C.date, new Date().toISOString().slice(0, 10));
   row(C.pages, C.count(docPages + 1));
-  y -= 14;
-  page.drawLine({ start: { x: 54, y }, end: { x: 558, y }, thickness: 0.8, color: rgb(0.5, 0.5, 0.5) }); y -= 28;
-  for (const line of wrap(safe(note).slice(0, 2000), font, 12, 504).slice(0, 40)) { page.drawText(line, { x: 54, y, size: 12, font }); y -= 17; }
+  if (cover.note) {
+    y -= 14;
+    page.drawLine({ start: { x: 54, y }, end: { x: 558, y }, thickness: 0.8, color: rgb(0.5, 0.5, 0.5) }); y -= 28;
+    for (const line of wrap(safe(cover.note).slice(0, 2000), font, 12, 504).slice(0, 30)) { page.drawText(line, { x: 54, y, size: 12, font }); y -= 17; }
+  }
 }
 
 // Prices per site: letterhome.ca in Canadian dollars, letterhome.us in US dollars. Each is set in the admin Settings.
@@ -215,30 +228,37 @@ function register(app, deps) {
 
   const quoteLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 20, standardHeaders: true, legacyHeaders: false,
     skip: () => process.env.NODE_ENV === 'test', message: { error: 'Too many uploads. Please try again in an hour.' } });
-  const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: MAX_BYTES, files: 1, fields: 10, fieldSize: 4000 } }).single('document');
+  const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: MAX_BYTES, files: MAX_FILES, fields: 20, fieldSize: 4000 } }).array('document', MAX_FILES);
 
   app.post('/api/fax/quote', quoteLimiter, (req, res) => {
     const M = MSG[langOf(req.query.lang)];
     if (!open(req)) return res.status(403).json({ error: M.closed });
     upload(req, res, async err => {
-      if (err) return res.status(400).json({ error: err.code === 'LIMIT_FILE_SIZE' ? M.big : M.unread });
+      if (err) return res.status(400).json({ error: err.code === 'LIMIT_FILE_SIZE' ? M.big : err.code === 'LIMIT_FILE_COUNT' || err.code === 'LIMIT_UNEXPECTED_FILE' ? M.files : M.unread });
       try {
         const b = req.body || {};
         const lang = langOf(b.lang || req.query.lang);
         const to = normalizeNumber(b.to);
         if (!to) return res.status(400).json({ error: M.number });
+        // Only the fax number and a document are needed. The email can come from Stripe at payment.
         const email = String(b.email || '').trim().slice(0, 200);
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: M.email });
-        const sender = String(b.sender_name || '').trim().slice(0, 100);
-        if (!sender) return res.status(400).json({ error: M.name });
-        const coverNote = String(b.cover_note || '').trim().slice(0, 2000);
-        if (!req.file) return res.status(400).json({ error: M.file });
-        const kind = kindOf(req.file.buffer);
-        if (!kind) return res.status(400).json({ error: M.type });
-        const doc = await toPdf(req.file.buffer, kind);
+        if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: M.email });
+        const clip = (v, n) => String(v || '').replace(/\r/g, '').trim().slice(0, n);
+        const cover = b.cover === '1' ? { to: clip(b.cover_to, 100), from: clip(b.cover_from, 100), fax: clip(b.cover_fax, 30), phone: clip(b.cover_phone, 30),
+          email: clip(b.cover_email, 200), address: clip(b.cover_address, 300), note: clip(b.cover_note, 2000) } : null;
+        const files = (req.files || []).filter(f => f && f.size);
+        if (!files.length) return res.status(400).json({ error: M.file });
+        if (files.reduce((n, f) => n + f.size, 0) > MAX_BYTES) return res.status(400).json({ error: M.big });
+        const doc = await PDFDocument.create();
+        for (const file of files) {
+          const kind = kindOf(file.buffer);
+          if (!kind) return res.status(400).json({ error: M.type });
+          const part = await toPdf(file.buffer, kind);
+          (await doc.copyPages(part, part.getPageIndices())).forEach(pg => doc.addPage(pg));
+        }
         const docPages = doc.getPageCount();
         if (!docPages) return res.status(400).json({ error: M.empty });
-        if (coverNote) await addCover(doc, { to, from: sender, note: coverNote, docPages, lang });
+        if (cover) await addCover(doc, { to, cover, docPages, lang });
         const pages = doc.getPageCount();
         if (pages > MAX_PAGES) return res.status(400).json({ error: M.pages(MAX_PAGES, pages) });
         const bytes = Buffer.from(await doc.save());
@@ -248,14 +268,23 @@ function register(app, deps) {
         const ref = 'FX-' + crypto.randomBytes(4).toString('hex').toUpperCase();
         const site = b.site === 'us' ? 'us' : 'ca', currency = currencyOf(site);
         const price = priceFor(getSetting, pages, currency);
-        db.prepare(`INSERT INTO fax_orders (public_ref, status, email, sender_name, to_number, cover_note, pages, price_cents, currency, site, lang, file_name, original_name, status_token, quote_ip)
-          VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).run(ref, 'quote', email, sender, to, coverNote || null, pages, price, currency, site, lang, fileName,
-          String(req.file.originalname || '').slice(0, 200), crypto.randomBytes(24).toString('hex'), String(req.ip || '').slice(0, 64));
-        res.json({ ref, to: pretty(to), pages, price_cents: price, currency, cover: !!coverNote });
+        const token = crypto.randomBytes(24).toString('hex');
+        db.prepare(`INSERT INTO fax_orders (public_ref, status, email, sender_name, to_number, cover_note, cover_json, pages, price_cents, currency, site, lang, file_name, original_name, status_token, quote_ip)
+          VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).run(ref, 'quote', email || null, (cover && cover.from) || null, to, (cover && cover.note) || null, cover ? JSON.stringify(cover) : null,
+          pages, price, currency, site, lang, fileName, files.map(f => String(f.originalname || '')).join(', ').slice(0, 300), token, String(req.ip || '').slice(0, 64));
+        res.json({ ref, to: pretty(to), pages, price_cents: price, currency, cover: !!cover, preview: `/api/fax/preview/${token}` });
       } catch (e) {
         res.status(400).json({ error: (e.code && M[e.code]) || M.prep });
       }
     });
+  });
+
+  app.get('/api/fax/preview/:token', (req, res) => {
+    const f = db.prepare("SELECT * FROM fax_orders WHERE status_token = ? AND status IN ('quote','awaiting_payment')").get(String(req.params.token || ''));
+    if (!f || f.files_deleted_at || !fs.existsSync(fileOf(f))) return res.status(404).end();
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Cache-Control', 'no-store');
+    fs.createReadStream(fileOf(f)).pipe(res);
   });
 
   app.post('/api/fax/checkout', express.json({ limit: '4kb' }), async (req, res) => {
@@ -264,11 +293,13 @@ function register(app, deps) {
     const f = db.prepare("SELECT * FROM fax_orders WHERE public_ref = ? AND status IN ('quote','awaiting_payment')").get(String(req.body?.ref || ''));
     if (!f || f.files_deleted_at) return res.status(404).json({ error: M.expired });
     M = MSG[langOf(f.lang)];
-    const recent = db.prepare("SELECT COUNT(*) n FROM fax_orders WHERE lower(email) = lower(?) AND paid_at > datetime('now','-1 hour')").get(f.email).n;
+    const recent = f.email
+      ? db.prepare("SELECT COUNT(*) n FROM fax_orders WHERE lower(email) = lower(?) AND paid_at > datetime('now','-1 hour')").get(f.email).n
+      : db.prepare("SELECT COUNT(*) n FROM fax_orders WHERE quote_ip = ? AND paid_at > datetime('now','-1 hour')").get(f.quote_ip || '').n;
     if (recent >= 5) return res.status(429).json({ error: M.hourly });
     try {
       const session = await stripe.checkout.sessions.create({
-        mode: 'payment', customer_email: f.email,
+        mode: 'payment', ...(f.email ? { customer_email: f.email } : {}),
         line_items: [{ quantity: 1, price_data: { currency: String(f.currency || 'CAD').toLowerCase(), unit_amount: f.price_cents,
           product_data: {
             name: { fr: `Fax au ${pretty(f.to_number)}`, es: `Fax al ${pretty(f.to_number)}` }[f.lang] || `Fax to ${pretty(f.to_number)}`,
@@ -323,8 +354,9 @@ function register(app, deps) {
     const f = db.prepare('SELECT * FROM fax_orders WHERE public_ref = ?').get(String(session.metadata.fax_ref || ''));
     if (!f) { console.error('[fax] paid session for unknown fax', session.metadata.fax_ref); return true; }
     if (session.payment_status !== 'paid') return true;
-    const r = db.prepare("UPDATE fax_orders SET status = 'paid', paid_at = CURRENT_TIMESTAMP, payment_intent = ?, stripe_session_id = ? WHERE id = ? AND status IN ('quote','awaiting_payment')")
-      .run(String(session.payment_intent || ''), String(session.id || ''), f.id);
+    const stripeEmail = String((session.customer_details && session.customer_details.email) || session.customer_email || '').slice(0, 200) || null;
+    const r = db.prepare("UPDATE fax_orders SET status = 'paid', paid_at = CURRENT_TIMESTAMP, payment_intent = ?, stripe_session_id = ?, email = COALESCE(email, ?) WHERE id = ? AND status IN ('quote','awaiting_payment')")
+      .run(String(session.payment_intent || ''), String(session.id || ''), stripeEmail, f.id);
     if (!r.changes) return true;                                             // already handled: Stripe sent the event twice
     note(f.id, `Paid ${money(f.price_cents, f.currency)}. Waiting for approval.`);
     customerEmail(f.id, 'paid');
@@ -483,7 +515,7 @@ function register(app, deps) {
   // ---------- admin (registered after the admin CSRF check, see registerAdmin) ----------
   function registerAdmin(app) {
   app.get('/api/admin/faxes', requireAdmin, (req, res) => {
-    const rows = db.prepare(`SELECT id, public_ref, status, email, sender_name, to_number, cover_note, pages, price_cents, currency, attempts, failure_reason,
+    const rows = db.prepare(`SELECT id, public_ref, status, email, sender_name, to_number, cover_note, cover_json, pages, price_cents, currency, attempts, failure_reason,
       telnyx_mode, created_at, paid_at, sent_at, delivered_at, failed_at, refunded_at, files_deleted_at
       FROM fax_orders WHERE status != 'quote' ORDER BY CASE status WHEN 'paid' THEN 0 WHEN 'failed' THEN 1 WHEN 'retrying' THEN 2 WHEN 'sending' THEN 3 ELSE 4 END, id DESC LIMIT 200`).all();
     const notes = db.prepare('SELECT fax_id, note, created_at FROM fax_notes WHERE fax_id IN (SELECT id FROM fax_orders ORDER BY id DESC LIMIT 200) ORDER BY id').all();
